@@ -138,21 +138,19 @@ export default function Signup() {
               {[1, 2, 3].map((step) => (
                 <div key={step} className="flex items-center flex-1">
                   <div
-                    className={`flex items-center justify-center w-7 h-7 rounded-full font-semibold text-xs transition-all ${
-                      currentStep > step
+                    className={`flex items-center justify-center w-7 h-7 rounded-full font-semibold text-xs transition-all ${currentStep > step
                         ? "bg-orange-500 text-white"
                         : currentStep === step
-                        ? "bg-orange-500 text-white"
-                        : "bg-gray-200 text-gray-500"
-                    }`}
+                          ? "bg-orange-500 text-white"
+                          : "bg-gray-200 text-gray-500"
+                      }`}
                   >
                     {currentStep > step ? <Check className="w-3 h-3" /> : step}
                   </div>
                   {step < 3 && (
                     <div
-                      className={`flex-1 h-1 mx-1 rounded ${
-                        currentStep > step ? "bg-orange-500" : "bg-gray-200"
-                      }`}
+                      className={`flex-1 h-1 mx-1 rounded ${currentStep > step ? "bg-orange-500" : "bg-gray-200"
+                        }`}
                     ></div>
                   )}
                 </div>
