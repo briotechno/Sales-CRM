@@ -17,7 +17,12 @@ import {
   CheckCircle,
   Home,
   ChevronDown,
+  FileTextIcon,
+  Activity,
+  View,
+  Archive,
 } from "lucide-react";
+import NumberCard from "../../components/NumberCard";
 
 // Policy Detail View Modal
 function PolicyDetailModal({ isOpen, onClose, policy, onEdit }) {
@@ -96,13 +101,12 @@ function PolicyDetailModal({ isOpen, onClose, policy, onEdit }) {
               </label>
               <div className="mt-1">
                 <span
-                  className={`px-3 py-1 rounded-md text-sm font-semibold ${
-                    policy.status === "Active"
-                      ? "bg-green-100 text-green-700"
-                      : policy.status === "Under Review"
+                  className={`px-3 py-1 rounded-md text-sm font-semibold ${policy.status === "Active"
+                    ? "bg-green-100 text-green-700"
+                    : policy.status === "Under Review"
                       ? "bg-yellow-100 text-yellow-700"
                       : "bg-red-100 text-red-700"
-                  }`}
+                    }`}
                 >
                   {policy.status}
                 </span>
@@ -279,9 +283,8 @@ function PolicyModal({ isOpen, onClose, policy = null, onSave }) {
             <input
               type="text"
               placeholder="Enter policy title"
-              className={`w-full px-4 py-3 border-2 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all ${
-                errors.policyTitle ? "border-red-500" : "border-gray-200"
-              }`}
+              className={`w-full px-4 py-3 border-2 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all ${errors.policyTitle ? "border-red-500" : "border-gray-200"
+                }`}
               value={formData.policyTitle}
               onChange={(e) =>
                 setFormData({ ...formData, policyTitle: e.target.value })
@@ -299,9 +302,8 @@ function PolicyModal({ isOpen, onClose, policy = null, onSave }) {
                 Category <span className="text-red-500">*</span>
               </label>
               <select
-                className={`w-full px-4 py-3 border-2 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all ${
-                  errors.category ? "border-red-500" : "border-gray-200"
-                }`}
+                className={`w-full px-4 py-3 border-2 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all ${errors.category ? "border-red-500" : "border-gray-200"
+                  }`}
                 value={formData.category}
                 onChange={(e) =>
                   setFormData({ ...formData, category: e.target.value })
@@ -340,9 +342,8 @@ function PolicyModal({ isOpen, onClose, policy = null, onSave }) {
               <input
                 type="text"
                 placeholder="e.g., 1.0"
-                className={`w-full px-4 py-3 border-2 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all ${
-                  errors.version ? "border-red-500" : "border-gray-200"
-                }`}
+                className={`w-full px-4 py-3 border-2 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all ${errors.version ? "border-red-500" : "border-gray-200"
+                  }`}
                 value={formData.version}
                 onChange={(e) =>
                   setFormData({ ...formData, version: e.target.value })
@@ -362,9 +363,8 @@ function PolicyModal({ isOpen, onClose, policy = null, onSave }) {
             <textarea
               placeholder="Enter policy description"
               rows="4"
-              className={`w-full px-4 py-3 border-2 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all resize-none ${
-                errors.description ? "border-red-500" : "border-gray-200"
-              }`}
+              className={`w-full px-4 py-3 border-2 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all resize-none ${errors.description ? "border-red-500" : "border-gray-200"
+                }`}
               value={formData.description}
               onChange={(e) =>
                 setFormData({ ...formData, description: e.target.value })
@@ -383,9 +383,8 @@ function PolicyModal({ isOpen, onClose, policy = null, onSave }) {
               </label>
               <input
                 type="date"
-                className={`w-full px-4 py-3 border-2 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all ${
-                  errors.effectiveDate ? "border-red-500" : "border-gray-200"
-                }`}
+                className={`w-full px-4 py-3 border-2 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all ${errors.effectiveDate ? "border-red-500" : "border-gray-200"
+                  }`}
                 value={formData.effectiveDate}
                 onChange={(e) =>
                   setFormData({ ...formData, effectiveDate: e.target.value })
@@ -405,9 +404,8 @@ function PolicyModal({ isOpen, onClose, policy = null, onSave }) {
               </label>
               <input
                 type="date"
-                className={`w-full px-4 py-3 border-2 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all ${
-                  errors.reviewDate ? "border-red-500" : "border-gray-200"
-                }`}
+                className={`w-full px-4 py-3 border-2 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all ${errors.reviewDate ? "border-red-500" : "border-gray-200"
+                  }`}
                 value={formData.reviewDate}
                 onChange={(e) =>
                   setFormData({ ...formData, reviewDate: e.target.value })
@@ -707,12 +705,12 @@ export default function HRPolicyPage() {
       activeTab === "all"
         ? true
         : activeTab === "active"
-        ? policy.status === "Active"
-        : activeTab === "review"
-        ? policy.status === "Under Review"
-        : activeTab === "archived"
-        ? policy.status === "Archived"
-        : true;
+          ? policy.status === "Active"
+          : activeTab === "review"
+            ? policy.status === "Under Review"
+            : activeTab === "archived"
+              ? policy.status === "Archived"
+              : true;
 
     const matchesSearch =
       policy.policyTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -771,8 +769,8 @@ export default function HRPolicyPage() {
     <DashboardLayout>
       <div className="min-h-screen ml-6 ">
         {/* Header */}
-        <div className="bg-white border-b">
-          <div className="px-6 py-3">
+        <div className="bg-white rounded-sm p-3 mb-4 border-b">
+          <div className="py-1">
             <div className="flex items-center gap-2 mb-2">
               <div>
                 <h1 className="text-2xl font-bold text-gray-900 whitespace-nowrap">
@@ -866,74 +864,38 @@ export default function HRPolicyPage() {
         </div>
 
         {/* Stats Cards */}
-        <div className="px-0 py-0 mt-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div className="bg-white rounded-sm shadow-md p-6 border-l-4 border-blue-500 hover:shadow-lg transition-shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-600 text-sm font-semibold mb-2">
-                    Total Policies
-                  </p>
-                  <p className="text-4xl font-bold text-gray-900">
-                    {stats.total}
-                  </p>
-                </div>
-                <div className="bg-blue-500 p-4 rounded-lg">
-                  <FileText size={32} className="text-white" />
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-sm shadow-md p-6 border-l-4 border-green-500 hover:shadow-lg transition-shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-600 text-sm font-semibold mb-2">
-                    Active
-                  </p>
-                  <p className="text-4xl font-bold text-gray-900">
-                    {stats.active}
-                  </p>
-                </div>
-                <div className="bg-green-500 p-4 rounded-lg">
-                  <CheckCircle size={32} className="text-white" />
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-sm shadow-md p-6 border-l-4 border-yellow-500 hover:shadow-lg transition-shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-600 text-sm font-semibold mb-2">
-                    Under Review
-                  </p>
-                  <p className="text-4xl font-bold text-gray-900">
-                    {stats.review}
-                  </p>
-                </div>
-                <div className="bg-yellow-500 p-4 rounded-sm">
-                  <Calendar size={32} className="text-white" />
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-sm shadow-md p-6 border-l-4 border-red-500 hover:shadow-lg transition-shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-600 text-sm font-semibold mb-2">
-                    Archived
-                  </p>
-                  <p className="text-4xl font-bold text-gray-900">
-                    {stats.archived}
-                  </p>
-                </div>
-                <div className="bg-red-500 p-4 rounded-sm">
-                  <Trash2 size={32} className="text-white" />
-                </div>
-              </div>
-            </div>
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+          <NumberCard
+            title={"Total Policies"}
+            number={stats.total}
+            icon={<FileText className="text-blue-600" size={24} />}
+            iconBgColor={"bg-blue-100"}
+            lineBorderClass={"border-blue-500"}
+          />
+          <NumberCard
+            title={"Active"}
+            number={stats.active}
+            icon={<Activity className="text-green-600" size={24} />}
+            iconBgColor={"bg-green-100"}
+            lineBorderClass={"border-green-500"}
+          />
+          <NumberCard
+            title={"Under Review"}
+            number={stats.review}
+            icon={<View className="text-orange-600" size={24} />}
+            iconBgColor={"bg-orange-100"}
+            lineBorderClass={"border-orange-500"}
+          />
+          <NumberCard
+            title={"Archived"}
+            number={stats.archived}
+            icon={<Archive className="text-purple-600" size={24} />}
+            iconBgColor={"bg-purple-100"}
+            lineBorderClass={"border-purple-500"}
+          />
         </div>
 
+        {/*  */}
         <div className="px-0 pb-2">
           <div className="bg-white rounded-sm shadow-sm p-4">
             {/* Active Filters Display */}
@@ -971,41 +933,37 @@ export default function HRPolicyPage() {
             <div className="flex gap-1 border-b-2 border-gray-200">
               <button
                 onClick={() => setActiveTab("all")}
-                className={`px-6 py-3 font-semibold transition-all ${
-                  activeTab === "all"
-                    ? "text-[#FF7B1D] border-b-4 border-[#FF7B1D] -mb-0.5"
-                    : "text-gray-600 hover:text-gray-900"
-                }`}
+                className={`px-6 py-3 font-semibold transition-all ${activeTab === "all"
+                  ? "text-[#FF7B1D] border-b-4 border-[#FF7B1D] -mb-0.5"
+                  : "text-gray-600 hover:text-gray-900"
+                  }`}
               >
                 All ({policies.length})
               </button>
               <button
                 onClick={() => setActiveTab("active")}
-                className={`px-6 py-3 font-semibold transition-all ${
-                  activeTab === "active"
-                    ? "text-[#FF7B1D] border-b-4 border-[#FF7B1D] -mb-0.5"
-                    : "text-gray-600 hover:text-gray-900"
-                }`}
+                className={`px-6 py-3 font-semibold transition-all ${activeTab === "active"
+                  ? "text-[#FF7B1D] border-b-4 border-[#FF7B1D] -mb-0.5"
+                  : "text-gray-600 hover:text-gray-900"
+                  }`}
               >
                 Active ({stats.active})
               </button>
               <button
                 onClick={() => setActiveTab("review")}
-                className={`px-6 py-3 font-semibold transition-all ${
-                  activeTab === "review"
-                    ? "text-[#FF7B1D] border-b-4 border-[#FF7B1D] -mb-0.5"
-                    : "text-gray-600 hover:text-gray-900"
-                }`}
+                className={`px-6 py-3 font-semibold transition-all ${activeTab === "review"
+                  ? "text-[#FF7B1D] border-b-4 border-[#FF7B1D] -mb-0.5"
+                  : "text-gray-600 hover:text-gray-900"
+                  }`}
               >
                 Under Review ({stats.review})
               </button>
               <button
                 onClick={() => setActiveTab("archived")}
-                className={`px-6 py-3 font-semibold transition-all ${
-                  activeTab === "archived"
-                    ? "text-[#FF7B1D] border-b-4 border-[#FF7B1D] -mb-0.5"
-                    : "text-gray-600 hover:text-gray-900"
-                }`}
+                className={`px-6 py-3 font-semibold transition-all ${activeTab === "archived"
+                  ? "text-[#FF7B1D] border-b-4 border-[#FF7B1D] -mb-0.5"
+                  : "text-gray-600 hover:text-gray-900"
+                  }`}
               >
                 Archived ({stats.archived})
               </button>
@@ -1072,9 +1030,8 @@ export default function HRPolicyPage() {
                     {filteredPolicies.map((policy, index) => (
                       <tr
                         key={policy.id}
-                        className={`hover:bg-gray-50 transition-colors ${
-                          index % 2 === 0 ? "bg-white" : "bg-gray-00"
-                        }`}
+                        className={`hover:bg-gray-50 transition-colors ${index % 2 === 0 ? "bg-white" : "bg-gray-00"
+                          }`}
                       >
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">

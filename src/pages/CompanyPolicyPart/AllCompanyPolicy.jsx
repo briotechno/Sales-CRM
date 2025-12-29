@@ -11,7 +11,12 @@ import {
   Calendar,
   User,
   Building,
+  Activity,
+  Underline,
+  View,
+  Archive,
 } from "lucide-react";
+import NumberCard from "../../components/NumberCard";
 
 export default function CompanyPolicy() {
   const [activeTab, setActiveTab] = useState("All");
@@ -233,8 +238,8 @@ export default function CompanyPolicy() {
     <DashboardLayout>
       <div className="min-h-screen  ml-6 p-0">
         {/* Header */}
-        <div className="bg-white border-b">
-          <div className="max-w-8xl mx-auto px-4 py-4 flex items-center justify-between">
+        <div className="bg-white rounded-sm p-3 mb-4 border-b">
+          <div className="flex justify-between items-center">
             {/* Left side: Title & Breadcrumb */}
             <div>
               <h1 className="text-2xl font-bold text-gray-900">
@@ -278,68 +283,36 @@ export default function CompanyPolicy() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 mt-4 md:grid-cols-4 gap-6 mb-6">
-          <div className="bg-white rounded-sm shadow-sm border-l-4 border-orange-500 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 text-sm font-medium mb-1">
-                  Total Policies
-                </p>
-                <p className="text-4xl font-bold text-gray-900">
-                  {stats.total}
-                </p>
-              </div>
-              <div className="bg-blue-500 p-4 rounded-lg">
-                <FileText className="text-white" size={28} />
-              </div>
-            </div>
-          </div>
-          <div className="bg-white rounded-sm shadow-sm border-l-4 border-orange-500 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 text-sm font-medium mb-1">Active</p>
-                <p className="text-4xl font-bold text-gray-900">
-                  {stats.active}
-                </p>
-              </div>
-              <div className="bg-yellow-500 p-4 rounded-sm">
-                <FileText className="text-white" size={28} />
-              </div>
-            </div>
-          </div>
-          <div className="bg-white rounded-sm shadow-sm border-l-4 border-orange-500 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 text-sm font-medium mb-1">
-                  Under Review
-                </p>
-                <p className="text-4xl font-bold text-gray-900">
-                  {stats.underReview}
-                </p>
-              </div>
-              <div className="bg-green-500 p-4 rounded-lg">
-                <FileText className="text-white" size={28} />
-              </div>
-            </div>
-          </div>
-          <div className="bg-white rounded-sm shadow-sm border-l-4 border-orange-500 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 text-sm font-medium mb-1">
-                  Archived
-                </p>
-                <p className="text-4xl font-bold text-gray-900">
-                  {stats.archived}
-                </p>
-              </div>
-              <div className="bg-red-500 p-4 rounded-lg">
-                <FileText className="text-white" size={28} />
-              </div>
-            </div>
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6 ">
+          <NumberCard
+            title={"Total Policies"}
+            number={stats.total}
+            icon={<FileText className="text-blue-600" size={24} />}
+            iconBgColor={"bg-blue-100"}
+            lineBorderClass={"border-blue-500"}
+          />
+          <NumberCard
+            title={"Active"}
+            number={stats.total}
+            icon={<Activity className="text-green-600" size={24} />}
+            iconBgColor={"bg-green-100"}
+            lineBorderClass={"border-green-500"}
+          />
+          <NumberCard
+            title={"Under Review"}
+            number={stats.total}
+            icon={<View className="text-orange-600" size={24} />}
+            iconBgColor={"bg-orange-100"}
+            lineBorderClass={"border-orange-500"}
+          />
+          <NumberCard
+            title={"Archived"}
+            number={stats.total}
+            icon={<Archive className="text-purple-600" size={24} />}
+            iconBgColor={"bg-purple-100"}
+            lineBorderClass={"border-purple-500"}
+          />
         </div>
-
-        {/* Action Buttons */}
 
         {/* Tabs */}
         <div className="flex gap-8 mb-6 border-b border-gray-200">

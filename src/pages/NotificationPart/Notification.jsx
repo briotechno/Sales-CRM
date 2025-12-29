@@ -19,6 +19,7 @@ import {
   X,
   Settings,
 } from "lucide-react";
+import NumberCard from "../../components/NumberCard";
 
 export default function NotificationPage() {
   const [notifications, setNotifications] = useState([
@@ -278,65 +279,34 @@ export default function NotificationPage() {
         {/* Stats Cards */}
         <div className="max-w-7xl mx-auto px-0 mt-2 py-0">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-white rounded-sm p-5 shadow-md border-l-4 border-orange-500 hover:shadow-lg transition-shadow">
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="text-gray-500 text-sm font-medium">
-                    Total Notifications
-                  </p>
-                  <h3 className="text-3xl font-bold text-gray-800 mt-2">
-                    {stats.total}
-                  </h3>
-                </div>
-                <div className="bg-orange-100 p-3 rounded-sm">
-                  <Bell className="text-orange-500" size={24} />
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-sm p-5 shadow-md border-l-4 border-blue-500 hover:shadow-lg transition-shadow">
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="text-gray-500 text-sm font-medium">Unread</p>
-                  <h3 className="text-3xl font-bold text-blue-600 mt-2">
-                    {stats.unread}
-                  </h3>
-                </div>
-                <div className="bg-blue-100 p-3 rounded-sm">
-                  <Mail className="text-blue-500" size={24} />
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-sm p-5 shadow-md border-l-4 border-red-500 hover:shadow-lg transition-shadow">
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="text-gray-500 text-sm font-medium">
-                    High Priority
-                  </p>
-                  <h3 className="text-3xl font-bold text-red-600 mt-2">
-                    {stats.high}
-                  </h3>
-                </div>
-                <div className="bg-red-100 p-3 rounded-sm">
-                  <AlertCircle className="text-red-500" size={24} />
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-sm p-5 shadow-md border-l-4 border-green-500 hover:shadow-lg transition-shadow">
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="text-gray-500 text-sm font-medium">Today</p>
-                  <h3 className="text-3xl font-bold text-green-600 mt-2">
-                    {stats.today}
-                  </h3>
-                </div>
-                <div className="bg-green-100 p-3 rounded-sm">
-                  <Calendar className="text-green-500" size={24} />
-                </div>
-              </div>
-            </div>
+            <NumberCard
+              title={"Total Notifications"}
+              number={stats.total}
+              icon={<Bell className="text-blue-600" size={24} />}
+              iconBgColor={"bg-blue-100"}
+              lineBorderClass={"border-blue-500"}
+            />
+            <NumberCard
+              title={"Unread"}
+              number={stats.unread}
+              icon={<Mail className="text-green-600" size={24} />}
+              iconBgColor={"bg-green-100"}
+              lineBorderClass={"border-green-500"}
+            />
+            <NumberCard
+              title={"High Priority"}
+              number={stats.high}
+              icon={<AlertCircle className="text-orange-600" size={24} />}
+              iconBgColor={"bg-orange-100"}
+              lineBorderClass={"border-orange-500"}
+            />
+            <NumberCard
+              title={"Today"}
+              number={stats.today}
+              icon={<Calendar className="text-purple-600" size={24} />}
+              iconBgColor={"bg-purple-100"}
+              lineBorderClass={"border-purple-500"}
+            />
           </div>
 
           {/* Notifications List */}
@@ -353,11 +323,10 @@ export default function NotificationPage() {
               filteredNotifications.map((notification) => (
                 <div
                   key={notification.id}
-                  className={`bg-white rounded-sm shadow-md hover:shadow-lg transition-all p-5 border-l-4 ${
-                    notification.read
+                  className={`bg-white rounded-sm shadow-md hover:shadow-lg transition-all p-5 border-t-4 ${notification.read
                       ? "border-gray-300 opacity-75"
                       : "border-orange-500"
-                  }`}
+                    }`}
                 >
                   <div className="flex items-start gap-4">
                     {/* Icon */}
@@ -375,9 +344,8 @@ export default function NotificationPage() {
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
                             <h3
-                              className={`font-bold text-gray-800 ${
-                                !notification.read ? "text-orange-600" : ""
-                              }`}
+                              className={`font-bold text-gray-800 ${!notification.read ? "text-orange-600" : ""
+                                }`}
                             >
                               {notification.title}
                             </h3>

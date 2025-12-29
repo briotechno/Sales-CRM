@@ -128,41 +128,33 @@ export default function SalaryManagement() {
       label: "Total Payroll",
       value: `₹${(totalPaid + totalPending).toLocaleString()}`,
       icon: DollarSign,
-      color: "orange",
-      bgColor: "bg-orange-50",
-      iconBg: "bg-orange-100",
-      textColor: "text-orange-600",
-      borderColor: "border-orange-500",
+      iconBg: "bg-blue-100",
+      iconColor: "text-blue-600",
+      borderColor: "border-blue-500",
     },
     {
       label: "Paid This Month",
       value: `₹${totalPaid.toLocaleString()}`,
       icon: TrendingUp,
-      color: "green",
-      bgColor: "bg-green-50",
       iconBg: "bg-green-100",
-      textColor: "text-green-600",
+      iconColor: "text-green-600",
       borderColor: "border-green-500",
     },
     {
       label: "Pending Payment",
       value: `₹${totalPending.toLocaleString()}`,
       icon: Calendar,
-      color: "yellow",
-      bgColor: "bg-yellow-50",
-      iconBg: "bg-yellow-100",
-      textColor: "text-yellow-600",
-      borderColor: "border-yellow-500",
+      iconBg: "bg-orange-100",
+      iconColor: "text-orange-600",
+      borderColor: "border-orange-500",
     },
     {
       label: "Active Departments",
       value: activeDepartments,
       icon: Users,
-      color: "blue",
-      bgColor: "bg-blue-50",
-      iconBg: "bg-blue-100",
-      textColor: "text-blue-600",
-      borderColor: "border-blue-500",
+      iconBg: "bg-purple-100",
+      iconColor: "text-purple-600",
+      borderColor: "border-purple-500",
     },
   ];
 
@@ -264,10 +256,10 @@ export default function SalaryManagement() {
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen bg-gradient-to-br from-orange-0 via-white to-orange-50 ml-6 p-0">
+      <div className="ml-6 min-h-screen">
         {/* Header */}
-        <div className="bg-white rounded-sm shadow-sm p-6 mb-6 border-l-4 border-orange-500">
-          <div className="flex items-center justify-between">
+        <div className="bg-white rounded-sm p-3 mb-4 border-b">
+          <div className="flex justify-between items-center">
             {/* LEFT TITLE */}
             <div>
               <h1 className="text-2xl font-bold text-gray-800">
@@ -336,19 +328,19 @@ export default function SalaryManagement() {
           {salaryStats.map((stat, index) => (
             <div
               key={index}
-              className={`${stat.bgColor} rounded-sm shadow-sm hover:shadow-md transition p-6 border-t-4 ${stat.borderColor}`}
+              className={`rounded-sm shadow-sm hover:shadow-md transition p-6 border-t-4 ${stat.borderColor}`}
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-600 text-sm font-medium mb-1">
+                  <p className="text-gray-500 text-sm font-medium">
                     {stat.label}
                   </p>
-                  <p className={`text-2xl font-bold ${stat.textColor}`}>
+                  <p className={`text-3xl font-bold text-gray-800 mt-1`}>
                     {stat.value}
                   </p>
                 </div>
-                <div className={`${stat.iconBg} p-4 rounded-sm shadow-sm`}>
-                  <stat.icon className={`w-8 h-8 ${stat.textColor}`} />
+                <div className={`${stat.iconBg} p-3 rounded-lg`}>
+                  <stat.icon className={stat.iconColor} size={24} />
                 </div>
               </div>
             </div>
@@ -360,7 +352,7 @@ export default function SalaryManagement() {
           {filteredSalaries.map((salary) => (
             <div
               key={salary.id}
-              className="bg-white rounded-sm shadow-sm hover:shadow-md transition border-l-4 border-orange-400"
+              className="bg-white rounded-sm shadow-sm hover:shadow-md transition border-t-4 border-orange-400"
             >
               <div className="p-6">
                 {/* Employee Info */}

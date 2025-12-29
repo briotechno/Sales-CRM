@@ -9,7 +9,7 @@ import {
   Filter,
   FileText,
   Calendar,
-  Search,
+  Building,
 } from "lucide-react";
 import NumberCard from "../../components/NumberCard";
 
@@ -123,7 +123,7 @@ const TermsAndCondition = () => {
     const matchesDesig = filterDesig ? term.designation === filterDesig : true;
     const matchesSearch = searchTerm
       ? term.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        term.description.toLowerCase().includes(searchTerm.toLowerCase())
+      term.description.toLowerCase().includes(searchTerm.toLowerCase())
       : true;
     return matchesDept && matchesDesig && matchesSearch;
   });
@@ -220,7 +220,7 @@ const TermsAndCondition = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6 ">
           <NumberCard
             title={"Total Policies"}
             number={termsList.length}
@@ -228,54 +228,27 @@ const TermsAndCondition = () => {
             iconBgColor={"bg-blue-100"}
             lineBorderClass={"border-blue-500"}
           />
-
-          <div className="bg-white rounded-sm shadow-sm p-5 border-t-4 border-green-500">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-500 text-sm font-medium">
-                  Active Filters
-                </p>
-                <p className="text-3xl font-bold text-gray-800 mt-1">
-                  {(filterDept ? 1 : 0) +
-                    (filterDesig ? 1 : 0) +
-                    (searchTerm ? 1 : 0)}
-                </p>
-              </div>
-              <div className="bg-green-100 p-3 rounded-lg">
-                <Filter className="text-green-600" size={24} />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-sm shadow-sm p-5 border-t-4 border-[#FF7B1D]">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-500 text-sm font-medium">
-                  Filtered Results
-                </p>
-                <p className="text-3xl font-bold text-gray-800 mt-1">
-                  {filteredTerms.length}
-                </p>
-              </div>
-              <div className="bg-orange-100 p-3 rounded-lg">
-                <Calendar className="text-[#FF7B1D]" size={24} />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-sm shadow-sm p-5 border-t-4 border-purple-500">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-500 text-sm font-medium">Departments</p>
-                <p className="text-3xl font-bold text-gray-800 mt-1">
-                  {new Set(termsList.map((t) => t.department)).size}
-                </p>
-              </div>
-              <div className="bg-purple-100 p-3 rounded-lg">
-                <FileText className="text-purple-600" size={24} />
-              </div>
-            </div>
-          </div>
+          <NumberCard
+            title={"Active Filters"}
+            number={termsList.length}
+            icon={<Filter className="text-green-600" size={24} />}
+            iconBgColor={"bg-green-100"}
+            lineBorderClass={"border-green-500"}
+          />
+          <NumberCard
+            title={"Filtered Results"}
+            number={termsList.length}
+            icon={<Calendar className="text-[#FF7B1D]" size={24} />}
+            iconBgColor={"bg-orange-100"}
+            lineBorderClass={"border-orange-500"}
+          />
+          <NumberCard
+            title={"Departments"}
+            number={new Set(termsList.map((t) => t.department)).size}
+            icon={<Building className="text-purple-600" size={24} />}
+            iconBgColor={"bg-purple-100"}
+            lineBorderClass={"border-purple-500"}
+          />
         </div>
 
         {/* Terms Table */}

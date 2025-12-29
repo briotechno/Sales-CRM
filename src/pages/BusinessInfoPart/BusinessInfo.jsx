@@ -21,6 +21,7 @@ import {
   X,
   Share2,
 } from "lucide-react";
+import NumberCard from "../../components/NumberCard";
 
 export default function BusinessInfoPage() {
   const [isEditing, setIsEditing] = useState(false);
@@ -97,18 +98,6 @@ export default function BusinessInfoPage() {
     window.open(formData.youtube, "_blank");
   };
 
-  const stats = [
-    { label: "Years in Business", value: "6+", icon: Calendar, color: "blue" },
-    { label: "Total Employees", value: "180", icon: Users, color: "green" },
-    { label: "Active Clients", value: "250+", icon: Target, color: "purple" },
-    {
-      label: "Annual Revenue",
-      value: formData.annualRevenue,
-      icon: TrendingUp,
-      color: "orange",
-    },
-  ];
-
   const getColorClasses = (color) => {
     const colors = {
       blue: "bg-blue-100 text-blue-600 border-blue-500",
@@ -144,11 +133,10 @@ export default function BusinessInfoPage() {
               <div className="flex items-center mr- gap-3">
                 <button
                   onClick={() => {
-                    const profileLink = `${
-                      window.location.origin
-                    }/business/${formData.companyName
-                      .toLowerCase()
-                      .replace(/\s+/g, "-")}`;
+                    const profileLink = `${window.location.origin
+                      }/business/${formData.companyName
+                        .toLowerCase()
+                        .replace(/\s+/g, "-")}`;
 
                     // Mobile share (Web Share API)
                     if (navigator.share) {
@@ -215,39 +203,36 @@ export default function BusinessInfoPage() {
           </div>
         </div>
 
-        <div className="max-w-8xl mx-auto px-0 py-0 mt-2">
+        <div className="max-w-7xl mx-auto px-0 py-0 mt-2">
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            {stats.map((stat, index) => {
-              const Icon = stat.icon;
-              return (
-                <div
-                  key={index}
-                  className={`bg-white rounded-sm p-8 shadow-md border-l-4 hover:shadow-lg transition-shadow ${
-                    getColorClasses(stat.color).split(" ")[2]
-                  }`}
-                >
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="text-gray-500 text-sm font-medium">
-                        {stat.label}
-                      </p>
-                      <h3 className="text-3xl font-bold text-gray-800 mt-2">
-                        {stat.value}
-                      </h3>
-                    </div>
-                    <div
-                      className={`p-3 rounded-sm ${getColorClasses(stat.color)
-                        .split(" ")
-                        .slice(0, 2)
-                        .join(" ")}`}
-                    >
-                      <Icon size={24} />
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+            <NumberCard
+              title={"Years in Business"}
+              number={"6+"}
+              icon={<Calendar className="text-blue-600" size={24} />}
+              iconBgColor={"bg-blue-100"}
+              lineBorderClass={"border-blue-500"} />
+
+            <NumberCard
+              title={"Total Employees"}
+              number={"180+"}
+              icon={<Users className="text-green-600" size={24} />}
+              iconBgColor={"bg-green-100"}
+              lineBorderClass={"border-green-500"} />
+
+            <NumberCard
+              title={"Active Clients"}
+              number={"250+"}
+              icon={<Target className="text-orange-600" size={24} />}
+              iconBgColor={"bg-orange-100"}
+              lineBorderClass={"border-orange-500"} />
+
+            <NumberCard
+              title={"Annual Revenue"}
+              number={formData.annualRevenue}
+              icon={<TrendingUp className="text-purple-600" size={24} />}
+              iconBgColor={"bg-purple-100"}
+              lineBorderClass={"border-purple-500"} />
           </div>
 
           {/* Company Logo Section */}
@@ -744,7 +729,7 @@ export default function BusinessInfoPage() {
                 </h2>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                    <label className="d-block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
                       <Globe size={16} className="text-orange-500" />
                       Website
                     </label>
@@ -764,7 +749,7 @@ export default function BusinessInfoPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                    <label className="d-block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
                       <Mail size={16} className="text-orange-500" />
                       Email
                     </label>
@@ -784,7 +769,7 @@ export default function BusinessInfoPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                    <label className="d-block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
                       <Phone size={16} className="text-orange-500" />
                       Phone
                     </label>
