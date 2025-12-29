@@ -222,7 +222,7 @@ const TermsAndCondition = () => {
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
           <NumberCard
-            title={" Total Policies"}
+            title={"Total Policies"}
             number={termsList.length}
             icon={<FileText className="text-blue-600" size={24} />}
             iconBgColor={"bg-blue-100"}
