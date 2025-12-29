@@ -11,6 +11,7 @@ import {
   Calendar,
   Search,
 } from "lucide-react";
+import NumberCard from "../../components/NumberCard";
 
 const TermsAndCondition = () => {
   // Sample data with full details
@@ -220,21 +221,13 @@ const TermsAndCondition = () => {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-          <div className="bg-white rounded-sm shadow-sm p-5 border-t-4 border-blue-500">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-500 text-sm font-medium">
-                  Total Policies
-                </p>
-                <p className="text-3xl font-bold text-gray-800 mt-1">
-                  {termsList.length}
-                </p>
-              </div>
-              <div className="bg-blue-100 p-3 rounded-lg">
-                <FileText className="text-blue-600" size={24} />
-              </div>
-            </div>
-          </div>
+          <NumberCard
+            title={" Total Policies"}
+            number={termsList.length}
+            icon={<FileText className="text-blue-600" size={24} />}
+            iconBgColor={"bg-blue-100"}
+            lineBorderClass={"border-blue-500"}
+          />
 
           <div className="bg-white rounded-sm shadow-sm p-5 border-t-4 border-green-500">
             <div className="flex items-center justify-between">
