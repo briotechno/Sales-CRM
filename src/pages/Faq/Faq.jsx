@@ -14,7 +14,9 @@ import {
   Shield,
   Clock,
   CheckCircle,
+  Calendar,
 } from "lucide-react";
+import NumberCard from "../../components/NumberCard";
 
 export default function FAQPage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -118,29 +120,6 @@ export default function FAQPage() {
     }))
     .filter((category) => category.questions.length > 0);
 
-  const stats = [
-    {
-      icon: <Clock className="w-6 h-6" />,
-      value: "24/7",
-      label: "Support Available",
-    },
-    {
-      icon: <CheckCircle className="w-6 h-6" />,
-      value: "500+",
-      label: "Questions Answered",
-    },
-    {
-      icon: <Users className="w-6 h-6" />,
-      value: "10K+",
-      label: "Happy Users",
-    },
-    {
-      icon: <Zap className="w-6 h-6" />,
-      value: "< 2hrs",
-      label: "Response Time",
-    },
-  ];
-
   return (
     <DashboardLayout>
       <div className="min-h-screen ml-6">
@@ -162,26 +141,36 @@ export default function FAQPage() {
         </div>
 
         {/* Stats Section */}
-        <div className="max-w-7xl mx-auto px-0  py-12">
+        <div className="max-w-7xl mx-auto px-0 py-12">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            {stats.map((stat, index) => (
-              <div
-                key={index}
-                className="bg-white rounded-sm p-6 shadow-lg border border-orange-100 hover:shadow-xl transition-all hover:scale-105 group"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-gradient-to-br from-orange-400 to-orange-500 rounded-sm text-white group-hover:scale-110 transition-transform">
-                    {stat.icon}
-                  </div>
-                  <div>
-                    <div className="text-2xl font-bold text-gray-800">
-                      {stat.value}
-                    </div>
-                    <div className="text-sm text-gray-600">{stat.label}</div>
-                  </div>
-                </div>
-              </div>
-            ))}
+            <NumberCard
+              title={"Support Available"}
+              number={"24/7"}
+              icon={<Clock className="text-blue-600" size={24} />}
+              iconBgColor={"bg-blue-100"}
+              lineBorderClass={"border-blue-500"} />
+
+            <NumberCard
+              title={"Questions Answered"}
+              number={"500+"}
+              icon={<CheckCircle className="text-green-600" size={24} />}
+              iconBgColor={"bg-green-100"}
+              lineBorderClass={"border-green-500"} />
+
+            <NumberCard
+              title={"Happy Users"}
+              number={"10K+"}
+              icon={<Users className="text-orange-600" size={24} />}
+              iconBgColor={"bg-orange-100"}
+              lineBorderClass={"border-orange-500"} />
+
+            <NumberCard
+              title={"Response Time"}
+              number={"< 2hrs"}
+              icon={<Zap className="text-purple-600" size={24} />}
+              iconBgColor={"bg-purple-100"}
+              lineBorderClass={"border-purple-500"} />
+
           </div>
         </div>
 
@@ -227,16 +216,14 @@ export default function FAQPage() {
                               {item.q}
                             </span>
                             <ChevronDown
-                              className={`w-5 h-5 text-orange-500 flex-shrink-0 transition-transform duration-300 mt-1 ${
-                                isOpen ? "transform rotate-180" : ""
-                              }`}
+                              className={`w-5 h-5 text-orange-500 flex-shrink-0 transition-transform duration-300 mt-1 ${isOpen ? "transform rotate-180" : ""
+                                }`}
                             />
                           </button>
 
                           <div
-                            className={`overflow-hidden transition-all duration-300 ${
-                              isOpen ? "max-h-96" : "max-h-0"
-                            }`}
+                            className={`overflow-hidden transition-all duration-300 ${isOpen ? "max-h-96" : "max-h-0"
+                              }`}
                           >
                             <div className="px-6 py-4 bg-gradient-to-r from-orange-50 to-blue-50 border-t border-orange-100">
                               <p className="text-gray-700 leading-relaxed">

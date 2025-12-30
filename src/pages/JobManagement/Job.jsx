@@ -9,7 +9,11 @@ import {
   Trash2,
   Eye,
   Users,
+  FileText,
+  Activity,
 } from "lucide-react";
+import { FiHome } from "react-icons/fi";
+import NumberCard from "../../components/NumberCard";
 
 // StatCard Component
 const StatCard = ({ label, value, icon: Icon, gradient }) => {
@@ -40,6 +44,8 @@ export default function JobManagement() {
   const [selectedFilter, setSelectedFilter] = useState("All");
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedJob, setSelectedJob] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   const [jobs] = useState([
     {
@@ -144,52 +150,49 @@ export default function JobManagement() {
       ? jobs
       : jobs.filter((job) => job.status === selectedFilter);
 
-  // Statistics data
-  const stats = [
-    {
-      label: "Total Jobs",
-      value: jobs.length,
-      icon: Briefcase,
-      gradient: "from-orange-400 to-orange-600",
-    },
-    {
-      label: "Active Jobs",
-      value: jobs.filter((j) => j.status === "Active").length,
-      icon: Briefcase,
-      gradient: "from-green-400 to-green-600",
-    },
-    {
-      label: "Total Applicants",
-      value: jobs.reduce((sum, j) => sum + j.applicants, 0),
-      icon: Users,
-      gradient: "from-blue-400 to-blue-600",
-    },
-    {
-      label: "Open Positions",
-      value: jobs.reduce((sum, j) => sum + j.positions, 0),
-      icon: Plus,
-      gradient: "from-purple-400 to-purple-600",
-    },
-  ];
-
   const filterOptions = ["All", "Active", "On Hold", "Closed"];
+
+  const totalPages = Math.ceil(filteredJobs.length / itemsPerPage);
+
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const currentJobs = filteredJobs.slice(
+    startIndex,
+    startIndex + itemsPerPage
+  );
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
+  const handleNext = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage((prev) => prev + 1);
+    }
+  };
+
+  const handlePrev = () => {
+    if (currentPage > 1) {
+      setCurrentPage((prev) => prev - 1);
+    }
+  };
 
   return (
     <DashboardLayout>
       <div className="min-h-screen bg-gradient-to-br from-orange-0 via-white to-orange-0 p-0 ml-6">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="mb-8">
-            <div className="flex items-center justify-between mb-6">
+          <div className="bg-white rounded-sm p-3 mb-4 border-b">
+            <div className="flex justify-between items-center">
               <div>
-                <h1 className="text-4xl font-bold bg-gradient-to-r from-orange-600 to-orange-400 bg-clip-text text-transparent flex items-center gap-3 mb-2">
-                  <div className="bg-gradient-to-br from-orange-400 to-orange-600 p-3 rounded-sm shadow-lg">
-                    <Briefcase className="text-white" size={32} />
-                  </div>
+                <h1 className="text-2xl font-bold text-gray-900 whitespace-nowrap">
                   Job Management
                 </h1>
-                <p className="text-gray-600 text-lg ml-14">
-                  Manage and track all job postings efficiently
+                <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
+                  <FiHome className="text-gray-700 text-sm" />
+                  <span className="text-gray-400"></span> HRM /{" "}
+                  <span className="text-[#FF7B1D] font-medium">
+                    All Job Management
+                  </span>
                 </p>
               </div>
               <div className="flex items-center gap-4">
@@ -200,11 +203,10 @@ export default function JobManagement() {
                     <button
                       key={filter}
                       onClick={() => setSelectedFilter(filter)}
-                      className={`px-4 py-2 rounded-sm font-semibold transition-all ${
-                        selectedFilter === filter
-                          ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md"
-                          : "text-gray-600 hover:bg-gray-100"
-                      }`}
+                      className={`px-4 py-2 rounded-sm font-semibold transition-all ${selectedFilter === filter
+                        ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md"
+                        : "text-gray-600 hover:bg-gray-100"
+                        }`}
                     >
                       {filter}
                     </button>
@@ -214,20 +216,41 @@ export default function JobManagement() {
                 {/* Add New Job Button */}
                 <button
                   onClick={() => setShowAddModal(true)}
-                  className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-8 py-4 rounded-sm flex items-center gap-3 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                  className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white px-4 py-2 rounded-sm font-semibold hover:from-orange-600 hover:to-orange-700 hover:opacity-90 transition ml-2"
                 >
-                  <Plus size={22} />
-                  <span className="font-semibold">Add New Job</span>
+                  <Plus size={18} />
+                  Add New Job
                 </button>
               </div>
             </div>
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            {stats.map((stat, index) => (
-              <StatCard key={index} {...stat} />
-            ))}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+            <NumberCard
+              title={"Total Jobs"}
+              number={jobs.length}
+              icon={<Briefcase className="text-blue-600" size={24} />}
+              iconBgColor={"bg-blue-100"}
+              lineBorderClass={"border-blue-500"} />
+            <NumberCard
+              title={"Active Jobs"}
+              number={jobs.filter((j) => j.status === "Active").length}
+              icon={<Activity className="text-green-600" size={24} />}
+              iconBgColor={"bg-green-100"}
+              lineBorderClass={"border-green-500"} />
+            <NumberCard
+              title={"Total Applicants"}
+              number={jobs.reduce((sum, j) => sum + j.applicants, 0)}
+              icon={<Users className="text-orange-600" size={24} />}
+              iconBgColor={"bg-orange-100"}
+              lineBorderClass={"border-orange-500"} />
+            <NumberCard
+              title={"Open Positions"}
+              number={jobs.reduce((sum, j) => sum + j.applicants, 0)}
+              icon={<Plus className="text-purple-600" size={24} />}
+              iconBgColor={"bg-purple-100"}
+              lineBorderClass={"border-purple-500"} />
           </div>
 
           {/* Jobs Table */}
@@ -267,12 +290,11 @@ export default function JobManagement() {
                 </thead>
 
                 <tbody className="divide-y divide-gray-200">
-                  {filteredJobs.map((job, index) => (
+                  {currentJobs.map((job, index) => (
                     <tr
                       key={job.id}
-                      className={`hover:bg-orange-50 transition-colors whitespace-nowrap ${
-                        index % 2 === 0 ? "bg-white" : "bg-gray-50"
-                      }`}
+                      className={`hover:bg-orange-50 transition-colors whitespace-nowrap ${index % 2 === 0 ? "bg-white" : "bg-gray-50"
+                        }`}
                     >
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-3">
@@ -320,13 +342,12 @@ export default function JobManagement() {
 
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
-                          className={`px-3 py-1 text-sm font-semibold rounded-sm ${
-                            job.status === "Active"
-                              ? "bg-green-100 text-green-700"
-                              : job.status === "On Hold"
+                          className={`px-3 py-1 text-sm font-semibold rounded-sm ${job.status === "Active"
+                            ? "bg-green-100 text-green-700"
+                            : job.status === "On Hold"
                               ? "bg-yellow-100 text-yellow-700"
                               : "bg-gray-100 text-gray-700"
-                          }`}
+                            }`}
                         >
                           {job.status}
                         </span>
@@ -368,6 +389,46 @@ export default function JobManagement() {
               </p>
             </div>
           )}
+
+          {/* Pagination */}
+          <div className="flex justify-end items-center gap-3 mt-6">
+            <button
+              onClick={handlePrev}
+              disabled={currentPage === 1}
+              className={`px-4 py-2 rounded-sm text-white font-semibold transition ${currentPage === 1
+                ? "bg-gray-300 cursor-not-allowed"
+                : "bg-[#FF7B1D] hover:opacity-90"
+                }`}
+            >
+              Back
+            </button>
+
+            <div className="flex items-center gap-2">
+              {Array.from({ length: totalPages }, (_, i) => (
+                <button
+                  key={i + 1}
+                  onClick={() => handlePageChange(i + 1)}
+                  className={`px-3 py-1 rounded-sm text-black font-semibold border transition ${currentPage === i + 1
+                    ? "bg-gray-200 border-gray-400"
+                    : "bg-white border-gray-300 hover:bg-gray-100"
+                    }`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+            </div>
+
+            <button
+              onClick={handleNext}
+              disabled={currentPage === totalPages}
+              className={`px-4 py-2 rounded-sm text-white font-semibold transition ${currentPage === totalPages
+                ? "bg-gray-300 cursor-not-allowed"
+                : "bg-[#22C55E] hover:opacity-90"
+                }`}
+            >
+              Next
+            </button>
+          </div>
 
           {/* Add Job Modal */}
           {showAddModal && (

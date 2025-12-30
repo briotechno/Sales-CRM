@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { FiHome } from "react-icons/fi";
 import DashboardLayout from "../../components/DashboardLayout";
 import {
@@ -11,12 +11,19 @@ import {
   Filter,
   Download,
   Search,
+  Target,
+  Handshake,
+  DollarSign,
+  Users,
 } from "lucide-react";
+import NumberCard from "../../components/NumberCard";
 
 export default function LeaveManagement() {
   const [activeTab, setActiveTab] = useState("all");
   const [showApplyModal, setShowApplyModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
   const [leaveData, setLeaveData] = useState([
     {
       id: 1,
@@ -68,7 +75,58 @@ export default function LeaveManagement() {
       status: "approved",
       reason: "Family event",
     },
+    {
+      id: 6,
+      employee: "David Wilson",
+      type: "Casual Leave",
+      from: "2025-11-28",
+      to: "2025-11-29",
+      days: 2,
+      status: "approved",
+      reason: "Family event",
+    },
+    {
+      id: 7,
+      employee: "David Wilson",
+      type: "Casual Leave",
+      from: "2025-11-28",
+      to: "2025-11-29",
+      days: 2,
+      status: "approved",
+      reason: "Family event",
+    },
+    {
+      id: 8,
+      employee: "David Wilson",
+      type: "Casual Leave",
+      from: "2025-11-28",
+      to: "2025-11-29",
+      days: 2,
+      status: "rejected",
+      reason: "Family event",
+    },
+    {
+      id: 9,
+      employee: "David Wilson",
+      type: "Casual Leave",
+      from: "2025-11-28",
+      to: "2025-11-29",
+      days: 2,
+      status: "approved",
+      reason: "Family event",
+    },
+    {
+      id: 10,
+      employee: "David Wilson",
+      type: "Casual Leave",
+      from: "2025-11-28",
+      to: "2025-11-29",
+      days: 2,
+      status: "approved",
+      reason: "Family event",
+    },
   ]);
+
   const [formData, setFormData] = useState({
     employee: "",
     type: "Sick Leave",
@@ -79,33 +137,6 @@ export default function LeaveManagement() {
 
   const leaveRequests = leaveData;
 
-  const leaveStats = [
-    {
-      label: "Total Requests",
-      value: leaveData.length,
-      icon: Calendar,
-      color: "bg-gradient-to-br from-blue-500 to-blue-600",
-    },
-    {
-      label: "Pending",
-      value: leaveData.filter((r) => r.status === "pending").length,
-      icon: Clock,
-      color: "bg-gradient-to-br from-yellow-500 to-yellow-600",
-    },
-    {
-      label: "Approved",
-      value: leaveData.filter((r) => r.status === "approved").length,
-      icon: CheckCircle,
-      color: "bg-gradient-to-br from-green-500 to-green-600",
-    },
-    {
-      label: "Rejected",
-      value: leaveData.filter((r) => r.status === "rejected").length,
-      icon: XCircle,
-      color: "bg-gradient-to-br from-red-500 to-red-600",
-    },
-  ];
-
   const filteredRequests = leaveRequests.filter((req) => {
     const matchesSearch =
       req.employee.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -113,6 +144,16 @@ export default function LeaveManagement() {
     const matchesTab = activeTab === "all" || req.status === activeTab;
     return matchesSearch && matchesTab;
   });
+
+  const totalPages = Math.ceil(filteredRequests.length / itemsPerPage);
+
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+
+  const currentRequests = filteredRequests.slice(
+    indexOfFirstItem,
+    indexOfLastItem
+  );
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -175,6 +216,24 @@ export default function LeaveManagement() {
       reason: "",
     });
   };
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
+  const handleNext = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(prev => prev + 1);
+    }
+  };
+
+  const handlePrev = () => {
+    if (currentPage > 1) {
+      setCurrentPage(prev => prev - 1);
+    }
+  };
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab, searchTerm]);
 
   const handleExport = () => {
     const csv = [
@@ -203,9 +262,8 @@ export default function LeaveManagement() {
   return (
     <DashboardLayout>
       <div className="min-h-screen bg-gray-0 ml-6 p-0">
-        {/* Header */}
         {/* Header + Actions in Single Row */}
-        <div className="mb-6 boder-b flex items-center justify-between">
+        <div className="mb-6 boder-b flex items-center justify-between bg-white border-b py-3">
           {/* LEFT SIDE — Title */}
           <div>
             <h1 className="text-2xl font-bold text-gray-800 mb-1">
@@ -237,33 +295,44 @@ export default function LeaveManagement() {
             </button>
             <button
               onClick={() => setShowApplyModal(true)}
-              className="mr-6 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 
-                 text-white px-6 py-3 rounded-sm flex items-center gap-2 transition shadow-md hover:shadow-lg"
+              className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white px-4 py-2 rounded-sm font-semibold hover:from-orange-600 hover:to-orange-700 hover:opacity-90 transition ml-2"
             >
-              <Plus className="w-4 h-4" />
+              <Plus size={18} />
               Apply Leave
             </button>
           </div>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          {leaveStats.map((stat, index) => (
-            <div
-              key={index}
-              className="bg-white rounded-sm shadow-md hover:shadow-lg transition p-6 flex items-center border-l-4 border-orange-500"
-            >
-              <div className={`${stat.color} p-3 rounded-sm mr-4 shadow-md`}>
-                <stat.icon className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <p className="text-gray-600 text-sm font-medium">
-                  {stat.label}
-                </p>
-                <p className="text-3xl font-bold text-gray-800">{stat.value}</p>
-              </div>
-            </div>
-          ))}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <NumberCard
+            title="Total Requests"
+            number={leaveData.length}
+            icon={<Calendar className="text-blue-600" size={24} />}
+            iconBgColor="bg-blue-100"
+            lineBorderClass="border-blue-500"
+          />
+          <NumberCard
+            title="Pending"
+            number={leaveData.filter((r) => r.status === "pending").length}
+            icon={<Clock className="text-green-600" size={24} />}
+            iconBgColor="bg-green-100"
+            lineBorderClass="border-green-500"
+          />
+          <NumberCard
+            title="Approved"
+            number={leaveData.filter((r) => r.status === "approved").length}
+            icon={<CheckCircle className="text-orange-600" size={24} />}
+            iconBgColor="bg-orange-100"
+            lineBorderClass="border-orange-500"
+          />
+          <NumberCard
+            title="Rejected"
+            number={leaveData.filter((r) => r.status === "rejected").length}
+            icon={<XCircle className="text-purple-600" size={24} />}
+            iconBgColor="bg-purple-100"
+            lineBorderClass="border-purple-500"
+          />
         </div>
 
         {/* Main Content Card */}
@@ -274,11 +343,10 @@ export default function LeaveManagement() {
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`px-6 py-3 font-medium capitalize transition ${
-                  activeTab === tab
-                    ? "border-b-2 border-orange-500 text-orange-500"
-                    : "text-gray-600 hover:text-gray-800"
-                }`}
+                className={`px-6 py-3 font-medium capitalize transition ${activeTab === tab
+                  ? "border-b-2 border-orange-500 text-orange-500"
+                  : "text-gray-600 hover:text-gray-800"
+                  }`}
               >
                 {tab}
               </button>
@@ -314,7 +382,7 @@ export default function LeaveManagement() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredRequests.map((request) => (
+                {currentRequests.map((request) => (
                   <tr key={request.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
@@ -325,7 +393,7 @@ export default function LeaveManagement() {
                             .join("")}
                         </div>
                         <div className="ml-3">
-                          <p className="text-sm font-medium text-gray-900">
+                          <p className="text-sm text-orange-600 hover:text-blue-800 font-medium">
                             {request.employee}
                           </p>
                         </div>
@@ -381,25 +449,43 @@ export default function LeaveManagement() {
           </div>
 
           {/* Pagination */}
-          <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
-            <p className="text-sm text-gray-600">
-              Showing {filteredRequests.length} of {leaveRequests.length}{" "}
-              requests
-            </p>
-            <div className="flex gap-2">
-              <button className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50">
-                Previous
-              </button>
-              <button className="px-3 py-1 bg-orange-500 text-white rounded">
-                1
-              </button>
-              <button className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50">
-                2
-              </button>
-              <button className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50">
-                Next
-              </button>
+          <div className="flex justify-end items-center gap-3 mt-6">
+            <button
+              onClick={handlePrev}
+              disabled={currentPage === 1}
+              className={`px-4 py-2 rounded-sm text-white font-semibold transition ${currentPage === 1
+                ? "bg-gray-300 cursor-not-allowed"
+                : "bg-[#FF7B1D] hover:opacity-90"
+                }`}
+            >
+              Back
+            </button>
+
+            <div className="flex items-center gap-2">
+              {Array.from({ length: totalPages }, (_, i) => (
+                <button
+                  key={i + 1}
+                  onClick={() => handlePageChange(i + 1)}
+                  className={`px-3 py-1 rounded-sm text-black font-semibold border transition ${currentPage === i + 1
+                    ? "bg-gray-200 border-gray-400"
+                    : "bg-white border-gray-300 hover:bg-gray-100"
+                    }`}
+                >
+                  {i + 1}
+                </button>
+              ))}
             </div>
+
+            <button
+              onClick={handleNext}
+              disabled={currentPage === totalPages}
+              className={`px-4 py-2 rounded-sm text-white font-semibold transition ${currentPage === totalPages
+                ? "bg-gray-300 cursor-not-allowed"
+                : "bg-[#22C55E] hover:opacity-90"
+                }`}
+            >
+              Next
+            </button>
           </div>
         </div>
 

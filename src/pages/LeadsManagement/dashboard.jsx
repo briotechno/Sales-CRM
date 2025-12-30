@@ -12,43 +12,11 @@ import {
   ArrowUp,
   ArrowDown,
   Menu,
+  Home,
 } from "lucide-react";
+import NumberCard from "../../components/NumberCard";
 
 export default function LeadDashboard() {
-  const stats = [
-    {
-      title: "All Leads",
-      value: "2,847",
-      change: "+12.5%",
-      trend: "up",
-      icon: Users,
-      gradient: "from-orange-400 to-orange-500",
-    },
-    {
-      title: "New Leads",
-      value: "342",
-      change: "+23.1%",
-      trend: "up",
-      icon: UserPlus,
-      gradient: "from-orange-500 to-orange-600",
-    },
-    {
-      title: "Assigned",
-      value: "1,524",
-      change: "+8.2%",
-      trend: "up",
-      icon: UserCheck,
-      gradient: "from-amber-500 to-orange-500",
-    },
-    {
-      title: "Unread Leads",
-      value: "89",
-      change: "-5.3%",
-      trend: "down",
-      icon: Mail,
-      gradient: "from-orange-600 to-red-500",
-    },
-  ];
 
   const recentLeads = [
     {
@@ -128,56 +96,65 @@ export default function LeadDashboard() {
   return (
     <DashboardLayout>
       <div className="min-h-screen ">
+        {/* Header */}
+        <div className="bg-white border-b my-3">
+          <div className="max-w-7xl mx-auto px-0 ml-10 py-4">
+            <div className="flex items-center justify-between">
+              {/* Left Title Section */}
+              <div>
+                <h1 className="text-2xl font-bold text-gray-800">
+                  CRM Dashboard
+                </h1>
+                <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
+                  <Home className="text-gray-700" size={14} />
+                  <span className="text-gray-400"></span> CRM /{" "}
+                  <span className="text-gray-400 font-medium">
+                    Leads Management /{" "}
+                  </span>
+                  <span className="text-orange-500 font-medium">
+                    Lead Dashboard
+                  </span>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
         <div className="p-0 ml-6">
           {/* Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            {stats.map((stat, index) => (
-              <div
-                key={index}
-                className="bg-white rounded-sm shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden cursor-pointer border border-orange-100"
-              >
-                <div className="p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div
-                      className={`p-4 rounded-lg bg-gradient-to-br ${stat.gradient} shadow-md`}
-                    >
-                      <stat.icon className="w-7 h-7 text-white" />
-                    </div>
-                    <div
-                      className={`flex items-center space-x-1 px-3 py-1.5 rounded-full ${
-                        stat.trend === "up"
-                          ? "bg-green-50 border border-green-200"
-                          : "bg-red-50 border border-red-200"
-                      }`}
-                    >
-                      {stat.trend === "up" ? (
-                        <ArrowUp className="w-4 h-4 text-green-600" />
-                      ) : (
-                        <ArrowDown className="w-4 h-4 text-red-600" />
-                      )}
-                      <span
-                        className={`text-sm font-bold ${
-                          stat.trend === "up"
-                            ? "text-green-600"
-                            : "text-red-600"
-                        }`}
-                      >
-                        {stat.change}
-                      </span>
-                    </div>
-                  </div>
-                  <h3 className="text-orange-600 text-sm font-semibold mb-2 uppercase tracking-wide">
-                    {stat.title}
-                  </h3>
-                  <p className="text-4xl font-bold bg-gradient-to-r from-orange-600 to-orange-500 bg-clip-text text-transparent">
-                    {stat.value}
-                  </p>
-                </div>
-                <div
-                  className={`h-1.5 bg-gradient-to-r ${stat.gradient}`}
-                ></div>
-              </div>
-            ))}
+
+            <NumberCard
+              title="All Leads"
+              number={"2,847"}
+              up={"+12.5%"}
+              icon={<Users className="text-blue-600" size={24} />}
+              iconBgColor="bg-blue-100"
+              lineBorderClass="border-blue-500"
+            />
+            <NumberCard
+              title="New Leads"
+              number={"342"}
+              up={"+23.1%"}
+              icon={<UserPlus className="text-green-600" size={24} />}
+              iconBgColor="bg-green-100"
+              lineBorderClass="border-green-500"
+            />
+            <NumberCard
+              title="Assigned"
+              number={"1,524"}
+              up={"+8.2%"}
+              icon={<UserCheck className="text-orange-600" size={24} />}
+              iconBgColor="bg-orange-100"
+              lineBorderClass="border-orange-500"
+            />
+            <NumberCard
+              title="Unread Leads"
+              number={"89"}
+              down={"-5.3%"}
+              icon={<Mail className="text-purple-600" size={24} />}
+              iconBgColor="bg-purple-100"
+              lineBorderClass="border-purple-500"
+            />
           </div>
 
           {/* Main Content Grid */}

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { X, Building2, FileText, Image } from "lucide-react";
+import { X, Building2, FileText, Image, Plus } from "lucide-react";
 
 const AddDepartmentModal = ({ isOpen, onClose, onAdd }) => {
   const [departmentName, setDepartmentName] = useState("");
@@ -195,13 +195,14 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-4">
+    <div className="bg-white flex items-center justify-center">
       <div className="text-center">
         <button
           onClick={() => setIsModalOpen(true)}
-          className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
+          className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white px-4 py-2 rounded-sm font-semibold hover:from-orange-600 hover:to-orange-700 hover:opacity-90 transition ml-2"
         >
-          Open Add Department Modal
+          <Plus size={18} />
+          Add Department
         </button>
       </div>
 

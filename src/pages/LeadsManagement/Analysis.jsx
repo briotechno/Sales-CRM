@@ -12,6 +12,7 @@ import {
   Award,
   Zap,
 } from "lucide-react";
+import { FiHome } from "react-icons/fi";
 
 export default function AnalysisPage() {
   const performanceMetrics = [
@@ -132,10 +133,20 @@ export default function AnalysisPage() {
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen ">
-        <div className="p-0 ml-6">
+      <div className="p-0 ml-6 bg-gray-0 min-h-screen">
+        <div className="bg-white border-b my-3">
+          <h1 className="text-2xl font-bold text-gray-800">
+            Analysis
+          </h1>
+          <p className="text-sm text-gray-500 mt-1 flex items-center gap-2 my-3">
+            <FiHome className="text-gray-700 text-sm" />
+            <span className="text-gray-400"></span> CRM /{" "}
+            <span className="text-[#FF7B1D] font-medium">Analysis</span>
+          </p>
+        </div>
+        <div className="">
           {/* Performance Metrics */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             {performanceMetrics.map((metric, index) => (
               <div
                 key={index}
@@ -181,7 +192,7 @@ export default function AnalysisPage() {
                 <div className={`h-2 bg-gradient-to-r ${metric.color}`}></div>
               </div>
             ))}
-          </div>
+          </div> */}
 
           {/* Main Analysis Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">

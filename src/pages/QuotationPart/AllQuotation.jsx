@@ -613,11 +613,13 @@ import {
   Trash2,
   FileText,
   Home,
+  FileTextIcon,
 } from "lucide-react";
 
 // Import modal components (these would be in separate files)
 import CreateQuotationModal from "../../pages/QuotationPart/CreateQuotationModal";
 import ViewQuotationModal from "../../pages/QuotationPart/ViewQuotationModal";
+import NumberCard from "../../components/NumberCard";
 
 export default function QuotationPage() {
   const [quotations, setQuotations] = useState([
@@ -803,7 +805,7 @@ export default function QuotationPage() {
                 </h1>
                 <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
                   <Home className="text-gray-700" size={14} />
-                  <span className="text-gray-400">/</span> Additional /{" "}
+                  <span className="text-gray-400"></span> Additional /{" "}
                   <span className="text-orange-500 font-medium">
                     All Quotations
                   </span>
@@ -848,65 +850,33 @@ export default function QuotationPage() {
         {/* Stats Cards */}
         <div className="max-w-7xl mx-auto px-0 ml-6 py-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-white rounded-sm p-5 shadow-md border-l-4 border-orange-500 hover:shadow-lg transition-shadow">
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="text-gray-500 text-sm font-medium">
-                    Total Quotations
-                  </p>
-                  <h3 className="text-3xl font-bold text-gray-800 mt-2">
-                    {stats.total}
-                  </h3>
-                </div>
-                <div className="bg-orange-100 p-3 rounded-sm">
-                  <FileText className="text-orange-500" size={24} />
-                </div>
-              </div>
-            </div>
+            <NumberCard
+              title={"Total Quotations"}
+              number={stats.total}
+              icon={<FileText className="text-blue-600" size={24} />}
+              iconBgColor={"bg-blue-100"}
+              lineBorderClass={"border-blue-500"} />
 
-            <div className="bg-white rounded-sm p-5 shadow-md border-l-4 border-green-500 hover:shadow-lg transition-shadow">
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="text-gray-500 text-sm font-medium">Approved</p>
-                  <h3 className="text-3xl font-bold text-green-600 mt-2">
-                    {stats.approved}
-                  </h3>
-                </div>
-                <div className="bg-green-100 p-3 rounded-sm">
-                  <FileText className="text-green-500" size={24} />
-                </div>
-              </div>
-            </div>
+            <NumberCard
+              title={"Approved"}
+              number={stats.approved}
+              icon={<FileText className="text-green-600" size={24} />}
+              iconBgColor={"bg-green-100"}
+              lineBorderClass={"border-green-500"} />
 
-            <div className="bg-white rounded-sm p-5 shadow-md border-l-4 border-yellow-500 hover:shadow-lg transition-shadow">
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="text-gray-500 text-sm font-medium">Pending</p>
-                  <h3 className="text-3xl font-bold text-yellow-600 mt-2">
-                    {stats.pending}
-                  </h3>
-                </div>
-                <div className="bg-yellow-100 p-3 rounded-sm">
-                  <FileText className="text-yellow-500" size={24} />
-                </div>
-              </div>
-            </div>
+            <NumberCard
+              title={"Pending"}
+              number={stats.pending}
+              icon={<FileText className="text-orange-600" size={24} />}
+              iconBgColor={"bg-orange-100"}
+              lineBorderClass={"border-orange-500"} />
 
-            <div className="bg-white rounded-sm p-5 shadow-md border-l-4 border-blue-500 hover:shadow-lg transition-shadow">
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="text-gray-500 text-sm font-medium">
-                    Total Value
-                  </p>
-                  <h3 className="text-3xl font-bold text-blue-600 mt-2">
-                    ₹{(stats.totalValue / 100000).toFixed(1)}L
-                  </h3>
-                </div>
-                <div className="bg-blue-100 p-3 rounded-sm">
-                  <FileText className="text-blue-500" size={24} />
-                </div>
-              </div>
-            </div>
+            <NumberCard
+              title={"Total Value"}
+              number={`₹${(stats.totalValue / 100000).toFixed(1)}L`}
+              icon={<FileText className="text-purple-600" size={24} />}
+              iconBgColor={"bg-purple-100"}
+              lineBorderClass={"border-purple-500"} />
           </div>
 
           {/* Quotations Table */}
@@ -1039,11 +1009,10 @@ export default function QuotationPage() {
                 <button
                   key={i + 1}
                   onClick={() => setCurrentPage(i + 1)}
-                  className={`px-3 py-1 rounded-sm text-black font-semibold border transition ${
-                    currentPage === i + 1
-                      ? "bg-gray-200 border-gray-400"
-                      : "bg-white border-gray-300 hover:bg-gray-100"
-                  }`}
+                  className={`px-3 py-1 rounded-sm text-black font-semibold border transition ${currentPage === i + 1
+                    ? "bg-gray-200 border-gray-400"
+                    : "bg-white border-gray-300 hover:bg-gray-100"
+                    }`}
                 >
                   {i + 1}
                 </button>

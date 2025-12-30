@@ -4,18 +4,12 @@ import {
   Users,
   Calendar,
   ClipboardList,
-  Briefcase,
-  Building2,
-  FileText,
-  Shield,
   DollarSign,
   BookOpen,
-  TrendingUp,
   UserCheck,
   Clock,
-  AlertCircle,
   Award,
-  ArrowUpRight,
+  Home,
 } from "lucide-react";
 import {
   BarChart,
@@ -28,51 +22,10 @@ import {
   PieChart,
   Pie,
   Cell,
-  LineChart,
-  Line,
-  Area,
-  AreaChart,
 } from "recharts";
+import NumberCard from "../../components/NumberCard";
 
 export default function HRMDashboard() {
-  const stats = [
-    {
-      icon: Users,
-      label: "Total Employees",
-      value: "1,247",
-      change: "+8.2%",
-      trend: "up",
-      color: "from-orange-400 to-orange-600",
-      bgGlow: "bg-orange-100",
-    },
-    {
-      icon: UserCheck,
-      label: "Present Today",
-      value: "1,156",
-      change: "+2.5%",
-      trend: "up",
-      color: "from-green-400 to-green-600",
-      bgGlow: "bg-green-100",
-    },
-    {
-      icon: Clock,
-      label: "On Leave",
-      value: "91",
-      change: "-5.3%",
-      trend: "down",
-      color: "from-blue-400 to-blue-600",
-      bgGlow: "bg-blue-100",
-    },
-    {
-      icon: Award,
-      label: "New Joiners",
-      value: "45",
-      change: "+12.8%",
-      trend: "up",
-      color: "from-purple-400 to-purple-600",
-      bgGlow: "bg-purple-100",
-    },
-  ];
 
   const attendanceData = [
     { day: "Mon", present: 1180, absent: 67 },
@@ -189,46 +142,62 @@ export default function HRMDashboard() {
   return (
     <DashboardLayout>
       <div className="min-h-screen ">
+        {/* Header */}
+        <div className="bg-white border-b">
+          <div className="max-w-7xl mx-auto px-0 ml-10 py-4 bg-white border-b my-3">
+            <div className="flex items-center justify-between">
+              {/* Left Title Section */}
+              <div className="">
+                <h1 className="text-2xl font-bold text-gray-800">
+                  HRM Dashboard
+                </h1>
+                <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
+                  <Home className="text-gray-700" size={14} />
+                  <span className="text-gray-400"></span> HRM /{" "}
+                  <span className="text-orange-500 font-medium">
+                    All Dashboard
+                  </span>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
         {/* Dashboard Content */}
-        <div className="max-w-7xl mx-auto p-0 ml-6 space-y-8">
+        <div className="p-0 ml-6 space-y-8">
           {/* Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {stats.map((stat, index) => (
-              <div key={index} className="relative group">
-                <div
-                  className={`absolute inset-0 ${stat.bgGlow} rounded-sm blur-xl opacity-20 group-hover:opacity-40 transition-opacity`}
-                ></div>
-                <div className="relative bg-white rounded-sm shadow-lg p-6 hover:shadow-2xl transition-all transform  border border-gray-100">
-                  <div className="flex items-center justify-between mb-4">
-                    <div
-                      className={`bg-gradient-to-br ${stat.color} p-4 rounded-sm shadow-lg`}
-                    >
-                      <stat.icon className="w-7 h-7 text-white" />
-                    </div>
-                    <div
-                      className={`flex items-center space-x-1 ${
-                        stat.trend === "up" ? "text-green-500" : "text-red-500"
-                      } font-bold`}
-                    >
-                      <ArrowUpRight
-                        className={`w-4 h-4 ${
-                          stat.trend === "down" ? "rotate-90" : ""
-                        }`}
-                      />
-                      <span className="text-sm">{stat.change}</span>
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-gray-500 text-sm font-medium mb-1">
-                      {stat.label}
-                    </p>
-                    <p className="text-3xl font-bold text-gray-800">
-                      {stat.value}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ))}
+            <NumberCard
+              title="Total Employees"
+              number={"1,247"}
+              up={"+8.2%"}
+              icon={<Users className="text-blue-600" size={24} />}
+              iconBgColor="bg-blue-100"
+              lineBorderClass="border-blue-500"
+            />
+            <NumberCard
+              title="Present Today"
+              number={"1,156"}
+              up={"+2.5%"}
+              icon={<UserCheck className="text-green-600" size={24} />}
+              iconBgColor="bg-green-100"
+              lineBorderClass="border-green-500"
+            />
+            <NumberCard
+              title="On Leave"
+              number={"91"}
+              down={"-5.3%"}
+              icon={<Clock className="text-orange-600" size={24} />}
+              iconBgColor="bg-orange-100"
+              lineBorderClass="border-orange-500"
+            />
+            <NumberCard
+              title="Unread Leads"
+              number={"89"}
+              up={"+12.8%"}
+              icon={<Award className="text-purple-600" size={24} />}
+              iconBgColor="bg-purple-100"
+              lineBorderClass="border-purple-500"
+            />
           </div>
 
           {/* Attendance & Department Charts */}
@@ -358,13 +327,12 @@ export default function HRMDashboard() {
                           </div>
                           <div className="text-right">
                             <span
-                              className={`px-4 py-2 rounded-sm text-xs font-bold shadow-sm ${
-                                request.status === "Pending"
-                                  ? "bg-gradient-to-r from-yellow-500 to-yellow-600 text-white"
-                                  : request.status === "Approved"
+                              className={`px-4 py-2 rounded-sm text-xs font-bold shadow-sm ${request.status === "Pending"
+                                ? "bg-gradient-to-r from-yellow-500 to-yellow-600 text-white"
+                                : request.status === "Approved"
                                   ? "bg-gradient-to-r from-green-500 to-green-600 text-white"
                                   : "bg-gradient-to-r from-red-500 to-red-600 text-white"
-                              }`}
+                                }`}
                             >
                               {request.status}
                             </span>
@@ -394,13 +362,12 @@ export default function HRMDashboard() {
                       <div className="p-4 bg-gradient-to-r from-gray-50 to-white rounded-sm hover:shadow-md transition-all border-2 border-gray-100 group-hover:border-green-300">
                         <div className="flex items-start space-x-3">
                           <div
-                            className={`p-3 rounded-sm shadow-lg ${
-                              task.priority === "High"
-                                ? "bg-gradient-to-br from-red-400 to-red-600"
-                                : task.priority === "Medium"
+                            className={`p-3 rounded-sm shadow-lg ${task.priority === "High"
+                              ? "bg-gradient-to-br from-red-400 to-red-600"
+                              : task.priority === "Medium"
                                 ? "bg-gradient-to-br from-orange-400 to-orange-600"
                                 : "bg-gradient-to-br from-blue-400 to-blue-600"
-                            }`}
+                              }`}
                           >
                             <Clock className="w-5 h-5 text-white" />
                           </div>

@@ -15,6 +15,7 @@ import {
   Edit2,
   Upload,
 } from "lucide-react";
+import NumberCard from "../../components/NumberCard";
 
 export default function ExpensePage() {
   const [expenses, setExpenses] = useState([
@@ -250,64 +251,34 @@ export default function ExpensePage() {
           {/* Stats Cards (Receipt Based - Icon Right Side) */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
             {/* Total Expenses */}
-            <div className="bg-white rounded-sm p-6 shadow-md border-l-4 border-orange-500 hover:shadow-lg transition-shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-500 text-xs">Total Expenses</p>
-                  <p className="text-xl font-bold text-gray-800">
-                    ₹{totalExpenses}
-                  </p>
-                </div>
-                <div className="bg-orange-100 p-2 rounded-full">
-                  <DollarSign className="text-orange-600" size={20} />
-                </div>
-              </div>
-            </div>
-
-            {/* With Receipt */}
-            <div className="bg-white rounded-sm p-4 shadow-md border-l-4 border-green-500 hover:shadow-lg transition-shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-500 text-xs">With Receipt</p>
-                  <p className="text-xl font-bold text-gray-800">
-                    {expenses.filter((e) => e.receipt).length}
-                  </p>
-                </div>
-                <div className="bg-green-100 p-2 rounded-full">
-                  <Receipt className="text-green-600" size={20} />
-                </div>
-              </div>
-            </div>
-
-            {/* Without Receipt */}
-            <div className="bg-white rounded-sm p-4 shadow-md border-l-4 border-red-500 hover:shadow-lg transition-shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-500 text-xs">Without Receipt</p>
-                  <p className="text-xl font-bold text-gray-800">
-                    {expenses.filter((e) => !e.receipt).length}
-                  </p>
-                </div>
-                <div className="bg-red-100 p-2 rounded-full">
-                  <Receipt className="text-red-600" size={20} />
-                </div>
-              </div>
-            </div>
-
-            {/* Total Entries */}
-            <div className="bg-white rounded-sm p-4 shadow-md border-l-4 border-blue-500 hover:shadow-lg transition-shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-500 text-xs">Total Entries</p>
-                  <p className="text-xl font-bold text-gray-800">
-                    {expenses.length}
-                  </p>
-                </div>
-                <div className="bg-blue-100 p-2 rounded-full">
-                  <Calendar className="text-blue-600" size={20} />
-                </div>
-              </div>
-            </div>
+            <NumberCard
+              title={"Total Expenses"}
+              number={`₹${totalExpenses}`}
+              icon={<DollarSign className="text-blue-600" size={24} />}
+              iconBgColor={"bg-blue-100"}
+              lineBorderClass={"border-blue-500"}
+            />
+            <NumberCard
+              title={"With Receipt"}
+              number={expenses.filter((e) => e.receipt).length}
+              icon={<Receipt className="text-green-600" size={24} />}
+              iconBgColor={"bg-green-100"}
+              lineBorderClass={"border-green-500"}
+            />
+            <NumberCard
+              title={"Without Receipt"}
+              number={expenses.filter((e) => !e.receipt).length}
+              icon={<Receipt className="text-orange-600" size={24} />}
+              iconBgColor={"bg-orange-100"}
+              lineBorderClass={"border-orange-500"}
+            />
+            <NumberCard
+              title={"Total Entries"}
+              number={expenses.length}
+              icon={<Calendar className="text-purple-600" size={24} />}
+              iconBgColor={"bg-purple-100"}
+              lineBorderClass={"border-purple-500"}
+            />
           </div>
 
           {/* Expenses Table */}
@@ -337,9 +308,8 @@ export default function ExpensePage() {
                   {currentExpenses.map((expense, index) => (
                     <tr
                       key={expense.id}
-                      className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${
-                        index % 2 === 0 ? "bg-white" : "bg-gray-0"
-                      }`}
+                      className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${index % 2 === 0 ? "bg-white" : "bg-gray-0"
+                        }`}
                     >
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2 text-gray-600 text-sm">
@@ -413,11 +383,10 @@ export default function ExpensePage() {
                 <button
                   key={i + 1}
                   onClick={() => setCurrentPage(i + 1)}
-                  className={`px-3 py-1 rounded-sm text-black font-semibold border transition ${
-                    currentPage === i + 1
-                      ? "bg-gray-200 border-gray-400"
-                      : "bg-white border-gray-300 hover:bg-gray-100"
-                  }`}
+                  className={`px-3 py-1 rounded-sm text-black font-semibold border transition ${currentPage === i + 1
+                    ? "bg-gray-200 border-gray-400"
+                    : "bg-white border-gray-300 hover:bg-gray-100"
+                    }`}
                 >
                   {i + 1}
                 </button>

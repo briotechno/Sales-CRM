@@ -9,9 +9,9 @@ import {
   Flag,
   Clock,
   Filter,
-  Search,
   X,
 } from "lucide-react";
+import NumberCard from "../../components/NumberCard";
 
 export default function TodoPage() {
   const [tasks, setTasks] = useState([
@@ -208,49 +208,34 @@ export default function TodoPage() {
           </div>
         </div>
 
+        {/* Stats Cards */}
         <div className="max-w-7xl ml-2 mt-4 mx-auto p-0">
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <div className="bg-white rounded-sm p-5 shadow-md border-l-4 border-orange-500">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-500 text-sm">Total Tasks</p>
-                  <p className="text-3xl font-bold text-gray-800">
-                    {tasks.length}
-                  </p>
-                </div>
-                <div className="bg-orange-100 p-3 rounded-full">
-                  <Check className="text-orange-600" size={24} />
-                </div>
-              </div>
-            </div>
-            <div className="bg-white rounded-sm p-5 shadow-md border-l-4 border-blue-500">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-500 text-sm">Active</p>
-                  <p className="text-3xl font-bold text-gray-800">
-                    {activeTasks.length}
-                  </p>
-                </div>
-                <div className="bg-blue-100 p-3 rounded-full">
-                  <Clock className="text-blue-600" size={24} />
-                </div>
-              </div>
-            </div>
-            <div className="bg-white rounded-sm p-5 shadow-md border-l-4 border-green-500">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-500 text-sm">Completed</p>
-                  <p className="text-3xl font-bold text-gray-800">
-                    {completedTasks.length}
-                  </p>
-                </div>
-                <div className="bg-green-100 p-3 rounded-full">
-                  <Check className="text-green-600" size={24} />
-                </div>
-              </div>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 ">
+            <NumberCard
+              title={"Total Tasks"}
+              number={tasks.length}
+              icon={<Check className="text-blue-600" size={24} />}
+              iconBgColor={"bg-blue-100"}
+              lineBorderClass={"border-blue-500"}
+            />
+            <NumberCard
+              title={"Active"}
+              number={activeTasks.length}
+              icon={<Clock className="text-green-600" size={24} />}
+              iconBgColor={"bg-green-100"}
+              lineBorderClass={"border-green-500"}
+            />
+            <NumberCard
+              title={"Completed"}
+              number={completedTasks.length}
+              icon={<Check className="text-[#FF7B1D]" size={24} />}
+              iconBgColor={"bg-orange-100"}
+              lineBorderClass={"border-orange-500"}
+            />
           </div>
+        </div>
+
+        <div className="max-w-7xl ml-2 mt-4 mx-auto p-0">
 
           {/* Active Tasks */}
           {activeTasks.length > 0 && (
@@ -263,7 +248,7 @@ export default function TodoPage() {
                 {activeTasks.map((task) => (
                   <div
                     key={task.id}
-                    className="bg-white rounded-sm p-5 shadow-md hover:shadow-xl transition-all border-l-4 border-orange-500"
+                    className="bg-white rounded-sm p-5 shadow-md hover:shadow-xl transition-all border-t-4 border-orange-500"
                   >
                     <div className="flex items-start gap-4">
                       <button
@@ -320,7 +305,7 @@ export default function TodoPage() {
                 {completedTasks.map((task) => (
                   <div
                     key={task.id}
-                    className="bg-gray-50 rounded-sm p-5 shadow-md border-l-4 border-green-500 opacity-75"
+                    className="bg-gray-50 rounded-sm p-5 shadow-md border-t-4 border-green-500 opacity-75"
                   >
                     <div className="flex items-start gap-4">
                       <button
@@ -418,33 +403,30 @@ export default function TodoPage() {
                   <div className="grid grid-cols-3 gap-3">
                     <button
                       onClick={() => setNewTaskPriority("high")}
-                      className={`py-3 px-4 rounded-sm font-semibold border-2 transition ${
-                        newTaskPriority === "high"
-                          ? "bg-red-500 text-white border-red-500"
-                          : "bg-white text-red-500 border-red-200 hover:bg-red-50"
-                      }`}
+                      className={`py-3 px-4 rounded-sm font-semibold border-2 transition ${newTaskPriority === "high"
+                        ? "bg-red-500 text-white border-red-500"
+                        : "bg-white text-red-500 border-red-200 hover:bg-red-50"
+                        }`}
                     >
                       <Flag size={18} className="inline mr-2" />
                       High
                     </button>
                     <button
                       onClick={() => setNewTaskPriority("medium")}
-                      className={`py-3 px-4 rounded-sm font-semibold border-2 transition ${
-                        newTaskPriority === "medium"
-                          ? "bg-orange-500 text-white border-orange-500"
-                          : "bg-white text-orange-500 border-orange-200 hover:bg-orange-50"
-                      }`}
+                      className={`py-3 px-4 rounded-sm font-semibold border-2 transition ${newTaskPriority === "medium"
+                        ? "bg-orange-500 text-white border-orange-500"
+                        : "bg-white text-orange-500 border-orange-200 hover:bg-orange-50"
+                        }`}
                     >
                       <Flag size={18} className="inline mr-2" />
                       Medium
                     </button>
                     <button
                       onClick={() => setNewTaskPriority("low")}
-                      className={`py-3 px-4 rounded-sm font-semibold border-2 transition ${
-                        newTaskPriority === "low"
-                          ? "bg-green-500 text-white border-green-500"
-                          : "bg-white text-green-500 border-green-200 hover:bg-green-50"
-                      }`}
+                      className={`py-3 px-4 rounded-sm font-semibold border-2 transition ${newTaskPriority === "low"
+                        ? "bg-green-500 text-white border-green-500"
+                        : "bg-white text-green-500 border-green-200 hover:bg-green-50"
+                        }`}
                     >
                       <Flag size={18} className="inline mr-2" />
                       Low

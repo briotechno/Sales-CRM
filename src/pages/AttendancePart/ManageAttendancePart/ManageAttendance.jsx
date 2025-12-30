@@ -132,10 +132,10 @@ export default function AttendanceSettings() {
       <div className="p-0 bg-white ml-2 min-h-screen text-black">
         {/* Animated Background */}
 
-        <div className="relative z-10 p-0 ml-6 max-w-[1600px] mx-auto">
+        <div className="relative z-10 p-0 ml-6">
           {/* Header */}
           <div className="mb-6">
-            <div className="flex items-center gap-3 mb-4">
+            <div className="flex items-center gap-3 mb-4 bg-white border-b py-3">
               <div>
                 <h1 className="text-2xl font-bold text-gray-800">
                   Attendance Settings
@@ -971,7 +971,7 @@ export default function AttendanceSettings() {
                           key={leave.key}
                           className="bg-white border-2 border-gray-200 rounded-lg p-4"
                         >
-                          <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
+                          <label className="d-block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
                             <Icon
                               className={`w-5 h-5 text-${leave.color}-500`}
                             />

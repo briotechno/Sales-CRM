@@ -479,7 +479,7 @@
 //   return (
 //     <DashboardLayout>
 //       <div className="p-6 bg-gray-0 min-h-screen">
-//         <div className="flex justify-between items-center mb-6 flex-wrap gap-3">
+//         <div className="bg-white border-b py-2 flex justify-between items-center mb-6 flex-wrap gap-3">
 //           <div>
 //             <h1 className="text-2xl font-bold text-gray-800">
 //               Leads Management
@@ -896,10 +896,13 @@ import {
   Filter,
   UserPlus,
   Users,
+  Type,
+  Server,
 } from "lucide-react";
 import AddLeadPopup from "../../components/AddNewLeads/AddNewLead";
 import BulkUploadLeads from "../../components/AddNewLeads/BulkUpload";
 import FilterPopup from "../../pages/LeadsManagement/FilterPopup";
+import NumberCard from "../../components/NumberCard";
 
 export default function LeadsList() {
   const navigate = useNavigate();
@@ -1240,9 +1243,8 @@ export default function LeadsList() {
       now.getMonth() + 1
     ).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")} ${String(
       now.getHours() % 12 || 12
-    ).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")} ${
-      now.getHours() >= 12 ? "PM" : "AM"
-    }`;
+    ).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")} ${now.getHours() >= 12 ? "PM" : "AM"
+      }`;
 
     setLeadsData([
       ...leadsData,
@@ -1510,7 +1512,7 @@ export default function LeadsList() {
     <DashboardLayout>
       <div className="p-0 ml-6 bg-gray-0 min-h-screen">
         {/* Header */}
-        <div className="flex justify-between items-center mb-6 flex-wrap gap-3">
+        <div className="bg-white border-b py-2 flex justify-between items-center mb-6 flex-wrap gap-3">
           <div>
             <h1 className="text-2xl font-bold text-gray-800">
               Leads Management
@@ -1518,7 +1520,7 @@ export default function LeadsList() {
             <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
               <FiHome className="text-gray-700 text-sm" />
               <span className="text-gray-400"></span> CRM /{" "}
-              <span className="text-[#FF7B1D] font-medium">All Leads</span>
+              <span className="text-[#FF7B1D] font-medium">Trending Leads</span>
             </p>
           </div>
 
@@ -1530,11 +1532,10 @@ export default function LeadsList() {
                   setFilterStatus(status);
                   setCurrentPage(1);
                 }}
-                className={`px-3 py-2 rounded-sm font-semibold border text-sm transition ${
-                  filterStatus === status
+                className={`px-3 py-2 rounded-sm font-semibold border text-sm transition ${filterStatus === status
                     ? "bg-[#FF7B1D] text-white border-[#FF7B1D]"
                     : "bg-white text-black border-gray-300 hover:bg-gray-100"
-                }`}
+                  }`}
               >
                 {status}
               </button>
@@ -1551,21 +1552,19 @@ export default function LeadsList() {
             <div className="flex border border-gray-300 rounded-sm overflow-hidden ml-2">
               <button
                 onClick={() => setView("list")}
-                className={`p-2 transition ${
-                  view === "list"
+                className={`p-2 transition ${view === "list"
                     ? "bg-[#FF7B1D] text-white"
                     : "bg-white text-black hover:bg-gray-100"
-                }`}
+                  }`}
               >
                 <LayoutList size={18} />
               </button>
               <button
                 onClick={() => setView("grid")}
-                className={`p-2 transition border-l border-gray-300 ${
-                  view === "grid"
+                className={`p-2 transition border-l border-gray-300 ${view === "grid"
                     ? "bg-[#FF7B1D] text-white"
                     : "bg-white text-black hover:bg-gray-100"
-                }`}
+                  }`}
               >
                 <Grid3X3 size={18} />
               </button>
@@ -1614,6 +1613,38 @@ export default function LeadsList() {
               )}
             </div>
           </div>
+        </div>
+
+        {/* Statement Card */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <NumberCard
+            title="Total Clients"
+            number={"248"}
+            icon={<Users className="text-blue-600" size={24} />}
+            iconBgColor="bg-blue-100"
+            lineBorderClass="border-blue-500"
+          />
+          <NumberCard
+            title="Total Service"
+            number={"186"}
+            icon={<Server className="text-green-600" size={24} />}
+            iconBgColor="bg-green-100"
+            lineBorderClass="border-green-500"
+          />
+          <NumberCard
+            title="Total Type"
+            number={"18"}
+            icon={<Type className="text-orange-600" size={24} />}
+            iconBgColor="bg-orange-100"
+            lineBorderClass="border-orange-500"
+          />
+          <NumberCard
+            title="Total Calls"
+            number={"24"}
+            icon={<Phone className="text-purple-600" size={24} />}
+            iconBgColor="bg-purple-100"
+            lineBorderClass="border-purple-500"
+          />
         </div>
 
         {/* Filter Popup Component */}
@@ -1710,9 +1741,9 @@ export default function LeadsList() {
                       <td className="py-3 px-4">
                         {(currentPage - 1) * itemsPerPage + index + 1}
                       </td>
-                      <td className="py-3 px-4 font-medium">{lead.id}</td>
+                      <td className="py-3 px-4 text-orange-600 hover:text-blue-800 font-medium">{lead.id}</td>
                       <td
-                        className="py-3 px-4 text-blue-600 hover:text-blue-800 cursor-pointer font-medium"
+                        className="py-3 px-4 text-orange-600 hover:text-blue-800 cursor-pointer font-medium"
                         onClick={() => handleLeadClick(lead)}
                       >
                         {lead.name}
@@ -1732,11 +1763,10 @@ export default function LeadsList() {
                       <td className="py-3 px-4 text-xs">{lead.date}</td>
                       <td className="py-3 px-4">
                         <span
-                          className={`px-3 py-1 text-xs font-semibold rounded-full ${
-                            lead.status === "Active"
+                          className={`px-3 py-1 text-xs font-semibold rounded-full ${lead.status === "Active"
                               ? "bg-green-100 text-green-600"
                               : "bg-red-100 text-red-600"
-                          }`}
+                            }`}
                         >
                           {lead.status}
                         </span>
@@ -1904,11 +1934,10 @@ export default function LeadsList() {
           <button
             onClick={handlePrev}
             disabled={currentPage === 1}
-            className={`px-4 py-2 rounded-sm text-white font-semibold transition ${
-              currentPage === 1
+            className={`px-4 py-2 rounded-sm text-white font-semibold transition ${currentPage === 1
                 ? "bg-gray-300 cursor-not-allowed"
                 : "bg-[#FF7B1D] hover:opacity-90"
-            }`}
+              }`}
           >
             Back
           </button>
@@ -1918,11 +1947,10 @@ export default function LeadsList() {
               <button
                 key={i + 1}
                 onClick={() => handlePageChange(i + 1)}
-                className={`px-3 py-1 rounded-sm text-black font-semibold border transition ${
-                  currentPage === i + 1
+                className={`px-3 py-1 rounded-sm text-black font-semibold border transition ${currentPage === i + 1
                     ? "bg-gray-200 border-gray-400"
                     : "bg-white border-gray-300 hover:bg-gray-100"
-                }`}
+                  }`}
               >
                 {i + 1}
               </button>
@@ -1932,11 +1960,10 @@ export default function LeadsList() {
           <button
             onClick={handleNext}
             disabled={currentPage === totalPages}
-            className={`px-4 py-2 rounded-sm text-white font-semibold transition ${
-              currentPage === totalPages
+            className={`px-4 py-2 rounded-sm text-white font-semibold transition ${currentPage === totalPages
                 ? "bg-gray-300 cursor-not-allowed"
                 : "bg-[#22C55E] hover:opacity-90"
-            }`}
+              }`}
           >
             Next
           </button>
@@ -1968,11 +1995,10 @@ export default function LeadsList() {
               <div className="flex border-b border-gray-200 flex-shrink-0 bg-white">
                 <button
                   onClick={() => setAssignView("teams")}
-                  className={`flex-1 py-3 px-4 font-semibold transition ${
-                    assignView === "teams"
+                  className={`flex-1 py-3 px-4 font-semibold transition ${assignView === "teams"
                       ? "bg-[#FF7B1D] text-white"
                       : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                  }`}
+                    }`}
                 >
                   <Users className="inline mr-2" size={18} />
                   Teams ({selectedTeams.length} selected)
@@ -1980,11 +2006,10 @@ export default function LeadsList() {
 
                 <button
                   onClick={() => setAssignView("employees")}
-                  className={`flex-1 py-3 px-4 font-semibold transition ${
-                    assignView === "employees"
+                  className={`flex-1 py-3 px-4 font-semibold transition ${assignView === "employees"
                       ? "bg-[#FF7B1D] text-white"
                       : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                  }`}
+                    }`}
                 >
                   <UserPlus className="inline mr-2" size={18} />
                   Employees ({selectedEmployees.length} selected)
@@ -2024,11 +2049,10 @@ export default function LeadsList() {
                           <div
                             key={team.id}
                             onClick={() => handleToggleTeam(team.id)}
-                            className={`border rounded-lg p-4 cursor-pointer transition ${
-                              isSelected
+                            className={`border rounded-lg p-4 cursor-pointer transition ${isSelected
                                 ? "border-[#FF7B1D] bg-orange-50 shadow-md"
                                 : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm"
-                            }`}
+                              }`}
                           >
                             <div className="flex items-start justify-between">
                               <div className="flex-1">
@@ -2065,13 +2089,12 @@ export default function LeadsList() {
                               </div>
 
                               <span
-                                className={`px-2 py-1 text-xs font-semibold rounded ${
-                                  team.performance === "Excellent"
+                                className={`px-2 py-1 text-xs font-semibold rounded ${team.performance === "Excellent"
                                     ? "bg-green-100 text-green-600"
                                     : team.performance === "Good"
-                                    ? "bg-blue-100 text-blue-600"
-                                    : "bg-yellow-100 text-yellow-600"
-                                }`}
+                                      ? "bg-blue-100 text-blue-600"
+                                      : "bg-yellow-100 text-yellow-600"
+                                  }`}
                               >
                                 {team.performance}
                               </span>
@@ -2185,11 +2208,10 @@ export default function LeadsList() {
                           <div
                             key={employee.id}
                             onClick={() => handleToggleEmployee(employee.id)}
-                            className={`border rounded-lg p-4 cursor-pointer transition ${
-                              isSelected
+                            className={`border rounded-lg p-4 cursor-pointer transition ${isSelected
                                 ? "border-[#FF7B1D] bg-orange-50 shadow-md"
                                 : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm"
-                            }`}
+                              }`}
                           >
                             <div className="flex items-start gap-3">
                               <input
@@ -2235,14 +2257,13 @@ export default function LeadsList() {
                                 </div>
 
                                 <span
-                                  className={`inline-block mt-2 px-2 py-1 text-xs font-semibold rounded ${
-                                    employee.performance === "Best Performer"
+                                  className={`inline-block mt-2 px-2 py-1 text-xs font-semibold rounded ${employee.performance === "Best Performer"
                                       ? "bg-green-100 text-green-600"
                                       : employee.performance ===
                                         "Good Performer"
-                                      ? "bg-blue-100 text-blue-600"
-                                      : "bg-yellow-100 text-yellow-600"
-                                  }`}
+                                        ? "bg-blue-100 text-blue-600"
+                                        : "bg-yellow-100 text-yellow-600"
+                                    }`}
                                 >
                                   {employee.performance}
                                 </span>

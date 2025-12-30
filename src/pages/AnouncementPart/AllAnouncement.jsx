@@ -4,21 +4,16 @@ import DashboardLayout from "../../components/DashboardLayout";
 import {
   Megaphone,
   Plus,
-  Search,
-  Filter,
   Eye,
-  Edit2,
   Trash2,
   Pin,
   TrendingUp,
-  Users,
   Calendar,
   MessageCircle,
   X,
-  Image,
-  Paperclip,
   Send,
 } from "lucide-react";
+import NumberCard from "../../components/NumberCard";
 
 export default function AnnouncementPage() {
   const [announcements, setAnnouncements] = useState([
@@ -273,65 +268,34 @@ export default function AnnouncementPage() {
         {/* Stats Cards */}
         <div className="max-w-7xl mx-auto px-0 py-0 mt-2">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-white rounded-sm p-5 shadow-md border-l-4 border-orange-500 hover:shadow-lg transition-shadow">
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="text-gray-500 text-sm font-medium">
-                    Total Announcements
-                  </p>
-                  <h3 className="text-3xl font-bold text-gray-800 mt-2">
-                    {stats.total}
-                  </h3>
-                </div>
-                <div className="bg-orange-100 p-3 rounded-sm">
-                  <Megaphone className="text-orange-500" size={24} />
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-sm p-5 shadow-md border-l-4 border-blue-500 hover:shadow-lg transition-shadow">
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="text-gray-500 text-sm font-medium">Pinned</p>
-                  <h3 className="text-3xl font-bold text-blue-600 mt-2">
-                    {stats.pinned}
-                  </h3>
-                </div>
-                <div className="bg-blue-100 p-3 rounded-sm">
-                  <Pin className="text-blue-500" size={24} />
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-sm p-5 shadow-md border-l-4 border-green-500 hover:shadow-lg transition-shadow">
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="text-gray-500 text-sm font-medium">This Week</p>
-                  <h3 className="text-3xl font-bold text-green-600 mt-2">
-                    {stats.thisWeek}
-                  </h3>
-                </div>
-                <div className="bg-green-100 p-3 rounded-sm">
-                  <Calendar className="text-green-500" size={24} />
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-sm p-5 shadow-md border-l-4 border-purple-500 hover:shadow-lg transition-shadow">
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="text-gray-500 text-sm font-medium">
-                    Total Views
-                  </p>
-                  <h3 className="text-3xl font-bold text-purple-600 mt-2">
-                    {stats.totalViews}
-                  </h3>
-                </div>
-                <div className="bg-purple-100 p-3 rounded-sm">
-                  <Eye className="text-purple-500" size={24} />
-                </div>
-              </div>
-            </div>
+            <NumberCard
+              title={"Total Announcements"}
+              number={stats.total}
+              icon={<Megaphone className="text-blue-600" size={24} />}
+              iconBgColor={"bg-blue-100"}
+              lineBorderClass={"border-blue-500"}
+            />
+            <NumberCard
+              title={"Pinned"}
+              number={stats.pinned}
+              icon={<Pin className="text-green-600" size={24} />}
+              iconBgColor={"bg-green-100"}
+              lineBorderClass={"border-green-500"}
+            />
+            <NumberCard
+              title={"This Week"}
+              number={stats.thisWeek}
+              icon={<Calendar className="text-orange-600" size={24} />}
+              iconBgColor={"bg-orange-100"}
+              lineBorderClass={"border-orange-500"}
+            />
+            <NumberCard
+              title={"Total Views"}
+              number={stats.totalViews}
+              icon={<Eye className="text-purple-600" size={24} />}
+              iconBgColor={"bg-purple-100"}
+              lineBorderClass={"border-purple-500"}
+            />
           </div>
 
           {/* Announcements Grid */}
@@ -350,11 +314,10 @@ export default function AnnouncementPage() {
               filteredAnnouncements.map((announcement) => (
                 <div
                   key={announcement.id}
-                  className={`bg-white rounded-sm shadow-md hover:shadow-xl transition-all p-6 border-l-4 ${
-                    announcement.pinned
+                  className={`bg-white rounded-sm shadow-md hover:shadow-xl transition-all p-6 border-t-4 ${announcement.pinned
                       ? "border-orange-500 bg-orange-50"
                       : "border-gray-300"
-                  }`}
+                    }`}
                 >
                   {/* Header */}
                   <div className="flex items-start justify-between mb-4">
@@ -394,11 +357,10 @@ export default function AnnouncementPage() {
                     <div className="flex gap-2">
                       <button
                         onClick={() => togglePin(announcement.id)}
-                        className={`p-2 rounded-sm transition-colors ${
-                          announcement.pinned
+                        className={`p-2 rounded-sm transition-colors ${announcement.pinned
                             ? "text-orange-500 bg-orange-100 hover:bg-orange-200"
                             : "text-gray-400 hover:bg-gray-100"
-                        }`}
+                          }`}
                         title="Pin/Unpin"
                       >
                         <Pin size={18} />

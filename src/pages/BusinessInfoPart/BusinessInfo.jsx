@@ -243,7 +243,7 @@ export default function BusinessInfoPage() {
           </div>
         </div>
 
-        <div className="max-w-8xl mx-auto px-0 py-0 mt-2">
+        <div className="max-w-7xl mx-auto px-0 py-0 mt-2">
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
             {stats.map((stat, index) => {
@@ -789,7 +789,7 @@ export default function BusinessInfoPage() {
                 </h2>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                    <label className="d-block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
                       <Globe size={16} className="text-orange-500" />
                       Website
                     </label>
@@ -809,7 +809,7 @@ export default function BusinessInfoPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                    <label className="d-block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
                       <Mail size={16} className="text-orange-500" />
                       Email
                     </label>
@@ -829,7 +829,7 @@ export default function BusinessInfoPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                    <label className="d-block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
                       <Phone size={16} className="text-orange-500" />
                       Phone
                     </label>

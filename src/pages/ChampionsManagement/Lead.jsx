@@ -23,6 +23,7 @@ import {
   Check,
   Home,
 } from "lucide-react";
+import NumberCard from "../../components/NumberCard";
 
 export default function ChampionsLeadPage() {
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -107,43 +108,6 @@ export default function ChampionsLeadPage() {
     status: "Cold",
     source: "Website",
   });
-
-  const stats = [
-    {
-      title: "Total Leads",
-      value: leads.length,
-      icon: Users,
-      color: "from-orange-500 to-orange-600",
-      bgColor: "bg-orange-50",
-      iconColor: "text-orange-600",
-    },
-    {
-      title: "Hot Leads",
-      value: leads.filter((l) => l.status === "Hot").length,
-      icon: TrendingUp,
-      color: "from-red-500 to-red-600",
-      bgColor: "bg-red-50",
-      iconColor: "text-red-600",
-    },
-    {
-      title: "Warm Leads",
-      value: leads.filter((l) => l.status === "Warm").length,
-      icon: Activity,
-      color: "from-yellow-500 to-yellow-600",
-      bgColor: "bg-yellow-50",
-      iconColor: "text-yellow-600",
-    },
-    {
-      title: "Avg Lead Score",
-      value: Math.round(
-        leads.reduce((acc, lead) => acc + lead.score, 0) / leads.length
-      ),
-      icon: Award,
-      color: "from-green-500 to-green-600",
-      bgColor: "bg-green-50",
-      iconColor: "text-green-600",
-    },
-  ];
 
   const scrollbarStyles = `
     .custom-scrollbar::-webkit-scrollbar {
@@ -230,7 +194,7 @@ export default function ChampionsLeadPage() {
       <div className="min-h-screen p-0 ml-6 ">
         <style>{scrollbarStyles}</style>
 
-        <div className="max-w-7xl mx-auto">
+        <div className="">
           {/* Header Section */}
           <div className="mb-8">
             {/* Top Section: Title + Filters + Add Button */}
@@ -243,7 +207,7 @@ export default function ChampionsLeadPage() {
                 <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
                   <Home size={14} className="text-gray-700" />
                   CRM /{" "}
-                  <span className="text-orange-600 font-medium">All Leads</span>
+                  <span className="text-orange-600 font-medium">Lead</span>
                 </p>
               </div>
 
@@ -291,28 +255,38 @@ export default function ChampionsLeadPage() {
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              {stats.map((stat, index) => (
-                <div
-                  key={index}
-                  className="bg-white p-6 shadow-md hover:shadow-md transition-all duration-300 transform  border-l-4 border-orange-500"
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-gray-600 text-sm font-medium mb-1">
-                        {stat.title}
-                      </p>
-                      <p className="text-3xl font-bold text-gray-800">
-                        {stat.value}
-                      </p>
-                    </div>
-                    <div className={`${stat.bgColor} p-4`}>
-                      <stat.icon className={stat.iconColor} size={32} />
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+            {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+
+              <NumberCard
+                title={"Total Leads"}
+                number={leads.length}
+                icon={<Users className="text-blue-600" size={24} />}
+                iconBgColor={"bg-blue-100"}
+                lineBorderClass={"border-blue-500"} />
+
+              <NumberCard
+                title={"Hot Leads"}
+                number={leads.filter((l) => l.status === "Hot").length}
+                icon={<TrendingUp className="text-green-600" size={24} />}
+                iconBgColor={"bg-green-100"}
+                lineBorderClass={"border-green-500"} />
+
+              <NumberCard
+                title={"Warm Leads"}
+                number={leads.filter((l) => l.status === "Warm").length}
+                icon={<Activity className="text-orange-600" size={24} />}
+                iconBgColor={"bg-orange-100"}
+                lineBorderClass={"border-orange-500"} />
+
+              <NumberCard
+                title={"Avg Lead Score"}
+                number={Math.round(
+                  leads.reduce((acc, lead) => acc + lead.score, 0) / leads.length
+                )}
+                icon={<Award className="text-purple-600" size={24} />}
+                iconBgColor={"bg-purple-100"}
+                lineBorderClass={"border-purple-500"} />
+            </div> */}
           </div>
 
           {/* Modal Popup */}
