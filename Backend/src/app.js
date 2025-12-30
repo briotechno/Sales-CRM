@@ -6,6 +6,8 @@ const departmentRoutes = require('./routes/departmentRoutes');
 const designationRoutes = require('./routes/designationRoutes');
 const employeeRoutes = require('./routes/employeeRoutes');
 const teamRoutes = require('./routes/teamRoutes');
+const businessInfoRoutes = require('./routes/businessInfoRoutes');
+const path = require('path');
 
 dotenv.config();
 
@@ -14,12 +16,16 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Serve static files
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/departments', departmentRoutes);
 app.use('/api/designations', designationRoutes);
 app.use('/api/employees', employeeRoutes);
 app.use('/api/teams', teamRoutes);
+app.use('/api/business-info', businessInfoRoutes);
 
 app.get('/', (req, res) => {
     res.send('API is running...');
