@@ -547,6 +547,8 @@ export default function HRPolicyPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterCategory, setFilterCategory] = useState("");
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   const [policies, setPolicies] = useState([
     {
@@ -650,6 +652,40 @@ export default function HRPolicyPage() {
       bgColor: "bg-indigo-100",
       textColor: "text-indigo-600",
       document: "Remote_Work_Policy_v2.1.pdf",
+    },
+    {
+      id: 7,
+      policyTitle: "Attendance Policy",
+      category: "Attendance",
+      description:
+        "Policy regarding employee attendance and punctuality. This policy outlines expectations for on-time arrival, proper notification procedures for absences, and consequences for repeated tardiness.",
+      effectiveDate: "2024-01-15",
+      reviewDate: "2025-01-15",
+      version: "2.0",
+      status: "Active",
+      department: "Human Resources",
+      applicableTo: "all",
+      initials: "AP",
+      bgColor: "bg-blue-100",
+      textColor: "text-blue-600",
+      document: "Attendance_Policy_v2.0.pdf",
+    },
+    {
+      id: 8,
+      policyTitle: "Attendance Policy",
+      category: "Attendance",
+      description:
+        "Policy regarding employee attendance and punctuality. This policy outlines expectations for on-time arrival, proper notification procedures for absences, and consequences for repeated tardiness.",
+      effectiveDate: "2024-01-15",
+      reviewDate: "2025-01-15",
+      version: "2.0",
+      status: "Active",
+      department: "Human Resources",
+      applicableTo: "all",
+      initials: "AP",
+      bgColor: "bg-blue-100",
+      textColor: "text-blue-600",
+      document: "Attendance_Policy_v2.0.pdf",
     },
   ]);
 
@@ -765,6 +801,37 @@ export default function HRPolicyPage() {
     a.click();
   };
 
+  // const filteredPolicies = policies
+  //   .filter((p) => activeTab === "All" || p.status === activeTab)
+  //   .filter((p) => filterCategory === "All" || p.category === filterCategory)
+  //   .filter((p) => filterStatus === "All" || p.status === filterStatus);
+
+  const totalPages = Math.ceil(filteredPolicies.length / itemsPerPage);
+
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+
+  const currentPolicies = filteredPolicies.slice(
+    indexOfFirstItem,
+    indexOfLastItem
+  );
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
+  const handleNext = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage((prev) => prev + 1);
+    }
+  };
+
+  const handlePrev = () => {
+    if (currentPage > 1) {
+      setCurrentPage((prev) => prev - 1);
+    }
+  };
+
   return (
     <DashboardLayout>
       <div className="min-h-screen ml-6 ">
@@ -852,9 +919,9 @@ export default function HRPolicyPage() {
                       setSelectedPolicy(null);
                       setIsModalOpen(true);
                     }}
-                    className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-2 font-semibold"
+                    className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white px-4 py-2 rounded-sm font-semibold hover:from-orange-600 hover:to-orange-700 hover:opacity-90 transition ml-2"
                   >
-                    <Plus size={20} />
+                    <Plus size={18} />
                     Add Policy
                   </button>
                 </div>
@@ -1027,7 +1094,7 @@ export default function HRPolicyPage() {
                   </thead>
 
                   <tbody className="divide-y divide-gray-200">
-                    {filteredPolicies.map((policy, index) => (
+                    {currentPolicies.map((policy, index) => (
                       <tr
                         key={policy.id}
                         className={`hover:bg-gray-50 transition-colors ${index % 2 === 0 ? "bg-white" : "bg-gray-00"
@@ -1102,6 +1169,46 @@ export default function HRPolicyPage() {
               </div>
             )}
           </div>
+        </div>
+
+        {/* Pagination */}
+        <div className="flex justify-end items-center gap-3 mt-6">
+          <button
+            onClick={handlePrev}
+            disabled={currentPage === 1}
+            className={`px-4 py-2 rounded-sm text-white font-semibold transition ${currentPage === 1
+              ? "bg-gray-300 cursor-not-allowed"
+              : "bg-[#FF7B1D] hover:opacity-90"
+              }`}
+          >
+            Back
+          </button>
+
+          <div className="flex items-center gap-2">
+            {Array.from({ length: totalPages }, (_, i) => (
+              <button
+                key={i + 1}
+                onClick={() => handlePageChange(i + 1)}
+                className={`px-3 py-1 rounded-sm text-black font-semibold border transition ${currentPage === i + 1
+                  ? "bg-gray-200 border-gray-400"
+                  : "bg-white border-gray-300 hover:bg-gray-100"
+                  }`}
+              >
+                {i + 1}
+              </button>
+            ))}
+          </div>
+
+          <button
+            onClick={handleNext}
+            disabled={currentPage === totalPages}
+            className={`px-4 py-2 rounded-sm text-white font-semibold transition ${currentPage === totalPages
+              ? "bg-gray-300 cursor-not-allowed"
+              : "bg-[#22C55E] hover:opacity-90"
+              }`}
+          >
+            Next
+          </button>
         </div>
 
         {/* Modals */}

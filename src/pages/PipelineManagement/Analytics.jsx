@@ -31,7 +31,9 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Filter,
+  TrendingDown,
 } from "lucide-react";
+import { FiHome } from "react-icons/fi";
 
 const PipelineAnalytics = () => {
   const [selectedPeriod, setSelectedPeriod] = useState("month");
@@ -114,37 +116,58 @@ const PipelineAnalytics = () => {
   const wonDeals = 1245;
   const winRate = 68;
 
-  const StatCard = ({ icon: Icon, title, value, subtitle, trend }) => (
-    <div className="bg-white rounded-sm p-6 shadow-lg border-l-4 border-orange-500 hover:shadow-xl transition-shadow duration-300">
+  const StatCard = ({ icon: Icon, title, value, subtitle, trend, iconColorClass, iconBgColor, lineBorderClass }) => (
+    <div
+      className={`bg-white rounded-sm p-6 shadow-lg border-t-4 ${lineBorderClass} hover:shadow-xl transition-shadow duration-300`}
+    >
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-2">
-            <Icon className="w-5 h-5 text-orange-500" />
             <p className="text-sm font-medium text-gray-600">{title}</p>
           </div>
           <p className="text-3xl font-bold text-gray-900 mb-1">{value}</p>
           <p className="text-xs text-gray-500">{subtitle}</p>
         </div>
-        {trend && (
-          <div
-            className={`flex items-center gap-1 px-2 py-1 rounded-sm text-xs font-semibold ${
-              trend > 0
+        <div className="">
+          {trend && (
+            <div
+              className={`flex items-center gap-1 px-2 py-1 rounded-sm text-xs font-semibold ${trend > 0
                 ? "bg-green-100 text-green-700"
                 : "bg-red-100 text-red-700"
-            }`}
-          >
-            <TrendingUp className="w-3 h-3" />
-            {Math.abs(trend)}%
+                }`}
+            >
+            {trend > 0 ? (
+                <TrendingUp className="w-3 h-3" />
+              ) : (
+                <TrendingDown className="w-3 h-3" />
+              )}
+              {Math.abs(trend)}%
+            </div>
+          )}
+          <div className={`${iconBgColor} w-12 h-12 flex items-center justify-center rounded-lg my-3`}>
+            <Icon className={`w-6 h-6 ${iconColorClass}`} />
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen ">
-        <div className="p-0 ml-6">
+      <div className="p-0 ml-6 bg-gray-0 min-h-screen">
+        <div className="bg-white border-b py-2 flex justify-between items-center mb-6 flex-wrap gap-3">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800">
+              Analytics
+            </h1>
+            <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
+              <FiHome className="text-gray-700 text-sm" />
+              <span className="text-gray-400"></span> CRM /{" "}
+              <span className="text-[#FF7B1D] font-medium">All Analytics</span>
+            </p>
+          </div>
+        </div>
+        <div className="">
           {/* Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <StatCard
@@ -153,6 +176,9 @@ const PipelineAnalytics = () => {
               value={totalDeals.toLocaleString()}
               subtitle="Across all pipelines"
               trend={12.5}
+              iconBgColor="bg-blue-100"
+              iconColorClass="text-blue-600"
+              lineBorderClass="border-blue-500"
             />
             <StatCard
               icon={DollarSign}
@@ -160,6 +186,9 @@ const PipelineAnalytics = () => {
               value={`₹${(totalValue / 1000).toFixed(0)}K`}
               subtitle="Combined deal value"
               trend={8.3}
+              iconBgColor="bg-green-100"
+              iconColorClass="text-green-600"
+              lineBorderClass="border-green-500"
             />
             <StatCard
               icon={Users}
@@ -167,6 +196,9 @@ const PipelineAnalytics = () => {
               value={`₹${(avgDealValue / 1000).toFixed(0)}K`}
               subtitle="Per deal average"
               trend={-2.1}
+              iconBgColor="bg-orange-100"
+              iconColorClass="text-orange-600"
+              lineBorderClass="border-orange-500"
             />
             <StatCard
               icon={Activity}
@@ -174,17 +206,19 @@ const PipelineAnalytics = () => {
               value={activePipelines}
               subtitle="Currently running"
               trend={5.2}
+              iconBgColor="bg-purple-100"
+              iconColorClass="text-purple-600"
+              lineBorderClass="border-purple-500"
             />
-          </div>
-
-          {/* Additional Stats Row */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <StatCard
               icon={CheckCircle}
               title="Won Deals"
               value={wonDeals.toLocaleString()}
               subtitle="Successfully closed"
               trend={15.7}
+              iconBgColor="bg-blue-100"
+              iconColorClass="text-blue-600"
+              lineBorderClass="border-blue-500"
             />
             <StatCard
               icon={Award}
@@ -192,6 +226,9 @@ const PipelineAnalytics = () => {
               value={`${winRate}%`}
               subtitle="Conversion success"
               trend={3.2}
+              iconBgColor="bg-green-100"
+              iconColorClass="text-green-600"
+              lineBorderClass="border-green-500"
             />
             <StatCard
               icon={Clock}
@@ -199,6 +236,9 @@ const PipelineAnalytics = () => {
               value={`${avgDealCycle} days`}
               subtitle="Time to close"
               trend={-4.5}
+              iconBgColor="bg-orange-100"
+              iconColorClass="text-orange-600"
+              lineBorderClass="border-orange-500"
             />
             <StatCard
               icon={TrendingUp}
@@ -206,6 +246,9 @@ const PipelineAnalytics = () => {
               value={`${conversionRate}%`}
               subtitle="Lead to close"
               trend={6.8}
+              iconBgColor="bg-purple-100"
+              iconColorClass="text-purple-600"
+              lineBorderClass="border-purple-500"
             />
           </div>
 

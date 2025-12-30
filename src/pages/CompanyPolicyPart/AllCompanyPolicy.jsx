@@ -26,6 +26,8 @@ export default function CompanyPolicy() {
   const [selectedPolicy, setSelectedPolicy] = useState(null);
   const [filterCategory, setFilterCategory] = useState("All");
   const [filterStatus, setFilterStatus] = useState("All");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   const [policies, setPolicies] = useState([
     {
@@ -96,6 +98,72 @@ export default function CompanyPolicy() {
       description: "Policy ensuring equal opportunity for all employees.",
       author: "HR Department",
     },
+    {
+      id: 6,
+      title: "Equal Employment Opportunity",
+      category: "HR",
+      effectiveDate: "2024-01-01",
+      reviewDate: "2025-01-01",
+      version: "2.1",
+      status: "Archived",
+      initials: "EE",
+      color: "bg-pink-100 text-pink-700",
+      description: "Policy ensuring equal opportunity for all employees.",
+      author: "HR Department",
+    },
+    {
+      id: 7,
+      title: "Equal Employment Opportunity",
+      category: "HR",
+      effectiveDate: "2024-01-01",
+      reviewDate: "2025-01-01",
+      version: "2.1",
+      status: "Archived",
+      initials: "EE",
+      color: "bg-pink-100 text-pink-700",
+      description: "Policy ensuring equal opportunity for all employees.",
+      author: "HR Department",
+    },
+    {
+      id: 8,
+      title: "Equal Employment Opportunity",
+      category: "HR",
+      effectiveDate: "2024-01-01",
+      reviewDate: "2025-01-01",
+      version: "2.1",
+      status: "Archived",
+      initials: "EE",
+      color: "bg-pink-100 text-pink-700",
+      description: "Policy ensuring equal opportunity for all employees.",
+      author: "HR Department",
+    },
+    {
+      id: 9,
+      title: "Equal Employment Opportunity",
+      category: "HR",
+      effectiveDate: "2024-01-01",
+      reviewDate: "2025-01-01",
+      version: "2.1",
+      status: "Archived",
+      initials: "EE",
+      color: "bg-pink-100 text-pink-700",
+      description: "Policy ensuring equal opportunity for all employees.",
+      author: "HR Department",
+    },
+    {
+      id: 10,
+      title: "Equal Employment Opportunity",
+      category: "HR",
+      effectiveDate: "2024-01-01",
+      reviewDate: "2025-01-01",
+      version: "2.1",
+      status: "Archived",
+      initials: "EE",
+      color: "bg-pink-100 text-pink-700",
+      description: "Policy ensuring equal opportunity for all employees.",
+      author: "HR Department",
+    },
+
   ]);
 
   const [newPolicy, setNewPolicy] = useState({
@@ -234,6 +302,32 @@ export default function CompanyPolicy() {
     .filter((p) => filterCategory === "All" || p.category === filterCategory)
     .filter((p) => filterStatus === "All" || p.status === filterStatus);
 
+  const totalPages = Math.ceil(filteredPolicies.length / itemsPerPage);
+
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+
+  const currentPolicies = filteredPolicies.slice(
+    indexOfFirstItem,
+    indexOfLastItem
+  );
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
+  const handleNext = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage((prev) => prev + 1);
+    }
+  };
+
+  const handlePrev = () => {
+    if (currentPage > 1) {
+      setCurrentPage((prev) => prev - 1);
+    }
+  };
+
   return (
     <DashboardLayout>
       <div className="min-h-screen  ml-6 p-0">
@@ -273,7 +367,7 @@ export default function CompanyPolicy() {
               </button>
               <button
                 onClick={() => setShowAddModal(true)}
-                className="mr-6 flex items-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700  text-white px-5 py-2.5 rounded-sm font-medium transition-colors"
+                className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white px-4 py-2 rounded-sm font-semibold hover:from-orange-600 hover:to-orange-700 hover:opacity-90 transition ml-2"
               >
                 <Plus size={18} />
                 Add Policy
@@ -320,11 +414,10 @@ export default function CompanyPolicy() {
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`pb-3 font-medium transition-colors ${
-                activeTab === tab
-                  ? "text-orange-500 border-b-2 border-orange-500"
-                  : "text-gray-600 hover:text-gray-900"
-              }`}
+              className={`pb-3 font-medium transition-colors ${activeTab === tab
+                ? "text-orange-500 border-b-2 border-orange-500"
+                : "text-gray-600 hover:text-gray-900"
+                }`}
             >
               {tab}
             </button>
@@ -362,7 +455,7 @@ export default function CompanyPolicy() {
 
             <tbody className="divide-y divide-gray-200">
               {filteredPolicies.length > 0 ? (
-                filteredPolicies.map((policy) => (
+                currentPolicies.map((policy) => (
                   <tr
                     key={policy.id}
                     className="hover:bg-gray-50 transition-colors"
@@ -393,13 +486,12 @@ export default function CompanyPolicy() {
                     </td>
                     <td className="px-6 py-4">
                       <span
-                        className={`inline-block px-4 py-1 rounded-full text-sm font-medium ${
-                          policy.status === "Active"
-                            ? "bg-green-100 text-green-700"
-                            : policy.status === "Under Review"
+                        className={`inline-block px-4 py-1 rounded-full text-sm font-medium ${policy.status === "Active"
+                          ? "bg-green-100 text-green-700"
+                          : policy.status === "Under Review"
                             ? "bg-yellow-100 text-yellow-700"
                             : "bg-gray-100 text-gray-700"
-                        }`}
+                          }`}
                       >
                         {policy.status}
                       </span>
@@ -448,6 +540,46 @@ export default function CompanyPolicy() {
           </table>
         </div>
 
+        {/* Pagination */}
+        <div className="flex justify-end items-center gap-3 mt-6">
+          <button
+            onClick={handlePrev}
+            disabled={currentPage === 1}
+            className={`px-4 py-2 rounded-sm text-white font-semibold transition ${currentPage === 1
+              ? "bg-gray-300 cursor-not-allowed"
+              : "bg-[#FF7B1D] hover:opacity-90"
+              }`}
+          >
+            Back
+          </button>
+
+          <div className="flex items-center gap-2">
+            {Array.from({ length: totalPages }, (_, i) => (
+              <button
+                key={i + 1}
+                onClick={() => handlePageChange(i + 1)}
+                className={`px-3 py-1 rounded-sm text-black font-semibold border transition ${currentPage === i + 1
+                  ? "bg-gray-200 border-gray-400"
+                  : "bg-white border-gray-300 hover:bg-gray-100"
+                  }`}
+              >
+                {i + 1}
+              </button>
+            ))}
+          </div>
+
+          <button
+            onClick={handleNext}
+            disabled={currentPage === totalPages}
+            className={`px-4 py-2 rounded-sm text-white font-semibold transition ${currentPage === totalPages
+              ? "bg-gray-300 cursor-not-allowed"
+              : "bg-[#22C55E] hover:opacity-90"
+              }`}
+          >
+            Next
+          </button>
+        </div>
+        
         {/* Add Policy Modal */}
         {showAddModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -730,13 +862,12 @@ export default function CompanyPolicy() {
                       Status
                     </p>
                     <span
-                      className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
-                        selectedPolicy.status === "Active"
-                          ? "bg-green-500 text-white"
-                          : selectedPolicy.status === "Under Review"
+                      className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${selectedPolicy.status === "Active"
+                        ? "bg-green-500 text-white"
+                        : selectedPolicy.status === "Under Review"
                           ? "bg-yellow-500 text-white"
                           : "bg-gray-500 text-white"
-                      }`}
+                        }`}
                     >
                       {selectedPolicy.status}
                     </span>

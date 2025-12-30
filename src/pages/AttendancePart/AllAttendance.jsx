@@ -30,6 +30,7 @@ import {
   ClipboardList,
   FileText,
 } from "lucide-react";
+import NumberCard from "../../components/NumberCard";
 
 export default function AttendanceApp() {
   const [currentPage, setCurrentPage] = useState("dashboard");
@@ -277,14 +278,14 @@ export default function AttendanceApp() {
       prev.map((record) =>
         record.employeeId === employee.employeeId
           ? {
-              ...record,
-              checkIn: timeString,
-              status: status,
-              checkInMethod: "WiFi",
-              ipAddress: userIP,
-              selfie: selfieData,
-              location: locationData,
-            }
+            ...record,
+            checkIn: timeString,
+            status: status,
+            checkInMethod: "WiFi",
+            ipAddress: userIP,
+            selfie: selfieData,
+            location: locationData,
+          }
           : record
       )
     );
@@ -333,43 +334,51 @@ export default function AttendanceApp() {
   };
 
   const stats = useMemo(() => {
-    const total = attendanceData.length;
-    const present = attendanceData.filter((a) => a.status === "present").length;
-    const absent = attendanceData.filter((a) => a.status === "absent").length;
-    const late = attendanceData.filter((a) => a.status === "late").length;
-    const halfDay = attendanceData.filter(
-      (a) => a.status === "half-day"
-    ).length;
-    const attendanceRate =
-      total > 0 ? (((present + late + halfDay) / total) * 100).toFixed(1) : 0;
+  const total = attendanceData.length;
+  const present = attendanceData.filter(a => a.status === "present").length;
+  const absent = attendanceData.filter(a => a.status === "absent").length;
+  const late = attendanceData.filter(a => a.status === "late").length;
+  const halfDay = attendanceData.filter(a => a.status === "half-day").length;
 
-    return [
-      {
-        label: "Total Employees",
-        value: total.toString(),
-        icon: Users,
-        gradient: "from-orange-400 to-orange-600",
-      },
-      {
-        label: "Present Today",
-        value: present.toString(),
-        icon: UserCheck,
-        gradient: "from-green-400 to-green-600",
-      },
-      {
-        label: "Absent",
-        value: absent.toString(),
-        icon: UserX,
-        gradient: "from-red-400 to-red-600",
-      },
-      {
-        label: "Attendance Rate",
-        value: `${attendanceRate}%`,
-        icon: TrendingUp,
-        gradient: "from-purple-400 to-purple-600",
-      },
-    ];
-  }, [attendanceData]);
+  const attendanceRate =
+    total > 0 ? (((present + late + halfDay) / total) * 100).toFixed(1) : 0;
+
+  return [
+    {
+      title: "Total Employees",
+      number: total,
+      icon: Users,
+      iconBgColor: "bg-blue-100",
+      iconColor: "text-blue-600",
+      lineBorderClass: "border-blue-500",
+    },
+    {
+      title: "Present Today",
+      number: present,
+      icon: UserCheck,
+      iconBgColor: "bg-green-100",
+      iconColor: "text-green-600",
+      lineBorderClass: "border-green-500",
+    },
+    {
+      title: "Absent",
+      number: absent,
+      icon: UserX,
+      iconBgColor: "bg-orange-100",
+      iconColor: "text-orange-600",
+      lineBorderClass: "border-orange-500",
+    },
+    {
+      title: "Attendance Rate",
+      number: `${attendanceRate}%`,
+      icon: TrendingUp,
+      iconBgColor: "bg-purple-100",
+      iconColor: "text-purple-600",
+      lineBorderClass: "border-purple-500",
+    },
+  ];
+}, [attendanceData]);
+
 
   const filteredAttendance = useMemo(() => {
     return attendanceData.filter((record) => {
@@ -432,8 +441,8 @@ export default function AttendanceApp() {
     <DashboardLayout>
       <div className="p-0 bg-white ml-6 min-h-screen text-black">
         {/* Navigation */}
-        <nav className="bg-white shadow-sm ">
-          <div className="max-w-7xl mx-auto px-6 py-4">
+        <nav className="bg-white border-b my-3 ">
+          <div className="px-6 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div>
@@ -455,33 +464,30 @@ export default function AttendanceApp() {
               <div className="flex gap-2">
                 <button
                   onClick={() => setCurrentPage("dashboard")}
-                  className={`px-6 py-3 rounded-sm font-semibold transition-all flex items-center gap-2 ${
-                    currentPage === "dashboard"
-                      ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg"
-                      : "bg-orange-50 text-orange-700 hover:bg-orange-100"
-                  }`}
+                  className={`px-6 py-3 rounded-sm font-semibold transition-all flex items-center gap-2 ${currentPage === "dashboard"
+                    ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg"
+                    : "bg-orange-50 text-orange-700 hover:bg-orange-100"
+                    }`}
                 >
                   <Home className="w-5 h-5" />
                   Dashboard
                 </button>
                 <button
                   onClick={() => setCurrentPage("checkin")}
-                  className={`px-6 py-3 rounded-sm font-semibold transition-all flex items-center gap-2 ${
-                    currentPage === "checkin"
-                      ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg"
-                      : "bg-orange-50 text-orange-700 hover:bg-orange-100"
-                  }`}
+                  className={`px-6 py-3 rounded-sm font-semibold transition-all flex items-center gap-2 ${currentPage === "checkin"
+                    ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg"
+                    : "bg-orange-50 text-orange-700 hover:bg-orange-100"
+                    }`}
                 >
                   <Camera className="w-5 h-5" />
                   Check-In
                 </button>
                 <button
                   onClick={() => setCurrentPage("records")}
-                  className={`px-6 py-3 rounded-sm font-semibold transition-all flex items-center gap-2 ${
-                    currentPage === "records"
-                      ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg"
-                      : "bg-orange-50 text-orange-700 hover:bg-orange-100"
-                  }`}
+                  className={`px-6 py-3 rounded-sm font-semibold transition-all flex items-center gap-2 ${currentPage === "records"
+                    ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg"
+                    : "bg-orange-50 text-orange-700 hover:bg-orange-100"
+                    }`}
                 >
                   <ClipboardList className="w-5 h-5" />
                   Records
@@ -492,35 +498,40 @@ export default function AttendanceApp() {
         </nav>
 
         {/* Page Content */}
-        <div className="max-w-7xl mx-auto px-0 mt-4 py-0">
+        <div className="px-0 mt-4 py-0">
           {/* ==================== DASHBOARD PAGE ==================== */}
           {currentPage === "dashboard" && (
             <div className="space-y-8">
               {/* Stats Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
-                {stats.map((stat, index) => (
-                  <div
-                    key={index}
-                    className="group relative bg-white rounded-sm shadow-lg hover:shadow-sm transition-all transform  overflow-hidden"
-                  >
-                    <div
-                      className={`absolute inset-0 bg-gradient-to-r ${stat.gradient} opacity-0 transition-opacity`}
-                    ></div>
-                    <div className="relative p-6">
-                      <div
-                        className={`inline-flex p-4 rounded-sm bg-gradient-to-r ${stat.gradient} shadow-lg mb-4`}
-                      >
-                        <stat.icon className="w-7 h-7 text-white" />
-                      </div>
-                      <h3 className="text-gray-600 text-sm font-semibold uppercase tracking-wider mb-2">
-                        {stat.label}
-                      </h3>
-                      <p className="text-4xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
-                        {stat.value}
-                      </p>
-                    </div>
-                  </div>
-                ))}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <NumberCard
+                  title="Total Employees"
+                  // number={total}
+                  icon={<Users className="text-blue-600" size={24} />}
+                  iconBgColor="bg-blue-100"
+                  lineBorderClass="border-blue-500"
+                />
+                <NumberCard
+                  title="Present Today"
+                  // number={present}
+                  icon={<UserCheck className="text-green-600" size={24} />}
+                  iconBgColor="bg-green-100"
+                  lineBorderClass="border-green-500"
+                />
+                <NumberCard
+                  title="Absent"
+                  // number={absent.toString()}
+                  icon={<UserX className="text-orange-600" size={24} />}
+                  iconBgColor="bg-orange-100"
+                  lineBorderClass="border-orange-500"
+                />
+                <NumberCard
+                  title="Attendance Rate"
+                  // number={`${attendanceRate}%`}
+                  icon={<TrendingUp className="text-purple-600" size={24} />}
+                  iconBgColor="bg-purple-100"
+                  lineBorderClass="border-purple-500"
+                />
               </div>
 
               {/* Network Status
@@ -686,11 +697,10 @@ export default function AttendanceApp() {
                         key={employee.id}
                         onClick={() => handleCheckInClick(employee)}
                         disabled={!isOnCompanyNetwork}
-                        className={`border-2 rounded-sm p-6 text-left  ${
-                          isOnCompanyNetwork
-                            ? "border-orange-200 hover:border-orange-500 hover:bg-orange-50 cursor-pointer shadow-md hover:shadow-sm"
-                            : "border-gray-200 bg-gray-50 cursor-not-allowed opacity-50"
-                        }`}
+                        className={`border-2 rounded-sm p-6 text-left  ${isOnCompanyNetwork
+                          ? "border-orange-200 hover:border-orange-500 hover:bg-orange-50 cursor-pointer shadow-md hover:shadow-sm"
+                          : "border-gray-200 bg-gray-50 cursor-not-allowed opacity-50"
+                          }`}
                       >
                         <div className="flex items-center gap-4 mb-4">
                           <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-4 rounded-sm shadow-sm">
@@ -717,13 +727,13 @@ export default function AttendanceApp() {
 
                 {attendanceData.filter((emp) => emp.status === "absent")
                   .length === 0 && (
-                  <div className="text-center py-12 bg-gradient-to-r from-orange-50 to-orange-100 rounded-sm">
-                    <CheckCircle className="w-16 h-16 text-orange-500 mx-auto mb-4" />
-                    <p className="text-gray-700 font-bold text-xl">
-                      All employees have checked in! 🎉
-                    </p>
-                  </div>
-                )}
+                    <div className="text-center py-12 bg-gradient-to-r from-orange-50 to-orange-100 rounded-sm">
+                      <CheckCircle className="w-16 h-16 text-orange-500 mx-auto mb-4" />
+                      <p className="text-gray-700 font-bold text-xl">
+                        All employees have checked in! 🎉
+                      </p>
+                    </div>
+                  )}
               </div>
             </div>
           )}

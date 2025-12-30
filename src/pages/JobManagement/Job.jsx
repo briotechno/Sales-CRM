@@ -44,6 +44,8 @@ export default function JobManagement() {
   const [selectedFilter, setSelectedFilter] = useState("All");
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedJob, setSelectedJob] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   const [jobs] = useState([
     {
@@ -150,6 +152,30 @@ export default function JobManagement() {
 
   const filterOptions = ["All", "Active", "On Hold", "Closed"];
 
+  const totalPages = Math.ceil(filteredJobs.length / itemsPerPage);
+
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const currentJobs = filteredJobs.slice(
+    startIndex,
+    startIndex + itemsPerPage
+  );
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
+  const handleNext = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage((prev) => prev + 1);
+    }
+  };
+
+  const handlePrev = () => {
+    if (currentPage > 1) {
+      setCurrentPage((prev) => prev - 1);
+    }
+  };
+
   return (
     <DashboardLayout>
       <div className="min-h-screen bg-gradient-to-br from-orange-0 via-white to-orange-0 p-0 ml-6">
@@ -190,10 +216,10 @@ export default function JobManagement() {
                 {/* Add New Job Button */}
                 <button
                   onClick={() => setShowAddModal(true)}
-                  className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-8 py-4 rounded-sm flex items-center gap-3 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                  className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white px-4 py-2 rounded-sm font-semibold hover:from-orange-600 hover:to-orange-700 hover:opacity-90 transition ml-2"
                 >
-                  <Plus size={22} />
-                  <span className="font-semibold">Add New Job</span>
+                  <Plus size={18} />
+                  Add New Job
                 </button>
               </div>
             </div>
@@ -264,7 +290,7 @@ export default function JobManagement() {
                 </thead>
 
                 <tbody className="divide-y divide-gray-200">
-                  {filteredJobs.map((job, index) => (
+                  {currentJobs.map((job, index) => (
                     <tr
                       key={job.id}
                       className={`hover:bg-orange-50 transition-colors whitespace-nowrap ${index % 2 === 0 ? "bg-white" : "bg-gray-50"
@@ -363,6 +389,46 @@ export default function JobManagement() {
               </p>
             </div>
           )}
+
+          {/* Pagination */}
+          <div className="flex justify-end items-center gap-3 mt-6">
+            <button
+              onClick={handlePrev}
+              disabled={currentPage === 1}
+              className={`px-4 py-2 rounded-sm text-white font-semibold transition ${currentPage === 1
+                ? "bg-gray-300 cursor-not-allowed"
+                : "bg-[#FF7B1D] hover:opacity-90"
+                }`}
+            >
+              Back
+            </button>
+
+            <div className="flex items-center gap-2">
+              {Array.from({ length: totalPages }, (_, i) => (
+                <button
+                  key={i + 1}
+                  onClick={() => handlePageChange(i + 1)}
+                  className={`px-3 py-1 rounded-sm text-black font-semibold border transition ${currentPage === i + 1
+                    ? "bg-gray-200 border-gray-400"
+                    : "bg-white border-gray-300 hover:bg-gray-100"
+                    }`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+            </div>
+
+            <button
+              onClick={handleNext}
+              disabled={currentPage === totalPages}
+              className={`px-4 py-2 rounded-sm text-white font-semibold transition ${currentPage === totalPages
+                ? "bg-gray-300 cursor-not-allowed"
+                : "bg-[#22C55E] hover:opacity-90"
+                }`}
+            >
+              Next
+            </button>
+          </div>
 
           {/* Add Job Modal */}
           {showAddModal && (

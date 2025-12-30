@@ -11,7 +11,11 @@ import {
   Filter,
   Home,
   X,
+  DollarSign,
+  Handshake,
+  Target,
 } from "lucide-react";
+import NumberCard from "../../components/NumberCard";
 
 export default function TeamManagement() {
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -161,8 +165,8 @@ export default function TeamManagement() {
         (e) => `${e.name}-${e.department}` === employeeKey
       )
         ? prev.selectedEmployees.filter(
-            (e) => `${e.name}-${e.department}` !== employeeKey
-          )
+          (e) => `${e.name}-${e.department}` !== employeeKey
+        )
         : [...prev.selectedEmployees, employee],
     }));
   };
@@ -208,9 +212,9 @@ export default function TeamManagement() {
       teams.map((team) =>
         team.id === id
           ? {
-              ...team,
-              status: team.status === "Active" ? "Inactive" : "Active",
-            }
+            ...team,
+            status: team.status === "Active" ? "Inactive" : "Active",
+          }
           : team
       )
     );
@@ -257,22 +261,24 @@ export default function TeamManagement() {
       <div className="min-h-screen p-0 ml-6">
         <style>{scrollbarStyles}</style>
         <div className="max-w-8xl mx-auto">
-          <div className="flex items-center justify-between mb-4">
-            <div>
+          <div className="flex items-center justify-between mb-4 bg-white border-b py-3">
+            <div className="">
               <h1 className="text-3xl font-bold text-gray-800">
                 Team Management
               </h1>
-              <p className="text-sm text-gray-500 mt-1 flex items-center gap-0">
-                <Home size={14} className="text-gray-700" />
-                CRM /{" "}
-                <span className="text-orange-600 font-medium">All Teams</span>
+              <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
+                <Home className="text-gray-700" size={14} />
+                <span className="text-gray-400"></span> HRM /{" "}
+                <span className="text-orange-500 font-medium">
+                  All Team
+                </span>
               </p>
             </div>
             <button
               onClick={() => setShowCreateForm(true)}
-              className="mr-6 flex items-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-6 py-3 shadow-lg hover:shadow-xl transition-all duration-300 transform "
+              className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white px-4 py-2 rounded-sm font-semibold hover:from-orange-600 hover:to-orange-700 hover:opacity-90 transition ml-2"
             >
-              <Plus size={20} />
+              <Plus size={18} />
               Create Team
             </button>
           </div>
@@ -391,11 +397,10 @@ export default function TeamManagement() {
                         return (
                           <label
                             key={`${employee.name}-${employee.department}`}
-                            className={`flex items-center justify-between p-3 border-2 cursor-pointer transition-all ${
-                              isSelected
-                                ? "border-orange-500 bg-orange-50"
-                                : "border-gray-200 hover:border-orange-300 bg-white"
-                            }`}
+                            className={`flex items-center justify-between p-3 border-2 cursor-pointer transition-all ${isSelected
+                              ? "border-orange-500 bg-orange-50"
+                              : "border-gray-200 hover:border-orange-300 bg-white"
+                              }`}
                           >
                             <div className="flex items-center gap-3 flex-1">
                               <input
@@ -455,6 +460,38 @@ export default function TeamManagement() {
             </div>
           )}
 
+          {/* Statement Card */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <NumberCard
+              title="Total Team"
+              number={"248"}
+              icon={<Users className="text-blue-600" size={24} />}
+              iconBgColor="bg-blue-100"
+              lineBorderClass="border-blue-500"
+            />
+            <NumberCard
+              title="Total Member"
+              number={"186"}
+              icon={<DollarSign className="text-green-600" size={24} />}
+              iconBgColor="bg-green-100"
+              lineBorderClass="border-green-500"
+            />
+            <NumberCard
+              title="Total Deals"
+              number={"18"}
+              icon={<Handshake className="text-orange-600" size={24} />}
+              iconBgColor="bg-orange-100"
+              lineBorderClass="border-orange-500"
+            />
+            <NumberCard
+              title="Total Status"
+              number={"2"}
+              icon={<Target className="text-purple-600" size={24} />}
+              iconBgColor="bg-purple-100"
+              lineBorderClass="border-purple-500"
+            />
+          </div>
+
           {/* Teams Table */}
           <div className="bg-white shadow-xl overflow-hidden border-2 border-orange-50">
             <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-4">
@@ -498,12 +535,12 @@ export default function TeamManagement() {
                         {indexOfFirstItem + index + 1}
                       </td>
                       <td className="px-6 py-4">
-                        <span className="text-sm font-semibold text-orange-600">
+                        <span className="text-sm font-semibold text-orange-600 hover:text-blue-800">
                           {team.id}
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="text-sm font-semibold text-gray-800">
+                        <span className="text-sm text-orange-600 hover:text-blue-800 font-semibold">
                           {team.name}
                         </span>
                       </td>
@@ -523,11 +560,10 @@ export default function TeamManagement() {
                       <td className="px-6 py-4 text-center">
                         <button
                           onClick={() => toggleStatus(team.id)}
-                          className={`inline-flex items-center px-3 py-1 text-xs font-semibold transition-all ${
-                            team.status === "Active"
-                              ? "bg-green-100 text-green-700 hover:bg-green-200"
-                              : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                          }`}
+                          className={`inline-flex items-center px-3 py-1 text-xs font-semibold transition-all ${team.status === "Active"
+                            ? "bg-green-100 text-green-700 hover:bg-green-200"
+                            : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                            }`}
                         >
                           {team.status}
                         </button>
@@ -567,7 +603,11 @@ export default function TeamManagement() {
           <div className="flex justify-end items-center gap-3 mt-6">
             <button
               onClick={handlePrev}
-              className="px-4 py-2 rounded-sm  font-semibold bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:opacity-90 transition"
+              disabled={currentPage === 1}
+              className={`px-4 py-2 rounded-sm text-white font-semibold transition ${currentPage === 1
+                ? "bg-gray-300 cursor-not-allowed"
+                : "bg-[#FF7B1D] hover:opacity-90"
+                }`}
             >
               Back
             </button>
@@ -576,12 +616,11 @@ export default function TeamManagement() {
               {Array.from({ length: totalPages }, (_, i) => (
                 <button
                   key={i + 1}
-                  onClick={() => setCurrentPage(i + 1)}
-                  className={`px-3 py-1 rounded-sm text-black font-semibold border transition ${
-                    currentPage === i + 1
-                      ? "bg-gray-200 border-gray-400"
-                      : "bg-white border-gray-300 hover:bg-gray-100"
-                  }`}
+                  onClick={() => handlePageChange(i + 1)}
+                  className={`px-3 py-1 rounded-sm text-black font-semibold border transition ${currentPage === i + 1
+                    ? "bg-gray-200 border-gray-400"
+                    : "bg-white border-gray-300 hover:bg-gray-100"
+                    }`}
                 >
                   {i + 1}
                 </button>
@@ -590,7 +629,11 @@ export default function TeamManagement() {
 
             <button
               onClick={handleNext}
-              className="px-4 py-2 rounded-sm text-white font-semibold bg-[#22C55E] hover:opacity-90 transition"
+              disabled={currentPage === totalPages}
+              className={`px-4 py-2 rounded-sm text-white font-semibold transition ${currentPage === totalPages
+                ? "bg-gray-300 cursor-not-allowed"
+                : "bg-[#22C55E] hover:opacity-90"
+                }`}
             >
               Next
             </button>

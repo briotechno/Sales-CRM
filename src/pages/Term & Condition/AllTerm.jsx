@@ -10,6 +10,7 @@ import {
   FileText,
   Calendar,
   Building,
+  Plus,
 } from "lucide-react";
 import NumberCard from "../../components/NumberCard";
 
@@ -132,7 +133,7 @@ const TermsAndCondition = () => {
     <DashboardLayout>
       <div className="ml-6 min-h-screen">
         {/* Header Section */}
-        <div className="bg-white rounded-sm  p-3 mb-4 border-b">
+        <div className="bg-white rounded-sm p-3 mb-4 border-b">
           <div className="flex justify-between items-center">
             {/* Left Title + Breadcrumb */}
             <div>
@@ -210,9 +211,9 @@ const TermsAndCondition = () => {
               {/* Add Terms Button */}
               <button
                 onClick={() => setIsModalOpen(true)}
-                className="mr-6 bg-gradient-to-r from-orange-500 to-orange-600 text-white px-4 py-2 rounded-sm font-semibold hover:shadow-xl hover:from-orange-600 hover:to-orange-700 transition-all flex items-center gap-2"
+                className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-4 py-2 rounded-sm font-semibold hover:shadow-xl hover:from-orange-600 hover:to-orange-700 transition-all flex items-center gap-2"
               >
-                <span className="text-xl">+</span>
+                 <Plus size={18} />
                 Add Terms & Conditions
               </button>
             </div>

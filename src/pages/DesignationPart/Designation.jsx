@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { FiHome } from "react-icons/fi";
-import { Pencil, Trash2, Eye, Grid, FileDown } from "lucide-react";
+import { Pencil, Trash2, Eye, Grid, FileDown, Users, Warehouse, Handshake, Target, Plus } from "lucide-react";
 import DashboardLayout from "../../components/DashboardLayout";
 import AddDesignationModal from "../../components/Designation/AddDesignationModal";
+import NumberCard from "../../components/NumberCard";
 
 const AllDesignation = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -79,6 +80,26 @@ const AllDesignation = () => {
       createdDate: "2024-01-20",
       status: "Inactive",
     },
+    {
+      id: "DSG007",
+      department: "Human Resources",
+      name: "HR Manager",
+      image: "https://i.pravatar.cc/50?img=11",
+      description: "Responsible for recruitment and HR operations.",
+      employees: 4,
+      createdDate: "2024-03-15",
+      status: "Active",
+    },
+    {
+      id: "DSG008",
+      department: "Human Resources",
+      name: "HR Manager",
+      image: "https://i.pravatar.cc/50?img=11",
+      description: "Responsible for recruitment and HR operations.",
+      employees: 4,
+      createdDate: "2024-03-15",
+      status: "Active",
+    },
   ];
 
   // 🔹 Filter + Pagination
@@ -108,7 +129,7 @@ const AllDesignation = () => {
     <DashboardLayout>
       <div className="p-0 bg-white ml-6 min-h-screen text-black">
         {/* 🔹 Header Section */}
-        <div className="flex justify-between items-center mb-6 flex-wrap gap-3">
+        <div className="bg-white border-b py-2 flex justify-between items-center mb-6 flex-wrap gap-3">
           <div>
             <h1 className="text-2xl font-bold text-gray-800">
               Designation Module
@@ -129,11 +150,10 @@ const AllDesignation = () => {
                   setStatusFilter(status);
                   setCurrentPage(1);
                 }}
-                className={`px-3 py-2 rounded-sm font-semibold border text-sm transition ${
-                  statusFilter === status
-                    ? "bg-gradient-to-r from-orange-500 to-orange-600  text-white border-[#FF7B1D]"
-                    : "bg-white text-black border-gray-300 hover:bg-gray-100"
-                }`}
+                className={`px-3 py-2 rounded-sm font-semibold border text-sm transition ${statusFilter === status
+                  ? "bg-gradient-to-r from-orange-500 to-orange-600  text-white border-[#FF7B1D]"
+                  : "bg-white text-black border-gray-300 hover:bg-gray-100"
+                  }`}
               >
                 {status}
               </button>
@@ -150,11 +170,43 @@ const AllDesignation = () => {
 
             <button
               onClick={() => setIsAddModalOpen(true)}
-              className="mr-6 px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700  text-white rounded-sm hover:opacity-90"
+              className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white px-4 py-2 rounded-sm font-semibold hover:from-orange-600 hover:to-orange-700 hover:opacity-90 transition ml-2"
             >
-              + Add Designation
+              <Plus size={18} />
+              Add Designation
             </button>
           </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <NumberCard
+            title="Total Employee"
+            number={"248"}
+            icon={<Users className="text-blue-600" size={24} />}
+            iconBgColor="bg-blue-100"
+            lineBorderClass="border-blue-500"
+          />
+          <NumberCard
+            title="Total Department"
+            number={"186"}
+            icon={<Warehouse className="text-green-600" size={24} />}
+            iconBgColor="bg-green-100"
+            lineBorderClass="border-green-500"
+          />
+          <NumberCard
+            title="Total Designation"
+            number={"18"}
+            icon={<Handshake className="text-orange-600" size={24} />}
+            iconBgColor="bg-orange-100"
+            lineBorderClass="border-orange-500"
+          />
+          <NumberCard
+            title="Total Status"
+            number={"2"}
+            icon={<Target className="text-purple-600" size={24} />}
+            iconBgColor="bg-purple-100"
+            lineBorderClass="border-purple-500"
+          />
         </div>
 
         {/* 🧾 Table */}
@@ -191,8 +243,8 @@ const AllDesignation = () => {
                         className="w-10 h-10 rounded-full border object-cover mx-auto"
                       />
                     </td>
-                    <td className="py-3 px-4 font-medium">{dsg.id}</td>
-                    <td className="py-3 px-4">{dsg.department}</td>
+                    <td className="py-3 px-4 text-orange-600 hover:text-blue-800 font-medium">{dsg.id}</td>
+                    <td className="py-3 px-4 text-orange-600 hover:text-blue-800">{dsg.department}</td>
                     <td className="py-3 px-4 font-semibold text-gray-800">
                       {dsg.name}
                     </td>
@@ -200,11 +252,10 @@ const AllDesignation = () => {
                     <td className="py-3 px-4">{dsg.createdDate}</td>
                     <td className="py-3 px-4">
                       <span
-                        className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                          dsg.status === "Active"
-                            ? "bg-green-100 text-green-700"
-                            : "bg-red-100 text-red-600"
-                        }`}
+                        className={`px-3 py-1 rounded-full text-xs font-semibold ${dsg.status === "Active"
+                          ? "bg-green-100 text-green-700"
+                          : "bg-red-100 text-red-600"
+                          }`}
                       >
                         {dsg.status}
                       </span>
@@ -242,7 +293,11 @@ const AllDesignation = () => {
         <div className="flex justify-end items-center gap-3 mt-6">
           <button
             onClick={handlePrev}
-            className="px-4 py-2 rounded-sm text-white font-semibold bg-gradient-to-r from-orange-500 to-orange-600 hover:opacity-90 transition"
+            disabled={currentPage === 1}
+            className={`px-4 py-2 rounded-sm text-white font-semibold transition ${currentPage === 1
+              ? "bg-gray-300 cursor-not-allowed"
+              : "bg-[#FF7B1D] hover:opacity-90"
+              }`}
           >
             Back
           </button>
@@ -251,12 +306,11 @@ const AllDesignation = () => {
             {Array.from({ length: totalPages }, (_, i) => (
               <button
                 key={i + 1}
-                onClick={() => setCurrentPage(i + 1)}
-                className={`px-3 py-1 rounded-sm text-black font-semibold border transition ${
-                  currentPage === i + 1
-                    ? "bg-gray-200 border-gray-400"
-                    : "bg-white border-gray-300 hover:bg-gray-100"
-                }`}
+                onClick={() => handlePageChange(i + 1)}
+                className={`px-3 py-1 rounded-sm text-black font-semibold border transition ${currentPage === i + 1
+                  ? "bg-gray-200 border-gray-400"
+                  : "bg-white border-gray-300 hover:bg-gray-100"
+                  }`}
               >
                 {i + 1}
               </button>
@@ -265,7 +319,11 @@ const AllDesignation = () => {
 
           <button
             onClick={handleNext}
-            className="px-4 py-2 rounded-sm text-white font-semibold bg-[#22C55E] hover:opacity-90 transition"
+            disabled={currentPage === totalPages}
+            className={`px-4 py-2 rounded-sm text-white font-semibold transition ${currentPage === totalPages
+              ? "bg-gray-300 cursor-not-allowed"
+              : "bg-[#22C55E] hover:opacity-90"
+              }`}
           >
             Next
           </button>

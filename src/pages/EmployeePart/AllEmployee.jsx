@@ -3,9 +3,10 @@ import { useNavigate } from "react-router-dom";
 
 import { FiHome, FiGrid } from "react-icons/fi";
 import DashboardLayout from "../../components/DashboardLayout";
-import { Eye, Pencil, Trash2, Plus, List } from "lucide-react";
+import { Eye, Pencil, Trash2, Plus, List, Warehouse, Users, Handshake, Target } from "lucide-react";
 import AddEmployeePopup from "../../components/Employee/AddEmployeeModal";
 import EmployeeGridView from "../../pages/EmployeePart/EmployeeGridView";
+import NumberCard from "../../components/NumberCard";
 
 const AllEmployee = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -185,7 +186,7 @@ const AllEmployee = () => {
     <DashboardLayout>
       <div className="p-0 bg-white ml-6 min-h-screen text-black">
         {/* Header Section */}
-        <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
+        <div className="flex justify-between items-center mb-6 flex-wrap gap-4 bg-white border-b py-3">
           {/* Left: Title */}
           <div>
             <h1 className="text-2xl font-bold text-gray-800">All Employees</h1>
@@ -207,11 +208,10 @@ const AllEmployee = () => {
                     setStatusFilter(status);
                     setCurrentPage(1);
                   }}
-                  className={`px-3 py-2 rounded-sm font-semibold border text-sm transition ${
-                    statusFilter === status
-                      ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
-                      : "bg-white text-black border-gray-300 hover:bg-gray-100"
-                  }`}
+                  className={`px-3 py-2 rounded-sm font-semibold border text-sm transition ${statusFilter === status
+                    ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
+                    : "bg-white text-black border-gray-300 hover:bg-gray-100"
+                    }`}
                 >
                   {status}
                 </button>
@@ -225,11 +225,10 @@ const AllEmployee = () => {
                   setViewMode("list");
                   setCurrentPage(1);
                 }}
-                className={`px-2 py-2 font-semibold text-sm transition flex items-center gap-2 ${
-                  viewMode === "list"
-                    ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white"
-                    : "bg-white text-gray-700 hover:bg-gray-50"
-                }`}
+                className={`px-2 py-2 font-semibold text-sm transition flex items-center gap-2 ${viewMode === "list"
+                  ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white"
+                  : "bg-white text-gray-700 hover:bg-gray-50"
+                  }`}
               >
                 <List size={18} />
               </button>
@@ -239,11 +238,10 @@ const AllEmployee = () => {
                   setViewMode("grid");
                   setCurrentPage(1);
                 }}
-                className={`px-2 py-2 font-semibold text-sm transition flex items-center gap-2 ${
-                  viewMode === "grid"
-                    ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white"
-                    : "bg-white text-gray-700 hover:bg-gray-50"
-                }`}
+                className={`px-2 py-2 font-semibold text-sm transition flex items-center gap-2 ${viewMode === "grid"
+                  ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white"
+                  : "bg-white text-gray-700 hover:bg-gray-50"
+                  }`}
               >
                 <FiGrid size={18} />
               </button>
@@ -258,6 +256,38 @@ const AllEmployee = () => {
               Add Employee
             </button>
           </div>
+        </div>
+
+        {/* Statement Card */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <NumberCard
+            title="Total Employee"
+            number={"248"}
+            icon={<Users className="text-blue-600" size={24} />}
+            iconBgColor="bg-blue-100"
+            lineBorderClass="border-blue-500"
+          />
+          <NumberCard
+            title="Total Department"
+            number={"186"}
+            icon={<Warehouse className="text-green-600" size={24} />}
+            iconBgColor="bg-green-100"
+            lineBorderClass="border-green-500"
+          />
+          <NumberCard
+            title="Total Designation"
+            number={"18"}
+            icon={<Handshake className="text-orange-600" size={24} />}
+            iconBgColor="bg-orange-100"
+            lineBorderClass="border-orange-500"
+          />
+          <NumberCard
+            title="Total Status"
+            number={"2"}
+            icon={<Target className="text-purple-600" size={24} />}
+            iconBgColor="bg-purple-100"
+            lineBorderClass="border-purple-500"
+          />
         </div>
 
         {/* 🔹 Conditional Rendering: List or Grid View */}
@@ -300,14 +330,14 @@ const AllEmployee = () => {
                         </div>
                       </td>
                       <td
-                        className="py-3 px-4 font-medium text-orange-600 cursor-pointer "
+                        className="py-3 px-4 font-medium text-orange-600 hover:text-blue-800 cursor-pointer "
                         onClick={() => openProfile(emp.id)}
                       >
                         {emp.id}
                       </td>
 
                       <td
-                        className="py-3 px-4 text-orange-600 cursor-pointer"
+                        className="py-3 px-4 text-orange-600 hover:text-blue-800 cursor-pointer"
                         onClick={() => openProfile(emp.id)}
                       >
                         {emp.name}
@@ -367,7 +397,11 @@ const AllEmployee = () => {
         <div className="flex justify-end items-center gap-3 mt-6">
           <button
             onClick={handlePrev}
-            className="px-4 py-2 rounded-sm text-white font-semibold bg-gradient-to-r from-orange-500 to-orange-600 hover:opacity-90 transition"
+            disabled={currentPage === 1}
+            className={`px-4 py-2 rounded-sm text-white font-semibold transition ${currentPage === 1
+              ? "bg-gray-300 cursor-not-allowed"
+              : "bg-[#FF7B1D] hover:opacity-90"
+              }`}
           >
             Back
           </button>
@@ -377,11 +411,10 @@ const AllEmployee = () => {
               <button
                 key={i + 1}
                 onClick={() => handlePageChange(i + 1)}
-                className={`px-3 py-1 rounded-sm text-black font-semibold border transition ${
-                  currentPage === i + 1
-                    ? "bg-gray-200 border-gray-400"
-                    : "bg-white border-gray-300 hover:bg-gray-100"
-                }`}
+                className={`px-3 py-1 rounded-sm text-black font-semibold border transition ${currentPage === i + 1
+                  ? "bg-gray-200 border-gray-400"
+                  : "bg-white border-gray-300 hover:bg-gray-100"
+                  }`}
               >
                 {i + 1}
               </button>
@@ -390,7 +423,11 @@ const AllEmployee = () => {
 
           <button
             onClick={handleNext}
-            className="px-4 py-2 rounded-sm text-white font-semibold bg-[#22C55E] hover:opacity-90 transition"
+            disabled={currentPage === totalPages}
+            className={`px-4 py-2 rounded-sm text-white font-semibold transition ${currentPage === totalPages
+              ? "bg-gray-300 cursor-not-allowed"
+              : "bg-[#22C55E] hover:opacity-90"
+              }`}
           >
             Next
           </button>

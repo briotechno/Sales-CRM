@@ -194,7 +194,7 @@ export default function ChampionsLeadPage() {
       <div className="min-h-screen p-0 ml-6 ">
         <style>{scrollbarStyles}</style>
 
-        <div className="max-w-7xl mx-auto">
+        <div className="">
           {/* Header Section */}
           <div className="mb-8">
             {/* Top Section: Title + Filters + Add Button */}
@@ -207,7 +207,7 @@ export default function ChampionsLeadPage() {
                 <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
                   <Home size={14} className="text-gray-700" />
                   CRM /{" "}
-                  <span className="text-orange-600 font-medium">All Leads</span>
+                  <span className="text-orange-600 font-medium">Lead</span>
                 </p>
               </div>
 
@@ -255,7 +255,7 @@ export default function ChampionsLeadPage() {
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
 
               <NumberCard
                 title={"Total Leads"}
@@ -286,7 +286,7 @@ export default function ChampionsLeadPage() {
                 icon={<Award className="text-purple-600" size={24} />}
                 iconBgColor={"bg-purple-100"}
                 lineBorderClass={"border-purple-500"} />
-            </div>
+            </div> */}
           </div>
 
           {/* Modal Popup */}

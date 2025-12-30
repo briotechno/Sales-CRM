@@ -21,6 +21,7 @@ import {
   TrendingUp,
   Users,
 } from "lucide-react";
+import NumberCard from "../../components/NumberCard";
 
 export default function AllClientPage() {
   const [showAddModal, setShowAddModal] = useState(false);
@@ -260,68 +261,50 @@ export default function AllClientPage() {
         {/* Stats Cards */}
         <div className="px-0 py-0 mt-2">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-5 mb-6">
-            <div className="bg-gradient-to-br from-white to-orange-50 rounded-sm p-6 border border-orange-100 hover:shadow-sm">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 font-medium">
-                    Total Clients
-                  </p>
-                  <p className="text-3xl font-bold text-gray-900 mt-2">248</p>
-                  <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
-                    <TrendingUp size={12} /> +12% this month
-                  </p>
-                </div>
-                <div className="bg-gradient-to-br from-orange-400 to-orange-500 p-4 rounded-sm shadow-lg">
-                  <Users className="text-white" size={28} />
-                </div>
-              </div>
-            </div>
-            <div className="bg-gradient-to-br from-white to-green-50 rounded-sm p-6 border border-green-100 hover:shadow-sm">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 font-medium">
-                    Active Clients
-                  </p>
-                  <p className="text-3xl font-bold text-green-600 mt-2">186</p>
-                  <p className="text-xs text-gray-500 mt-1">75% of total</p>
-                </div>
-                <div className="bg-gradient-to-br from-green-400 to-green-500 p-4 rounded-sm shadow-lg">
-                  <CheckCircle className="text-white" size={28} />
-                </div>
-              </div>
-            </div>
-            <div className="bg-gradient-to-br from-white to-red-50 rounded-sm p-6 border border-red-100 hover:shadow-sm">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 font-medium">
-                    Inactive Clients
-                  </p>
-                  <p className="text-3xl font-bold text-red-600 mt-2">18</p>
-                  <p className="text-xs text-gray-500 mt-1">7% of total</p>
-                </div>
-                <div className="bg-gradient-to-br from-red-400 to-red-500 p-4 rounded-sm shadow-lg">
-                  <Clock className="text-white" size={28} />
-                </div>
-              </div>
-            </div>
-            <div className="bg-gradient-to-br from-white to-blue-50 rounded-sm p-6 border border-blue-100 hover:shadow-sm">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 font-medium">
-                    Total Value
-                  </p>
-                  <p className="text-3xl font-bold text-blue-600 mt-2">
-                    ₹1.2Cr
-                  </p>
-                  <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
-                    <TrendingUp size={12} /> +8.5% growth
-                  </p>
-                </div>
-                <div className="bg-gradient-to-br from-blue-400 to-blue-500 p-4 rounded-sm shadow-lg">
-                  <DollarSign className="text-white" size={28} />
-                </div>
-              </div>
-            </div>
+
+            <NumberCard
+              title="Total Clients"
+              number={"248"}
+              up={
+                <span className="flex items-center gap-1 text-green-600 text-xs">
+                  <TrendingUp size={12} />
+                  +12% this month
+                </span>
+              }
+              icon={<Users className="text-blue-600" size={24} />}
+              iconBgColor="bg-blue-100"
+              lineBorderClass="border-blue-500"
+            />
+            <NumberCard
+              title="Active Clients"
+              number={"186"}
+              up={"75% of total"}
+              icon={<CheckCircle className="text-green-600" size={24} />}
+              iconBgColor="bg-green-100"
+              lineBorderClass="border-green-500"
+            />
+            <NumberCard
+              title="Inactive Clients"
+              number={"18"}
+              up={"7% of total"}
+              icon={<Clock className="text-orange-600" size={24} />}
+              iconBgColor="bg-orange-100"
+              lineBorderClass="border-orange-500"
+            />
+            <NumberCard
+              title="Total Value"
+              number={"₹1.2Cr"}
+              up={
+                <span className="flex items-center gap-1 text-green-600 text-xs">
+                  <TrendingUp size={12} />
+                  +8.5% growth
+                </span>
+              }
+              icon={<DollarSign className="text-purple-600" size={24} />}
+              iconBgColor="bg-purple-100"
+              lineBorderClass="border-purple-500"
+            />
+
           </div>
 
           {/* Selection Actions Bar */}
@@ -391,11 +374,10 @@ export default function AllClientPage() {
             {filteredClients.map((client) => (
               <div
                 key={client.id}
-                className={`bg-white rounded-lg border-2 p-6 relative transition-all hover:shadow-xl ${
-                  selectedClients.has(client.id)
-                    ? "border-orange-400 shadow-lg bg-orange-50"
-                    : "border-orange-100 hover:border-orange-200"
-                }`}
+                className={`bg-white rounded-lg border-2 p-6 relative transition-all hover:shadow-xl ${selectedClients.has(client.id)
+                  ? "border-orange-400 shadow-lg bg-orange-50"
+                  : "border-orange-100 hover:border-orange-200"
+                  }`}
               >
                 {/* Checkbox in top-right corner */}
                 <div className="absolute top-5 right-5 z-10">
@@ -410,11 +392,10 @@ export default function AllClientPage() {
                 <div className="flex items-start justify-between pr-10">
                   <div className="flex items-start gap-5 flex-1">
                     <div
-                      className={`p-4 rounded-2xl shadow-lg ${
-                        client.type === "person"
-                          ? "bg-gradient-to-br from-blue-400 to-blue-500"
-                          : "bg-gradient-to-br from-purple-400 to-purple-500"
-                      }`}
+                      className={`p-4 rounded-2xl shadow-lg ${client.type === "person"
+                        ? "bg-gradient-to-br from-blue-400 to-blue-500"
+                        : "bg-gradient-to-br from-purple-400 to-purple-500"
+                        }`}
                     >
                       {client.type === "person" ? (
                         <User className="text-white" size={28} />
@@ -566,11 +547,10 @@ export default function AllClientPage() {
                           className="w-5 h-5 text-orange-500"
                         />
                         <div
-                          className={`p-3 rounded-xl ${
-                            clientType === "person"
-                              ? "bg-gradient-to-br from-blue-400 to-blue-500"
-                              : "bg-gray-200"
-                          }`}
+                          className={`p-3 rounded-xl ${clientType === "person"
+                            ? "bg-gradient-to-br from-blue-400 to-blue-500"
+                            : "bg-gray-200"
+                            }`}
                         >
                           <User
                             size={24}
@@ -608,11 +588,10 @@ export default function AllClientPage() {
                           className="w-5 h-5 text-orange-500"
                         />
                         <div
-                          className={`p-3 rounded-xl ${
-                            clientType === "organization"
-                              ? "bg-gradient-to-br from-purple-400 to-purple-500"
-                              : "bg-gray-200"
-                          }`}
+                          className={`p-3 rounded-xl ${clientType === "organization"
+                            ? "bg-gradient-to-br from-purple-400 to-purple-500"
+                            : "bg-gray-200"
+                            }`}
                         >
                           <Building2
                             size={24}

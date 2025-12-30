@@ -13,7 +13,15 @@ import {
   DollarSign,
   Calendar,
   Activity,
+  Type,
+  Server,
+  Users,
+  Phone,
+  DollarSignIcon,
+  Handshake,
+  Target,
 } from "lucide-react";
+import NumberCard from "../../components/NumberCard";
 
 const PipelineList = () => {
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -120,6 +128,42 @@ const PipelineList = () => {
       createdDate: "02 Sep 2024",
       status: "Active",
     },
+    {
+      id: 9,
+      sn: 9,
+      name: "Sales",
+      stages: 5,
+      totalDealValue: 450000,
+      noOfDeals: 315,
+      stageLabel: "Won",
+      stageColor: "green",
+      createdDate: "14 Jan 2024",
+      status: "Active",
+    },
+    {
+      id: 10,
+      sn: 9,
+      name: "Sales",
+      stages: 5,
+      totalDealValue: 450000,
+      noOfDeals: 315,
+      stageLabel: "Won",
+      stageColor: "green",
+      createdDate: "14 Jan 2024",
+      status: "Active",
+    },
+    {
+      id: 11,
+      sn: 9,
+      name: "Sales",
+      stages: 5,
+      totalDealValue: 450000,
+      noOfDeals: 315,
+      stageLabel: "Won",
+      stageColor: "green",
+      createdDate: "14 Jan 2024",
+      status: "Active",
+    },
   ]);
 
   // Format currency
@@ -198,7 +242,7 @@ const PipelineList = () => {
     <DashboardLayout>
       <div className="p-0 ml-6 bg-gray-0 min-h-screen">
         {/* Header */}
-        <div className="flex justify-between items-center mb-6 flex-wrap gap-3">
+        <div className="bg-white border-b py-2 flex justify-between items-center mb-6 flex-wrap gap-3">
           <div>
             <h1 className="text-2xl font-bold text-gray-800">
               Pipeline Management
@@ -218,11 +262,10 @@ const PipelineList = () => {
                   setFilterStatus(status);
                   setCurrentPage(1);
                 }}
-                className={`px-3 py-2 rounded-sm font-semibold border text-sm transition ${
-                  filterStatus === status
+                className={`px-3 py-2 rounded-sm font-semibold border text-sm transition ${filterStatus === status
                     ? "bg-[#FF7B1D] text-white border-[#FF7B1D]"
                     : "bg-white text-black border-gray-300 hover:bg-gray-100"
-                }`}
+                  }`}
               >
                 {status}
               </button>
@@ -244,6 +287,38 @@ const PipelineList = () => {
               Add Pipeline
             </button>
           </div>
+        </div>
+
+        {/* Statement Card */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <NumberCard
+            title="Total Pipeline"
+            number={"248"}
+            icon={<Users className="text-blue-600" size={24} />}
+            iconBgColor="bg-blue-100"
+            lineBorderClass="border-blue-500"
+          />
+          <NumberCard
+            title="Total Value"
+            number={"186"}
+            icon={<DollarSign className="text-green-600" size={24} />}
+            iconBgColor="bg-green-100"
+            lineBorderClass="border-green-500"
+          />
+          <NumberCard
+            title="Total Deals"
+            number={"18"}
+            icon={<Handshake className="text-orange-600" size={24} />}
+            iconBgColor="bg-orange-100"
+            lineBorderClass="border-orange-500"
+          />
+          <NumberCard
+            title="Total Status"
+            number={"24"}
+            icon={<Target className="text-purple-600" size={24} />}
+            iconBgColor="bg-purple-100"
+            lineBorderClass="border-purple-500"
+          />
         </div>
 
         {/* Table Container */}
@@ -273,10 +348,10 @@ const PipelineList = () => {
                     <td className="py-3 px-4 font-medium">
                       {indexOfFirstItem + index + 1}
                     </td>
-                    <td className="py-3 px-4 text-blue-600 hover:text-blue-800 cursor-pointer font-medium">
+                    <td className="py-3 px-4 text-orange-600 hover:text-blue-800 cursor-pointer font-medium">
                       {pipeline.name}
                     </td>
-                    <td className="py-3 px-4 font-medium">{pipeline.stages}</td>
+                    <td className="py-3 px-4 text-orange-600 hover:text-blue-800 font-medium">{pipeline.stages}</td>
                     <td className="py-3 px-4 font-semibold">
                       {formatCurrency(pipeline.totalDealValue)}
                     </td>
@@ -288,11 +363,10 @@ const PipelineList = () => {
                     </td>
                     <td className="py-3 px-4">
                       <span
-                        className={`px-3 py-1 text-xs font-semibold rounded-full ${
-                          pipeline.status === "Active"
+                        className={`px-3 py-1 text-xs font-semibold rounded-full ${pipeline.status === "Active"
                             ? "bg-green-100 text-green-600"
                             : "bg-red-100 text-red-600"
-                        }`}
+                          }`}
                       >
                         {pipeline.status}
                       </span>
@@ -336,7 +410,11 @@ const PipelineList = () => {
         <div className="flex justify-end items-center gap-3 mt-6">
           <button
             onClick={handlePrev}
-            className="px-4 py-2 rounded-sm text-white font-semibold bg-[#FF7B1D] hover:opacity-90 transition"
+            disabled={currentPage === 1}
+            className={`px-4 py-2 rounded-sm text-white font-semibold transition ${currentPage === 1
+              ? "bg-gray-300 cursor-not-allowed"
+              : "bg-[#FF7B1D] hover:opacity-90"
+              }`}
           >
             Back
           </button>
@@ -346,11 +424,10 @@ const PipelineList = () => {
               <button
                 key={i + 1}
                 onClick={() => handlePageChange(i + 1)}
-                className={`px-3 py-1 rounded-sm text-black font-semibold border transition ${
-                  currentPage === i + 1
-                    ? "bg-gray-200 border-gray-400"
-                    : "bg-white border-gray-300 hover:bg-gray-100"
-                }`}
+                className={`px-3 py-1 rounded-sm text-black font-semibold border transition ${currentPage === i + 1
+                  ? "bg-gray-200 border-gray-400"
+                  : "bg-white border-gray-300 hover:bg-gray-100"
+                  }`}
               >
                 {i + 1}
               </button>
@@ -359,7 +436,11 @@ const PipelineList = () => {
 
           <button
             onClick={handleNext}
-            className="px-4 py-2 rounded-sm text-white font-semibold bg-[#22C55E] hover:opacity-90 transition"
+            disabled={currentPage === totalPages}
+            className={`px-4 py-2 rounded-sm text-white font-semibold transition ${currentPage === totalPages
+              ? "bg-gray-300 cursor-not-allowed"
+              : "bg-[#22C55E] hover:opacity-90"
+              }`}
           >
             Next
           </button>

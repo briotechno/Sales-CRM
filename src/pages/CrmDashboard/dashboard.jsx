@@ -244,7 +244,7 @@ export default function CRMDashboard() {
     <DashboardLayout>
       <div className="min-h-screen ">
         {/* Header */}
-        <div className="bg-white border-b">
+        <div className="bg-white border-b my-3">
           <div className="max-w-7xl mx-auto px-0 ml-10 py-4">
             <div className="flex items-center justify-between">
               {/* Left Title Section */}
@@ -265,7 +265,7 @@ export default function CRMDashboard() {
         </div>
 
         {/* Dashboard Content */}
-        <div className="max-w-7xl mx-auto p-0 ml-6  space-y-8">
+        <div className="p-0 ml-6 space-y-8">
           {/* Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
 

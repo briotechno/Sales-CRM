@@ -97,7 +97,7 @@ export default function LeadDashboard() {
     <DashboardLayout>
       <div className="min-h-screen ">
         {/* Header */}
-        <div className="bg-white border-b">
+        <div className="bg-white border-b my-3">
           <div className="max-w-7xl mx-auto px-0 ml-10 py-4">
             <div className="flex items-center justify-between">
               {/* Left Title Section */}
@@ -150,7 +150,7 @@ export default function LeadDashboard() {
             <NumberCard
               title="Unread Leads"
               number={"89"}
-              up={"-5.3%"}
+              down={"-5.3%"}
               icon={<Mail className="text-purple-600" size={24} />}
               iconBgColor="bg-purple-100"
               lineBorderClass="border-purple-500"

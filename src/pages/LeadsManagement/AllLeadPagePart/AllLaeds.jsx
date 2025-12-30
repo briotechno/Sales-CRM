@@ -2,13 +2,14 @@ import React, { useState } from "react";
 import { FiHome, FiGrid } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "../../../components/DashboardLayout";
-import { Download, Upload, Filter, UserPlus, List, Trash2 } from "lucide-react";
+import { Download, Upload, Filter, UserPlus, List, Trash2, FileText, Users, CheckCircle, Clock, DollarSign, Workflow, Server, Type, Phone } from "lucide-react";
 import AddLeadPopup from "../../../components/AddNewLeads/AddNewLead";
 import BulkUploadLeads from "../../../components/AddNewLeads/BulkUpload";
 import FilterPopup from "../../../pages/LeadsManagement/FilterPopup";
 import AssignLeadsModal from "../../../pages/LeadsManagement/AllLeadPagePart/AssignLeadModal";
 import LeadsListView from "../../../pages/LeadsManagement/AllLeadPagePart/LeadsList";
 import LeadsGridView from "../../../pages/LeadsManagement/AllLeadPagePart/LeadsGridView";
+import NumberCard from "../../../components/NumberCard";
 
 export default function LeadsList() {
   const navigate = useNavigate();
@@ -197,9 +198,8 @@ export default function LeadsList() {
       now.getMonth() + 1
     ).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")} ${String(
       now.getHours() % 12 || 12
-    ).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")} ${
-      now.getHours() >= 12 ? "PM" : "AM"
-    }`;
+    ).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")} ${now.getHours() >= 12 ? "PM" : "AM"
+      }`;
 
     setLeadsData([
       ...leadsData,
@@ -358,7 +358,7 @@ export default function LeadsList() {
     <DashboardLayout>
       <div className="p-0 ml-6 bg-gray-0 min-h-screen">
         {/* Header */}
-        <div className="flex justify-between items-center mb-6 flex-wrap gap-3">
+        <div className="flex justify-between items-center flex-wrap gap-3 bg-white border-b py-3">
           <div>
             <h1 className="text-2xl font-bold text-gray-800">
               Leads Management
@@ -378,11 +378,10 @@ export default function LeadsList() {
                   setFilterStatus(status);
                   setCurrentPage(1);
                 }}
-                className={`px-3 py-2 rounded-sm font-semibold border text-sm transition ${
-                  filterStatus === status
-                    ? "bg-[#FF7B1D] text-white border-[#FF7B1D]"
-                    : "bg-white text-black border-gray-300 hover:bg-gray-100"
-                }`}
+                className={`px-3 py-2 rounded-sm font-semibold border text-sm transition ${filterStatus === status
+                  ? "bg-[#FF7B1D] text-white border-[#FF7B1D]"
+                  : "bg-white text-black border-gray-300 hover:bg-gray-100"
+                  }`}
               >
                 {status}
               </button>
@@ -399,22 +398,20 @@ export default function LeadsList() {
             <div className="flex border border-gray-300 rounded-sm overflow-hidden ml-2">
               <button
                 onClick={() => setView("list")}
-                className={`p-2 transition ${
-                  view === "list"
-                    ? "bg-[#FF7B1D] text-white"
-                    : "bg-white text-black hover:bg-gray-100"
-                }`}
+                className={`p-2 transition ${view === "list"
+                  ? "bg-[#FF7B1D] text-white"
+                  : "bg-white text-black hover:bg-gray-100"
+                  }`}
               >
                 <List size={18} />
               </button>
 
               <button
                 onClick={() => setView("grid")}
-                className={`p-2 transition border-l border-gray-300 ${
-                  view === "grid"
-                    ? "bg-[#FF7B1D] text-white"
-                    : "bg-white text-black hover:bg-gray-100"
-                }`}
+                className={`p-2 transition border-l border-gray-300 ${view === "grid"
+                  ? "bg-[#FF7B1D] text-white"
+                  : "bg-white text-black hover:bg-gray-100"
+                  }`}
               >
                 <FiGrid size={18} />
               </button>
@@ -483,6 +480,38 @@ export default function LeadsList() {
           setFilterSubtype={setFilterSubtype}
         />
 
+        {/* Statement Card */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 my-3">
+          <NumberCard
+            title="Total Clients"
+            number={"248"}
+            icon={<Users className="text-blue-600" size={24} />}
+            iconBgColor="bg-blue-100"
+            lineBorderClass="border-blue-500"
+          />
+          <NumberCard
+            title="Total Service"
+            number={"186"}
+            icon={<Server className="text-green-600" size={24} />}
+            iconBgColor="bg-green-100"
+            lineBorderClass="border-green-500"
+          />
+          <NumberCard
+            title="Total Type"
+            number={"18"}
+            icon={<Type className="text-orange-600" size={24} />}
+            iconBgColor="bg-orange-100"
+            lineBorderClass="border-orange-500"
+          />
+          <NumberCard
+            title="Total Calls"
+            number={"24"}
+            icon={<Phone className="text-purple-600" size={24} />}
+            iconBgColor="bg-purple-100"
+            lineBorderClass="border-purple-500"
+          />
+        </div>
+        
         {/* Action Bar with Selection */}
         {selectedLeads.length > 0 && (
           <div className="bg-orange-500 text-white p-4 rounded-sm mb-4 shadow-sm flex justify-between items-center">
@@ -533,15 +562,15 @@ export default function LeadsList() {
 
         {/* Pagination */}
         {view === "list" && filteredLeads.length > 0 && (
+
           <div className="flex justify-end items-center gap-3 mt-6">
             <button
               onClick={handlePrev}
               disabled={currentPage === 1}
-              className={`px-4 py-2 rounded-sm text-white font-semibold transition ${
-                currentPage === 1
-                  ? "bg-gray-300 cursor-not-allowed"
-                  : "bg-[#FF7B1D] hover:opacity-90"
-              }`}
+              className={`px-4 py-2 rounded-sm text-white font-semibold transition ${currentPage === 1
+                ? "bg-gray-300 cursor-not-allowed"
+                : "bg-[#FF7B1D] hover:opacity-90"
+                }`}
             >
               Back
             </button>
@@ -551,11 +580,10 @@ export default function LeadsList() {
                 <button
                   key={i + 1}
                   onClick={() => handlePageChange(i + 1)}
-                  className={`px-3 py-1 rounded-sm text-black font-semibold border transition ${
-                    currentPage === i + 1
-                      ? "bg-gray-200 border-gray-400"
-                      : "bg-white border-gray-300 hover:bg-gray-100"
-                  }`}
+                  className={`px-3 py-1 rounded-sm text-black font-semibold border transition ${currentPage === i + 1
+                    ? "bg-gray-200 border-gray-400"
+                    : "bg-white border-gray-300 hover:bg-gray-100"
+                    }`}
                 >
                   {i + 1}
                 </button>
@@ -565,11 +593,10 @@ export default function LeadsList() {
             <button
               onClick={handleNext}
               disabled={currentPage === totalPages}
-              className={`px-4 py-2 rounded-sm text-white font-semibold transition ${
-                currentPage === totalPages
-                  ? "bg-gray-300 cursor-not-allowed"
-                  : "bg-[#22C55E] hover:opacity-90"
-              }`}
+              className={`px-4 py-2 rounded-sm text-white font-semibold transition ${currentPage === totalPages
+                ? "bg-gray-300 cursor-not-allowed"
+                : "bg-[#22C55E] hover:opacity-90"
+                }`}
             >
               Next
             </button>

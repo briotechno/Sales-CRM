@@ -479,7 +479,7 @@
 //   return (
 //     <DashboardLayout>
 //       <div className="p-6 bg-gray-0 min-h-screen">
-//         <div className="flex justify-between items-center mb-6 flex-wrap gap-3">
+//         <div className="bg-white border-b py-2 flex justify-between items-center mb-6 flex-wrap gap-3">
 //           <div>
 //             <h1 className="text-2xl font-bold text-gray-800">
 //               Leads Management
@@ -896,10 +896,13 @@ import {
   Filter,
   UserPlus,
   Users,
+  Type,
+  Server,
 } from "lucide-react";
 import AddLeadPopup from "../../components/AddNewLeads/AddNewLead";
 import BulkUploadLeads from "../../components/AddNewLeads/BulkUpload";
 import FilterPopup from "../../pages/LeadsManagement/FilterPopup";
+import NumberCard from "../../components/NumberCard";
 
 export default function LeadsList() {
   const navigate = useNavigate();
@@ -1510,7 +1513,7 @@ export default function LeadsList() {
     <DashboardLayout>
       <div className="p-0 ml-6 bg-gray-0 min-h-screen">
         {/* Header */}
-        <div className="flex justify-between items-center mb-6 flex-wrap gap-3">
+        <div className="bg-white border-b py-2 flex justify-between items-center mb-6 flex-wrap gap-3">
           <div>
             <h1 className="text-2xl font-bold text-gray-800">
               Leads Management
@@ -1518,7 +1521,7 @@ export default function LeadsList() {
             <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
               <FiHome className="text-gray-700 text-sm" />
               <span className="text-gray-400"></span> CRM /{" "}
-              <span className="text-[#FF7B1D] font-medium">All Leads</span>
+              <span className="text-[#FF7B1D] font-medium">Dropped Leads</span>
             </p>
           </div>
 
@@ -1616,6 +1619,38 @@ export default function LeadsList() {
           </div>
         </div>
 
+{/* Statement Card */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <NumberCard
+            title="Total Clients"
+            number={"248"}
+            icon={<Users className="text-blue-600" size={24} />}
+            iconBgColor="bg-blue-100"
+            lineBorderClass="border-blue-500"
+          />
+          <NumberCard
+            title="Total Service"
+            number={"186"}
+            icon={<Server className="text-green-600" size={24} />}
+            iconBgColor="bg-green-100"
+            lineBorderClass="border-green-500"
+          />
+          <NumberCard
+            title="Total Type"
+            number={"18"}
+            icon={<Type className="text-orange-600" size={24} />}
+            iconBgColor="bg-orange-100"
+            lineBorderClass="border-orange-500"
+          />
+          <NumberCard
+            title="Total Calls"
+            number={"24"}
+            icon={<Phone className="text-purple-600" size={24} />}
+            iconBgColor="bg-purple-100"
+            lineBorderClass="border-purple-500"
+          />
+        </div>
+
         {/* Filter Popup Component */}
         <FilterPopup
           isOpen={isFilterOpen}
@@ -1710,9 +1745,9 @@ export default function LeadsList() {
                       <td className="py-3 px-4">
                         {(currentPage - 1) * itemsPerPage + index + 1}
                       </td>
-                      <td className="py-3 px-4 font-medium">{lead.id}</td>
+                      <td className="py-3 px-4 text-orange-600 hover:text-blue-800 font-medium">{lead.id}</td>
                       <td
-                        className="py-3 px-4 text-blue-600 hover:text-blue-800 cursor-pointer font-medium"
+                        className="py-3 px-4 text-orange-600 hover:text-blue-800 cursor-pointer font-medium"
                         onClick={() => handleLeadClick(lead)}
                       >
                         {lead.name}
