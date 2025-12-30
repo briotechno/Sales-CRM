@@ -27,16 +27,31 @@ const Department = {
         return result.insertId;
     },
 
-    findAll: async () => {
+    findAll: async (page = 1, limit = 10) => {
+        const offset = (page - 1) * limit;
+
+        // Get total count
+        const [totalRows] = await pool.query('SELECT COUNT(*) as total FROM departments');
+        const total = totalRows[0].total;
+
         const [rows] = await pool.query(`
             SELECT d.*, 
             (SELECT COUNT(*) FROM employees e WHERE e.department_id = d.id) as employee_count,
             (SELECT COUNT(*) FROM designations deg WHERE deg.department_id = d.id) as designation_count
             FROM departments d
-        `);
-        return rows;
-    },
+            LIMIT ? OFFSET ?
+        `, [parseInt(limit), parseInt(offset)]);
 
+        return {
+            departments: rows,
+            pagination: {
+                total,
+                page: parseInt(page),
+                limit: parseInt(limit),
+                totalPages: Math.ceil(total / limit)
+            }
+        };
+    },
     findById: async (id) => {
         const [rows] = await pool.query(`
             SELECT d.*, 

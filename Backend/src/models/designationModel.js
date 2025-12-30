@@ -21,14 +21,30 @@ const Designation = {
         return result.insertId;
     },
 
-    findAll: async () => {
+    findAll: async (page = 1, limit = 10) => {
+        const offset = (page - 1) * limit;
+
+        // Get total count
+        const [totalRows] = await pool.query('SELECT COUNT(*) as total FROM designations');
+        const total = totalRows[0].total;
+
         const [rows] = await pool.query(`
             SELECT deg.*, d.department_name, d.department_id as department_uid,
             (SELECT COUNT(*) FROM employees e WHERE e.designation_id = deg.id) as employee_count
             FROM designations deg
             LEFT JOIN departments d ON deg.department_id = d.id
-        `);
-        return rows;
+            LIMIT ? OFFSET ?
+        `, [parseInt(limit), parseInt(offset)]);
+
+        return {
+            designations: rows,
+            pagination: {
+                total,
+                page: parseInt(page),
+                limit: parseInt(limit),
+                totalPages: Math.ceil(total / limit)
+            }
+        };
     },
 
     findById: async (id) => {

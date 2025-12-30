@@ -11,10 +11,11 @@ const createEmployee = async (req, res) => {
 
 const getEmployees = async (req, res) => {
     try {
-        const employees = await Employee.findAll();
-        res.status(200).json({ status: true, data: employees });
+        const { page = 1, limit = 10 } = req.query;
+        const data = await Employee.findAll(page, limit);
+        res.status(200).json(data);
     } catch (error) {
-        res.status(500).json({ status: false, message: error.message });
+        res.status(500).json({ message: error.message });
     }
 };
 

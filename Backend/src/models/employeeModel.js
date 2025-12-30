@@ -40,7 +40,13 @@ const Employee = {
         return result.insertId;
     },
 
-    findAll: async () => {
+    findAll: async (page = 1, limit = 10) => {
+        const offset = (page - 1) * limit;
+
+        // Get total count
+        const [totalRows] = await pool.query('SELECT COUNT(*) as total FROM employees');
+        const total = totalRows[0].total;
+
         const [rows] = await pool.query(`
             SELECT e.*, 
             d.department_name, d.department_id as department_uid,
@@ -49,8 +55,18 @@ const Employee = {
             LEFT JOIN departments d ON e.department_id = d.id 
             LEFT JOIN designations deg ON e.designation_id = deg.id
             ORDER BY e.id DESC
-        `);
-        return rows;
+            LIMIT ? OFFSET ?
+        `, [parseInt(limit), parseInt(offset)]);
+
+        return {
+            employees: rows,
+            pagination: {
+                total,
+                page: parseInt(page),
+                limit: parseInt(limit),
+                totalPages: Math.ceil(total / limit)
+            }
+        };
     },
 
     findById: async (id) => {

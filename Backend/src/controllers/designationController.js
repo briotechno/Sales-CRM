@@ -11,10 +11,11 @@ const createDesignation = async (req, res) => {
 
 const getDesignations = async (req, res) => {
     try {
-        const designations = await Designation.findAll();
-        res.status(200).json({ status: true, data: designations });
+        const { page = 1, limit = 10 } = req.query;
+        const data = await Designation.findAll(page, limit);
+        res.status(200).json(data);
     } catch (error) {
-        res.status(500).json({ status: false, message: error.message });
+        res.status(500).json({ message: error.message });
     }
 };
 

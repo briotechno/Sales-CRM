@@ -5,6 +5,7 @@ const authRoutes = require('./routes/authRoutes');
 const departmentRoutes = require('./routes/departmentRoutes');
 const designationRoutes = require('./routes/designationRoutes');
 const employeeRoutes = require('./routes/employeeRoutes');
+const teamRoutes = require('./routes/teamRoutes');
 
 dotenv.config();
 
@@ -18,6 +19,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/departments', departmentRoutes);
 app.use('/api/designations', designationRoutes);
 app.use('/api/employees', employeeRoutes);
+app.use('/api/teams', teamRoutes);
 
 app.get('/', (req, res) => {
     res.send('API is running...');
