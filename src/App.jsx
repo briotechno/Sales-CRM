@@ -97,97 +97,72 @@ import MailPage from "./pages/TopBarComponents/MailPage";
 import LeadsReminder from "./components/Reminder";
 // Meeting reminder
 import MeetingReminder from "./components/Meeting";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
   return (
     <Router>
       <Routes>
+        {/* Public Routes */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/packages" element={<Packages />} />
-        // logout
-        <Route path="/logout" element={<Logout />} />
-        // Header Component Routes
-        <Route path="/notifications" element={<NotificationPage />} />
-        <Route path="/mail" element={<MailPage />} />
-        // Dashboard Route
-        <Route path="/dashboard" element={<Dashboard />} />
-        // Crm Dashboard
-        <Route path="/crm/dashboard" element={<CRMDashboard />} />
-        // Leads Management Routes
-        <Route path="/crm/leads/all" element={<AllLeads />} />
-        <Route path="/crm/leads/new" element={<NewLeads />} />
-        <Route path="/crm/leads/assigned" element={<Assigned />} />
-        <Route path="/crm/leads/unread" element={<UnreadLeads />} />
-        <Route path="/crm/leads/dropped" element={<DroppedLeads />} />
-        <Route path="/crm/leads/trending" element={<TrendingLeads />} />
-        <Route path="/crm/leads/analysis" element={<Analysis />} />
-        <Route path="/crm/leads/profile/:id" element={<LeadProfile />} />
-        <Route path="/crm/leads/add-notes" element={<AddNotes />} />
-        <Route path="/crm/leads/dashboard" element={<LeadDashboard />} />
-        <Route
-          path="/crm/leads/create-call-log"
-          element={<CreateCallLogModal />}
-        />
-        // Champion Management
-        <Route path="/crm/champions/lead" element={<Lead />} />
-        // Pipline Management Routes
-        <Route path="/crm/pipeline/manage" element={<ManagePipline />} />
-        <Route path="/crm/pipeline/analytics" element={<Analytics />} />
-        // HRM Dashboard
-        <Route path="/hrm/dashboard" element={<HrmDashboard />} />
-        // Department Routes
-        <Route path="/hrm/department" element={<AllDepartment />} />
-        // Designation part
-        <Route path="/hrm/designation" element={<AllDesignation />} />
-        // Term & Condition
-        <Route path="/hrm/terms" element={<AllTermCondition />} />
-        // Employee Part
-        <Route path="/hrm/employee/all" element={<AllEmployee />} />
-        <Route path="/employee-profile/:id" element={<EmployeeProfile />} />
-        // Attendance Part
-        <Route path="/hrm/attendance" element={<AllAttendance />} />
-        <Route path="/hrm/attendance/manage" element={<ManageAttendance />} />
-        // Leave Management Part
-        <Route path="/hrm/leave/all" element={<AllLeave />} />
-        <Route path="/hrm/leave/holiday" element={<Holiday />} />
-        <Route path="/hrm/leave/manage" element={<ManageLeave />} />
-        // Salary Management Part
-        <Route path="/hrm/salary" element={<AllSalary />} />
-        // Company Policy Part
-        <Route path="/hrm/company-policy" element={<AllCompanyPolicy />} />
-        // HR Policy Part
-        <Route path="/hrm/hr-policy" element={<AllHRPolicy />} />
-        <Route path="/hrm/job-management" element={<Job />} />
-        // Notes Part
-        <Route path="/additional/notes" element={<AllNotes />} />
-        // To Do Part
-        <Route path="/additional/todo" element={<AllToDo />} />
-        // My Expanses Part
-        <Route path="/additional/expenses" element={<MyExpanses />} />
-        // Quotation Part
-        <Route path="/additional/quotation" element={<AllQuotation />} />
-        // Invoice Part
-        <Route path="/additional/invoice" element={<AllInvoice />} />
-        // Notification Part
-        <Route path="/additional/notification" element={<Notification />} />
-        // Anouncement Part
-        <Route path="/additional/announcement" element={<AllAnouncement />} />
-        // Client Management Part
-        <Route path="/crm/client/all" element={<ClientManagement />} />
-        // Business Info Part
-        <Route path="/settings/business-info" element={<BusinessInfo />} />
-        // Manage Subscription Part
-        <Route path="/settings/subscription" element={<ManageSubscription />} />
-        // FAQ Part
-        <Route path="/settings/faq" element={<Faq />} />
-        // Messenger Part
-        <Route path="/additional/messenger" element={<Messenger />} />
-        // Catelogs Part
-        <Route path="/additional/catelogs" element={<Catelogs />} />
-        // Team Management
-        <Route path="/hrm/teams" element={<TeamManagement />} />
+
+        {/* Protected Routes */}
+        <Route element={<ProtectedRoute />}>
+          <Route path="/logout" element={<Logout />} />
+          <Route path="/notifications" element={<NotificationPage />} />
+          <Route path="/mail" element={<MailPage />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/crm/dashboard" element={<CRMDashboard />} />
+          <Route path="/crm/leads/all" element={<AllLeads />} />
+          <Route path="/crm/leads/new" element={<NewLeads />} />
+          <Route path="/crm/leads/assigned" element={<Assigned />} />
+          <Route path="/crm/leads/unread" element={<UnreadLeads />} />
+          <Route path="/crm/leads/dropped" element={<DroppedLeads />} />
+          <Route path="/crm/leads/trending" element={<TrendingLeads />} />
+          <Route path="/crm/leads/analysis" element={<Analysis />} />
+          <Route path="/crm/leads/profile/:id" element={<LeadProfile />} />
+          <Route path="/crm/leads/add-notes" element={<AddNotes />} />
+          <Route path="/crm/leads/dashboard" element={<LeadDashboard />} />
+          <Route
+            path="/crm/leads/create-call-log"
+            element={<CreateCallLogModal />}
+          />
+          <Route path="/crm/champions/lead" element={<Lead />} />
+          <Route path="/crm/pipeline/manage" element={<ManagePipline />} />
+          <Route path="/crm/pipeline/analytics" element={<Analytics />} />
+          <Route path="/hrm/dashboard" element={<HrmDashboard />} />
+          <Route path="/hrm/department" element={<AllDepartment />} />
+          <Route path="/hrm/designation" element={<AllDesignation />} />
+          <Route path="/hrm/terms" element={<AllTermCondition />} />
+          <Route path="/hrm/employee/all" element={<AllEmployee />} />
+          <Route path="/employee-profile/:id" element={<EmployeeProfile />} />
+          <Route path="/hrm/attendance" element={<AllAttendance />} />
+          <Route path="/hrm/attendance/manage" element={<ManageAttendance />} />
+          <Route path="/hrm/leave/all" element={<AllLeave />} />
+          <Route path="/hrm/leave/holiday" element={<Holiday />} />
+          <Route path="/hrm/leave/manage" element={<ManageLeave />} />
+          <Route path="/hrm/salary" element={<AllSalary />} />
+          <Route path="/hrm/company-policy" element={<AllCompanyPolicy />} />
+          <Route path="/hrm/hr-policy" element={<AllHRPolicy />} />
+          <Route path="/hrm/job-management" element={<Job />} />
+          <Route path="/additional/notes" element={<AllNotes />} />
+          <Route path="/additional/todo" element={<AllToDo />} />
+          <Route path="/additional/expenses" element={<MyExpanses />} />
+          <Route path="/additional/quotation" element={<AllQuotation />} />
+          <Route path="/additional/invoice" element={<AllInvoice />} />
+          <Route path="/additional/notification" element={<Notification />} />
+          <Route path="/additional/announcement" element={<AllAnouncement />} />
+          <Route path="/crm/client/all" element={<ClientManagement />} />
+          <Route path="/settings/business-info" element={<BusinessInfo />} />
+          <Route path="/settings/subscription" element={<ManageSubscription />} />
+          <Route path="/settings/faq" element={<Faq />} />
+          <Route path="/additional/messenger" element={<Messenger />} />
+          <Route path="/additional/catelogs" element={<Catelogs />} />
+          <Route path="/hrm/teams" element={<TeamManagement />} />
+        </Route>
       </Routes>
       <LeadsReminder />
       <MeetingReminder />

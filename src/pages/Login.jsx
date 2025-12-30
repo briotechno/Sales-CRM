@@ -1,25 +1,41 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { toast } from "react-hot-toast";
 import { Users, Eye, EyeOff, User, Lock, Mail, TrendingUp } from "lucide-react";
+import { useLoginMutation } from "../store/api/authApi";
+import { setCredentials } from "../store/slices/authSlice";
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
-  const [formData, setFormData] = useState({ username: "", password: "" });
+  const [formData, setFormData] = useState({ email: "", password: "" });
   const [forgotPassword, setForgotPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [showNewPassword, setShowNewPassword] = useState(false);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const [login, { isLoading }] = useLoginMutation();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleLogin = () => {
-    if (formData.username && formData.password) {
-      navigate("/dashboard"); // <-- move this here
-    } else {
-      alert("Please enter credentials");
+  const handleLogin = async () => {
+    if (!formData.email || !formData.password) {
+      return toast.error("Please enter email and password");
+    }
+
+    try {
+      const result = await login(formData).unwrap();
+      dispatch(setCredentials({
+        user: result.user,
+        token: result.token
+      }));
+      toast.success("Login successful!");
+      navigate("/dashboard");
+    } catch (err) {
+      toast.error(err?.data?.message || "Login failed. Please check your credentials.");
     }
   };
 
@@ -96,15 +112,15 @@ export default function Login() {
               {/* Username Field */}
               <div>
                 <label className="block text-sm font-bold text-gray-800 mb-2">
-                  Username
+                  Email Address
                 </label>
                 <div className="relative">
-                  <User className="absolute left-3 top-3.5 text-black w-5 h-5" />
+                  <Mail className="absolute left-3 top-3.5 text-black w-5 h-5" />
                   <input
-                    type="text"
-                    name="username"
-                    placeholder="Enter User Name"
-                    value={formData.username}
+                    type="email"
+                    name="email"
+                    placeholder="Enter Email"
+                    value={formData.email}
                     onChange={handleChange}
                     onKeyPress={(e) => handleKeyPress(e, handleLogin)}
                     className="w-full pl-10 pr-4 py-3 bg-white border-2 border-gray-200 rounded-xl text-gray-800 placeholder-gray-400 transition-all focus:border-orange-500 focus:ring-2 focus:ring-orange-200 focus:outline-none text-sm sm:text-base"
@@ -145,9 +161,10 @@ export default function Login() {
               {/* Login Button */}
               <button
                 onClick={handleLogin}
-                className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white py-3 sm:py-3.5 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl mt-4 sm:mt-6 text-sm sm:text-base"
+                disabled={isLoading}
+                className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white py-3 sm:py-3.5 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl mt-4 sm:mt-6 text-sm sm:text-base flex items-center justify-center opacity-90 disabled:opacity-50"
               >
-                Access Dashboard →
+                {isLoading ? "Signing in..." : "Access Dashboard →"}
               </button>
 
               <div className="text-center mt-4">

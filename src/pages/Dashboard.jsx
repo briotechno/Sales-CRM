@@ -664,6 +664,7 @@
 
 // export default CRMDashboard;
 import React, { useState, useEffect } from "react";
+import { useSelector } from "react-redux";
 import DashboardLayout from "../components/DashboardLayout";
 import AddLeadModal from "../components/AddNewLeads/AddNewLead";
 import BulkUploadLeads from "../components/AddNewLeads/BulkUpload";
@@ -693,6 +694,7 @@ import {
 } from "lucide-react";
 
 const CRMDashboard = () => {
+  const { user } = useSelector((state) => state.auth);
   const [loading, setLoading] = useState(true);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [openLeadMenu, setOpenLeadMenu] = useState(false);
@@ -926,7 +928,7 @@ const CRMDashboard = () => {
                     />
                     <div>
                       <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-                        Welcome Back, NK Yadav
+                        Welcome Back, {user?.firstName} {user?.lastName}
                         <Edit
                           size={18}
                           className="text-white/80 cursor-pointer hover:text-white"
@@ -1202,12 +1204,12 @@ const CRMDashboard = () => {
                           {channel === "meta"
                             ? "Meta"
                             : channel === "justdial"
-                            ? "Justdial"
-                            : channel === "indiamart"
-                            ? "Indiamart"
-                            : channel === "googleDocs"
-                            ? "Google Docs"
-                            : "CRM Form"}
+                              ? "Justdial"
+                              : channel === "indiamart"
+                                ? "Indiamart"
+                                : channel === "googleDocs"
+                                  ? "Google Docs"
+                                  : "CRM Form"}
                         </span>
                         <span className="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full font-bold text-sm">
                           {count}
@@ -1333,9 +1335,8 @@ const CRMDashboard = () => {
                         <div
                           className="bg-[#F26422] h-2 rounded-full"
                           style={{
-                            width: `${
-                              (stage.count / stats.leads.total) * 100
-                            }%`,
+                            width: `${(stage.count / stats.leads.total) * 100
+                              }%`,
                           }}
                         ></div>
                       </div>
@@ -1401,13 +1402,12 @@ const CRMDashboard = () => {
                             </td>
                             <td className="px-3 py-3">
                               <span
-                                className={`px-2 py-1 text-xs font-bold rounded-full ${
-                                  lead.status === "New"
+                                className={`px-2 py-1 text-xs font-bold rounded-full ${lead.status === "New"
                                     ? "bg-green-100 text-green-700"
                                     : lead.status === "Trending"
-                                    ? "bg-purple-100 text-purple-700"
-                                    : "bg-orange-100 text-orange-700"
-                                }`}
+                                      ? "bg-purple-100 text-purple-700"
+                                      : "bg-orange-100 text-orange-700"
+                                  }`}
                               >
                                 {lead.status}
                               </span>

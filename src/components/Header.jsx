@@ -14,8 +14,10 @@ import {
   FiDollarSign,
 } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 
 const Header = () => {
+  const { user } = useSelector((state) => state.auth);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [appsOpen, setAppsOpen] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -208,9 +210,9 @@ const Header = () => {
           {isDropdownOpen && (
             <div className="absolute right-0 mt-2 w-48 sm:w-56 bg-white rounded-lg shadow-lg overflow-hidden">
               <div className="px-3 sm:px-4 py-2 sm:py-3 border-b">
-                <p className="text-xs sm:text-sm font-semibold">Kevin Larry</p>
+                <p className="text-xs sm:text-sm font-semibold">{user?.firstName} {user?.lastName}</p>
                 <p className="text-[10px] sm:text-xs text-gray-500 truncate">
-                  warren@example.com
+                  {user?.email}
                 </p>
               </div>
 

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-hot-toast";
 import {
   Users,
   Eye,
@@ -17,12 +18,14 @@ import {
   ArrowLeft,
   Check,
 } from "lucide-react";
+import { useSignupMutation } from "../store/api/authApi";
 
 export default function Signup() {
   const [currentStep, setCurrentStep] = useState(1);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigate = useNavigate();
+  const [signup, { isLoading }] = useSignupMutation();
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -46,7 +49,7 @@ export default function Signup() {
 
   const validateStep1 = () => {
     if (!formData.firstName || !formData.email || !formData.mobileNumber) {
-      alert("Please fill out all required fields in Step 1");
+      toast.error("Please fill out all required fields in Step 1");
       return false;
     }
     return true;
@@ -54,7 +57,7 @@ export default function Signup() {
 
   const validateStep2 = () => {
     if (!formData.businessName || !formData.businessType || !formData.address) {
-      alert("Please fill out all required fields in Step 2");
+      toast.error("Please fill out all required fields in Step 2");
       return false;
     }
     return true;
@@ -74,21 +77,29 @@ export default function Signup() {
     }
   };
 
-  const handleSignup = (e) => {
-    e.preventDefault();
+  const handleSignup = async (e) => {
+    if (e) e.preventDefault();
 
     if (!formData.password || !formData.confirmPassword) {
-      alert("Please fill out all required fields");
+      toast.error("Please fill out all required fields");
       return;
     }
 
     if (formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match");
+      toast.error("Passwords do not match");
       return;
     }
 
-    alert("Signup successful! Please login.");
-    navigate("/packages");
+    try {
+      // Create user data without confirmPassword for the API
+      const { confirmPassword, ...signupData } = formData;
+      await signup(signupData).unwrap();
+
+      toast.success("Signup successful! Please login.");
+      navigate("/login");
+    } catch (err) {
+      toast.error(err?.data?.message || "Signup failed. Please try again.");
+    }
   };
 
   const handleKeyPress = (e) => {
@@ -139,10 +150,10 @@ export default function Signup() {
                 <div key={step} className="flex items-center flex-1">
                   <div
                     className={`flex items-center justify-center w-7 h-7 rounded-full font-semibold text-xs transition-all ${currentStep > step
+                      ? "bg-orange-500 text-white"
+                      : currentStep === step
                         ? "bg-orange-500 text-white"
-                        : currentStep === step
-                          ? "bg-orange-500 text-white"
-                          : "bg-gray-200 text-gray-500"
+                        : "bg-gray-200 text-gray-500"
                       }`}
                   >
                     {currentStep > step ? <Check className="w-3 h-3" /> : step}
@@ -171,7 +182,7 @@ export default function Signup() {
                   First Name
                 </label>
                 <div className="relative">
-                  <User className="absolute left-2.5 top-2.5 text-black w-5 h-5" />
+                  <User className="absolute left-2.5 top-1/2 -translate-y-1/2 text-black w-5 h-5" />
                   <input
                     type="text"
                     name="firstName"
@@ -190,7 +201,7 @@ export default function Signup() {
                   Last Name
                 </label>
                 <div className="relative">
-                  <User className="absolute left-2.5 top-2.5 text-black w-5 h-5" />
+                  <User className="absolute left-2.5 top-1/2 -translate-y-1/2 text-black w-5 h-5" />
                   <input
                     type="text"
                     name="lastName"
@@ -209,7 +220,7 @@ export default function Signup() {
                   Email Address
                 </label>
                 <div className="relative">
-                  <Mail className="absolute left-2.5 top-2.5 text-black w-4 h-4" />
+                  <Mail className="absolute left-2.5 top-1/2 -translate-y-1/2 text-black w-4 h-4" />
                   <input
                     type="email"
                     name="email"
@@ -228,7 +239,7 @@ export default function Signup() {
                   Mobile Number
                 </label>
                 <div className="relative">
-                  <Phone className="absolute left-2.5 top-2.5 text-black w-4 h-4" />
+                  <Phone className="absolute left-2.5 top-1/2 -translate-y-1/2 text-black w-4 h-4" />
                   <input
                     type="tel"
                     name="mobileNumber"
@@ -244,7 +255,7 @@ export default function Signup() {
               {/* Next Button */}
               <button
                 onClick={handleNext}
-                className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white py-2 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl mt-2 flex items-center justify-center gap-2 text-sm"
+                className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl mt-2 flex items-center justify-center gap-2 text-sm"
               >
                 Next Step
                 <ArrowRight className="w-4 h-4" />
@@ -256,7 +267,7 @@ export default function Signup() {
                   <button
                     type="button"
                     className="text-orange-500 font-semibold hover:underline"
-                    onClick={() => navigate("/")}
+                    onClick={() => navigate("/login")}
                   >
                     Login
                   </button>
@@ -278,7 +289,7 @@ export default function Signup() {
                   Business Name
                 </label>
                 <div className="relative">
-                  <Building className="absolute left-2.5 top-2.5 text-black w-4 h-4" />
+                  <Building className="absolute left-2.5 top-1/2 -translate-y-1/2 text-black w-4 h-4" />
                   <input
                     type="text"
                     name="businessName"
@@ -297,7 +308,7 @@ export default function Signup() {
                   Business Type
                 </label>
                 <div className="relative">
-                  <Briefcase className="absolute left-2.5 top-2.5 text-black w-4 h-4 z-10" />
+                  <Briefcase className="absolute left-2.5 top-1/2 -translate-y-1/2 text-black w-4 h-4 z-10" />
                   <select
                     name="businessType"
                     value={formData.businessType}
@@ -308,7 +319,7 @@ export default function Signup() {
                     <option value="person">Person</option>
                     <option value="organisation">Organisation</option>
                   </select>
-                  <ChevronDown className="absolute right-2.5 top-2.5 text-gray-600 w-4 h-4 pointer-events-none" />
+                  <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-600 w-4 h-4 pointer-events-none" />
                 </div>
               </div>
 
@@ -319,7 +330,7 @@ export default function Signup() {
                   <span className="text-gray-400 text-xs">(Optional)</span>
                 </label>
                 <div className="relative">
-                  <FileText className="absolute left-2.5 top-2.5 text-black w-4 h-4" />
+                  <FileText className="absolute left-2.5 top-1/2 -translate-y-1/2 text-black w-4 h-4" />
                   <input
                     type="text"
                     name="gst"
@@ -338,7 +349,7 @@ export default function Signup() {
                   Address
                 </label>
                 <div className="relative">
-                  <MapPin className="absolute left-2.5 top-2.5 text-black w-4 h-4" />
+                  <MapPin className="absolute left-2.5 top-1/2 -translate-y-1/2 text-black w-4 h-4" />
                   <input
                     type="text"
                     name="address"
@@ -355,14 +366,14 @@ export default function Signup() {
               <div className="flex gap-2 mt-2">
                 <button
                   onClick={handleBack}
-                  className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center gap-2 text-sm"
+                  className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center gap-2 text-sm"
                 >
                   <ArrowLeft className="w-4 h-4" />
                   Back
                 </button>
                 <button
                   onClick={handleNext}
-                  className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white py-2 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center gap-2 text-sm"
+                  className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center gap-2 text-sm"
                 >
                   Next Step
                   <ArrowRight className="w-4 h-4" />
@@ -384,7 +395,7 @@ export default function Signup() {
                   Password
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-2.5 top-2.5 text-black w-4 h-4" />
+                  <Lock className="absolute left-2.5 top-1/2 -translate-y-1/2 text-black w-4 h-4" />
                   <input
                     type={showPassword ? "text" : "password"}
                     name="password"
@@ -397,7 +408,7 @@ export default function Signup() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-2.5 top-2.5 text-gray-600 hover:text-orange-600 transition"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-600 hover:text-orange-600 transition"
                   >
                     {showPassword ? (
                       <EyeOff className="w-4 h-4" />
@@ -414,7 +425,7 @@ export default function Signup() {
                   Confirm Password
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-2.5 top-2.5 text-black w-4 h-4" />
+                  <Lock className="absolute left-2.5 top-1/2 -translate-y-1/2 text-black w-4 h-4" />
                   <input
                     type={showConfirmPassword ? "text" : "password"}
                     name="confirmPassword"
@@ -427,7 +438,7 @@ export default function Signup() {
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-2.5 top-2.5 text-gray-600 hover:text-orange-600 transition"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-600 hover:text-orange-600 transition"
                   >
                     {showConfirmPassword ? (
                       <EyeOff className="w-4 h-4" />
@@ -454,16 +465,17 @@ export default function Signup() {
               <div className="flex gap-2 mt-2">
                 <button
                   onClick={handleBack}
-                  className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center gap-2 text-sm"
+                  className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center gap-2 text-sm"
                 >
                   <ArrowLeft className="w-4 h-4" />
                   Back
                 </button>
                 <button
                   onClick={handleSignup}
-                  className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white py-2 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl text-sm"
+                  disabled={isLoading}
+                  className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl text-sm disabled:opacity-50 flex items-center justify-center"
                 >
-                  Create Account →
+                  {isLoading ? "Creating Account..." : "Create Account →"}
                 </button>
               </div>
             </div>
