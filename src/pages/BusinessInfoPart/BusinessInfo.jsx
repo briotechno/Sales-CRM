@@ -243,7 +243,7 @@ export default function BusinessInfoPage() {
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto px-0 py-0 mt-2">
+        <div className="max-w-8xl mx-auto px-0 py-0 mt-2">
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
             {stats.map((stat, index) => {
