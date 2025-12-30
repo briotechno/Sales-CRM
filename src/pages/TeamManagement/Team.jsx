@@ -599,6 +599,7 @@ export default function TeamManagement() {
               </table>
             </div>
           </div>
+          
           {/* Pagination */}
           <div className="flex justify-end items-center gap-3 mt-6">
             <button

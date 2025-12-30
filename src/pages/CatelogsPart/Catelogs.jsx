@@ -17,7 +17,11 @@ import {
   Grid,
   FileDown,
   Share2,
+  Target,
+  Handshake,
+  Users,
 } from "lucide-react";
+import NumberCard from "../../components/NumberCard";
 
 export default function CatalogsPage() {
   const [showAddModal, setShowAddModal] = useState(false);
@@ -25,7 +29,7 @@ export default function CatalogsPage() {
   const [imagePreview, setImagePreview] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState("All");
-  const itemsPerPage = 7;
+  const itemsPerPage = 5;
 
   const [catalogs, setCatalogs] = useState([
     {
@@ -190,9 +194,9 @@ export default function CatalogsPage() {
     <DashboardLayout>
       <div className=" ml-6 min-h-screen">
         {/* Header Section */}
-        <div className="bg-white border-b ">
-          <div className="max-w-8xl mx-auto ml-2 px-0 py-3 ">
-            <div className="flex items-center justify-between">
+        <div className="bg-white border-b my-3">
+          <div className="max-w-8xl mx-auto">
+            <div className="flex items-center justify-between py-3">
               <div>
                 <h1 className="text-2xl font-bold text-gray-800">
                   Catalog Module
@@ -215,11 +219,10 @@ export default function CatalogsPage() {
                       setStatusFilter(status);
                       setCurrentPage(1);
                     }}
-                    className={`px-5 py-3 rounded-sm font-semibold border text-sm transition ${
-                      statusFilter === status
-                        ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
-                        : "bg-white text-black border-gray-300 hover:bg-gray-100"
-                    }`}
+                    className={`px-5 py-3 rounded-sm font-semibold border text-sm transition ${statusFilter === status
+                      ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
+                      : "bg-white text-black border-gray-300 hover:bg-gray-100"
+                      }`}
                   >
                     {status}
                   </button>
@@ -239,6 +242,38 @@ export default function CatalogsPage() {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Statement Card */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <NumberCard
+            title="Total Team"
+            number={"248"}
+            icon={<Users className="text-blue-600" size={24} />}
+            iconBgColor="bg-blue-100"
+            lineBorderClass="border-blue-500"
+          />
+          <NumberCard
+            title="Total ID"
+            number={"186"}
+            icon={<DollarSign className="text-green-600" size={24} />}
+            iconBgColor="bg-green-100"
+            lineBorderClass="border-green-500"
+          />
+          <NumberCard
+            title="Total Leads"
+            number={"18"}
+            icon={<Handshake className="text-orange-600" size={24} />}
+            iconBgColor="bg-orange-100"
+            lineBorderClass="border-orange-500"
+          />
+          <NumberCard
+            title="Total Status"
+            number={"2"}
+            icon={<Target className="text-purple-600" size={24} />}
+            iconBgColor="bg-purple-100"
+            lineBorderClass="border-purple-500"
+          />
         </div>
 
         {/* Table */}
@@ -296,11 +331,10 @@ export default function CatalogsPage() {
                     <td className="py-3 px-4">{catalog.createdDate}</td>
                     <td className="py-3 px-4">
                       <span
-                        className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                          catalog.status === "Active"
-                            ? "bg-green-100 text-green-700"
-                            : "bg-red-100 text-red-600"
-                        }`}
+                        className={`px-3 py-1 rounded-full text-xs font-semibold ${catalog.status === "Active"
+                          ? "bg-green-100 text-green-700"
+                          : "bg-red-100 text-red-600"
+                          }`}
                       >
                         {catalog.status}
                       </span>
@@ -341,7 +375,11 @@ export default function CatalogsPage() {
         <div className="flex justify-end items-center gap-3 mt-6">
           <button
             onClick={handlePrev}
-            className="px-4 py-2 rounded-sm  font-semibold bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:opacity-90 transition"
+            disabled={currentPage === 1}
+            className={`px-4 py-2 rounded-sm text-white font-semibold transition ${currentPage === 1
+              ? "bg-gray-300 cursor-not-allowed"
+              : "bg-[#FF7B1D] hover:opacity-90"
+              }`}
           >
             Back
           </button>
@@ -350,12 +388,11 @@ export default function CatalogsPage() {
             {Array.from({ length: totalPages }, (_, i) => (
               <button
                 key={i + 1}
-                onClick={() => setCurrentPage(i + 1)}
-                className={`px-3 py-1 rounded-sm text-black font-semibold border transition ${
-                  currentPage === i + 1
-                    ? "bg-gray-200 border-gray-400"
-                    : "bg-white border-gray-300 hover:bg-gray-100"
-                }`}
+                onClick={() => handlePageChange(i + 1)}
+                className={`px-3 py-1 rounded-sm text-black font-semibold border transition ${currentPage === i + 1
+                  ? "bg-gray-200 border-gray-400"
+                  : "bg-white border-gray-300 hover:bg-gray-100"
+                  }`}
               >
                 {i + 1}
               </button>
@@ -364,7 +401,11 @@ export default function CatalogsPage() {
 
           <button
             onClick={handleNext}
-            className="px-4 py-2 rounded-sm text-white font-semibold bg-[#22C55E] hover:opacity-90 transition"
+            disabled={currentPage === totalPages}
+            className={`px-4 py-2 rounded-sm text-white font-semibold transition ${currentPage === totalPages
+              ? "bg-gray-300 cursor-not-allowed"
+              : "bg-[#22C55E] hover:opacity-90"
+              }`}
           >
             Next
           </button>

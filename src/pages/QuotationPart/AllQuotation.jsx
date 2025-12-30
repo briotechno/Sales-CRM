@@ -771,7 +771,7 @@ export default function QuotationPage() {
   };
 
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10; // FIX
+  const itemsPerPage = 5; // FIX
 
   // Pagination logic
   const totalPages = Math.ceil(filteredQuotations.length / itemsPerPage);
@@ -995,37 +995,46 @@ export default function QuotationPage() {
               </table>
             </div>
           </div>
+
           {/* Pagination */}
-          <div className="flex justify-end items-center gap-3 mt-6">
-            <button
-              onClick={handlePrev}
-              className="px-4 py-2 rounded-sm  font-semibold bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:opacity-90 transition"
-            >
-              Back
-            </button>
+        <div className="flex justify-end items-center gap-3 mt-6">
+          <button
+            onClick={handlePrev}
+            disabled={currentPage === 1}
+            className={`px-4 py-2 rounded-sm text-white font-semibold transition ${currentPage === 1
+              ? "bg-gray-300 cursor-not-allowed"
+              : "bg-[#FF7B1D] hover:opacity-90"
+              }`}
+          >
+            Back
+          </button>
 
-            <div className="flex items-center gap-2">
-              {Array.from({ length: totalPages }, (_, i) => (
-                <button
-                  key={i + 1}
-                  onClick={() => setCurrentPage(i + 1)}
-                  className={`px-3 py-1 rounded-sm text-black font-semibold border transition ${currentPage === i + 1
-                    ? "bg-gray-200 border-gray-400"
-                    : "bg-white border-gray-300 hover:bg-gray-100"
-                    }`}
-                >
-                  {i + 1}
-                </button>
-              ))}
-            </div>
-
-            <button
-              onClick={handleNext}
-              className="px-4 py-2 rounded-sm text-white font-semibold bg-[#22C55E] hover:opacity-90 transition"
-            >
-              Next
-            </button>
+          <div className="flex items-center gap-2">
+            {Array.from({ length: totalPages }, (_, i) => (
+              <button
+                key={i + 1}
+                onClick={() => handlePageChange(i + 1)}
+                className={`px-3 py-1 rounded-sm text-black font-semibold border transition ${currentPage === i + 1
+                  ? "bg-gray-200 border-gray-400"
+                  : "bg-white border-gray-300 hover:bg-gray-100"
+                  }`}
+              >
+                {i + 1}
+              </button>
+            ))}
           </div>
+
+          <button
+            onClick={handleNext}
+            disabled={currentPage === totalPages}
+            className={`px-4 py-2 rounded-sm text-white font-semibold transition ${currentPage === totalPages
+              ? "bg-gray-300 cursor-not-allowed"
+              : "bg-[#22C55E] hover:opacity-90"
+              }`}
+          >
+            Next
+          </button>
+        </div>
         </div>
 
         {/* Modals */}

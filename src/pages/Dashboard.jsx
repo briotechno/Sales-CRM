@@ -691,6 +691,7 @@ import {
   Eye,
   Edit,
 } from "lucide-react";
+import NumberCard from "../components/NumberCard";
 
 const CRMDashboard = () => {
   const [loading, setLoading] = useState(true);
@@ -986,114 +987,70 @@ const CRMDashboard = () => {
 
               {/* Main Stats Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                {/* Total Leads */}
-                <div className="bg-white rounded-sm shadow-sm p-5 border-l-4 border-[#F26422] hover:shadow-lg transition-shadow">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="bg-orange-100 p-3 rounded-lg">
-                      <Users className="text-[#F26422]" size={24} />
-                    </div>
-                    <div className="flex items-center gap-1 text-green-600 text-sm font-bold">
-                      <ArrowUp size={16} />
-                      {stats.leads.growth}%
-                    </div>
-                  </div>
-                  <h3 className="text-gray-600 text-sm font-medium mb-1">
-                    Total Leads
-                  </h3>
-                  <p className="text-3xl font-bold text-gray-800 mb-2">
-                    {stats.leads.total.toLocaleString()}
-                  </p>
-                  <div className="flex gap-3 text-xs">
-                    <span className="text-blue-600 font-medium">
-                      New: {stats.leads.new}
-                    </span>
-                    <span className="text-orange-600 font-medium">
-                      Unread: {stats.leads.unread}
-                    </span>
-                    <span className="text-purple-600 font-medium">
-                      Trending: {stats.leads.trending}
-                    </span>
-                  </div>
-                </div>
+                <NumberCard
+                  title="Total Leads"
+                  number={stats.leads.total.toLocaleString()}
+                  up={`${stats.leads.growth}%`}
+                  icon={<Users className="text-blue-600" size={24} />}
+                  iconBgColor="bg-blue-100"
+                  lineBorderClass="border-blue-500"
+                >
+                  <span className="text-blue-600 font-medium">
+                    New: {stats.leads.new}
+                  </span>
+                  <span className="text-orange-600 font-medium">
+                    Unread: {stats.leads.unread}
+                  </span>
+                  <span className="text-purple-600 font-medium">
+                    Trending: {stats.leads.trending}
+                  </span>
+                </NumberCard>
 
-                {/* Pipeline Value */}
-                <div className="bg-white rounded-sm shadow-md p-5 border-l-4 border-green-500 hover:shadow-lg transition-shadow">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="bg-green-100 p-3 rounded-lg">
-                      <Target className="text-green-600" size={24} />
-                    </div>
-                    <div className="flex items-center gap-1 text-green-600 text-sm font-bold">
-                      <ArrowUp size={16} />
-                      {stats.pipeline.growth}%
-                    </div>
-                  </div>
-                  <h3 className="text-gray-600 text-sm font-medium mb-1">
-                    Pipeline Value
-                  </h3>
-                  <p className="text-3xl font-bold text-gray-800 mb-2">
-                    ₹{(stats.pipeline.totalValue / 100000).toFixed(1)}L
-                  </p>
-                  <div className="flex gap-3 text-xs">
-                    <span className="text-blue-600 font-medium">
-                      Active: {stats.pipeline.activeDeals}
-                    </span>
-                    <span className="text-green-600 font-medium">
-                      Won: {stats.pipeline.wonDeals}
-                    </span>
-                  </div>
-                </div>
+                <NumberCard
+                  title="Pipeline Value"
+                  number={`₹${(stats.pipeline.totalValue / 100000).toFixed(1)}L`}
+                  up={`${stats.pipeline.growth}%`}
+                  icon={<Target className="text-green-600" size={24} />}
+                  iconBgColor="bg-green-100"
+                  lineBorderClass="border-green-500"
+                >
+                  <span className="text-blue-600 font-medium">
+                    Active: {stats.pipeline.activeDeals}
+                  </span>
+                  <span className="text-green-600 font-medium">
+                    Won: {stats.pipeline.wonDeals}
+                  </span>
+                </NumberCard>
 
-                {/* Total Clients */}
-                <div className="bg-white rounded-sm shadow-sm p-5 border-l-4 border-blue-500 hover:shadow-lg transition-shadow">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="bg-blue-100 p-3 rounded-lg">
-                      <Briefcase className="text-blue-600" size={24} />
-                    </div>
-                    <div className="flex items-center gap-1 text-green-600 text-sm font-bold">
-                      <ArrowUp size={16} />
-                      {stats.clients.growth}%
-                    </div>
-                  </div>
-                  <h3 className="text-gray-600 text-sm font-medium mb-1">
-                    Total Clients
-                  </h3>
-                  <p className="text-3xl font-bold text-gray-800 mb-2">
-                    {stats.clients.total}
-                  </p>
-                  <div className="flex gap-3 text-xs">
-                    <span className="text-green-600 font-medium">
-                      Active: {stats.clients.active}
-                    </span>
-                    <span className="text-gray-500 font-medium">
-                      New: {stats.clients.newThisMonth}
-                    </span>
-                  </div>
-                </div>
+                <NumberCard
+                  title="Total Clients"
+                  number={stats.clients.total}
+                  up={`${stats.clients.growth}%`}
+                  icon={<Briefcase className="text-orange-600" size={24} />}
+                  iconBgColor="bg-orange-100"
+                  lineBorderClass="border-orange-500"
+                >
+                  <span className="text-green-600 font-medium">
+                    Active: {stats.clients.active}
+                  </span>
+                  <span className="text-gray-500 font-medium">
+                    New: {stats.clients.newThisMonth}
+                  </span>
+                </NumberCard>
 
-                {/* Conversion Rate */}
-                <div className="bg-white rounded-sm shadow-sm p-5 border-l-4 border-purple-500 hover:shadow-lg transition-shadow">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="bg-purple-100 p-3 rounded-lg">
-                      <TrendingUp className="text-purple-600" size={24} />
-                    </div>
-                    <div className="flex items-center gap-1 text-green-600 text-sm font-bold">
-                      <ArrowUp size={16} />
-                      3.2%
-                    </div>
-                  </div>
-                  <h3 className="text-gray-600 text-sm font-medium mb-1">
-                    Conversion Rate
-                  </h3>
-                  <p className="text-3xl font-bold text-gray-800 mb-2">
-                    {stats.leads.conversionRate}%
-                  </p>
-                  <div className="flex gap-3 text-xs">
-                    <span className="text-green-600 font-medium">
-                      Avg Deal: ₹
-                      {(stats.pipeline.avgDealSize / 1000).toFixed(0)}K
-                    </span>
-                  </div>
-                </div>
+                <NumberCard
+                  title="Conversion Rate"
+                  number={`${stats.leads.conversionRate}%`}
+                  up={`${stats.clients.growth}%`}
+                  icon={<TrendingUp className="text-purple-600" size={24} />}
+                  iconBgColor="bg-purple-100"
+                  lineBorderClass="border-purple-500"
+                >
+                  <span className="text-green-600 font-medium">
+                    Avg Deal: ₹
+                    {(stats.pipeline.avgDealSize / 1000).toFixed(0)}K
+                  </span>
+                </NumberCard>
               </div>
 
               {/* Secondary Stats - Channel Integration & Activities */}
@@ -1202,12 +1159,12 @@ const CRMDashboard = () => {
                           {channel === "meta"
                             ? "Meta"
                             : channel === "justdial"
-                            ? "Justdial"
-                            : channel === "indiamart"
-                            ? "Indiamart"
-                            : channel === "googleDocs"
-                            ? "Google Docs"
-                            : "CRM Form"}
+                              ? "Justdial"
+                              : channel === "indiamart"
+                                ? "Indiamart"
+                                : channel === "googleDocs"
+                                  ? "Google Docs"
+                                  : "CRM Form"}
                         </span>
                         <span className="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full font-bold text-sm">
                           {count}
@@ -1333,9 +1290,8 @@ const CRMDashboard = () => {
                         <div
                           className="bg-[#F26422] h-2 rounded-full"
                           style={{
-                            width: `${
-                              (stage.count / stats.leads.total) * 100
-                            }%`,
+                            width: `${(stage.count / stats.leads.total) * 100
+                              }%`,
                           }}
                         ></div>
                       </div>
@@ -1401,13 +1357,12 @@ const CRMDashboard = () => {
                             </td>
                             <td className="px-3 py-3">
                               <span
-                                className={`px-2 py-1 text-xs font-bold rounded-full ${
-                                  lead.status === "New"
-                                    ? "bg-green-100 text-green-700"
-                                    : lead.status === "Trending"
+                                className={`px-2 py-1 text-xs font-bold rounded-full ${lead.status === "New"
+                                  ? "bg-green-100 text-green-700"
+                                  : lead.status === "Trending"
                                     ? "bg-purple-100 text-purple-700"
                                     : "bg-orange-100 text-orange-700"
-                                }`}
+                                  }`}
                               >
                                 {lead.status}
                               </span>

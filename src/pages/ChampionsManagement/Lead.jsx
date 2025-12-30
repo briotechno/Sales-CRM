@@ -198,7 +198,7 @@ export default function ChampionsLeadPage() {
           {/* Header Section */}
           <div className="mb-8">
             {/* Top Section: Title + Filters + Add Button */}
-            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between mb-6 gap-4">
+            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between mb-6 gap-4 bg-white border-b py-3">
               {/* Left Side Title */}
               <div>
                 <h1 className="text-2xl font-bold text-gray-800">

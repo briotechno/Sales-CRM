@@ -173,7 +173,7 @@ export default function Signup() {
                   First Name
                 </label>
                 <div className="relative">
-                  <User className="absolute left-2.5 top-2.5 text-black w-5 h-5" />
+                  <User className="absolute left-2.5 top-3.5 text-black w-5 h-5" />
                   <input
                     type="text"
                     name="firstName"
@@ -192,7 +192,7 @@ export default function Signup() {
                   Last Name
                 </label>
                 <div className="relative">
-                  <User className="absolute left-2.5 top-2.5 text-black w-5 h-5" />
+                  <User className="absolute left-2.5 top-3.5 text-black w-5 h-5" />
                   <input
                     type="text"
                     name="lastName"
@@ -211,7 +211,7 @@ export default function Signup() {
                   Email Address
                 </label>
                 <div className="relative">
-                  <Mail className="absolute left-2.5 top-2.5 text-black w-4 h-4" />
+                  <Mail className="absolute left-2.5 top-4 text-black w-4 h-4" />
                   <input
                     type="email"
                     name="email"
@@ -230,7 +230,7 @@ export default function Signup() {
                   Mobile Number
                 </label>
                 <div className="relative">
-                  <Phone className="absolute left-2.5 top-2.5 text-black w-4 h-4" />
+                  <Phone className="absolute left-2.5 top-3.5 text-black w-4 h-4" />
                   <input
                     type="tel"
                     name="mobileNumber"
@@ -280,7 +280,7 @@ export default function Signup() {
                   Business Name
                 </label>
                 <div className="relative">
-                  <Building className="absolute left-2.5 top-2.5 text-black w-4 h-4" />
+                  <Building className="absolute left-2.5 top-3.5 text-black w-4 h-4" />
                   <input
                     type="text"
                     name="businessName"
@@ -299,7 +299,7 @@ export default function Signup() {
                   Business Type
                 </label>
                 <div className="relative">
-                  <Briefcase className="absolute left-2.5 top-2.5 text-black w-4 h-4 z-10" />
+                  <Briefcase className="absolute left-2.5 top-3.5 text-black w-4 h-4 z-10" />
                   <select
                     name="businessType"
                     value={formData.businessType}
@@ -310,7 +310,7 @@ export default function Signup() {
                     <option value="person">Person</option>
                     <option value="organisation">Organisation</option>
                   </select>
-                  <ChevronDown className="absolute right-2.5 top-2.5 text-gray-600 w-4 h-4 pointer-events-none" />
+                  <ChevronDown className="absolute right-2.5 top-4 text-gray-600 w-4 h-4 pointer-events-none" />
                 </div>
               </div>
 
@@ -321,7 +321,7 @@ export default function Signup() {
                   <span className="text-gray-400 text-xs">(Optional)</span>
                 </label>
                 <div className="relative">
-                  <FileText className="absolute left-2.5 top-2.5 text-black w-4 h-4" />
+                  <FileText className="absolute left-2.5 top-4 text-black w-4 h-4" />
                   <input
                     type="text"
                     name="gst"
@@ -340,7 +340,7 @@ export default function Signup() {
                   Address
                 </label>
                 <div className="relative">
-                  <MapPin className="absolute left-2.5 top-2.5 text-black w-4 h-4" />
+                  <MapPin className="absolute left-2.5 top-4 text-black w-4 h-4" />
                   <input
                     type="text"
                     name="address"
@@ -386,7 +386,7 @@ export default function Signup() {
                   Password
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-2.5 top-2.5 text-black w-4 h-4" />
+                  <Lock className="absolute left-2.5 top-4 text-black w-4 h-4" />
                   <input
                     type={showPassword ? "text" : "password"}
                     name="password"
@@ -399,7 +399,7 @@ export default function Signup() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-2.5 top-2.5 text-gray-600 hover:text-orange-600 transition"
+                    className="absolute right-2.5 top-4 text-gray-600 hover:text-orange-600 transition"
                   >
                     {showPassword ? (
                       <EyeOff className="w-4 h-4" />
@@ -416,7 +416,7 @@ export default function Signup() {
                   Confirm Password
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-2.5 top-2.5 text-black w-4 h-4" />
+                  <Lock className="absolute left-2.5 top-3.5 text-black w-4 h-4" />
                   <input
                     type={showConfirmPassword ? "text" : "password"}
                     name="confirmPassword"
@@ -429,7 +429,7 @@ export default function Signup() {
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-2.5 top-2.5 text-gray-600 hover:text-orange-600 transition"
+                    className="absolute right-2.5 top-3.5 text-gray-600 hover:text-orange-600 transition"
                   >
                     {showConfirmPassword ? (
                       <EyeOff className="w-4 h-4" />
