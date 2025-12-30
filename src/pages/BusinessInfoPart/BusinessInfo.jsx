@@ -21,45 +21,51 @@ import {
   X,
   Share2,
 } from "lucide-react";
+import { useGetBusinessInfoQuery, useUpdateBusinessInfoMutation } from "../../store/api/businessApi";
+import { toast } from "react-hot-toast";
+import { useEffect } from "react";
 
 export default function BusinessInfoPage() {
+  const { data: businessInfo, isLoading: isFetching } = useGetBusinessInfoQuery();
+  const [updateBusinessInfo, { isLoading: isUpdating }] = useUpdateBusinessInfoMutation();
+
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
-    companyName: "Tech Solutions Pvt Ltd",
-    legalName: "Tech Solutions Private Limited",
+    company_name: "",
+    legal_name: "",
     industry: "Information Technology",
-    businessType: "Private Limited Company",
-    foundedYear: "2018",
-    registrationNumber: "CIN-U72900MH2018PTC123456",
-    gstNumber: "27AABCT1234F1Z5",
-    panNumber: "AABCT1234F",
-    website: "www.techsolutions.com",
-    email: "info@techsolutions.com",
-    phone: "+91 22 1234 5678",
-    address: "123, Tech Park, Andheri East",
-    city: "Mumbai",
-    state: "Maharashtra",
-    pincode: "400069",
-    country: "India",
-    employeeCount: "150-200",
-    annualRevenue: "₹50 Crores",
-    description:
-      "We are a leading IT solutions provider specializing in custom software development, cloud services, and digital transformation. Our team of experts delivers innovative solutions to businesses across various industries.",
-    vision:
-      "To be the most trusted technology partner for businesses worldwide.",
-    mission:
-      "Deliver cutting-edge technology solutions that drive business growth and innovation.",
-    bankName: "HDFC Bank",
-    accountNumber: "50200012345678",
-    ifscCode: "HDFC0001234",
-    branchName: "Andheri East Branch",
-
-    facebook: "https://www.facebook.com/",
-    instagram: "https://www.instagram.com/",
-    linkedin: "https://www.linkedin.com/login",
-    youtube: "https://www.youtube.com/",
-    whatsapp: "https://www.whatsapp.com/?lang=en",
+    business_type: "Private Limited Company",
+    founded_year: "",
+    registration_number: "",
+    gst_number: "",
+    pan_number: "",
+    website: "",
+    email: "",
+    phone: "",
+    street_address: "",
+    city: "",
+    state: "",
+    pincode: "",
+    country: "",
+    company_description: "",
+    vision: "",
+    mission: "",
+    bank_name: "",
+    account_number: "",
+    ifsc_code: "",
+    branch_name: "",
+    logo: null,
   });
+
+  // Sync with fetched data
+  useEffect(() => {
+    if (businessInfo) {
+      setFormData({
+        ...businessInfo,
+        logo: null, // Don't overwrite with string URL, wait for file upload
+      });
+    }
+  }, [businessInfo]);
 
   const handleInputChange = (e) => {
     setFormData({
@@ -68,14 +74,36 @@ export default function BusinessInfoPage() {
     });
   };
 
-  const handleSave = () => {
-    setIsEditing(false);
-    // Save logic here
+  const handleSave = async () => {
+    try {
+      await updateBusinessInfo(formData).unwrap();
+      toast.success("Business information updated successfully!");
+      setIsEditing(false);
+    } catch (err) {
+      toast.error(err?.data?.message || "Failed to update business information");
+    }
   };
 
-  const profileLink = `${window.location.origin}/business/${formData.companyName
-    .toLowerCase()
-    .replace(/\s+/g, "-")}`;
+  const handleLogoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setFormData({ ...formData, logo: file });
+    }
+  };
+
+  if (isFetching) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // const profileLink = `${window.location.origin}/business/${formData.companyName
+  //   .toLowerCase()
+  //   .replace(/\s+/g, "-")}`;
 
   const shareOnWhatsApp = () => {
     window.open(`https://wa.me/${formData.whatsapp}`, "_blank");
@@ -98,12 +126,12 @@ export default function BusinessInfoPage() {
   };
 
   const stats = [
-    { label: "Years in Business", value: "6+", icon: Calendar, color: "blue" },
+    { label: "Years in Business", value: businessInfo?.founded_year ? `${new Date().getFullYear() - businessInfo.founded_year}+` : "0", icon: Calendar, color: "blue" },
     { label: "Total Employees", value: "180", icon: Users, color: "green" },
     { label: "Active Clients", value: "250+", icon: Target, color: "purple" },
     {
       label: "Annual Revenue",
-      value: formData.annualRevenue,
+      value: "₹50 Crores",
       icon: TrendingUp,
       color: "orange",
     },
@@ -144,17 +172,16 @@ export default function BusinessInfoPage() {
               <div className="flex items-center mr- gap-3">
                 <button
                   onClick={() => {
-                    const profileLink = `${
-                      window.location.origin
-                    }/business/${formData.companyName
-                      .toLowerCase()
-                      .replace(/\s+/g, "-")}`;
+                    const profileLink = `${window.location.origin
+                      }/business/${formData.companyName
+                        .toLowerCase()
+                        .replace(/\s+/g, "-")}`;
 
                     // Mobile share (Web Share API)
                     if (navigator.share) {
                       navigator
                         .share({
-                          title: formData.companyName,
+                          title: formData.company_name,
                           text: "Check out this business profile",
                           url: profileLink,
                         })
@@ -203,10 +230,11 @@ export default function BusinessInfoPage() {
                     </button>
                     <button
                       onClick={handleSave}
-                      className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg flex items-center gap-2 font-semibold"
+                      disabled={isUpdating}
+                      className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg flex items-center gap-2 font-semibold disabled:opacity-50"
                     >
                       <Save size={20} />
-                      Save Changes
+                      {isUpdating ? "Saving..." : "Save Changes"}
                     </button>
                   </div>
                 )}
@@ -223,9 +251,8 @@ export default function BusinessInfoPage() {
               return (
                 <div
                   key={index}
-                  className={`bg-white rounded-sm p-8 shadow-md border-l-4 hover:shadow-lg transition-shadow ${
-                    getColorClasses(stat.color).split(" ")[2]
-                  }`}
+                  className={`bg-white rounded-sm p-8 shadow-md border-l-4 hover:shadow-lg transition-shadow ${getColorClasses(stat.color).split(" ")[2]
+                    }`}
                 >
                   <div className="flex justify-between items-start">
                     <div>
@@ -257,14 +284,32 @@ export default function BusinessInfoPage() {
               Company Logo & Branding
             </h2>
             <div className="flex items-center gap-6">
-              <div className="w-32 h-32 bg-gradient-to-br from-orange-400 to-orange-600 rounded-sm flex items-center justify-center">
-                <span className="text-white font-bold text-4xl">TS</span>
+              <div className="w-32 h-32 bg-gray-100 border border-gray-200 rounded-sm flex items-center justify-center overflow-hidden">
+                {formData.logo_url || formData.logo ? (
+                  <img
+                    src={formData.logo ? URL.createObjectURL(formData.logo) : `${import.meta.env.VITE_API_BASE_URL.replace('/api/', '')}${formData.logo_url}`}
+                    alt="Logo"
+                    className="w-full h-full object-contain"
+                  />
+                ) : (
+                  <span className="text-gray-400 font-bold text-4xl">
+                    {formData.company_name?.substring(0, 2).toUpperCase() || "NA"}
+                  </span>
+                )}
               </div>
               {isEditing && (
-                <button className="flex items-center gap-2 px-4 py-2 border-2 border-dashed border-orange-300 text-orange-600 rounded-sm hover:bg-orange-50 font-semibold">
-                  <Upload size={20} />
-                  Upload Logo
-                </button>
+                <div className="relative">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleLogoChange}
+                    className="absolute inset-0 opacity-0 cursor-pointer"
+                  />
+                  <button className="flex items-center gap-2 px-4 py-2 border-2 border-dashed border-orange-300 text-orange-600 rounded-sm hover:bg-orange-50 font-semibold pointer-events-none">
+                    <Upload size={20} />
+                    {formData.logo ? "Change Logo" : "Upload Logo"}
+                  </button>
+                </div>
               )}
               <div className="flex-1">
                 <p className="text-sm text-gray-600">
@@ -295,14 +340,14 @@ export default function BusinessInfoPage() {
                       {isEditing ? (
                         <input
                           type="text"
-                          name="companyName"
-                          value={formData.companyName}
+                          name="company_name"
+                          value={formData.company_name}
                           onChange={handleInputChange}
                           className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                         />
                       ) : (
                         <p className="text-gray-800 font-medium">
-                          {formData.companyName}
+                          {formData.company_name}
                         </p>
                       )}
                     </div>
@@ -313,14 +358,14 @@ export default function BusinessInfoPage() {
                       {isEditing ? (
                         <input
                           type="text"
-                          name="legalName"
-                          value={formData.legalName}
+                          name="legal_name"
+                          value={formData.legal_name}
                           onChange={handleInputChange}
                           className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                         />
                       ) : (
                         <p className="text-gray-800 font-medium">
-                          {formData.legalName}
+                          {formData.legal_name}
                         </p>
                       )}
                     </div>
@@ -358,8 +403,8 @@ export default function BusinessInfoPage() {
                       </label>
                       {isEditing ? (
                         <select
-                          name="businessType"
-                          value={formData.businessType}
+                          name="business_type"
+                          value={formData.business_type}
                           onChange={handleInputChange}
                           className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                         >
@@ -371,7 +416,7 @@ export default function BusinessInfoPage() {
                         </select>
                       ) : (
                         <p className="text-gray-800 font-medium">
-                          {formData.businessType}
+                          {formData.business_type}
                         </p>
                       )}
                     </div>
@@ -383,15 +428,15 @@ export default function BusinessInfoPage() {
                     </label>
                     {isEditing ? (
                       <textarea
-                        name="description"
-                        value={formData.description}
+                        name="company_description"
+                        value={formData.company_description}
                         onChange={handleInputChange}
                         rows="4"
                         className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                       ></textarea>
                     ) : (
-                      <p className="text-gray-700 leading-relaxed">
-                        {formData.description}
+                      <p className="text-gray-700 leading-relaxed text-sm">
+                        {formData.company_description}
                       </p>
                     )}
                   </div>
@@ -413,14 +458,14 @@ export default function BusinessInfoPage() {
                       {isEditing ? (
                         <input
                           type="text"
-                          name="foundedYear"
-                          value={formData.foundedYear}
+                          name="founded_year"
+                          value={formData.founded_year}
                           onChange={handleInputChange}
                           className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                         />
                       ) : (
-                        <p className="text-gray-800 font-medium">
-                          {formData.foundedYear}
+                        <p className="text-gray-800 font-medium text-sm">
+                          {formData.founded_year}
                         </p>
                       )}
                     </div>
@@ -431,14 +476,14 @@ export default function BusinessInfoPage() {
                       {isEditing ? (
                         <input
                           type="text"
-                          name="registrationNumber"
-                          value={formData.registrationNumber}
+                          name="registration_number"
+                          value={formData.registration_number}
                           onChange={handleInputChange}
                           className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                         />
                       ) : (
-                        <p className="text-gray-800 font-medium">
-                          {formData.registrationNumber}
+                        <p className="text-gray-800 font-medium text-sm">
+                          {formData.registration_number}
                         </p>
                       )}
                     </div>
@@ -452,14 +497,14 @@ export default function BusinessInfoPage() {
                       {isEditing ? (
                         <input
                           type="text"
-                          name="gstNumber"
-                          value={formData.gstNumber}
+                          name="gst_number"
+                          value={formData.gst_number}
                           onChange={handleInputChange}
                           className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                         />
                       ) : (
-                        <p className="text-gray-800 font-medium">
-                          {formData.gstNumber}
+                        <p className="text-gray-800 font-medium text-sm">
+                          {formData.gst_number}
                         </p>
                       )}
                     </div>
@@ -470,14 +515,14 @@ export default function BusinessInfoPage() {
                       {isEditing ? (
                         <input
                           type="text"
-                          name="panNumber"
-                          value={formData.panNumber}
+                          name="pan_number"
+                          value={formData.pan_number}
                           onChange={handleInputChange}
                           className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                         />
                       ) : (
-                        <p className="text-gray-800 font-medium">
-                          {formData.panNumber}
+                        <p className="text-gray-800 font-medium text-sm">
+                          {formData.pan_number}
                         </p>
                       )}
                     </div>
@@ -500,14 +545,14 @@ export default function BusinessInfoPage() {
                       {isEditing ? (
                         <input
                           type="text"
-                          name="bankName"
-                          value={formData.bankName}
+                          name="bank_name"
+                          value={formData.bank_name}
                           onChange={handleInputChange}
                           className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                         />
                       ) : (
-                        <p className="text-gray-800 font-medium">
-                          {formData.bankName}
+                        <p className="text-gray-800 font-medium text-sm">
+                          {formData.bank_name}
                         </p>
                       )}
                     </div>
@@ -518,14 +563,14 @@ export default function BusinessInfoPage() {
                       {isEditing ? (
                         <input
                           type="text"
-                          name="branchName"
-                          value={formData.branchName}
+                          name="branch_name"
+                          value={formData.branch_name}
                           onChange={handleInputChange}
                           className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                         />
                       ) : (
-                        <p className="text-gray-800 font-medium">
-                          {formData.branchName}
+                        <p className="text-gray-800 font-medium text-sm">
+                          {formData.branch_name}
                         </p>
                       )}
                     </div>
@@ -539,14 +584,14 @@ export default function BusinessInfoPage() {
                       {isEditing ? (
                         <input
                           type="text"
-                          name="accountNumber"
-                          value={formData.accountNumber}
+                          name="account_number"
+                          value={formData.account_number}
                           onChange={handleInputChange}
                           className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                         />
                       ) : (
-                        <p className="text-gray-800 font-medium">
-                          {formData.accountNumber}
+                        <p className="text-gray-800 font-medium text-sm">
+                          {formData.account_number}
                         </p>
                       )}
                     </div>
@@ -557,14 +602,14 @@ export default function BusinessInfoPage() {
                       {isEditing ? (
                         <input
                           type="text"
-                          name="ifscCode"
-                          value={formData.ifscCode}
+                          name="ifsc_code"
+                          value={formData.ifsc_code}
                           onChange={handleInputChange}
                           className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                         />
                       ) : (
-                        <p className="text-gray-800 font-medium">
-                          {formData.ifscCode}
+                        <p className="text-gray-800 font-medium text-sm">
+                          {formData.ifsc_code}
                         </p>
                       )}
                     </div>
@@ -819,14 +864,14 @@ export default function BusinessInfoPage() {
                     {isEditing ? (
                       <input
                         type="text"
-                        name="address"
-                        value={formData.address}
+                        name="street_address"
+                        value={formData.street_address}
                         onChange={handleInputChange}
                         className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                       />
                     ) : (
-                      <p className="text-gray-800 font-medium">
-                        {formData.address}
+                      <p className="text-gray-800 font-medium text-sm">
+                        {formData.street_address}
                       </p>
                     )}
                   </div>
@@ -845,7 +890,7 @@ export default function BusinessInfoPage() {
                           className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                         />
                       ) : (
-                        <p className="text-gray-800 font-medium">
+                        <p className="text-gray-800 font-medium text-sm">
                           {formData.city}
                         </p>
                       )}
@@ -863,7 +908,7 @@ export default function BusinessInfoPage() {
                           className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                         />
                       ) : (
-                        <p className="text-gray-800 font-medium">
+                        <p className="text-gray-800 font-medium text-sm">
                           {formData.state}
                         </p>
                       )}
@@ -884,7 +929,7 @@ export default function BusinessInfoPage() {
                           className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                         />
                       ) : (
-                        <p className="text-gray-800 font-medium">
+                        <p className="text-gray-800 font-medium text-sm">
                           {formData.pincode}
                         </p>
                       )}
@@ -902,7 +947,7 @@ export default function BusinessInfoPage() {
                           className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                         />
                       ) : (
-                        <p className="text-gray-800 font-medium">
+                        <p className="text-gray-800 font-medium text-sm">
                           {formData.country}
                         </p>
                       )}
@@ -931,7 +976,7 @@ export default function BusinessInfoPage() {
                         className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                       ></textarea>
                     ) : (
-                      <p className="text-gray-800 italic leading-relaxed">
+                      <p className="text-gray-800 italic leading-relaxed text-sm">
                         "{formData.vision}"
                       </p>
                     )}
@@ -950,7 +995,7 @@ export default function BusinessInfoPage() {
                         className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                       ></textarea>
                     ) : (
-                      <p className="text-gray-800 italic leading-relaxed">
+                      <p className="text-gray-800 italic leading-relaxed text-sm">
                         "{formData.mission}"
                       </p>
                     )}

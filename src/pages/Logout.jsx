@@ -1,9 +1,14 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { logout } from "../store/slices/authSlice";
+import { authApi } from "../store/api/authApi";
+import { businessApi } from "../store/api/businessApi";
 import { X, AlertCircle, LogOut } from "lucide-react";
 
 export default function LogoutPopup({ onClose }) {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isLoggedOut, setIsLoggedOut] = useState(false);
 
@@ -11,10 +16,12 @@ export default function LogoutPopup({ onClose }) {
     setIsLoggingOut(true);
 
     try {
-      // Clear authentication data
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-      sessionStorage.clear();
+      // Dispatch logout action to clear state and local storage
+      dispatch(logout());
+
+      // Reset RTK Query cache for all APIs
+      dispatch(authApi.util.resetApiState());
+      dispatch(businessApi.util.resetApiState());
 
       // Simulate logout API call
       await new Promise((resolve) => setTimeout(resolve, 1000));
