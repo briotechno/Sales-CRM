@@ -6,9 +6,17 @@ import {
   FileText,
   CreditCard,
   Key,
+  ShieldCheck,
 } from "lucide-react";
+import { useGetDepartmentsQuery } from "../../store/api/departmentApi";
+import { useGetDesignationsQuery } from "../../store/api/designationApi";
 
 const FormSection = ({ formData, handleChange, handleChanges }) => {
+  const { data: deptData, isLoading: departmentsLoading } = useGetDepartmentsQuery({ limit: 100 });
+  const { data: dsgData, isLoading: designationsLoading } = useGetDesignationsQuery({ limit: 100 });
+
+  const departments = deptData?.departments || [];
+  const designations = dsgData?.designations || [];
   // Consistent input styles matching AddTermModal
   const inputStyles =
     "w-full px-4 py-3 border-2 border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300";
@@ -203,14 +211,15 @@ const FormSection = ({ formData, handleChange, handleChanges }) => {
                 className={selectStyles}
               >
                 <option value="">Select Department</option>
-                <option>Human Resources</option>
-                <option>IT Support</option>
-                <option>Sales</option>
-                <option>Finance</option>
-                <option>Marketing</option>
-                <option>Operations</option>
-                <option>Customer Service</option>
-                <option>Engineering</option>
+                {departmentsLoading ? (
+                  <option disabled>Loading...</option>
+                ) : (
+                  departments.map((dept) => (
+                    <option key={dept.id} value={dept.id}>
+                      {dept.department_name}
+                    </option>
+                  ))
+                )}
               </select>
               <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
                 <svg
@@ -241,16 +250,15 @@ const FormSection = ({ formData, handleChange, handleChanges }) => {
                 className={selectStyles}
               >
                 <option value="">Select Designation</option>
-                <option>Manager</option>
-                <option>HR Manager</option>
-                <option>Support Engineer</option>
-                <option>Sales Executive</option>
-                <option>Accountant</option>
-                <option>Team Lead</option>
-                <option>Developer</option>
-                <option>Designer</option>
-                <option>Analyst</option>
-                <option>Executive</option>
+                {designationsLoading ? (
+                  <option disabled>Loading...</option>
+                ) : (
+                  designations.map((dsg) => (
+                    <option key={dsg.id} value={dsg.id}>
+                      {dsg.designation_name}
+                    </option>
+                  ))
+                )}
               </select>
               <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
                 <svg

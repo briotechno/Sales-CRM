@@ -12,7 +12,7 @@ const storage = multer.diskStorage({
             uploadDir = 'uploads/departments';
         } else if (file.fieldname === 'image') {
             uploadDir = 'uploads/designations';
-        } else if (file.fieldname === 'profile_image') {
+        } else if (['profile_picture', 'profile_image', 'aadhar_front', 'aadhar_back', 'pan_card', 'cancelled_cheque'].includes(file.fieldname)) {
             uploadDir = 'uploads/employees';
         }
 

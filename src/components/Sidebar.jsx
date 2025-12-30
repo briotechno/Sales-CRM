@@ -199,12 +199,8 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         {
           name: "Employee",
           icon: <Users size={22} />,
-          path: "/hrm/employee",
-          children: [
-            { name: "All", path: "/hrm/employee/all" },
-            { name: "Active", path: "/hrm/employee/active" },
-            { name: "Resigned", path: "/hrm/employee/resigned" },
-          ],
+          path: "/hrm/employee/all",
+
         },
         {
           name: "Department",
@@ -325,9 +321,8 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 h-screen bg-white text-black shadow-lg flex flex-col p-2 transition-all duration-300 z-40 ${
-          isOpen ? "translate-x-0" : "-translate-x-full"
-        } md:translate-x-0 w-64`}
+        className={`fixed top-0 left-0 h-screen bg-white text-black shadow-lg flex flex-col p-2 transition-all duration-300 z-40 ${isOpen ? "translate-x-0" : "-translate-x-full"
+          } md:translate-x-0 w-64`}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-2 py-3 mb-2">
@@ -350,11 +345,10 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                       <div key={item.name} className="mb-2">
                         <Link
                           to={item.path}
-                          className={`flex items-center gap-2 px-4 py-2 rounded-sm font-semibold transition-all duration-200 ${
-                            isActive
-                              ? "bg-[#FF7B1D] text-white"
-                              : "hover:bg-gray-100 text-black"
-                          }`}
+                          className={`flex items-center gap-2 px-4 py-2 rounded-sm font-semibold transition-all duration-200 ${isActive
+                            ? "bg-[#FF7B1D] text-white"
+                            : "hover:bg-gray-100 text-black"
+                            }`}
                           onClick={() => {
                             setActiveItem(item.path);
                             if (window.innerWidth < 768) setIsOpen(false);
@@ -391,11 +385,10 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                           <Link
                             to={item.path}
                             ref={parentActive ? activeItemRef : null}
-                            className={`flex items-center gap-2 px-2 py-1.5 rounded-sm font-semibold transition-all duration-200 text-[15px] ${
-                              parentActive
-                                ? "bg-[#FF7B1D] text-white shadow-sm"
-                                : "hover:bg-gray-100 text-black"
-                            }`}
+                            className={`flex items-center gap-2 px-2 py-1.5 rounded-sm font-semibold transition-all duration-200 text-[15px] ${parentActive
+                              ? "bg-[#FF7B1D] text-white shadow-sm"
+                              : "hover:bg-gray-100 text-black"
+                              }`}
                             onClick={() => {
                               setActiveItem(item.path);
                               if (window.innerWidth < 768) setIsOpen(false);
@@ -407,11 +400,10 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                         ) : (
                           <>
                             <div
-                              className={`flex items-center justify-between gap-2 px-2 py-1.5 rounded-sm cursor-pointer transition-colors duration-200 font-semibold text-[15px] ${
-                                parentActive
-                                  ? "text-[#FF7B1D]"
-                                  : "text-black hover:bg-gray-100"
-                              }`}
+                              className={`flex items-center justify-between gap-2 px-2 py-1.5 rounded-sm cursor-pointer transition-colors duration-200 font-semibold text-[15px] ${parentActive
+                                ? "text-[#FF7B1D]"
+                                : "text-black hover:bg-gray-100"
+                                }`}
                               onClick={() => toggleMenu(item.name)}
                             >
                               <div className="flex items-center gap-2">
@@ -420,19 +412,17 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                               </div>
                               <ChevronDown
                                 size={12}
-                                className={`transition-transform duration-300 ${
-                                  isOpenThis ? "rotate-180" : ""
-                                }`}
+                                className={`transition-transform duration-300 ${isOpenThis ? "rotate-180" : ""
+                                  }`}
                               />
                             </div>
 
                             {/* Submenu */}
                             <ul
-                              className={`ml-4 border-l pl-3 mt-1 overflow-hidden transition-all duration-300 ease-in-out ${
-                                isOpenThis
-                                  ? "max-h-64 opacity-100"
-                                  : "max-h-0 opacity-0"
-                              }`}
+                              className={`ml-4 border-l pl-3 mt-1 overflow-hidden transition-all duration-300 ease-in-out ${isOpenThis
+                                ? "max-h-64 opacity-100"
+                                : "max-h-0 opacity-0"
+                                }`}
                             >
                               {item.children.map((sub) => {
                                 const subActive = activeItem === sub.path;
@@ -441,11 +431,10 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                                     <Link
                                       to={sub.path}
                                       ref={subActive ? activeItemRef : null}
-                                      className={`block px-2 py-1 rounded-sm transition-colors duration-200 text-[13px] ${
-                                        subActive
-                                          ? "text-[#FF7B1D] font-semibold before:content-[''] before:absolute before:left-[-8px] before:top-0 before:h-full before:w-[2px] before:bg-[#FF7B1D]"
-                                          : "text-black hover:text-[#FF7B1D]"
-                                      }`}
+                                      className={`block px-2 py-1 rounded-sm transition-colors duration-200 text-[13px] ${subActive
+                                        ? "text-[#FF7B1D] font-semibold before:content-[''] before:absolute before:left-[-8px] before:top-0 before:h-full before:w-[2px] before:bg-[#FF7B1D]"
+                                        : "text-black hover:text-[#FF7B1D]"
+                                        }`}
                                       onClick={() => {
                                         setActiveItem(sub.path);
                                         if (window.innerWidth < 768)

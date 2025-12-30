@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { X, UserPlus, Briefcase } from "lucide-react";
-import FormSection from "../../components/Employee/FormSection";
+import { X, UserPlus, Save, Loader2 } from "lucide-react";
+import FormSection from "./FormSection";
+import { useCreateEmployeeMutation } from "../../store/api/employeeApi";
+import { toast } from "react-hot-toast";
 
-const AddEmployeePopup = ({ isOpen, onClose }) => {
+const AddEmployeeModal = ({ isOpen, onClose }) => {
   const [formData, setFormData] = useState({
-    employeeId: "",
     employeeName: "",
     profilePic: null,
     dob: "",
@@ -39,20 +40,13 @@ const AddEmployeePopup = ({ isOpen, onClose }) => {
     cancelCheque: null,
     username: "",
     password: "",
+    status: "Active"
   });
 
-  useEffect(() => {
-    if (isOpen) {
-      const generateEmployeeId = () => {
-        const prefix = "EMP";
-        const randomNum = Math.floor(10000 + Math.random() * 90000);
-        return `${prefix}${randomNum}`;
-      };
-      setFormData((prev) => ({ ...prev, employeeId: generateEmployeeId() }));
-    }
-  }, [isOpen]);
+  const [createEmployee, { isLoading }] = useCreateEmployeeMutation();
 
   const calculateAge = (dob) => {
+    if (!dob) return "";
     const birthDate = new Date(dob);
     const today = new Date();
     let age = today.getFullYear() - birthDate.getFullYear();
@@ -67,31 +61,24 @@ const AddEmployeePopup = ({ isOpen, onClose }) => {
     const { name, value, files, type } = e.target;
     if (type === "file") {
       setFormData({ ...formData, [name]: files[0] });
-    } else if (type === "select-multiple") {
-      const options = Array.from(
-        e.target.selectedOptions,
-        (option) => option.value
-      );
-      setFormData({ ...formData, [name]: options });
     } else {
-      setFormData({ ...formData, [name]: value });
-    }
-
-    if (name === "dob") {
-      const age = calculateAge(value);
-      setFormData((prev) => ({ ...prev, age }));
+      setFormData((prev) => {
+        const updated = { ...prev, [name]: value };
+        if (name === "dob") {
+          updated.age = calculateAge(value);
+        }
+        return updated;
+      });
     }
   };
 
   const handleChanges = (e) => {
     const { name, value, type, checked } = e.target;
-
     if (type === "checkbox" && name === "languages") {
       setFormData((prev) => {
         const updatedLanguages = checked
           ? [...prev.languages, value]
           : prev.languages.filter((lang) => lang !== value);
-
         return { ...prev, languages: updatedLanguages };
       });
     } else {
@@ -99,42 +86,101 @@ const AddEmployeePopup = ({ isOpen, onClose }) => {
     }
   };
 
-  const handleSubmit = () => {
-    console.log(formData);
-    alert("Employee data saved successfully!");
-    onClose();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    // Basic validation
+    if (!formData.employeeName || !formData.email || !formData.mobile) {
+      toast.error("Please fill in required fields");
+      return;
+    }
+
+    const data = new FormData();
+
+    // Mapping frontend field names to backend expected names
+    const mapping = {
+      employeeName: 'employee_name',
+      profilePic: 'profile_picture',
+      dob: 'date_of_birth',
+      age: 'age',
+      gender: 'gender',
+      fatherName: 'father_name',
+      motherName: 'mother_name',
+      maritalStatus: 'marital_status',
+      joiningDate: 'joining_date',
+      department: 'department_id',
+      designation: 'designation_id',
+      employeeType: 'employee_type',
+      workType: 'work_type',
+      mobile: 'mobile_number',
+      altMobile: 'alternate_mobile_number',
+      email: 'email',
+      permanentAddress: 'permanent_address',
+      correspondenceAddress: 'correspondence_address',
+      emergencyPerson: 'emergency_contact_person',
+      emergencyNumber: 'emergency_contact_number',
+      bloodGroup: 'blood_group',
+      languages: 'languages',
+      aadharNumber: 'aadhar_number',
+      panNumber: 'pan_number',
+      aadharFront: 'aadhar_front',
+      aadharBack: 'aadhar_back',
+      panCard: 'pan_card',
+      ifscCode: 'ifsc_code',
+      accountNumber: 'account_number',
+      accountHolderName: 'account_holder_name',
+      branchName: 'branch_name',
+      cancelCheque: 'cancelled_cheque',
+      username: 'username',
+      password: 'password',
+      status: 'status'
+    };
+
+    Object.keys(formData).forEach(key => {
+      const backendKey = mapping[key] || key;
+      if (formData[key] instanceof File) {
+        data.append(backendKey, formData[key]);
+      } else if (Array.isArray(formData[key])) {
+        data.append(backendKey, JSON.stringify(formData[key]));
+      } else if (formData[key] !== null && formData[key] !== undefined) {
+        data.append(backendKey, formData[key]);
+      }
+    });
+
+    try {
+      await createEmployee(data).unwrap();
+      toast.success("Employee added successfully!");
+      onClose();
+    } catch (err) {
+      toast.error(err.data?.message || "Failed to add employee");
+    }
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex justify-center items-center z-50 animate-fadeIn overflow-y-auto p-4">
-      <div className="bg-white rounded-sm shadow-2xl w-full max-w-4xl my-8 relative transform transition-all animate-slideUp">
-        {/* Header with Gradient */}
-        <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white p-6">
+    <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex justify-center items-center z-50 p-4">
+      <div className="bg-white rounded-sm shadow-2xl w-full max-w-5xl h-[90vh] flex flex-col relative transform transition-all animate-slideUp">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white p-6 shrink-0">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-3">
-              <div className="bg-white bg-opacity-20 p-2 rounded-lg">
+              <div className="bg-white bg-opacity-20 p-2 rounded-sm">
                 <UserPlus size={24} />
               </div>
               <div>
                 <h2 className="text-2xl font-bold">Add New Employee</h2>
-                <p className="text-sm text-white text-opacity-90 mt-1">
-                  Fill out the details below to add a new employee
-                </p>
+                <p className="text-sm text-white text-opacity-90">Manage your workforce efficiently</p>
               </div>
             </div>
-            <button
-              onClick={onClose}
-              className="text-white hover:bg-orange-700 p-1 rounded-sm transition-colors"
-            >
-              <X size={22} className="text-white" />
+            <button onClick={onClose} className="hover:bg-orange-700 p-1 rounded-sm transition-all">
+              <X size={24} />
             </button>
           </div>
         </div>
 
         {/* Form Body */}
-        <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-6 space-y-6 overflow-y-auto flex-1">
           <FormSection
             formData={formData}
             handleChange={handleChange}
@@ -142,56 +188,28 @@ const AddEmployeePopup = ({ isOpen, onClose }) => {
           />
         </div>
 
-        {/* Footer with Actions */}
-        <div className="bg-gray-50 px-6 py-4 rounded-b-lg border-t border-gray-200 flex justify-end gap-3">
+        {/* Footer */}
+        <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-end gap-3 shrink-0">
           <button
             type="button"
             onClick={onClose}
-            className="px-6 py-2.5 rounded-sm border-2 border-gray-300 text-gray-700 font-semibold hover:bg-gray-100 transition-all"
+            className="px-6 py-2 rounded-sm border-2 border-gray-300 text-gray-700 font-semibold hover:bg-gray-100 transition-all"
           >
             Cancel
           </button>
           <button
             type="button"
+            disabled={isLoading}
             onClick={handleSubmit}
-            className="px-6 py-2.5 rounded-sm bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold hover:shadow-lg transform transition-all"
+            className="flex items-center gap-2 px-8 py-2 rounded-sm bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold hover:shadow-lg transform transition-all disabled:opacity-50"
           >
+            {isLoading ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
             Save Employee
           </button>
         </div>
       </div>
-
-      <style jsx>{`
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
-        }
-
-        @keyframes slideUp {
-          from {
-            transform: translateY(20px);
-            opacity: 0;
-          }
-          to {
-            transform: translateY(0);
-            opacity: 1;
-          }
-        }
-
-        .animate-fadeIn {
-          animation: fadeIn 0.2s ease-out;
-        }
-
-        .animate-slideUp {
-          animation: slideUp 0.3s ease-out;
-        }
-      `}</style>
     </div>
   );
 };
 
-export default AddEmployeePopup;
+export default AddEmployeeModal;
