@@ -2,18 +2,28 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-// Create uploads directory if it doesn't exist
-const uploadDir = 'uploads/logos';
-if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
-}
-
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
+        let uploadDir = 'uploads/others';
+
+        if (file.fieldname === 'logo') {
+            uploadDir = 'uploads/logos';
+        } else if (file.fieldname === 'icon') {
+            uploadDir = 'uploads/departments';
+        } else if (file.fieldname === 'image') {
+            uploadDir = 'uploads/designations';
+        } else if (file.fieldname === 'profile_image') {
+            uploadDir = 'uploads/employees';
+        }
+
+        if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir, { recursive: true });
+        }
         cb(null, uploadDir);
     },
     filename: (req, file, cb) => {
-        cb(null, `logo-${Date.now()}${path.extname(file.originalname)}`);
+        const prefix = file.fieldname.replace('_', '-');
+        cb(null, `${prefix}-${Date.now()}${path.extname(file.originalname)}`);
     }
 });
 

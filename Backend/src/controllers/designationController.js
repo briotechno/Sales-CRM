@@ -2,7 +2,11 @@ const Designation = require('../models/designationModel');
 
 const createDesignation = async (req, res) => {
     try {
-        const id = await Designation.create(req.body);
+        const data = { ...req.body };
+        if (req.file) {
+            data.image = `/uploads/designations/${req.file.filename}`;
+        }
+        const id = await Designation.create(data);
         res.status(201).json({ status: true, message: 'Designation created successfully', id });
     } catch (error) {
         res.status(500).json({ status: false, message: error.message });
@@ -11,8 +15,8 @@ const createDesignation = async (req, res) => {
 
 const getDesignations = async (req, res) => {
     try {
-        const { page = 1, limit = 10 } = req.query;
-        const data = await Designation.findAll(page, limit);
+        const { page = 1, limit = 10, status = 'All', search = '' } = req.query;
+        const data = await Designation.findAll(page, limit, status, search);
         res.status(200).json(data);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -37,7 +41,11 @@ const updateDesignation = async (req, res) => {
         if (!designation) {
             return res.status(404).json({ status: false, message: 'Designation not found' });
         }
-        await Designation.update(req.params.id, req.body);
+        const data = { ...req.body };
+        if (req.file) {
+            data.image = `/uploads/designations/${req.file.filename}`;
+        }
+        await Designation.update(req.params.id, data);
         res.status(200).json({ status: true, message: 'Designation updated successfully' });
     } catch (error) {
         res.status(500).json({ status: false, message: error.message });

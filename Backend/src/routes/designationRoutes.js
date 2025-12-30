@@ -9,11 +9,12 @@ const {
 } = require('../controllers/designationController');
 
 const { protect } = require('../middleware/authMiddleware');
+const upload = require('../middleware/uploadMiddleware');
 
-router.post('/', protect, createDesignation);
+router.post('/', protect, upload.single('image'), createDesignation);
 router.get('/', protect, getDesignations);
 router.get('/:id', protect, getDesignationById);
-router.put('/:id', protect, updateDesignation);
+router.put('/:id', protect, upload.single('image'), updateDesignation);
 router.delete('/:id', protect, deleteDesignation);
 
 module.exports = router;

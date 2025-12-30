@@ -27,20 +27,36 @@ const Department = {
         return result.insertId;
     },
 
-    findAll: async (page = 1, limit = 10) => {
+    findAll: async (page = 1, limit = 10, status = null, search = '') => {
         const offset = (page - 1) * limit;
+        let query = 'SELECT d.*, (SELECT COUNT(*) FROM employees e WHERE e.department_id = d.id) as employee_count, (SELECT COUNT(*) FROM designations deg WHERE deg.department_id = d.id) as designation_count FROM departments d WHERE 1=1';
+        let countQuery = 'SELECT COUNT(*) as total FROM departments WHERE 1=1';
+        let queryParams = [];
+        let countParams = [];
+
+        if (status && status !== 'All') {
+            query += ' AND d.status = ?';
+            countQuery += ' AND status = ?';
+            queryParams.push(status);
+            countParams.push(status);
+        }
+
+        if (search) {
+            const searchPattern = `%${search}%`;
+            query += ' AND (d.department_name LIKE ? OR d.department_id LIKE ?)';
+            countQuery += ' AND (department_name LIKE ? OR department_id LIKE ?)';
+            queryParams.push(searchPattern, searchPattern);
+            countParams.push(searchPattern, searchPattern);
+        }
+
+        query += ' ORDER BY d.id DESC LIMIT ? OFFSET ?';
+        queryParams.push(parseInt(limit), parseInt(offset));
 
         // Get total count
-        const [totalRows] = await pool.query('SELECT COUNT(*) as total FROM departments');
+        const [totalRows] = await pool.query(countQuery, countParams);
         const total = totalRows[0].total;
 
-        const [rows] = await pool.query(`
-            SELECT d.*, 
-            (SELECT COUNT(*) FROM employees e WHERE e.department_id = d.id) as employee_count,
-            (SELECT COUNT(*) FROM designations deg WHERE deg.department_id = d.id) as designation_count
-            FROM departments d
-            LIMIT ? OFFSET ?
-        `, [parseInt(limit), parseInt(offset)]);
+        const [rows] = await pool.query(query, queryParams);
 
         return {
             departments: rows,

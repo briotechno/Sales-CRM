@@ -21,20 +21,42 @@ const Designation = {
         return result.insertId;
     },
 
-    findAll: async (page = 1, limit = 10) => {
+    findAll: async (page = 1, limit = 10, status = 'All', search = '') => {
         const offset = (page - 1) * limit;
-
-        // Get total count
-        const [totalRows] = await pool.query('SELECT COUNT(*) as total FROM designations');
-        const total = totalRows[0].total;
-
-        const [rows] = await pool.query(`
+        let query = `
             SELECT deg.*, d.department_name, d.department_id as department_uid,
             (SELECT COUNT(*) FROM employees e WHERE e.designation_id = deg.id) as employee_count
             FROM designations deg
             LEFT JOIN departments d ON deg.department_id = d.id
-            LIMIT ? OFFSET ?
-        `, [parseInt(limit), parseInt(offset)]);
+            WHERE 1=1
+        `;
+        let countQuery = 'SELECT COUNT(*) as total FROM designations deg LEFT JOIN departments d ON deg.department_id = d.id WHERE 1=1';
+        let queryParams = [];
+        let countParams = [];
+
+        if (status && status !== 'All') {
+            query += ' AND deg.status = ?';
+            countQuery += ' AND deg.status = ?';
+            queryParams.push(status);
+            countParams.push(status);
+        }
+
+        if (search) {
+            const searchPattern = `%${search}%`;
+            query += ' AND (deg.designation_name LIKE ? OR deg.designation_id LIKE ? OR d.department_name LIKE ?)';
+            countQuery += ' AND (deg.designation_name LIKE ? OR deg.designation_id LIKE ? OR d.department_name LIKE ?)';
+            queryParams.push(searchPattern, searchPattern, searchPattern);
+            countParams.push(searchPattern, searchPattern, searchPattern);
+        }
+
+        query += ' ORDER BY deg.id DESC LIMIT ? OFFSET ?';
+        queryParams.push(parseInt(limit), parseInt(offset));
+
+        // Get total count
+        const [totalRows] = await pool.query(countQuery, countParams);
+        const total = totalRows[0].total;
+
+        const [rows] = await pool.query(query, queryParams);
 
         return {
             designations: rows,
