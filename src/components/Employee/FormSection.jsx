@@ -74,6 +74,13 @@ const FormSection = ({ formData, handleChange, handleChanges }) => {
               onChange={handleChange}
               className={fileStyles}
             />
+            {formData.profilePicPreview && (
+              <img
+                src={formData.profilePicPreview}
+                alt="Profile"
+                className="w-24 h-24 object-cover rounded-sm border"
+              />
+            )}
           </div>
           <div>
             <label className={labelStyles}>Date of Birth</label>
@@ -533,6 +540,13 @@ const FormSection = ({ formData, handleChange, handleChanges }) => {
               onChange={handleChange}
               className={fileStyles}
             />
+            {formData.aadharFrontPreview && (
+              <img
+                src={formData.aadharFrontPreview}
+                alt="Profile"
+                className="w-24 h-24 object-cover rounded-sm border"
+              />
+            )}
           </div>
           <div>
             <label className={labelStyles}>Upload Aadhar Card (Back)</label>
@@ -543,6 +557,13 @@ const FormSection = ({ formData, handleChange, handleChanges }) => {
               onChange={handleChange}
               className={fileStyles}
             />
+            {formData.aadharBackPreview && (
+              <img
+                src={formData.aadharBackPreview}
+                alt="Profile"
+                className="w-24 h-24 object-cover rounded-sm border"
+              />
+            )}
           </div>
           <div>
             <label className={labelStyles}>Upload PAN Card</label>
@@ -553,6 +574,13 @@ const FormSection = ({ formData, handleChange, handleChanges }) => {
               onChange={handleChange}
               className={fileStyles}
             />
+            {formData.panCardPreview && (
+              <img
+                src={formData.panCardPreview}
+                alt="Profile"
+                className="w-24 h-24 object-cover rounded-sm border"
+              />
+            )}
           </div>
         </div>
       </div>
@@ -619,6 +647,13 @@ const FormSection = ({ formData, handleChange, handleChanges }) => {
               onChange={handleChange}
               className={fileStyles}
             />
+            {formData.cancelChequePreview && (
+              <img
+                src={formData.cancelChequePreview}
+                alt="Profile"
+                className="w-24 h-24 object-cover rounded-sm border"
+              />
+            )}
           </div>
         </div>
       </div>

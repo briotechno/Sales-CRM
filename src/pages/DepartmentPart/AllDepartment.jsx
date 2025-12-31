@@ -150,9 +150,9 @@ const AllDepartment = () => {
                     </td>
                     <td className="py-3 px-4">
                       <div className="flex justify-center">
-                        {dept.icon_url ? (
+                        {dept.icon ? (
                           <img
-                            src={`${import.meta.env.VITE_API_BASE_URL.replace('/api/', '')}${dept.icon_url}`}
+                            src={`${import.meta.env.VITE_API_BASE_URL.replace('/api/', '')}${dept.icon}`}
                             alt={dept.department_name}
                             className="w-10 h-10 rounded-full border border-gray-300 object-cover"
                           />

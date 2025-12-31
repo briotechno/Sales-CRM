@@ -77,7 +77,16 @@ export default function EmployeeProfile() {
   return (
     <DashboardLayout>
       <div className="min-h-screen   ml-6">
-        <div className="max-w-7xl mx-auto">
+        <div className="">
+          {/* Back Button */}
+          <div className="flex items-center gap-3 mb-6">
+            <button
+              onClick={() => navigate('/hrm/employee/all')}
+              className="flex items-center gap-2 text-orange-500 font-bold hover:text-orange-600 transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5" /> Back to Employees
+            </button>
+          </div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Left Column - Profile Card */}
             <div className="lg:col-span-1 rounded-sm shadow-lg">
