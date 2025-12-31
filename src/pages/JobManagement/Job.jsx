@@ -179,7 +179,7 @@ export default function JobManagement() {
   return (
     <DashboardLayout>
       <div className="min-h-screen bg-gradient-to-br from-orange-0 via-white to-orange-0 p-0 ml-6">
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-8xl mx-auto">
           {/* Header */}
           <div className="bg-white rounded-sm p-3 mb-4 border-b">
             <div className="flex justify-between items-center">
