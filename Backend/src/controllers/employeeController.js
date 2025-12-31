@@ -23,7 +23,9 @@ const createEmployee = async (req, res) => {
             }
         }
 
-        const id = await Employee.create(data);
+        // Ensure user_id comes ONLY from JWT token
+        const userId = req.user.id;
+        const id = await Employee.create(data, userId);
         res.status(201).json({ status: true, message: 'Employee created successfully', id });
     } catch (error) {
         console.error('Create Employee Error:', error);
@@ -34,7 +36,8 @@ const createEmployee = async (req, res) => {
 const getEmployees = async (req, res) => {
     try {
         const { page = 1, limit = 10, status = 'All', search = '' } = req.query;
-        const data = await Employee.findAll(page, limit, status, search);
+        // userId from token
+        const data = await Employee.findAll(req.user.id, page, limit, status, search);
         res.status(200).json(data);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -43,7 +46,7 @@ const getEmployees = async (req, res) => {
 
 const getEmployeeById = async (req, res) => {
     try {
-        const employee = await Employee.findById(req.params.id);
+        const employee = await Employee.findById(req.params.id, req.user.id);
         if (!employee) {
             return res.status(404).json({ status: false, message: 'Employee not found' });
         }
@@ -55,7 +58,7 @@ const getEmployeeById = async (req, res) => {
 
 const updateEmployee = async (req, res) => {
     try {
-        const employee = await Employee.findById(req.params.id);
+        const employee = await Employee.findById(req.params.id, req.user.id);
         if (!employee) {
             return res.status(404).json({ status: false, message: 'Employee not found' });
         }
@@ -81,7 +84,7 @@ const updateEmployee = async (req, res) => {
             }
         }
 
-        await Employee.update(req.params.id, data);
+        await Employee.update(req.params.id, data, req.user.id);
         res.status(200).json({ status: true, message: 'Employee updated successfully' });
     } catch (error) {
         console.error('Update Employee Error:', error);
@@ -91,11 +94,11 @@ const updateEmployee = async (req, res) => {
 
 const deleteEmployee = async (req, res) => {
     try {
-        const employee = await Employee.findById(req.params.id);
+        const employee = await Employee.findById(req.params.id, req.user.id);
         if (!employee) {
             return res.status(404).json({ status: false, message: 'Employee not found' });
         }
-        await Employee.delete(req.params.id);
+        await Employee.delete(req.params.id, req.user.id);
         res.status(200).json({ status: true, message: 'Employee deleted successfully' });
     } catch (error) {
         res.status(500).json({ status: false, message: error.message });

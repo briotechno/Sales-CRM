@@ -6,7 +6,9 @@ const createDepartment = async (req, res) => {
         if (req.file) {
             data.icon = `/uploads/departments/${req.file.filename}`;
         }
-        const id = await Department.create(data);
+        // Ensure user_id comes ONLY from JWT token
+        const userId = req.user.id;
+        const id = await Department.create(data, userId);
         res.status(201).json({ status: true, message: 'Department created successfully', id });
     } catch (error) {
         res.status(500).json({ status: false, message: error.message });
@@ -16,7 +18,8 @@ const createDepartment = async (req, res) => {
 const getDepartments = async (req, res) => {
     try {
         const { page = 1, limit = 10, status = 'All', search = '' } = req.query;
-        const data = await Department.findAll(page, limit, status, search);
+        // userId from token
+        const data = await Department.findAll(req.user.id, page, limit, status, search);
         res.status(200).json(data);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -25,7 +28,7 @@ const getDepartments = async (req, res) => {
 
 const getDepartmentById = async (req, res) => {
     try {
-        const department = await Department.findById(req.params.id);
+        const department = await Department.findById(req.params.id, req.user.id);
         if (!department) {
             return res.status(404).json({ status: false, message: 'Department not found' });
         }
@@ -37,7 +40,7 @@ const getDepartmentById = async (req, res) => {
 
 const updateDepartment = async (req, res) => {
     try {
-        const department = await Department.findById(req.params.id);
+        const department = await Department.findById(req.params.id, req.user.id);
         if (!department) {
             return res.status(404).json({ status: false, message: 'Department not found' });
         }
@@ -45,7 +48,7 @@ const updateDepartment = async (req, res) => {
         if (req.file) {
             data.icon = `/uploads/departments/${req.file.filename}`;
         }
-        await Department.update(req.params.id, data);
+        await Department.update(req.params.id, data, req.user.id);
         res.status(200).json({ status: true, message: 'Department updated successfully' });
     } catch (error) {
         res.status(500).json({ status: false, message: error.message });
@@ -54,11 +57,11 @@ const updateDepartment = async (req, res) => {
 
 const deleteDepartment = async (req, res) => {
     try {
-        const department = await Department.findById(req.params.id);
+        const department = await Department.findById(req.params.id, req.user.id);
         if (!department) {
             return res.status(404).json({ status: false, message: 'Department not found' });
         }
-        await Department.delete(req.params.id);
+        await Department.delete(req.params.id, req.user.id);
         res.status(200).json({ status: true, message: 'Department deleted successfully' });
     } catch (error) {
         res.status(500).json({ status: false, message: error.message });

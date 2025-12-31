@@ -1,5 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { departmentApi } from "../store/api/departmentApi";
+import { designationApi } from "../store/api/designationApi";
+import { employeeApi } from "../store/api/employeeApi";
+import { businessApi } from "../store/api/businessApi";
 import {
   LayoutDashboard,
   ChevronDown,
@@ -31,6 +36,23 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
   const location = useLocation();
   const [activeItem, setActiveItem] = useState("/");
   const activeItemRef = React.useRef(null);
+  const dispatch = useDispatch();
+
+  const handleItemClick = (path) => {
+    setActiveItem(path);
+    if (window.innerWidth < 768) setIsOpen(false);
+
+    // Force re-fetch for specific routes by invalidating RTK Query tags
+    if (path === "/hrm/department") {
+      dispatch(departmentApi.util.invalidateTags(["Department"]));
+    } else if (path === "/hrm/designation") {
+      dispatch(designationApi.util.invalidateTags(["Designation"]));
+    } else if (path === "/hrm/employee/all") {
+      dispatch(employeeApi.util.invalidateTags(["Employee"]));
+    } else if (path === "/settings/business-info") {
+      dispatch(businessApi.util.invalidateTags(["BusinessInfo"]));
+    }
+  };
 
   useEffect(() => {
     setActiveItem(location.pathname);
@@ -350,8 +372,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                             : "hover:bg-gray-100 text-black"
                             }`}
                           onClick={() => {
-                            setActiveItem(item.path);
-                            if (window.innerWidth < 768) setIsOpen(false);
+                            handleItemClick(item.path);
                           }}
                         >
                           {item.icon}
@@ -390,8 +411,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                               : "hover:bg-gray-100 text-black"
                               }`}
                             onClick={() => {
-                              setActiveItem(item.path);
-                              if (window.innerWidth < 768) setIsOpen(false);
+                              handleItemClick(item.path);
                             }}
                           >
                             {item.icon}
@@ -436,9 +456,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                                         : "text-black hover:text-[#FF7B1D]"
                                         }`}
                                       onClick={() => {
-                                        setActiveItem(sub.path);
-                                        if (window.innerWidth < 768)
-                                          setIsOpen(false);
+                                        handleItemClick(sub.path);
                                         setOpenMenu(item.name);
                                       }}
                                     >

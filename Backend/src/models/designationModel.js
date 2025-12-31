@@ -1,10 +1,10 @@
 const { pool } = require('../config/db');
 
 const Designation = {
-    create: async (data) => {
+    create: async (data, userId) => {
         const { department_id, designation_name, image, status } = data;
 
-        // Generate unique designation_id
+        // Generate unique designation_id for all users
         const [rows] = await pool.query('SELECT designation_id FROM designations ORDER BY id DESC LIMIT 1');
         let newId = 'DSG001';
         if (rows.length > 0 && rows[0].designation_id) {
@@ -15,24 +15,24 @@ const Designation = {
         }
 
         const [result] = await pool.query(
-            'INSERT INTO designations (designation_id, department_id, designation_name, image, status) VALUES (?, ?, ?, ?, ?)',
-            [newId, department_id, designation_name, image, status]
+            'INSERT INTO designations (designation_id, department_id, designation_name, image, status, user_id) VALUES (?, ?, ?, ?, ?, ?)',
+            [newId, department_id, designation_name, image, status, userId]
         );
         return result.insertId;
     },
 
-    findAll: async (page = 1, limit = 10, status = 'All', search = '') => {
+    findAll: async (userId, page = 1, limit = 10, status = 'All', search = '') => {
         const offset = (page - 1) * limit;
         let query = `
             SELECT deg.*, d.department_name, d.department_id as department_uid,
-            (SELECT COUNT(*) FROM employees e WHERE e.designation_id = deg.id) as employee_count
+            (SELECT COUNT(*) FROM employees e WHERE e.designation_id = deg.id AND e.user_id = deg.user_id) as employee_count
             FROM designations deg
             LEFT JOIN departments d ON deg.department_id = d.id
-            WHERE 1=1
+            WHERE deg.user_id = ?
         `;
-        let countQuery = 'SELECT COUNT(*) as total FROM designations deg LEFT JOIN departments d ON deg.department_id = d.id WHERE 1=1';
-        let queryParams = [];
-        let countParams = [];
+        let countQuery = 'SELECT COUNT(*) as total FROM designations deg LEFT JOIN departments d ON deg.department_id = d.id WHERE deg.user_id = ?';
+        let queryParams = [userId];
+        let countParams = [userId];
 
         if (status && status !== 'All') {
             query += ' AND deg.status = ?';
@@ -69,27 +69,27 @@ const Designation = {
         };
     },
 
-    findById: async (id) => {
+    findById: async (id, userId) => {
         const [rows] = await pool.query(`
             SELECT deg.*, d.department_name, d.department_id as department_uid,
-            (SELECT COUNT(*) FROM employees e WHERE e.designation_id = deg.id) as employee_count
+            (SELECT COUNT(*) FROM employees e WHERE e.designation_id = deg.id AND e.user_id = deg.user_id) as employee_count
             FROM designations deg
             LEFT JOIN departments d ON deg.department_id = d.id
-            WHERE deg.id = ?
-        `, [id]);
+            WHERE deg.id = ? AND deg.user_id = ?
+        `, [id, userId]);
         return rows[0];
     },
 
-    update: async (id, data) => {
+    update: async (id, data, userId) => {
         const { department_id, designation_name, image, status } = data;
         await pool.query(
-            'UPDATE designations SET department_id = ?, designation_name = ?, image = ?, status = ? WHERE id = ?',
-            [department_id, designation_name, image, status, id]
+            'UPDATE designations SET department_id = ?, designation_name = ?, image = ?, status = ? WHERE id = ? AND user_id = ?',
+            [department_id, designation_name, image, status, id, userId]
         );
     },
 
-    delete: async (id) => {
-        await pool.query('DELETE FROM designations WHERE id = ?', [id]);
+    delete: async (id, userId) => {
+        await pool.query('DELETE FROM designations WHERE id = ? AND user_id = ?', [id, userId]);
     }
 };
 

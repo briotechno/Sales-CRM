@@ -1,14 +1,14 @@
 const { pool } = require('../config/db');
 
 const Team = {
-    create: async (data) => {
+    create: async (data, userId) => {
         const { team_name, description, status, employee_ids } = data;
 
         const connection = await pool.getConnection();
         try {
             await connection.beginTransaction();
 
-            // Generate unique team_id (TM001, TM002, etc.)
+            // Generate unique team_id (TM001, TM002, etc.) for all users
             const [rows] = await connection.query('SELECT team_id FROM teams ORDER BY id DESC LIMIT 1');
             let newId = 'TM001';
             if (rows.length > 0 && rows[0].team_id) {
@@ -19,8 +19,8 @@ const Team = {
             }
 
             const [result] = await connection.query(
-                'INSERT INTO teams (team_id, team_name, description, status) VALUES (?, ?, ?, ?)',
-                [newId, team_name, description, status || 'Active']
+                'INSERT INTO teams (team_id, team_name, description, status, user_id) VALUES (?, ?, ?, ?, ?)',
+                [newId, team_name, description, status || 'Active', userId]
             );
 
             const teamTableId = result.insertId;
@@ -45,11 +45,11 @@ const Team = {
         }
     },
 
-    findAll: async (page = 1, limit = 10) => {
+    findAll: async (userId, page = 1, limit = 10) => {
         const offset = (page - 1) * limit;
 
         // Get total count
-        const [totalRows] = await pool.query('SELECT COUNT(*) as total FROM teams');
+        const [totalRows] = await pool.query('SELECT COUNT(*) as total FROM teams WHERE user_id = ?', [userId]);
         const total = totalRows[0].total;
 
         // Get paginated data
@@ -57,9 +57,10 @@ const Team = {
             SELECT t.*, 
             (SELECT COUNT(*) FROM team_members tm WHERE tm.team_id = t.id) as total_members
             FROM teams t
+            WHERE t.user_id = ?
             ORDER BY t.id DESC
             LIMIT ? OFFSET ?
-        `, [parseInt(limit), parseInt(offset)]);
+        `, [userId, parseInt(limit), parseInt(offset)]);
 
         return {
             teams: rows,
@@ -72,8 +73,8 @@ const Team = {
         };
     },
 
-    findById: async (id) => {
-        const [rows] = await pool.query('SELECT * FROM teams WHERE id = ?', [id]);
+    findById: async (id, userId) => {
+        const [rows] = await pool.query('SELECT * FROM teams WHERE id = ? AND user_id = ?', [id, userId]);
         if (rows.length === 0) return null;
 
         const [members] = await pool.query(`
@@ -86,17 +87,21 @@ const Team = {
         return { ...rows[0], members };
     },
 
-    update: async (id, data) => {
+    update: async (id, data, userId) => {
         const { team_name, description, status, employee_ids } = data;
 
         const connection = await pool.getConnection();
         try {
             await connection.beginTransaction();
 
-            await connection.query(
-                'UPDATE teams SET team_name = ?, description = ?, status = ? WHERE id = ?',
-                [team_name, description, status, id]
+            const [result] = await connection.query(
+                'UPDATE teams SET team_name = ?, description = ?, status = ? WHERE id = ? AND user_id = ?',
+                [team_name, description, status, id, userId]
             );
+
+            if (result.affectedRows === 0) {
+                throw new Error('Team not found or not authorized');
+            }
 
             // Update members: delete existing and add new ones
             if (employee_ids && Array.isArray(employee_ids)) {
@@ -118,8 +123,8 @@ const Team = {
         }
     },
 
-    delete: async (id) => {
-        await pool.query('DELETE FROM teams WHERE id = ?', [id]);
+    delete: async (id, userId) => {
+        await pool.query('DELETE FROM teams WHERE id = ? AND user_id = ?', [id, userId]);
     }
 };
 

@@ -7,6 +7,10 @@ const designationRoutes = require('./routes/designationRoutes');
 const employeeRoutes = require('./routes/employeeRoutes');
 const teamRoutes = require('./routes/teamRoutes');
 const businessInfoRoutes = require('./routes/businessInfoRoutes');
+const leaveRoutes = require('./routes/leaveRoutes');
+const termsRoutes = require('./routes/termsRoutes');
+const companyPolicyRoutes = require('./routes/companyPolicyRoutes');
+const hrPolicyRoutes = require('./routes/hrPolicyRoutes');
 const path = require('path');
 
 dotenv.config();
@@ -26,6 +30,10 @@ app.use('/api/designations', designationRoutes);
 app.use('/api/employees', employeeRoutes);
 app.use('/api/teams', teamRoutes);
 app.use('/api/business-info', businessInfoRoutes);
+app.use('/api/leave', leaveRoutes);
+app.use('/api/terms', termsRoutes);
+app.use('/api/company-policies', companyPolicyRoutes);
+app.use('/api/hr-policies', hrPolicyRoutes);
 
 app.get('/', (req, res) => {
     res.send('API is running...');

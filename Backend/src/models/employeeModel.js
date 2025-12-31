@@ -1,7 +1,7 @@
 const { pool } = require('../config/db');
 
 const Employee = {
-    create: async (data) => {
+    create: async (data, userId) => {
         const {
             employee_name, profile_picture, date_of_birth, age, gender,
             father_name, mother_name, marital_status, joining_date,
@@ -15,7 +15,7 @@ const Employee = {
             cancelled_cheque, username, password, status
         } = data;
 
-        // Generate unique employee_id
+        // Generate unique employee_id for all users
         const [rows] = await pool.query('SELECT employee_id FROM employees ORDER BY id DESC LIMIT 1');
         let newId = 'EMP10001';
         if (rows.length > 0 && rows[0].employee_id) {
@@ -36,8 +36,8 @@ const Employee = {
                 blood_group, languages, aadhar_number, pan_number,
                 aadhar_front, aadhar_back, pan_card,
                 ifsc_code, account_number, account_holder_name, branch_name,
-                cancelled_cheque, username, password, status
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                cancelled_cheque, username, password, status, user_id
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 newId, employee_name, profile_picture, date_of_birth, age, gender,
                 father_name, mother_name, marital_status, joining_date,
@@ -48,13 +48,13 @@ const Employee = {
                 blood_group, languages, aadhar_number, pan_number,
                 aadhar_front, aadhar_back, pan_card,
                 ifsc_code, account_number, account_holder_name, branch_name,
-                cancelled_cheque, username, password, status
+                cancelled_cheque, username, password, status, userId
             ]
         );
         return result.insertId;
     },
 
-    findAll: async (page = 1, limit = 10, status = 'All', search = '') => {
+    findAll: async (userId, page = 1, limit = 10, status = 'All', search = '') => {
         const offset = (page - 1) * limit;
         let query = `
             SELECT e.*, 
@@ -63,31 +63,28 @@ const Employee = {
             FROM employees e 
             LEFT JOIN departments d ON e.department_id = d.id 
             LEFT JOIN designations deg ON e.designation_id = deg.id
-            WHERE 1=1
+            WHERE e.user_id = ?
         `;
-        let countQuery = 'SELECT COUNT(*) as total FROM employees e WHERE 1=1';
-        let queryParams = [];
+        let countQuery = 'SELECT COUNT(*) as total FROM employees e WHERE e.user_id = ?';
+        let queryParams = [userId];
 
         if (status !== 'All') {
             query += ' AND e.status = ?';
-            countQuery += ' AND status = ?';
+            countQuery += ' AND e.status = ?';
             queryParams.push(status);
         }
 
         if (search) {
             const searchPattern = `%${search}%`;
             query += ' AND (e.employee_name LIKE ? OR e.employee_id LIKE ? OR e.email LIKE ? OR e.mobile_number LIKE ?)';
-            countQuery += ' AND (employee_name LIKE ? OR employee_id LIKE ? OR email LIKE ? OR mobile_number LIKE ?)';
+            countQuery += ' AND (e.employee_name LIKE ? OR e.employee_id LIKE ? OR e.email LIKE ? OR e.mobile_number LIKE ?)';
             queryParams.push(searchPattern, searchPattern, searchPattern, searchPattern);
         }
 
         query += ' ORDER BY e.id DESC LIMIT ? OFFSET ?';
-        let countParams = queryParams.slice(0, status !== 'All' ? 1 : 0);
-        if (search) {
-            countParams = [...countParams, ...Array(4).fill(`%${search}%`)];
-        }
+        let countParams = queryParams;
 
-        queryParams.push(parseInt(limit), parseInt(offset));
+        queryParams = [...queryParams, parseInt(limit), parseInt(offset)];
 
         const [totalRows] = await pool.query(countQuery, countParams);
         const total = totalRows[0].total;
@@ -105,7 +102,7 @@ const Employee = {
         };
     },
 
-    findById: async (id) => {
+    findById: async (id, userId) => {
         const [rows] = await pool.query(`
             SELECT e.*, 
             d.department_name, d.department_id as department_uid,
@@ -113,26 +110,26 @@ const Employee = {
             FROM employees e 
             LEFT JOIN departments d ON e.department_id = d.id 
             LEFT JOIN designations deg ON e.designation_id = deg.id
-            WHERE e.id = ?
-        `, [id]);
+            WHERE e.id = ? AND e.user_id = ?
+        `, [id, userId]);
         return rows[0];
     },
 
-    update: async (id, data) => {
-        const fields = Object.keys(data).filter(key => key !== 'id' && key !== 'employee_id');
+    update: async (id, data, userId) => {
+        const fields = Object.keys(data).filter(key => key !== 'id' && key !== 'employee_id' && key !== 'user_id');
         const setClause = fields.map(field => `${field} = ?`).join(', ');
         const values = fields.map(field => data[field]);
 
         if (fields.length === 0) return;
 
         await pool.query(
-            `UPDATE employees SET ${setClause} WHERE id = ?`,
-            [...values, id]
+            `UPDATE employees SET ${setClause} WHERE id = ? AND user_id = ?`,
+            [...values, id, userId]
         );
     },
 
-    delete: async (id) => {
-        await pool.query('DELETE FROM employees WHERE id = ?', [id]);
+    delete: async (id, userId) => {
+        await pool.query('DELETE FROM employees WHERE id = ? AND user_id = ?', [id, userId]);
     }
 };
 
