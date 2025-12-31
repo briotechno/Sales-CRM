@@ -141,8 +141,8 @@ export default function FAQPage() {
         </div>
 
         {/* Stats Section */}
-        <div className="max-w-7xl mx-auto px-0 py-12">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="max-w-7xl mx-auto px-0 py-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 bg-white border-b py-3">
             <NumberCard
               title={"Support Available"}
               number={"24/7"}

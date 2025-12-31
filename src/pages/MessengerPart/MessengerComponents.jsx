@@ -263,8 +263,8 @@ export function ChatMessages({
   const reactions = ["👍", "❤️", "😂", "😮", "😢", "🔥"];
 
   return (
-    <div className="flex-1 p-6 bg-gradient-to-b from-gray-50 via-white to-gray-50 overflow-y-auto custom-scrollbar">
-      <div className="max-w-4xl mx-auto space-y-4 pb-4">
+    <div className="flex-1 p-6 bg-gradient-to-b from-gray-50 via-white to-gray-50">
+      <div className="space-y-4 pb-4">
         {messages.map((msg) => (
           <div key={msg.id} className="group relative">
             {/* Reply Preview */}

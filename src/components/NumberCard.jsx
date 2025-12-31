@@ -1,6 +1,6 @@
 import { FileText } from "lucide-react";
 
-const NumberCard = ({ title, number, lineBorderClass, icon, iconBgColor, up, down }) => {
+const NumberCard = ({ title, number, lineBorderClass, icon, iconBgColor, up, down, children }) => {
   return (
     <div className={`bg-white rounded-sm shadow-sm hover:shadow-md p-5 border-t-4 ${lineBorderClass}`}>
       <div className="flex items-center justify-between">
@@ -22,6 +22,11 @@ const NumberCard = ({ title, number, lineBorderClass, icon, iconBgColor, up, dow
           </div>
         </div>
       </div>
+      {children && (
+        <div className="flex gap-3 text-xs mt-4">
+          {children}
+        </div>
+      )}
     </div>
   )
 }
