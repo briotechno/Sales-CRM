@@ -33,13 +33,17 @@ const EditEmployeeModal = ({ isOpen, onClose, employee }) => {
         aadharNumber: "",
         panNumber: "",
         aadharFront: null,
+        aadharFrontPreview: "",
         aadharBack: null,
+        aadharBackPreview: "",
         panCard: null,
+        panCardPreview: "",
         ifscCode: "",
         accountNumber: "",
         accountHolderName: "",
         branchName: "",
         cancelCheque: null,
+        cancelChequePreview: "",
         username: "",
         password: "",
         status: "Active"
@@ -77,13 +81,17 @@ const EditEmployeeModal = ({ isOpen, onClose, employee }) => {
                 aadharNumber: employee.aadhar_number || "",
                 panNumber: employee.pan_number || "",
                 aadharFront: null,
+                aadharFrontPreview: employee.aadhar_front_url || "",
                 aadharBack: null,
+                aadharBackPreview: employee.aadhar_back_url || "",
                 panCard: null,
+                panCardPreview: employee.pan_card_url || "",
                 ifscCode: employee.ifsc_code || "",
                 accountNumber: employee.account_number || "",
                 accountHolderName: employee.account_holder_name || "",
                 branchName: employee.branch_name || "",
                 cancelCheque: null,
+                cancelChequePreview: employee.cancelled_cheque_url || "",
                 username: employee.username || "",
                 password: "", // Keep password empty for security
                 status: employee.status || "Active"
@@ -151,6 +159,7 @@ const EditEmployeeModal = ({ isOpen, onClose, employee }) => {
 
         const data = new FormData();
         const mapping = {
+            employeeId:'employee_id',
             employeeName: 'employee_name',
             profilePic: 'profile_picture',
             dob: 'date_of_birth',
