@@ -26,9 +26,25 @@ import {
  * />
  */
 
-const JobViewModal = ({ job, onClose }) => {
+const JobViewModal = ({ job, onClose, onEdit }) => {
   // Don't render if no job is provided
   if (!job) return null;
+
+  // Helper to ensure we have an array
+  const getList = (items) => {
+    if (Array.isArray(items)) return items;
+    if (typeof items === 'string') {
+      try {
+        return JSON.parse(items);
+      } catch (e) {
+        return [];
+      }
+    }
+    return [];
+  };
+
+  const responsibilities = getList(job.responsibilities);
+  const requirements = getList(job.requirements);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -121,13 +137,12 @@ const JobViewModal = ({ job, onClose }) => {
                       <XCircle size={20} className="text-red-600" />
                     )}
                     <span
-                      className={`px-4 py-2 text-sm font-semibold rounded-sm ${
-                        job.status === "Active"
+                      className={`px-4 py-2 text-sm font-semibold rounded-sm ${job.status === "Active"
                           ? "bg-green-100 text-green-700"
                           : job.status === "On Hold"
-                          ? "bg-yellow-100 text-yellow-700"
-                          : "bg-gray-200 text-gray-700"
-                      }`}
+                            ? "bg-yellow-100 text-yellow-700"
+                            : "bg-gray-200 text-gray-700"
+                        }`}
                     >
                       {job.status}
                     </span>
@@ -142,7 +157,7 @@ const JobViewModal = ({ job, onClose }) => {
                   <div className="flex items-center gap-2">
                     <Calendar size={20} className="text-orange-600" />
                     <span className="text-gray-800 font-medium">
-                      {job.postedDate}
+                      {new Date(job.posted_date).toLocaleDateString()}
                     </span>
                   </div>
                 </div>
@@ -156,12 +171,8 @@ const JobViewModal = ({ job, onClose }) => {
                 Job Description
               </h3>
               <div className="bg-white border-2 border-gray-200 p-6 rounded-sm">
-                <p className="text-gray-700 leading-relaxed">
-                  We are looking for a talented {job.title} to join our{" "}
-                  {job.department} team. This is a {job.type} position based in{" "}
-                  {job.location}. The ideal candidate will have extensive
-                  experience in their field and a passion for innovation and
-                  excellence.
+                <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+                  {job.description}
                 </p>
               </div>
             </div>
@@ -174,40 +185,18 @@ const JobViewModal = ({ job, onClose }) => {
               </h3>
               <div className="bg-white border-2 border-gray-200 p-6 rounded-sm">
                 <ul className="space-y-2">
-                  <li className="flex items-start gap-3">
-                    <div className="bg-orange-100 p-1 rounded-full mt-1">
-                      <CheckCircle size={16} className="text-orange-600" />
-                    </div>
-                    <span className="text-gray-700">
-                      Lead and manage projects within the {job.department}{" "}
-                      department
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <div className="bg-orange-100 p-1 rounded-full mt-1">
-                      <CheckCircle size={16} className="text-orange-600" />
-                    </div>
-                    <span className="text-gray-700">
-                      Collaborate with cross-functional teams to achieve company
-                      goals
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <div className="bg-orange-100 p-1 rounded-full mt-1">
-                      <CheckCircle size={16} className="text-orange-600" />
-                    </div>
-                    <span className="text-gray-700">
-                      Mentor junior team members and contribute to team growth
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <div className="bg-orange-100 p-1 rounded-full mt-1">
-                      <CheckCircle size={16} className="text-orange-600" />
-                    </div>
-                    <span className="text-gray-700">
-                      Drive innovation and implement best practices
-                    </span>
-                  </li>
+                  {responsibilities.length > 0 ? (
+                    responsibilities.map((item, index) => (
+                      <li key={index} className="flex items-start gap-3">
+                        <div className="bg-orange-100 p-1 rounded-full mt-1">
+                          <CheckCircle size={16} className="text-orange-600" />
+                        </div>
+                        <span className="text-gray-700">{item}</span>
+                      </li>
+                    ))
+                  ) : (
+                    <p className="text-gray-500 italic">No specific responsibilities listed.</p>
+                  )}
                 </ul>
               </div>
             </div>
@@ -220,39 +209,18 @@ const JobViewModal = ({ job, onClose }) => {
               </h3>
               <div className="bg-white border-2 border-gray-200 p-6 rounded-sm">
                 <ul className="space-y-2">
-                  <li className="flex items-start gap-3">
-                    <div className="bg-blue-100 p-1 rounded-full mt-1">
-                      <CheckCircle size={16} className="text-blue-600" />
-                    </div>
-                    <span className="text-gray-700">
-                      5+ years of experience in relevant field
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <div className="bg-blue-100 p-1 rounded-full mt-1">
-                      <CheckCircle size={16} className="text-blue-600" />
-                    </div>
-                    <span className="text-gray-700">
-                      Strong technical and analytical skills
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <div className="bg-blue-100 p-1 rounded-full mt-1">
-                      <CheckCircle size={16} className="text-blue-600" />
-                    </div>
-                    <span className="text-gray-700">
-                      Excellent communication and leadership abilities
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <div className="bg-blue-100 p-1 rounded-full mt-1">
-                      <CheckCircle size={16} className="text-blue-600" />
-                    </div>
-                    <span className="text-gray-700">
-                      Bachelor's degree in related field or equivalent
-                      experience
-                    </span>
-                  </li>
+                  {requirements.length > 0 ? (
+                    requirements.map((item, index) => (
+                      <li key={index} className="flex items-start gap-3">
+                        <div className="bg-blue-100 p-1 rounded-full mt-1">
+                          <CheckCircle size={16} className="text-blue-600" />
+                        </div>
+                        <span className="text-gray-700">{item}</span>
+                      </li>
+                    ))
+                  ) : (
+                    <p className="text-gray-500 italic">No specific requirements listed.</p>
+                  )}
                 </ul>
               </div>
             </div>
@@ -267,7 +235,9 @@ const JobViewModal = ({ job, onClose }) => {
           >
             Close
           </button>
-          <button className="px-8 py-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-sm font-semibold shadow-lg transition-all">
+          <button
+            onClick={onEdit}
+            className="px-8 py-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-sm font-semibold shadow-lg transition-all">
             Edit Job
           </button>
         </div>
