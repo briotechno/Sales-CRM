@@ -24,6 +24,7 @@ import {
   useDeleteJobMutation
 } from "../../store/api/jobApi";
 import toast from 'react-hot-toast';
+import { useGetDepartmentsQuery } from "../../store/api/departmentApi";
 
 // Main Component
 export default function JobManagement() {
@@ -35,7 +36,7 @@ export default function JobManagement() {
   const [jobToDelete, setJobToDelete] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [editingJobId, setEditingJobId] = useState(null);
-  const itemsPerPage = 5;
+  const itemsPerPage = 8;
 
   // Input states for dynamic arrays
   const [responsibilityInput, setResponsibilityInput] = useState("");
@@ -44,7 +45,7 @@ export default function JobManagement() {
   // Add Job Form State
   const [formData, setFormData] = useState({
     title: "",
-    department: "Engineering",
+    department: "",
     location: "",
     type: "Full-time",
     positions: 1,
@@ -65,6 +66,7 @@ export default function JobManagement() {
   }, { refetchOnMountOrArgChange: true });
 
   const { data: statsData } = useGetJobStatsQuery(undefined, { refetchOnMountOrArgChange: true });
+  const { data: departmentsData } = useGetDepartmentsQuery({ page: 1, limit: 100 });
 
   const [createJob] = useCreateJobMutation();
   const [updateJob] = useUpdateJobMutation();
@@ -85,7 +87,7 @@ export default function JobManagement() {
   const resetForm = () => {
     setFormData({
       title: "",
-      department: "Engineering",
+      department: "",
       location: "",
       type: "Full-time",
       positions: 1,
@@ -198,8 +200,8 @@ export default function JobManagement() {
   };
 
   const handleSubmit = async () => {
-    if (!formData.title || !formData.location || !formData.description) {
-      toast.error("Please fill in all required fields (Title, Location, Description)");
+    if (!formData.title || !formData.location || !formData.description || !formData.department) {
+      toast.error("Please fill in all required fields (Title, Department, Location, Description)");
       return;
     }
 
@@ -540,12 +542,12 @@ export default function JobManagement() {
                         value={formData.department}
                         onChange={handleInputChange}
                         className="w-full px-4 py-3 border-2 border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300">
-                        <option>Engineering</option>
-                        <option>Sales</option>
-                        <option>Design</option>
-                        <option>Product</option>
-                        <option>Marketing</option>
-                        <option>Human Resources</option>
+                        <option value="">Select Department</option>
+                        {departmentsData?.departments?.map((dept) => (
+                          <option key={dept.id} value={dept.department_name}>
+                            {dept.department_name}
+                          </option>
+                        ))}
                       </select>
                     </div>
                     <div>
