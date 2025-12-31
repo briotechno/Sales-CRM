@@ -7,12 +7,20 @@ import {
   Trash2,
   Edit2,
   X,
-  Filter,
-  Search,
   TrendingUp,
   Clock,
   CheckCircle,
+  ChevronLeft,
+  ChevronRight,
+  Search
 } from "lucide-react";
+import {
+  useGetHolidaysQuery,
+  useCreateHolidayMutation,
+  useUpdateHolidayMutation,
+  useDeleteHolidayMutation
+} from "../../store/api/leaveApi";
+import toast from 'react-hot-toast';
 
 // AddHolidayModal Component
 const AddHolidayModal = ({
@@ -27,16 +35,16 @@ const AddHolidayModal = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex justify-center items-center z-50 animate-fadeIn">
-      <div className="bg-white rounded-sm shadow-2xl w-full max-w-2xl mx-4 relative transform transition-all animate-slideUp">
+      <div className="bg-white rounded-lg shadow-2xl w-full max-w-2xl mx-4 relative transform transition-all animate-slideUp">
         {/* Header with Gradient */}
-        <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white p-6">
+        <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white p-6 rounded-t-lg">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-3">
               <div className="bg-white bg-opacity-20 p-2 rounded-lg">
                 <Calendar size={24} />
               </div>
               <div>
-                <h2 className="text-2xl font-bold">
+                <h2 className="text-xl font-bold">
                   {editingId ? "Edit Holiday" : "Add Holiday"}
                 </h2>
                 <p className="text-sm text-white text-opacity-90 mt-1">
@@ -69,8 +77,9 @@ const AddHolidayModal = ({
               onChange={(e) =>
                 setFormData({ ...formData, name: e.target.value })
               }
-              placeholder="e.g., New Year, Republic Day, Diwali..."
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300"
+              placeholder="e.g., New Year, Republic Day..."
+              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#FF7B1D] focus:border-transparent outline-none transition-all text-sm"
+              required
             />
           </div>
 
@@ -84,11 +93,12 @@ const AddHolidayModal = ({
               </label>
               <input
                 type="date"
-                value={formData.startDate}
+                value={formData.start_date}
                 onChange={(e) =>
-                  setFormData({ ...formData, startDate: e.target.value })
+                  setFormData({ ...formData, start_date: e.target.value })
                 }
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300"
+                className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#FF7B1D] focus:border-transparent outline-none transition-all text-sm"
+                required
               />
             </div>
 
@@ -100,134 +110,66 @@ const AddHolidayModal = ({
               </label>
               <input
                 type="date"
-                value={formData.endDate}
+                value={formData.end_date}
                 onChange={(e) =>
-                  setFormData({ ...formData, endDate: e.target.value })
+                  setFormData({ ...formData, end_date: e.target.value })
                 }
-                min={formData.startDate}
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300"
+                min={formData.start_date}
+                className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#FF7B1D] focus:border-transparent outline-none transition-all text-sm"
+                required
               />
             </div>
-          </div>
-
-          {/* Info Note */}
-          <div className="bg-orange-50 border border-orange-200 rounded-sm p-4">
-            <p className="text-sm text-gray-700">
-              <span className="font-semibold text-orange-600">Note:</span> The
-              number of days will be calculated automatically based on the start
-              and end dates.
-            </p>
           </div>
         </div>
 
         {/* Footer with Actions */}
-        <div className="bg-gray-50 px-6 py-4 rounded-b-sm border-t border-gray-200 flex justify-end gap-3">
+        <div className="bg-gray-50 px-6 py-4 rounded-b-lg border-t border-gray-200 flex justify-end gap-3">
           <button
             onClick={onClose}
-            className="px-6 py-2.5 rounded-sm border-2 border-gray-300 text-gray-700 font-semibold hover:bg-gray-100 transition-all"
+            className="px-6 py-2.5 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition-all"
           >
             Cancel
           </button>
           <button
             onClick={onSubmit}
-            className="px-6 py-2.5 rounded-sm bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold hover:shadow-lg transform transition-all"
+            className="px-6 py-2.5 rounded-lg bg-[#FF7B1D] text-white font-medium hover:bg-[#e06915] transition-all shadow-sm"
           >
             {editingId ? "Update Holiday" : "Add Holiday"}
           </button>
         </div>
       </div>
-
-      <style jsx>{`
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
-        }
-
-        @keyframes slideUp {
-          from {
-            transform: translateY(20px);
-            opacity: 0;
-          }
-          to {
-            transform: translateY(0);
-            opacity: 1;
-          }
-        }
-
-        .animate-fadeIn {
-          animation: fadeIn 0.2s ease-out;
-        }
-
-        .animate-slideUp {
-          animation: slideUp 0.3s ease-out;
-        }
-      `}</style>
     </div>
   );
 };
 
 // Main HolidaysManagement Component
 export default function HolidaysManagement() {
-  const [holidays, setHolidays] = useState([
-    {
-      id: 1,
-      name: "New Year",
-      startDate: "2025-01-01",
-      endDate: "2025-01-01",
-      days: 1,
-    },
-    {
-      id: 2,
-      name: "Republic Day",
-      startDate: "2025-01-26",
-      endDate: "2025-01-29",
-      days: 4,
-    },
-    {
-      id: 3,
-      name: "Holi",
-      startDate: "2025-03-14",
-      endDate: "2025-03-14",
-      days: 1,
-    },
-    {
-      id: 4,
-      name: "Independence Day",
-      startDate: "2025-08-15",
-      endDate: "2025-08-15",
-      days: 1,
-    },
-    {
-      id: 5,
-      name: "Diwali",
-      startDate: "2025-10-20",
-      endDate: "2025-10-22",
-      days: 3,
-    },
-    {
-      id: 6,
-      name: "Christmas",
-      startDate: "2025-12-25",
-      endDate: "2025-12-25",
-      days: 1,
-    },
-  ]);
-
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
+  const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({
     name: "",
-    startDate: "",
-    endDate: "",
+    start_date: "",
+    end_date: "",
   });
 
-  // Filter states
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [searchQuery, setSearchQuery] = useState("");
+  // Queries
+  const {
+    data: holidaysData,
+    isLoading,
+    isError,
+    refetch
+  } = useGetHolidaysQuery({
+    page: currentPage,
+    limit: itemsPerPage,
+    search: searchTerm
+  }, { refetchOnMountOrArgChange: true });
+
+  const [createHoliday] = useCreateHolidayMutation();
+  const [updateHoliday] = useUpdateHolidayMutation();
+  const [deleteHoliday] = useDeleteHolidayMutation();
 
   const calculateDays = (start, end) => {
     const startDate = new Date(start);
@@ -237,12 +179,11 @@ export default function HolidaysManagement() {
     return diffDays;
   };
 
-  // Get holiday status
   const getHolidayStatus = (holiday) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const startDate = new Date(holiday.startDate);
-    const endDate = new Date(holiday.endDate);
+    const startDate = new Date(holiday.start_date);
+    const endDate = new Date(holiday.end_date);
 
     if (endDate < today) {
       return "passed";
@@ -253,67 +194,26 @@ export default function HolidaysManagement() {
     }
   };
 
-  // Calculate statistics
-  const stats = useMemo(() => {
-    const total = holidays.length;
-    const active = holidays.filter(
-      (h) => getHolidayStatus(h) === "active"
-    ).length;
-    const upcoming = holidays.filter(
-      (h) => getHolidayStatus(h) === "upcoming"
-    ).length;
-    const passed = holidays.filter(
-      (h) => getHolidayStatus(h) === "passed"
-    ).length;
-    const totalDays = holidays.reduce((sum, h) => sum + h.days, 0);
-
-    return { total, active, upcoming, passed, totalDays };
-  }, [holidays]);
-
-  // Filter and search holidays
-  const filteredHolidays = useMemo(() => {
-    return holidays.filter((holiday) => {
-      const status = getHolidayStatus(holiday);
-      const matchesStatus = statusFilter === "all" || status === statusFilter;
-      const matchesSearch = holiday.name
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
-      return matchesStatus && matchesSearch;
-    });
-  }, [holidays, statusFilter, searchQuery]);
-
-  const handleSubmit = () => {
-    if (formData.name && formData.startDate && formData.endDate) {
-      const days = calculateDays(formData.startDate, formData.endDate);
-
-      if (editingId) {
-        setHolidays(
-          holidays.map((h) =>
-            h.id === editingId
-              ? {
-                  ...h,
-                  name: formData.name,
-                  startDate: formData.startDate,
-                  endDate: formData.endDate,
-                  days,
-                }
-              : h
-          )
-        );
+  const handleSubmit = async () => {
+    if (formData.name && formData.start_date && formData.end_date) {
+      const days = calculateDays(formData.start_date, formData.end_date);
+      try {
+        if (editingId) {
+          await updateHoliday({ id: editingId, ...formData, days }).unwrap();
+          toast.success('Holiday updated successfully');
+        } else {
+          await createHoliday({ ...formData, days }).unwrap();
+          toast.success('Holiday added successfully');
+        }
+        setFormData({ name: "", start_date: "", end_date: "" });
         setEditingId(null);
-      } else {
-        const newHoliday = {
-          id: Date.now(),
-          name: formData.name,
-          startDate: formData.startDate,
-          endDate: formData.endDate,
-          days,
-        };
-        setHolidays([...holidays, newHoliday]);
+        setIsModalOpen(false);
+        refetch();
+      } catch (error) {
+        toast.error(error?.data?.message || 'Failed to save holiday');
       }
-
-      setFormData({ name: "", startDate: "", endDate: "" });
-      setIsModalOpen(false);
+    } else {
+      toast.error('Please fill all required fields');
     }
   };
 
@@ -321,23 +221,32 @@ export default function HolidaysManagement() {
     setEditingId(holiday.id);
     setFormData({
       name: holiday.name,
-      startDate: holiday.startDate,
-      endDate: holiday.endDate,
+      start_date: holiday.start_date ? new Date(holiday.start_date).toISOString().split('T')[0] : '', // Format for date input
+      end_date: holiday.end_date ? new Date(holiday.end_date).toISOString().split('T')[0] : '',
     });
     setIsModalOpen(true);
   };
 
-  const handleDelete = (id) => {
-    setHolidays(holidays.filter((h) => h.id !== id));
+  const handleDelete = async (id) => {
+    if (window.confirm("Are you sure you want to delete this holiday?")) {
+      try {
+        await deleteHoliday(id).unwrap();
+        toast.success('Holiday deleted successfully');
+        refetch();
+      } catch (error) {
+        toast.error(error?.data?.message || 'Failed to delete holiday');
+      }
+    }
   };
 
   const handleCancel = () => {
     setIsModalOpen(false);
     setEditingId(null);
-    setFormData({ name: "", startDate: "", endDate: "" });
+    setFormData({ name: "", start_date: "", end_date: "" });
   };
 
   const formatDate = (dateString) => {
+    if (!dateString) return "-";
     const date = new Date(dateString);
     return date.toLocaleDateString("en-GB", {
       day: "2-digit",
@@ -368,7 +277,7 @@ export default function HolidaysManagement() {
       },
     };
 
-    const badge = badges[status];
+    const badge = badges[status] || badges.upcoming;
     return (
       <span
         className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${badge.bg} ${badge.text}`}
@@ -379,282 +288,246 @@ export default function HolidaysManagement() {
     );
   };
 
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
+  const totalPages = holidaysData?.pagination?.totalPages || 1;
+  const totalHolidays = holidaysData?.pagination?.total || 0;
+
   return (
     <DashboardLayout>
-      <div className="min-h-screen ml-6">
-        <div className="max-w-7xl mx-auto">
-          {/* Header */}
-          <div className="bg-white rounded-sm border-b p-6 mb-6">
+      <div className="min-h-screen bg-gray-50 ml-6 p-6">
+        {/* Header */}
+        <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">
+              Holidays Management
+            </h1>
+            <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
+              <FiHome className="text-gray-400" />
+              <span>HRM /</span>
+              <span className="text-[#FF7B1D] font-medium">
+                All Holidays
+              </span>
+            </p>
+          </div>
+          <div className="flex gap-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <input
+                type="text"
+                placeholder="Search holidays..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#FF7B1D] w-64"
+              />
+            </div>
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="flex items-center gap-2 bg-[#FF7B1D] hover:bg-[#e06915] text-white px-4 py-2 rounded-lg transition-colors shadow-sm font-medium"
+            >
+              <Plus className="w-4 h-4" />
+              Add Holiday
+            </button>
+          </div>
+        </div>
+
+        {/* Stats Cards - Simplified */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <div className="bg-white p-5 rounded-lg shadow-sm border-l-4 border-orange-500">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-800">
-                    Holidays Management
-                  </h1>
-                  <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
-                    <FiHome className="text-gray-700 text-sm" />
-                    <span className="text-gray-400"></span> HRM /{" "}
-                    <span className="text-[#FF7B1D] font-medium">
-                      All Holidays
-                    </span>
-                  </p>
-                </div>
+              <div>
+                <h3 className="text-gray-500 text-sm font-medium">
+                  Total Holidays
+                </h3>
+                <p className="text-2xl font-bold text-gray-900 mt-1">
+                  {totalHolidays}
+                </p>
               </div>
-              <div className="flex items-center gap-3">
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setStatusFilter("all")}
-                    className={`px-5 py-3 rounded-sm text-sm font-medium transition-all ${
-                      statusFilter === "all"
-                        ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-sm"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    }`}
-                  >
-                    All ({stats.total})
-                  </button>
-                  <button
-                    onClick={() => setStatusFilter("active")}
-                    className={`px-5 py-3 rounded-sm text-sm font-medium transition-all ${
-                      statusFilter === "active"
-                        ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-sm"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    }`}
-                  >
-                    Active ({stats.active})
-                  </button>
-                  <button
-                    onClick={() => setStatusFilter("upcoming")}
-                    className={`px-5 py-3 rounded-sm text-sm font-medium transition-all ${
-                      statusFilter === "upcoming"
-                        ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-sm"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    }`}
-                  >
-                    Upcoming ({stats.upcoming})
-                  </button>
-                  <button
-                    onClick={() => setStatusFilter("passed")}
-                    className={`px-5 py-3 rounded-sm text-sm font-medium transition-all ${
-                      statusFilter === "passed"
-                        ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-sm"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    }`}
-                  >
-                    Passed ({stats.passed})
-                  </button>
-                </div>
-                <button
-                  onClick={() => setIsModalOpen(true)}
-                  className="mr-6 flex items-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-6 py-3 rounded-sm transition-colors shadow-sm"
-                >
-                  <Plus className="w-5 h-5" />
-                  Add Holiday
-                </button>
+              <div className="bg-orange-100 p-2 rounded-lg">
+                <Calendar className="text-orange-600" size={20} />
               </div>
-            </div>
-          </div>
-
-          {/* Statistics Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-            <div className="bg-white rounded-sm shadow-sm border p-5 hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 font-medium">
-                    Total Holidays
-                  </p>
-                  <p className="text-2xl font-bold text-gray-800 mt-1">
-                    {stats.total}
-                  </p>
-                </div>
-                <div className="bg-orange-100 p-3 rounded-sm">
-                  <Calendar className="w-6 h-6 text-orange-600" />
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-sm shadow-sm border p-5 hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 font-medium">
-                    Active Now
-                  </p>
-                  <p className="text-2xl font-bold text-green-600 mt-1">
-                    {stats.active}
-                  </p>
-                </div>
-                <div className="bg-green-100 p-3 rounded-sm">
-                  <Clock className="w-6 h-6 text-green-600" />
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-sm shadow-sm border p-5 hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 font-medium">Upcoming</p>
-                  <p className="text-2xl font-bold text-blue-600 mt-1">
-                    {stats.upcoming}
-                  </p>
-                </div>
-                <div className="bg-blue-100 p-3 rounded-sm">
-                  <TrendingUp className="w-6 h-6 text-blue-600" />
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-sm shadow-sm border p-5 hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 font-medium">Passed</p>
-                  <p className="text-2xl font-bold text-gray-600 mt-1">
-                    {stats.passed}
-                  </p>
-                </div>
-                <div className="bg-gray-100 p-3 rounded-sm">
-                  <CheckCircle className="w-6 h-6 text-gray-600" />
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-sm shadow-sm border p-5 hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 font-medium">
-                    Total Days Off
-                  </p>
-                  <p className="text-2xl font-bold text-orange-600 mt-1">
-                    {stats.totalDays}
-                  </p>
-                </div>
-                <div className="bg-orange-100 p-3 rounded-sm">
-                  <Calendar className="w-6 h-6 text-orange-600" />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Holidays Table */}
-          <div className="bg-white rounded-sm shadow-sm overflow-hidden border">
-            <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-4 flex justify-between items-center">
-              <h2 className="text-lg font-semibold text-white">
-                Holidays List ({filteredHolidays.length})
-              </h2>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 border-b">
-                  <tr>
-                    <th className="px-6 py-3 text-left font-semibold text-sm text-gray-700">
-                      Holiday Name
-                    </th>
-                    <th className="px-6 py-3 text-center font-semibold text-sm text-gray-700">
-                      Start Date
-                    </th>
-                    <th className="px-6 py-3 text-center font-semibold text-sm text-gray-700">
-                      End Date
-                    </th>
-                    <th className="px-6 py-3 text-center font-semibold text-sm text-gray-700">
-                      Days
-                    </th>
-                    <th className="px-6 py-3 text-center font-semibold text-sm text-gray-700">
-                      Status
-                    </th>
-                    <th className="px-6 py-3 text-right font-semibold text-sm text-gray-700">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-
-                <tbody className="divide-y divide-gray-200">
-                  {filteredHolidays.length === 0 ? (
-                    <tr>
-                      <td
-                        colSpan="6"
-                        className="px-6 py-12 text-center text-gray-500"
-                      >
-                        <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                        <p className="font-medium">No holidays found</p>
-                        <p className="text-sm mt-1">
-                          {searchQuery
-                            ? "Try adjusting your search or filters"
-                            : 'Click "Add Holiday" to create one'}
-                        </p>
-                      </td>
-                    </tr>
-                  ) : (
-                    filteredHolidays.map((holiday) => (
-                      <tr
-                        key={holiday.id}
-                        className="hover:bg-gray-50 transition-colors"
-                      >
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-orange-100 rounded-sm flex items-center justify-center">
-                              <Calendar className="w-5 h-5 text-orange-600" />
-                            </div>
-                            <span className="font-medium text-gray-800">
-                              {holiday.name}
-                            </span>
-                          </div>
-                        </td>
-
-                        <td className="px-6 py-4 text-center text-gray-600">
-                          {formatDate(holiday.startDate)}
-                        </td>
-
-                        <td className="px-6 py-4 text-center text-gray-600">
-                          {formatDate(holiday.endDate)}
-                        </td>
-
-                        <td className="px-6 py-4 text-center">
-                          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                            {holiday.days} {holiday.days === 1 ? "Day" : "Days"}
-                          </span>
-                        </td>
-
-                        <td className="px-6 py-4 text-center">
-                          {getStatusBadge(getHolidayStatus(holiday))}
-                        </td>
-
-                        <td className="px-6 py-4">
-                          <div className="flex justify-end gap-2">
-                            <button
-                              onClick={() => handleEdit(holiday)}
-                              className="p-2 text-blue-600 hover:bg-blue-50 rounded-sm transition-colors"
-                              title="Edit"
-                            >
-                              <Edit2 className="w-4 h-4" />
-                            </button>
-
-                            <button
-                              onClick={() => handleDelete(holiday.id)}
-                              className="p-2 text-red-600 hover:bg-red-50 rounded-sm transition-colors"
-                              title="Delete"
-                            >
-                              <Trash2 size={18} />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
             </div>
           </div>
         </div>
 
-        {/* Add/Edit Holiday Modal */}
-        <AddHolidayModal
-          isOpen={isModalOpen}
-          onClose={handleCancel}
-          formData={formData}
-          setFormData={setFormData}
-          onSubmit={handleSubmit}
-          editingId={editingId}
-        />
+        {/* Holidays Table */}
+        <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
+                <tr>
+                  <th className="px-6 py-4 text-left font-semibold tracking-wider">
+                    Holiday Name
+                  </th>
+                  <th className="px-6 py-4 text-center font-semibold tracking-wider">
+                    Start Date
+                  </th>
+                  <th className="px-6 py-4 text-center font-semibold tracking-wider">
+                    End Date
+                  </th>
+                  <th className="px-6 py-4 text-center font-semibold tracking-wider">
+                    Days
+                  </th>
+                  <th className="px-6 py-4 text-center font-semibold tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-6 py-4 text-center font-semibold tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+
+              <tbody className="divide-y divide-gray-200">
+                {isLoading ? (
+                  Array.from({ length: 5 }).map((_, index) => (
+                    <tr key={index} className="border-b">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-gray-200 animate-pulse"></div>
+                          <div className="h-4 bg-gray-200 rounded animate-pulse w-32"></div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-center"><div className="h-4 bg-gray-200 rounded animate-pulse w-24 mx-auto"></div></td>
+                      <td className="px-6 py-4 text-center"><div className="h-4 bg-gray-200 rounded animate-pulse w-24 mx-auto"></div></td>
+                      <td className="px-6 py-4 text-center"><div className="h-5 bg-gray-200 rounded-full animate-pulse w-16 mx-auto"></div></td>
+                      <td className="px-6 py-4 text-center"><div className="h-5 bg-gray-200 rounded-full animate-pulse w-20 mx-auto"></div></td>
+                      <td className="px-6 py-4"><div className="flex justify-end gap-2"><div className="h-8 w-16 bg-gray-200 rounded animate-pulse"></div></div></td>
+                    </tr>
+                  ))
+                ) : isError ? (
+                  <tr><td colSpan="6" className="text-center py-8 text-red-500">Error loading data</td></tr>
+                ) : holidaysData?.holidays?.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan="6"
+                      className="px-6 py-12 text-center text-gray-500"
+                    >
+                      <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                      <p className="font-medium">No holidays found</p>
+                      <p className="text-sm mt-1">
+                        {searchTerm
+                          ? "Try adjusting your search"
+                          : 'Click "Add Holiday" to create one'}
+                      </p>
+                    </td>
+                  </tr>
+                ) : (
+                  holidaysData?.holidays.map((holiday) => (
+                    <tr
+                      key={holiday.id}
+                      className="hover:bg-gray-50 transition-colors"
+                    >
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+                            <Calendar className="w-4 h-4 text-[#FF7B1D]" />
+                          </div>
+                          <span className="font-medium text-gray-900">
+                            {holiday.name}
+                          </span>
+                        </div>
+                      </td>
+
+                      <td className="px-6 py-4 text-center text-gray-500 text-sm">
+                        {formatDate(holiday.start_date)}
+                      </td>
+
+                      <td className="px-6 py-4 text-center text-gray-500 text-sm">
+                        {formatDate(holiday.end_date)}
+                      </td>
+
+                      <td className="px-6 py-4 text-center">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
+                          {holiday.days} {holiday.days === 1 ? "Day" : "Days"}
+                        </span>
+                      </td>
+
+                      <td className="px-6 py-4 text-center">
+                        {getStatusBadge(getHolidayStatus(holiday))}
+                      </td>
+
+                      <td className="px-6 py-4">
+                        <div className="flex justify-center gap-2">
+                          <button
+                            onClick={() => handleEdit(holiday)}
+                            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition"
+                            title="Edit"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+
+                          <button
+                            onClick={() => handleDelete(holiday.id)}
+                            className="p-1.5 text-red-600 hover:bg-red-50 rounded transition"
+                            title="Delete"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination */}
+          <div className="flex justify-between items-center mt-6 bg-gray-50 p-4 rounded-sm border-t border-gray-200">
+            <p className="text-sm text-gray-600">
+              Showing <span className="font-bold">{((currentPage - 1) * itemsPerPage) + 1}</span> to <span className="font-bold">{Math.min(currentPage * itemsPerPage, totalHolidays)}</span> of <span className="font-bold">{totalHolidays}</span> results
+            </p>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="px-4 py-2 border rounded-sm text-sm font-bold disabled:opacity-50 bg-white hover:bg-gray-50 transition-colors"
+              >
+                Previous
+              </button>
+
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                let p = i + 1;
+                if (totalPages > 5 && currentPage > 3) p = currentPage - 2 + i;
+                if (p > totalPages) return null;
+                return (
+                  <button
+                    key={p}
+                    onClick={() => handlePageChange(p)}
+                    className={`w-9 h-9 border rounded-sm text-sm font-bold flex items-center justify-center transition-colors ${currentPage === p
+                      ? 'bg-orange-500 text-white border-orange-500'
+                      : 'bg-white text-gray-700 hover:bg-gray-50'
+                      }`}
+                  >
+                    {p}
+                  </button>
+                );
+              })}
+
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="px-4 py-2 border rounded-sm text-sm font-bold disabled:opacity-50 bg-white hover:bg-gray-50 transition-colors"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
-    </DashboardLayout>
+
+      {/* Add/Edit Holiday Modal */}
+      <AddHolidayModal
+        isOpen={isModalOpen}
+        onClose={handleCancel}
+        formData={formData}
+        setFormData={setFormData}
+        onSubmit={handleSubmit}
+        editingId={editingId}
+      />
+
+    </DashboardLayout >
   );
 }

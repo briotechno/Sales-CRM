@@ -15,9 +15,44 @@ const LeaveType = {
         );
         return result.insertId;
     },
-    findAll: async (userId) => {
-        const [rows] = await pool.query('SELECT * FROM leave_types WHERE user_id = ? ORDER BY id DESC', [userId]);
-        return rows;
+    findAll: async (userId, filters = {}, pagination = {}) => {
+        const { search, status } = filters;
+        const { page = 1, limit = 10 } = pagination;
+        const offset = (page - 1) * limit;
+
+        let query = 'SELECT * FROM leave_types WHERE user_id = ?';
+        let countQuery = 'SELECT COUNT(*) as total FROM leave_types WHERE user_id = ?';
+        let queryParams = [userId];
+
+        if (search) {
+            query += ' AND (leave_type LIKE ? OR description LIKE ?)';
+            countQuery += ' AND (leave_type LIKE ? OR description LIKE ?)';
+            queryParams.push(`%${search}%`, `%${search}%`);
+        }
+        if (status && status !== 'All') {
+            query += ' AND status = ?';
+            countQuery += ' AND status = ?';
+            queryParams.push(status);
+        }
+
+        query += ' ORDER BY id DESC LIMIT ? OFFSET ?';
+
+        // Execute count query
+        const [countResult] = await pool.query(countQuery, queryParams);
+        const total = countResult[0].total;
+
+        // Execute data query
+        const [rows] = await pool.query(query, [...queryParams, parseInt(limit), parseInt(offset)]);
+
+        return {
+            leave_types: rows,
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total,
+                totalPages: Math.ceil(total / limit)
+            }
+        };
     },
     findById: async (id, userId) => {
         const [rows] = await pool.query('SELECT * FROM leave_types WHERE id = ? AND user_id = ?', [id, userId]);
@@ -47,9 +82,37 @@ const Holiday = {
         );
         return result.insertId;
     },
-    findAll: async (userId) => {
-        const [rows] = await pool.query('SELECT * FROM holidays WHERE user_id = ? ORDER BY start_date ASC', [userId]);
-        return rows;
+    findAll: async (userId, filters = {}, pagination = {}) => {
+        const { search } = filters;
+        const { page = 1, limit = 10 } = pagination;
+        const offset = (page - 1) * limit;
+
+        let query = 'SELECT * FROM holidays WHERE user_id = ?';
+        let countQuery = 'SELECT COUNT(*) as total FROM holidays WHERE user_id = ?';
+        let queryParams = [userId];
+
+        if (search) {
+            query += ' AND name LIKE ?';
+            countQuery += ' AND name LIKE ?';
+            queryParams.push(`%${search}%`);
+        }
+
+        query += ' ORDER BY start_date ASC LIMIT ? OFFSET ?';
+
+        const [countResult] = await pool.query(countQuery, queryParams);
+        const total = countResult[0].total;
+
+        const [rows] = await pool.query(query, [...queryParams, parseInt(limit), parseInt(offset)]);
+
+        return {
+            holidays: rows,
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total,
+                totalPages: Math.ceil(total / limit)
+            }
+        };
     },
     findById: async (id, userId) => {
         const [rows] = await pool.query('SELECT * FROM holidays WHERE id = ? AND user_id = ?', [id, userId]);
@@ -81,7 +144,11 @@ const LeaveRequest = {
         );
         return result.insertId;
     },
-    findAll: async (userId, status = 'All', search = '') => {
+    findAll: async (userId, filters = {}, pagination = {}) => {
+        const { status, search } = filters;
+        const { page = 1, limit = 10 } = pagination;
+        const offset = (page - 1) * limit;
+
         let query = `
             SELECT lr.*, e.employee_name, e.employee_id as employee_uid, lt.leave_type
             FROM leave_requests lr
@@ -89,22 +156,44 @@ const LeaveRequest = {
             LEFT JOIN leave_types lt ON lr.leave_type_id = lt.id
             WHERE lr.user_id = ?
         `;
-        const queryParams = [userId];
+        let countQuery = `
+            SELECT COUNT(*) as total
+            FROM leave_requests lr
+            LEFT JOIN employees e ON lr.employee_id = e.id
+            LEFT JOIN leave_types lt ON lr.leave_type_id = lt.id
+            WHERE lr.user_id = ?
+        `;
+        let queryParams = [userId];
 
-        if (status !== 'All') {
+        if (status && status !== 'All' && status !== 'all') {
             query += ' AND lr.status = ?';
+            countQuery += ' AND lr.status = ?';
             queryParams.push(status);
         }
 
         if (search) {
             query += ' AND (e.employee_name LIKE ? OR lt.leave_type LIKE ?)';
+            countQuery += ' AND (e.employee_name LIKE ? OR lt.leave_type LIKE ?)';
             const searchPattern = `%${search}%`;
             queryParams.push(searchPattern, searchPattern);
         }
 
-        query += ' ORDER BY lr.id DESC';
-        const [rows] = await pool.query(query, queryParams);
-        return rows;
+        query += ' ORDER BY lr.id DESC LIMIT ? OFFSET ?';
+
+        const [countResult] = await pool.query(countQuery, queryParams);
+        const total = countResult[0].total;
+
+        const [rows] = await pool.query(query, [...queryParams, parseInt(limit), parseInt(offset)]);
+
+        return {
+            leave_requests: rows,
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total,
+                totalPages: Math.ceil(total / limit)
+            }
+        };
     },
     findById: async (id, userId) => {
         const [rows] = await pool.query(`

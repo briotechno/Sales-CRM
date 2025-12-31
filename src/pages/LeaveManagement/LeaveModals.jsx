@@ -41,14 +41,14 @@ export const LeaveFormModal = ({
 
         <form onSubmit={handleSubmit} className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="md:col-span-2">
+            <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Leave Type *
               </label>
               <input
                 type="text"
-                name="leaveType"
-                value={formData.leaveType}
+                name="leave_type"
+                value={formData.leave_type}
                 onChange={handleInputChange}
                 required
                 className="w-full px-4 py-3 border-2 border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300"
@@ -76,8 +76,8 @@ export const LeaveFormModal = ({
                 Renewal Type *
               </label>
               <select
-                name="renewalType"
-                value={formData.renewalType}
+                name="renewal_type"
+                value={formData.renewal_type}
                 onChange={handleInputChange}
                 required
                 className="w-full px-4 py-3 border-2 border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300"
@@ -97,8 +97,8 @@ export const LeaveFormModal = ({
               </label>
               <input
                 type="number"
-                name="leaveAllocation"
-                value={formData.leaveAllocation}
+                name="leave_allocation"
+                value={formData.leave_allocation}
                 onChange={handleInputChange}
                 min="0"
                 required
@@ -106,7 +106,7 @@ export const LeaveFormModal = ({
                 placeholder="Number of leaves"
               />
               <p className="text-xs text-gray-500 mt-1">
-                {formData.renewalType === "Monthly"
+                {formData.renewal_type === "Monthly"
                   ? "Leaves allocated per month"
                   : "Leaves allocated per year"}
               </p>
@@ -118,8 +118,8 @@ export const LeaveFormModal = ({
               </label>
               <input
                 type="number"
-                name="maxConsecutiveDays"
-                value={formData.maxConsecutiveDays}
+                name="max_consecutive_days"
+                value={formData.max_consecutive_days}
                 onChange={handleInputChange}
                 min="1"
                 required
@@ -137,8 +137,8 @@ export const LeaveFormModal = ({
               </label>
               <input
                 type="number"
-                name="eligibilityDays"
-                value={formData.eligibilityDays}
+                name="eligibility_days"
+                value={formData.eligibility_days}
                 onChange={handleInputChange}
                 min="0"
                 required

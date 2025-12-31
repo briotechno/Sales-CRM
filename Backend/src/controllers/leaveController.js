@@ -12,8 +12,9 @@ const createLeaveType = async (req, res) => {
 
 const getLeaveTypes = async (req, res) => {
     try {
-        const data = await LeaveType.findAll(req.user.id);
-        res.status(200).json({ status: true, data });
+        const { page = 1, limit = 10, search = '', status = 'All' } = req.query;
+        const result = await LeaveType.findAll(req.user.id, { search, status }, { page, limit });
+        res.status(200).json({ status: true, ...result });
     } catch (error) {
         res.status(500).json({ status: false, message: error.message });
     }
@@ -49,8 +50,9 @@ const createHoliday = async (req, res) => {
 
 const getHolidays = async (req, res) => {
     try {
-        const data = await Holiday.findAll(req.user.id);
-        res.status(200).json({ status: true, data });
+        const { page = 1, limit = 10, search = '' } = req.query;
+        const result = await Holiday.findAll(req.user.id, { search }, { page, limit });
+        res.status(200).json({ status: true, ...result });
     } catch (error) {
         res.status(500).json({ status: false, message: error.message });
     }
@@ -86,9 +88,9 @@ const applyLeave = async (req, res) => {
 
 const getLeaveRequests = async (req, res) => {
     try {
-        const { status = 'All', search = '' } = req.query;
-        const data = await LeaveRequest.findAll(req.user.id, status, search);
-        res.status(200).json({ status: true, data });
+        const { status = 'All', search = '', page = 1, limit = 10 } = req.query;
+        const result = await LeaveRequest.findAll(req.user.id, { status, search }, { page, limit });
+        res.status(200).json({ status: true, ...result });
     } catch (error) {
         res.status(500).json({ status: false, message: error.message });
     }

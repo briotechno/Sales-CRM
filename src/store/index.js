@@ -6,6 +6,7 @@ import { departmentApi } from './api/departmentApi';
 import { designationApi } from './api/designationApi';
 import { employeeApi } from './api/employeeApi';
 import { teamApi } from './api/teamApi';
+import { leaveApi } from './api/leaveApi';
 
 export const store = configureStore({
     reducer: {
@@ -16,6 +17,7 @@ export const store = configureStore({
         [designationApi.reducerPath]: designationApi.reducer,
         [employeeApi.reducerPath]: employeeApi.reducer,
         [teamApi.reducerPath]: teamApi.reducer,
+        [leaveApi.reducerPath]: leaveApi.reducer,
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware().concat(
@@ -24,6 +26,7 @@ export const store = configureStore({
             departmentApi.middleware,
             designationApi.middleware,
             employeeApi.middleware,
-            teamApi.middleware
+            teamApi.middleware,
+            leaveApi.middleware
         ),
 });
