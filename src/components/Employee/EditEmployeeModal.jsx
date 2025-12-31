@@ -6,8 +6,10 @@ import { toast } from "react-hot-toast";
 
 const EditEmployeeModal = ({ isOpen, onClose, employee }) => {
     const [formData, setFormData] = useState({
+        employeeId: "",
         employeeName: "",
         profilePic: null,
+        profilePicPreview: "",
         dob: "",
         age: "",
         gender: "",
@@ -48,8 +50,10 @@ const EditEmployeeModal = ({ isOpen, onClose, employee }) => {
     useEffect(() => {
         if (employee) {
             setFormData({
+                employeeId: employee.employee_id || "",
                 employeeName: employee.employee_name || "",
                 profilePic: null, // Don't pre-fill files
+                profilePicPreview: employee.profile_picture_url || "",
                 dob: employee.date_of_birth ? employee.date_of_birth.substring(0, 10) : "",
                 age: employee.age || "",
                 gender: employee.gender || "",
@@ -101,14 +105,23 @@ const EditEmployeeModal = ({ isOpen, onClose, employee }) => {
 
     const handleChange = (e) => {
         const { name, value, files, type } = e.target;
+
         if (type === "file") {
-            setFormData({ ...formData, [name]: files[0] });
+            const file = files[0];
+
+            setFormData((prev) => ({
+                ...prev,
+                [name]: file,
+                [`${name}Preview`]: file ? URL.createObjectURL(file) : prev[`${name}Preview`],
+            }));
         } else {
             setFormData((prev) => {
                 const updated = { ...prev, [name]: value };
+
                 if (name === "dob") {
                     updated.age = calculateAge(value);
                 }
+
                 return updated;
             });
         }

@@ -94,7 +94,7 @@ const AllEmployee = () => {
                   setStatusFilter(status);
                   setCurrentPage(1);
                 }}
-                className={`px-3 py-2 rounded-sm font-semibold border text-sm transition ${statusFilter === status
+                className={`px-2 py-2 rounded-sm font-semibold border text-sm transition ${statusFilter === status
                   ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
                   : "bg-white text-black border-gray-300 hover:bg-gray-100"
                   }`}
@@ -103,7 +103,7 @@ const AllEmployee = () => {
               </button>
             ))}
 
-            <div className="relative ml-2">
+            <div className="relative">
               <input
                 type="text"
                 placeholder="Search employee..."

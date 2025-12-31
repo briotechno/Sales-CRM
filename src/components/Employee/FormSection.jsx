@@ -73,7 +73,14 @@ const FormSection = ({ formData, handleChange, handleChanges }) => {
               accept="image/*"
               onChange={handleChange}
               className={fileStyles}
-            />
+              />
+              {formData.profilePicPreview && (
+                <img
+                  src={formData.profilePicPreview}
+                  alt="Profile"
+                  className="w-24 h-24 object-cover rounded-sm border"
+                />
+              )}
           </div>
           <div>
             <label className={labelStyles}>Date of Birth</label>
