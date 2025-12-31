@@ -10,6 +10,8 @@ class Job {
             type,
             positions,
             description,
+            responsibilities,
+            requirements,
             status,
             posted_date
         } = jobData;
@@ -17,14 +19,17 @@ class Job {
         const query = `
       INSERT INTO jobs (
         user_id, title, department, location, type, 
-        positions, description, status, posted_date
+        positions, description, responsibilities, requirements, status, posted_date
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
         const [result] = await pool.execute(query, [
             user_id, title, department, location, type,
-            positions, description, status, posted_date
+            positions, description,
+            JSON.stringify(responsibilities || []),
+            JSON.stringify(requirements || []),
+            status, posted_date
         ]);
 
         return result.insertId;
@@ -82,6 +87,8 @@ class Job {
             type,
             positions,
             description,
+            responsibilities,
+            requirements,
             status
         } = jobData;
 
@@ -95,6 +102,8 @@ class Job {
         if (type !== undefined) { fields.push('type = ?'); params.push(type); }
         if (positions !== undefined) { fields.push('positions = ?'); params.push(positions); }
         if (description !== undefined) { fields.push('description = ?'); params.push(description); }
+        if (responsibilities !== undefined) { fields.push('responsibilities = ?'); params.push(JSON.stringify(responsibilities)); }
+        if (requirements !== undefined) { fields.push('requirements = ?'); params.push(JSON.stringify(requirements)); }
         if (status !== undefined) { fields.push('status = ?'); params.push(status); }
 
         if (fields.length === 0) return false;

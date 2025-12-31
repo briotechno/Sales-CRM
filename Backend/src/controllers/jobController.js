@@ -9,6 +9,8 @@ const createJob = async (req, res) => {
             type,
             positions,
             description,
+            responsibilities,
+            requirements,
             status,
             posted_date
         } = req.body;
@@ -21,6 +23,8 @@ const createJob = async (req, res) => {
             type,
             positions,
             description,
+            responsibilities,
+            requirements,
             status: status || 'Active',
             posted_date: posted_date || new Date()
         });
