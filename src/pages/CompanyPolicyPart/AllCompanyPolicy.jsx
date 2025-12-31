@@ -8,173 +8,60 @@ import {
   Download,
   Eye,
   X,
-  Calendar,
-  User,
-  Building,
+  Edit,
+  Trash2,
   Activity,
-  Underline,
   View,
   Archive,
+  AlertTriangle,
 } from "lucide-react";
 import NumberCard from "../../components/NumberCard";
+import {
+  useGetCompanyPoliciesQuery,
+  useCreateCompanyPolicyMutation,
+  useUpdateCompanyPolicyMutation,
+  useDeleteCompanyPolicyMutation,
+} from "../../store/api/companyPolicyApi";
+import toast from "react-hot-toast";
 
 export default function CompanyPolicy() {
   const [activeTab, setActiveTab] = useState("All");
   const [showAddModal, setShowAddModal] = useState(false);
-  const [showFilterModal, setShowFilterModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showFilterModal, setShowFilterModal] = useState(false);
   const [selectedPolicy, setSelectedPolicy] = useState(null);
+  const [policyToDelete, setPolicyToDelete] = useState(null);
   const [filterCategory, setFilterCategory] = useState("All");
   const [filterStatus, setFilterStatus] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+  const itemsPerPage = 8;
 
-  const [policies, setPolicies] = useState([
-    {
-      id: 1,
-      title: "Code of Conduct",
-      category: "General",
-      effectiveDate: "2024-01-15",
-      reviewDate: "2025-01-15",
-      version: "2.0",
-      status: "Active",
-      initials: "CC",
-      color: "bg-blue-100 text-blue-700",
-      description:
-        "Guidelines for professional behavior and ethical conduct in the workplace.",
-      author: "HR Department",
-    },
-    {
-      id: 2,
-      title: "Work from Home Policy",
-      category: "Work Arrangements",
-      effectiveDate: "2024-03-01",
-      reviewDate: "2025-03-01",
-      version: "1.5",
-      status: "Active",
-      initials: "WH",
-      color: "bg-purple-100 text-purple-700",
-      description:
-        "Policy outlining remote work arrangements and expectations.",
-      author: "Operations Team",
-    },
-    {
-      id: 3,
-      title: "Data Protection & Privacy",
-      category: "Security",
-      effectiveDate: "2024-02-10",
-      reviewDate: "2025-02-10",
-      version: "3.0",
-      status: "Under Review",
-      initials: "DP",
-      color: "bg-green-100 text-green-700",
-      description: "Comprehensive data protection and privacy guidelines.",
-      author: "IT Security",
-    },
-    {
-      id: 4,
-      title: "Expense Reimbursement",
-      category: "Finance",
-      effectiveDate: "2023-12-01",
-      reviewDate: "2024-12-01",
-      version: "1.0",
-      status: "Active",
-      initials: "ER",
-      color: "bg-orange-100 text-orange-700",
-      description:
-        "Guidelines for submitting and approving expense reimbursements.",
-      author: "Finance Department",
-    },
-    {
-      id: 5,
-      title: "Equal Employment Opportunity",
-      category: "HR",
-      effectiveDate: "2024-01-01",
-      reviewDate: "2025-01-01",
-      version: "2.1",
-      status: "Archived",
-      initials: "EE",
-      color: "bg-pink-100 text-pink-700",
-      description: "Policy ensuring equal opportunity for all employees.",
-      author: "HR Department",
-    },
-    {
-      id: 6,
-      title: "Equal Employment Opportunity",
-      category: "HR",
-      effectiveDate: "2024-01-01",
-      reviewDate: "2025-01-01",
-      version: "2.1",
-      status: "Archived",
-      initials: "EE",
-      color: "bg-pink-100 text-pink-700",
-      description: "Policy ensuring equal opportunity for all employees.",
-      author: "HR Department",
-    },
-    {
-      id: 7,
-      title: "Equal Employment Opportunity",
-      category: "HR",
-      effectiveDate: "2024-01-01",
-      reviewDate: "2025-01-01",
-      version: "2.1",
-      status: "Archived",
-      initials: "EE",
-      color: "bg-pink-100 text-pink-700",
-      description: "Policy ensuring equal opportunity for all employees.",
-      author: "HR Department",
-    },
-    {
-      id: 8,
-      title: "Equal Employment Opportunity",
-      category: "HR",
-      effectiveDate: "2024-01-01",
-      reviewDate: "2025-01-01",
-      version: "2.1",
-      status: "Archived",
-      initials: "EE",
-      color: "bg-pink-100 text-pink-700",
-      description: "Policy ensuring equal opportunity for all employees.",
-      author: "HR Department",
-    },
-    {
-      id: 9,
-      title: "Equal Employment Opportunity",
-      category: "HR",
-      effectiveDate: "2024-01-01",
-      reviewDate: "2025-01-01",
-      version: "2.1",
-      status: "Archived",
-      initials: "EE",
-      color: "bg-pink-100 text-pink-700",
-      description: "Policy ensuring equal opportunity for all employees.",
-      author: "HR Department",
-    },
-    {
-      id: 10,
-      title: "Equal Employment Opportunity",
-      category: "HR",
-      effectiveDate: "2024-01-01",
-      reviewDate: "2025-01-01",
-      version: "2.1",
-      status: "Archived",
-      initials: "EE",
-      color: "bg-pink-100 text-pink-700",
-      description: "Policy ensuring equal opportunity for all employees.",
-      author: "HR Department",
-    },
-
-  ]);
-
-  const [newPolicy, setNewPolicy] = useState({
+  const [formData, setFormData] = useState({
     title: "",
     category: "General",
-    effectiveDate: "",
-    reviewDate: "",
+    effective_date: "",
+    review_date: "",
     version: "1.0",
     description: "",
     author: "",
+    status: "Active",
   });
+
+  // API Queries and Mutations
+  const {
+    data: policiesData,
+    isLoading,
+    isError,
+  } = useGetCompanyPoliciesQuery({
+    category: filterCategory,
+    status: filterStatus === "All" ? activeTab : filterStatus,
+  });
+
+  const [createPolicy] = useCreateCompanyPolicyMutation();
+  const [updatePolicy] = useUpdateCompanyPolicyMutation();
+  const [deletePolicy] = useDeleteCompanyPolicyMutation();
 
   const categories = [
     "General",
@@ -183,72 +70,110 @@ export default function CompanyPolicy() {
     "Finance",
     "HR",
   ];
+
   const statuses = ["Active", "Under Review", "Archived"];
 
+  // Calculate stats
   const getStats = () => {
+    if (!policiesData) return { total: 0, active: 0, underReview: 0, archived: 0 };
     return {
-      total: policies.length,
-      active: policies.filter((p) => p.status === "Active").length,
-      underReview: policies.filter((p) => p.status === "Under Review").length,
-      archived: policies.filter((p) => p.status === "Archived").length,
+      total: policiesData.length,
+      active: policiesData.filter((p) => p.status === "Active").length,
+      underReview: policiesData.filter((p) => p.status === "Under Review").length,
+      archived: policiesData.filter((p) => p.status === "Archived").length,
     };
   };
 
   const stats = getStats();
 
-  const handleAddPolicy = () => {
-    if (!newPolicy.title || !newPolicy.effectiveDate || !newPolicy.reviewDate) {
-      alert("Please fill in all required fields");
-      return;
-    }
+  // Filter policies based on active tab
+  const filteredPolicies = policiesData
+    ? policiesData.filter((p) => activeTab === "All" || p.status === activeTab)
+    : [];
 
-    const colors = [
-      "bg-blue-100 text-blue-700",
-      "bg-purple-100 text-purple-700",
-      "bg-green-100 text-green-700",
-      "bg-orange-100 text-orange-700",
-      "bg-pink-100 text-pink-700",
-      "bg-indigo-100 text-indigo-700",
-    ];
+  // Pagination
+  const totalPages = Math.ceil(filteredPolicies.length / itemsPerPage);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentPolicies = filteredPolicies.slice(indexOfFirstItem, indexOfLastItem);
 
-    const initials = newPolicy.title
-      .split(" ")
-      .map((word) => word[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
-
-    const policy = {
-      ...newPolicy,
-      id: policies.length + 1,
-      initials,
-      color: colors[Math.floor(Math.random() * colors.length)],
-      status: "Under Review",
-    };
-
-    setPolicies([...policies, policy]);
-    setNewPolicy({
+  const resetForm = () => {
+    setFormData({
       title: "",
       category: "General",
-      effectiveDate: "",
-      reviewDate: "",
+      effective_date: "",
+      review_date: "",
       version: "1.0",
       description: "",
       author: "",
+      status: "Active",
     });
-    setShowAddModal(false);
   };
 
-  const handleApprove = (id) => {
-    setPolicies(
-      policies.map((p) => (p.id === id ? { ...p, status: "Active" } : p))
-    );
+  const handleAddPolicy = async () => {
+    if (!formData.title || !formData.effective_date || !formData.review_date) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
+    try {
+      await createPolicy(formData).unwrap();
+      toast.success("Policy created successfully");
+      setShowAddModal(false);
+      resetForm();
+    } catch (error) {
+      toast.error("Failed to create policy");
+    }
   };
 
-  const handleReject = (id) => {
-    setPolicies(
-      policies.map((p) => (p.id === id ? { ...p, status: "Archived" } : p))
-    );
+  const handleEditClick = (policy) => {
+    setSelectedPolicy(policy);
+    setFormData({
+      title: policy.title,
+      category: policy.category,
+      effective_date: policy.effective_date,
+      review_date: policy.review_date,
+      version: policy.version,
+      description: policy.description || "",
+      author: policy.author || "",
+      status: policy.status,
+    });
+    setShowEditModal(true);
+  };
+
+  const handleUpdatePolicy = async () => {
+    if (!formData.title || !formData.effective_date || !formData.review_date) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
+    try {
+      await updatePolicy({ id: selectedPolicy.id, ...formData }).unwrap();
+      toast.success("Policy updated successfully");
+      setShowEditModal(false);
+      resetForm();
+      setSelectedPolicy(null);
+    } catch (error) {
+      toast.error("Failed to update policy");
+    }
+  };
+
+  const handleDeleteClick = (policy) => {
+    setPolicyToDelete(policy);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    if (policyToDelete) {
+      try {
+        await deletePolicy(policyToDelete.id).unwrap();
+        toast.success("Policy deleted successfully");
+        setShowDeleteModal(false);
+        setPolicyToDelete(null);
+      } catch (error) {
+        toast.error("Failed to delete policy");
+      }
+    }
   };
 
   const handleView = (policy) => {
@@ -258,23 +183,15 @@ export default function CompanyPolicy() {
 
   const handleExport = () => {
     const csvContent = [
-      [
-        "Policy Title",
-        "Category",
-        "Effective Date",
-        "Review Date",
-        "Version",
-        "Status",
-        "Author",
-      ],
+      ["Policy Title", "Category", "Effective Date", "Review Date", "Version", "Status", "Author"],
       ...filteredPolicies.map((p) => [
         p.title,
         p.category,
-        p.effectiveDate,
-        p.reviewDate,
+        p.effective_date,
+        p.review_date,
         p.version,
         p.status,
-        p.author,
+        p.author || "",
       ]),
     ]
       .map((row) => row.join(","))
@@ -290,27 +207,13 @@ export default function CompanyPolicy() {
 
   const applyFilters = () => {
     setShowFilterModal(false);
+    setCurrentPage(1);
   };
 
   const resetFilters = () => {
     setFilterCategory("All");
     setFilterStatus("All");
   };
-
-  const filteredPolicies = policies
-    .filter((p) => activeTab === "All" || p.status === activeTab)
-    .filter((p) => filterCategory === "All" || p.category === filterCategory)
-    .filter((p) => filterStatus === "All" || p.status === filterStatus);
-
-  const totalPages = Math.ceil(filteredPolicies.length / itemsPerPage);
-
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-
-  const currentPolicies = filteredPolicies.slice(
-    indexOfFirstItem,
-    indexOfLastItem
-  );
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
@@ -328,27 +231,42 @@ export default function CompanyPolicy() {
     }
   };
 
+  const getInitials = (title) => {
+    return title
+      .split(" ")
+      .map((word) => word[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  const getColorClass = (index) => {
+    const colors = [
+      "bg-blue-100 text-blue-700",
+      "bg-purple-100 text-purple-700",
+      "bg-green-100 text-green-700",
+      "bg-orange-100 text-orange-700",
+      "bg-pink-100 text-pink-700",
+      "bg-indigo-100 text-indigo-700",
+    ];
+    return colors[index % colors.length];
+  };
+
   return (
     <DashboardLayout>
-      <div className="min-h-screen  ml-6 p-0">
+      <div className="min-h-screen ml-6 p-0">
         {/* Header */}
         <div className="bg-white rounded-sm p-3 mb-4 border-b">
           <div className="flex justify-between items-center">
-            {/* Left side: Title & Breadcrumb */}
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                Company Policy
-              </h1>
+              <h1 className="text-2xl font-bold text-gray-900">Company Policy</h1>
               <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
                 <FiHome className="text-gray-700 text-sm" />
                 <span className="text-gray-400">HRM /</span>
-                <span className="text-[#FF7B1D] font-medium">
-                  All Company Policy
-                </span>
+                <span className="text-[#FF7B1D] font-medium">All Company Policy</span>
               </p>
             </div>
 
-            {/* Right side: Buttons */}
             <div className="flex gap-3">
               <button
                 onClick={() => setShowFilterModal(true)}
@@ -366,7 +284,10 @@ export default function CompanyPolicy() {
                 Export
               </button>
               <button
-                onClick={() => setShowAddModal(true)}
+                onClick={() => {
+                  resetForm();
+                  setShowAddModal(true);
+                }}
                 className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white px-4 py-2 rounded-sm font-semibold hover:from-orange-600 hover:to-orange-700 hover:opacity-90 transition ml-2"
               >
                 <Plus size={18} />
@@ -377,7 +298,7 @@ export default function CompanyPolicy() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6 ">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
           <NumberCard
             title={"Total Policies"}
             number={stats.total}
@@ -387,21 +308,21 @@ export default function CompanyPolicy() {
           />
           <NumberCard
             title={"Active"}
-            number={stats.total}
+            number={stats.active}
             icon={<Activity className="text-green-600" size={24} />}
             iconBgColor={"bg-green-100"}
             lineBorderClass={"border-green-500"}
           />
           <NumberCard
             title={"Under Review"}
-            number={stats.total}
+            number={stats.underReview}
             icon={<View className="text-orange-600" size={24} />}
             iconBgColor={"bg-orange-100"}
             lineBorderClass={"border-orange-500"}
           />
           <NumberCard
             title={"Archived"}
-            number={stats.total}
+            number={stats.archived}
             icon={<Archive className="text-purple-600" size={24} />}
             iconBgColor={"bg-purple-100"}
             lineBorderClass={"border-purple-500"}
@@ -413,10 +334,13 @@ export default function CompanyPolicy() {
           {["All", "Active", "Under Review", "Archived"].map((tab) => (
             <button
               key={tab}
-              onClick={() => setActiveTab(tab)}
+              onClick={() => {
+                setActiveTab(tab);
+                setCurrentPage(1);
+              }}
               className={`pb-3 font-medium transition-colors ${activeTab === tab
-                ? "text-orange-500 border-b-2 border-orange-500"
-                : "text-gray-600 hover:text-gray-900"
+                  ? "text-orange-500 border-b-2 border-orange-500"
+                  : "text-gray-600 hover:text-gray-900"
                 }`}
             >
               {tab}
@@ -454,84 +378,103 @@ export default function CompanyPolicy() {
             </thead>
 
             <tbody className="divide-y divide-gray-200">
-              {filteredPolicies.length > 0 ? (
-                currentPolicies.map((policy) => (
-                  <tr
-                    key={policy.id}
-                    className="hover:bg-gray-50 transition-colors"
-                  >
+              {isLoading ? (
+                Array.from({ length: 5 }).map((_, index) => (
+                  <tr key={index} className="bg-white animate-pulse">
+                    <td className="px-6 py-4">
+                      <div className="h-4 bg-gray-200 rounded w-32"></div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="h-4 bg-gray-200 rounded w-24"></div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="h-4 bg-gray-200 rounded w-24"></div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="h-4 bg-gray-200 rounded w-24"></div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="h-4 bg-gray-200 rounded w-16"></div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="h-6 bg-gray-200 rounded w-20"></div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="h-8 bg-gray-200 rounded w-24"></div>
+                    </td>
+                  </tr>
+                ))
+              ) : isError ? (
+                <tr>
+                  <td colSpan="7" className="px-6 py-12 text-center text-red-500">
+                    Error loading policies
+                  </td>
+                </tr>
+              ) : currentPolicies.length > 0 ? (
+                currentPolicies.map((policy, index) => (
+                  <tr key={policy.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div
-                          className={`w-12 h-12 rounded-full ${policy.color} flex items-center justify-center font-semibold text-sm`}
+                          className={`w-12 h-12 rounded-full ${getColorClass(
+                            index
+                          )} flex items-center justify-center font-semibold text-sm`}
                         >
-                          {policy.initials}
+                          {getInitials(policy.title)}
                         </div>
-                        <span className="font-medium text-gray-900">
-                          {policy.title}
-                        </span>
+                        <span className="font-medium text-gray-900">{policy.title}</span>
                       </div>
                     </td>
+                    <td className="px-6 py-4 text-gray-700">{policy.category}</td>
                     <td className="px-6 py-4 text-gray-700">
-                      {policy.category}
+                      {new Date(policy.effective_date).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 text-gray-700">
-                      {policy.effectiveDate}
+                      {new Date(policy.review_date).toLocaleDateString()}
                     </td>
-                    <td className="px-6 py-4 text-gray-700">
-                      {policy.reviewDate}
-                    </td>
-                    <td className="px-6 py-4 text-gray-700">
-                      {policy.version}
-                    </td>
+                    <td className="px-6 py-4 text-gray-700">{policy.version}</td>
                     <td className="px-6 py-4">
                       <span
                         className={`inline-block px-4 py-1 rounded-full text-sm font-medium ${policy.status === "Active"
-                          ? "bg-green-100 text-green-700"
-                          : policy.status === "Under Review"
-                            ? "bg-yellow-100 text-yellow-700"
-                            : "bg-gray-100 text-gray-700"
+                            ? "bg-green-100 text-green-700"
+                            : policy.status === "Under Review"
+                              ? "bg-yellow-100 text-yellow-700"
+                              : "bg-gray-100 text-gray-700"
                           }`}
                       >
                         {policy.status}
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        {policy.status === "Under Review" ? (
-                          <>
-                            <button
-                              onClick={() => handleApprove(policy.id)}
-                              className="text-green-600 hover:text-green-700 font-medium"
-                            >
-                              Approve
-                            </button>
-                            <button
-                              onClick={() => handleReject(policy.id)}
-                              className="text-red-600 hover:text-red-700 font-medium"
-                            >
-                              Reject
-                            </button>
-                          </>
-                        ) : (
-                          <button
-                            onClick={() => handleView(policy)}
-                            className="text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
-                          >
-                            <Eye size={16} />
-                            View
-                          </button>
-                        )}
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleView(policy)}
+                          className="p-2 hover:bg-blue-100 rounded-sm transition-all"
+                          title="View"
+                        >
+                          <Eye size={18} className="text-blue-600" />
+                        </button>
+                        <button
+                          onClick={() => handleEditClick(policy)}
+                          className="p-2 hover:bg-orange-100 rounded-sm transition-all"
+                          title="Edit"
+                        >
+                          <Edit size={18} className="text-orange-600" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteClick(policy)}
+                          className="p-2 hover:bg-red-100 rounded-sm transition-all"
+                          title="Delete"
+                        >
+                          <Trash2 size={18} className="text-red-600" />
+                        </button>
                       </div>
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td
-                    colSpan="7"
-                    className="px-6 py-12 text-center text-gray-500"
-                  >
+                  <td colSpan="7" className="px-6 py-12 text-center text-gray-500">
                     No policies found matching the current filters
                   </td>
                 </tr>
@@ -540,60 +483,61 @@ export default function CompanyPolicy() {
           </table>
         </div>
 
-        {/* Pagination */}
-        <div className="flex justify-end items-center gap-3 mt-6">
-          <button
-            onClick={handlePrev}
-            disabled={currentPage === 1}
-            className={`px-4 py-2 rounded-sm text-white font-semibold transition ${currentPage === 1
-              ? "bg-gray-300 cursor-not-allowed"
-              : "bg-[#FF7B1D] hover:opacity-90"
-              }`}
-          >
-            Back
-          </button>
-
+        {/* Pagination - Updated to match Designation.jsx */}
+        <div className="flex justify-between items-center mt-6 bg-gray-50 p-4 rounded-sm border-t border-gray-200">
+          <p className="text-sm text-gray-600">
+            Showing <span className="font-bold">{indexOfFirstItem + 1}</span> to{" "}
+            <span className="font-bold">{Math.min(indexOfLastItem, filteredPolicies.length)}</span> of{" "}
+            <span className="font-bold">{filteredPolicies.length}</span> results
+          </p>
           <div className="flex items-center gap-2">
-            {Array.from({ length: totalPages }, (_, i) => (
-              <button
-                key={i + 1}
-                onClick={() => handlePageChange(i + 1)}
-                className={`px-3 py-1 rounded-sm text-black font-semibold border transition ${currentPage === i + 1
-                  ? "bg-gray-200 border-gray-400"
-                  : "bg-white border-gray-300 hover:bg-gray-100"
-                  }`}
-              >
-                {i + 1}
-              </button>
-            ))}
-          </div>
+            <button
+              onClick={handlePrev}
+              disabled={currentPage === 1}
+              className="px-4 py-2 border rounded-sm text-sm font-bold disabled:opacity-50 bg-white hover:bg-gray-50 transition-colors"
+            >
+              Previous
+            </button>
 
-          <button
-            onClick={handleNext}
-            disabled={currentPage === totalPages}
-            className={`px-4 py-2 rounded-sm text-white font-semibold transition ${currentPage === totalPages
-              ? "bg-gray-300 cursor-not-allowed"
-              : "bg-[#22C55E] hover:opacity-90"
-              }`}
-          >
-            Next
-          </button>
+            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              let p = i + 1;
+              if (totalPages > 5 && currentPage > 3) p = currentPage - 2 + i;
+              if (p > totalPages) return null;
+              return (
+                <button
+                  key={p}
+                  onClick={() => handlePageChange(p)}
+                  className={`w-9 h-9 border rounded-sm text-sm font-bold flex items-center justify-center transition-colors ${currentPage === p
+                      ? "bg-orange-500 text-white border-orange-500"
+                      : "bg-white text-gray-700 hover:bg-gray-50"
+                    }`}
+                >
+                  {p}
+                </button>
+              );
+            })}
+
+            <button
+              onClick={handleNext}
+              disabled={currentPage === totalPages}
+              className="px-4 py-2 border rounded-sm text-sm font-bold disabled:opacity-50 bg-white hover:bg-gray-50 transition-colors"
+            >
+              Next
+            </button>
+          </div>
         </div>
-        
+
         {/* Add Policy Modal */}
         {showAddModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-sm shadow-2xl w-full max-w-4xl">
-              {/* Modal Header with gradient */}
               <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-6 rounded-t-xl">
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-3">
                     <div className="bg-white bg-opacity-20 p-2 rounded-sm">
                       <Plus className="text-white" size={24} />
                     </div>
-                    <h2 className="text-2xl font-bold text-white">
-                      Add New Policy
-                    </h2>
+                    <h2 className="text-2xl font-bold text-white">Add New Policy</h2>
                   </div>
                   <button
                     onClick={() => setShowAddModal(false)}
@@ -604,7 +548,6 @@ export default function CompanyPolicy() {
                 </div>
               </div>
 
-              {/* Modal Content */}
               <div className="p-6">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -613,10 +556,8 @@ export default function CompanyPolicy() {
                     </label>
                     <input
                       type="text"
-                      value={newPolicy.title}
-                      onChange={(e) =>
-                        setNewPolicy({ ...newPolicy, title: e.target.value })
-                      }
+                      value={formData.title}
+                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                       className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                       placeholder="Enter policy title"
                     />
@@ -626,10 +567,8 @@ export default function CompanyPolicy() {
                       Category *
                     </label>
                     <select
-                      value={newPolicy.category}
-                      onChange={(e) =>
-                        setNewPolicy({ ...newPolicy, category: e.target.value })
-                      }
+                      value={formData.category}
+                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                       className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                     >
                       {categories.map((cat) => (
@@ -645,13 +584,8 @@ export default function CompanyPolicy() {
                     </label>
                     <input
                       type="date"
-                      value={newPolicy.effectiveDate}
-                      onChange={(e) =>
-                        setNewPolicy({
-                          ...newPolicy,
-                          effectiveDate: e.target.value,
-                        })
-                      }
+                      value={formData.effective_date}
+                      onChange={(e) => setFormData({ ...formData, effective_date: e.target.value })}
                       className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                     />
                   </div>
@@ -661,40 +595,27 @@ export default function CompanyPolicy() {
                     </label>
                     <input
                       type="date"
-                      value={newPolicy.reviewDate}
-                      onChange={(e) =>
-                        setNewPolicy({
-                          ...newPolicy,
-                          reviewDate: e.target.value,
-                        })
-                      }
+                      value={formData.review_date}
+                      onChange={(e) => setFormData({ ...formData, review_date: e.target.value })}
                       className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Version
-                    </label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Version</label>
                     <input
                       type="text"
-                      value={newPolicy.version}
-                      onChange={(e) =>
-                        setNewPolicy({ ...newPolicy, version: e.target.value })
-                      }
+                      value={formData.version}
+                      onChange={(e) => setFormData({ ...formData, version: e.target.value })}
                       className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                       placeholder="1.0"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Author
-                    </label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Author</label>
                     <input
                       type="text"
-                      value={newPolicy.author}
-                      onChange={(e) =>
-                        setNewPolicy({ ...newPolicy, author: e.target.value })
-                      }
+                      value={formData.author}
+                      onChange={(e) => setFormData({ ...formData, author: e.target.value })}
                       className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                       placeholder="Department or author name"
                     />
@@ -704,13 +625,8 @@ export default function CompanyPolicy() {
                       Description
                     </label>
                     <textarea
-                      value={newPolicy.description}
-                      onChange={(e) =>
-                        setNewPolicy({
-                          ...newPolicy,
-                          description: e.target.value,
-                        })
-                      }
+                      value={formData.description}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                       className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
                       rows="3"
                       placeholder="Enter policy description"
@@ -737,6 +653,293 @@ export default function CompanyPolicy() {
           </div>
         )}
 
+        {/* Edit Policy Modal */}
+        {showEditModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-sm shadow-2xl w-full max-w-4xl">
+              <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-6 rounded-t-xl">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-white bg-opacity-20 p-2 rounded-sm">
+                      <Edit className="text-white" size={24} />
+                    </div>
+                    <h2 className="text-2xl font-bold text-white">Edit Policy</h2>
+                  </div>
+                  <button
+                    onClick={() => setShowEditModal(false)}
+                    className="text-white hover:bg-white hover:bg-opacity-20 p-2 rounded-sm transition-colors"
+                  >
+                    <X size={24} />
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-6">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Policy Title *
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.title}
+                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      placeholder="Enter policy title"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Category *
+                    </label>
+                    <select
+                      value={formData.category}
+                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    >
+                      {categories.map((cat) => (
+                        <option key={cat} value={cat}>
+                          {cat}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Effective Date *
+                    </label>
+                    <input
+                      type="date"
+                      value={formData.effective_date}
+                      onChange={(e) => setFormData({ ...formData, effective_date: e.target.value })}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Review Date *
+                    </label>
+                    <input
+                      type="date"
+                      value={formData.review_date}
+                      onChange={(e) => setFormData({ ...formData, review_date: e.target.value })}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Version</label>
+                    <input
+                      type="text"
+                      value={formData.version}
+                      onChange={(e) => setFormData({ ...formData, version: e.target.value })}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      placeholder="1.0"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Status</label>
+                    <select
+                      value={formData.status}
+                      onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    >
+                      {statuses.map((status) => (
+                        <option key={status} value={status}>
+                          {status}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Author</label>
+                    <input
+                      type="text"
+                      value={formData.author}
+                      onChange={(e) => setFormData({ ...formData, author: e.target.value })}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      placeholder="Department or author name"
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Description
+                    </label>
+                    <textarea
+                      value={formData.description}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
+                      rows="3"
+                      placeholder="Enter policy description"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex gap-3 mt-6">
+                  <button
+                    onClick={handleUpdatePolicy}
+                    className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-6 py-3 rounded-lg font-semibold transition-all shadow-lg hover:shadow-xl"
+                  >
+                    Update Policy
+                  </button>
+                  <button
+                    onClick={() => setShowEditModal(false)}
+                    className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 rounded-sm font-semibold transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* View Policy Modal */}
+        {showViewModal && selectedPolicy && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-sm shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+              <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-6">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-white bg-opacity-20 p-2 rounded-lg">
+                      <FileText size={24} className="text-white" />
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-bold text-white">{selectedPolicy.title}</h2>
+                      <p className="text-sm text-white text-opacity-90 mt-1">Policy Details</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setShowViewModal(false)}
+                    className="bg-white bg-opacity-20 hover:bg-opacity-30 p-2 rounded-lg transition-all"
+                  >
+                    <X size={22} className="text-white" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-6 space-y-6">
+                <div className="grid grid-cols-2 gap-6">
+                  <div>
+                    <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
+                      Category
+                    </label>
+                    <p className="text-lg font-semibold text-gray-900 mt-1">
+                      {selectedPolicy.category}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
+                      Version
+                    </label>
+                    <p className="text-lg font-semibold text-gray-900 mt-1">
+                      {selectedPolicy.version}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
+                      Effective Date
+                    </label>
+                    <p className="text-lg font-semibold text-gray-900 mt-1">
+                      {new Date(selectedPolicy.effective_date).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
+                      Review Date
+                    </label>
+                    <p className="text-lg font-semibold text-gray-900 mt-1">
+                      {new Date(selectedPolicy.review_date).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
+                      Author
+                    </label>
+                    <p className="text-lg font-semibold text-gray-900 mt-1">
+                      {selectedPolicy.author || "N/A"}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
+                      Status
+                    </label>
+                    <div className="mt-1">
+                      <span
+                        className={`px-3 py-1 rounded-md text-sm font-semibold ${selectedPolicy.status === "Active"
+                            ? "bg-green-100 text-green-700"
+                            : selectedPolicy.status === "Under Review"
+                              ? "bg-yellow-100 text-yellow-700"
+                              : "bg-gray-100 text-gray-700"
+                          }`}
+                      >
+                        {selectedPolicy.status}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {selectedPolicy.description && (
+                  <div>
+                    <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
+                      Description
+                    </label>
+                    <p className="text-gray-700 mt-2 leading-relaxed">
+                      {selectedPolicy.description}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex justify-end gap-3 px-6 py-4 border-t bg-gray-50">
+                <button
+                  onClick={() => setShowViewModal(false)}
+                  className="px-6 py-2.5 text-sm font-semibold text-gray-700 bg-white border-2 border-gray-300 hover:bg-gray-100 rounded-lg transition-all"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={() => {
+                    setShowViewModal(false);
+                    handleEditClick(selectedPolicy);
+                  }}
+                  className="px-6 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 rounded-lg shadow-md hover:shadow-lg transition-all"
+                >
+                  Edit Policy
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Delete Confirmation Modal */}
+        {showDeleteModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-sm shadow-2xl max-w-md w-full p-6 text-center">
+              <div className="bg-red-100 p-4 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                <AlertTriangle size={32} className="text-red-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Delete Policy</h3>
+              <p className="text-gray-600 mb-6">
+                Are you sure you want to delete this policy? This action cannot be undone.
+              </p>
+              <div className="flex justify-center gap-4">
+                <button
+                  onClick={() => setShowDeleteModal(false)}
+                  className="px-6 py-2 border-2 border-gray-300 text-gray-700 rounded-sm hover:bg-gray-100 transition-all font-semibold"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDelete}
+                  className="px-6 py-2 bg-red-600 text-white rounded-sm hover:bg-red-700 transition-all font-semibold shadow-sm"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Filter Modal */}
         {showFilterModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -747,9 +950,7 @@ export default function CompanyPolicy() {
                     <div className="bg-white bg-opacity-20 p-2 rounded-lg">
                       <Filter className="text-white" size={24} />
                     </div>
-                    <h2 className="text-2xl font-bold text-white">
-                      Filter Policies
-                    </h2>
+                    <h2 className="text-2xl font-bold text-white">Filter Policies</h2>
                   </div>
                   <button
                     onClick={() => setShowFilterModal(false)}
@@ -806,114 +1007,13 @@ export default function CompanyPolicy() {
                     Apply Filters
                   </button>
                   <button
-                    onClick={resetFilters}
+                    onClick={() => {
+                      resetFilters();
+                      setShowFilterModal(false);
+                    }}
                     className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 rounded-sm font-semibold transition-colors"
                   >
                     Reset
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* View Policy Modal */}
-        {showViewModal && selectedPolicy && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-sm shadow-2xl w-full max-w-3xl">
-              <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-6 rounded-t-xl">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`w-14 h-14 rounded-full ${selectedPolicy.color} flex items-center justify-center font-bold text-lg border-4 border-white`}
-                    >
-                      {selectedPolicy.initials}
-                    </div>
-                    <div>
-                      <h2 className="text-2xl font-bold text-white">
-                        {selectedPolicy.title}
-                      </h2>
-                      <p className="text-orange-100">
-                        Version {selectedPolicy.version}
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => setShowViewModal(false)}
-                    className="text-white hover:bg-white hover:bg-opacity-20 p-2 rounded-sm transition-colors"
-                  >
-                    <X size={24} />
-                  </button>
-                </div>
-              </div>
-
-              <div className="p-6">
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-sm border border-blue-200">
-                    <p className="text-sm text-blue-600 font-semibold mb-1">
-                      Category
-                    </p>
-                    <p className="font-bold text-gray-900">
-                      {selectedPolicy.category}
-                    </p>
-                  </div>
-                  <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-sm border border-purple-200">
-                    <p className="text-sm text-purple-600 font-semibold mb-1">
-                      Status
-                    </p>
-                    <span
-                      className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${selectedPolicy.status === "Active"
-                        ? "bg-green-500 text-white"
-                        : selectedPolicy.status === "Under Review"
-                          ? "bg-yellow-500 text-white"
-                          : "bg-gray-500 text-white"
-                        }`}
-                    >
-                      {selectedPolicy.status}
-                    </span>
-                  </div>
-                  <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-sm border border-green-200">
-                    <p className="text-sm text-green-600 font-semibold mb-1">
-                      Effective Date
-                    </p>
-                    <p className="font-bold text-gray-900">
-                      {selectedPolicy.effectiveDate}
-                    </p>
-                  </div>
-                  <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-4 rounded-sm border border-orange-200">
-                    <p className="text-sm text-orange-600 font-semibold mb-1">
-                      Review Date
-                    </p>
-                    <p className="font-bold text-gray-900">
-                      {selectedPolicy.reviewDate}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="bg-gradient-to-br from-pink-50 to-pink-100 p-4 rounded-sm border border-pink-200 mb-4">
-                  <p className="text-sm text-pink-600 font-semibold mb-1">
-                    Author
-                  </p>
-                  <p className="font-bold text-gray-900">
-                    {selectedPolicy.author}
-                  </p>
-                </div>
-
-                <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-4 rounded-sm border border-gray-200">
-                  <p className="text-sm text-gray-600 font-semibold mb-2">
-                    Description
-                  </p>
-                  <p className="text-gray-900 leading-relaxed">
-                    {selectedPolicy.description}
-                  </p>
-                </div>
-
-                <div className="mt-6">
-                  <button
-                    onClick={() => setShowViewModal(false)}
-                    className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-6 py-3 rounded-lg font-semibold transition-all shadow-lg hover:shadow-xl"
-                  >
-                    Close
                   </button>
                 </div>
               </div>

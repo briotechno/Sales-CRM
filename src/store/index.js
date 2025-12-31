@@ -8,6 +8,8 @@ import { employeeApi } from './api/employeeApi';
 import { teamApi } from './api/teamApi';
 import { leaveApi } from './api/leaveApi';
 import { jobApi } from './api/jobApi';
+import { companyPolicyApi } from './api/companyPolicyApi';
+import { hrPolicyApi } from './api/hrPolicyApi';
 
 export const store = configureStore({
     reducer: {
@@ -20,6 +22,8 @@ export const store = configureStore({
         [teamApi.reducerPath]: teamApi.reducer,
         [leaveApi.reducerPath]: leaveApi.reducer,
         [jobApi.reducerPath]: jobApi.reducer,
+        [companyPolicyApi.reducerPath]: companyPolicyApi.reducer,
+        [hrPolicyApi.reducerPath]: hrPolicyApi.reducer,
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware().concat(
@@ -30,6 +34,8 @@ export const store = configureStore({
             employeeApi.middleware,
             teamApi.middleware,
             leaveApi.middleware,
-            jobApi.middleware
+            jobApi.middleware,
+            companyPolicyApi.middleware,
+            hrPolicyApi.middleware
         ),
 });
