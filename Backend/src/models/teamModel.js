@@ -45,22 +45,36 @@ const Team = {
         }
     },
 
-    findAll: async (userId, page = 1, limit = 10) => {
+    findAll: async (userId, page = 1, limit = 10, search = '') => {
         const offset = (page - 1) * limit;
 
+        let searchCondition = '';
+        const queryParams = [userId];
+
+        if (search) {
+            searchCondition = ' AND (team_name LIKE ? OR description LIKE ?)';
+            queryParams.push(`%${search}%`, `%${search}%`);
+        }
+
         // Get total count
-        const [totalRows] = await pool.query('SELECT COUNT(*) as total FROM teams WHERE user_id = ?', [userId]);
+        const countQuery = `SELECT COUNT(*) as total FROM teams WHERE user_id = ? ${searchCondition}`;
+        const [totalRows] = await pool.query(countQuery, queryParams);
         const total = totalRows[0].total;
 
         // Get paginated data
-        const [rows] = await pool.query(`
+        const dataQuery = `
             SELECT t.*, 
             (SELECT COUNT(*) FROM team_members tm WHERE tm.team_id = t.id) as total_members
             FROM teams t
-            WHERE t.user_id = ?
+            WHERE t.user_id = ? ${searchCondition}
             ORDER BY t.id DESC
             LIMIT ? OFFSET ?
-        `, [userId, parseInt(limit), parseInt(offset)]);
+        `;
+
+        // Add limit and offset to params for data query
+        const dataParams = [...queryParams, parseInt(limit), parseInt(offset)];
+
+        const [rows] = await pool.query(dataQuery, dataParams);
 
         return {
             teams: rows,
