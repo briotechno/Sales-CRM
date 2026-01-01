@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { FiHome } from "react-icons/fi";
 import DashboardLayout from "../../components/DashboardLayout";
 import AddTermModal from "../../components/TermCondition/AddTermModal";
+import ViewTermModal from "../../components/TermCondition/ViewTermModal";
+import EditTermModal from "../../components/TermCondition/EditTermModal";
 import {
   Pencil,
   Trash2,
@@ -13,68 +15,29 @@ import {
   Plus,
 } from "lucide-react";
 import NumberCard from "../../components/NumberCard";
+import {
+  useGetAllTermsQuery,
+  useDeleteTermMutation,
+  useCreateTermMutation,
+  useUpdateTermMutation,
+} from "../../store/api/termApi";
+import DeleteTermModal from "../../components/TermCondition/DeleteTermModal";
 
 const TermsAndCondition = () => {
-  // Sample data with full details
-  const [termsList, setTermsList] = useState([
-    {
-      id: 1,
-      department: "HR",
-      designation: "Manager",
-      title: "Remote Work Policy",
-      description:
-        "Guidelines for employees working remotely including work hours, communication protocols, equipment provision, and performance expectations. All remote employees must maintain regular communication with their team and adhere to security protocols.",
-      createdDate: "2024-01-15",
-      updatedDate: "2024-10-20",
-    },
-    {
-      id: 2,
-      department: "IT",
-      designation: "Engineer",
-      title: "Data Security & Confidentiality",
-      description:
-        "Comprehensive data protection policy covering password management, secure coding practices, data encryption standards, and breach reporting procedures. Employees must complete annual security training.",
-      createdDate: "2024-02-10",
-      updatedDate: "2024-09-15",
-    },
-    {
-      id: 3,
-      department: "Sales",
-      designation: "Executive",
-      title: "Client Communication Standards",
-      description:
-        "Professional communication guidelines for client interactions including response time expectations, email etiquette, meeting protocols, and escalation procedures for complex issues.",
-      createdDate: "2024-03-05",
-      updatedDate: "2024-11-01",
-    },
-    {
-      id: 4,
-      department: "Finance",
-      designation: "Manager",
-      title: "Expense Reimbursement Policy",
-      description:
-        "Detailed process for submitting expense claims including eligible expenses, required documentation, approval workflows, and reimbursement timelines. All receipts must be submitted within 30 days.",
-      createdDate: "2024-01-20",
-      updatedDate: "2024-08-12",
-    },
-    {
-      id: 5,
-      department: "Operations",
-      designation: "Associate",
-      title: "Health & Safety Guidelines",
-      description:
-        "Workplace safety protocols including emergency procedures, accident reporting, ergonomic standards, and regular safety audits. Compliance is mandatory for all staff members.",
-      createdDate: "2024-04-01",
-      updatedDate: "2024-10-25",
-    },
-  ]);
-
+  /* ================= STATES ================= */
   const [filterDept, setFilterDept] = useState("");
   const [filterDesig, setFilterDesig] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [viewingTerm, setViewingTerm] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [selectedTermId, setSelectedTermId] = useState(null);
+  const [selectedTerm, setSelectedTerm] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
   const [formData, setFormData] = useState({
     department: "",
     designation: "",
@@ -82,362 +45,343 @@ const TermsAndCondition = () => {
     description: "",
   });
 
-  const handleAddTerm = () => {
+  /* ================= API ================= */
+  const { data, isLoading } = useGetAllTermsQuery({
+    page: currentPage,
+    limit: itemsPerPage,
+    search: searchTerm,
+    department: filterDept,
+    designation: filterDesig,
+  });
+
+  const [createTerm, { isLoading: creating }] = useCreateTermMutation();
+  const [updateTerm, { isLoading: updating }] = useUpdateTermMutation();
+  const [deleteTerm] = useDeleteTermMutation();
+
+  const terms = Array.isArray(data) ? data : [];
+  const pagination = {
+    total: terms.length,
+    totalPages: Math.ceil(terms.length / itemsPerPage),
+  };
+
+  /* ================= PAGINATION ================= */
+  const indexOfFirstItem =
+    pagination.total === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
+  const indexOfLastItem = Math.min(currentPage * itemsPerPage, pagination.total);
+
+  const handlePrev = () => {
+    if (currentPage > 1) setCurrentPage((p) => p - 1);
+  };
+
+  const handleNext = () => {
+    if (currentPage < pagination.totalPages) setCurrentPage((p) => p + 1);
+  };
+
+  const handlePageChange = (page) => setCurrentPage(page);
+
+  /* ================= HANDLERS ================= */
+  const handleAddTerm = async () => {
     if (
-      !formData.title.trim() ||
-      !formData.description.trim() ||
       !formData.department ||
-      !formData.designation
+      !formData.designation ||
+      !formData.title.trim() ||
+      !formData.description.trim()
     ) {
-      alert("All fields are required.");
+      alert("All fields are required");
       return;
     }
 
-    const newTerm = {
-      id: termsList.length + 1,
-      department: formData.department,
-      designation: formData.designation,
-      title: formData.title,
-      description: formData.description,
-      createdDate: new Date().toISOString().split("T")[0],
-      updatedDate: new Date().toISOString().split("T")[0],
-    };
-
-    setTermsList([...termsList, newTerm]);
+    await createTerm(formData).unwrap();
+    setIsModalOpen(false);
     setFormData({
       department: "",
       designation: "",
       title: "",
       description: "",
     });
-    setIsModalOpen(false);
   };
 
-  const handleDeleteTerm = (id) => {
+  const handleUpdateTerm = async (id, updatedData) => {
+    await updateTerm({ id, ...updatedData }).unwrap();
+    setIsEditModalOpen(false);
+    setSelectedTerm(null);
+  };
+
+  const handleDeleteTerm = async (id) => {
     if (window.confirm("Are you sure you want to delete this policy?")) {
-      setTermsList(termsList.filter((term) => term.id !== id));
+      await deleteTerm(id).unwrap();
     }
   };
 
-  const filteredTerms = termsList.filter((term) => {
-    const matchesDept = filterDept ? term.department === filterDept : true;
-    const matchesDesig = filterDesig ? term.designation === filterDesig : true;
-    const matchesSearch = searchTerm
-      ? term.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      term.description.toLowerCase().includes(searchTerm.toLowerCase())
-      : true;
-    return matchesDept && matchesDesig && matchesSearch;
-  });
-
+  /* ================= UI ================= */
   return (
     <DashboardLayout>
       <div className="ml-6 min-h-screen">
-        {/* Header Section */}
+        {/* HEADER */}
         <div className="bg-white rounded-sm p-3 mb-4 border-b">
           <div className="flex justify-between items-center">
-            {/* Left Title + Breadcrumb */}
             <div>
-              <h1 className="text-2xl font-bold text-gray-800">
-                Term & Conditions
-              </h1>
-
-              <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
-                <FiHome className="text-gray-700 text-sm" />
-                <span className="text-gray-400">HRM /</span>
-                <span className="text-[#FF7B1D] font-medium">
-                  Term & Condition
+              <h1 className="text-2xl font-bold">Terms & Conditions</h1>
+              <p className="text-sm text-gray-500 mt-1 flex gap-2">
+                <FiHome />
+                <span>HRM /</span>
+                <span className="text-orange-500 font-semibold">
+                  Terms & Conditions
                 </span>
               </p>
             </div>
 
-            {/* RIGHT SIDE BUTTONS */}
-            <div className="flex items-center gap-3">
-              {/* More Filters Button */}
-              <div className="relative">
-                <button
-                  onClick={() => setShowFilters(!showFilters)}
-                  className="flex items-center gap-2 px-4 py-3 bg-white text-black border-2 rounded-sm text-sm font-semibold hover:bg-gray-100 transition-all"
-                >
-                  <Filter size={16} className="text-black" />
-                  More Filters
-                </button>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className="px-4 py-2 border flex gap-2"
+              >
+                <Filter size={16} /> Filters
+              </button>
 
-                {/* Dropdown Filters */}
-                {showFilters && (
-                  <div className="absolute right-0 mt-2 bg-white border border-gray-200 rounded-md shadow-lg w-64 p-4 animate-fadeIn">
-                    {/* Department */}
-                    <div className="mb-4">
-                      <label className="block text-sm font-semibold text-gray-700 mb-1">
-                        Department
-                      </label>
-                      <select
-                        value={filterDept}
-                        onChange={(e) => setFilterDept(e.target.value)}
-                        className="w-full border-2 border-gray-200 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-[#FF7B1D] focus:border-[#FF7B1D] outline-none"
-                      >
-                        <option value="">All Departments</option>
-                        <option value="HR">Human Resources</option>
-                        <option value="IT">IT Support</option>
-                        <option value="Sales">Sales</option>
-                        <option value="Finance">Finance</option>
-                        <option value="Operations">Operations</option>
-                        <option value="Marketing">Marketing</option>
-                      </select>
-                    </div>
-
-                    {/* Designation */}
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-1">
-                        Designation
-                      </label>
-                      <select
-                        value={filterDesig}
-                        onChange={(e) => setFilterDesig(e.target.value)}
-                        className="w-full border-2 border-gray-200 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-[#FF7B1D] focus:border-[#FF7B1D] outline-none"
-                      >
-                        <option value="">All Designations</option>
-                        <option value="Manager">Manager</option>
-                        <option value="Executive">Executive</option>
-                        <option value="Engineer">Engineer</option>
-                        <option value="Associate">Associate</option>
-                        <option value="Director">Director</option>
-                        <option value="Intern">Intern</option>
-                      </select>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Add Terms Button */}
               <button
                 onClick={() => setIsModalOpen(true)}
-                className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-4 py-2 rounded-sm font-semibold hover:shadow-xl hover:from-orange-600 hover:to-orange-700 transition-all flex items-center gap-2"
+                className="bg-orange-500 text-white px-4 py-2 flex gap-2"
               >
-                 <Plus size={18} />
-                Add Terms & Conditions
+                <Plus size={18} /> Add Terms
               </button>
             </div>
           </div>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6 ">
+        {/* FILTER DROPDOWN */}
+        {showFilters && (
+          <div className="absolute right-5 mt-2 bg-white border border-gray-200 rounded-md shadow-lg w-64 p-4 animate-fadeIn">
+            {/* Department */}
+            <div className="mb-4">
+              <label className="block text-sm font-semibold text-gray-700 mb-1">
+                Department
+              </label>
+              <select
+                value={filterDept}
+                onChange={(e) => setFilterDept(e.target.value)}
+                className="w-full border-2 border-gray-200 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-[#FF7B1D] focus:border-[#FF7B1D] outline-none"
+              >
+                <option value="">All Departments</option>
+                <option value="HR">Human Resources</option>
+                <option value="IT">IT Support</option>
+                <option value="Sales">Sales</option>
+                <option value="Finance">Finance</option>
+                <option value="Operations">Operations</option>
+                <option value="Marketing">Marketing</option>
+              </select>
+            </div>
+
+            {/* Designation */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">
+                Designation
+              </label>
+              <select
+                value={filterDesig}
+                onChange={(e) => setFilterDesig(e.target.value)}
+                className="w-full border-2 border-gray-200 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-[#FF7B1D] focus:border-[#FF7B1D] outline-none"
+              >
+                <option value="">All Designations</option>
+                <option value="Manager">Manager</option>
+                <option value="Executive">Executive</option>
+                <option value="Engineer">Engineer</option>
+                <option value="Associate">Associate</option>
+                <option value="Director">Director</option>
+                <option value="Intern">Intern</option>
+              </select>
+            </div>
+          </div>
+        )}
+
+        {/* STATS */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
           <NumberCard
-            title={"Total Policies"}
-            number={termsList.length}
-            icon={<FileText className="text-blue-600" size={24} />}
-            iconBgColor={"bg-blue-100"}
-            lineBorderClass={"border-blue-500"}
+            title="Total Policies"
+            number={pagination.total}
+            icon={<FileText />}
+            iconBgColor="bg-blue-100"
+            lineBorderClass="border-blue-500"
           />
           <NumberCard
-            title={"Active Filters"}
-            number={termsList.length}
-            icon={<Filter className="text-green-600" size={24} />}
-            iconBgColor={"bg-green-100"}
-            lineBorderClass={"border-green-500"}
+            title="Current Page"
+            number={terms.length}
+            icon={<Calendar />}
+            iconBgColor="bg-green-100"
+            lineBorderClass="border-green-500"
           />
           <NumberCard
-            title={"Filtered Results"}
-            number={termsList.length}
-            icon={<Calendar className="text-[#FF7B1D]" size={24} />}
-            iconBgColor={"bg-orange-100"}
-            lineBorderClass={"border-orange-500"}
+            title="Departments"
+            number={new Set(terms.map((t) => t.department)).size}
+            icon={<Building />}
+            iconBgColor="bg-purple-100"
+            lineBorderClass="border-purple-500"
           />
           <NumberCard
-            title={"Departments"}
-            number={new Set(termsList.map((t) => t.department)).size}
-            icon={<Building className="text-purple-600" size={24} />}
-            iconBgColor={"bg-purple-100"}
-            lineBorderClass={"border-purple-500"}
+            title="Page"
+            number={`${currentPage}/${pagination.totalPages}`}
+            icon={<Filter />}
+            iconBgColor="bg-orange-100"
+            lineBorderClass="border-orange-500"
           />
         </div>
 
-        {/* Terms Table */}
-        <div className="bg-white rounded-am shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm">
-                  <th className="py-4 px-6 font-semibold text-left">S.N</th>
-                  <th className="py-4 px-6 font-semibold text-left">
-                    Department
-                  </th>
-                  <th className="py-4 px-6 font-semibold text-left">
-                    Designation
-                  </th>
-                  <th className="py-4 px-6 font-semibold text-left">Title</th>
-                  <th className="py-4 px-6 font-semibold text-left">
-                    Description
-                  </th>
-                  <th className="py-4 px-6 font-semibold text-left">Created</th>
-                  <th className="py-4 px-6 font-semibold text-left">Updated</th>
-                  <th className="py-4 px-6 font-semibold text-center">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
+        {/* TABLE */}
+        <div className="bg-white shadow rounded overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-orange-500 text-white">
+              <tr>
+                <th className="py-3 px-4 font-semibold">S.N</th>
+                <th className="py-3 px-4 font-semibold">Department</th>
+                <th className="py-3 px-4 font-semibold">Designation</th>
+                <th className="py-3 px-4 font-semibold">Title</th>
+                <th className="py-3 px-4 font-semibold">Description</th>
+                <th className="py-3 px-4 font-semibold">Created</th>
+                <th className="py-3 px-4 font-semibold">Updated</th>
+                <th className="py-3 px-4 font-semibold">Actions</th>
+              </tr>
+            </thead>
 
-              <tbody>
-                {filteredTerms.length > 0 ? (
-                  filteredTerms.map((term, index) => (
-                    <tr
-                      key={term.id}
-                      className="border-b border-gray-100 hover:bg-gradient-to-r hover:from-orange-50 hover:to-transparent transition-all"
-                    >
-                      <td className="py-4 px-6 font-medium text-gray-700">
-                        {index + 1}
-                      </td>
-                      <td className="py-4 px-6">
-                        <span className="inline-block bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-medium">
-                          {term.department}
-                        </span>
-                      </td>
-                      <td className="py-4 px-6">
-                        <span className="inline-block bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-sm font-medium">
-                          {term.designation}
-                        </span>
-                      </td>
-                      <td className="py-4 px-6 text-gray-800 font-medium max-w-xs">
-                        {term.title}
-                      </td>
-                      <td className="py-4 px-6 text-gray-600 text-sm max-w-md">
-                        <div className="line-clamp-2">{term.description}</div>
-                      </td>
-                      <td className="py-4 px-6 text-gray-600 text-sm whitespace-nowrap">
-                        {term.createdDate}
-                      </td>
-                      <td className="py-4 px-6 text-gray-600 text-sm whitespace-nowrap">
-                        {term.updatedDate}
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="flex justify-center gap-2">
-                          <button
-                            onClick={() => setViewingTerm(term)}
-                            className=" p-2 rounded-sm"
-                            title="View Details"
-                          >
-                            <Eye
-                              size={18}
-                              className="text-blue-500 hover:bg-blue-50 rounded-sm transition-colors "
-                            />
-                          </button>
-                          <button
-                            className=" bg-opacity-10 p-2 rounded-sm"
-                            title="Edit"
-                          >
-                            <Pencil
-                              size={18}
-                              className="text-[#FF7B1D]  transition-transform"
-                            />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteTerm(term.id)}
-                            className=" p-2 rounded-sm "
-                            title="Delete"
-                          >
-                            <Trash2
-                              size={18}
-                              className="text-red-500  transition-transform"
-                            />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="8" className="py-12 text-center">
-                      <div className="flex flex-col items-center gap-3">
-                        <div className="bg-gray-100 p-4 rounded-full">
-                          <FileText size={48} className="text-gray-400" />
-                        </div>
-                        <p className="text-gray-500 font-medium text-lg">
-                          No terms & conditions found
-                        </p>
-                        <p className="text-gray-400 text-sm">
-                          {searchTerm || filterDept || filterDesig
-                            ? "Try adjusting your filters"
-                            : 'Click "Add Terms & Conditions" to create your first policy'}
-                        </p>
+            <tbody>
+              {isLoading ? (
+                <tr>
+                  <td colSpan="8" className="text-center py-10">
+                    Loading...
+                  </td>
+                </tr>
+              ) : terms.length ? (
+                terms.map((term, index) => (
+                  <tr key={term.id} className="border-t hover:bg-gray-50 transition-colors">
+                    <td className="py-3 px-4">
+                      {(currentPage - 1) * itemsPerPage + index + 1}
+                    </td>
+                    <td className="py-3 px-1 text-orange-600 font-medium">{term.department}</td>
+                    <td className="py-3 px-1 text-orange-600 font-medium">{term.designation}</td>
+                    <td>{term.title}</td>
+                    <td>{term.description}</td>
+                    <td className="py-3 px-1 whitespace-nowrap">{term.created_at}</td>
+                    <td className="py-3 px-1 whitespace-nowrap">{term.updated_at}</td>
+                    <td className="py-3 px-1">
+                      <div className="flex justify-center gap-2">
+                        <button
+                          onClick={() => {
+                            setSelectedTerm(term);
+                            setIsViewModalOpen(true);
+                          }}
+                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-sm transition-colors"
+                        >
+                          <Eye size={18} />
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSelectedTerm(term);
+                            setIsEditModalOpen(true);
+                          }}
+                          className="p-2 text-orange-600 hover:bg-orange-50 rounded-sm transition-colors"
+                        >
+                          <Pencil size={18} />
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSelectedTermId(term.id);
+                            setIsDeleteModalOpen(true);
+                          }}
+                          className="p-2 text-red-600 hover:bg-red-50 rounded-sm transition-colors"
+                        >
+                          <Trash2 size={18} />
+                        </button>
                       </div>
                     </td>
                   </tr>
-                )}
-              </tbody>
-            </table>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="8" className="text-center py-10">
+                    No Terms & Conditions found
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+
+          {/* PAGINATION */}
+          <div className="flex justify-between items-center mt-6 bg-gray-50 p-4 rounded-sm border">
+            <p className="text-sm text-gray-600">
+              Showing <b>{indexOfFirstItem}</b> to <b>{indexOfLastItem}</b> of{" "}
+              <b>{pagination.total}</b> terms
+            </p>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handlePrev}
+                disabled={currentPage === 1}
+                className="px-4 py-2 border rounded-sm font-bold bg-white disabled:opacity-50"
+              >
+                Previous
+              </button>
+
+              {Array.from({ length: pagination.totalPages }, (_, i) => (
+                <button
+                  key={i + 1}
+                  onClick={() => handlePageChange(i + 1)}
+                  className={`w-9 h-9 border rounded-sm font-bold ${currentPage === i + 1
+                    ? "bg-orange-500 text-white"
+                    : "bg-white"
+                    }`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+
+              <button
+                onClick={handleNext}
+                disabled={currentPage === pagination.totalPages}
+                className="px-4 py-2 border rounded-sm font-bold bg-white disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Add Modal */}
+      {/* ADD MODAL */}
       <AddTermModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         formData={formData}
         setFormData={setFormData}
         onSubmit={handleAddTerm}
+        loading={creating}
+      />
+      <ViewTermModal
+        isOpen={isViewModalOpen}
+        onClose={() => {
+          setIsViewModalOpen(false);
+          setSelectedTerm(null);
+        }}
+        term={selectedTerm}
+      />
+      <EditTermModal
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setSelectedTerm(null);
+        }}
+        term={selectedTerm}
+        onSubmit={handleUpdateTerm}
+        loading={updating}
+      />
+      <DeleteTermModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setSelectedTermId(null);
+        }}
+        termId={selectedTermId}
       />
 
-      {/* View Details Modal */}
-      {viewingTerm && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex justify-center items-center z-50">
-          <div className="bg-white rounded-lg shadow-2xl w-full max-w-2xl mx-4 max-h-[80vh] overflow-y-auto">
-            <div className="bg-gradient-to-r from-[#FF7B1D] to-[#FF9A4D] text-white p-6 sticky top-0">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h2 className="text-2xl font-bold mb-2">
-                    {viewingTerm.title}
-                  </h2>
-                  <div className="flex gap-3">
-                    <span className="bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm">
-                      {viewingTerm.department}
-                    </span>
-                    <span className="bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm">
-                      {viewingTerm.designation}
-                    </span>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setViewingTerm(null)}
-                  className="bg-white bg-opacity-20 hover:bg-opacity-30 p-2 rounded-lg transition-all"
-                >
-                  ✕
-                </button>
-              </div>
-            </div>
 
-            <div className="p-6">
-              <div className="mb-6">
-                <h3 className="text-sm font-semibold text-gray-500 mb-2">
-                  DESCRIPTION
-                </h3>
-                <p className="text-gray-700 leading-relaxed">
-                  {viewingTerm.description}
-                </p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 pt-4 border-t">
-                <div>
-                  <p className="text-sm font-semibold text-gray-500">
-                    Created Date
-                  </p>
-                  <p className="text-gray-800 font-medium">
-                    {viewingTerm.createdDate}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-gray-500">
-                    Last Updated
-                  </p>
-                  <p className="text-gray-800 font-medium">
-                    {viewingTerm.updatedDate}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </DashboardLayout>
   );
 };
