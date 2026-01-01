@@ -38,6 +38,7 @@ const createSalary = async (req, res) => {
 };
 
 const getSalaries = async (req, res) => {
+    console.log(req)
     try {
         const { page, limit, search, department } = req.query;
         const data = await Salary.findAll(req.user.id, {
