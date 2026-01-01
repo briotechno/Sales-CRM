@@ -151,28 +151,46 @@ const TermsAndCondition = () => {
 
         {/* FILTER DROPDOWN */}
         {showFilters && (
-          <div className="bg-white p-4 mb-4 shadow rounded w-64">
-            <select
-              className="w-full mb-3 border p-2"
-              value={filterDept}
-              onChange={(e) => setFilterDept(e.target.value)}
-            >
-              <option value="">All Departments</option>
-              <option value="HR">HR</option>
-              <option value="IT">IT</option>
-              <option value="Sales">Sales</option>
-            </select>
+          <div className="absolute right-5 mt-2 bg-white border border-gray-200 rounded-md shadow-lg w-64 p-4 animate-fadeIn">
+            {/* Department */}
+            <div className="mb-4">
+              <label className="block text-sm font-semibold text-gray-700 mb-1">
+                Department
+              </label>
+              <select
+                value={filterDept}
+                onChange={(e) => setFilterDept(e.target.value)}
+                className="w-full border-2 border-gray-200 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-[#FF7B1D] focus:border-[#FF7B1D] outline-none"
+              >
+                <option value="">All Departments</option>
+                <option value="HR">Human Resources</option>
+                <option value="IT">IT Support</option>
+                <option value="Sales">Sales</option>
+                <option value="Finance">Finance</option>
+                <option value="Operations">Operations</option>
+                <option value="Marketing">Marketing</option>
+              </select>
+            </div>
 
-            <select
-              className="w-full border p-2"
-              value={filterDesig}
-              onChange={(e) => setFilterDesig(e.target.value)}
-            >
-              <option value="">All Designations</option>
-              <option value="Manager">Manager</option>
-              <option value="Engineer">Engineer</option>
-              <option value="Executive">Executive</option>
-            </select>
+            {/* Designation */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">
+                Designation
+              </label>
+              <select
+                value={filterDesig}
+                onChange={(e) => setFilterDesig(e.target.value)}
+                className="w-full border-2 border-gray-200 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-[#FF7B1D] focus:border-[#FF7B1D] outline-none"
+              >
+                <option value="">All Designations</option>
+                <option value="Manager">Manager</option>
+                <option value="Executive">Executive</option>
+                <option value="Engineer">Engineer</option>
+                <option value="Associate">Associate</option>
+                <option value="Director">Director</option>
+                <option value="Intern">Intern</option>
+              </select>
+            </div>
           </div>
         )}
 
