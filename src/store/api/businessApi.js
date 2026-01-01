@@ -36,7 +36,10 @@ export const businessApi = createApi({
             },
             invalidatesTags: ['BusinessInfo'],
         }),
+        getPublicBusinessInfo: builder.query({
+            query: (id) => `business-info/public/${id}`,
+        }),
     }),
 });
 
-export const { useGetBusinessInfoQuery, useUpdateBusinessInfoMutation } = businessApi;
+export const { useGetBusinessInfoQuery, useUpdateBusinessInfoMutation, useGetPublicBusinessInfoQuery } = businessApi;

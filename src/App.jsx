@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import CompanyProfile from "./pages/Public/CompanyProfile";
 import Dashboard from "./pages/Dashboard";
 // CRM Dashboard
 import CRMDashboard from "./pages/CrmDashboard/dashboard";
@@ -108,6 +109,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/packages" element={<Packages />} />
+        <Route path="/business/:id" element={<CompanyProfile />} />
 
         {/* Protected Routes */}
         <Route element={<ProtectedRoute />}>

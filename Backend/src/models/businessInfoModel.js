@@ -57,6 +57,11 @@ const BusinessInfo = {
     findByUserId: async (user_id) => {
         const [rows] = await pool.query('SELECT * FROM business_info WHERE user_id = ?', [user_id]);
         return rows[0];
+    },
+
+    findById: async (id) => {
+        const [rows] = await pool.query('SELECT * FROM business_info WHERE id = ?', [id]);
+        return rows[0];
     }
 };
 

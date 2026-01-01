@@ -24,12 +24,14 @@ import {
 import { useGetBusinessInfoQuery, useUpdateBusinessInfoMutation } from "../../store/api/businessApi";
 import { toast } from "react-hot-toast";
 import { useEffect } from "react";
+import ShareModal from "../../components/BusinessInfo/ShareModal";
 
 export default function BusinessInfoPage() {
   const { data: businessInfo, isLoading: isFetching } = useGetBusinessInfoQuery();
   const [updateBusinessInfo, { isLoading: isUpdating }] = useUpdateBusinessInfoMutation();
 
   const [isEditing, setIsEditing] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     company_name: "",
     legal_name: "",
@@ -171,41 +173,7 @@ export default function BusinessInfoPage() {
               {/* Right Side – Added Share Button */}
               <div className="flex items-center mr- gap-3">
                 <button
-                  onClick={() => {
-                    const profileLink = `${window.location.origin
-                      }/business/${formData.companyName
-                        .toLowerCase()
-                        .replace(/\s+/g, "-")}`;
-
-                    // Mobile share (Web Share API)
-                    if (navigator.share) {
-                      navigator
-                        .share({
-                          title: formData.company_name,
-                          text: "Check out this business profile",
-                          url: profileLink,
-                        })
-                        .catch((error) => console.log("Error sharing:", error));
-                      return;
-                    }
-
-                    // Desktop: Copy to clipboard
-                    navigator.clipboard
-                      .writeText(profileLink)
-                      .then(() => {
-                        alert("Profile link copied!");
-                      })
-                      .catch(() => {
-                        // Fallback
-                        const textarea = document.createElement("textarea");
-                        textarea.value = profileLink;
-                        document.body.appendChild(textarea);
-                        textarea.select();
-                        document.execCommand("copy");
-                        document.body.removeChild(textarea);
-                        alert("Profile link copied!");
-                      });
-                  }}
+                  onClick={() => setIsShareModalOpen(true)}
                   className="px-5 py-3 border border-gray-300 rounded-sm hover:bg-gray-50 font-semibold text-gray-700 flex items-center gap-2"
                 >
                   <Share2 size={18} />
@@ -1033,6 +1001,12 @@ export default function BusinessInfoPage() {
           </div>
         </div>
       </div>
+      <ShareModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        companyName={formData.company_name}
+        businessId={businessInfo?.id}
+      />
     </DashboardLayout>
   );
 }

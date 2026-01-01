@@ -40,7 +40,8 @@ const AddEmployeeModal = ({ isOpen, onClose }) => {
     cancelCheque: null,
     username: "",
     password: "",
-    status: "Active"
+    status: "Active",
+    permissions: {}
   });
 
   const [createEmployee, { isLoading }] = useCreateEmployeeMutation();
@@ -142,6 +143,8 @@ const AddEmployeeModal = ({ isOpen, onClose }) => {
         data.append(backendKey, formData[key]);
       } else if (Array.isArray(formData[key])) {
         data.append(backendKey, JSON.stringify(formData[key]));
+      } else if (key === 'permissions') {
+        data.append(backendKey, JSON.stringify(formData[key]));
       } else if (formData[key] !== null && formData[key] !== undefined) {
         data.append(backendKey, formData[key]);
       }
@@ -185,6 +188,7 @@ const AddEmployeeModal = ({ isOpen, onClose }) => {
             formData={formData}
             handleChange={handleChange}
             handleChanges={handleChanges}
+            setFormData={setFormData}
           />
         </div>
 

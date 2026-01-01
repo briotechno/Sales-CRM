@@ -46,7 +46,8 @@ const EditEmployeeModal = ({ isOpen, onClose, employee }) => {
         cancelChequePreview: "",
         username: "",
         password: "",
-        status: "Active"
+        status: "Active",
+        permissions: {}
     });
 
     const [updateEmployee, { isLoading }] = useUpdateEmployeeMutation();
@@ -94,7 +95,8 @@ const EditEmployeeModal = ({ isOpen, onClose, employee }) => {
                 cancelChequePreview: employee.cancelled_cheque_url || "",
                 username: employee.username || "",
                 password: "", // Keep password empty for security
-                status: employee.status || "Active"
+                status: employee.status || "Active",
+                permissions: Array.isArray(employee.permissions) ? {} : (typeof employee.permissions === 'string' ? JSON.parse(employee.permissions || '{}') : (employee.permissions || {}))
             });
         }
     }, [employee]);
@@ -159,7 +161,7 @@ const EditEmployeeModal = ({ isOpen, onClose, employee }) => {
 
         const data = new FormData();
         const mapping = {
-            employeeId:'employee_id',
+            employeeId: 'employee_id',
             employeeName: 'employee_name',
             profilePic: 'profile_picture',
             dob: 'date_of_birth',
@@ -205,6 +207,8 @@ const EditEmployeeModal = ({ isOpen, onClose, employee }) => {
                 // Skip empty password in edit
             } else if (Array.isArray(formData[key])) {
                 data.append(backendKey, JSON.stringify(formData[key]));
+            } else if (key === 'permissions') {
+                data.append(backendKey, JSON.stringify(formData[key]));
             } else if (formData[key] !== null && formData[key] !== undefined) {
                 data.append(backendKey, formData[key]);
             }
@@ -248,6 +252,7 @@ const EditEmployeeModal = ({ isOpen, onClose, employee }) => {
                         formData={formData}
                         handleChange={handleChange}
                         handleChanges={handleChanges}
+                        setFormData={setFormData}
                     />
                 </div>
 

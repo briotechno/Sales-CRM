@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   User,
   Briefcase,
@@ -7,17 +7,36 @@ import {
   CreditCard,
   Key,
   ShieldCheck,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { useGetDepartmentsQuery } from "../../store/api/departmentApi";
 import { useGetDesignationsQuery } from "../../store/api/designationApi";
 
-const FormSection = ({ formData, handleChange, handleChanges }) => {
+const FormSection = ({ formData, handleChange, handleChanges, setFormData }) => {
+  const [collapsedSections, setCollapsedSections] = useState({
+    personal: false,
+    job: true,
+    contact: true,
+    documents: true,
+    bank: true,
+    login: true,
+    permissions: true,
+  });
+
+  const toggleSection = (section) => {
+    setCollapsedSections((prev) => ({
+      ...prev,
+      [section]: !prev[section],
+    }));
+  };
+
   const { data: deptData, isLoading: departmentsLoading } = useGetDepartmentsQuery({ limit: 100 });
   const { data: dsgData, isLoading: designationsLoading } = useGetDesignationsQuery({ limit: 100 });
 
   const departments = deptData?.departments || [];
   const designations = dsgData?.designations || [];
-  // Consistent input styles matching AddTermModal
+
   const inputStyles =
     "w-full px-4 py-3 border-2 border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300";
 
@@ -33,14 +52,98 @@ const FormSection = ({ formData, handleChange, handleChanges }) => {
   const labelStyles =
     "flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2";
 
+  const modules = [
+    "Dashboard",
+    "Leads Management",
+    "Champions Management",
+    "Pipeline Management",
+    "Client Management",
+    "Employee Management",
+    "Department Management",
+    "Designation Management",
+    "Attendance Management",
+    "Leave Management",
+    "Salary Management",
+    "Company Policy",
+    "HR Policy",
+    "Job Management",
+    "Team Management",
+    "Quotation",
+    "Invoice",
+    "Expense Management",
+    "Notes",
+    "ToDo",
+    "Announcement",
+    "Notification",
+    "Messenger",
+    "Catelogs",
+    "Business Info",
+    "Subscription",
+    "FAQ",
+  ];
+
+  const actions = ["Create", "Read", "Update", "Delete"];
+
+  const handlePermissionChange = (module, action, checked) => {
+    const updatedPermissions = { ...formData.permissions };
+    if (!updatedPermissions[module]) {
+      updatedPermissions[module] = {
+        create: false,
+        read: false,
+        update: false,
+        delete: false,
+      };
+    }
+    updatedPermissions[module][action.toLowerCase()] = checked;
+    setFormData((prev) => ({ ...prev, permissions: updatedPermissions }));
+  };
+
+  const handleSelectAllModule = (module, checked) => {
+    const updatedPermissions = { ...formData.permissions };
+    updatedPermissions[module] = {
+      create: checked,
+      read: checked,
+      update: checked,
+      delete: checked,
+    };
+    setFormData((prev) => ({ ...prev, permissions: updatedPermissions }));
+  };
+
+  const isModuleAllChecked = (module) => {
+    const p = formData.permissions?.[module];
+    return p && p.create && p.read && p.update && p.delete;
+  };
+
+  const CollapsibleSection = ({ id, title, icon: Icon, children }) => {
+    const isCollapsed = collapsedSections[id];
+    return (
+      <div className="border-2 border-gray-200 rounded-sm bg-white shadow-sm overflow-hidden mb-6">
+        <div
+          className="flex items-center justify-between p-6 cursor-pointer hover:bg-gray-50 transition-colors"
+          onClick={() => toggleSection(id)}
+        >
+          <div className="flex items-center gap-2">
+            <Icon size={20} className="text-[#FF7B1D]" />
+            <h3 className="text-lg font-bold text-gray-800">{title}</h3>
+          </div>
+          {isCollapsed ? (
+            <ChevronDown size={20} className="text-gray-500" />
+          ) : (
+            <ChevronUp size={20} className="text-gray-500" />
+          )}
+        </div>
+        {!isCollapsed && (
+          <div className="p-6 pt-0 border-t-2 border-gray-100 animate-fadeIn overflow-x-auto">
+            {children}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <>
-      {/* Personal Details */}
-      <div className="border-2 border-gray-200 rounded-sm p-6 bg-white shadow-sm">
-        <div className="flex items-center gap-2 mb-5 pb-3 border-b-2 border-gray-100">
-          <User size={20} className="text-[#FF7B1D]" />
-          <h3 className="text-lg font-bold text-gray-800">Personal Details</h3>
-        </div>
+      <CollapsibleSection id="personal" title="Personal Details" icon={User}>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           <div>
             <label className={labelStyles}>Employee ID</label>
@@ -78,7 +181,7 @@ const FormSection = ({ formData, handleChange, handleChanges }) => {
               <img
                 src={formData.profilePicPreview}
                 alt="Profile"
-                className="w-24 h-24 object-cover rounded-sm border"
+                className="w-24 h-24 object-cover rounded-sm border mt-2"
               />
             )}
           </div>
@@ -118,19 +221,7 @@ const FormSection = ({ formData, handleChange, handleChanges }) => {
                 <option>Other</option>
               </select>
               <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                <svg
-                  className="w-5 h-5 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
+                <ChevronDown size={18} className="text-gray-400" />
               </div>
             </div>
           </div>
@@ -170,31 +261,14 @@ const FormSection = ({ formData, handleChange, handleChanges }) => {
                 <option value="No">Unmarried</option>
               </select>
               <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                <svg
-                  className="w-5 h-5 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
+                <ChevronDown size={18} className="text-gray-400" />
               </div>
             </div>
           </div>
         </div>
-      </div>
+      </CollapsibleSection>
 
-      {/* Job Details */}
-      <div className="border-2 border-gray-200 rounded-lg p-6 bg-white shadow-sm">
-        <div className="flex items-center gap-2 mb-5 pb-3 border-b-2 border-gray-100">
-          <Briefcase size={20} className="text-[#FF7B1D]" />
-          <h3 className="text-lg font-bold text-gray-800">Job Details</h3>
-        </div>
+      <CollapsibleSection id="job" title="Job Details" icon={Briefcase}>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           <div>
             <label className={labelStyles}>Joining Date</label>
@@ -229,19 +303,7 @@ const FormSection = ({ formData, handleChange, handleChanges }) => {
                 )}
               </select>
               <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                <svg
-                  className="w-5 h-5 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
+                <ChevronDown size={18} className="text-gray-400" />
               </div>
             </div>
           </div>
@@ -268,19 +330,7 @@ const FormSection = ({ formData, handleChange, handleChanges }) => {
                 )}
               </select>
               <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                <svg
-                  className="w-5 h-5 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
+                <ChevronDown size={18} className="text-gray-400" />
               </div>
             </div>
           </div>
@@ -298,19 +348,7 @@ const FormSection = ({ formData, handleChange, handleChanges }) => {
                 <option>Intern</option>
               </select>
               <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                <svg
-                  className="w-5 h-5 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
+                <ChevronDown size={18} className="text-gray-400" />
               </div>
             </div>
           </div>
@@ -327,33 +365,14 @@ const FormSection = ({ formData, handleChange, handleChanges }) => {
                 <option>WFH</option>
               </select>
               <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                <svg
-                  className="w-5 h-5 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
+                <ChevronDown size={18} className="text-gray-400" />
               </div>
             </div>
           </div>
         </div>
-      </div>
+      </CollapsibleSection>
 
-      {/* Contact Info */}
-      <div className="border-2 border-gray-200 rounded-lg p-6 bg-white shadow-sm">
-        <div className="flex items-center gap-2 mb-5 pb-3 border-b-2 border-gray-100">
-          <Phone size={20} className="text-[#FF7B1D]" />
-          <h3 className="text-lg font-bold text-gray-800">
-            Contact Information
-          </h3>
-        </div>
+      <CollapsibleSection id="contact" title="Contact Information" icon={Phone}>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           <div>
             <label className={labelStyles}>
@@ -456,19 +475,7 @@ const FormSection = ({ formData, handleChange, handleChanges }) => {
                 <option>AB-</option>
               </select>
               <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                <svg
-                  className="w-5 h-5 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
+                <ChevronDown size={18} className="text-gray-400" />
               </div>
             </div>
           </div>
@@ -500,14 +507,9 @@ const FormSection = ({ formData, handleChange, handleChanges }) => {
             </div>
           </div>
         </div>
-      </div>
+      </CollapsibleSection>
 
-      {/* Document Details */}
-      <div className="border-2 border-gray-200 rounded-lg p-6 bg-white shadow-sm">
-        <div className="flex items-center gap-2 mb-5 pb-3 border-b-2 border-gray-100">
-          <FileText size={20} className="text-[#FF7B1D]" />
-          <h3 className="text-lg font-bold text-gray-800">Document Details</h3>
-        </div>
+      <CollapsibleSection id="documents" title="Document Details" icon={FileText}>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           <div>
             <label className={labelStyles}>Aadhar Number</label>
@@ -544,7 +546,7 @@ const FormSection = ({ formData, handleChange, handleChanges }) => {
               <img
                 src={formData.aadharFrontPreview}
                 alt="Profile"
-                className="w-24 h-24 object-cover rounded-sm border"
+                className="w-24 h-24 object-cover rounded-sm border mt-2"
               />
             )}
           </div>
@@ -561,7 +563,7 @@ const FormSection = ({ formData, handleChange, handleChanges }) => {
               <img
                 src={formData.aadharBackPreview}
                 alt="Profile"
-                className="w-24 h-24 object-cover rounded-sm border"
+                className="w-24 h-24 object-cover rounded-sm border mt-2"
               />
             )}
           </div>
@@ -578,21 +580,14 @@ const FormSection = ({ formData, handleChange, handleChanges }) => {
               <img
                 src={formData.panCardPreview}
                 alt="Profile"
-                className="w-24 h-24 object-cover rounded-sm border"
+                className="w-24 h-24 object-cover rounded-sm border mt-2"
               />
             )}
           </div>
         </div>
-      </div>
+      </CollapsibleSection>
 
-      {/* Account Details */}
-      <div className="border-2 border-gray-200 rounded-lg p-6 bg-white shadow-sm">
-        <div className="flex items-center gap-2 mb-5 pb-3 border-b-2 border-gray-100">
-          <CreditCard size={20} className="text-[#FF7B1D]" />
-          <h3 className="text-lg font-bold text-gray-800">
-            Bank Account Details
-          </h3>
-        </div>
+      <CollapsibleSection id="bank" title="Bank Account Details" icon={CreditCard}>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           <div>
             <label className={labelStyles}>IFSC Code</label>
@@ -651,19 +646,14 @@ const FormSection = ({ formData, handleChange, handleChanges }) => {
               <img
                 src={formData.cancelChequePreview}
                 alt="Profile"
-                className="w-24 h-24 object-cover rounded-sm border"
+                className="w-24 h-24 object-cover rounded-sm border mt-2"
               />
             )}
           </div>
         </div>
-      </div>
+      </CollapsibleSection>
 
-      {/* Login Credentials */}
-      <div className="border-2 border-gray-200 rounded-lg p-6 bg-white shadow-sm">
-        <div className="flex items-center gap-2 mb-5 pb-3 border-b-2 border-gray-100">
-          <Key size={20} className="text-[#FF7B1D]" />
-          <h3 className="text-lg font-bold text-gray-800">Login Credentials</h3>
-        </div>
+      <CollapsibleSection id="login" title="Login Credentials" icon={Key}>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           <div>
             <label className={labelStyles}>
@@ -703,7 +693,64 @@ const FormSection = ({ formData, handleChange, handleChanges }) => {
             />
           </div>
         </div>
-      </div>
+      </CollapsibleSection>
+
+      <CollapsibleSection id="permissions" title="Permissions Control" icon={ShieldCheck}>
+        <table className="w-full text-sm text-left">
+          <thead className="bg-gray-50 text-gray-700 uppercase font-bold text-xs">
+            <tr>
+              <th className="px-4 py-3 border-b">Module Name</th>
+              <th className="px-4 py-3 border-b text-center">Select All</th>
+              {actions.map((action) => (
+                <th key={action} className="px-4 py-3 border-b text-center">
+                  {action}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100">
+            {modules.map((module) => (
+              <tr
+                key={module}
+                className="hover:bg-gray-50 transition-colors group"
+              >
+                <td className="px-4 py-3 font-semibold text-gray-800 group-hover:text-[#FF7B1D]">
+                  {module}
+                </td>
+                <td className="px-4 py-3 text-center">
+                  <input
+                    type="checkbox"
+                    checked={isModuleAllChecked(module) || false}
+                    onChange={(e) =>
+                      handleSelectAllModule(module, e.target.checked)
+                    }
+                    className="h-4 w-4 text-[#FF7B1D] border-gray-300 rounded focus:ring-[#FF7B1D] cursor-pointer"
+                  />
+                </td>
+                {actions.map((action) => (
+                  <td key={action} className="px-4 py-3 text-center">
+                    <input
+                      type="checkbox"
+                      checked={
+                        formData.permissions?.[module]?.[action.toLowerCase()] ||
+                        false
+                      }
+                      onChange={(e) =>
+                        handlePermissionChange(
+                          module,
+                          action,
+                          e.target.checked
+                        )
+                      }
+                      className="h-4 w-4 text-[#FF7B1D] border-gray-300 rounded focus:ring-[#FF7B1D] cursor-pointer"
+                    />
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </CollapsibleSection>
     </>
   );
 };
