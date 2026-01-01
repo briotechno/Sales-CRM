@@ -56,6 +56,11 @@ export default function BusinessInfoPage() {
     account_number: "",
     ifsc_code: "",
     branch_name: "",
+    whatsapp_link: "",
+    facebook_link: "",
+    linkedin_link: "",
+    instagram_link: "",
+    youtube_link: "",
     logo: null,
   });
 
@@ -108,23 +113,25 @@ export default function BusinessInfoPage() {
   //   .replace(/\s+/g, "-")}`;
 
   const shareOnWhatsApp = () => {
-    window.open(`https://wa.me/${formData.whatsapp}`, "_blank");
+    if (formData.whatsapp_link) {
+      window.open(formData.whatsapp_link.startsWith('http') ? formData.whatsapp_link : `https://wa.me/${formData.whatsapp_link}`, "_blank");
+    }
   };
 
   const shareOnFacebook = () => {
-    window.open(formData.facebook, "_blank");
+    if (formData.facebook_link) window.open(formData.facebook_link, "_blank");
   };
 
   const shareOnInstagram = () => {
-    window.open(formData.instagram, "_blank");
+    if (formData.instagram_link) window.open(formData.instagram_link, "_blank");
   };
 
   const shareOnLinkedIn = () => {
-    window.open(formData.linkedin, "_blank");
+    if (formData.linkedin_link) window.open(formData.linkedin_link, "_blank");
   };
 
   const shareOnYouTube = () => {
-    window.open(formData.youtube, "_blank");
+    if (formData.youtube_link) window.open(formData.youtube_link, "_blank");
   };
 
   const stats = [
@@ -668,15 +675,16 @@ export default function BusinessInfoPage() {
                     {/* WhatsApp */}
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        WhatsApp Number
+                        WhatsApp (Number or Link)
                       </label>
                       <input
                         type="text"
                         className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-                        value={formData.whatsapp}
+                        value={formData.whatsapp_link}
                         onChange={(e) =>
-                          setFormData({ ...formData, whatsapp: e.target.value })
+                          setFormData({ ...formData, whatsapp_link: e.target.value })
                         }
+                        placeholder="e.g. 919876543210 or https://wa.me/..."
                       />
                     </div>
 
@@ -688,10 +696,11 @@ export default function BusinessInfoPage() {
                       <input
                         type="text"
                         className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-                        value={formData.facebook}
+                        value={formData.facebook_link}
                         onChange={(e) =>
-                          setFormData({ ...formData, facebook: e.target.value })
+                          setFormData({ ...formData, facebook_link: e.target.value })
                         }
+                        placeholder="https://facebook.com/..."
                       />
                     </div>
 
@@ -703,13 +712,14 @@ export default function BusinessInfoPage() {
                       <input
                         type="text"
                         className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-                        value={formData.instagram}
+                        value={formData.instagram_link}
                         onChange={(e) =>
                           setFormData({
                             ...formData,
-                            instagram: e.target.value,
+                            instagram_link: e.target.value,
                           })
                         }
+                        placeholder="https://instagram.com/..."
                       />
                     </div>
 
@@ -721,10 +731,11 @@ export default function BusinessInfoPage() {
                       <input
                         type="text"
                         className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-                        value={formData.linkedin}
+                        value={formData.linkedin_link}
                         onChange={(e) =>
-                          setFormData({ ...formData, linkedin: e.target.value })
+                          setFormData({ ...formData, linkedin_link: e.target.value })
                         }
+                        placeholder="https://linkedin.com/..."
                       />
                     </div>
 
@@ -736,10 +747,11 @@ export default function BusinessInfoPage() {
                       <input
                         type="text"
                         className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-                        value={formData.youtube}
+                        value={formData.youtube_link}
                         onChange={(e) =>
-                          setFormData({ ...formData, youtube: e.target.value })
+                          setFormData({ ...formData, youtube_link: e.target.value })
                         }
+                        placeholder="https://youtube.com/..."
                       />
                     </div>
                   </div>
@@ -970,6 +982,8 @@ export default function BusinessInfoPage() {
                   </div>
                 </div>
               </div>
+
+
 
               {/* Verification Status */}
               <div className="bg-white rounded-sm shadow-md p-6">

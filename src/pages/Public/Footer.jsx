@@ -102,20 +102,52 @@ const Footer = ({ business, logoUrl }) => {
                             &copy; {new Date().getFullYear()} {business.company_name}. All rights reserved.
                         </p>
                         <div className="flex items-center gap-4">
-                            {[
-                                { icon: Linkedin, href: '#' },
-                                { icon: Facebook, href: '#' },
-                                { icon: Twitter, href: '#' },
-                                { icon: Instagram, href: '#' },
-                            ].map((social, index) => (
+                            {business.linkedin_link && (
                                 <a
-                                    key={index}
-                                    href={social.href}
+                                    href={business.linkedin_link}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
                                     className="w-10 h-10 bg-orange-50 border border-orange-100 rounded-lg flex items-center justify-center text-[#FF7B1D] hover:bg-[#FF7B1D] hover:text-white transition-all hover:scale-110 shadow-sm"
+                                    title="LinkedIn"
                                 >
-                                    <social.icon size={18} />
+                                    <Linkedin size={18} />
                                 </a>
-                            ))}
+                            )}
+                            {business.facebook_link && (
+                                <a
+                                    href={business.facebook_link}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="w-10 h-10 bg-orange-50 border border-orange-100 rounded-lg flex items-center justify-center text-[#FF7B1D] hover:bg-[#FF7B1D] hover:text-white transition-all hover:scale-110 shadow-sm"
+                                    title="Facebook"
+                                >
+                                    <Facebook size={18} />
+                                </a>
+                            )}
+                            {business.instagram_link && (
+                                <a
+                                    href={business.instagram_link}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="w-10 h-10 bg-orange-50 border border-orange-100 rounded-lg flex items-center justify-center text-[#FF7B1D] hover:bg-[#FF7B1D] hover:text-white transition-all hover:scale-110 shadow-sm"
+                                    title="Instagram"
+                                >
+                                    <Instagram size={18} />
+                                </a>
+                            )}
+                            {business.youtube_link && (
+                                <a
+                                    href={business.youtube_link}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="w-10 h-10 bg-orange-50 border border-orange-100 rounded-lg flex items-center justify-center text-[#FF7B1D] hover:bg-[#FF7B1D] hover:text-white transition-all hover:scale-110 shadow-sm"
+                                    title="YouTube"
+                                >
+                                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+                                    </svg>
+                                </a>
+                            )}
                         </div>
                     </div>
                 </div>

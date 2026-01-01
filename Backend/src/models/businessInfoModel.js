@@ -7,7 +7,8 @@ const BusinessInfo = {
             company_description, founded_year, registration_number, gst_number,
             pan_number, bank_name, branch_name, account_number, ifsc_code,
             website, email, phone, street_address, city, state, pincode,
-            country, vision, mission
+            country, vision, mission, whatsapp_link, facebook_link,
+            linkedin_link, instagram_link, youtube_link
         } = data;
 
         // Check if info exists for this user
@@ -21,14 +22,16 @@ const BusinessInfo = {
                 company_description = ?, founded_year = ?, registration_number = ?, gst_number = ?,
                 pan_number = ?, bank_name = ?, branch_name = ?, account_number = ?, ifsc_code = ?,
                 website = ?, email = ?, phone = ?, street_address = ?, city = ?, state = ?, 
-                pincode = ?, country = ?, vision = ?, mission = ?
+                pincode = ?, country = ?, vision = ?, mission = ?,
+                whatsapp_link = ?, facebook_link = ?, linkedin_link = ?, instagram_link = ?, youtube_link = ?
                 WHERE user_id = ?`,
                 [
                     logo_url, company_name, legal_name, industry, business_type,
                     company_description, founded_year, registration_number, gst_number,
                     pan_number, bank_name, branch_name, account_number, ifsc_code,
                     website, email, phone, street_address, city, state, pincode,
-                    country, vision, mission, user_id
+                    country, vision, mission, whatsapp_link, facebook_link,
+                    linkedin_link, instagram_link, youtube_link, user_id
                 ]
             );
             return existing[0].id;
@@ -40,14 +43,16 @@ const BusinessInfo = {
                 company_description, founded_year, registration_number, gst_number,
                 pan_number, bank_name, branch_name, account_number, ifsc_code,
                 website, email, phone, street_address, city, state, pincode,
-                country, vision, mission
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                country, vision, mission, whatsapp_link, facebook_link, 
+                linkedin_link, instagram_link, youtube_link
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
                 [
                     user_id, logo_url, company_name, legal_name, industry, business_type,
                     company_description, founded_year, registration_number, gst_number,
                     pan_number, bank_name, branch_name, account_number, ifsc_code,
                     website, email, phone, street_address, city, state, pincode,
-                    country, vision, mission
+                    country, vision, mission, whatsapp_link, facebook_link,
+                    linkedin_link, instagram_link, youtube_link
                 ]
             );
             return result.insertId;
