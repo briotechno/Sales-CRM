@@ -10,6 +10,8 @@ import {
   Clock,
   Award,
   Home,
+  Loader2,
+  AlertCircle
 } from "lucide-react";
 import {
   BarChart,
@@ -24,8 +26,43 @@ import {
   Cell,
 } from "recharts";
 import NumberCard from "../../components/NumberCard";
+import { useGetHRMDashboardDataQuery } from "../../store/api/hrmDashboardApi";
 
 export default function HRMDashboard() {
+  const { data: dashboardResponse, isLoading, isError, error } = useGetHRMDashboardDataQuery();
+
+  // Handle loading state
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="flex flex-col items-center gap-4">
+            <Loader2 className="w-12 h-12 text-orange-500 animate-spin" />
+            <p className="text-gray-500 font-medium">Loading Dashboard Data...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Handle error state
+  if (isError) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="flex flex-col items-center gap-4 p-8 bg-red-50 rounded-lg border border-red-100 max-w-md text-center">
+            <AlertCircle className="w-12 h-12 text-red-500" />
+            <h2 className="text-xl font-bold text-gray-800">Oops! Something went wrong</h2>
+            <p className="text-red-600 font-medium">
+              {error?.data?.message || "Failed to fetch dashboard data. Please try again later."}
+            </p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  const dashboardData = dashboardResponse?.data || {};
 
   const attendanceData = [
     { day: "Mon", present: 1180, absent: 67 },
@@ -33,101 +70,6 @@ export default function HRMDashboard() {
     { day: "Wed", present: 1190, absent: 57 },
     { day: "Thu", present: 1156, absent: 91 },
     { day: "Fri", present: 1200, absent: 47 },
-  ];
-
-  const departmentData = [
-    { name: "Engineering", employees: 425, color: "#f97316" },
-    { name: "Sales", employees: 287, color: "#fb923c" },
-    { name: "Marketing", employees: 156, color: "#fdba74" },
-    { name: "HR", employees: 89, color: "#fed7aa" },
-    { name: "Finance", employees: 134, color: "#ffedd5" },
-    { name: "Operations", employees: 156, color: "#ea580c" },
-  ];
-
-  const leaveRequests = [
-    {
-      name: "Rajesh Kumar",
-      department: "Engineering",
-      type: "Casual Leave",
-      days: "3 days",
-      status: "Pending",
-      date: "Nov 25-27",
-    },
-    {
-      name: "Priya Sharma",
-      department: "Marketing",
-      type: "Sick Leave",
-      days: "2 days",
-      status: "Approved",
-      date: "Nov 24-25",
-    },
-    {
-      name: "Amit Patel",
-      department: "Sales",
-      type: "Annual Leave",
-      days: "5 days",
-      status: "Pending",
-      date: "Dec 1-5",
-    },
-    {
-      name: "Sneha Reddy",
-      department: "HR",
-      type: "Casual Leave",
-      days: "1 day",
-      status: "Rejected",
-      date: "Nov 26",
-    },
-  ];
-
-  const recentJoiners = [
-    {
-      name: "Vikram Singh",
-      designation: "Senior Developer",
-      department: "Engineering",
-      joinDate: "Nov 15, 2024",
-      salary: "₹8.5L",
-    },
-    {
-      name: "Anita Desai",
-      designation: "Marketing Manager",
-      department: "Marketing",
-      joinDate: "Nov 18, 2024",
-      salary: "₹12L",
-    },
-    {
-      name: "Karthik Iyer",
-      designation: "Sales Executive",
-      department: "Sales",
-      joinDate: "Nov 20, 2024",
-      salary: "₹6L",
-    },
-  ];
-
-  const upcomingTasks = [
-    {
-      task: "Performance Reviews - Q4",
-      priority: "High",
-      dueDate: "Nov 30, 2024",
-      assignedTo: "HR Team",
-    },
-    {
-      task: "Salary Processing - November",
-      priority: "High",
-      dueDate: "Nov 28, 2024",
-      assignedTo: "Finance",
-    },
-    {
-      task: "Policy Update Training",
-      priority: "Medium",
-      dueDate: "Dec 5, 2024",
-      assignedTo: "HR Team",
-    },
-    {
-      task: "Team Building Event",
-      priority: "Low",
-      dueDate: "Dec 10, 2024",
-      assignedTo: "Admin",
-    },
   ];
 
   const COLORS = [
@@ -168,32 +110,32 @@ export default function HRMDashboard() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <NumberCard
               title="Total Employees"
-              number={"1,247"}
-              up={"+8.2%"}
+              number={dashboardData.summary?.totalEmployees?.value || 0}
+              up={dashboardData.summary?.totalEmployees?.trend}
               icon={<Users className="text-blue-600" size={24} />}
               iconBgColor="bg-blue-100"
               lineBorderClass="border-blue-500"
             />
             <NumberCard
               title="Present Today"
-              number={"1,156"}
-              up={"+2.5%"}
+              number={dashboardData.summary?.presentToday?.value || 0}
+              up={dashboardData.summary?.presentToday?.trend}
               icon={<UserCheck className="text-green-600" size={24} />}
               iconBgColor="bg-green-100"
               lineBorderClass="border-green-500"
             />
             <NumberCard
               title="On Leave"
-              number={"91"}
-              down={"-5.3%"}
+              number={dashboardData.summary?.onLeave?.value || 0}
+              down={dashboardData.summary?.onLeave?.trend}
               icon={<Clock className="text-orange-600" size={24} />}
               iconBgColor="bg-orange-100"
               lineBorderClass="border-orange-500"
             />
             <NumberCard
               title="Unread Leads"
-              number={"89"}
-              up={"+12.8%"}
+              number={dashboardData.summary?.unreadLeads?.value || 0}
+              up={dashboardData.summary?.unreadLeads?.trend}
               icon={<Award className="text-purple-600" size={24} />}
               iconBgColor="bg-purple-100"
               lineBorderClass="border-purple-500"
@@ -256,7 +198,7 @@ export default function HRMDashboard() {
                 <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
                     <Pie
-                      data={departmentData}
+                      data={dashboardData.departmentDistribution || []}
                       cx="50%"
                       cy="50%"
                       labelLine={false}
@@ -267,10 +209,10 @@ export default function HRMDashboard() {
                       fill="#8884d8"
                       dataKey="employees"
                     >
-                      {departmentData.map((entry, index) => (
+                      {(dashboardData.departmentDistribution || []).map((entry, index) => (
                         <Cell
                           key={`cell-${index}`}
-                          fill={COLORS[index % COLORS.length]}
+                          fill={entry.color || COLORS[index % COLORS.length]}
                         />
                       ))}
                     </Pie>
@@ -305,14 +247,14 @@ export default function HRMDashboard() {
               </div>
               <div className="p-6">
                 <div className="space-y-4">
-                  {leaveRequests.map((request, index) => (
+                  {(dashboardData.leaveRequests || []).map((request, index) => (
                     <div key={index} className="group">
                       <div className="p-5 bg-gradient-to-r from-gray-50 to-white rounded-sm hover:shadow-lg transition-all border-2 border-gray-100 group-hover:border-orange-300">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-4">
                             <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-orange-600 rounded-sm flex items-center justify-center text-white font-bold text-sm shadow-lg">
                               {request.name
-                                .split(" ")
+                                ?.split(" ")
                                 .map((n) => n[0])
                                 .join("")}
                             </div>
@@ -327,23 +269,28 @@ export default function HRMDashboard() {
                           </div>
                           <div className="text-right">
                             <span
-                              className={`px-4 py-2 rounded-sm text-xs font-bold shadow-sm ${request.status === "Pending"
+                              className={`px-4 py-2 rounded-sm text-xs font-bold shadow-sm ${request.status === "Pending" || request.status === "pending"
                                 ? "bg-gradient-to-r from-yellow-500 to-yellow-600 text-white"
-                                : request.status === "Approved"
+                                : request.status === "Approved" || request.status === "approved"
                                   ? "bg-gradient-to-r from-green-500 to-green-600 text-white"
                                   : "bg-gradient-to-r from-red-500 to-red-600 text-white"
                                 }`}
                             >
-                              {request.status}
+                              {request.status?.charAt(0).toUpperCase() + request.status?.slice(1)}
                             </span>
                             <p className="text-xs text-gray-500 mt-2 font-medium">
-                              {request.date} • {request.days}
+                              {request.date} • {request.days} {request.days === 1 ? 'day' : 'days'}
                             </p>
                           </div>
                         </div>
                       </div>
                     </div>
                   ))}
+                  {(!dashboardData.leaveRequests || dashboardData.leaveRequests.length === 0) && (
+                    <div className="text-center py-8 text-gray-500 font-medium bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
+                      No recent leave requests found.
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -357,7 +304,7 @@ export default function HRMDashboard() {
               </div>
               <div className="p-6">
                 <div className="space-y-4">
-                  {upcomingTasks.map((task, index) => (
+                  {(dashboardData.upcomingTasks || []).map((task, index) => (
                     <div key={index} className="group">
                       <div className="p-4 bg-gradient-to-r from-gray-50 to-white rounded-sm hover:shadow-md transition-all border-2 border-gray-100 group-hover:border-green-300">
                         <div className="flex items-start space-x-3">
@@ -400,14 +347,14 @@ export default function HRMDashboard() {
             </div>
             <div className="p-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {recentJoiners.map((employee, index) => (
+                {(dashboardData.recentJoiners || []).map((employee, index) => (
                   <div key={index} className="relative group">
                     <div className="absolute inset-0 bg-gradient-to-br from-orange-200 to-yellow-200 rounded-sm blur-xl opacity-30 group-hover:opacity-50 transition-opacity"></div>
                     <div className="relative p-6 bg-gradient-to-br from-orange-50 via-yellow-50 to-orange-50 rounded-sm border-2 border-orange-200 hover:shadow-1xl transition-all transform ">
                       <div className="flex items-center justify-center mb-4">
                         <div className="w-20 h-20 bg-gradient-to-br from-orange-500 to-orange-600 rounded-sm flex items-center justify-center text-white font-bold text-2xl shadow-xl">
                           {employee.name
-                            .split(" ")
+                            ?.split(" ")
                             .map((n) => n[0])
                             .join("")}
                         </div>
@@ -442,6 +389,11 @@ export default function HRMDashboard() {
                     </div>
                   </div>
                 ))}
+                {(!dashboardData.recentJoiners || dashboardData.recentJoiners.length === 0) && (
+                  <div className="md:col-span-3 text-center py-12 text-gray-500 font-medium bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
+                    No recent joiners found.
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -454,63 +406,69 @@ export default function HRMDashboard() {
               </h3>
             </div>
             <div className="p-6 overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="bg-gradient-to-r from-gray-100 to-gray-50">
-                    <th className="text-left py-4 px-6 text-sm font-bold text-gray-700 rounded-l-sm">
-                      Department
-                    </th>
-                    <th className="text-center py-4 px-6 text-sm font-bold text-gray-700">
-                      Total Employees
-                    </th>
-                    <th className="text-center py-4 px-6 text-sm font-bold text-gray-700">
-                      Present Today
-                    </th>
-                    <th className="text-center py-4 px-6 text-sm font-bold text-gray-700">
-                      On Leave
-                    </th>
-                    <th className="text-center py-4 px-6 text-sm font-bold text-gray-700 rounded-r-sm">
-                      Avg Attendance
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {departmentData.map((dept, index) => (
-                    <tr
-                      key={index}
-                      className="border-b border-gray-100 hover:bg-gradient-to-r hover:from-orange-50 hover:to-purple-50 transition-all"
-                    >
-                      <td className="py-5 px-6">
-                        <div className="flex items-center space-x-3">
-                          <div
-                            className="w-4 h-4 rounded-sm shadow-lg"
-                            style={{ backgroundColor: dept.color }}
-                          ></div>
-                          <span className="font-bold text-gray-800 text-base">
-                            {dept.name}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="text-center py-5 px-6 font-bold text-gray-800 text-base">
-                        {dept.employees}
-                      </td>
-                      <td className="text-center py-5 px-6">
-                        <span className="bg-green-100 text-green-700 px-3 py-1 rounded-sm text-sm font-bold">
-                          {Math.floor(dept.employees * 0.93)}
-                        </span>
-                      </td>
-                      <td className="text-center py-5 px-6">
-                        <span className="bg-red-100 text-red-700 px-3 py-1 rounded-sm text-sm font-bold">
-                          {Math.floor(dept.employees * 0.07)}
-                        </span>
-                      </td>
-                      <td className="text-center py-5 px-6 font-bold text-orange-600 text-base">
-                        93%
-                      </td>
+              {dashboardData.departmentOverview && dashboardData.departmentOverview.length > 0 ? (
+                <table className="w-full">
+                  <thead>
+                    <tr className="bg-gradient-to-r from-gray-100 to-gray-50">
+                      <th className="text-left py-4 px-6 text-sm font-bold text-gray-700 rounded-l-sm">
+                        Department
+                      </th>
+                      <th className="text-center py-4 px-6 text-sm font-bold text-gray-700">
+                        Total Employees
+                      </th>
+                      <th className="text-center py-4 px-6 text-sm font-bold text-gray-700">
+                        Present Today
+                      </th>
+                      <th className="text-center py-4 px-6 text-sm font-bold text-gray-700">
+                        On Leave
+                      </th>
+                      <th className="text-center py-4 px-6 text-sm font-bold text-gray-700 rounded-r-sm">
+                        Avg Attendance
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {dashboardData.departmentOverview.map((dept, index) => (
+                      <tr
+                        key={index}
+                        className="border-b border-gray-100 hover:bg-gradient-to-r hover:from-orange-50 hover:to-purple-50 transition-all"
+                      >
+                        <td className="py-5 px-6">
+                          <div className="flex items-center space-x-3">
+                            <div
+                              className="w-4 h-4 rounded-sm shadow-lg"
+                              style={{ backgroundColor: dept.color }}
+                            ></div>
+                            <span className="font-bold text-gray-800 text-base">
+                              {dept.name}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="text-center py-5 px-6 font-bold text-gray-800 text-base">
+                          {dept.totalEmployees}
+                        </td>
+                        <td className="text-center py-5 px-6">
+                          <span className="bg-green-100 text-green-700 px-3 py-1 rounded-sm text-sm font-bold">
+                            {dept.presentToday}
+                          </span>
+                        </td>
+                        <td className="text-center py-5 px-6">
+                          <span className="bg-red-100 text-red-700 px-3 py-1 rounded-sm text-sm font-bold">
+                            {dept.onLeave}
+                          </span>
+                        </td>
+                        <td className="text-center py-5 px-6 font-bold text-orange-600 text-base">
+                          {dept.avgAttendance}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <div className="text-center py-12 text-gray-500 font-medium bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
+                  No department data available.
+                </div>
+              )}
             </div>
           </div>
 
