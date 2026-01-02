@@ -215,7 +215,16 @@ const EditEmployeeModal = ({ isOpen, onClose, employee }) => {
             status: 'status'
         };
 
+        const excludedFields = [
+            "profilePicPreview",
+            "aadharFrontPreview",
+            "aadharBackPreview",
+            "panCardPreview",
+            "cancelChequePreview"
+        ];
+
         Object.keys(formData).forEach(key => {
+            if (excludedFields.includes(key)) return;
             const backendKey = mapping[key] || key;
             if (formData[key] instanceof File) {
                 data.append(backendKey, formData[key]);
