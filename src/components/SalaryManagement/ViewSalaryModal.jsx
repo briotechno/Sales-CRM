@@ -7,6 +7,11 @@ import {
 } from "lucide-react";
 import Modal from "../common/Modal";
 
+const formatDate = (date) => {
+    if (!date) return "N/A";
+    return new Date(date).toISOString().split("T")[0];
+};
+
 const ViewSalaryModal = ({ isOpen, onClose, salary }) => {
     if (!salary) return null;
 
@@ -66,7 +71,7 @@ const ViewSalaryModal = ({ isOpen, onClose, salary }) => {
                             <Calendar size={20} />
                         </div>
                         <span className="text-sm font-bold text-orange-900">
-                            {salary.pay_date || "-"}
+                            {formatDate(salary.pay_date)}
                         </span>
                         <span className="text-xs font-semibold text-orange-600 uppercase tracking-widest mt-1">
                             Payment Date
