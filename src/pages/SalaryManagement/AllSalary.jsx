@@ -15,6 +15,7 @@ import {
   X,
   Pencil,
 } from "lucide-react";
+import toast from 'react-hot-toast';
 
 import {
   useGetAllSalariesQuery,

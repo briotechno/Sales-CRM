@@ -36,7 +36,7 @@ class Salary {
         let query = `
       SELECT s.*, e.employee_name, e.profile_picture 
       FROM salaries s
-      LEFT JOIN employees e ON s.employee_id = e.employee_id
+      LEFT JOIN employees e ON s.employee_id = e.id
       WHERE s.user_id = ?
     `;
         const params = [userId];
@@ -78,7 +78,7 @@ class Salary {
         const query = `
       SELECT s.*, e.employee_name 
       FROM salaries s
-      LEFT JOIN employees e ON s.employee_id = e.employee_id
+      LEFT JOIN employees e ON s.employee_id = e.id
       WHERE s.id = ? AND s.user_id = ?
     `;
         const [rows] = await pool.execute(query, [id, userId]);

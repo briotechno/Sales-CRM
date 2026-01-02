@@ -41,13 +41,24 @@ const AddSalaryModal = ({ isOpen, onClose, onSubmit, loading }) => {
         return;
       }
 
+      const basic = Number(formData.basic_salary);
+      const allow = Number(formData.allowances || 0);
+      const deduct = Number(formData.deductions || 0);
+      const net = basic + allow - deduct;
+
+      // Find employee name
+      const selectedEmployee = employeeData?.employees?.find(emp => emp.id == formData.Employee);
+      const employeeName = selectedEmployee ? selectedEmployee.employee_name : "";
+
       const payload = {
-        employee: formData.Employee,
+        employee_id: parseInt(formData.Employee),
+        employee_name: employeeName,
         designation: formData.designation,
         department: formData.department,
-        basic_salary: Number(formData.basic_salary),
-        allowances: Number(formData.allowances || 0),
-        deductions: Number(formData.deductions || 0),
+        basic_salary: basic,
+        allowances: allow,
+        deductions: deduct,
+        net_salary: net,
         pay_date: formData.pay_date,
       };
 
@@ -116,7 +127,7 @@ const AddSalaryModal = ({ isOpen, onClose, onSubmit, loading }) => {
           >
             <option value="">Select Department</option>
             {departmentData?.departments?.map((dept) => (
-              <option key={dept.id} value={dept.id}>
+              <option key={dept.id} value={dept.department_name}>
                 {dept.department_name}
               </option>
             ))}

@@ -4,6 +4,7 @@ const createSalary = async (req, res) => {
     try {
         const {
             employee_id,
+            employee_name,
             designation,
             department,
             basic_salary,
@@ -14,15 +15,19 @@ const createSalary = async (req, res) => {
             pay_date
         } = req.body;
 
+        // Calculate net salary
+        const calculatedNetSalary = (parseFloat(basic_salary) || 0) + (parseFloat(allowances) || 0) - (parseFloat(deductions) || 0);
+
         const salaryId = await Salary.create({
             user_id: req.user.id,
             employee_id,
+            employee_name,
             designation,
             department,
             basic_salary,
             allowances,
             deductions,
-            net_salary,
+            net_salary: calculatedNetSalary,
             status: status || 'pending',
             pay_date
         });

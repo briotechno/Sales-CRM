@@ -38,6 +38,7 @@ const EditSalaryModal = ({ isOpen, onClose, salary, onSubmit, loading }: any) =>
   const handleSave = async () => {
     try {
       const payload = {
+        employee_name: formData.employee,
         designation: formData.designation,
         department: formData.department,
         basic_salary: Number(formData.basic_salary),
@@ -80,6 +81,7 @@ const EditSalaryModal = ({ isOpen, onClose, salary, onSubmit, loading }: any) =>
           </button>
         </div>
       }
+
     >
       <div className="grid grid-cols-2 gap-4">
         <div className="flex flex-col gap-1">
