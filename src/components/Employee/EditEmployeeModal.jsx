@@ -216,6 +216,8 @@ const EditEmployeeModal = ({ isOpen, onClose, employee }) => {
         };
 
         const excludedFields = [
+            "firstName",
+            "lastName",
             "profilePicPreview",
             "aadharFrontPreview",
             "aadharBackPreview",

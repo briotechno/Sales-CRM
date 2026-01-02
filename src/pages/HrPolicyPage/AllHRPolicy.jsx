@@ -23,6 +23,7 @@ import {
   useDeleteHRPolicyMutation,
 } from "../../store/api/hrPolicyApi";
 import toast from "react-hot-toast";
+import usePermission from "../../hooks/usePermission";
 
 export default function HRPolicy() {
   const [activeTab, setActiveTab] = useState("All");
@@ -37,6 +38,7 @@ export default function HRPolicy() {
   const [filterStatus, setFilterStatus] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
+  const { create, read, update, delete: remove } = usePermission("HR Policy");
 
   const [formData, setFormData] = useState({
     title: "",
@@ -296,7 +298,11 @@ export default function HRPolicy() {
                   resetForm();
                   setShowAddModal(true);
                 }}
-                className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white px-4 py-2 rounded-sm font-semibold hover:from-orange-600 hover:to-orange-700 hover:opacity-90 transition ml-2"
+                disabled={!create}
+                className={`flex items-center gap-2 px-4 py-2 rounded-sm font-semibold transition ml-2 ${create
+                    ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 hover:opacity-90"
+                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  }`}
               >
                 <Plus size={18} />
                 Add Policy
@@ -347,8 +353,8 @@ export default function HRPolicy() {
                 setCurrentPage(1);
               }}
               className={`pb-3 font-medium transition-colors ${activeTab === tab
-                  ? "text-orange-500 border-b-2 border-orange-500"
-                  : "text-gray-600 hover:text-gray-900"
+                ? "text-orange-500 border-b-2 border-orange-500"
+                : "text-gray-600 hover:text-gray-900"
                 }`}
             >
               {tab}
@@ -444,10 +450,10 @@ export default function HRPolicy() {
                     <td className="px-6 py-4">
                       <span
                         className={`inline-block px-4 py-1 rounded-full text-sm font-medium ${policy.status === "Active"
-                            ? "bg-green-100 text-green-700"
-                            : policy.status === "Under Review"
-                              ? "bg-yellow-100 text-yellow-700"
-                              : "bg-gray-100 text-gray-700"
+                          ? "bg-green-100 text-green-700"
+                          : policy.status === "Under Review"
+                            ? "bg-yellow-100 text-yellow-700"
+                            : "bg-gray-100 text-gray-700"
                           }`}
                       >
                         {policy.status}
@@ -455,27 +461,33 @@ export default function HRPolicy() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => handleView(policy)}
-                          className="p-2 hover:bg-blue-100 rounded-sm transition-all"
-                          title="View"
-                        >
-                          <Eye size={18} className="text-blue-600" />
-                        </button>
-                        <button
-                          onClick={() => handleEditClick(policy)}
-                          className="p-2 hover:bg-orange-100 rounded-sm transition-all"
-                          title="Edit"
-                        >
-                          <Edit size={18} className="text-orange-600" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteClick(policy)}
-                          className="p-2 hover:bg-red-100 rounded-sm transition-all"
-                          title="Delete"
-                        >
-                          <Trash2 size={18} className="text-red-600" />
-                        </button>
+                        {read && (
+                          <button
+                            onClick={() => handleView(policy)}
+                            className="p-2 hover:bg-blue-100 rounded-sm transition-all"
+                            title="View"
+                          >
+                            <Eye size={18} className="text-blue-600" />
+                          </button>
+                        )}
+                        {update && (
+                          <button
+                            onClick={() => handleEditClick(policy)}
+                            className="p-2 hover:bg-orange-100 rounded-sm transition-all"
+                            title="Edit"
+                          >
+                            <Edit size={18} className="text-orange-600" />
+                          </button>
+                        )}
+                        {remove && (
+                          <button
+                            onClick={() => handleDeleteClick(policy)}
+                            className="p-2 hover:bg-red-100 rounded-sm transition-all"
+                            title="Delete"
+                          >
+                            <Trash2 size={18} className="text-red-600" />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -516,8 +528,8 @@ export default function HRPolicy() {
                   key={p}
                   onClick={() => handlePageChange(p)}
                   className={`w-9 h-9 border rounded-sm text-sm font-bold flex items-center justify-center transition-colors ${currentPage === p
-                      ? "bg-orange-500 text-white border-orange-500"
-                      : "bg-white text-gray-700 hover:bg-gray-50"
+                    ? "bg-orange-500 text-white border-orange-500"
+                    : "bg-white text-gray-700 hover:bg-gray-50"
                     }`}
                 >
                   {p}
@@ -916,10 +928,10 @@ export default function HRPolicy() {
                     <div className="mt-1">
                       <span
                         className={`px-3 py-1 rounded-md text-sm font-semibold ${selectedPolicy.status === "Active"
-                            ? "bg-green-100 text-green-700"
-                            : selectedPolicy.status === "Under Review"
-                              ? "bg-yellow-100 text-yellow-700"
-                              : "bg-gray-100 text-gray-700"
+                          ? "bg-green-100 text-green-700"
+                          : selectedPolicy.status === "Under Review"
+                            ? "bg-yellow-100 text-yellow-700"
+                            : "bg-gray-100 text-gray-700"
                           }`}
                       >
                         {selectedPolicy.status}

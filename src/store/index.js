@@ -13,6 +13,7 @@ import { hrPolicyApi } from './api/hrPolicyApi';
 import { termApi } from './api/termApi';
 import { hrmDashboardApi } from './api/hrmDashboardApi';
 import { salaryApi } from './api/salaryApi';
+import { userApi } from './api/userApi';
 
 export const store = configureStore({
     reducer: {
@@ -30,6 +31,7 @@ export const store = configureStore({
         [termApi.reducerPath]: termApi.reducer,
         [hrmDashboardApi.reducerPath]: hrmDashboardApi.reducer,
         [salaryApi.reducerPath]: salaryApi.reducer,
+        [userApi.reducerPath]: userApi.reducer,
 
     },
     middleware: (getDefaultMiddleware) =>
@@ -46,6 +48,7 @@ export const store = configureStore({
             hrPolicyApi.middleware,
             termApi.middleware,
             hrmDashboardApi.middleware,
-            salaryApi.middleware
+            salaryApi.middleware,
+            userApi.middleware
         ),
 });
