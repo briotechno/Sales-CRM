@@ -27,6 +27,7 @@ import AddSalaryModal from "../../components/SalaryManagement/AddSalaryModal";
 import DeleteSalaryModal from "../../components/SalaryManagement/DeleteSalaryModal";
 import ViewSalaryModal from "../../components/SalaryManagement/ViewSalaryModal";
 import EditSalaryModal from "../../components/SalaryManagement/EditSalaryModal";
+import usePermission from "../../hooks/usePermission";
 
 export default function SalaryManagement() {
   /* ================= STATES ================= */
@@ -37,6 +38,8 @@ export default function SalaryManagement() {
   const [selectedSalary, setSelectedSalary] = useState(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedSalaryId, setSelectedSalaryId] = useState(null);
+
+  const { create, read, update, delete: remove } = usePermission("Payroll");
 
   const [formData, setFormData] = useState({
     employee: "",
@@ -246,7 +249,11 @@ export default function SalaryManagement() {
               {/* Add Salary Button */}
               <button
                 onClick={() => setShowAddModal(true)}
-                className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white px-4 py-2 rounded-sm font-semibold hover:from-orange-600 hover:to-orange-700 hover:opacity-90 transition ml-2"
+                disabled={!create}
+                className={`flex items-center gap-2 px-4 py-2 rounded-sm font-semibold transition ml-2 ${create
+                  ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 hover:opacity-90"
+                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  }`}
               >
                 <Plus size={18} />
                 Add Salary
@@ -355,7 +362,7 @@ export default function SalaryManagement() {
 
                   {/* Action Buttons */}
                   <div className="flex gap-2">
-                    {salary.status === "pending" && (
+                    {salary.status === "pending" && update && (
                       <button
                         onClick={() => handleMarkAsPaid(salary.id)}
                         className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-green-50 text-green-600 hover:bg-green-100 rounded-sm transition font-medium"
@@ -364,31 +371,37 @@ export default function SalaryManagement() {
                         Mark as Paid
                       </button>
                     )}
-                    <button
-                      onClick={() => {
-                        setSelectedSalary(salary);
-                        setViewModalOpen(true);
-                      }}
-                      className="flex items-center justify-center gap-2 px-4 py-2 bg-orange-50 text-orange-600 hover:bg-orange-100 rounded-sm transition">
-                      <Eye className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => {
-                        setSelectedSalary(salary); // full salary object
-                        setEditModalOpen(true);
-                      }}
-                      className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-sm transition">
-                      <Edit className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => {
-                        setSelectedSalaryId(salary.id);
-                        setOpenDelete(true);
-                      }}
-                      className="flex items-center justify-center gap-2 px-4 py-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-sm transition"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    {read && (
+                      <button
+                        onClick={() => {
+                          setSelectedSalary(salary);
+                          setViewModalOpen(true);
+                        }}
+                        className="flex items-center justify-center gap-2 px-4 py-2 bg-orange-50 text-orange-600 hover:bg-orange-100 rounded-sm transition">
+                        <Eye className="w-4 h-4" />
+                      </button>
+                    )}
+                    {update && (
+                      <button
+                        onClick={() => {
+                          setSelectedSalary(salary); // full salary object
+                          setEditModalOpen(true);
+                        }}
+                        className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-sm transition">
+                        <Edit className="w-4 h-4" />
+                      </button>
+                    )}
+                    {remove && (
+                      <button
+                        onClick={() => {
+                          setSelectedSalaryId(salary.id);
+                          setOpenDelete(true);
+                        }}
+                        className="flex items-center justify-center gap-2 px-4 py-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-sm transition"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

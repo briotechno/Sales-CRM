@@ -33,6 +33,10 @@ import AllTermCondition from "./pages/Term & Condition/AllTerm";
 import AllEmployee from "./pages/EmployeePart/AllEmployee";
 import EmployeeProfile from "./pages/EmployeePart/AllEmployee/Profile.jsx";
 
+// unused generally
+// My Profile
+import MyProfile from "./pages/Profile/MyProfile";
+
 // Attendance Part
 import AllAttendance from "./pages/AttendancePart/AllAttendance";
 
@@ -140,6 +144,7 @@ function App() {
           <Route path="/hrm/designation" element={<AllDesignation />} />
           <Route path="/hrm/terms" element={<AllTermCondition />} />
           <Route path="/hrm/employee/all" element={<AllEmployee />} />
+          <Route path="/profile" element={<MyProfile />} />
           <Route path="/employee-profile/:id" element={<EmployeeProfile />} />
           <Route path="/hrm/attendance" element={<AllAttendance />} />
           <Route path="/hrm/attendance/manage" element={<ManageAttendance />} />

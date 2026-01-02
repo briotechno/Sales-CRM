@@ -55,6 +55,22 @@ const User = {
             [id]
         );
         return rows[0];
+    },
+
+    update: async (id, data) => {
+        const allowedFields = ['firstName', 'lastName', 'mobileNumber', 'businessName', 'businessType', 'gst', 'address'];
+        const fields = Object.keys(data).filter(key => allowedFields.includes(key));
+
+        if (fields.length === 0) return false;
+
+        const setClause = fields.map(field => `${field} = ?`).join(', ');
+        const values = fields.map(field => data[field]);
+
+        const [result] = await pool.query(
+            `UPDATE users SET ${setClause} WHERE id = ?`,
+            [...values, id]
+        );
+        return result.affectedRows > 0;
     }
 };
 
