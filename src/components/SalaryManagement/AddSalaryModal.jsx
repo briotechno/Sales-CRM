@@ -1,157 +1,173 @@
 import React, { useState } from "react";
-import { X } from "lucide-react";
+import { DollarSign, Save } from "lucide-react";
+import Modal from "../common/Modal";
 import { toast } from "react-hot-toast";
-import { useCreateSalaryMutation } from "../../store/api/salaryApi";
+import { useGetEmployeesQuery } from "../../store/api/employeeApi";
+import { useGetDepartmentsQuery } from "../../store/api/departmentApi";
+import { useGetDesignationsQuery } from "../../store/api/designationApi";
 
-const AddSalaryModal = ({ isOpen, onClose }) => {
+const AddSalaryModal = ({ isOpen, onClose, onSubmit, loading }) => {
   const [formData, setFormData] = useState({
-    employee: "",
+    Employee: "",
     designation: "",
     department: "",
-    date: "",
-    basicSalary: "",
+    basic_salary: "",
     allowances: "",
     deductions: "",
+    pay_date: "",
   });
 
-  const [createSalary, { isLoading }] = useCreateSalaryMutation();
+  const { data: employeeData, isLoading: loadingEmployees } = useGetEmployeesQuery({
+    limit: 100,
+  });
 
-  if (!isOpen) return null;
+  const { data: departmentData, isLoading: loadingDepartments } = useGetDepartmentsQuery({
+    limit: 100,
+  });
 
-  const calculateNetSalary = () => {
-    const basic = Number(formData.basicSalary) || 0;
-    const allowances = Number(formData.allowances) || 0;
-    const deductions = Number(formData.deductions) || 0;
-    return basic + allowances - deductions;
-  };
+  const { data: designationData, isLoading: loadingDesignations } = useGetDesignationsQuery({
+    limit: 100,
+  });
 
   const handleAdd = async () => {
-    const { employee, designation, department, date, basicSalary, allowances, deductions } = formData;
-
-    // Basic validation
-    if (!employee || !designation || !department || !date || !basicSalary) {
-      toast.error("Please fill all required fields");
-      return;
-    }
-
     try {
+      if (!formData.Employee) {
+        toast.error("Employee is required");
+        return;
+      }
+
+      if (!formData.basic_salary || !formData.pay_date) {
+        toast.error("Basic salary and Pay date are required");
+        return;
+      }
+
       const payload = {
-        ...formData,
-        basicSalary: Number(basicSalary),
-        allowances: Number(allowances) || 0,
-        deductions: Number(deductions) || 0,
+        employee: formData.Employee,
+        designation: formData.designation,
+        department: formData.department,
+        basic_salary: Number(formData.basic_salary),
+        allowances: Number(formData.allowances || 0),
+        deductions: Number(formData.deductions || 0),
+        pay_date: formData.pay_date,
       };
-      const result = await createSalary(payload).unwrap();
-      console.log("Salary created:", result);
+
+      await onSubmit(payload);
       toast.success("Salary added successfully");
-      // Reset form after success
-      setFormData({
-        employee: "",
-        designation: "",
-        department: "",
-        date: "",
-        basicSalary: "",
-        allowances: "",
-        deductions: "",
-      });
       onClose();
     } catch (err) {
       console.error("API Error:", err);
-      toast.error("err?.data?.message" || "Error creating salary record");
+      toast.error("Failed to add salary");
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-sm shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="sticky top-0 bg-gradient-to-r from-orange-500 to-orange-600 p-6 rounded-t-lg flex justify-between items-center">
-          <h2 className="text-2xl font-bold text-white">Add Salary Record</h2>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Add Salary"
+      icon={
+        <div className="bg-orange-500 p-2 rounded-xl text-white">
+          <DollarSign size={22} />
+        </div>
+      }
+      footer={
+        <div className="flex justify-end gap-3">
+          <button onClick={onClose} className="px-5 py-2 border rounded-lg">
+            Cancel
+          </button>
           <button
-            onClick={onClose}
-            className="text-white hover:bg-white hover:bg-opacity-20 p-2 rounded-sm transition"
+            onClick={handleAdd}
+            disabled={loading}
+            className="px-5 py-2 bg-orange-500 text-white rounded-lg flex items-center gap-2"
           >
-            <X className="w-6 h-6" />
+            <Save size={18} />
+            {loading ? "Saving..." : "Add Salary"}
           </button>
         </div>
-
-        {/* Form */}
-        <div className="p-6 grid grid-cols-2 gap-4">
-          <input
-            type="text"
-            placeholder="Employee Name"
-            value={formData.employee}
-            onChange={(e) =>
-              setFormData({ ...formData, employee: e.target.value })
-            }
+      }
+    >
+      <div className="grid grid-cols-2 gap-4">
+        {/* Employee Select */}
+        <div className="flex flex-col gap-1 col-span-2">
+          <label className="text-sm font-medium text-gray-600">Employee</label>
+          <select
+            value={formData.Employee}
+            onChange={(e) => setFormData({ ...formData, Employee: e.target.value })}
             className="border p-2"
-          />
-          <input
-            type="text"
-            placeholder="Designation"
-            value={formData.designation}
-            onChange={(e) =>
-              setFormData({ ...formData, designation: e.target.value })
-            }
-            className="border p-2"
-          />
-          <input
-            type="text"
-            placeholder="Department"
-            value={formData.department}
-            onChange={(e) =>
-              setFormData({ ...formData, department: e.target.value })
-            }
-            className="border p-2"
-          />
-          <input
-            type="date"
-            value={formData.date}
-            onChange={(e) =>
-              setFormData({ ...formData, date: e.target.value })
-            }
-            className="border p-2"
-          />
-          <input
-            type="number"
-            placeholder="Basic Salary"
-            value={formData.basicSalary}
-            onChange={(e) =>
-              setFormData({ ...formData, basicSalary: e.target.value })
-            }
-            className="border p-2"
-          />
-          <input
-            type="number"
-            placeholder="Allowances"
-            value={formData.allowances}
-            onChange={(e) =>
-              setFormData({ ...formData, allowances: e.target.value })
-            }
-            className="border p-2"
-          />
-          <input
-            type="number"
-            placeholder="Deductions"
-            value={formData.deductions}
-            onChange={(e) =>
-              setFormData({ ...formData, deductions: e.target.value })
-            }
-            className="border p-2"
-          />
+            disabled={loadingEmployees}
+          >
+            <option value="">Select Employee</option>
+            {employeeData?.employees?.map((emp) => (
+              <option key={emp.id} value={emp.id}>
+                {emp.employee_name}
+              </option>
+            ))}
+          </select>
         </div>
 
-        <p className="mt-4 font-bold">Net Salary: ₹{calculateNetSalary()}</p>
+        {/* Department Select */}
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-medium text-gray-600">Department</label>
+          <select
+            value={formData.department}
+            onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+            className="border p-2"
+            disabled={loadingDepartments}
+          >
+            <option value="">Select Department</option>
+            {departmentData?.departments?.map((dept) => (
+              <option key={dept.id} value={dept.id}>
+                {dept.department_name}
+              </option>
+            ))}
+          </select>
+        </div>
 
-        <button
-          onClick={handleAdd}
-          disabled={isLoading}
-          className="mt-4 bg-orange-500 text-white px-4 py-2 w-full rounded-sm hover:shadow-lg transition disabled:opacity-50"
-        >
-          {isLoading ? "Saving..." : "Add Salary"}
-        </button>
+        {/* Designation Select */}
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-medium text-gray-600">Designation</label>
+          <select
+            value={formData.designation}
+            onChange={(e) => setFormData({ ...formData, designation: e.target.value })}
+            className="border p-2"
+            disabled={loadingDesignations}
+          >
+            <option value="">Select Designation</option>
+            {designationData?.designations?.map((des) => (
+              <option key={des.designation_name} value={des.designation_name}>
+                {des.designation_name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Pay Date */}
+        <input
+          type="date"
+          className="border p-2"
+          onChange={(e) => setFormData({ ...formData, pay_date: e.target.value })}
+        />
+
+        <input
+          type="number"
+          placeholder="Basic Salary"
+          className="border p-2"
+          onChange={(e) => setFormData({ ...formData, basic_salary: e.target.value })}
+        />
+        <input
+          type="number"
+          placeholder="Allowances"
+          className="border p-2"
+          onChange={(e) => setFormData({ ...formData, allowances: e.target.value })}
+        />
+        <input
+          type="number"
+          placeholder="Deductions"
+          className="border p-2"
+          onChange={(e) => setFormData({ ...formData, deductions: e.target.value })}
+        />
       </div>
-    </div>
+    </Modal>
   );
 };
 

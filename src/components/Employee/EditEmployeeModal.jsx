@@ -159,7 +159,7 @@ const EditEmployeeModal = ({ isOpen, onClose, employee }) => {
 
         const data = new FormData();
         const mapping = {
-            employeeId:'employee_id',
+            employeeId: 'employee_id',
             employeeName: 'employee_name',
             profilePic: 'profile_picture',
             dob: 'date_of_birth',
@@ -197,7 +197,16 @@ const EditEmployeeModal = ({ isOpen, onClose, employee }) => {
             status: 'status'
         };
 
+        const excludedFields = [
+            "profilePicPreview",
+            "aadharFrontPreview",
+            "aadharBackPreview",
+            "panCardPreview",
+            "cancelChequePreview"
+        ];
+
         Object.keys(formData).forEach(key => {
+            if (excludedFields.includes(key)) return;
             const backendKey = mapping[key] || key;
             if (formData[key] instanceof File) {
                 data.append(backendKey, formData[key]);

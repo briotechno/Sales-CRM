@@ -1,9 +1,185 @@
-import React from 'react'
+import React, { useEffect, useState } from "react";
+import { DollarSign, Save } from "lucide-react";
+import Modal from "../common/Modal";
+import { toast } from "react-hot-toast";
 
-const EditSalaryModal = () => {
+const EditSalaryModal = ({ isOpen, onClose, salary, onSubmit, loading }: any) => {
+  const [formData, setFormData] = useState({
+    employee: "",
+    designation: "",
+    department: "",
+    basic_salary: "",
+    allowances: "",
+    deductions: "",
+    pay_date: "",
+  });
+
+  useEffect(() => {
+    if (salary && isOpen) {
+      setFormData({
+        employee: salary.employee_name || "",
+        designation: salary.designation || "",
+        department: salary.department || "",
+        basic_salary: salary.basic_salary?.toString() || "",
+        allowances: salary.allowances?.toString() || "",
+        deductions: salary.deductions?.toString() || "",
+        pay_date: salary.pay_date
+          ? salary.pay_date.split("T")[0]
+          : "",
+      });
+    }
+  }, [salary, isOpen]);
+
+  const netSalary =
+    Number(formData.basic_salary || 0) +
+    Number(formData.allowances || 0) -
+    Number(formData.deductions || 0);
+
+  const handleSave = async () => {
+    try {
+      const payload = {
+        designation: formData.designation,
+        department: formData.department,
+        basic_salary: Number(formData.basic_salary),
+        allowances: Number(formData.allowances),
+        deductions: Number(formData.deductions),
+        pay_date: formData.pay_date,
+      };
+
+      await onSubmit(salary.id, payload);
+      toast.success("Salary updated successfully");
+      onClose();
+    } catch (err) {
+      toast.error("Failed to update salary");
+    }
+  };
+
   return (
-    <div>EditSalaryModal</div>
-  )
-}
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Edit Salary"
+      subtitle={formData.employee}
+      icon={
+        <div className="bg-orange-500 p-2 rounded-xl text-white">
+          <DollarSign size={22} />
+        </div>
+      }
+      footer={
+        <div className="flex justify-end gap-3">
+          <button onClick={onClose} className="px-5 py-2 border rounded-lg">
+            Cancel
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={loading}
+            className="px-5 py-2 bg-orange-500 text-white rounded-lg flex items-center gap-2"
+          >
+            <Save size={18} />
+            {loading ? "Saving..." : "Update Salary"}
+          </button>
+        </div>
+      }
+    >
+      <div className="grid grid-cols-2 gap-4">
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-medium text-gray-600">
+            Employee Name
+          </label>
+          <input
+            value={formData.employee}
+            disabled
+            className="border p-2 bg-gray-100 rounded"
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-medium text-gray-600">
+            Designation
+          </label>
+          <input
+            value={formData.designation}
+            onChange={(e) =>
+              setFormData({ ...formData, designation: e.target.value })
+            }
+            className="border p-2"
+            placeholder="Designation"
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-medium text-gray-600">
+            Department
+          </label>
+          <input
+            value={formData.department}
+            onChange={(e) =>
+              setFormData({ ...formData, department: e.target.value })
+            }
+            className="border p-2"
+            placeholder="Department"
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-medium text-gray-600">
+            Payment Date
+          </label>
+          <input
+            type="date"
+            value={formData.pay_date}
+            onChange={(e) =>
+              setFormData({ ...formData, pay_date: e.target.value })
+            }
+            className="border p-2"
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-medium text-gray-600">
+            Basic Salary
+          </label>
+          <input
+            type="number"
+            value={formData.basic_salary}
+            onChange={(e) =>
+              setFormData({ ...formData, basic_salary: e.target.value })
+            }
+            className="border p-2"
+            placeholder="Basic Salary"
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-medium text-gray-600">
+            Allowances
+          </label>
+          <input
+            type="number"
+            value={formData.allowances}
+            onChange={(e) =>
+              setFormData({ ...formData, allowances: e.target.value })
+            }
+            className="border p-2"
+            placeholder="Allowances"
+          />
+        </div>
+        <div className="flex flex-col gap-1 col-span-2">
+          <label className="text-sm font-medium text-gray-600">
+            Deductions
+          </label>
+          <input
+            type="number"
+            value={formData.deductions}
+            onChange={(e) =>
+              setFormData({ ...formData, deductions: e.target.value })
+            }
+            className="border p-2"
+            placeholder="Deductions"
+          />
+        </div>
+      </div>
 
-export default EditSalaryModal
+      <p className="mt-4 font-bold text-right text-lg">
+        Net Salary: <span className="text-orange-600">₹{netSalary}</span>
+      </p>
+    </Modal>
+  );
+};
+
+export default EditSalaryModal;

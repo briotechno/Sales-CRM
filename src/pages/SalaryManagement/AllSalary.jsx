@@ -82,9 +82,10 @@ export default function SalaryManagement() {
     .filter((s) => s.status !== "paid")
     .reduce((sum, s) => sum + (Number(s.net_salary) || 0), 0);
 
-  const activeDepartments = new Set(
-    salaries.map((s) => s.department).filter(Boolean)
-  ).size;
+  const formatDate = (date) => {
+    if (!date) return "N/A";
+    return new Date(date).toISOString().split("T")[0];
+  };
 
   const salaryStats = [
     {
@@ -122,35 +123,18 @@ export default function SalaryManagement() {
   ];
 
   /* ================= HANDLERS ================= */
-  const handleSubmitSalary = async () => {
+  const handleSubmitSalary = async (payload) => {
     try {
-      await createSalary({
-        employee_name: formData.employee,
-        designation: formData.designation,
-        department: formData.department,
-        basic_salary: Number(formData.basicSalary),
-        allowances: Number(formData.allowances || 0),
-        deductions: Number(formData.deductions || 0),
-        payment_date: formData.date,
-      }).unwrap();
-
+      await createSalary(payload).unwrap();
+      toast.success("Salary added successfully");
       setShowAddModal(false);
-      setFormData({
-        employee: "",
-        designation: "",
-        department: "",
-        basicSalary: "",
-        allowances: "",
-        deductions: "",
-        date: "",
-      });
     } catch (err) {
-      alert(err?.data?.message || "Failed to create salary");
+      toast.error(err?.data?.message || "Failed to create salary");
     }
   };
 
-  const handleUpdateSalary = async (id, payload) => {
-    await updateSalary({ id, ...payload }).unwrap();
+  const handleUpdateSalary = async (id, data) => {
+    return await updateSalary({ id, data }).unwrap();
   };
 
   const getStatusColor = (status) =>
@@ -187,6 +171,17 @@ export default function SalaryManagement() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  const handleMarkAsPaid = async (salaryId) => {
+    try {
+      await updateSalary({
+        id: salaryId,
+        data: { status: "paid" },
+      }).unwrap();
+    } catch (err) {
+      alert(err?.data?.message || "Failed to mark salary as paid");
+    }
   };
 
   /* ================= UI ================= */
@@ -352,16 +347,28 @@ export default function SalaryManagement() {
 
                   <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
                     <Calendar className="w-4 h-4 text-orange-500" />
-                    <span>Payment Date: {salary.pay_date || "N/A"}</span>
+                    {/* <span>Payment Date: {salary.pay_date || "N/A"}</span> */}
+                    <span>Payment Date: {formatDate(salary.pay_date)}</span>
+
                   </div>
 
+                  {/* Action Buttons */}
                   <div className="flex gap-2">
+                    {salary.status === "pending" && (
+                      <button
+                        onClick={() => handleMarkAsPaid(salary.id)}
+                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-green-50 text-green-600 hover:bg-green-100 rounded-sm transition font-medium"
+                      >
+                        <DollarSign className="w-4 h-4" />
+                        Mark as Paid
+                      </button>
+                    )}
                     <button
                       onClick={() => {
                         setSelectedSalary(salary);
                         setViewModalOpen(true);
                       }}
-                      className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-sm transition">
+                      className="flex items-center justify-center gap-2 px-4 py-2 bg-orange-50 text-orange-600 hover:bg-orange-100 rounded-sm transition">
                       <Eye className="w-4 h-4" />
                     </button>
                     <button
@@ -369,16 +376,15 @@ export default function SalaryManagement() {
                         setSelectedSalary(salary); // full salary object
                         setEditModalOpen(true);
                       }}
-                      className="p-2 text-orange-600 hover:bg-orange-50 rounded-sm transition-colors"
-                    >
-                      <Pencil size={18} />
+                      className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-sm transition">
+                      <Edit className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => {
                         setSelectedSalaryId(salary.id);
                         setOpenDelete(true);
                       }}
-                      className="flex items-center justify-center gap-2 px-4 py-2 bg-red-50 text-red-600 rounded-sm transition"
+                      className="flex items-center justify-center gap-2 px-4 py-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-sm transition"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -401,10 +407,8 @@ export default function SalaryManagement() {
         <AddSalaryModal
           isOpen={showAddModal}
           onClose={() => setShowAddModal(false)}
-          formData={formData}
-          setFormData={setFormData}
           onSubmit={handleSubmitSalary}
-          creating={creating}
+          loading={creating}
         />
         <ViewSalaryModal
           isOpen={ViewModalOpen}

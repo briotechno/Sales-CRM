@@ -21,23 +21,24 @@ export const salaryApi = createApi({
       providesTags: ["Salaries"],
     }),
 
-   createSalary: builder.mutation({
-      query: (salaryData) => ({
+    createSalary: builder.mutation({
+      query: (data) => ({
         url: "salaries",
         method: "POST",
-        body: salaryData,
-      }),
-      invalidatesTags: ["Salaries"], // Refresh salaries after creation
-    }),
-
-    updateSalary: builder.mutation({
-      query: ({ id, ...salary }) => ({
-        url: `salaries/${id}`,
-        method: "PUT",
-        body: salary,
+        body: data,
       }),
       invalidatesTags: ["Salaries"],
     }),
+
+    updateSalary: builder.mutation({
+      query: ({ id, data }) => ({
+        url: `/salaries/${id}`,
+        method: "PUT",
+        body: data,
+      }),
+      invalidatesTags: ["Salaries"],
+    }),
+
     deleteSalary: builder.mutation({
       query: (id) => ({
         url: `salaries/${id}`,
