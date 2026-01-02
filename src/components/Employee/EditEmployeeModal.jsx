@@ -7,6 +7,8 @@ import { toast } from "react-hot-toast";
 const EditEmployeeModal = ({ isOpen, onClose, employee }) => {
     const [formData, setFormData] = useState({
         employeeId: "",
+        firstName: "",
+        lastName: "",
         employeeName: "",
         profilePic: null,
         profilePicPreview: "",
@@ -54,8 +56,15 @@ const EditEmployeeModal = ({ isOpen, onClose, employee }) => {
 
     useEffect(() => {
         if (employee) {
+            // Split name for editing
+            const nameParts = (employee.employee_name || "").split(" ");
+            const fName = nameParts[0] || "";
+            const lName = nameParts.slice(1).join(" ") || "";
+
             setFormData({
                 employeeId: employee.employee_id || "",
+                firstName: fName,
+                lastName: lName,
                 employeeName: employee.employee_name || "",
                 profilePic: null, // Don't pre-fill files
                 profilePicPreview: employee.profile_picture_url || "",
@@ -130,6 +139,13 @@ const EditEmployeeModal = ({ isOpen, onClose, employee }) => {
 
                 if (name === "dob") {
                     updated.age = calculateAge(value);
+                }
+
+                // Auto-update employeeName
+                if (name === "firstName" || name === "lastName") {
+                    const fName = name === "firstName" ? value : (prev.firstName || "");
+                    const lName = name === "lastName" ? value : (prev.lastName || "");
+                    updated.employeeName = `${fName} ${lName}`.trim();
                 }
 
                 return updated;

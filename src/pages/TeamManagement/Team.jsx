@@ -24,6 +24,7 @@ import EditTeamModal from "../../components/Team/EditTeamModal";
 import ViewTeamModal from "../../components/Team/ViewTeamModal";
 import DeleteTeamModal from "../../components/Team/DeleteTeamModal";
 import { toast } from "react-hot-toast";
+import usePermission from "../../hooks/usePermission";
 
 export default function TeamManagement() {
   // 1. States for filtering and pagination
@@ -37,6 +38,8 @@ export default function TeamManagement() {
   const [showViewModal, setShowViewModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState(null);
+
+  const { create, read, update, delete: remove } = usePermission("Team Management");
 
   // 3. API Queries and Mutations
   const { data, isLoading, isError, error, refetch } = useGetTeamsQuery({
@@ -144,7 +147,11 @@ export default function TeamManagement() {
               </div>
               <button
                 onClick={() => setShowAddModal(true)}
-                className="flex items-center justify-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-2 rounded-sm font-semibold hover:from-orange-600 hover:to-orange-700 transition shadow-md"
+                disabled={!create}
+                className={`flex items-center justify-center gap-2 px-6 py-2 rounded-sm font-semibold transition shadow-md ${create
+                  ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
+                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  }`}
               >
                 <Plus size={18} />
                 Create Team
@@ -249,24 +256,33 @@ export default function TeamManagement() {
                       </td>
                       <td className="py-3 px-4">
                         <div className="flex justify-center gap-2">
-                          <button
-                            onClick={() => { setSelectedTeam(team); setShowViewModal(true); }}
-                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-sm transition-colors"
-                          >
-                            <Eye size={18} />
-                          </button>
-                          <button
-                            onClick={() => { setSelectedTeam(team); setShowEditModal(true); }}
-                            className="p-2 text-orange-600 hover:bg-orange-50 rounded-sm transition-colors"
-                          >
-                            <Edit2 size={18} />
-                          </button>
-                          <button
-                            onClick={() => { setSelectedTeam(team); setShowDeleteModal(true); }}
-                            className="p-2 text-red-600 hover:bg-red-50 rounded-sm transition-colors"
-                          >
-                            <Trash2 size={18} />
-                          </button>
+                          {read && (
+                            <button
+                              onClick={() => { setSelectedTeam(team); setShowViewModal(true); }}
+                              className="p-2 text-blue-600 hover:bg-blue-50 rounded-sm transition-colors"
+                              title="View Team"
+                            >
+                              <Eye size={18} />
+                            </button>
+                          )}
+                          {update && (
+                            <button
+                              onClick={() => { setSelectedTeam(team); setShowEditModal(true); }}
+                              className="p-2 text-orange-600 hover:bg-orange-50 rounded-sm transition-colors"
+                              title="Edit Team"
+                            >
+                              <Edit2 size={18} />
+                            </button>
+                          )}
+                          {remove && (
+                            <button
+                              onClick={() => { setSelectedTeam(team); setShowDeleteModal(true); }}
+                              className="p-2 text-red-600 hover:bg-red-50 rounded-sm transition-colors"
+                              title="Delete Team"
+                            >
+                              <Trash2 size={18} />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>

@@ -13,6 +13,32 @@ import {
 import { useGetDepartmentsQuery } from "../../store/api/departmentApi";
 import { useGetDesignationsQuery } from "../../store/api/designationApi";
 
+const CollapsibleSection = ({ id, title, icon: Icon, children, isCollapsed, onToggle }) => {
+  return (
+    <div className="border-2 border-gray-200 rounded-sm bg-white shadow-sm overflow-hidden mb-6">
+      <div
+        className="flex items-center justify-between p-6 cursor-pointer hover:bg-gray-50 transition-colors"
+        onClick={onToggle}
+      >
+        <div className="flex items-center gap-2">
+          <Icon size={20} className="text-[#FF7B1D]" />
+          <h3 className="text-lg font-bold text-gray-800">{title}</h3>
+        </div>
+        {isCollapsed ? (
+          <ChevronDown size={20} className="text-gray-500" />
+        ) : (
+          <ChevronUp size={20} className="text-gray-500" />
+        )}
+      </div>
+      {!isCollapsed && (
+        <div className="p-6 pt-0 border-t-2 border-gray-100 animate-fadeIn overflow-x-auto">
+          {children}
+        </div>
+      )}
+    </div>
+  );
+};
+
 const FormSection = ({ formData, handleChange, handleChanges, setFormData }) => {
   const [collapsedSections, setCollapsedSections] = useState({
     personal: false,
@@ -114,36 +140,15 @@ const FormSection = ({ formData, handleChange, handleChanges, setFormData }) => 
     return p && p.create && p.read && p.update && p.delete;
   };
 
-  const CollapsibleSection = ({ id, title, icon: Icon, children }) => {
-    const isCollapsed = collapsedSections[id];
-    return (
-      <div className="border-2 border-gray-200 rounded-sm bg-white shadow-sm overflow-hidden mb-6">
-        <div
-          className="flex items-center justify-between p-6 cursor-pointer hover:bg-gray-50 transition-colors"
-          onClick={() => toggleSection(id)}
-        >
-          <div className="flex items-center gap-2">
-            <Icon size={20} className="text-[#FF7B1D]" />
-            <h3 className="text-lg font-bold text-gray-800">{title}</h3>
-          </div>
-          {isCollapsed ? (
-            <ChevronDown size={20} className="text-gray-500" />
-          ) : (
-            <ChevronUp size={20} className="text-gray-500" />
-          )}
-        </div>
-        {!isCollapsed && (
-          <div className="p-6 pt-0 border-t-2 border-gray-100 animate-fadeIn overflow-x-auto">
-            {children}
-          </div>
-        )}
-      </div>
-    );
-  };
-
   return (
     <>
-      <CollapsibleSection id="personal" title="Personal Details" icon={User}>
+      <CollapsibleSection
+        id="personal"
+        title="Personal Details"
+        icon={User}
+        isCollapsed={collapsedSections.personal}
+        onToggle={() => toggleSection("personal")}
+      >
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           <div>
             <label className={labelStyles}>Employee ID</label>
@@ -157,13 +162,26 @@ const FormSection = ({ formData, handleChange, handleChanges, setFormData }) => 
           </div>
           <div>
             <label className={labelStyles}>
-              Employee Name <span className="text-red-500">*</span>
+              First Name <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
-              name="employeeName"
-              placeholder="Enter full name"
-              value={formData.employeeName}
+              name="firstName"
+              placeholder="Enter first name"
+              value={formData.firstName || ""}
+              onChange={handleChange}
+              className={inputStyles}
+            />
+          </div>
+          <div>
+            <label className={labelStyles}>
+              Last Name <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              name="lastName"
+              placeholder="Enter last name"
+              value={formData.lastName || ""}
               onChange={handleChange}
               className={inputStyles}
             />
@@ -268,7 +286,13 @@ const FormSection = ({ formData, handleChange, handleChanges, setFormData }) => 
         </div>
       </CollapsibleSection>
 
-      <CollapsibleSection id="job" title="Job Details" icon={Briefcase}>
+      <CollapsibleSection
+        id="job"
+        title="Job Details"
+        icon={Briefcase}
+        isCollapsed={collapsedSections.job}
+        onToggle={() => toggleSection("job")}
+      >
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           <div>
             <label className={labelStyles}>Joining Date</label>
@@ -372,7 +396,13 @@ const FormSection = ({ formData, handleChange, handleChanges, setFormData }) => 
         </div>
       </CollapsibleSection>
 
-      <CollapsibleSection id="contact" title="Contact Information" icon={Phone}>
+      <CollapsibleSection
+        id="contact"
+        title="Contact Information"
+        icon={Phone}
+        isCollapsed={collapsedSections.contact}
+        onToggle={() => toggleSection("contact")}
+      >
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           <div>
             <label className={labelStyles}>
@@ -509,7 +539,13 @@ const FormSection = ({ formData, handleChange, handleChanges, setFormData }) => 
         </div>
       </CollapsibleSection>
 
-      <CollapsibleSection id="documents" title="Document Details" icon={FileText}>
+      <CollapsibleSection
+        id="documents"
+        title="Document Details"
+        icon={FileText}
+        isCollapsed={collapsedSections.documents}
+        onToggle={() => toggleSection("documents")}
+      >
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           <div>
             <label className={labelStyles}>Aadhar Number</label>
@@ -587,7 +623,13 @@ const FormSection = ({ formData, handleChange, handleChanges, setFormData }) => 
         </div>
       </CollapsibleSection>
 
-      <CollapsibleSection id="bank" title="Bank Account Details" icon={CreditCard}>
+      <CollapsibleSection
+        id="bank"
+        title="Bank Account Details"
+        icon={CreditCard}
+        isCollapsed={collapsedSections.bank}
+        onToggle={() => toggleSection("bank")}
+      >
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           <div>
             <label className={labelStyles}>IFSC Code</label>
@@ -653,7 +695,13 @@ const FormSection = ({ formData, handleChange, handleChanges, setFormData }) => 
         </div>
       </CollapsibleSection>
 
-      <CollapsibleSection id="login" title="Login Credentials" icon={Key}>
+      <CollapsibleSection
+        id="login"
+        title="Login Credentials"
+        icon={Key}
+        isCollapsed={collapsedSections.login}
+        onToggle={() => toggleSection("login")}
+      >
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           <div>
             <label className={labelStyles}>
@@ -695,7 +743,13 @@ const FormSection = ({ formData, handleChange, handleChanges, setFormData }) => 
         </div>
       </CollapsibleSection>
 
-      <CollapsibleSection id="permissions" title="Permissions Control" icon={ShieldCheck}>
+      <CollapsibleSection
+        id="permissions"
+        title="Permissions Control"
+        icon={ShieldCheck}
+        isCollapsed={collapsedSections.permissions}
+        onToggle={() => toggleSection("permissions")}
+      >
         <table className="w-full text-sm text-left">
           <thead className="bg-gray-50 text-gray-700 uppercase font-bold text-xs">
             <tr>

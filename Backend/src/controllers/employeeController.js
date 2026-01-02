@@ -1,8 +1,15 @@
 const Employee = require('../models/employeeModel');
+const bcrypt = require('bcryptjs');
 
 const createEmployee = async (req, res) => {
     try {
         const data = { ...req.body };
+
+        // Hash password
+        if (data.password) {
+            const salt = await bcrypt.genSalt(10);
+            data.password = await bcrypt.hash(data.password, salt);
+        }
 
         // Handle file uploads
         if (req.files) {
@@ -64,6 +71,12 @@ const updateEmployee = async (req, res) => {
         }
 
         const data = { ...req.body };
+
+        // Hash password if updating
+        if (data.password) {
+            const salt = await bcrypt.genSalt(10);
+            data.password = await bcrypt.hash(data.password, salt);
+        }
 
         // Handle file uploads
         if (req.files) {

@@ -23,6 +23,7 @@ import {
 } from "../../store/api/leaveApi";
 import { useGetEmployeesQuery } from "../../store/api/employeeApi";
 import toast from 'react-hot-toast';
+import usePermission from "../../hooks/usePermission";
 
 export default function LeaveManagement() {
   const [activeTab, setActiveTab] = useState("all");
@@ -30,6 +31,8 @@ export default function LeaveManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+
+  const { create, read, update, delete: remove } = usePermission("Leave Management");
 
   // Queries
   const {
@@ -203,7 +206,11 @@ export default function LeaveManagement() {
             </button>
             <button
               onClick={() => setShowApplyModal(true)}
-              className="flex items-center gap-2 bg-[#FF7B1D] text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-[#e06915] transition shadow-sm"
+              disabled={!create}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition shadow-sm ${create
+                ? "bg-[#FF7B1D] text-white hover:bg-[#e06915]"
+                : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                }`}
             >
               <Plus className="w-4 h-4" />
               Apply Leave
@@ -331,24 +338,30 @@ export default function LeaveManagement() {
                       <td className="py-3 px-4 whitespace-nowrap text-sm">
                         {request.status === "pending" || request.status === "Pending" ? (
                           <div className="flex justify-center gap-3">
-                            <button
-                              onClick={() => handleStatusUpdate(request.id, 'approved')}
-                              className="text-green-600 hover:text-green-800 font-semibold text-xs transition-colors"
-                            >
-                              Approve
-                            </button>
-                            <button
-                              onClick={() => handleStatusUpdate(request.id, 'rejected')}
-                              className="text-red-600 hover:text-red-800 font-semibold text-xs transition-colors"
-                            >
-                              Reject
-                            </button>
+                            {update && (
+                              <>
+                                <button
+                                  onClick={() => handleStatusUpdate(request.id, 'approved')}
+                                  className="text-green-600 hover:text-green-800 font-semibold text-xs transition-colors"
+                                >
+                                  Approve
+                                </button>
+                                <button
+                                  onClick={() => handleStatusUpdate(request.id, 'rejected')}
+                                  className="text-red-600 hover:text-red-800 font-semibold text-xs transition-colors"
+                                >
+                                  Reject
+                                </button>
+                              </>
+                            )}
                           </div>
                         ) : (
                           <div className="flex justify-center">
-                            <button className="text-blue-600 hover:text-blue-800 font-semibold text-xs transition-colors">
-                              View
-                            </button>
+                            {read && (
+                              <button className="text-blue-600 hover:text-blue-800 font-semibold text-xs transition-colors">
+                                View
+                              </button>
+                            )}
                           </div>
                         )}
                       </td>

@@ -13,7 +13,57 @@ const protect = async (req, res, next) => {
 
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
+            // Handle Super Admin
+            if (decoded.role === 'Super Admin') {
+                req.user = {
+                    id: 'SUPER_ADMIN',
+                    role: 'Super Admin',
+                    username: 'superadmin'
+                };
+                return next();
+            }
+
+            // Handle Employee
+            if (decoded.role === 'Employee') {
+                // We need to fetch the employee to get the latest permissions and Linked Admin ID
+                const Employee = require('../models/employeeModel');
+                const employee = await Employee.findById(decoded.id, null); // CAUTION: findById expects (id, userId).
+                // But wait, Employee.findById filters by userId too.
+                // We need a findById that doesn't strictly require userId IF we don't know it yet.
+                // Actually, relying on findById(id, userId) is tricky if we don't have userId.
+                // But we have the ID from token.
+                // I should add a findByPk or findByIdOnly method to Employee model, or logic to bypass query.
+                // Luckily, I added findByUsername which returns raw row.
+                // But here we have ID.
+
+                // Workaround: Use pool query directly or add method.
+                // Let's add findByIdRaw to Employee model? Or use pool here?
+                // Using pool here is ugly but safe.
+                // Or: "SELECT * FROM employees WHERE id = ?"
+                const { pool } = require('../config/db');
+                const [rows] = await pool.query('SELECT * FROM employees WHERE id = ?', [decoded.id]);
+                const emp = rows[0];
+
+                if (emp) {
+                    req.user = {
+                        _id: emp.id, // Actual Employee ID
+                        id: emp.user_id, // Masquerade as Admin ID for existing controllers (Data Scope)
+                        role: 'Employee',
+                        permissions: emp.permissions ? (typeof emp.permissions === 'string' ? JSON.parse(emp.permissions) : emp.permissions) : [],
+                        username: emp.username,
+                        email: emp.email
+                    };
+                    return next();
+                }
+            }
+
+            // Handle Admin (User)
+            // Default or robust check
             req.user = await User.findById(decoded.id);
+            if (req.user) {
+                // Ensure role is set
+                if (!req.user.role) req.user.role = 'Admin';
+            }
 
             next();
         } catch (error) {

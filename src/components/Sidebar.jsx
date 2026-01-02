@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { departmentApi } from "../store/api/departmentApi";
 import { designationApi } from "../store/api/designationApi";
 import { employeeApi } from "../store/api/employeeApi";
@@ -37,6 +37,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
   const [activeItem, setActiveItem] = useState("/");
   const activeItemRef = React.useRef(null);
   const dispatch = useDispatch();
+  const user = useSelector((state) => state.auth.user);
 
   const handleItemClick = (path) => {
     setActiveItem(path);
@@ -100,6 +101,45 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
     return false;
   };
 
+  const checkPermission = (key) => {
+    // If no user, or if role is missing, deny
+    if (!user) return false;
+
+    // Super Admin and Admin have full access
+    if (user.role === 'Super Admin' || user.role === 'Admin') return true;
+
+    // Employee Access Check
+    if (user.role === 'Employee') {
+      let perms = user.permissions;
+
+      // Parse if string
+      if (typeof perms === 'string') {
+        try {
+          perms = JSON.parse(perms);
+        } catch (e) {
+          console.error("Failed to parse permissions", e);
+          return false;
+        }
+      }
+
+      // Safety check
+      if (!perms || typeof perms !== 'object') return false;
+
+      // Check if module exists AND has read entitlement
+      // The structure is { "Module Name": { "read": true, ... } }
+      const modulePerms = perms[key];
+
+      // If module permission object exists, check for 'read' or 'view'
+      if (modulePerms && (modulePerms.read === true || modulePerms.view === true)) {
+        return true;
+      }
+
+      return false;
+    }
+
+    return false;
+  };
+
   const menuItems = [
     {
       section: "Dashboard",
@@ -108,6 +148,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           name: "Dashboard",
           icon: <LayoutDashboard size={22} />,
           path: "/dashboard",
+          permission: "Dashboard" // Matches JSON key
         },
       ],
     },
@@ -118,16 +159,16 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           name: "CRM Dashboard",
           icon: <LayoutDashboard size={22} />,
           path: "/crm/dashboard",
+          permission: "CRM Dashboard"
         },
-
         {
           name: "Leads Management",
           icon: <Users size={22} />,
           path: "/crm/leads",
+          permission: "Leads Management",
           children: [
             { name: "Lead Dashboard", path: "/crm/leads/dashboard" },
             { name: "All Leads", path: "/crm/leads/all" },
-
             { name: "New Leads", path: "/crm/leads/new" },
             { name: "Assigned", path: "/crm/leads/assigned" },
             { name: "Unread Leads", path: "/crm/leads/unread" },
@@ -140,6 +181,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           name: "campaign",
           icon: <Users size={16} />,
           path: "/crm/champions",
+          permission: "Campaign",
           children: [
             { name: "Lead", path: "/crm/champions/lead" },
             { name: "Dialer ", path: "/crm/champions/dialer" },
@@ -151,6 +193,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           name: "Pipeline Management",
           icon: <FolderKanban size={22} />,
           path: "/crm/pipeline",
+          permission: "Pipeline Management",
           children: [
             { name: "Manage Pipeline", path: "/crm/pipeline/manage" },
             { name: "Analytics", path: "/crm/pipeline/analytics" },
@@ -160,6 +203,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           name: "Client Management",
           icon: <Briefcase size={22} />,
           path: "/crm/client",
+          permission: "Client Management",
           children: [
             { name: "All Client", path: "/crm/client/all" },
             { name: "Active Client", path: "/crm/client/active" },
@@ -170,6 +214,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           name: "Channel Integration",
           icon: <Share2 size={22} />,
           path: "/crm/channel",
+          permission: "Channel Integration",
           children: [
             { name: "Meta", path: "/crm/channel/meta" },
             { name: "Justdial", path: "/crm/channel/justdial" },
@@ -187,16 +232,19 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           name: "HRM Dashboard",
           icon: <LayoutDashboard size={22} />,
           path: "/hrm/dashboard",
+          permission: "HRM Dashboard"
         },
         {
           name: "Team Management",
           icon: <Users size={22} />,
           path: "/hrm/teams",
+          permission: "Team Management"
         },
         {
           name: "Attendance",
           icon: <CalendarCheck size={22} />,
           path: null,
+          permission: "Attendance",
           children: [
             {
               name: "All Attendance",
@@ -212,6 +260,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           name: "Leave Management",
           icon: <ClipboardList size={22} />,
           path: "/hrm/leave",
+          permission: "Leave Management",
           children: [
             { name: "Leave", path: "/hrm/leave/all" },
             { name: "Holidays", path: "/hrm/leave/holiday" },
@@ -222,38 +271,44 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           name: "Employee",
           icon: <Users size={22} />,
           path: "/hrm/employee/all",
-
+          permission: "Employee Management"
         },
         {
           name: "Department",
           icon: <Briefcase size={22} />,
           path: "/hrm/department",
+          permission: "Department"
         },
         {
           name: "Designation",
           icon: <FileText size={22} />,
           path: "/hrm/designation",
+          permission: "Designation"
         },
         {
           name: "Terms & Conditions",
           icon: <FileSignature size={22} />,
           path: "/hrm/terms",
+          permission: "Terms & Conditions"
         },
-        { name: "Salary", icon: <Wallet size={22} />, path: "/hrm/salary" },
+        { name: "Salary", icon: <Wallet size={22} />, path: "/hrm/salary", permission: "Salary" },
         {
           name: "Company Policy",
           icon: <FileText size={22} />,
           path: "/hrm/company-policy",
+          permission: "Company Policy"
         },
         {
           name: "HR Policy",
           icon: <FileText size={22} />,
           path: "/hrm/hr-policy",
+          permission: "HR Policy"
         },
         {
           name: "Job Management",
           icon: <Briefcase size={22} />,
           path: "/hrm/job-management",
+          permission: "Job Management"
         },
       ],
     },
@@ -264,46 +319,55 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           name: "Catelogs",
           icon: <BarChart3 size={22} />,
           path: "/additional/catelogs",
+          permission: "Catelogs"
         },
         {
           name: "Messenger",
           icon: <MessageSquare size={22} />,
           path: "/additional/messenger",
+          permission: "Messenger"
         },
         {
           name: "Notes",
           icon: <StickyNote size={22} />,
           path: "/additional/notes",
+          permission: "Notes"
         },
         {
           name: "To-Do",
           icon: <CheckSquare size={22} />,
           path: "/additional/todo",
+          permission: "To-Do"
         },
         {
           name: "Quotation",
           icon: <FileSignature size={22} />,
           path: "/additional/quotation",
+          permission: "Quotation"
         },
         {
           name: "Invoice",
           icon: <FileSpreadsheet size={22} />,
           path: "/additional/invoice",
+          permission: "Invoice"
         },
         {
           name: "My Expenses",
           icon: <Wallet size={22} />,
           path: "/additional/expenses",
+          permission: "My Expenses"
         },
         {
           name: "Notification",
           icon: <Bell size={22} />,
           path: "/additional/notification",
+          permission: "Notification"
         },
         {
           name: "Announcement",
           icon: <Megaphone size={22} />,
           path: "/additional/announcement",
+          permission: "Announcement"
         },
       ],
     },
@@ -314,22 +378,36 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           name: "Business Info",
           icon: <Settings size={22} />,
           path: "/settings/business-info",
+          permission: "Business Info"
         },
         {
           name: "Manage Subscription",
           icon: <BarChart3 size={22} />,
           path: "/settings/subscription",
+          permission: "Manage Subscription"
         },
 
         {
           name: "FAQ",
           icon: <HelpCircle size={22} />,
           path: "/settings/faq",
+          permission: "FAQ"
         },
         { name: "Logout", icon: <LogOut size={22} />, path: "/logout" },
       ],
     },
   ];
+
+  /* Filtering */
+  const filteredMenuItems = menuItems.map(section => {
+    const filteredItems = section.items.filter(item => {
+      if (item.name === "Logout") return true;
+      // If no permission key is set, assume it's public or visible
+      if (!item.permission) return true;
+      return checkPermission(item.permission);
+    });
+    return { ...section, items: filteredItems };
+  }).filter(section => section.items.length > 0);
 
   return (
     <>
@@ -356,7 +434,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
 
         {/* Menu */}
         <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
-          {menuItems.map((section, index) => (
+          {filteredMenuItems.map((section, index) => (
             <React.Fragment key={index}>
               {index === 0 ? (
                 <>
@@ -383,9 +461,12 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                   })}
 
                   {/* Main Menu Label */}
-                  <p className="mt-4 mb-2 text-[11px] font-semibold tracking-wide text-gray-500 px-2">
-                    MAIN MENU
-                  </p>
+                  {/* Show tag only if following sections exist */}
+                  {filteredMenuItems.length > 1 && (
+                    <p className="mt-4 mb-2 text-[11px] font-semibold tracking-wide text-gray-500 px-2">
+                      MAIN MENU
+                    </p>
+                  )}
                 </>
               ) : (
                 <>

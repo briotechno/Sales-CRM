@@ -8,6 +8,7 @@ import ViewDepartmentModal from "../../components/Department/ViewDepartmentModal
 import DeleteDepartmentModal from "../../components/Department/DeleteDepartmentModal";
 import NumberCard from "../../components/NumberCard";
 import { useGetDepartmentsQuery } from "../../store/api/departmentApi";
+import usePermission from "../../hooks/usePermission";
 
 const AllDepartment = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -20,6 +21,8 @@ const AllDepartment = () => {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedDept, setSelectedDept] = useState(null);
+
+  const { create, read, update, delete: remove } = usePermission("Department");
 
   const { data, isLoading, isError } = useGetDepartmentsQuery({
     page: currentPage,
@@ -85,7 +88,11 @@ const AllDepartment = () => {
 
             <button
               onClick={() => setIsAddModalOpen(true)}
-              className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-4 py-2 rounded-sm font-semibold flex items-center gap-2 hover:from-orange-600 hover:to-orange-700 transition shadow-md"
+              disabled={!create}
+              className={`px-4 py-2 rounded-sm font-semibold flex items-center gap-2 transition shadow-md ${create
+                ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
+                : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                }`}
             >
               <Plus size={16} /> Add Department
             </button>
@@ -175,24 +182,30 @@ const AllDepartment = () => {
                     </td>
                     <td className="py-3 px-4">
                       <div className="flex justify-center gap-2">
-                        <button
-                          onClick={() => { setSelectedDept(dept); setIsViewModalOpen(true); }}
-                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-sm transition-colors"
-                        >
-                          <Eye size={18} />
-                        </button>
-                        <button
-                          onClick={() => { setSelectedDept(dept); setIsEditModalOpen(true); }}
-                          className="p-2 text-orange-600 hover:bg-orange-50 rounded-sm transition-colors"
-                        >
-                          <Pencil size={18} />
-                        </button>
-                        <button
-                          onClick={() => { setSelectedDept(dept); setIsDeleteModalOpen(true); }}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-sm transition-colors"
-                        >
-                          <Trash2 size={18} />
-                        </button>
+                        {read && (
+                          <button
+                            onClick={() => { setSelectedDept(dept); setIsViewModalOpen(true); }}
+                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-sm transition-colors"
+                          >
+                            <Eye size={18} />
+                          </button>
+                        )}
+                        {update && (
+                          <button
+                            onClick={() => { setSelectedDept(dept); setIsEditModalOpen(true); }}
+                            className="p-2 text-orange-600 hover:bg-orange-50 rounded-sm transition-colors"
+                          >
+                            <Pencil size={18} />
+                          </button>
+                        )}
+                        {remove && (
+                          <button
+                            onClick={() => { setSelectedDept(dept); setIsDeleteModalOpen(true); }}
+                            className="p-2 text-red-600 hover:bg-red-50 rounded-sm transition-colors"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

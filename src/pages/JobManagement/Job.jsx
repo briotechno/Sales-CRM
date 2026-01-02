@@ -25,6 +25,7 @@ import {
 } from "../../store/api/jobApi";
 import toast from 'react-hot-toast';
 import { useGetDepartmentsQuery } from "../../store/api/departmentApi";
+import usePermission from "../../hooks/usePermission";
 
 // Main Component
 export default function JobManagement() {
@@ -41,6 +42,8 @@ export default function JobManagement() {
   // Input states for dynamic arrays
   const [responsibilityInput, setResponsibilityInput] = useState("");
   const [requirementInput, setRequirementInput] = useState("");
+
+  const { create, read, update, delete: remove } = usePermission("Job Management");
 
   // Add Job Form State
   const [formData, setFormData] = useState({
@@ -277,7 +280,11 @@ export default function JobManagement() {
                     resetForm();
                     setShowAddModal(true);
                   }}
-                  className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white px-4 py-2 rounded-sm font-semibold hover:from-orange-600 hover:to-orange-700 hover:opacity-90 transition ml-2"
+                  disabled={!create}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-sm font-semibold transition ml-2 ${create
+                    ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 hover:opacity-90"
+                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    }`}
                 >
                   <Plus size={18} />
                   Add New Job
@@ -436,23 +443,29 @@ export default function JobManagement() {
 
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center justify-center gap-2">
-                            <button
-                              onClick={() => handleViewJob(job)}
-                              className="p-2 hover:bg-blue-100 rounded-sm transition-all"
-                              title="View Job Details"
-                            >
-                              <Eye size={18} className="text-blue-600" />
-                            </button>
-                            <button
-                              onClick={() => handleEditJob(job)}
-                              className="p-2 hover:bg-orange-100 rounded-sm transition-all">
-                              <Edit size={18} className="text-orange-600" />
-                            </button>
-                            <button
-                              onClick={() => handleDelete(job.id)}
-                              className="p-2 hover:bg-red-100 rounded-sm transition-all">
-                              <Trash2 size={18} className="text-red-600" />
-                            </button>
+                            {read && (
+                              <button
+                                onClick={() => handleViewJob(job)}
+                                className="p-2 hover:bg-blue-100 rounded-sm transition-all"
+                                title="View Job Details"
+                              >
+                                <Eye size={18} className="text-blue-600" />
+                              </button>
+                            )}
+                            {update && (
+                              <button
+                                onClick={() => handleEditJob(job)}
+                                className="p-2 hover:bg-orange-100 rounded-sm transition-all">
+                                <Edit size={18} className="text-orange-600" />
+                              </button>
+                            )}
+                            {remove && (
+                              <button
+                                onClick={() => handleDelete(job.id)}
+                                className="p-2 hover:bg-red-100 rounded-sm transition-all">
+                                <Trash2 size={18} className="text-red-600" />
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>

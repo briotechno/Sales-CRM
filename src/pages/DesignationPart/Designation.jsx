@@ -8,6 +8,7 @@ import ViewDesignationModal from "../../components/Designation/ViewDesignationMo
 import DeleteDesignationModal from "../../components/Designation/DeleteDesignationModal";
 import NumberCard from "../../components/NumberCard";
 import { useGetDesignationsQuery } from "../../store/api/designationApi";
+import usePermission from "../../hooks/usePermission";
 
 const AllDesignation = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -21,6 +22,8 @@ const AllDesignation = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedDesignation, setSelectedDesignation] = useState(null);
+
+  const { create, read, update, delete: remove } = usePermission("Designation");
 
   // RTK Query
   const { data, isLoading } = useGetDesignationsQuery({
@@ -103,7 +106,11 @@ const AllDesignation = () => {
 
             <button
               onClick={() => setIsAddModalOpen(true)}
-              className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-4 py-2 rounded-sm font-semibold flex items-center gap-2 hover:from-orange-600 hover:to-orange-700 transition shadow-md"
+              disabled={!create}
+              className={`bg-gradient-to-r from-orange-500 to-orange-600 text-white px-4 py-2 rounded-sm font-semibold flex items-center gap-2 transition shadow-md ${create
+                ? "hover:from-orange-600 hover:to-orange-700"
+                : "bg-gray-300 text-gray-500 cursor-not-allowed from-gray-300 to-gray-400"
+                }`}
             >
               <Plus size={16} /> Add Designation
             </button>
@@ -200,24 +207,30 @@ const AllDesignation = () => {
                     </td>
                     <td className="py-3 px-4">
                       <div className="flex justify-center gap-2">
-                        <button
-                          onClick={() => handleView(dsg)}
-                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-sm transition-colors"
-                        >
-                          <Eye size={18} />
-                        </button>
-                        <button
-                          onClick={() => handleEdit(dsg)}
-                          className="p-2 text-orange-600 hover:bg-orange-50 rounded-sm transition-colors"
-                        >
-                          <Pencil size={18} />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(dsg)}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-sm transition-colors"
-                        >
-                          <Trash2 size={18} />
-                        </button>
+                        {read && (
+                          <button
+                            onClick={() => handleView(dsg)}
+                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-sm transition-colors"
+                          >
+                            <Eye size={18} />
+                          </button>
+                        )}
+                        {update && (
+                          <button
+                            onClick={() => handleEdit(dsg)}
+                            className="p-2 text-orange-600 hover:bg-orange-50 rounded-sm transition-colors"
+                          >
+                            <Pencil size={18} />
+                          </button>
+                        )}
+                        {remove && (
+                          <button
+                            onClick={() => handleDelete(dsg)}
+                            className="p-2 text-red-600 hover:bg-red-50 rounded-sm transition-colors"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

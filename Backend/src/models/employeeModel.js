@@ -12,7 +12,7 @@ const Employee = {
             blood_group, languages, aadhar_number, pan_number,
             aadhar_front, aadhar_back, pan_card,
             ifsc_code, account_number, account_holder_name, branch_name,
-            cancelled_cheque, username, password, status
+            cancelled_cheque, username, password, status, permissions
         } = data;
 
         // Generate unique employee_id for all users
@@ -36,8 +36,8 @@ const Employee = {
                 blood_group, languages, aadhar_number, pan_number,
                 aadhar_front, aadhar_back, pan_card,
                 ifsc_code, account_number, account_holder_name, branch_name,
-                cancelled_cheque, username, password, status, user_id
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                cancelled_cheque, username, password, status, user_id, permissions
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 newId, employee_name, profile_picture, date_of_birth, age, gender,
                 father_name, mother_name, marital_status, joining_date,
@@ -48,7 +48,7 @@ const Employee = {
                 blood_group, languages, aadhar_number, pan_number,
                 aadhar_front, aadhar_back, pan_card,
                 ifsc_code, account_number, account_holder_name, branch_name,
-                cancelled_cheque, username, password, status, userId
+                cancelled_cheque, username, password, status, userId, (typeof permissions === 'object' ? JSON.stringify(permissions || []) : (permissions || '[]'))
             ]
         );
         return result.insertId;
@@ -118,7 +118,10 @@ const Employee = {
     update: async (id, data, userId) => {
         const fields = Object.keys(data).filter(key => key !== 'id' && key !== 'employee_id' && key !== 'user_id');
         const setClause = fields.map(field => `${field} = ?`).join(', ');
-        const values = fields.map(field => data[field]);
+        const values = fields.map(field => {
+            const val = data[field];
+            return (typeof val === 'object' && val !== null) ? JSON.stringify(val) : val;
+        });
 
         if (fields.length === 0) return;
 
@@ -130,6 +133,11 @@ const Employee = {
 
     delete: async (id, userId) => {
         await pool.query('DELETE FROM employees WHERE id = ? AND user_id = ?', [id, userId]);
+    },
+
+    findByUsername: async (username) => {
+        const [rows] = await pool.query('SELECT * FROM employees WHERE username = ?', [username]);
+        return rows[0];
     }
 };
 

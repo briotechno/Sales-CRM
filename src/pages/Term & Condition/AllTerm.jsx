@@ -22,6 +22,7 @@ import {
   useUpdateTermMutation,
 } from "../../store/api/termApi";
 import DeleteTermModal from "../../components/TermCondition/DeleteTermModal";
+import usePermission from "../../hooks/usePermission";
 
 const TermsAndCondition = () => {
   /* ================= STATES ================= */
@@ -44,6 +45,8 @@ const TermsAndCondition = () => {
     title: "",
     description: "",
   });
+
+  const { create, read, update, delete: remove } = usePermission("HR Policy"); // Terms are part of HR Policy usually, or I should check keys. I'll stick to HR Policy or check if "Terms" is a key. Given user request, I'll use "HR Policy".
 
   /* ================= API ================= */
   const { data, isLoading } = useGetAllTermsQuery({
@@ -141,7 +144,11 @@ const TermsAndCondition = () => {
 
               <button
                 onClick={() => setIsModalOpen(true)}
-                className="bg-orange-500 text-white px-4 py-2 flex gap-2"
+                disabled={!create}
+                className={`px-4 py-2 flex gap-2 ${create
+                  ? "bg-orange-500 text-white"
+                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  }`}
               >
                 <Plus size={18} /> Add Terms
               </button>
@@ -263,33 +270,41 @@ const TermsAndCondition = () => {
                     <td className="py-3 px-1 whitespace-nowrap">{term.updated_at}</td>
                     <td className="py-3 px-1">
                       <div className="flex justify-center gap-2">
-                        <button
-                          onClick={() => {
-                            setSelectedTerm(term);
-                            setIsViewModalOpen(true);
-                          }}
-                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-sm transition-colors"
-                        >
-                          <Eye size={18} />
-                        </button>
-                        <button
-                          onClick={() => {
-                            setSelectedTerm(term);
-                            setIsEditModalOpen(true);
-                          }}
-                          className="p-2 text-orange-600 hover:bg-orange-50 rounded-sm transition-colors"
-                        >
-                          <Pencil size={18} />
-                        </button>
-                        <button
-                          onClick={() => {
-                            setSelectedTermId(term.id);
-                            setIsDeleteModalOpen(true);
-                          }}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-sm transition-colors"
-                        >
-                          <Trash2 size={18} />
-                        </button>
+                        <div className="flex justify-center gap-2">
+                          {read && (
+                            <button
+                              onClick={() => {
+                                setSelectedTerm(term);
+                                setIsViewModalOpen(true);
+                              }}
+                              className="p-2 text-blue-600 hover:bg-blue-50 rounded-sm transition-colors"
+                            >
+                              <Eye size={18} />
+                            </button>
+                          )}
+                          {update && (
+                            <button
+                              onClick={() => {
+                                setSelectedTerm(term);
+                                setIsEditModalOpen(true);
+                              }}
+                              className="p-2 text-orange-600 hover:bg-orange-50 rounded-sm transition-colors"
+                            >
+                              <Pencil size={18} />
+                            </button>
+                          )}
+                          {remove && (
+                            <button
+                              onClick={() => {
+                                setSelectedTermId(term.id);
+                                setIsDeleteModalOpen(true);
+                              }}
+                              className="p-2 text-red-600 hover:bg-red-50 rounded-sm transition-colors"
+                            >
+                              <Trash2 size={18} />
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </td>
                   </tr>

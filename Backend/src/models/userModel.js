@@ -11,7 +11,8 @@ const User = {
             businessType,
             gst,
             address,
-            password
+            password,
+            role = 'Admin' // Default role
         } = userData;
 
         const [result] = await pool.query(
@@ -24,8 +25,9 @@ const User = {
         businessType, 
         gst, 
         address, 
-        password
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        password,
+        role
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 firstName,
                 lastName,
@@ -35,7 +37,8 @@ const User = {
                 businessType,
                 gst,
                 address,
-                password
+                password,
+                role
             ]
         );
         return result.insertId;
@@ -48,7 +51,7 @@ const User = {
 
     findById: async (id) => {
         const [rows] = await pool.query(
-            'SELECT id, firstName, lastName, email, mobileNumber, businessName, businessType, gst, address, created_at FROM users WHERE id = ?',
+            'SELECT id, firstName, lastName, email, mobileNumber, businessName, businessType, gst, address, role, created_at FROM users WHERE id = ?',
             [id]
         );
         return rows[0];
