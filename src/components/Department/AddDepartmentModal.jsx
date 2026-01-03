@@ -4,7 +4,7 @@ import { useCreateDepartmentMutation } from "../../store/api/departmentApi";
 import { toast } from "react-hot-toast";
 import Modal from "../common/Modal";
 
-const AddDepartmentModal = ({ isOpen, onClose }) => {
+const AddDepartmentModal = ({ isOpen, onClose, refetchDashboard }) => {
   const [departmentName, setDepartmentName] = useState("");
   const [departmentDescription, setDepartmentDescription] = useState("");
   const [departmentIcon, setDepartmentIcon] = useState(null);
@@ -36,6 +36,10 @@ const AddDepartmentModal = ({ isOpen, onClose }) => {
       }
 
       await createDepartment(formData).unwrap();
+
+      if (refetchDashboard) {
+        refetchDashboard();
+      }
 
       toast.success("Department added successfully");
       setDepartmentName("");

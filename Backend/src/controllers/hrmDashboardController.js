@@ -27,6 +27,18 @@ const getDashboardData = async (req, res) => {
         );
         const unreadLeads = unreadLeadsRows[0]?.count || 0;
 
+        const [totalDeptsRows] = await pool.query(
+            'SELECT COUNT(*) as count FROM departments WHERE user_id = ?',
+            [userId]
+        );
+        const totalDepartments = totalDeptsRows[0]?.count || 0;
+
+        const [totalDesignationsRows] = await pool.query(
+            'SELECT COUNT(*) as count FROM designations WHERE user_id = ?',
+            [userId]
+        );
+        const totalDesignations = totalDesignationsRows[0]?.count || 0;
+
         // 2. Department Distribution
         const [deptDistRows] = await pool.query(
             `SELECT d.department_name as name, COUNT(e.id) as employees, d.icon as color 
@@ -126,7 +138,9 @@ const getDashboardData = async (req, res) => {
                     totalEmployees: { value: totalEmployees, trend: "+0%" },
                     presentToday: { value: presentToday, trend: "+0%" },
                     onLeave: { value: onLeave, trend: "+0%" },
-                    unreadLeads: { value: unreadLeads, trend: "+0%" }
+                    unreadLeads: { value: unreadLeads, trend: "+0%" },
+                    totalDepartments: { value: totalDepartments, trend: "+0%" },
+                    totalDesignations: { value: totalDesignations, trend: "+0%" }
                 },
                 departmentDistribution,
                 leaveRequests: leaveRequestsRows,

@@ -5,7 +5,7 @@ import { useGetDepartmentsQuery } from "../../store/api/departmentApi";
 import { toast } from "react-hot-toast";
 import Modal from "../common/Modal";
 
-const EditDesignationModal = ({ isOpen, onClose, designation }) => {
+const EditDesignationModal = ({ isOpen, onClose, designation, refetchDashboard }) => {
     const [designationName, setDesignationName] = useState("");
     const [departmentId, setDepartmentId] = useState("");
     const [description, setDescription] = useState("");
@@ -51,6 +51,11 @@ const EditDesignationModal = ({ isOpen, onClose, designation }) => {
             }
 
             await updateDesignation({ id: designation.id, data: formData }).unwrap();
+
+            if (refetchDashboard) {
+                refetchDashboard();
+            }
+
             toast.success("Designation updated successfully");
             onClose();
         } catch (err) {

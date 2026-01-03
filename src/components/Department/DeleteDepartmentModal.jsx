@@ -4,12 +4,17 @@ import { useDeleteDepartmentMutation } from "../../store/api/departmentApi";
 import { toast } from "react-hot-toast";
 import Modal from "../common/Modal";
 
-const DeleteDepartmentModal = ({ isOpen, onClose, departmentId }) => {
+const DeleteDepartmentModal = ({ isOpen, onClose, departmentId, refetchDashboard }) => {
     const [deleteDepartment, { isLoading }] = useDeleteDepartmentMutation();
 
     const handleDelete = async () => {
         try {
             await deleteDepartment(departmentId).unwrap();
+
+            if (refetchDashboard) {
+                refetchDashboard();
+            }
+
             toast.success("Department deleted successfully");
             onClose();
         } catch (err) {

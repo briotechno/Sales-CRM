@@ -8,6 +8,7 @@ import ViewDesignationModal from "../../components/Designation/ViewDesignationMo
 import DeleteDesignationModal from "../../components/Designation/DeleteDesignationModal";
 import NumberCard from "../../components/NumberCard";
 import { useGetDesignationsQuery } from "../../store/api/designationApi";
+import { useGetHRMDashboardDataQuery } from "../../store/api/hrmDashboardApi";
 import usePermission from "../../hooks/usePermission";
 
 const AllDesignation = () => {
@@ -32,6 +33,9 @@ const AllDesignation = () => {
     status: statusFilter,
     search: searchTerm,
   });
+
+  const { data: dashboardData, refetch: refetchDashboard } = useGetHRMDashboardDataQuery();
+  const summary = dashboardData?.data?.summary;
 
   const designations = data?.designations || [];
   const pagination = data?.pagination || { totalPages: 1, total: 0 };
@@ -120,21 +124,21 @@ const AllDesignation = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <NumberCard
             title="Total Employee"
-            number={"248"}
+            number={summary?.totalEmployees?.value || "-"}
             icon={<Users className="text-blue-600" size={24} />}
             iconBgColor="bg-blue-100"
             lineBorderClass="border-blue-500"
           />
           <NumberCard
             title="Total Department"
-            number={"186"}
+            number={summary?.totalDepartments?.value || "-"}
             icon={<Warehouse className="text-green-600" size={24} />}
             iconBgColor="bg-green-100"
             lineBorderClass="border-green-500"
           />
           <NumberCard
             title="Total Designation"
-            number={pagination.total.toString()}
+            number={summary?.totalDesignations?.value || "-"}
             icon={<Handshake className="text-orange-600" size={24} />}
             iconBgColor="bg-orange-100"
             lineBorderClass="border-orange-500"
@@ -294,6 +298,7 @@ const AllDesignation = () => {
       <AddDesignationModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
+        refetchDashboard={refetchDashboard}
       />
 
       <EditDesignationModal
@@ -303,6 +308,7 @@ const AllDesignation = () => {
           setSelectedDesignation(null);
         }}
         designation={selectedDesignation}
+        refetchDashboard={refetchDashboard}
       />
 
       <ViewDesignationModal
@@ -321,6 +327,7 @@ const AllDesignation = () => {
           setSelectedDesignation(null);
         }}
         designationId={selectedDesignation?.id}
+        refetchDashboard={refetchDashboard}
       />
     </DashboardLayout>
   );

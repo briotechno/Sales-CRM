@@ -182,26 +182,6 @@ export default function ManageLeave() {
           </div>
         </div>
 
-        {/* Stats - Simplified */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white p-5 rounded-lg shadow-sm border-l-4 border-orange-500">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-gray-500 text-sm font-medium">
-                  Total Leave Types
-                </h3>
-                <p className="text-2xl font-bold text-gray-900 mt-1">
-                  {totalTypes}
-                </p>
-              </div>
-              <div className="bg-orange-100 p-2 rounded-lg">
-                <FileText className="text-orange-600" size={20} />
-              </div>
-            </div>
-          </div>
-
-          {/* We can add more specific count queries later if needed */}
-        </div>
 
         {/* Table Card */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">

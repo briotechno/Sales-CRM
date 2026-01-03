@@ -333,24 +333,7 @@ export default function HolidaysManagement() {
           </div>
         </div>
 
-        {/* Stats Cards - Simplified */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white p-5 rounded-lg shadow-sm border-l-4 border-orange-500">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-gray-500 text-sm font-medium">
-                  Total Holidays
-                </h3>
-                <p className="text-2xl font-bold text-gray-900 mt-1">
-                  {totalHolidays}
-                </p>
-              </div>
-              <div className="bg-orange-100 p-2 rounded-lg">
-                <Calendar className="text-orange-600" size={20} />
-              </div>
-            </div>
-          </div>
-        </div>
+
 
         {/* Holidays Table */}
         <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200">

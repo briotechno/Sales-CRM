@@ -4,12 +4,17 @@ import { useDeleteDesignationMutation } from "../../store/api/designationApi";
 import { toast } from "react-hot-toast";
 import Modal from "../common/Modal";
 
-const DeleteDesignationModal = ({ isOpen, onClose, designationId }) => {
+const DeleteDesignationModal = ({ isOpen, onClose, designationId, refetchDashboard }) => {
     const [deleteDesignation, { isLoading }] = useDeleteDesignationMutation();
 
     const handleDelete = async () => {
         try {
             await deleteDesignation(designationId).unwrap();
+
+            if (refetchDashboard) {
+                refetchDashboard();
+            }
+
             toast.success("Designation deleted successfully");
             onClose();
         } catch (err) {

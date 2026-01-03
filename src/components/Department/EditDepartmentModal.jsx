@@ -4,7 +4,7 @@ import { useUpdateDepartmentMutation } from "../../store/api/departmentApi";
 import { toast } from "react-hot-toast";
 import Modal from "../common/Modal";
 
-const EditDepartmentModal = ({ isOpen, onClose, department }) => {
+const EditDepartmentModal = ({ isOpen, onClose, department, refetchDashboard }) => {
     const [departmentName, setDepartmentName] = useState("");
     const [departmentDescription, setDepartmentDescription] = useState("");
     const [status, setStatus] = useState("Active");
@@ -46,6 +46,11 @@ const EditDepartmentModal = ({ isOpen, onClose, department }) => {
             }
 
             await updateDepartment({ id: department.id, data: formData }).unwrap();
+
+            if (refetchDashboard) {
+                refetchDashboard();
+            }
+
             toast.success("Department updated successfully");
             onClose();
         } catch (err) {

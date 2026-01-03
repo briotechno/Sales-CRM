@@ -8,6 +8,7 @@ import ViewDepartmentModal from "../../components/Department/ViewDepartmentModal
 import DeleteDepartmentModal from "../../components/Department/DeleteDepartmentModal";
 import NumberCard from "../../components/NumberCard";
 import { useGetDepartmentsQuery } from "../../store/api/departmentApi";
+import { useGetHRMDashboardDataQuery } from "../../store/api/hrmDashboardApi";
 import usePermission from "../../hooks/usePermission";
 
 const AllDepartment = () => {
@@ -30,6 +31,9 @@ const AllDepartment = () => {
     status: statusFilter,
     search: searchTerm
   });
+
+  const { data: dashboardData, refetch: refetchDashboard } = useGetHRMDashboardDataQuery();
+  const summary = dashboardData?.data?.summary;
 
   const departments = data?.departments || [];
   const totalPages = data?.pagination?.totalPages || 1;
@@ -103,21 +107,21 @@ const AllDepartment = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <NumberCard
             title="Total Employee"
-            number={"248"}
+            number={summary?.totalEmployees?.value || "-"}
             icon={<Users className="text-blue-600" size={24} />}
             iconBgColor="bg-blue-100"
             lineBorderClass="border-blue-500"
           />
           <NumberCard
             title="Total Department"
-            number={data?.pagination?.total || "0"}
+            number={summary?.totalDepartments?.value || "-"}
             icon={<Warehouse className="text-green-600" size={24} />}
             iconBgColor="bg-green-100"
             lineBorderClass="border-green-500"
           />
           <NumberCard
             title="Total Designation"
-            number={"18"}
+            number={summary?.totalDesignations?.value || "-"}
             icon={<Handshake className="text-orange-600" size={24} />}
             iconBgColor="bg-orange-100"
             lineBorderClass="border-orange-500"
@@ -261,12 +265,13 @@ const AllDepartment = () => {
       </div>
 
       {/* Modals */}
-      <AddDepartmentModal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} />
+      <AddDepartmentModal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} refetchDashboard={refetchDashboard} />
 
       <EditDepartmentModal
         isOpen={isEditModalOpen}
         onClose={() => { setIsEditModalOpen(false); setSelectedDept(null); }}
         department={selectedDept}
+        refetchDashboard={refetchDashboard}
       />
 
       <ViewDepartmentModal
@@ -279,6 +284,7 @@ const AllDepartment = () => {
         isOpen={isDeleteModalOpen}
         onClose={() => { setIsDeleteModalOpen(false); setSelectedDept(null); }}
         departmentId={selectedDept?.id}
+        refetchDashboard={refetchDashboard}
       />
     </DashboardLayout>
   );
