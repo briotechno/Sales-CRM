@@ -20,6 +20,7 @@ import {
   Target,
   Handshake,
   Users,
+  CheckCircle,
 } from "lucide-react";
 import NumberCard from "../../components/NumberCard";
 
@@ -29,6 +30,7 @@ export default function CatalogsPage() {
   const [imagePreview, setImagePreview] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState("All");
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
   const itemsPerPage = 5;
 
   const [catalogs, setCatalogs] = useState([
@@ -168,14 +170,39 @@ export default function CatalogsPage() {
     setImagePreview(null);
   };
 
-  const filteredCatalogs = catalogs.filter((catalog) => {
-    const matchesSearch =
-      catalog.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      catalog.id.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus =
-      statusFilter === "All" || catalog.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  const handleSort = (key) => {
+    let direction = "asc";
+    if (sortConfig.key === key && sortConfig.direction === "asc") {
+      direction = "desc";
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const handleDelete = (id) => {
+    if (window.confirm("Are you sure you want to delete this catalog?")) {
+      setCatalogs(catalogs.filter((c) => c.id !== id));
+    }
+  };
+
+  const filteredCatalogs = catalogs
+    .filter((catalog) => {
+      const matchesSearch =
+        catalog.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        catalog.id.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesStatus =
+        statusFilter === "All" || catalog.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    })
+    .sort((a, b) => {
+      if (!sortConfig.key) return 0;
+      if (a[sortConfig.key] < b[sortConfig.key]) {
+        return sortConfig.direction === "asc" ? -1 : 1;
+      }
+      if (a[sortConfig.key] > b[sortConfig.key]) {
+        return sortConfig.direction === "asc" ? 1 : -1;
+      }
+      return 0;
+    });
 
   const totalPages = Math.ceil(filteredCatalogs.length / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -189,6 +216,18 @@ export default function CatalogsPage() {
     setCurrentPage((prev) => (prev > 1 ? prev - 1 : prev));
   const handleNext = () =>
     setCurrentPage((prev) => (prev < totalPages ? prev + 1 : prev));
+  const handlePageChange = (page) => setCurrentPage(page);
+
+  const handleShare = (id) => {
+    const url = `${window.location.origin}/catalog/view/${id}`;
+    navigator.clipboard.writeText(url).then(() => {
+      alert(`Catalog link copied to clipboard!\n${url}`);
+    });
+  };
+
+  const handleView = (id) => {
+    window.open(`/catalog/view/${id}`, "_blank");
+  };
 
   return (
     <DashboardLayout>
@@ -205,13 +244,26 @@ export default function CatalogsPage() {
                   <FiHome className="text-gray-700 text-sm" />
                   <span className="text-gray-400"></span> CRM /{" "}
                   <span className="text-[#FF7B1D] font-medium">
-                    All Catelogs
+                    All Catalogs
                   </span>
                 </p>
               </div>
 
               {/* Buttons */}
               <div className="flex flex-wrap items-center gap-2">
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Search catalogs..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 pr-4 py-3 border border-gray-200 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#FF7B1D] text-sm hidden md:block"
+                  />
+                  <Search
+                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 hidden md:block"
+                    size={16}
+                  />
+                </div>
                 {["All", "Active", "Inactive"].map((status) => (
                   <button
                     key={status}
@@ -280,17 +332,57 @@ export default function CatalogsPage() {
         <div className="overflow-x-auto mt-4 border border-gray-200 rounded-sm shadow-sm">
           <table className="w-full border-collapse text-center">
             <thead>
-              <tr className="bg-gradient-to-r from-orange-500 to-orange-600  text-white text-sm">
+              <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm">
                 <th className="py-3 px-4 font-semibold">S.N</th>
                 <th className="py-3 px-4 font-semibold">Image</th>
-                <th className="py-3 px-4 font-semibold">ID</th>
-                <th className="py-3 px-4 font-semibold">Name</th>
-                <th className="py-3 px-4 font-semibold">Min Price</th>
-                <th className="py-3 px-4 font-semibold">Max Price</th>
-                <th className="py-3 px-4 font-semibold">SKUs</th>
-                <th className="py-3 px-4 font-semibold">Interested Leads</th>
-                <th className="py-3 px-4 font-semibold">Created Date</th>
-                <th className="py-3 px-4 font-semibold">Status</th>
+                <th
+                  className="py-3 px-4 font-semibold cursor-pointer hover:text-gray-200"
+                  onClick={() => handleSort("id")}
+                >
+                  ID
+                </th>
+                <th
+                  className="py-3 px-4 font-semibold cursor-pointer hover:text-gray-200"
+                  onClick={() => handleSort("name")}
+                >
+                  Name
+                </th>
+                <th
+                  className="py-3 px-4 font-semibold cursor-pointer hover:text-gray-200"
+                  onClick={() => handleSort("minPrice")}
+                >
+                  Min Price
+                </th>
+                <th
+                  className="py-3 px-4 font-semibold cursor-pointer hover:text-gray-200"
+                  onClick={() => handleSort("maxPrice")}
+                >
+                  Max Price
+                </th>
+                <th
+                  className="py-3 px-4 font-semibold cursor-pointer hover:text-gray-200"
+                  onClick={() => handleSort("skus")}
+                >
+                  SKUs
+                </th>
+                <th
+                  className="py-3 px-4 font-semibold cursor-pointer hover:text-gray-200"
+                  onClick={() => handleSort("interestedLeads")}
+                >
+                  Interested Leads
+                </th>
+                <th
+                  className="py-3 px-4 font-semibold cursor-pointer hover:text-gray-200"
+                  onClick={() => handleSort("createdDate")}
+                >
+                  Created Date
+                </th>
+                <th
+                  className="py-3 px-4 font-semibold cursor-pointer hover:text-gray-200"
+                  onClick={() => handleSort("status")}
+                >
+                  Status
+                </th>
                 <th className="py-3 px-4 font-semibold">Action</th>
               </tr>
             </thead>
@@ -341,16 +433,25 @@ export default function CatalogsPage() {
                     </td>
                     <td className="py-3 px-4">
                       <div className="flex justify-center gap-3">
-                        <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-sm transition-colors">
+                        <button
+                          onClick={() => handleView(catalog.id)}
+                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-sm transition-colors"
+                        >
                           <Eye size={18} />
                         </button>
                         <button className="text-[#FF7B1D] hover:opacity-80">
                           <Edit2 size={18} />
                         </button>
-                        <button className="p-2 text-red-600 hover:bg-red-50 rounded-sm transition-colors">
+                        <button
+                          onClick={() => handleDelete(catalog.id)}
+                          className="p-2 text-red-600 hover:bg-red-50 rounded-sm transition-colors"
+                        >
                           <Trash2 size={18} />
                         </button>
-                        <button className="text-orange-500 hover:opacity-80">
+                        <button
+                          onClick={() => handleShare(catalog.id)}
+                          className="text-orange-500 hover:opacity-80"
+                        >
                           <Share2 size={18} />
                         </button>
                       </div>
@@ -422,7 +523,7 @@ export default function CatalogsPage() {
                 </h2>
 
                 <button
-                  onClick={() => setShowModal(false)}
+                  onClick={() => setShowAddModal(false)}
                   className="text-white hover:bg-orange-700 p-1 rounded-lg transition-colors"
                 >
                   <X size={24} />
