@@ -51,17 +51,24 @@ const DeleteSalaryModal = ({ isOpen, onClose, salaryId }) => {
       maxWidth="max-w-md"
       footer={footer}
     >
-      <div className="flex flex-col items-center text-center text-black">
-        <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mb-6 animate-bounce">
-          <AlertCircle size={48} className="text-red-600" />
-        </div>
-
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">Confirm Delete</h2>
-        <p className="text-gray-600 mb-2 leading-relaxed">
-          Are you sure you want to delete this salary record? This action cannot be undone.
-          All associated data will be permanently removed.
-        </p>
-      </div>
+   <div className="flex flex-col items-center text-center text-black">
+           <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mb-6 animate-bounce">
+             <AlertCircle size={48} className="text-red-600" />
+           </div>
+   
+           <h2 className="text-2xl font-bold text-gray-800 mb-2">
+             Confirm Delete
+           </h2>
+   
+           <p className="text-gray-600 mb-2 leading-relaxed">
+             Are you sure you want to delete the salary{" "}
+             <span className="font-bold text-gray-800">"{salaryId}"</span>?
+           </p>
+   
+           <p className="text-sm text-red-500 italic">
+             This action cannot be undone. All associated data will be permanently removed.
+           </p>
+         </div>
     </Modal>
   );
 };

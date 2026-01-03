@@ -361,11 +361,14 @@ export default function TeamManagement() {
 
       <DeleteTeamModal
         isOpen={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setSelectedTeam(null);
+        }}
+        teamId={selectedTeam?.id}
         teamName={selectedTeam?.team_name}
-        onConfirm={handleDeleteTeam}
-        isLoading={isDeleting}
       />
+
     </DashboardLayout>
   );
 }

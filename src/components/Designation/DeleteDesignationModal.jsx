@@ -53,9 +53,17 @@ const DeleteDesignationModal = ({ isOpen, onClose, designationId }) => {
                     <AlertCircle size={48} className="text-red-600" />
                 </div>
 
-                <h2 className="text-2xl font-bold text-gray-800 mb-2">Confirm Delete</h2>
+                <h2 className="text-2xl font-bold text-gray-800 mb-2">
+                    Confirm Delete
+                </h2>
+
                 <p className="text-gray-600 mb-2 leading-relaxed">
-                    Are you sure you want to delete this designation? This action cannot be undone. All associated data will be permanently removed.
+                    Are you sure you want to delete the designation{" "}
+                    <span className="font-bold text-gray-800">"{designationId}"</span>?
+                </p>
+
+                <p className="text-sm text-red-500 italic">
+                    This action cannot be undone. All associated data will be permanently removed.
                 </p>
             </div>
         </Modal>

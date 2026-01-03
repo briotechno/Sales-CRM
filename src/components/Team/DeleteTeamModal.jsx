@@ -1,48 +1,73 @@
 import React from "react";
-import { Trash2, X, AlertTriangle } from "lucide-react";
+import { AlertCircle, Trash2 } from "lucide-react";
+import { toast } from "react-hot-toast";
+import Modal from "../common/Modal";
+import { useDeleteTeamMutation } from "../../store/api/teamApi";
 
-const DeleteTeamModal = ({ isOpen, onClose, onConfirm, isLoading, teamName }) => {
-    if (!isOpen) return null;
+const DeleteTeamModal = ({ isOpen, onClose, teamId, teamName }) => {
+    const [deleteTeam, { isLoading }] = useDeleteTeamMutation();
+
+    const handleDelete = async () => {
+        try {
+            await deleteTeam(teamId).unwrap();
+            toast.success("Team deleted successfully");
+            onClose();
+        } catch (err) {
+            toast.error(err?.data?.message || "Failed to delete team");
+        }
+    };
+
+    const footer = (
+        <div className="flex gap-4 w-full">
+            <button
+                onClick={onClose}
+                className="flex-1 px-6 py-3 border-2 border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-100 transition-all"
+            >
+                Cancel
+            </button>
+
+            <button
+                onClick={handleDelete}
+                disabled={isLoading}
+                className="flex-1 px-6 py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition-all shadow-lg hover:shadow-red-200 flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+                {isLoading ? (
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                    <Trash2 size={20} />
+                )}
+                {isLoading ? "Deleting..." : "Delete Now"}
+            </button>
+        </div>
+    );
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white w-full max-w-md shadow-2xl rounded-sm">
-                <div className="flex justify-between items-center p-6 border-b">
-                    <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-                        <Trash2 className="text-red-500" size={24} />
-                        Confirm Delete
-                    </h3>
-                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
-                        <X size={24} />
-                    </button>
+        <Modal
+            isOpen={isOpen}
+            onClose={onClose}
+            headerVariant="simple"
+            maxWidth="max-w-md"
+            footer={footer}
+        >
+            <div className="flex flex-col items-center text-center text-black">
+                <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mb-6 animate-bounce">
+                    <AlertCircle size={48} className="text-red-600" />
                 </div>
 
-                <div className="p-8 text-center">
-                    <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <AlertTriangle className="text-red-600" size={32} />
-                    </div>
-                    <p className="text-gray-600 mb-2">Are you sure you want to delete the team</p>
-                    <p className="text-lg font-bold text-gray-800 mb-6">"{teamName}"?</p>
-                    <p className="text-sm text-red-500 italic">This action cannot be undone.</p>
-                </div>
+                <h2 className="text-2xl font-bold text-gray-800 mb-2">
+                    Confirm Delete
+                </h2>
 
-                <div className="flex gap-3 p-6 bg-gray-50 border-t">
-                    <button
-                        onClick={onConfirm}
-                        disabled={isLoading}
-                        className="flex-1 py-3 bg-red-600 text-white font-bold hover:bg-red-700 transition-all rounded-sm shadow-md disabled:opacity-50"
-                    >
-                        {isLoading ? "Deleting..." : "Yes, Delete"}
-                    </button>
-                    <button
-                        onClick={onClose}
-                        className="flex-1 py-3 border-2 border-gray-300 font-bold text-gray-700 hover:bg-white transition-all rounded-sm"
-                    >
-                        Cancel
-                    </button>
-                </div>
+                <p className="text-gray-600 mb-2 leading-relaxed">
+                    Are you sure you want to delete the team{" "}
+                    <span className="font-bold text-gray-800">"{teamName}"</span>?
+                </p>
+
+                <p className="text-sm text-red-500 italic">
+                    This action cannot be undone. All associated data will be permanently removed.
+                </p>
             </div>
-        </div>
+        </Modal>
     );
 };
 

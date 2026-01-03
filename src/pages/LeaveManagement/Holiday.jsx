@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import DashboardLayout from "../../components/DashboardLayout";
 import { FiHome } from "react-icons/fi";
 import {
@@ -10,9 +10,8 @@ import {
   TrendingUp,
   Clock,
   CheckCircle,
-  ChevronLeft,
-  ChevronRight,
-  Search
+  Search,
+  AlertCircle
 } from "lucide-react";
 import {
   useGetHolidaysQuery,
@@ -21,6 +20,7 @@ import {
   useDeleteHolidayMutation
 } from "../../store/api/leaveApi";
 import toast from 'react-hot-toast';
+import Modal from "../../components/common/Modal";
 
 // AddHolidayModal Component
 const AddHolidayModal = ({
@@ -142,6 +142,66 @@ const AddHolidayModal = ({
   );
 };
 
+const DeleteHolidayModal = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  isLoading,
+  holidayName,
+}) => {
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      headerVariant="simple"
+      maxWidth="max-w-md"
+      footer={
+        <div className="flex gap-4 w-full">
+          <button
+            onClick={onClose}
+            className="flex-1 px-6 py-3 border-2 border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-100"
+          >
+            Cancel
+          </button>
+
+          <button
+            onClick={onConfirm}
+            disabled={isLoading}
+            className="flex-1 px-6 py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 shadow-lg disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            {isLoading ? (
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <Trash2 size={20} />
+            )}
+            {isLoading ? "Deleting..." : "Delete Now"}
+          </button>
+        </div>
+      }
+    >
+      <div className="flex flex-col items-center text-center">
+        <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mb-6 animate-bounce">
+          <AlertCircle size={48} className="text-red-600" />
+        </div>
+
+        <h2 className="text-2xl font-bold text-gray-800 mb-2">
+          Confirm Delete
+        </h2>
+
+        <p className="text-gray-600 mb-2 leading-relaxed">
+          Are you sure you want to delete holiday{" "}
+          <span className="font-bold text-gray-800">"{holidayName}"</span>?
+        </p>
+
+        <p className="text-sm text-red-500 italic">
+          This action cannot be undone. All associated data will be permanently removed.
+        </p>
+
+      </div>
+    </Modal>
+  );
+};
+
 // Main HolidaysManagement Component
 export default function HolidaysManagement() {
   const [currentPage, setCurrentPage] = useState(1);
@@ -149,6 +209,9 @@ export default function HolidaysManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedHoliday, setSelectedHoliday] = useState(null);
+
   const [formData, setFormData] = useState({
     name: "",
     start_date: "",
@@ -169,7 +232,8 @@ export default function HolidaysManagement() {
 
   const [createHoliday] = useCreateHolidayMutation();
   const [updateHoliday] = useUpdateHolidayMutation();
-  const [deleteHoliday] = useDeleteHolidayMutation();
+  const [deleteHoliday, { isLoading: isDeleting }] =
+    useDeleteHolidayMutation();
 
   const calculateDays = (start, end) => {
     const startDate = new Date(start);
@@ -238,6 +302,23 @@ export default function HolidaysManagement() {
       }
     }
   };
+  const handleDeleteClick = (holiday) => {
+    setSelectedHoliday(holiday);
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    try {
+      await deleteHoliday(selectedHoliday.id).unwrap();
+      toast.success("Holiday deleted successfully");
+      setShowDeleteModal(false);
+      setSelectedHoliday(null);
+      refetch();
+    } catch (error) {
+      toast.error(error?.data?.message || "Failed to delete holiday");
+    }
+  };
+
 
   const handleCancel = () => {
     setIsModalOpen(false);
@@ -459,12 +540,13 @@ export default function HolidaysManagement() {
                           </button>
 
                           <button
-                            onClick={() => handleDelete(holiday.id)}
+                            onClick={() => handleDeleteClick(holiday)}
                             className="p-1.5 text-red-600 hover:bg-red-50 rounded transition"
                             title="Delete"
                           >
                             <Trash2 size={16} />
                           </button>
+
                         </div>
                       </td>
                     </tr>
@@ -527,6 +609,17 @@ export default function HolidaysManagement() {
         onSubmit={handleSubmit}
         editingId={editingId}
       />
+      <DeleteHolidayModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setSelectedHoliday(null);
+        }}
+        onConfirm={handleConfirmDelete}
+        isLoading={isDeleting}
+        holidayName={selectedHoliday?.name}
+      />
+
 
     </DashboardLayout >
   );

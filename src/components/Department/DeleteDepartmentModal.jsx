@@ -4,7 +4,7 @@ import { useDeleteDepartmentMutation } from "../../store/api/departmentApi";
 import { toast } from "react-hot-toast";
 import Modal from "../common/Modal";
 
-const DeleteDepartmentModal = ({ isOpen, onClose, departmentId }) => {
+const DeleteDepartmentModal = ({ isOpen, onClose, departmentId, }) => {
     const [deleteDepartment, { isLoading }] = useDeleteDepartmentMutation();
 
     const handleDelete = async () => {
@@ -53,9 +53,17 @@ const DeleteDepartmentModal = ({ isOpen, onClose, departmentId }) => {
                     <AlertCircle size={48} className="text-red-600" />
                 </div>
 
-                <h2 className="text-2xl font-bold text-gray-800 mb-2">Confirm Delete</h2>
+                <h2 className="text-2xl font-bold text-gray-800 mb-2">
+                    Confirm Delete
+                </h2>
+
                 <p className="text-gray-600 mb-2 leading-relaxed">
-                    Are you sure you want to delete this department? This action cannot be undone. All associated data will be permanently removed.
+                    Are you sure you want to delete the department{" "}
+                    <span className="font-bold text-gray-800">"{departmentId}"</span>?
+                </p>
+
+                <p className="text-sm text-red-500 italic">
+                    This action cannot be undone. All associated data will be permanently removed.
                 </p>
             </div>
         </Modal>
