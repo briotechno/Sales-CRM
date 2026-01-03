@@ -3,14 +3,28 @@ import { FileText, Briefcase, User, AlignLeft } from "lucide-react";
 import { useCreateTermMutation } from "../../store/api/termApi";
 import { toast } from "react-hot-toast";
 import Modal from "../common/Modal";
+import { useGetDepartmentsQuery } from "../../store/api/departmentApi";
+import { useGetDesignationsQuery } from "../../store/api/designationApi";
 
 const AddTermModal = ({ isOpen, onClose }) => {
   const [department, setDepartment] = useState("");
   const [designation, setDesignation] = useState("");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [formData, setFormData] = useState({
+    designation: "",
+    department: "",
+  });
 
   const [createTerm, { isLoading }] = useCreateTermMutation();
+
+  const { data: departmentData, isLoading: loadingDepartments } = useGetDepartmentsQuery({
+    limit: 100,
+  });
+
+  const { data: designationData, isLoading: loadingDesignations } = useGetDesignationsQuery({
+    limit: 100,
+  });
 
   const resetForm = () => {
     setDepartment("");
@@ -70,40 +84,39 @@ const AddTermModal = ({ isOpen, onClose }) => {
       footer={footer}
     >
       <div className="space-y-5">
-        {/* Department */}
-        <div>
-          <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-            <Briefcase size={16} className="text-[#FF7B1D]" />
-            Department *
-          </label>
+        {/* Department Select */}
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-medium text-gray-600">Department</label>
           <select
-            value={department}
-            onChange={(e) => setDepartment(e.target.value)}
-            className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg"
+            value={formData.department}
+            onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+            className="border p-2"
+            disabled={loadingDepartments}
           >
-            <option value="">-- Select Department --</option>
-            <option value="HR">HR</option>
-            <option value="IT">IT</option>
-            <option value="Sales">Sales</option>
-            <option value="Finance">Finance</option>
+            <option value="">Select Department</option>
+            {departmentData?.departments?.map((dept) => (
+              <option key={dept.id} value={dept.department_name}>
+                {dept.department_name}
+              </option>
+            ))}
           </select>
         </div>
 
-        {/* Designation */}
-        <div>
-          <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-            <User size={16} className="text-[#FF7B1D]" />
-            Designation *
-          </label>
+        {/* Designation Select */}
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-medium text-gray-600">Designation</label>
           <select
-            value={designation}
-            onChange={(e) => setDesignation(e.target.value)}
-            className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg"
+            value={formData.designation}
+            onChange={(e) => setFormData({ ...formData, designation: e.target.value })}
+            className="border p-2"
+            disabled={loadingDesignations}
           >
-            <option value="">-- Select Designation --</option>
-            <option value="Manager">Manager</option>
-            <option value="Executive">Executive</option>
-            <option value="Engineer">Engineer</option>
+            <option value="">Select Designation</option>
+            {designationData?.designations?.map((des) => (
+              <option key={des.designation_name} value={des.designation_name}>
+                {des.designation_name}
+              </option>
+            ))}
           </select>
         </div>
 
