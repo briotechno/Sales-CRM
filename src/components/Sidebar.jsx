@@ -181,7 +181,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           name: "campaign",
           icon: <Users size={16} />,
           path: "/crm/champions",
-          permission: "Campaign",
+          permission: "Champions Management",
           children: [
             { name: "Lead", path: "/crm/champions/lead" },
             { name: "Dialer ", path: "/crm/champions/dialer" },
@@ -244,7 +244,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           name: "Attendance",
           icon: <CalendarCheck size={22} />,
           path: null,
-          permission: "Attendance",
+          permission: "Attendance Management",
           children: [
             {
               name: "All Attendance",
@@ -277,21 +277,23 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           name: "Department",
           icon: <Briefcase size={22} />,
           path: "/hrm/department",
-          permission: "Department"
+          permission: "Department Management"
         },
         {
           name: "Designation",
           icon: <FileText size={22} />,
           path: "/hrm/designation",
-          permission: "Designation"
+          permission: "Designation Management"
         },
         {
           name: "Terms & Conditions",
           icon: <FileSignature size={22} />,
           path: "/hrm/terms",
-          permission: "Terms & Conditions"
+          permission: "Terms & Conditions Management"
         },
-        { name: "Salary", icon: <Wallet size={22} />, path: "/hrm/salary", permission: "Salary" },
+        {
+          name: "Salary", icon: <Wallet size={22} />, path: "/hrm/salary", permission: "Salary Management"
+        },
         {
           name: "Company Policy",
           icon: <FileText size={22} />,
@@ -337,7 +339,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           name: "To-Do",
           icon: <CheckSquare size={22} />,
           path: "/additional/todo",
-          permission: "To-Do"
+          permission: "ToDo"
         },
         {
           name: "Quotation",
@@ -355,7 +357,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           name: "My Expenses",
           icon: <Wallet size={22} />,
           path: "/additional/expenses",
-          permission: "My Expenses"
+          permission: "Expense Management"
         },
         {
           name: "Notification",
@@ -384,7 +386,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           name: "Manage Subscription",
           icon: <BarChart3 size={22} />,
           path: "/settings/subscription",
-          permission: "Manage Subscription"
+          permission: "Subscription"
         },
 
         {

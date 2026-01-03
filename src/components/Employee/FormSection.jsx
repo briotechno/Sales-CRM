@@ -80,6 +80,8 @@ const FormSection = ({ formData, handleChange, handleChanges, setFormData }) => 
 
   const modules = [
     "Dashboard",
+    "CRM Dashboard",
+    "HRM Dashboard",
     "Leads Management",
     "Champions Management",
     "Pipeline Management",
@@ -106,6 +108,7 @@ const FormSection = ({ formData, handleChange, handleChanges, setFormData }) => 
     "Business Info",
     "Subscription",
     "FAQ",
+    "Terms & Conditions Management",
   ];
 
   const actions = ["Create", "Read", "Update", "Delete"];

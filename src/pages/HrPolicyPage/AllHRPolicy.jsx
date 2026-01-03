@@ -300,8 +300,8 @@ export default function HRPolicy() {
                 }}
                 disabled={!create}
                 className={`flex items-center gap-2 px-4 py-2 rounded-sm font-semibold transition ml-2 ${create
-                    ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 hover:opacity-90"
-                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 hover:opacity-90"
+                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
                   }`}
               >
                 <Plus size={18} />
