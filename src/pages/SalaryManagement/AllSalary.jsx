@@ -116,14 +116,7 @@ export default function SalaryManagement() {
       iconBg: "bg-orange-100",
       iconColor: "text-orange-600",
     },
-    {
-      label: "Active Departments",
-      value: stats?.active_departments || 0,
-      icon: Users,
-      borderColor: "border-purple-500",
-      iconBg: "bg-purple-100",
-      iconColor: "text-purple-600",
-    },
+
   ];
 
   /* ================= HANDLERS ================= */
@@ -263,7 +256,7 @@ export default function SalaryManagement() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
           {salaryStats.map((stat, index) => (
             <div
               key={index}
