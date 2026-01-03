@@ -64,6 +64,7 @@ const AddSalaryModal = ({ isOpen, onClose, onSubmit, loading }) => {
 
       await onSubmit(payload);
       toast.success("Salary added successfully");
+      setFormData("")
       onClose();
     } catch (err) {
       console.error("API Error:", err);

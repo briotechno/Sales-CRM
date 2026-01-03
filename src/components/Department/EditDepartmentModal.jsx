@@ -18,7 +18,7 @@ const EditDepartmentModal = ({ isOpen, onClose, department, refetchDashboard }) 
             setDepartmentName(department.department_name || "");
             setDepartmentDescription(department.description || "");
             setStatus(department.status || "Active");
-            setIconPreview(department.icon_url || null);
+            setIconPreview(department.icon || null);
         }
     }, [department]);
 

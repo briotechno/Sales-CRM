@@ -10,7 +10,8 @@ import {
   XCircle,
   Filter,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  AlertCircle
 } from "lucide-react";
 import {
   LeaveFormModal,
@@ -23,6 +24,67 @@ import {
   useDeleteLeaveTypeMutation
 } from "../../store/api/leaveApi";
 import toast from 'react-hot-toast';
+import Modal from "../../components/common/Modal";
+
+const DeleteHolidayModal = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  isLoading,
+  holidayName,
+}) => {
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      headerVariant="simple"
+      maxWidth="max-w-md"
+      footer={
+        <div className="flex gap-4 w-full">
+          <button
+            onClick={onClose}
+            className="flex-1 px-6 py-3 border-2 border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-100"
+          >
+            Cancel
+          </button>
+
+          <button
+            onClick={onConfirm}
+            disabled={isLoading}
+            className="flex-1 px-6 py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 shadow-lg disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            {isLoading ? (
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <Trash2 size={20} />
+            )}
+            {isLoading ? "Deleting..." : "Delete Now"}
+          </button>
+        </div>
+      }
+    >
+      <div className="flex flex-col items-center text-center">
+        <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mb-6 animate-bounce">
+          <AlertCircle size={48} className="text-red-600" />
+        </div>
+
+        <h2 className="text-2xl font-bold text-gray-800 mb-2">
+          Confirm Delete
+        </h2>
+
+        <p className="text-gray-600 mb-2 leading-relaxed">
+          Are you sure you want to delete holiday{" "}
+          <span className="font-bold text-gray-800">"{holidayName}"</span>?
+        </p>
+
+        <p className="text-sm text-red-500 italic">
+          This action cannot be undone. All associated data will be permanently removed.
+        </p>
+
+      </div>
+    </Modal>
+  );
+};
 
 export default function ManageLeave() {
   const [currentPage, setCurrentPage] = useState(1);
@@ -31,6 +93,8 @@ export default function ManageLeave() {
   const [showModal, setShowModal] = useState(false);
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [editingLeave, setEditingLeave] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedLeave, setSelectedLeave] = useState(null);
 
   const [formData, setFormData] = useState({
     leave_type: "",
@@ -63,7 +127,8 @@ export default function ManageLeave() {
 
   const [createLeaveType] = useCreateLeaveTypeMutation();
   const [updateLeaveType] = useUpdateLeaveTypeMutation();
-  const [deleteLeaveType] = useDeleteLeaveTypeMutation();
+  const [deleteLeaveType, { isLoading: isDeleting }] =
+    useDeleteLeaveTypeMutation();
 
   const handleAddNew = () => {
     setEditingLeave(null);
@@ -86,15 +151,22 @@ export default function ManageLeave() {
     setShowModal(true);
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this leave type?")) {
-      try {
-        await deleteLeaveType(id).unwrap();
-        toast.success('Leave type deleted successfully');
-        refetch();
-      } catch (error) {
-        toast.error(error?.data?.message || 'Failed to delete leave type');
-      }
+  const handleDeleteClick = (leave) => {
+    setSelectedLeave(leave);
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!selectedLeave) return;
+
+    try {
+      await deleteLeaveType(selectedLeave.id).unwrap();
+      toast.success("Leave type deleted successfully");
+      setShowDeleteModal(false);
+      setSelectedLeave(null);
+      refetch();
+    } catch (error) {
+      toast.error(error?.data?.message || "Failed to delete leave type");
     }
   };
 
@@ -252,11 +324,12 @@ export default function ManageLeave() {
                             <Edit2 size={16} />
                           </button>
                           <button
-                            onClick={() => handleDelete(leave.id)}
+                            onClick={() => handleDeleteClick(leave)}
                             className="p-1.5 text-red-600 hover:bg-red-50 rounded transition"
                           >
                             <Trash2 size={16} />
                           </button>
+
                         </div>
                       </td>
                     </tr>
@@ -317,6 +390,17 @@ export default function ManageLeave() {
           formData={formData}
           handleInputChange={handleInputChange}
           handleSubmit={handleSubmit}
+        />
+
+        <DeleteHolidayModal
+          isOpen={showDeleteModal}
+          onClose={() => {
+            setShowDeleteModal(false);
+            setSelectedLeave(null);
+          }}
+          onConfirm={handleConfirmDelete}
+          isLoading={isDeleting}
+          holidayName={selectedLeave?.leave_type}
         />
 
         <FilterModal

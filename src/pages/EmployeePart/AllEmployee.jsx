@@ -24,8 +24,8 @@ const AllEmployee = () => {
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   const { create, read, update, delete: remove } = usePermission("Employee Management");
 
@@ -271,7 +271,10 @@ const AllEmployee = () => {
                             </button>
                           )}
                           {remove && (
-                            <button onClick={() => handleDelete(emp)} className="p-2 text-red-600 hover:bg-red-50 rounded-sm transition-colors" title="Delete Employee">
+                            <button onClick={() => {
+                              setSelectedEmployee(emp);
+                              setIsDeleteModalOpen(true);
+                            }} className="p-2 text-red-600 hover:bg-red-50 rounded-sm transition-colors" title="Delete Employee">
                               <Trash2 size={18} />
                             </button>
                           )}
@@ -325,7 +328,16 @@ const AllEmployee = () => {
       {/* Modals */}
       <AddEmployeeModal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} />
       <EditEmployeeModal isOpen={isEditModalOpen} onClose={() => { setIsEditModalOpen(false); setSelectedEmployee(null); }} employee={selectedEmployee} />
-      <DeleteEmployeeModal isOpen={isDeleteModalOpen} onClose={() => { setIsDeleteModalOpen(false); setSelectedEmployee(null); }} employeeId={selectedEmployee?.id} />
+      <DeleteEmployeeModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setSelectedEmployee(null);
+        }}
+        employeeId={selectedEmployee?.id}
+        employeeName={`${selectedEmployee?.first_name} ${selectedEmployee?.last_name}`}
+      />
+
     </DashboardLayout>
   );
 };

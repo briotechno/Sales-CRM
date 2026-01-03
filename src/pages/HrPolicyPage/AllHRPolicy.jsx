@@ -25,6 +25,61 @@ import {
 import toast from "react-hot-toast";
 import usePermission from "../../hooks/usePermission";
 import { useGetDepartmentsQuery } from "../../store/api/departmentApi";
+import Modal from "../../components/common/Modal";
+
+const DeleteHrModal = ({ isOpen, onClose, onConfirm, isLoading, policyTitle }) => {
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      headerVariant="simple"
+      maxWidth="max-w-md"
+      footer={
+        <div className="flex gap-4 w-full">
+          <button
+            onClick={onClose}
+            className="flex-1 px-6 py-3 border-2 border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-100"
+          >
+            Cancel
+          </button>
+
+          <button
+            onClick={onConfirm}
+            disabled={isLoading}
+            className="flex-1 px-6 py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 shadow-lg disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            {isLoading ? (
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <Trash2 size={20} />
+            )}
+            {isLoading ? "Deleting..." : "Delete Now"}
+          </button>
+        </div>
+      }
+    >
+      <div className="flex flex-col items-center text-center p-6">
+        <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mb-6 animate-bounce">
+          <AlertTriangle size={48} className="text-red-600" />
+        </div>
+
+        <h2 className="text-2xl font-bold text-gray-800 mb-2">
+          Confirm Delete
+        </h2>
+
+        <p className="text-gray-600 mb-2 leading-relaxed">
+          Are you sure you want to delete Hr policy{" "}
+          <span className="font-bold text-gray-800">"{policyTitle}"</span>?
+        </p>
+
+        <p className="text-sm text-red-500 italic mb-6">
+          This action cannot be undone. All associated data will be permanently removed.
+        </p>
+
+      </div>
+    </Modal>
+  );
+};
 
 export default function HRPolicy() {
   const [activeTab, setActiveTab] = useState("All");
@@ -494,16 +549,16 @@ export default function HRPolicy() {
                 <th className="px-6 py-4 text-left text-sm font-semibold uppercase whitespace-nowrap">
                   Effective Date
                 </th>
-                <th className="px-6 py-4 text-left text-sm font-semibold uppercase whitespace-nowrap">
+                <th className="py-4 text-left text-sm font-semibold uppercase whitespace-nowrap">
                   Review Date
                 </th>
-                <th className="px-6 py-4 text-left text-sm font-semibold uppercase whitespace-nowrap">
+                <th className="py-4 text-left text-sm font-semibold uppercase whitespace-nowrap">
                   Department
                 </th>
-                <th className="px-6 py-4 text-left text-sm font-semibold uppercase whitespace-nowrap">
+                <th className="py-4 text-left text-sm font-semibold uppercase whitespace-nowrap">
                   Status
                 </th>
-                <th className="px-6 py-4 text-left text-sm font-semibold uppercase whitespace-nowrap">
+                <th className="py-4 text-left text-sm font-semibold uppercase whitespace-nowrap">
                   Actions
                 </th>
               </tr>
@@ -577,7 +632,7 @@ export default function HRPolicy() {
                         {policy.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="py-4">
                       <div className="flex items-center gap-2">
                         {read && (
                           <button
@@ -1098,7 +1153,188 @@ export default function HRPolicy() {
                     onClick={() => setShowViewModal(false)}
                     className="px-6 py-2.5 text-sm font-semibold text-gray-700 bg-white border-2 border-gray-300 hover:bg-gray-100 rounded-lg transition-all"
                   >
-                    Close
+                    <X size={22} className="text-white" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-6 space-y-6">
+                <div className="grid grid-cols-2 gap-6">
+                  <div>
+                    <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
+                      Category
+                    </label>
+                    <p className="text-lg font-semibold text-gray-900 mt-1">
+                      {selectedPolicy.category}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
+                      Version
+                    </label>
+                    <p className="text-lg font-semibold text-gray-900 mt-1">
+                      {selectedPolicy.version}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
+                      Effective Date
+                    </label>
+                    <p className="text-lg font-semibold text-gray-900 mt-1">
+                      {new Date(selectedPolicy.effective_date).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
+                      Review Date
+                    </label>
+                    <p className="text-lg font-semibold text-gray-900 mt-1">
+                      {new Date(selectedPolicy.review_date).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
+                      Department
+                    </label>
+                    <p className="text-lg font-semibold text-gray-900 mt-1">
+                      {selectedPolicy.department || "All Departments"}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
+                      Status
+                    </label>
+                    <div className="mt-1">
+                      <span
+                        className={`px-3 py-1 rounded-md text-sm font-semibold ${selectedPolicy.status === "Active"
+                          ? "bg-green-100 text-green-700"
+                          : selectedPolicy.status === "Under Review"
+                            ? "bg-yellow-100 text-yellow-700"
+                            : "bg-gray-100 text-gray-700"
+                          }`}
+                      >
+                        {selectedPolicy.status}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="col-span-2">
+                    <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
+                      Applicable To
+                    </label>
+                    <p className="text-lg font-semibold text-gray-900 mt-1">
+                      {selectedPolicy.applicable_to === "all" ? "All Employees" : "Specific Department"}
+                    </p>
+                  </div>
+                </div>
+
+                {selectedPolicy.description && (
+                  <div>
+                    <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
+                      Description
+                    </label>
+                    <p className="text-gray-700 mt-2 leading-relaxed">
+                      {selectedPolicy.description}
+                    </p>
+                  </div>
+                )}
+
+                {selectedPolicy.document_path && (
+                  <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                    <label className="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-2">
+                      <FileText size={16} className="text-blue-600" />
+                      Attached Document
+                    </label>
+                    <p className="text-sm text-gray-600">{selectedPolicy.document_path}</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex justify-end gap-3 px-6 py-4 border-t bg-gray-50">
+                <button
+                  onClick={() => setShowViewModal(false)}
+                  className="px-6 py-2.5 text-sm font-semibold text-gray-700 bg-white border-2 border-gray-300 hover:bg-gray-100 rounded-lg transition-all"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={() => {
+                    setShowViewModal(false);
+                    handleEditClick(selectedPolicy);
+                  }}
+                  className="px-6 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 rounded-lg shadow-md hover:shadow-lg transition-all"
+                >
+                  Edit Policy
+                </button>
+              </div>
+            </div>
+         
+        )}
+
+        {/* Filter Modal */}
+        {/* {showFilterModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-sm shadow-2xl w-full max-w-md">
+              <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-6 rounded-t-xl">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-white bg-opacity-20 p-2 rounded-lg">
+                      <Filter className="text-white" size={24} />
+                    </div>
+                    <h2 className="text-2xl font-bold text-white">Filter HR Policies</h2>
+                  </div>
+                  <button
+                    onClick={() => setShowFilterModal(false)}
+                    className="text-white hover:bg-white hover:bg-opacity-20 p-2 rounded-sm transition-colors"
+                  >
+                    <X size={24} />
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-6">
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Category
+                    </label>
+                    <select
+                      value={filterCategory}
+                      onChange={(e) => setFilterCategory(e.target.value)}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    >
+                      <option value="All">All Categories</option>
+                      {categories.map((cat) => (
+                        <option key={cat} value={cat}>
+                          {cat}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Status
+                    </label>
+                    <select
+                      value={filterStatus}
+                      onChange={(e) => setFilterStatus(e.target.value)}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    >
+                      <option value="All">All Statuses</option>
+                      {statuses.map((status) => (
+                        <option key={status} value={status}>
+                          {status}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 mt-6">
+                  <button
+                    onClick={applyFilters}
+                    className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-6 py-3 rounded-lg font-semibold transition-all shadow-lg hover:shadow-xl"
+                  >
+                    Apply Filters
                   </button>
                   <button
                     onClick={() => {
@@ -1112,41 +1348,16 @@ export default function HRPolicy() {
                 </div>
               </div>
             </div>
-          )
-        }
-
-        {/* Delete Confirmation Modal */}
-        {
-          showDeleteModal && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-              <div className="bg-white rounded-sm shadow-2xl max-w-md w-full p-6 text-center">
-                <div className="bg-red-100 p-4 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                  <AlertTriangle size={32} className="text-red-600" />
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">Delete HR Policy</h3>
-                <p className="text-gray-600 mb-6">
-                  Are you sure you want to delete this HR policy? This action cannot be undone.
-                </p>
-                <div className="flex justify-center gap-4">
-                  <button
-                    onClick={() => setShowDeleteModal(false)}
-                    className="px-6 py-2 border-2 border-gray-300 text-gray-700 rounded-sm hover:bg-gray-100 transition-all font-semibold"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={confirmDelete}
-                    className="px-6 py-2 bg-red-600 text-white rounded-sm hover:bg-red-700 transition-all font-semibold shadow-sm"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            </div>
-          )
-        }
-
-      </div >
-    </DashboardLayout >
+          </div>
+        )} */}
+      </div>
+      <DeleteHrModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={confirmDelete}
+        isLoading={false} // Or set loading state if you have one
+        policyTitle={policyToDelete?.title || ""} // safe
+      />
+    </DashboardLayout>
   );
 }

@@ -2,6 +2,9 @@ import React, { useEffect, useState } from "react";
 import { DollarSign, Save } from "lucide-react";
 import Modal from "../common/Modal";
 import { toast } from "react-hot-toast";
+import { useGetEmployeesQuery } from "../../store/api/employeeApi";
+import { useGetDepartmentsQuery } from "../../store/api/departmentApi";
+import { useGetDesignationsQuery } from "../../store/api/designationApi";
 
 const EditSalaryModal = ({ isOpen, onClose, salary, onSubmit, loading }: any) => {
   const [formData, setFormData] = useState({
@@ -12,6 +15,18 @@ const EditSalaryModal = ({ isOpen, onClose, salary, onSubmit, loading }: any) =>
     allowances: "",
     deductions: "",
     pay_date: "",
+  });
+
+  const { data: employeeData, isLoading: loadingEmployees } = useGetEmployeesQuery({
+    limit: 100,
+  });
+
+  const { data: departmentData, isLoading: loadingDepartments } = useGetDepartmentsQuery({
+    limit: 100,
+  });
+
+  const { data: designationData, isLoading: loadingDesignations } = useGetDesignationsQuery({
+    limit: 100,
   });
 
   useEffect(() => {
@@ -84,42 +99,56 @@ const EditSalaryModal = ({ isOpen, onClose, salary, onSubmit, loading }: any) =>
 
     >
       <div className="grid grid-cols-2 gap-4">
-        <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-gray-600">
-            Employee Name
-          </label>
-          <input
+        <div className="flex flex-col gap-1 col-span-2">
+          <label className="text-sm font-medium text-gray-600">Employee</label>
+          <select
             value={formData.employee}
-            disabled
-            className="border p-2 bg-gray-100 rounded"
-          />
+            onChange={(e) => setFormData({ ...formData, employee: e.target.value })}
+            className="border p-2"
+            disabled={loadingEmployees}
+          >
+            <option value="">Select Employee</option>
+            {employeeData?.employees?.map((emp: any) => (
+              <option key={emp.id} value={emp.id}>
+                {emp.employee_name}
+              </option>
+            ))}
+          </select>
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-gray-600">
-            Designation
-          </label>
-          <input
+          <label className="text-sm font-medium text-gray-600">Designation</label>
+          <select
             value={formData.designation}
-            onChange={(e) =>
-              setFormData({ ...formData, designation: e.target.value })
-            }
+            onChange={(e) => setFormData({ ...formData, designation: e.target.value })}
             className="border p-2"
-            placeholder="Designation"
-          />
+            disabled={loadingDesignations}
+          >
+            <option value="">Select Designation</option>
+            {designationData?.designations?.map((des: any) => (
+              <option key={des.designation_name} value={des.designation_name}>
+                {des.designation_name}
+              </option>
+            ))}
+          </select>
         </div>
+
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-gray-600">
-            Department
-          </label>
-          <input
+          <label className="text-sm font-medium text-gray-600">Department</label>
+          <select
             value={formData.department}
-            onChange={(e) =>
-              setFormData({ ...formData, department: e.target.value })
-            }
+            onChange={(e) => setFormData({ ...formData, department: e.target.value })}
             className="border p-2"
-            placeholder="Department"
-          />
+            disabled={loadingDepartments}
+          >
+            <option value="">Select Department</option>
+            {departmentData?.departments?.map((dept: any) => (
+              <option key={dept.id} value={dept.department_name}>
+                {dept.department_name}
+              </option>
+            ))}
+          </select>
         </div>
+
         <div className="flex flex-col gap-1">
           <label className="text-sm font-medium text-gray-600">
             Payment Date
@@ -161,7 +190,7 @@ const EditSalaryModal = ({ isOpen, onClose, salary, onSubmit, loading }: any) =>
             placeholder="Allowances"
           />
         </div>
-        <div className="flex flex-col gap-1 col-span-2">
+        <div className="flex flex-col gap-1">
           <label className="text-sm font-medium text-gray-600">
             Deductions
           </label>
