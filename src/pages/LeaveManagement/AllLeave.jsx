@@ -13,7 +13,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Search,
-  Eye
+  Eye,
+  User,
+  FileText
 } from "lucide-react";
 import NumberCard from "../../components/NumberCard";
 import {
@@ -25,12 +27,132 @@ import {
 import { useGetEmployeesQuery } from "../../store/api/employeeApi";
 import toast from 'react-hot-toast';
 import usePermission from "../../hooks/usePermission";
+import Modal from "../../components/common/Modal";
+
+const ViewLeaveModal = ({ isOpen, onClose, leave }) => {
+  if (!leave) return null;
+
+  const footer = (
+    <button
+      onClick={onClose}
+      className="px-8 py-3 bg-white border-2 border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-100 hover:border-gray-300 transition-all shadow-sm"
+    >
+      Close Details
+    </button>
+  );
+
+  const statusIcon =
+    leave.status === "approved" ? (
+      <CheckCircle size={20} />
+    ) : leave.status === "rejected" ? (
+      <XCircle size={20} />
+    ) : (
+      <Clock size={20} />
+    );
+
+  const statusColor =
+    leave.status === "approved"
+      ? "green"
+      : leave.status === "rejected"
+        ? "red"
+        : "yellow";
+
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Leave Details"
+      subtitle={leave.employee_name}
+      icon={<User size={24} />}
+      footer={footer}
+    >
+      <div className="space-y-8 text-black bg-white">
+
+        {/* Stats */}
+        <div className="grid grid-cols-3 gap-6">
+
+          {/* Leave Days */}
+          <div className="bg-blue-50 p-4 rounded-2xl border border-blue-100 flex flex-col items-center text-center group hover:shadow-md transition-shadow">
+            <div className="bg-blue-600 p-2 rounded-xl text-white mb-2 group-hover:scale-110 transition-transform">
+              <Calendar  size={20} />
+            </div>
+            <span className="text-2xl font-bold text-blue-900">{leave.days}</span>
+            <span className="text-xs font-semibold text-blue-600 uppercase tracking-widest mt-1">
+              Total Days
+            </span>
+          </div>
+
+          {/* Leave Type */}
+          <div className="bg-purple-50 p-4 rounded-2xl border border-purple-100 flex flex-col items-center text-center group hover:shadow-md transition-shadow">
+            <div className="bg-purple-600 p-2 rounded-xl text-white mb-2 group-hover:scale-110 transition-transform">
+              <FileText size={20} />
+            </div>
+            <span className="text-sm font-bold text-purple-900 capitalize">
+              {leave.leave_type}
+            </span>
+            <span className="text-xs font-semibold text-purple-600 uppercase tracking-widest mt-1">
+              Leave Type
+            </span>
+          </div>
+
+          {/* Status */}
+          <div className={`bg-${statusColor}-50 p-4 rounded-2xl border border-${statusColor}-100 flex flex-col items-center text-center group hover:shadow-md transition-shadow`}>
+            <div className={`bg-${statusColor}-600 p-2 rounded-xl text-white mb-2 group-hover:scale-110 transition-transform`}>
+              {statusIcon}
+            </div>
+            <span className={`text-xl font-bold text-${statusColor}-900 capitalize`}>
+              {leave.status}
+            </span>
+            <span className="text-xs font-semibold uppercase tracking-widest mt-1">
+              Status
+            </span>
+          </div>
+
+        </div>
+
+        {/* Details */}
+        <div className="space-y-6">
+
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <p className="text-gray-400 font-semibold uppercase tracking-wider mb-1">From Date</p>
+              <p className="font-semibold text-gray-800">
+                {new Date(leave.from_date).toLocaleDateString()}
+              </p>
+            </div>
+
+            <div>
+              <p className="text-gray-400 font-semibold uppercase tracking-wider mb-1">To Date</p>
+              <p className="font-semibold text-gray-800">
+                {new Date(leave.to_date).toLocaleDateString()}
+              </p>
+            </div>
+          </div>
+
+          {/* Reason */}
+          <div>
+            <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+              <FileText size={16} /> Reason
+            </h3>
+            <p className="text-gray-700 leading-relaxed bg-gray-50 p-4 rounded-2xl border border-gray-100">
+              {leave.reason || "No reason provided for this leave."}
+            </p>
+          </div>
+
+        </div>
+      </div>
+    </Modal>
+  );
+};
 
 export default function LeaveManagement() {
   const [activeTab, setActiveTab] = useState("all");
   const [showApplyModal, setShowApplyModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [isViewOpen, setIsViewOpen] = useState(false);
+  const [selectedLeave, setSelectedLeave] = useState(null);
+
   const itemsPerPage = 10;
 
   const { create, read, update, delete: remove } = usePermission("Leave Management");
@@ -358,11 +480,20 @@ export default function LeaveManagement() {
                         ) : (
                           <div className="flex justify-center">
                             {read && (
-                              <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-sm transition-colors" title="View Details">
+                              <button
+                                onClick={() => {
+                                  setSelectedLeave(request);
+                                  setIsViewOpen(true);
+                                }}
+                                className="p-2 text-blue-600 hover:bg-blue-50 rounded-sm transition-colors"
+                                title="View Details"
+                              >
                                 <Eye size={18} />
                               </button>
                             )}
+
                           </div>
+
                         )}
                       </td>
                     </tr>
@@ -525,6 +656,15 @@ export default function LeaveManagement() {
           </div>
         )}
       </div>
+      <ViewLeaveModal
+        isOpen={isViewOpen}
+        onClose={() => {
+          setIsViewOpen(false);
+          setSelectedLeave(null);
+        }}
+        leave={selectedLeave}
+      />
+
     </DashboardLayout>
   );
 }

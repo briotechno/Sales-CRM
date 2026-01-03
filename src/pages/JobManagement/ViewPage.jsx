@@ -138,10 +138,10 @@ const JobViewModal = ({ job, onClose, onEdit }) => {
                     )}
                     <span
                       className={`px-4 py-2 text-sm font-semibold rounded-sm ${job.status === "Active"
-                          ? "bg-green-100 text-green-700"
-                          : job.status === "On Hold"
-                            ? "bg-yellow-100 text-yellow-700"
-                            : "bg-gray-200 text-gray-700"
+                        ? "bg-green-100 text-green-700"
+                        : job.status === "On Hold"
+                          ? "bg-yellow-100 text-yellow-700"
+                          : "bg-gray-200 text-gray-700"
                         }`}
                     >
                       {job.status}
@@ -231,15 +231,15 @@ const JobViewModal = ({ job, onClose, onEdit }) => {
         <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 p-6 flex justify-end gap-4">
           <button
             onClick={onClose}
-            className="px-8 py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-sm font-semibold transition-all"
+            className="px-8 py-3 bg-white border-2 border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-100 hover:border-gray-300 transition-all shadow-sm"
           >
-            Close
+            Close Details
           </button>
-          <button
+          {/* <button
             onClick={onEdit}
             className="px-8 py-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-sm font-semibold shadow-lg transition-all">
             Edit Job
-          </button>
+          </button> */}
         </div>
       </div>
     </div>
