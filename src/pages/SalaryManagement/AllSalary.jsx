@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { FiHome } from "react-icons/fi";
 import DashboardLayout from "../../components/DashboardLayout";
 import {
@@ -28,6 +28,7 @@ import DeleteSalaryModal from "../../components/SalaryManagement/DeleteSalaryMod
 import ViewSalaryModal from "../../components/SalaryManagement/ViewSalaryModal";
 import EditSalaryModal from "../../components/SalaryManagement/EditSalaryModal";
 import usePermission from "../../hooks/usePermission";
+import { useGetDepartmentsQuery } from "../../store/api/departmentApi";
 
 export default function SalaryManagement() {
   /* ================= STATES ================= */
@@ -38,6 +39,8 @@ export default function SalaryManagement() {
   const [selectedSalary, setSelectedSalary] = useState(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedSalaryId, setSelectedSalaryId] = useState(null);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const dropdownRef = useRef(null);
 
   const { create, read, update, delete: remove } = usePermission("Payroll");
 
@@ -55,6 +58,9 @@ export default function SalaryManagement() {
   const { data, isLoading: salariesLoading } = useGetAllSalariesQuery({
     department: selectedDepartment === "all" ? "" : selectedDepartment,
   });
+
+  const { data: deptData } = useGetDepartmentsQuery({ limit: 100 });
+  const departments = deptData?.departments || [];
 
   const salaries = Array.isArray(data?.salaries) ? data.salaries : [];
 
@@ -139,6 +145,16 @@ export default function SalaryManagement() {
       ? "bg-green-100 text-green-700"
       : "bg-yellow-100 text-yellow-700";
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsFilterOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   /* ================= EXPORT FUNCTION ================= */
   const handleExport = () => {
     if (!salaries.length) return alert("No salaries to export");
@@ -202,31 +218,51 @@ export default function SalaryManagement() {
 
             {/* RIGHT SIDE BUTTONS (Filter + Export + Add Salary) */}
             <div className="flex items-center gap-4">
-              {/* Filter + Department Select */}
-              <div className="flex items-center gap-2">
-                <Filter className="w-5 h-5 text-gray-600" />
-
-                {/* <select
-                  value={selectedDepartment}
-                  onChange={(e) => setSelectedDepartment(e.target.value)}
-                  className="px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white"
+              {/* Filter Dropdown */}
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={() => setIsFilterOpen(!isFilterOpen)}
+                  className={`p-2 rounded-sm border transition shadow-sm ${isFilterOpen || selectedDepartment !== "all"
+                    ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
+                    : "bg-white text-black border-gray-300 hover:bg-gray-100"
+                    }`}
+                  title={selectedDepartment === "all" ? "Filter" : `Filter: ${selectedDepartment}`}
                 >
-                  <option value="all">All Departments</option>
-                  {departments.map((dept) => (
-                    <option key={dept} value={dept}>
-                      {dept}
-                    </option>
-                  ))}
-                </select> */}
+                  <Filter size={20} />
+                </button>
 
-                {selectedDepartment !== "all" && (
-                  <button
-                    onClick={() => setSelectedDepartment("all")}
-                    className="text-orange-600 hover:text-orange-700 font-medium text-sm flex items-center gap-1"
-                  >
-                    <X className="w-4 h-4" />
-                    Clear
-                  </button>
+                {isFilterOpen && (
+                  <div className="absolute left-0 mt-2 w-48 bg-white border border-gray-200 rounded-sm shadow-xl z-50 animate-fadeIn">
+                    <div className="py-1 max-h-60 overflow-y-auto">
+                      <button
+                        onClick={() => {
+                          setSelectedDepartment("all");
+                          setIsFilterOpen(false);
+                        }}
+                        className={`block w-full text-left px-4 py-2.5 text-sm transition-colors ${selectedDepartment === "all"
+                          ? "bg-orange-50 text-orange-600 font-bold"
+                          : "text-gray-700 hover:bg-gray-50"
+                          }`}
+                      >
+                        All Departments
+                      </button>
+                      {departments.map((dept) => (
+                        <button
+                          key={dept.id}
+                          onClick={() => {
+                            setSelectedDepartment(dept.department_name);
+                            setIsFilterOpen(false);
+                          }}
+                          className={`block w-full text-left px-4 py-2.5 text-sm transition-colors ${selectedDepartment === dept.department_name
+                            ? "bg-orange-50 text-orange-600 font-bold"
+                            : "text-gray-700 hover:bg-gray-50"
+                            }`}
+                        >
+                          {dept.department_name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 )}
               </div>
 

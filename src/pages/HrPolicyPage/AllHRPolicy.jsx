@@ -24,6 +24,7 @@ import {
 } from "../../store/api/hrPolicyApi";
 import toast from "react-hot-toast";
 import usePermission from "../../hooks/usePermission";
+import { useGetDepartmentsQuery } from "../../store/api/departmentApi";
 
 export default function HRPolicy() {
   const [activeTab, setActiveTab] = useState("All");
@@ -31,13 +32,19 @@ export default function HRPolicy() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [showFilterModal, setShowFilterModal] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
   const [selectedPolicy, setSelectedPolicy] = useState(null);
   const [policyToDelete, setPolicyToDelete] = useState(null);
   const [filterCategory, setFilterCategory] = useState("All");
   const [filterStatus, setFilterStatus] = useState("All");
+  const [filterDepartment, setFilterDepartment] = useState("All");
+  const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
+
+  const { data: departmentData } = useGetDepartmentsQuery({ status: "Active" });
+  const departments = departmentData?.departments || [];
+
   const { create, read, update, delete: remove } = usePermission("HR Policy");
 
   const [formData, setFormData] = useState({
@@ -61,6 +68,8 @@ export default function HRPolicy() {
   } = useGetHRPoliciesQuery({
     category: filterCategory,
     status: filterStatus === "All" ? activeTab : filterStatus,
+    search: searchTerm,
+    department: filterDepartment,
   });
 
   const [createPolicy] = useCreateHRPolicyMutation();
@@ -215,14 +224,11 @@ export default function HRPolicy() {
     a.click();
   };
 
-  const applyFilters = () => {
-    setShowFilterModal(false);
-    setCurrentPage(1);
-  };
-
-  const resetFilters = () => {
+  const handleClearFilters = () => {
     setFilterCategory("All");
     setFilterStatus("All");
+    setFilterDepartment("All");
+    setSearchTerm("");
   };
 
   const handlePageChange = (page) => {
@@ -279,11 +285,17 @@ export default function HRPolicy() {
 
             <div className="flex gap-3">
               <button
-                onClick={() => setShowFilterModal(true)}
-                className="flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 px-5 py-2.5 rounded-sm font-medium border border-gray-300 transition-colors"
+                onClick={() => setShowFilters(!showFilters)}
+                className={`px-4 py-2 rounded-lg border flex items-center gap-2 transition-all shadow-sm ${showFilters || filterCategory !== "All" || filterStatus !== "All" || filterDepartment !== "All" || searchTerm
+                  ? "bg-orange-50 border-orange-200 text-orange-600"
+                  : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
+                  }`}
               >
-                <Filter size={18} />
-                Filter
+                <Filter size={18} className={filterCategory !== "All" || filterStatus !== "All" || filterDepartment !== "All" || searchTerm ? "fill-orange-500" : ""} />
+                <span className="font-semibold text-sm">Filters</span>
+                {(filterCategory !== "All" || filterStatus !== "All" || filterDepartment !== "All" || searchTerm) && (
+                  <span className="flex h-2 w-2 rounded-full bg-orange-500"></span>
+                )}
               </button>
 
               <button
@@ -310,6 +322,110 @@ export default function HRPolicy() {
             </div>
           </div>
         </div>
+
+        {/* FILTER DROPDOWN */}
+        {showFilters && (
+          <div className="absolute right-6 top-24 mt-2 bg-white border border-gray-200 rounded-xl shadow-2xl w-80 p-5 animate-fadeIn z-50 transition-all">
+            <div className="flex justify-between items-center mb-4 pb-2 border-b">
+              <h3 className="font-bold text-gray-800 flex items-center gap-2">
+                <Filter size={18} className="text-orange-500" />
+                Filter Options
+              </h3>
+              <button
+                onClick={() => setShowFilters(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Search */}
+            <div className="mb-4">
+              <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">
+                Search Policies
+              </label>
+              <input
+                type="text"
+                placeholder="Search..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all bg-gray-50"
+              />
+            </div>
+
+            {/* Category */}
+            <div className="mb-4">
+              <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">
+                Category
+              </label>
+              <select
+                value={filterCategory}
+                onChange={(e) => setFilterCategory(e.target.value)}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all bg-gray-50"
+              >
+                <option value="All">All Categories</option>
+                {categories.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Status */}
+            <div className="mb-4">
+              <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">
+                Status
+              </label>
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all bg-gray-50"
+              >
+                <option value="All">All Statuses</option>
+                {statuses.map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Department */}
+            <div className="mb-6">
+              <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">
+                Department
+              </label>
+              <select
+                value={filterDepartment}
+                onChange={(e) => setFilterDepartment(e.target.value)}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all bg-gray-50"
+              >
+                <option value="All">All Departments</option>
+                {departments.map((dep) => (
+                  <option key={dep.id} value={dep.department_name}>
+                    {dep.department_name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={handleClearFilters}
+                className="flex-1 px-4 py-2 border border-gray-200 text-gray-600 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-all font-sans"
+              >
+                Clear All
+              </button>
+              <button
+                onClick={() => setShowFilters(false)}
+                className="flex-1 px-4 py-2 bg-orange-500 text-white rounded-lg text-sm font-semibold hover:bg-orange-600 transition-all shadow-md shadow-orange-500/20 font-sans"
+              >
+                Apply
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
@@ -341,29 +457,31 @@ export default function HRPolicy() {
             iconBgColor={"bg-purple-100"}
             lineBorderClass={"border-purple-500"}
           />
-        </div>
+        </div >
 
         {/* Tabs */}
-        <div className="flex gap-8 mb-6 border-b border-gray-200">
-          {["All", "Active", "Under Review", "Archived"].map((tab) => (
-            <button
-              key={tab}
-              onClick={() => {
-                setActiveTab(tab);
-                setCurrentPage(1);
-              }}
-              className={`pb-3 font-medium transition-colors ${activeTab === tab
-                ? "text-orange-500 border-b-2 border-orange-500"
-                : "text-gray-600 hover:text-gray-900"
-                }`}
-            >
-              {tab}
-            </button>
-          ))}
-        </div>
+        < div className="flex gap-8 mb-6 border-b border-gray-200" >
+          {
+            ["All", "Active", "Under Review", "Archived"].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => {
+                  setActiveTab(tab);
+                  setCurrentPage(1);
+                }}
+                className={`pb-3 font-medium transition-colors ${activeTab === tab
+                  ? "text-orange-500 border-b-2 border-orange-500"
+                  : "text-gray-600 hover:text-gray-900"
+                  }`}
+              >
+                {tab}
+              </button>
+            ))
+          }
+        </div >
 
         {/* Table */}
-        <div className="bg-white rounded-sm shadow-sm overflow-hidden">
+        < div className="bg-white rounded-sm shadow-sm overflow-hidden" >
           <table className="w-full">
             <thead className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
               <tr>
@@ -501,10 +619,10 @@ export default function HRPolicy() {
               )}
             </tbody>
           </table>
-        </div>
+        </div >
 
         {/* Pagination - Updated to match Designation.jsx */}
-        <div className="flex justify-between items-center mt-6 bg-gray-50 p-4 rounded-sm border-t border-gray-200">
+        < div className="flex justify-between items-center mt-6 bg-gray-50 p-4 rounded-sm border-t border-gray-200" >
           <p className="text-sm text-gray-600">
             Showing <span className="font-bold">{indexOfFirstItem + 1}</span> to{" "}
             <span className="font-bold">{Math.min(indexOfLastItem, filteredPolicies.length)}</span> of{" "}
@@ -545,562 +663,490 @@ export default function HRPolicy() {
               Next
             </button>
           </div>
-        </div>
+        </div >
 
         {/* Add Policy Modal */}
-        {showAddModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-sm shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-              <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-6 rounded-t-xl">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-3">
-                    <div className="bg-white bg-opacity-20 p-2 rounded-sm">
-                      <Plus className="text-white" size={24} />
+        {
+          showAddModal && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-sm shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+                <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-6 rounded-t-xl">
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-3">
+                      <div className="bg-white bg-opacity-20 p-2 rounded-sm">
+                        <Plus className="text-white" size={24} />
+                      </div>
+                      <h2 className="text-2xl font-bold text-white">Add New HR Policy</h2>
                     </div>
-                    <h2 className="text-2xl font-bold text-white">Add New HR Policy</h2>
-                  </div>
-                  <button
-                    onClick={() => setShowAddModal(false)}
-                    className="text-white hover:bg-white hover:bg-opacity-20 p-2 rounded-sm transition-colors"
-                  >
-                    <X size={24} />
-                  </button>
-                </div>
-              </div>
-
-              <div className="p-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Policy Title *
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.title}
-                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                      placeholder="Enter policy title"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Category *
-                    </label>
-                    <select
-                      value={formData.category}
-                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    <button
+                      onClick={() => setShowAddModal(false)}
+                      className="text-white hover:bg-white hover:bg-opacity-20 p-2 rounded-sm transition-colors"
                     >
-                      {categories.map((cat) => (
-                        <option key={cat} value={cat}>
-                          {cat}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Effective Date *
-                    </label>
-                    <input
-                      type="date"
-                      value={formData.effective_date}
-                      onChange={(e) => setFormData({ ...formData, effective_date: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Review Date *
-                    </label>
-                    <input
-                      type="date"
-                      value={formData.review_date}
-                      onChange={(e) => setFormData({ ...formData, review_date: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Version</label>
-                    <input
-                      type="text"
-                      value={formData.version}
-                      onChange={(e) => setFormData({ ...formData, version: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                      placeholder="1.0"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Department</label>
-                    <input
-                      type="text"
-                      value={formData.department}
-                      onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                      placeholder="Leave blank for all departments"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Applicable To</label>
-                    <select
-                      value={formData.applicable_to}
-                      onChange={(e) => setFormData({ ...formData, applicable_to: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                    >
-                      <option value="all">All Employees</option>
-                      <option value="specific">Specific Department</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Document Path</label>
-                    <input
-                      type="text"
-                      value={formData.document_path}
-                      onChange={(e) => setFormData({ ...formData, document_path: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                      placeholder="Optional document path"
-                    />
-                  </div>
-                  <div className="col-span-2">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Description *
-                    </label>
-                    <textarea
-                      value={formData.description}
-                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
-                      rows="3"
-                      placeholder="Enter policy description"
-                    />
+                      <X size={24} />
+                    </button>
                   </div>
                 </div>
 
-                <div className="flex gap-3 mt-6">
-                  <button
-                    onClick={handleAddPolicy}
-                    className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-6 py-3 rounded-lg font-semibold transition-all shadow-lg hover:shadow-xl"
-                  >
-                    Add Policy
-                  </button>
-                  <button
-                    onClick={() => setShowAddModal(false)}
-                    className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 rounded-sm font-semibold transition-colors"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Edit Policy Modal */}
-        {showEditModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-sm shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-              <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-6 rounded-t-xl">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-3">
-                    <div className="bg-white bg-opacity-20 p-2 rounded-sm">
-                      <Edit className="text-white" size={24} />
-                    </div>
-                    <h2 className="text-2xl font-bold text-white">Edit HR Policy</h2>
-                  </div>
-                  <button
-                    onClick={() => setShowEditModal(false)}
-                    className="text-white hover:bg-white hover:bg-opacity-20 p-2 rounded-sm transition-colors"
-                  >
-                    <X size={24} />
-                  </button>
-                </div>
-              </div>
-
-              <div className="p-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Policy Title *
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.title}
-                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                      placeholder="Enter policy title"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Category *
-                    </label>
-                    <select
-                      value={formData.category}
-                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                    >
-                      {categories.map((cat) => (
-                        <option key={cat} value={cat}>
-                          {cat}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Effective Date *
-                    </label>
-                    <input
-                      type="date"
-                      value={formData.effective_date}
-                      onChange={(e) => setFormData({ ...formData, effective_date: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Review Date *
-                    </label>
-                    <input
-                      type="date"
-                      value={formData.review_date}
-                      onChange={(e) => setFormData({ ...formData, review_date: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Version</label>
-                    <input
-                      type="text"
-                      value={formData.version}
-                      onChange={(e) => setFormData({ ...formData, version: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                      placeholder="1.0"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Status</label>
-                    <select
-                      value={formData.status}
-                      onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                    >
-                      {statuses.map((status) => (
-                        <option key={status} value={status}>
-                          {status}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Department</label>
-                    <input
-                      type="text"
-                      value={formData.department}
-                      onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                      placeholder="Leave blank for all departments"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Applicable To</label>
-                    <select
-                      value={formData.applicable_to}
-                      onChange={(e) => setFormData({ ...formData, applicable_to: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                    >
-                      <option value="all">All Employees</option>
-                      <option value="specific">Specific Department</option>
-                    </select>
-                  </div>
-                  <div className="col-span-2">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Document Path</label>
-                    <input
-                      type="text"
-                      value={formData.document_path}
-                      onChange={(e) => setFormData({ ...formData, document_path: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                      placeholder="Optional document path"
-                    />
-                  </div>
-                  <div className="col-span-2">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Description *
-                    </label>
-                    <textarea
-                      value={formData.description}
-                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
-                      rows="3"
-                      placeholder="Enter policy description"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex gap-3 mt-6">
-                  <button
-                    onClick={handleUpdatePolicy}
-                    className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-6 py-3 rounded-lg font-semibold transition-all shadow-lg hover:shadow-xl"
-                  >
-                    Update Policy
-                  </button>
-                  <button
-                    onClick={() => setShowEditModal(false)}
-                    className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 rounded-sm font-semibold transition-colors"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* View Policy Modal */}
-        {showViewModal && selectedPolicy && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-sm shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
-              <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-6">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-3">
-                    <div className="bg-white bg-opacity-20 p-2 rounded-lg">
-                      <FileText size={24} className="text-white" />
+                <div className="p-6">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Policy Title *
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.title}
+                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        placeholder="Enter policy title"
+                      />
                     </div>
                     <div>
-                      <h2 className="text-2xl font-bold text-white">{selectedPolicy.title}</h2>
-                      <p className="text-sm text-white text-opacity-90 mt-1">HR Policy Details</p>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Category *
+                      </label>
+                      <select
+                        value={formData.category}
+                        onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      >
+                        {categories.map((cat) => (
+                          <option key={cat} value={cat}>
+                            {cat}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Effective Date *
+                      </label>
+                      <input
+                        type="date"
+                        value={formData.effective_date}
+                        onChange={(e) => setFormData({ ...formData, effective_date: e.target.value })}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Review Date *
+                      </label>
+                      <input
+                        type="date"
+                        value={formData.review_date}
+                        onChange={(e) => setFormData({ ...formData, review_date: e.target.value })}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Version</label>
+                      <input
+                        type="text"
+                        value={formData.version}
+                        onChange={(e) => setFormData({ ...formData, version: e.target.value })}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        placeholder="1.0"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Department</label>
+                      <input
+                        type="text"
+                        value={formData.department}
+                        onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        placeholder="Leave blank for all departments"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Applicable To</label>
+                      <select
+                        value={formData.applicable_to}
+                        onChange={(e) => setFormData({ ...formData, applicable_to: e.target.value })}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      >
+                        <option value="all">All Employees</option>
+                        <option value="specific">Specific Department</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Document Path</label>
+                      <input
+                        type="text"
+                        value={formData.document_path}
+                        onChange={(e) => setFormData({ ...formData, document_path: e.target.value })}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        placeholder="Optional document path"
+                      />
+                    </div>
+                    <div className="col-span-2">
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Description *
+                      </label>
+                      <textarea
+                        value={formData.description}
+                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
+                        rows="3"
+                        placeholder="Enter policy description"
+                      />
                     </div>
                   </div>
+
+                  <div className="flex gap-3 mt-6">
+                    <button
+                      onClick={handleAddPolicy}
+                      className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-6 py-3 rounded-lg font-semibold transition-all shadow-lg hover:shadow-xl"
+                    >
+                      Add Policy
+                    </button>
+                    <button
+                      onClick={() => setShowAddModal(false)}
+                      className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 rounded-sm font-semibold transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )
+        }
+
+        {/* Edit Policy Modal */}
+        {
+          showEditModal && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-sm shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+                <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-6 rounded-t-xl">
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-3">
+                      <div className="bg-white bg-opacity-20 p-2 rounded-sm">
+                        <Edit className="text-white" size={24} />
+                      </div>
+                      <h2 className="text-2xl font-bold text-white">Edit HR Policy</h2>
+                    </div>
+                    <button
+                      onClick={() => setShowEditModal(false)}
+                      className="text-white hover:bg-white hover:bg-opacity-20 p-2 rounded-sm transition-colors"
+                    >
+                      <X size={24} />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="p-6">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Policy Title *
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.title}
+                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        placeholder="Enter policy title"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Category *
+                      </label>
+                      <select
+                        value={formData.category}
+                        onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      >
+                        {categories.map((cat) => (
+                          <option key={cat} value={cat}>
+                            {cat}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Effective Date *
+                      </label>
+                      <input
+                        type="date"
+                        value={formData.effective_date}
+                        onChange={(e) => setFormData({ ...formData, effective_date: e.target.value })}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Review Date *
+                      </label>
+                      <input
+                        type="date"
+                        value={formData.review_date}
+                        onChange={(e) => setFormData({ ...formData, review_date: e.target.value })}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Version</label>
+                      <input
+                        type="text"
+                        value={formData.version}
+                        onChange={(e) => setFormData({ ...formData, version: e.target.value })}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        placeholder="1.0"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Status</label>
+                      <select
+                        value={formData.status}
+                        onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      >
+                        {statuses.map((status) => (
+                          <option key={status} value={status}>
+                            {status}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Department</label>
+                      <input
+                        type="text"
+                        value={formData.department}
+                        onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        placeholder="Leave blank for all departments"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Applicable To</label>
+                      <select
+                        value={formData.applicable_to}
+                        onChange={(e) => setFormData({ ...formData, applicable_to: e.target.value })}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      >
+                        <option value="all">All Employees</option>
+                        <option value="specific">Specific Department</option>
+                      </select>
+                    </div>
+                    <div className="col-span-2">
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Document Path</label>
+                      <input
+                        type="text"
+                        value={formData.document_path}
+                        onChange={(e) => setFormData({ ...formData, document_path: e.target.value })}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        placeholder="Optional document path"
+                      />
+                    </div>
+                    <div className="col-span-2">
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Description *
+                      </label>
+                      <textarea
+                        value={formData.description}
+                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
+                        rows="3"
+                        placeholder="Enter policy description"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3 mt-6">
+                    <button
+                      onClick={handleUpdatePolicy}
+                      className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-6 py-3 rounded-lg font-semibold transition-all shadow-lg hover:shadow-xl"
+                    >
+                      Update Policy
+                    </button>
+                    <button
+                      onClick={() => setShowEditModal(false)}
+                      className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 rounded-sm font-semibold transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )
+        }
+
+        {/* View Policy Modal */}
+        {
+          showViewModal && selectedPolicy && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-sm shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+                <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-6">
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-3">
+                      <div className="bg-white bg-opacity-20 p-2 rounded-lg">
+                        <FileText size={24} className="text-white" />
+                      </div>
+                      <div>
+                        <h2 className="text-2xl font-bold text-white">{selectedPolicy.title}</h2>
+                        <p className="text-sm text-white text-opacity-90 mt-1">HR Policy Details</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setShowViewModal(false)}
+                      className="bg-white bg-opacity-20 hover:bg-opacity-30 p-2 rounded-lg transition-all"
+                    >
+                      <X size={22} className="text-white" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="p-6 space-y-6">
+                  <div className="grid grid-cols-2 gap-6">
+                    <div>
+                      <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
+                        Category
+                      </label>
+                      <p className="text-lg font-semibold text-gray-900 mt-1">
+                        {selectedPolicy.category}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
+                        Version
+                      </label>
+                      <p className="text-lg font-semibold text-gray-900 mt-1">
+                        {selectedPolicy.version}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
+                        Effective Date
+                      </label>
+                      <p className="text-lg font-semibold text-gray-900 mt-1">
+                        {new Date(selectedPolicy.effective_date).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
+                        Review Date
+                      </label>
+                      <p className="text-lg font-semibold text-gray-900 mt-1">
+                        {new Date(selectedPolicy.review_date).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
+                        Department
+                      </label>
+                      <p className="text-lg font-semibold text-gray-900 mt-1">
+                        {selectedPolicy.department || "All Departments"}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
+                        Status
+                      </label>
+                      <div className="mt-1">
+                        <span
+                          className={`px-3 py-1 rounded-md text-sm font-semibold ${selectedPolicy.status === "Active"
+                            ? "bg-green-100 text-green-700"
+                            : selectedPolicy.status === "Under Review"
+                              ? "bg-yellow-100 text-yellow-700"
+                              : "bg-gray-100 text-gray-700"
+                            }`}
+                        >
+                          {selectedPolicy.status}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="col-span-2">
+                      <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
+                        Applicable To
+                      </label>
+                      <p className="text-lg font-semibold text-gray-900 mt-1">
+                        {selectedPolicy.applicable_to === "all" ? "All Employees" : "Specific Department"}
+                      </p>
+                    </div>
+                  </div>
+
+                  {selectedPolicy.description && (
+                    <div>
+                      <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
+                        Description
+                      </label>
+                      <p className="text-gray-700 mt-2 leading-relaxed">
+                        {selectedPolicy.description}
+                      </p>
+                    </div>
+                  )}
+
+                  {selectedPolicy.document_path && (
+                    <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                      <label className="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-2">
+                        <FileText size={16} className="text-blue-600" />
+                        Attached Document
+                      </label>
+                      <p className="text-sm text-gray-600">{selectedPolicy.document_path}</p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex justify-end gap-3 px-6 py-4 border-t bg-gray-50">
                   <button
                     onClick={() => setShowViewModal(false)}
-                    className="bg-white bg-opacity-20 hover:bg-opacity-30 p-2 rounded-lg transition-all"
+                    className="px-6 py-2.5 text-sm font-semibold text-gray-700 bg-white border-2 border-gray-300 hover:bg-gray-100 rounded-lg transition-all"
                   >
-                    <X size={22} className="text-white" />
-                  </button>
-                </div>
-              </div>
-
-              <div className="p-6 space-y-6">
-                <div className="grid grid-cols-2 gap-6">
-                  <div>
-                    <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
-                      Category
-                    </label>
-                    <p className="text-lg font-semibold text-gray-900 mt-1">
-                      {selectedPolicy.category}
-                    </p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
-                      Version
-                    </label>
-                    <p className="text-lg font-semibold text-gray-900 mt-1">
-                      {selectedPolicy.version}
-                    </p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
-                      Effective Date
-                    </label>
-                    <p className="text-lg font-semibold text-gray-900 mt-1">
-                      {new Date(selectedPolicy.effective_date).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
-                      Review Date
-                    </label>
-                    <p className="text-lg font-semibold text-gray-900 mt-1">
-                      {new Date(selectedPolicy.review_date).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
-                      Department
-                    </label>
-                    <p className="text-lg font-semibold text-gray-900 mt-1">
-                      {selectedPolicy.department || "All Departments"}
-                    </p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
-                      Status
-                    </label>
-                    <div className="mt-1">
-                      <span
-                        className={`px-3 py-1 rounded-md text-sm font-semibold ${selectedPolicy.status === "Active"
-                          ? "bg-green-100 text-green-700"
-                          : selectedPolicy.status === "Under Review"
-                            ? "bg-yellow-100 text-yellow-700"
-                            : "bg-gray-100 text-gray-700"
-                          }`}
-                      >
-                        {selectedPolicy.status}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="col-span-2">
-                    <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
-                      Applicable To
-                    </label>
-                    <p className="text-lg font-semibold text-gray-900 mt-1">
-                      {selectedPolicy.applicable_to === "all" ? "All Employees" : "Specific Department"}
-                    </p>
-                  </div>
-                </div>
-
-                {selectedPolicy.description && (
-                  <div>
-                    <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
-                      Description
-                    </label>
-                    <p className="text-gray-700 mt-2 leading-relaxed">
-                      {selectedPolicy.description}
-                    </p>
-                  </div>
-                )}
-
-                {selectedPolicy.document_path && (
-                  <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                    <label className="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-2">
-                      <FileText size={16} className="text-blue-600" />
-                      Attached Document
-                    </label>
-                    <p className="text-sm text-gray-600">{selectedPolicy.document_path}</p>
-                  </div>
-                )}
-              </div>
-
-              <div className="flex justify-end gap-3 px-6 py-4 border-t bg-gray-50">
-                <button
-                  onClick={() => setShowViewModal(false)}
-                  className="px-6 py-2.5 text-sm font-semibold text-gray-700 bg-white border-2 border-gray-300 hover:bg-gray-100 rounded-lg transition-all"
-                >
-                  Close
-                </button>
-                <button
-                  onClick={() => {
-                    setShowViewModal(false);
-                    handleEditClick(selectedPolicy);
-                  }}
-                  className="px-6 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 rounded-lg shadow-md hover:shadow-lg transition-all"
-                >
-                  Edit Policy
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Delete Confirmation Modal */}
-        {showDeleteModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-sm shadow-2xl max-w-md w-full p-6 text-center">
-              <div className="bg-red-100 p-4 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                <AlertTriangle size={32} className="text-red-600" />
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Delete HR Policy</h3>
-              <p className="text-gray-600 mb-6">
-                Are you sure you want to delete this HR policy? This action cannot be undone.
-              </p>
-              <div className="flex justify-center gap-4">
-                <button
-                  onClick={() => setShowDeleteModal(false)}
-                  className="px-6 py-2 border-2 border-gray-300 text-gray-700 rounded-sm hover:bg-gray-100 transition-all font-semibold"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={confirmDelete}
-                  className="px-6 py-2 bg-red-600 text-white rounded-sm hover:bg-red-700 transition-all font-semibold shadow-sm"
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Filter Modal */}
-        {showFilterModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-sm shadow-2xl w-full max-w-md">
-              <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-6 rounded-t-xl">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-3">
-                    <div className="bg-white bg-opacity-20 p-2 rounded-lg">
-                      <Filter className="text-white" size={24} />
-                    </div>
-                    <h2 className="text-2xl font-bold text-white">Filter HR Policies</h2>
-                  </div>
-                  <button
-                    onClick={() => setShowFilterModal(false)}
-                    className="text-white hover:bg-white hover:bg-opacity-20 p-2 rounded-sm transition-colors"
-                  >
-                    <X size={24} />
-                  </button>
-                </div>
-              </div>
-
-              <div className="p-6">
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Category
-                    </label>
-                    <select
-                      value={filterCategory}
-                      onChange={(e) => setFilterCategory(e.target.value)}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                    >
-                      <option value="All">All Categories</option>
-                      {categories.map((cat) => (
-                        <option key={cat} value={cat}>
-                          {cat}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Status
-                    </label>
-                    <select
-                      value={filterStatus}
-                      onChange={(e) => setFilterStatus(e.target.value)}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                    >
-                      <option value="All">All Statuses</option>
-                      {statuses.map((status) => (
-                        <option key={status} value={status}>
-                          {status}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div className="flex gap-3 mt-6">
-                  <button
-                    onClick={applyFilters}
-                    className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-6 py-3 rounded-lg font-semibold transition-all shadow-lg hover:shadow-xl"
-                  >
-                    Apply Filters
+                    Close
                   </button>
                   <button
                     onClick={() => {
-                      resetFilters();
-                      setShowFilterModal(false);
+                      setShowViewModal(false);
+                      handleEditClick(selectedPolicy);
                     }}
-                    className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 rounded-sm font-semibold transition-colors"
+                    className="px-6 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 rounded-lg shadow-md hover:shadow-lg transition-all"
                   >
-                    Reset
+                    Edit Policy
                   </button>
                 </div>
               </div>
             </div>
-          </div>
-        )}
-      </div>
-    </DashboardLayout>
+          )
+        }
+
+        {/* Delete Confirmation Modal */}
+        {
+          showDeleteModal && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+              <div className="bg-white rounded-sm shadow-2xl max-w-md w-full p-6 text-center">
+                <div className="bg-red-100 p-4 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                  <AlertTriangle size={32} className="text-red-600" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">Delete HR Policy</h3>
+                <p className="text-gray-600 mb-6">
+                  Are you sure you want to delete this HR policy? This action cannot be undone.
+                </p>
+                <div className="flex justify-center gap-4">
+                  <button
+                    onClick={() => setShowDeleteModal(false)}
+                    className="px-6 py-2 border-2 border-gray-300 text-gray-700 rounded-sm hover:bg-gray-100 transition-all font-semibold"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={confirmDelete}
+                    className="px-6 py-2 bg-red-600 text-white rounded-sm hover:bg-red-700 transition-all font-semibold shadow-sm"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+          )
+        }
+
+      </div >
+    </DashboardLayout >
   );
 }

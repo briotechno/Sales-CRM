@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { FiHome } from "react-icons/fi";
-import { Pencil, Trash2, Eye, Grid, FileDown, Plus, Target, Handshake, Warehouse, Users, Search } from "lucide-react";
+import { Pencil, Trash2, Eye, Grid, FileDown, Plus, Target, Handshake, Warehouse, Users, Search, Filter } from "lucide-react";
 import DashboardLayout from "../../components/DashboardLayout";
 import AddDepartmentModal from "../../components/Department/AddDepartmentModal";
 import EditDepartmentModal from "../../components/Department/EditDepartmentModal";
@@ -15,6 +15,8 @@ const AllDepartment = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState("All");
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const dropdownRef = useRef(null);
   const itemsPerPage = 6;
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -40,6 +42,16 @@ const AllDepartment = () => {
 
   const currentDepartments = departments;
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsFilterOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   const handlePageChange = (page) => setCurrentPage(page);
   const handlePrev = () =>
     setCurrentPage((prev) => (prev > 1 ? prev - 1 : prev));
@@ -63,21 +75,41 @@ const AllDepartment = () => {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            {["All", "Active", "Inactive"].map((status) => (
+            <div className="relative" ref={dropdownRef}>
               <button
-                key={status}
-                onClick={() => {
-                  setStatusFilter(status);
-                  setCurrentPage(1);
-                }}
-                className={`px-3 py-2 rounded-sm font-semibold border text-sm transition ${statusFilter === status
+                onClick={() => setIsFilterOpen(!isFilterOpen)}
+                className={`p-2 rounded-sm border transition shadow-sm ${isFilterOpen || statusFilter !== "All"
                   ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
                   : "bg-white text-black border-gray-300 hover:bg-gray-100"
                   }`}
+                title={statusFilter === "All" ? "Filter" : `Filter: ${statusFilter}`}
               >
-                {status}
+                <Filter size={20} />
               </button>
-            ))}
+
+              {isFilterOpen && (
+                <div className="absolute left-0 mt-2 w-32 bg-white border border-gray-200 rounded-sm shadow-xl z-50 animate-fadeIn">
+                  <div className="py-1">
+                    {["All", "Active", "Inactive"].map((status) => (
+                      <button
+                        key={status}
+                        onClick={() => {
+                          setStatusFilter(status);
+                          setIsFilterOpen(false);
+                          setCurrentPage(1);
+                        }}
+                        className={`block w-full text-left px-4 py-2.5 text-sm transition-colors ${statusFilter === status
+                          ? "bg-orange-50 text-orange-600 font-bold"
+                          : "text-gray-700 hover:bg-gray-50"
+                          }`}
+                      >
+                        {status}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
 
             <div className="relative">
               <input

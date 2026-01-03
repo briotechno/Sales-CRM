@@ -15,12 +15,13 @@ export const hrPolicyApi = createApi({
     tagTypes: ['HRPolicy'],
     endpoints: (builder) => ({
         getHRPolicies: builder.query({
-            query: ({ category, status, search }) => {
+            query: ({ category, status, search, department }) => {
                 let url = 'hr-policies';
                 const params = new URLSearchParams();
                 if (category && category !== 'All') params.append('category', category);
                 if (status && status !== 'All') params.append('status', status);
                 if (search) params.append('search', search);
+                if (department && department !== 'All') params.append('department', department);
                 const queryString = params.toString();
                 return queryString ? `${url}?${queryString}` : url;
             },

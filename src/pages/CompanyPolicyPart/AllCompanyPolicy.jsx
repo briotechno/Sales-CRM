@@ -26,16 +26,15 @@ import toast from "react-hot-toast";
 import usePermission from "../../hooks/usePermission";
 
 export default function CompanyPolicy() {
-  const [activeTab, setActiveTab] = useState("All");
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [showFilterModal, setShowFilterModal] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
   const [selectedPolicy, setSelectedPolicy] = useState(null);
   const [policyToDelete, setPolicyToDelete] = useState(null);
-  const [filterCategory, setFilterCategory] = useState("All");
   const [filterStatus, setFilterStatus] = useState("All");
+  const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
 
@@ -59,8 +58,9 @@ export default function CompanyPolicy() {
     isLoading,
     isError,
   } = useGetCompanyPoliciesQuery({
-    category: filterCategory,
-    status: filterStatus === "All" ? activeTab : filterStatus,
+    category: "All",
+    status: filterStatus,
+    search: searchTerm,
   });
 
   const [createPolicy] = useCreateCompanyPolicyMutation();
@@ -91,9 +91,7 @@ export default function CompanyPolicy() {
   const stats = getStats();
 
   // Filter policies based on active tab
-  const filteredPolicies = policiesData
-    ? policiesData.filter((p) => activeTab === "All" || p.status === activeTab)
-    : [];
+  const filteredPolicies = policiesData || [];
 
   // Pagination
   const totalPages = Math.ceil(filteredPolicies.length / itemsPerPage);
@@ -209,14 +207,9 @@ export default function CompanyPolicy() {
     a.click();
   };
 
-  const applyFilters = () => {
-    setShowFilterModal(false);
-    setCurrentPage(1);
-  };
-
-  const resetFilters = () => {
-    setFilterCategory("All");
+  const handleClearFilters = () => {
     setFilterStatus("All");
+    setSearchTerm("");
   };
 
   const handlePageChange = (page) => {
@@ -273,11 +266,17 @@ export default function CompanyPolicy() {
 
             <div className="flex gap-3">
               <button
-                onClick={() => setShowFilterModal(true)}
-                className="flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 px-5 py-2.5 rounded-sm font-medium border border-gray-300 transition-colors"
+                onClick={() => setShowFilters(!showFilters)}
+                className={`px-4 py-2 rounded-lg border flex items-center gap-2 transition-all shadow-sm ${showFilters || filterStatus !== "All" || searchTerm
+                  ? "bg-orange-50 border-orange-200 text-orange-600"
+                  : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
+                  }`}
               >
-                <Filter size={18} />
-                Filter
+                <Filter size={18} className={filterStatus !== "All" || searchTerm ? "fill-orange-500" : ""} />
+                <span className="font-semibold text-sm">Filters</span>
+                {(filterStatus !== "All" || searchTerm) && (
+                  <span className="flex h-2 w-2 rounded-full bg-orange-500"></span>
+                )}
               </button>
 
               <button
@@ -304,6 +303,75 @@ export default function CompanyPolicy() {
             </div>
           </div>
         </div>
+
+        {/* FILTER DROPDOWN */}
+        {showFilters && (
+          <div className="absolute right-6 top-24 mt-2 bg-white border border-gray-200 rounded-xl shadow-2xl w-80 p-5 animate-fadeIn z-50 transition-all">
+            <div className="flex justify-between items-center mb-4 pb-2 border-b">
+              <h3 className="font-bold text-gray-800 flex items-center gap-2">
+                <Filter size={18} className="text-orange-500" />
+                Filter Options
+              </h3>
+              <button
+                onClick={() => setShowFilters(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Search */}
+            <div className="mb-4">
+              <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">
+                Search Policies
+              </label>
+              <input
+                type="text"
+                placeholder="Search..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all bg-gray-50"
+              />
+            </div>
+
+            {/* Category */}
+
+
+            {/* Status */}
+            <div className="mb-6">
+              <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">
+                Status
+              </label>
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all bg-gray-50"
+              >
+                <option value="All">All Statuses</option>
+                {statuses.map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={handleClearFilters}
+                className="flex-1 px-4 py-2 border border-gray-200 text-gray-600 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-all font-sans"
+              >
+                Clear All
+              </button>
+              <button
+                onClick={() => setShowFilters(false)}
+                className="flex-1 px-4 py-2 bg-orange-500 text-white rounded-lg text-sm font-semibold hover:bg-orange-600 transition-all shadow-md shadow-orange-500/20 font-sans"
+              >
+                Apply
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
@@ -338,23 +406,7 @@ export default function CompanyPolicy() {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-8 mb-6 border-b border-gray-200">
-          {["All", "Active", "Under Review", "Archived"].map((tab) => (
-            <button
-              key={tab}
-              onClick={() => {
-                setActiveTab(tab);
-                setCurrentPage(1);
-              }}
-              className={`pb-3 font-medium transition-colors ${activeTab === tab
-                ? "text-orange-500 border-b-2 border-orange-500"
-                : "text-gray-600 hover:text-gray-900"
-                }`}
-            >
-              {tab}
-            </button>
-          ))}
-        </div>
+
 
         {/* Table */}
         <div className="bg-white rounded-sm shadow-sm overflow-hidden">
@@ -954,86 +1006,6 @@ export default function CompanyPolicy() {
           </div>
         )}
 
-        {/* Filter Modal */}
-        {showFilterModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-sm shadow-2xl w-full max-w-md">
-              <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-6 rounded-t-xl">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-3">
-                    <div className="bg-white bg-opacity-20 p-2 rounded-lg">
-                      <Filter className="text-white" size={24} />
-                    </div>
-                    <h2 className="text-2xl font-bold text-white">Filter Policies</h2>
-                  </div>
-                  <button
-                    onClick={() => setShowFilterModal(false)}
-                    className="text-white hover:bg-white hover:bg-opacity-20 p-2 rounded-sm transition-colors"
-                  >
-                    <X size={24} />
-                  </button>
-                </div>
-              </div>
-
-              <div className="p-6">
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Category
-                    </label>
-                    <select
-                      value={filterCategory}
-                      onChange={(e) => setFilterCategory(e.target.value)}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                    >
-                      <option value="All">All Categories</option>
-                      {categories.map((cat) => (
-                        <option key={cat} value={cat}>
-                          {cat}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Status
-                    </label>
-                    <select
-                      value={filterStatus}
-                      onChange={(e) => setFilterStatus(e.target.value)}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                    >
-                      <option value="All">All Statuses</option>
-                      {statuses.map((status) => (
-                        <option key={status} value={status}>
-                          {status}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div className="flex gap-3 mt-6">
-                  <button
-                    onClick={applyFilters}
-                    className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-6 py-3 rounded-lg font-semibold transition-all shadow-lg hover:shadow-xl"
-                  >
-                    Apply Filters
-                  </button>
-                  <button
-                    onClick={() => {
-                      resetFilters();
-                      setShowFilterModal(false);
-                    }}
-                    className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 rounded-sm font-semibold transition-colors"
-                  >
-                    Reset
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </DashboardLayout>
   );

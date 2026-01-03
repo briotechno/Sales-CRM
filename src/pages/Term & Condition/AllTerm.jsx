@@ -21,6 +21,8 @@ import {
   useCreateTermMutation,
   useUpdateTermMutation,
 } from "../../store/api/termApi";
+import { useGetDepartmentsQuery } from "../../store/api/departmentApi";
+import { useGetDesignationsQuery } from "../../store/api/designationApi";
 import DeleteTermModal from "../../components/TermCondition/DeleteTermModal";
 import usePermission from "../../hooks/usePermission";
 
@@ -49,6 +51,9 @@ const TermsAndCondition = () => {
   const { create, read, update, delete: remove } = usePermission("HR Policy"); // Terms are part of HR Policy usually, or I should check keys. I'll stick to HR Policy or check if "Terms" is a key. Given user request, I'll use "HR Policy".
 
   /* ================= API ================= */
+  const { data: deptData } = useGetDepartmentsQuery({ limit: 100 });
+  const { data: desigData } = useGetDesignationsQuery({ limit: 100 });
+
   const { data, isLoading } = useGetAllTermsQuery({
     page: currentPage,
     limit: itemsPerPage,
@@ -56,6 +61,9 @@ const TermsAndCondition = () => {
     department: filterDept,
     designation: filterDesig,
   });
+
+  const departments = deptData?.departments || [];
+  const designations = desigData?.designations || [];
 
   const [createTerm, { isLoading: creating }] = useCreateTermMutation();
   const [updateTerm, { isLoading: updating }] = useUpdateTermMutation();
@@ -116,6 +124,12 @@ const TermsAndCondition = () => {
     }
   };
 
+  const handleClearFilters = () => {
+    setFilterDept("");
+    setFilterDesig("");
+    setSearchTerm("");
+  };
+
   /* ================= UI ================= */
   return (
     <DashboardLayout>
@@ -137,20 +151,28 @@ const TermsAndCondition = () => {
             <div className="flex gap-3">
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className="px-4 py-2 border flex gap-2"
+                className={`px-4 py-2 rounded-lg border flex items-center gap-2 transition-all shadow-sm ${showFilters || filterDept || filterDesig || searchTerm
+                  ? "bg-orange-50 border-orange-200 text-orange-600"
+                  : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
+                  }`}
               >
-                <Filter size={16} /> Filters
+                <Filter size={18} className={filterDept || filterDesig || searchTerm ? "fill-orange-500" : ""} />
+                <span className="font-semibold text-sm">Filters</span>
+                {(filterDept || filterDesig || searchTerm) && (
+                  <span className="flex h-2 w-2 rounded-full bg-orange-500"></span>
+                )}
               </button>
 
               <button
                 onClick={() => setIsModalOpen(true)}
                 disabled={!create}
-                className={`px-4 py-2 flex gap-2 ${create
-                  ? "bg-orange-500 text-white"
-                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-all shadow-md ${create
+                  ? "bg-orange-500 text-white hover:bg-orange-600 shadow-orange-500/20"
+                  : "bg-gray-300 text-gray-500 cursor-not-allowed shadow-none"
                   }`}
               >
-                <Plus size={18} /> Add Terms
+                <Plus size={18} />
+                <span className="font-semibold text-sm">Add Terms</span>
               </button>
             </div>
           </div>
@@ -158,45 +180,85 @@ const TermsAndCondition = () => {
 
         {/* FILTER DROPDOWN */}
         {showFilters && (
-          <div className="absolute right-5 mt-2 bg-white border border-gray-200 rounded-md shadow-lg w-64 p-4 animate-fadeIn">
+          <div className="absolute right-6 top-24 mt-2 bg-white border border-gray-200 rounded-xl shadow-2xl w-80 p-5 animate-fadeIn z-50">
+            <div className="flex justify-between items-center mb-4 pb-2 border-b">
+              <h3 className="font-bold text-gray-800 flex items-center gap-2">
+                <Filter size={18} className="text-orange-500" />
+                Filter Options
+              </h3>
+              <button
+                onClick={() => setShowFilters(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <Plus size={20} className="rotate-45" />
+              </button>
+            </div>
+
+            {/* Search */}
+            <div className="mb-4">
+              <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">
+                Search Title/Desc
+              </label>
+              <input
+                type="text"
+                placeholder="Search..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all bg-gray-50"
+              />
+            </div>
+
             {/* Department */}
             <div className="mb-4">
-              <label className="block text-sm font-semibold text-gray-700 mb-1">
+              <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">
                 Department
               </label>
               <select
                 value={filterDept}
                 onChange={(e) => setFilterDept(e.target.value)}
-                className="w-full border-2 border-gray-200 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-[#FF7B1D] focus:border-[#FF7B1D] outline-none"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all bg-gray-50"
               >
                 <option value="">All Departments</option>
-                <option value="HR">Human Resources</option>
-                <option value="IT">IT Support</option>
-                <option value="Sales">Sales</option>
-                <option value="Finance">Finance</option>
-                <option value="Operations">Operations</option>
-                <option value="Marketing">Marketing</option>
+                {departments.map((dept) => (
+                  <option key={dept.id} value={dept.department_name}>
+                    {dept.department_name}
+                  </option>
+                ))}
               </select>
             </div>
 
             {/* Designation */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">
+            <div className="mb-6">
+              <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">
                 Designation
               </label>
               <select
                 value={filterDesig}
                 onChange={(e) => setFilterDesig(e.target.value)}
-                className="w-full border-2 border-gray-200 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-[#FF7B1D] focus:border-[#FF7B1D] outline-none"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all bg-gray-50"
               >
                 <option value="">All Designations</option>
-                <option value="Manager">Manager</option>
-                <option value="Executive">Executive</option>
-                <option value="Engineer">Engineer</option>
-                <option value="Associate">Associate</option>
-                <option value="Director">Director</option>
-                <option value="Intern">Intern</option>
+                {designations.map((dsg) => (
+                  <option key={dsg.id} value={dsg.designation_name}>
+                    {dsg.designation_name}
+                  </option>
+                ))}
               </select>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={handleClearFilters}
+                className="flex-1 px-4 py-2 border border-gray-200 text-gray-600 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-all"
+              >
+                Clear All
+              </button>
+              <button
+                onClick={() => setShowFilters(false)}
+                className="flex-1 px-4 py-2 bg-orange-500 text-white rounded-lg text-sm font-semibold hover:bg-orange-600 transition-all shadow-md shadow-orange-500/20"
+              >
+                Apply
+              </button>
             </div>
           </div>
         )}

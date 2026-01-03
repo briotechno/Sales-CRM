@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { FileText, Building, Briefcase, AlignLeft, Save } from "lucide-react";
 import Modal from "../common/Modal";
 import { toast } from "react-hot-toast";
+import { useGetDepartmentsQuery } from "../../store/api/departmentApi";
+import { useGetDesignationsQuery } from "../../store/api/designationApi";
 
 const EditTermModal = ({ isOpen, onClose, term, onSubmit, loading }) => {
   const [formData, setFormData] = useState({
@@ -10,6 +12,13 @@ const EditTermModal = ({ isOpen, onClose, term, onSubmit, loading }) => {
     title: "",
     description: "",
   });
+
+  /* API Data */
+  const { data: deptData } = useGetDepartmentsQuery({ limit: 100 });
+  const { data: desigData } = useGetDesignationsQuery({ limit: 100 });
+
+  const departments = deptData?.departments || [];
+  const designations = desigData?.designations || [];
 
   /* Prefill data */
   useEffect(() => {
@@ -81,12 +90,14 @@ const EditTermModal = ({ isOpen, onClose, term, onSubmit, loading }) => {
             onChange={(e) =>
               setFormData({ ...formData, department: e.target.value })
             }
-            className="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-orange-500 outline-none"
+            className="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-orange-500 outline-none bg-white"
           >
             <option value="">Select Department</option>
-            <option value="HR">HR</option>
-            <option value="IT">IT</option>
-            <option value="Sales">Sales</option>
+            {departments.map((dept) => (
+              <option key={dept.id} value={dept.name}>
+                {dept.name}
+              </option>
+            ))}
           </select>
         </div>
 
@@ -100,12 +111,14 @@ const EditTermModal = ({ isOpen, onClose, term, onSubmit, loading }) => {
             onChange={(e) =>
               setFormData({ ...formData, designation: e.target.value })
             }
-            className="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-orange-500 outline-none"
+            className="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-orange-500 outline-none bg-white"
           >
             <option value="">Select Designation</option>
-            <option value="Manager">Manager</option>
-            <option value="Engineer">Engineer</option>
-            <option value="Executive">Executive</option>
+            {designations.map((dsg) => (
+              <option key={dsg.id} value={dsg.name}>
+                {dsg.name}
+              </option>
+            ))}
           </select>
         </div>
 

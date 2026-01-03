@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import DashboardLayout from "../../components/DashboardLayout";
 import JobViewModal from "../../pages/JobManagement/ViewPage";
 import {
@@ -33,6 +33,8 @@ export default function JobManagement() {
   const [selectedFilter, setSelectedFilter] = useState("All");
   const [showViewModal, setShowViewModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const dropdownRef = useRef(null);
   const [selectedJob, setSelectedJob] = useState(null);
   const [jobToDelete, setJobToDelete] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -150,6 +152,16 @@ export default function JobManagement() {
     setCurrentPage(page);
   };
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsFilterOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   const handleNext = () => {
     if (currentPage < (jobsData?.pagination?.totalPages || 1)) {
       setCurrentPage((prev) => prev + 1);
@@ -254,24 +266,41 @@ export default function JobManagement() {
                 </p>
               </div>
               <div className="flex items-center gap-4">
-                {/* Filter Buttons */}
-                <div className="flex items-center gap-2 bg-white p-2 rounded-sm shadow-md">
-                  <Filter size={20} className="text-orange-500 ml-2" />
-                  {filterOptions.map((filter) => (
-                    <button
-                      key={filter}
-                      onClick={() => {
-                        setSelectedFilter(filter);
-                        setCurrentPage(1);
-                      }}
-                      className={`px-4 py-2 rounded-sm font-semibold transition-all ${selectedFilter === filter
-                        ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md"
-                        : "text-gray-600 hover:bg-gray-100"
-                        }`}
-                    >
-                      {filter}
-                    </button>
-                  ))}
+                {/* Filter Dropdown */}
+                <div className="relative" ref={dropdownRef}>
+                  <button
+                    onClick={() => setIsFilterOpen(!isFilterOpen)}
+                    className={`p-2 rounded-sm border transition shadow-sm ${isFilterOpen || selectedFilter !== "All"
+                      ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
+                      : "bg-white text-black border-gray-300 hover:bg-gray-100"
+                      }`}
+                    title={selectedFilter === "All" ? "Filter" : `Filter: ${selectedFilter}`}
+                  >
+                    <Filter size={20} />
+                  </button>
+
+                  {isFilterOpen && (
+                    <div className="absolute left-0 mt-2 w-40 bg-white border border-gray-200 rounded-sm shadow-xl z-50 animate-fadeIn">
+                      <div className="py-1">
+                        {filterOptions.map((filter) => (
+                          <button
+                            key={filter}
+                            onClick={() => {
+                              setSelectedFilter(filter);
+                              setIsFilterOpen(false);
+                              setCurrentPage(1);
+                            }}
+                            className={`block w-full text-left px-4 py-2.5 text-sm transition-colors ${selectedFilter === filter
+                              ? "bg-orange-50 text-orange-600 font-bold"
+                              : "text-gray-700 hover:bg-gray-50"
+                              }`}
+                          >
+                            {filter}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Add New Job Button */}

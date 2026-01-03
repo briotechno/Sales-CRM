@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiHome, FiGrid } from "react-icons/fi";
 import DashboardLayout from "../../components/DashboardLayout";
-import { Eye, Pencil, Trash2, Plus, List, Warehouse, Users, Handshake, Target, Search } from "lucide-react";
+import { Eye, Pencil, Trash2, Plus, List, Warehouse, Users, Handshake, Target, Search, Filter, ChevronDown } from "lucide-react";
 import AddEmployeeModal from "../../components/Employee/AddEmployeeModal";
 import EditEmployeeModal from "../../components/Employee/EditEmployeeModal";
 import DeleteEmployeeModal from "../../components/Employee/DeleteEmployeeModal";
@@ -16,6 +16,8 @@ import usePermission from "../../hooks/usePermission";
 const AllEmployee = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const dropdownRef = useRef(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [viewMode, setViewMode] = useState("list");
   const itemsPerPage = viewMode === "list" ? 7 : 8;
@@ -62,6 +64,16 @@ const AllEmployee = () => {
     setIsDeleteModalOpen(true);
   };
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsFilterOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   const getStatusClass = (status) => {
     switch (status) {
       case "Active": return "bg-green-100 text-green-600";
@@ -90,21 +102,41 @@ const AllEmployee = () => {
           </div>
 
           <div className="flex items-center flex-wrap gap-2">
-            {["All", "Active", "Terminate", "Resign", "Blocked", "Hold"].map((status) => (
+            <div className="relative" ref={dropdownRef}>
               <button
-                key={status}
-                onClick={() => {
-                  setStatusFilter(status);
-                  setCurrentPage(1);
-                }}
-                className={`px-2 py-2 rounded-sm font-semibold border text-sm transition ${statusFilter === status
+                onClick={() => setIsFilterOpen(!isFilterOpen)}
+                className={`p-2 rounded-sm border transition shadow-sm ${isFilterOpen || statusFilter !== "All"
                   ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
                   : "bg-white text-black border-gray-300 hover:bg-gray-100"
                   }`}
+                title={statusFilter === "All" ? "Filter" : `Filter: ${statusFilter}`}
               >
-                {status}
+                <Filter size={20} />
               </button>
-            ))}
+
+              {isFilterOpen && (
+                <div className="absolute left-0 mt-2 w-48 bg-white border border-gray-200 rounded-sm shadow-xl z-50 animate-fadeIn">
+                  <div className="py-1">
+                    {["All", "Active", "Terminate", "Resign", "Blocked", "Hold"].map((status) => (
+                      <button
+                        key={status}
+                        onClick={() => {
+                          setStatusFilter(status);
+                          setIsFilterOpen(false);
+                          setCurrentPage(1);
+                        }}
+                        className={`block w-full text-left px-4 py-2.5 text-sm transition-colors ${statusFilter === status
+                          ? "bg-orange-50 text-orange-600 font-bold"
+                          : "text-gray-700 hover:bg-gray-50"
+                          }`}
+                      >
+                        {status}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
 
             <div className="relative">
               <input
