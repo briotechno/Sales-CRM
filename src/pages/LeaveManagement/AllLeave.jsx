@@ -12,7 +12,8 @@ import {
   AlertCircle,
   ChevronLeft,
   ChevronRight,
-  Search
+  Search,
+  Eye
 } from "lucide-react";
 import NumberCard from "../../components/NumberCard";
 import {
@@ -225,29 +226,28 @@ export default function LeaveManagement() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <NumberCard
             title="Total Requests"
-            number={leaveData?.pagination?.total || 0}
+            number={leaveData ? leaveData?.summary?.total : "-"}
             icon={<Calendar className="text-blue-600" size={24} />}
             iconBgColor="bg-blue-100"
             lineBorderClass="border-blue-500"
           />
-          {/* We can't easily get counts for others without extra queries. Leaving them as placeholders or 0 for now to avoid errors, or removing. User asked for specific functionality. I'll keep them but maybe hardcode 0 or implement extra queries later. */}
           <NumberCard
             title="Pending"
-            number={"-"}
+            number={leaveData ? leaveData?.summary?.pending : "-"}
             icon={<Clock className="text-green-600" size={24} />}
             iconBgColor="bg-green-100"
             lineBorderClass="border-green-500"
           />
           <NumberCard
             title="Approved"
-            number={"-"}
+            number={leaveData ? leaveData?.summary?.approved : "-"}
             icon={<CheckCircle className="text-orange-600" size={24} />}
             iconBgColor="bg-orange-100"
             lineBorderClass="border-orange-500"
           />
           <NumberCard
             title="Rejected"
-            number={"-"}
+            number={leaveData ? leaveData?.summary?.rejected : "-"}
             icon={<XCircle className="text-purple-600" size={24} />}
             iconBgColor="bg-purple-100"
             lineBorderClass="border-purple-500"
@@ -281,13 +281,13 @@ export default function LeaveManagement() {
             <table className="w-full border-collapse text-center">
               <thead>
                 <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm">
-                  <th className="py-3 px-4 font-semibold">Employee</th>
-                  <th className="py-3 px-4 font-semibold">Leave Type</th>
-                  <th className="py-3 px-4 font-semibold">From</th>
-                  <th className="py-3 px-4 font-semibold">To</th>
-                  <th className="py-3 px-4 font-semibold">Days</th>
-                  <th className="py-3 px-4 font-semibold">Status</th>
-                  <th className="py-3 px-4 font-semibold">Actions</th>
+                  <th className="py-3 px-6 font-semibold text-left">Employee</th>
+                  <th className="py-3 px-4 font-semibold text-center">Leave Type</th>
+                  <th className="py-3 px-4 font-semibold text-center">From</th>
+                  <th className="py-3 px-4 font-semibold text-center">To</th>
+                  <th className="py-3 px-4 font-semibold text-center">Days</th>
+                  <th className="py-3 px-4 font-semibold text-center">Status</th>
+                  <th className="py-3 px-4 font-semibold text-center">Actions</th>
                 </tr>
               </thead>
               <tbody className="text-sm bg-white divide-y divide-gray-200">
@@ -310,12 +310,12 @@ export default function LeaveManagement() {
                 ) : (
                   leaveData?.leave_requests.map((request) => (
                     <tr key={request.id} className="border-t hover:bg-gray-50 transition-colors text-center">
-                      <td className="py-3 px-4 whitespace-nowrap">
-                        <div className="flex items-center justify-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-[#FF7B1D] font-bold text-xs">
+                      <td className="py-3 px-6 whitespace-nowrap">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-full bg-orange-100 flex items-center justify-center text-[#FF7B1D] font-bold text-sm shadow-sm border border-orange-200">
                             {request.employee_name?.charAt(0) || 'U'}
                           </div>
-                          <div className="text-sm font-medium text-gray-900">{request.employee_name}</div>
+                          <div className="text-sm font-semibold text-gray-900">{request.employee_name}</div>
                         </div>
                       </td>
                       <td className="py-3 px-4 whitespace-nowrap text-sm text-gray-700">
@@ -337,18 +337,18 @@ export default function LeaveManagement() {
                       </td>
                       <td className="py-3 px-4 whitespace-nowrap text-sm">
                         {request.status === "pending" || request.status === "Pending" ? (
-                          <div className="flex justify-center gap-3">
+                          <div className="flex justify-center gap-2">
                             {update && (
                               <>
                                 <button
                                   onClick={() => handleStatusUpdate(request.id, 'approved')}
-                                  className="text-green-600 hover:text-green-800 font-semibold text-xs transition-colors"
+                                  className="bg-green-100 text-green-700 px-3 py-1.5 rounded-sm text-xs font-bold hover:bg-green-200 transition-colors"
                                 >
                                   Approve
                                 </button>
                                 <button
                                   onClick={() => handleStatusUpdate(request.id, 'rejected')}
-                                  className="text-red-600 hover:text-red-800 font-semibold text-xs transition-colors"
+                                  className="bg-red-100 text-red-700 px-3 py-1.5 rounded-sm text-xs font-bold hover:bg-red-200 transition-colors"
                                 >
                                   Reject
                                 </button>
@@ -358,8 +358,8 @@ export default function LeaveManagement() {
                         ) : (
                           <div className="flex justify-center">
                             {read && (
-                              <button className="text-blue-600 hover:text-blue-800 font-semibold text-xs transition-colors">
-                                View
+                              <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-sm transition-colors" title="View Details">
+                                <Eye size={18} />
                               </button>
                             )}
                           </div>

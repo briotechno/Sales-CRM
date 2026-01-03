@@ -232,7 +232,7 @@ export default function HRMDashboard() {
           </div>
 
           {/* Leave Requests & Recent Joiners */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
             {/* Leave Requests */}
             <div className="lg:col-span-2 bg-white rounded-sm shadow-lg border border-gray-100 overflow-hidden">
               <div className="bg-gradient-to-r from-blue-100 to-blue-50 p-6 border-b border-blue-200">
@@ -295,47 +295,7 @@ export default function HRMDashboard() {
               </div>
             </div>
 
-            {/* Upcoming Tasks */}
-            <div className="bg-white rounded-sm shadow-lg border border-gray-100 overflow-hidden">
-              <div className="bg-gradient-to-r from-green-100 to-green-50 p-6 border-b border-green-200">
-                <h3 className="text-xl font-bold text-gray-800">
-                  ⏰ Upcoming Tasks
-                </h3>
-              </div>
-              <div className="p-6">
-                <div className="space-y-4">
-                  {(dashboardData.upcomingTasks || []).map((task, index) => (
-                    <div key={index} className="group">
-                      <div className="p-4 bg-gradient-to-r from-gray-50 to-white rounded-sm hover:shadow-md transition-all border-2 border-gray-100 group-hover:border-green-300">
-                        <div className="flex items-start space-x-3">
-                          <div
-                            className={`p-3 rounded-sm shadow-lg ${task.priority === "High"
-                              ? "bg-gradient-to-br from-red-400 to-red-600"
-                              : task.priority === "Medium"
-                                ? "bg-gradient-to-br from-orange-400 to-orange-600"
-                                : "bg-gradient-to-br from-blue-400 to-blue-600"
-                              }`}
-                          >
-                            <Clock className="w-5 h-5 text-white" />
-                          </div>
-                          <div className="flex-1">
-                            <p className="text-sm font-bold text-gray-800">
-                              {task.task}
-                            </p>
-                            <p className="text-xs text-gray-500 mt-1 font-medium">
-                              {task.dueDate}
-                            </p>
-                            <p className="text-xs text-gray-400 mt-1">
-                              {task.assignedTo}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+
           </div>
 
           {/* Recent Joiners */}

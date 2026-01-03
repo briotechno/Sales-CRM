@@ -183,10 +183,29 @@ const LeaveRequest = {
         const [countResult] = await pool.query(countQuery, queryParams);
         const total = countResult[0].total;
 
+        // Get summary counts (regardless of filters)
+        const [summaryResult] = await pool.query(`
+            SELECT 
+                COUNT(*) as total,
+                SUM(CASE WHEN status = 'pending' OR status = 'Pending' THEN 1 ELSE 0 END) as pending,
+                SUM(CASE WHEN status = 'approved' OR status = 'Approved' THEN 1 ELSE 0 END) as approved,
+                SUM(CASE WHEN status = 'rejected' OR status = 'Rejected' THEN 1 ELSE 0 END) as rejected
+            FROM leave_requests 
+            WHERE user_id = ?
+        `, [userId]);
+
+        const summary = {
+            total: summaryResult[0].total || 0,
+            pending: summaryResult[0].pending || 0,
+            approved: summaryResult[0].approved || 0,
+            rejected: summaryResult[0].rejected || 0
+        };
+
         const [rows] = await pool.query(query, [...queryParams, parseInt(limit), parseInt(offset)]);
 
         return {
             leave_requests: rows,
+            summary,
             pagination: {
                 page: parseInt(page),
                 limit: parseInt(limit),
