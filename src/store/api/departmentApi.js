@@ -26,6 +26,16 @@ export const departmentApi = createApi({
                 return url;
             },
             providesTags: ['Department'],
+            transformResponse: (response) => {
+                if (response.departments) {
+                    const baseUrl = import.meta.env.VITE_API_BASE_URL.replace('/api/', '');
+                    response.departments = response.departments.map(dept => ({
+                        ...dept,
+                        icon_url: dept.icon ? `${baseUrl}${dept.icon}` : null
+                    }));
+                }
+                return response;
+            },
         }),
         getDepartmentById: builder.query({
             query: (id) => `departments/${id}`,

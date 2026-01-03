@@ -2,7 +2,7 @@ const { pool } = require('../config/db');
 
 const Designation = {
     create: async (data, userId) => {
-        const { department_id, designation_name, image, status } = data;
+        const { department_id, designation_name, image, status, description } = data;
 
         // Generate unique designation_id for all users
         const [rows] = await pool.query('SELECT designation_id FROM designations ORDER BY id DESC LIMIT 1');
@@ -15,8 +15,8 @@ const Designation = {
         }
 
         const [result] = await pool.query(
-            'INSERT INTO designations (designation_id, department_id, designation_name, image, status, user_id) VALUES (?, ?, ?, ?, ?, ?)',
-            [newId, department_id, designation_name, image, status, userId]
+            'INSERT INTO designations (designation_id, department_id, designation_name, image, status, description, user_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            [newId, department_id, designation_name, image, status, description, userId]
         );
         return result.insertId;
     },
@@ -81,10 +81,10 @@ const Designation = {
     },
 
     update: async (id, data, userId) => {
-        const { department_id, designation_name, image, status } = data;
+        const { department_id, designation_name, image, status, description } = data;
         await pool.query(
-            'UPDATE designations SET department_id = ?, designation_name = ?, image = ?, status = ? WHERE id = ? AND user_id = ?',
-            [department_id, designation_name, image, status, id, userId]
+            'UPDATE designations SET department_id = ?, designation_name = ?, image = ?, status = ?, description = ? WHERE id = ? AND user_id = ?',
+            [department_id, designation_name, image, status, description, id, userId]
         );
     },
 

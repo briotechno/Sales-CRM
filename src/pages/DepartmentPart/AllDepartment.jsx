@@ -140,6 +140,7 @@ const AllDepartment = () => {
                 <th className="py-3 px-4 font-semibold">Icon</th>
                 <th className="py-3 px-4 font-semibold">Department ID</th>
                 <th className="py-3 px-4 font-semibold">Department Name</th>
+                <th className="py-3 px-4 font-semibold text-left">Description</th>
                 <th className="py-3 px-4 font-semibold">Employees</th>
                 <th className="py-3 px-4 font-semibold">Designations</th>
                 <th className="py-3 px-4 font-semibold">Date Created</th>
@@ -172,6 +173,11 @@ const AllDepartment = () => {
                     </td>
                     <td className="py-3 px-4 text-orange-600 font-medium">{dept.department_id}</td>
                     <td className="py-3 px-4 text-gray-800 font-medium">{dept.department_name}</td>
+                    <td className="py-3 px-4 text-gray-600 text-left max-w-xs transition-all duration-300">
+                      <div className="truncate hover:whitespace-normal hover:overflow-visible hover:relative hover:z-10 hover:bg-white hover:p-1 hover:shadow-lg rounded-sm cursor-help" title={dept.description}>
+                        {dept.description || "---"}
+                      </div>
+                    </td>
                     <td className="py-3 px-4">{dept.employee_count || 0}</td>
                     <td className="py-3 px-4">{dept.designation_count || 0}</td>
                     <td className="py-3 px-4">{new Date(dept.created_at).toLocaleDateString()}</td>
@@ -212,7 +218,7 @@ const AllDepartment = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="9" className="py-10 text-gray-500 font-medium">
+                  <td colSpan="10" className="py-10 text-gray-500 font-medium">
                     {isLoading ? "Loading..." : "No departments found."}
                   </td>
                 </tr>

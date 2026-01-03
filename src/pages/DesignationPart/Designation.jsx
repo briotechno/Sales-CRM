@@ -157,6 +157,7 @@ const AllDesignation = () => {
                 <th className="py-3 px-4 font-semibold">Icon</th>
                 <th className="py-3 px-4 font-semibold">Designation ID</th>
                 <th className="py-3 px-4 font-semibold">Designation Name</th>
+                <th className="py-3 px-4 font-semibold text-left">Description</th>
                 <th className="py-3 px-4 font-semibold">Department</th>
                 <th className="py-3 px-4 font-semibold">Employees</th>
                 <th className="py-3 px-4 font-semibold">Status</th>
@@ -167,7 +168,7 @@ const AllDesignation = () => {
             <tbody className="text-sm">
               {isLoading ? (
                 <tr>
-                  <td colSpan="8" className="py-10 text-gray-500 font-medium">
+                  <td colSpan="9" className="py-10 text-gray-500 font-medium">
                     Loading...
                   </td>
                 </tr>
@@ -193,6 +194,11 @@ const AllDesignation = () => {
                     </td>
                     <td className="py-3 px-4 text-orange-600 font-medium">{dsg.designation_id}</td>
                     <td className="py-3 px-4 text-gray-800 font-medium">{dsg.designation_name}</td>
+                    <td className="py-3 px-4 text-gray-600 text-left max-w-xs transition-all duration-300">
+                      <div className="truncate hover:whitespace-normal hover:overflow-visible hover:relative hover:z-10 hover:bg-white hover:p-1 hover:shadow-lg rounded-sm cursor-help" title={dsg.description}>
+                        {dsg.description || "---"}
+                      </div>
+                    </td>
                     <td className="py-3 px-4 text-gray-600">{dsg.department_name}</td>
                     <td className="py-3 px-4">{dsg.employee_count}</td>
                     <td className="py-3 px-4">
@@ -237,7 +243,7 @@ const AllDesignation = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="8" className="py-10 text-gray-500 font-medium">
+                  <td colSpan="9" className="py-10 text-gray-500 font-medium">
                     No designations found
                   </td>
                 </tr>
