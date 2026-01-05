@@ -325,7 +325,11 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           name: "Catelogs",
           icon: <BarChart3 size={22} />,
           path: "/additional/catelogs",
-          permission: "Catelogs"
+          permission: "Catelogs",
+          children: [
+            { name: "All Catelogs", path: "/additional/catelogs" },
+            { name: "Categories", path: "/additional/catalog-categories" },
+          ],
         },
         {
           name: "Messenger",

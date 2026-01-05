@@ -86,6 +86,7 @@ import Messenger from "./pages/MessengerPart/Messenger";
 // Catelogs Part
 import Catelogs from "./pages/CatelogsPart/Catelogs";
 import CatalogView from "./pages/CatelogsPart/CatalogView";
+import CatalogCategory from "./pages/CatelogsPart/CatalogCategory";
 // Team Management
 import TeamManagement from "./pages/TeamManagement/Team";
 // Auth Pages
@@ -173,6 +174,7 @@ function App() {
           <Route path="/settings/faq" element={<Faq />} />
           <Route path="/additional/messenger" element={<Messenger />} />
           <Route path="/additional/catelogs" element={<Catelogs />} />
+          <Route path="/additional/catalog-categories" element={<CatalogCategory />} />
           <Route path="/hrm/teams" element={<TeamManagement />} />
         </Route>
       </Routes>

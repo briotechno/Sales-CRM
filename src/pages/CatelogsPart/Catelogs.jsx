@@ -35,6 +35,7 @@ import {
   useDeleteCatalogMutation,
 } from "../../store/api/catalogApi";
 import { useGetHRMDashboardDataQuery } from "../../store/api/hrmDashboardApi";
+import { useGetCategoriesQuery } from "../../store/api/catalogCategoryApi";
 import usePermission from "../../hooks/usePermission";
 
 export default function CatalogsPage() {
@@ -59,6 +60,9 @@ export default function CatalogsPage() {
     status: statusFilter,
     search: searchTerm,
   });
+
+  const { data: categoriesData } = useGetCategoriesQuery({ status: 'Active', limit: 1000 });
+  const dbCategories = categoriesData?.categories || [];
 
   const { data: dashboardData } = useGetHRMDashboardDataQuery();
   const [createCatalog] = useCreateCatalogMutation();
@@ -646,16 +650,9 @@ export default function CatalogsPage() {
                         required
                       >
                         <option value="">Select Category</option>
-                        <option value="Software Development">Software Development</option>
-                        <option value="Cloud Services">Cloud Services</option>
-                        <option value="Cyber Security">Cyber Security</option>
-                        <option value="Hardware & Networking">Hardware & Networking</option>
-                        <option value="IT Consulting">IT Consulting</option>
-                        <option value="Managed IT Services">Managed IT Services</option>
-                        <option value="Data Analytics">Data Analytics</option>
-                        <option value="AI & Machine Learning">AI & Machine Learning</option>
-                        <option value="Mobile App Development">Mobile App Development</option>
-                        <option value="Web Hosting">Web Hosting</option>
+                        {dbCategories.map(cat => (
+                          <option key={cat.id} value={cat.name}>{cat.name}</option>
+                        ))}
                       </select>
                     </div>
                     <div>
