@@ -796,7 +796,7 @@ export default function QuotationPage() {
       <div className="min-h-screen ">
         {/* Header */}
         <div className="bg-white border-b">
-          <div className="max-w-7xl mx-auto px-0 ml-10 py-4">
+          <div className="max-w-8xl mx-auto px-0 ml-10 py-4">
             <div className="flex items-center justify-between">
               {/* Left Title Section */}
               <div>
@@ -848,7 +848,7 @@ export default function QuotationPage() {
         </div>
 
         {/* Stats Cards */}
-        <div className="max-w-7xl mx-auto px-0 ml-6 py-6">
+        <div className="max-w-8xl mx-auto px-0 ml-6 py-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
             <NumberCard
               title={"Total Quotations"}
@@ -997,44 +997,44 @@ export default function QuotationPage() {
           </div>
 
           {/* Pagination */}
-        <div className="flex justify-end items-center gap-3 mt-6">
-          <button
-            onClick={handlePrev}
-            disabled={currentPage === 1}
-            className={`px-4 py-2 rounded-sm text-white font-semibold transition ${currentPage === 1
-              ? "bg-gray-300 cursor-not-allowed"
-              : "bg-[#FF7B1D] hover:opacity-90"
-              }`}
-          >
-            Back
-          </button>
+          <div className="flex justify-end items-center gap-3 mt-6">
+            <button
+              onClick={handlePrev}
+              disabled={currentPage === 1}
+              className={`px-4 py-2 rounded-sm text-white font-semibold transition ${currentPage === 1
+                ? "bg-gray-300 cursor-not-allowed"
+                : "bg-[#FF7B1D] hover:opacity-90"
+                }`}
+            >
+              Back
+            </button>
 
-          <div className="flex items-center gap-2">
-            {Array.from({ length: totalPages }, (_, i) => (
-              <button
-                key={i + 1}
-                onClick={() => handlePageChange(i + 1)}
-                className={`px-3 py-1 rounded-sm text-black font-semibold border transition ${currentPage === i + 1
-                  ? "bg-gray-200 border-gray-400"
-                  : "bg-white border-gray-300 hover:bg-gray-100"
-                  }`}
-              >
-                {i + 1}
-              </button>
-            ))}
+            <div className="flex items-center gap-2">
+              {Array.from({ length: totalPages }, (_, i) => (
+                <button
+                  key={i + 1}
+                  onClick={() => handlePageChange(i + 1)}
+                  className={`px-3 py-1 rounded-sm text-black font-semibold border transition ${currentPage === i + 1
+                    ? "bg-gray-200 border-gray-400"
+                    : "bg-white border-gray-300 hover:bg-gray-100"
+                    }`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+            </div>
+
+            <button
+              onClick={handleNext}
+              disabled={currentPage === totalPages}
+              className={`px-4 py-2 rounded-sm text-white font-semibold transition ${currentPage === totalPages
+                ? "bg-gray-300 cursor-not-allowed"
+                : "bg-[#22C55E] hover:opacity-90"
+                }`}
+            >
+              Next
+            </button>
           </div>
-
-          <button
-            onClick={handleNext}
-            disabled={currentPage === totalPages}
-            className={`px-4 py-2 rounded-sm text-white font-semibold transition ${currentPage === totalPages
-              ? "bg-gray-300 cursor-not-allowed"
-              : "bg-[#22C55E] hover:opacity-90"
-              }`}
-          >
-            Next
-          </button>
-        </div>
         </div>
 
         {/* Modals */}
