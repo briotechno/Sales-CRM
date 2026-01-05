@@ -243,9 +243,13 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         {
           name: "Attendance",
           icon: <CalendarCheck size={22} />,
-          path: null,
+          path: (checkPermission("Attendance Management") || user?.role === 'Super Admin' || user?.role === 'Admin') ? null : "/hrm/attendance/employee",
           permission: "Attendance Management",
-          children: [
+          children: (checkPermission("Attendance Management") || user?.role === 'Super Admin' || user?.role === 'Admin') ? [
+            {
+              name: "My Attendance",
+              path: "/hrm/attendance/employee",
+            },
             {
               name: "All Attendance",
               path: "/hrm/attendance",
@@ -254,7 +258,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
               name: "Manage Attendance",
               path: "/hrm/attendance/manage",
             },
-          ],
+          ] : undefined,
         },
         {
           name: "Leave Management",

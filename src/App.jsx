@@ -39,6 +39,7 @@ import MyProfile from "./pages/Profile/MyProfile";
 
 // Attendance Part
 import AllAttendance from "./pages/AttendancePart/AllAttendance";
+import EmployeeAttendance from "./pages/AttendancePart/EmployeeAttendance"; // Import this
 
 import ManageAttendance from "./pages/AttendancePart/ManageAttendancePart/ManageAttendance";
 // Leave Management Part
@@ -84,6 +85,7 @@ import Faq from "./pages/Faq/Faq";
 import Messenger from "./pages/MessengerPart/Messenger";
 // Catelogs Part
 import Catelogs from "./pages/CatelogsPart/Catelogs";
+import CatalogView from "./pages/CatelogsPart/CatalogView";
 // Team Management
 import TeamManagement from "./pages/TeamManagement/Team";
 // Auth Pages
@@ -114,6 +116,7 @@ function App() {
         <Route path="/signup" element={<Signup />} />
         <Route path="/packages" element={<Packages />} />
         <Route path="/business/:id" element={<CompanyProfile />} />
+        <Route path="/catalog/view/:id" element={<CatalogView />} />
 
         {/* Protected Routes */}
         <Route element={<ProtectedRoute />}>
@@ -147,6 +150,8 @@ function App() {
           <Route path="/profile" element={<MyProfile />} />
           <Route path="/employee-profile/:id" element={<EmployeeProfile />} />
           <Route path="/hrm/attendance" element={<AllAttendance />} />
+          <Route path="/hrm/attendance/employee" element={<EmployeeAttendance />} />
+
           <Route path="/hrm/attendance/manage" element={<ManageAttendance />} />
           <Route path="/hrm/leave/all" element={<AllLeave />} />
           <Route path="/hrm/leave/holiday" element={<Holiday />} />

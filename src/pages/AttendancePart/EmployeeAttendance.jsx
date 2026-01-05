@@ -1,0 +1,928 @@
+import React, { useState, useMemo, useEffect, useRef } from "react";
+import DashboardLayout from "../../components/DashboardLayout";
+import { FiHome } from "react-icons/fi";
+import { useSelector } from "react-redux";
+
+import {
+  Calendar,
+  Clock,
+  Users,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+  Search,
+  Download,
+  ChevronLeft,
+  ChevronRight,
+  UserCheck,
+  UserX,
+  Timer,
+  TrendingUp,
+  Wifi,
+  QrCode,
+  Camera,
+  X,
+  Zap,
+  Activity,
+  Target,
+  MapPin,
+  Image as ImageIcon,
+  Home,
+  ClipboardList,
+  FileText,
+  Briefcase
+} from "lucide-react";
+import NumberCard from "../../components/NumberCard";
+
+export default function EmployeeAttendance() {
+  const [currentPage, setCurrentPage] = useState("dashboard"); // Default to dashboard as requested
+  const [userIP, setUserIP] = useState(null);
+  const [isOnCompanyNetwork, setIsOnCompanyNetwork] = useState(false);
+  const [showSelfieCapture, setShowSelfieCapture] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [detailsModal, setDetailsModal] = useState(null);
+
+  const user = useSelector((state) => state.auth.user);
+
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
+  const [stream, setStream] = useState(null);
+  const [capturedImage, setCapturedImage] = useState(null);
+  const [location, setLocation] = useState(null);
+  const [loadingLocation, setLoadingLocation] = useState(false);
+
+  const companyIPRange = "192.168.1.";
+
+  // Mock Data - In a real app, this would come from API based on logged in user
+  // This data should ideally represent ALL attendance records for the CURRENT user
+  const [attendanceData, setAttendanceData] = useState([
+    {
+      id: 1,
+      employeeId: "EMP001", // This should match current user ID
+      name: "Rajesh Kumar",
+      department: "Sales",
+      checkIn: "09:15 AM",
+      checkOut: "06:30 PM",
+      status: "present",
+      workHours: "9h 15m",
+      date: "2024-11-18",
+      checkInMethod: "WiFi",
+      ipAddress: "192.168.1.45",
+      selfie: null,
+      location: null,
+    },
+    {
+      id: 2,
+      employeeId: "EMP001",
+      name: "Rajesh Kumar",
+      department: "Sales",
+      checkIn: "09:00 AM",
+      checkOut: "06:00 PM",
+      status: "present",
+      workHours: "9h 00m",
+      date: "2024-11-17",
+      checkInMethod: "WiFi",
+      ipAddress: "192.168.1.45",
+      selfie: null,
+      location: null,
+    },
+    {
+      id: 3,
+      employeeId: "EMP001",
+      name: "Rajesh Kumar",
+      department: "Sales",
+      checkIn: "09:30 AM",
+      checkOut: "06:45 PM",
+      status: "late",
+      workHours: "9h 15m",
+      date: "2024-11-16",
+      checkInMethod: "WiFi",
+      ipAddress: "192.168.1.45",
+      selfie: null,
+      location: null,
+    },
+    {
+      id: 4,
+      employeeId: "EMP001",
+      name: "Rajesh Kumar",
+      department: "Sales",
+      checkIn: "-",
+      checkOut: "-",
+      status: "absent",
+      workHours: "0h 0m",
+      date: "2024-11-15",
+      checkInMethod: "-",
+      ipAddress: "-",
+      selfie: null,
+      location: null,
+    },
+    // Mock entry for today if not checked in
+    {
+      id: 999,
+      employeeId: "EMP001",
+      name: "Rajesh Kumar",
+      department: "Sales",
+      checkIn: "-",
+      checkOut: "-",
+      status: "absent", // "absent" implies not checked in yet for today's context
+      workHours: "0h 0m",
+      date: new Date().toISOString().split('T')[0], // Today
+      checkInMethod: "-",
+      ipAddress: "-",
+      selfie: null,
+      location: null,
+      isToday: true
+    }
+  ]);
+
+  // Filter only records for the current user (mocked as EMP001 here if user data isn't fully linked)
+  // In a real scenario: const myRecords = attendanceData.filter(r => r.employeeId === user.employeeId);
+  const myRecords = attendanceData;
+
+  const stats = useMemo(() => {
+    const totalRecords = myRecords.length;
+
+    // Simple logic for "Present Today"
+    // Check if there is a record for today where status is 'present', 'late', or 'half-day' and checkIn is not '-'
+    const todayStr = new Date().toISOString().split('T')[0];
+    const presentTodayRecord = myRecords.find(r => r.date === todayStr && (r.status === 'present' || r.status === 'late' || r.status === 'half-day'));
+    const isPresentToday = !!presentTodayRecord;
+
+    const totalPresent = myRecords.filter(r => r.status === "present" || r.status === "late" || r.status === "half-day").length;
+    const totalAbsent = myRecords.filter(r => r.status === "absent" && !r.isToday).length; // Don't count today as absent yet in historical stats if just started
+    const totalLeaves = myRecords.filter(r => r.status === "leave").length; // Assuming 'leave' status exists
+
+    const attendanceRate = totalRecords > 0 ? ((totalPresent / totalRecords) * 100).toFixed(1) : 0;
+
+    return [
+      {
+        title: "Total Leave", // Requested
+        number: totalLeaves,
+        icon: <Briefcase className="text-orange-600" size={24} />,
+        iconBgColor: "bg-orange-100",
+        // iconColor removed as it's in className
+        lineBorderClass: "border-orange-500",
+      },
+      {
+        title: "Present Today", // Requested
+        number: isPresentToday ? "Yes" : "No",
+        icon: isPresentToday ? <CheckCircle className="text-green-600" size={24} /> : <XCircle className="text-red-600" size={24} />,
+        iconBgColor: isPresentToday ? "bg-green-100" : "bg-red-100",
+        // iconColor removed
+        lineBorderClass: isPresentToday ? "border-green-500" : "border-red-500",
+      },
+      {
+        title: "Total Absent", // Requested
+        number: totalAbsent,
+        icon: <UserX className="text-red-600" size={24} />,
+        iconBgColor: "bg-red-100",
+        // iconColor removed
+        lineBorderClass: "border-red-500",
+      },
+      {
+        title: "Attendance Rate", // Requested
+        number: `${attendanceRate}%`,
+        icon: <TrendingUp className="text-blue-600" size={24} />,
+        iconBgColor: "bg-blue-100",
+        // iconColor removed
+        lineBorderClass: "border-blue-500",
+      },
+    ];
+  }, [myRecords]);
+
+  useEffect(() => {
+    const simulatedIP = `192.168.1.${Math.floor(Math.random() * 255)}`;
+    setUserIP(simulatedIP);
+    setIsOnCompanyNetwork(simulatedIP.startsWith(companyIPRange));
+  }, []);
+
+  useEffect(() => {
+    if (showSelfieCapture) {
+      startCamera();
+      getCurrentLocation();
+    }
+    return () => {
+      if (stream) {
+        stream.getTracks().forEach((track) => track.stop());
+      }
+    };
+  }, [showSelfieCapture]);
+
+  const startCamera = async () => {
+    try {
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "user" },
+        audio: false,
+      });
+      setStream(mediaStream);
+      if (videoRef.current) {
+        videoRef.current.srcObject = mediaStream;
+      }
+    } catch (error) {
+      console.error("Camera access error:", error);
+      alert("Unable to access camera. Please grant camera permissions.");
+    }
+  };
+
+  const getCurrentLocation = () => {
+    setLoadingLocation(true);
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setLocation({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            accuracy: position.coords.accuracy,
+          });
+          setLoadingLocation(false);
+        },
+        (error) => {
+          console.error("Location error:", error);
+          setLoadingLocation(false);
+        }
+      );
+    }
+  };
+
+  const capturePhoto = () => {
+    const canvas = canvasRef.current;
+    const video = videoRef.current;
+
+    if (canvas && video) {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const context = canvas.getContext("2d");
+      context.drawImage(video, 0, 0);
+      const imageData = canvas.toDataURL("image/jpeg");
+      setCapturedImage(imageData);
+    }
+  };
+
+  const retakePhoto = () => {
+    setCapturedImage(null);
+  };
+
+  const closeSelfieCapture = () => {
+    if (stream) {
+      stream.getTracks().forEach((track) => track.stop());
+    }
+    setShowSelfieCapture(false);
+    setSelectedEmployee(null);
+    setCapturedImage(null);
+    setLocation(null);
+  };
+
+  const confirmCapture = () => {
+    if (capturedImage) {
+      handleCheckIn(selectedEmployee, capturedImage, location);
+      if (stream) {
+        stream.getTracks().forEach((track) => track.stop());
+      }
+      setShowSelfieCapture(false);
+      setCapturedImage(null);
+      setLocation(null);
+    }
+  };
+
+
+  const handleCheckInClick = (employee) => {
+    if (!isOnCompanyNetwork) {
+      alert("Please connect to company WiFi network to check in");
+      return;
+    }
+    setSelectedEmployee(employee);
+    setShowSelfieCapture(true);
+  };
+
+  const handleCheckIn = (employee, selfieData, locationData) => {
+    const currentTime = new Date();
+    const timeString = currentTime.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+
+    const hour = currentTime.getHours();
+    const minute = currentTime.getMinutes();
+    const totalMinutes = hour * 60 + minute;
+    const lateThreshold = 10 * 60;
+
+    let status = "present";
+    if (totalMinutes > lateThreshold) {
+      status = "late";
+    }
+
+    setAttendanceData((prev) =>
+      prev.map((record) =>
+        record.id === employee.id // Match by specific record ID (today's placeholder)
+          ? {
+            ...record,
+            checkIn: timeString,
+            status: status,
+            checkInMethod: "WiFi",
+            ipAddress: userIP,
+            selfie: selfieData,
+            location: locationData,
+          }
+          : record
+      )
+    );
+
+    alert(
+      `✓ Check-in successful!\n${employee.name}\nTime: ${timeString}\nStatus: ${status}`
+    );
+    setCurrentPage("dashboard");
+  };
+
+  const getStatusBadge = (status) => {
+    const badges = {
+      present: {
+        bg: "bg-green-100",
+        text: "text-green-700",
+        label: "Present",
+        icon: CheckCircle,
+      },
+      absent: {
+        bg: "bg-red-100",
+        text: "text-red-700",
+        label: "Absent",
+        icon: XCircle,
+      },
+      late: {
+        bg: "bg-orange-100",
+        text: "text-orange-700",
+        label: "Late",
+        icon: AlertCircle,
+      },
+      "half-day": {
+        bg: "bg-yellow-100",
+        text: "text-yellow-700",
+        label: "Half Day",
+        icon: Timer,
+      },
+      leave: {
+        bg: "bg-blue-100",
+        text: "text-blue-700",
+        label: "Leave",
+        icon: Briefcase,
+      },
+    };
+    return badges[status] || badges.present;
+  };
+
+  const getMethodBadge = (method) => {
+    const badges = {
+      WiFi: { bg: "bg-green-100", text: "text-green-700", icon: Wifi },
+      "QR Code": { bg: "bg-blue-100", text: "text-blue-700", icon: QrCode },
+    };
+    return (
+      badges[method] || {
+        bg: "bg-gray-100",
+        text: "text-gray-700",
+        icon: Clock,
+      }
+    );
+  };
+
+
+  return (
+    <DashboardLayout>
+      <div className="p-0 bg-white ml-6 min-h-screen text-black">
+        {/* Navigation */}
+        <nav className="bg-white border-b my-3 ">
+          <div className="px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-800">
+                    My Attendance
+                  </h1>
+                  <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
+                    <FiHome className="text-gray-700 text-sm" />
+
+                    <span className="text-gray-600">HRM /</span>
+
+                    <span className="text-[#FF7B1D] font-medium">
+                      Attendance
+                    </span>
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setCurrentPage("dashboard")}
+                  className={`px-6 py-3 rounded-sm font-semibold transition-all flex items-center gap-2 ${currentPage === "dashboard"
+                    ? "bg-[#FF7B1D] text-white shadow-lg"
+                    : "bg-orange-50 text-orange-700 hover:bg-orange-100"
+                    }`}
+                >
+                  <Home className="w-5 h-5" />
+                  Dashboard
+                </button>
+                <button
+                  onClick={() => setCurrentPage("checkin")}
+                  className={`px-6 py-3 rounded-sm font-semibold transition-all flex items-center gap-2 ${currentPage === "checkin"
+                    ? "bg-[#FF7B1D] text-white shadow-lg"
+                    : "bg-orange-50 text-orange-700 hover:bg-orange-100"
+                    }`}
+                >
+                  <Camera className="w-5 h-5" />
+                  Check-In
+                </button>
+                <button
+                  onClick={() => setCurrentPage("records")}
+                  className={`px-6 py-3 rounded-sm font-semibold transition-all flex items-center gap-2 ${currentPage === "records"
+                    ? "bg-[#FF7B1D] text-white shadow-lg"
+                    : "bg-orange-50 text-orange-700 hover:bg-orange-100"
+                    }`}
+                >
+                  <ClipboardList className="w-5 h-5" />
+                  Records
+                </button>
+              </div>
+            </div>
+          </div>
+        </nav>
+
+        {/* Page Content */}
+        <div className="px-0 mt-4 py-0">
+
+          {/* ==================== DASHBOARD PAGE ==================== */}
+          {currentPage === "dashboard" && (
+            <div className="space-y-8 px-6">
+              {/* Stats Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                {stats.map((stat, index) => (
+                  <NumberCard
+                    key={index}
+                    title={stat.title}
+                    // number={stat.number} 
+                    // Making sure NumberCard component can handle string or number inputs if it's strictly typed or modifies it. 
+                    // If NumberCard expects a prop called 'value' or 'count' instead of number passed as child, adjustments might be needed.
+                    // Assuming NumberCard renders 'title' and some other prop or children. 
+                    // Based on previous file content, NumberCard usage was: <NumberCard title="..." icon={...} ... />
+                    // It seems the number value might be passed inside or as a prop. 
+                    // Let's pass it as a prop named 'number' as seen in the previous file's stats mapping.
+                    {...stat}
+                  />
+                ))}
+
+                {/* 
+                    Explicitly passing number prop just in case spread doesn't work well 
+                    with how NumberCard expects it (though spread should work).
+                    However, earlier I saw NumberCard usage commented out // number={...}.
+                    I will create inline cards here to be safe if NumberCard is complex or customized differently.
+                    Actually, let's trust the components/NumberCard import if it exists. Reverting to explicit JSX for cards if needed or using the component.
+                    The previous 'AllAttendance.jsx' used NumberCard. I'll use it.
+                 */}
+              </div>
+
+
+
+              {/* Recent Activity / Simple List */}
+              <div className="bg-white rounded-sm shadow-xl p-6">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                  Recent Attendance
+                </h2>
+                <div className="space-y-4">
+                  {myRecords
+                    .slice(0, 5)
+                    .map((record, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center gap-4 p-4 bg-orange-50 rounded-sm"
+                      >
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center ${record.status === 'present' ? 'bg-green-100' : 'bg-gray-200'}`}>
+                          {record.status === 'present' ? <CheckCircle className="w-6 h-6 text-green-600" /> : <Clock className="w-6 h-6 text-gray-600" />}
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-bold text-gray-900">
+                            {record.date}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            {record.status === 'present' ? `Checked in via ${record.checkInMethod}` : 'Status: ' + record.status}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-bold text-orange-600">
+                            {record.checkIn}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {record.checkOut !== '-' ? record.checkOut : ''}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ==================== CHECK-IN PAGE ==================== */}
+          {currentPage === "checkin" && (
+            <div className="space-y-8 px-6">
+              {/* Header */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-4 rounded-sm shadow-sm">
+                    <Camera className="w-10 h-10 text-white" />
+                  </div>
+                  <div>
+                    <h1 className="text-4xl font-bold bg-gradient-to-r from-orange-600 to-orange-800 bg-clip-text text-transparent">
+                      My Check-In
+                    </h1>
+                    <p className="text-gray-600 mt-1">
+                      Check in with selfie & location
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Network Warning */}
+              {!isOnCompanyNetwork && (
+                <div className="bg-red-50 border-2 border-red-300 rounded-sm p-6">
+                  <div className="flex items-center gap-4">
+                    <AlertCircle className="w-8 h-8 text-red-600" />
+                    <div>
+                      <p className="font-bold text-red-900 text-lg">
+                        Not Connected to Company Network
+                      </p>
+                      <p className="text-red-700">
+                        Please connect to company WiFi to enable check-in
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Employee List (Here: Just the current user card for check-in) */}
+              <div className="bg-white rounded-sm shadow-sm p-6">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                  Today's Check-In
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {myRecords
+                    .filter((rec) => rec.isToday && rec.status === "absent")
+                    .map((record) => (
+                      <button
+                        key={record.id}
+                        onClick={() => handleCheckInClick(record)}
+                        disabled={!isOnCompanyNetwork}
+                        className={`border-2 rounded-sm p-6 text-left  ${isOnCompanyNetwork
+                          ? "border-orange-200 hover:border-orange-500 hover:bg-orange-50 cursor-pointer shadow-md hover:shadow-sm"
+                          : "border-gray-200 bg-gray-50 cursor-not-allowed opacity-50"
+                          }`}
+                      >
+                        <div className="flex items-center gap-4 mb-4">
+                          <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-4 rounded-sm shadow-sm">
+                            <UserCheck className="w-7 h-7 text-white" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-bold text-gray-900 text-lg">
+                              {record.name}
+                            </p>
+                            <p className="text-sm text-gray-600 font-medium">
+                              {record.employeeId}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="bg-orange-50 rounded-sm px-3 py-2">
+                          <p className="text-xs text-orange-600">Department</p>
+                          <p className="text-sm font-bold text-gray-900">
+                            {record.department}
+                          </p>
+                        </div>
+                        <div className="mt-4 text-center text-orange-600 font-semibold text-sm">
+                          Click to Check-In
+                        </div>
+                      </button>
+                    ))}
+                </div>
+
+                {myRecords.filter((rec) => rec.isToday && rec.status === "absent")
+                  .length === 0 && (
+                    <div className="text-center py-12 bg-gradient-to-r from-orange-50 to-orange-100 rounded-sm">
+                      <CheckCircle className="w-16 h-16 text-orange-500 mx-auto mb-4" />
+                      <p className="text-gray-700 font-bold text-xl">
+                        You have already checked in for today! 🎉
+                      </p>
+                    </div>
+                  )}
+              </div>
+            </div>
+          )}
+
+          {/* ==================== RECORDS PAGE ==================== */}
+          {currentPage === "records" && (
+            <div className="space-y-8 px-6">
+              {/* Header */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-4 rounded-sm shadow-sm">
+                    <ClipboardList className="w-10 h-10 text-white" />
+                  </div>
+                  <div>
+                    <h1 className="text-4xl font-bold bg-gradient-to-r from-orange-600 to-orange-800 bg-clip-text text-transparent">
+                      Attendance History
+                    </h1>
+                    <p className="text-gray-600 mt-1">
+                      View your past attendance records
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-sm shadow-sm overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gradient-to-r from-orange-400 to-orange-500">
+                      <tr>
+                        <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase">Date</th>
+                        <th className="px-6 py-4 text-center text-xs font-bold text-white uppercase">Check In</th>
+                        <th className="px-6 py-4 text-center text-xs font-bold text-white uppercase">Method</th>
+                        <th className="px-6 py-4 text-center text-xs font-bold text-white uppercase">Check Out</th>
+                        <th className="px-6 py-4 text-center text-xs font-bold text-white uppercase">Work Hours</th>
+                        <th className="px-6 py-4 text-center text-xs font-bold text-white uppercase">Status</th>
+                        <th className="px-6 py-4 text-center text-xs font-bold text-white uppercase">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {myRecords.map((record) => {
+                        const badge = getStatusBadge(record.status);
+                        const StatusIcon = badge.icon;
+                        const methodBadge = getMethodBadge(record.checkInMethod);
+                        const MethodIcon = methodBadge.icon;
+
+                        return (
+                          <tr key={record.id} className="hover:bg-orange-50 transition-colors">
+                            <td className="px-6 py-4 text-sm font-bold text-gray-900">{record.date}</td>
+                            <td className="px-6 py-4 text-center">
+                              <div className="flex items-center justify-center gap-2">
+                                <Clock className="w-4 h-4 text-orange-400" />
+                                <span className="text-gray-900 font-semibold">{record.checkIn}</span>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 text-center">
+                              <span className={`inline-flex items-center gap-2 px-3 py-1 ${methodBadge.bg} ${methodBadge.text} rounded-sm text-xs font-bold`}>
+                                <MethodIcon className="w-4 h-4" />
+                                {record.checkInMethod}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 text-center text-gray-900 font-semibold">{record.checkOut}</td>
+                            <td className="px-6 py-4 text-center">
+                              <span className="inline-flex items-center gap-2 px-3 py-1 bg-orange-100 text-orange-700 rounded-sm text-xs font-bold">
+                                <Timer className="w-4 h-4" />
+                                {record.workHours}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 text-center">
+                              <span className={`inline-flex items-center gap-2 px-3 py-1 ${badge.bg} ${badge.text} rounded-sm text-xs font-bold`}>
+                                <StatusIcon className="w-4 h-4" />
+                                {badge.label}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 text-center">
+                              <button
+                                onClick={() => setDetailsModal(record)}
+                                className="text-orange-600 hover:text-orange-800 font-medium text-sm underline"
+                              >
+                                View
+                              </button>
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+        </div>
+
+        {/* ==================== SELFIE CAPTURE MODAL ==================== */}
+        {showSelfieCapture && selectedEmployee && (
+          <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-sm shadow-sm max-w-2xl w-full">
+              <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-6 flex justify-between items-center rounded-t-sm">
+                <div className="flex items-center gap-3">
+                  <Camera className="w-7 h-7 text-white" />
+                  <div>
+                    <h2 className="text-2xl font-bold text-white">
+                      Capture Selfie
+                    </h2>
+                    <p className="text-orange-100 text-sm">
+                      {selectedEmployee.name}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={closeSelfieCapture}
+                  className="text-white hover:bg-white hover:bg-opacity-20 p-2 rounded-sm transition"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="p-6">
+                <div
+                  className="relative bg-gray-900 rounded-sm overflow-hidden mb-4"
+                  style={{ height: "400px" }}
+                >
+                  {!capturedImage ? (
+                    <>
+                      <video
+                        ref={videoRef}
+                        autoPlay
+                        playsInline
+                        className="w-full h-full object-cover"
+                      />
+                      <canvas ref={canvasRef} className="hidden" />
+                    </>
+                  ) : (
+                    <img
+                      src={capturedImage}
+                      alt="Captured"
+                      className="w-full h-full object-cover"
+                    />
+                  )}
+                </div>
+
+                {location && (
+                  <div className="bg-green-50 border-2 border-green-200 rounded-sm p-4 mb-4">
+                    <div className="flex items-center gap-3">
+                      <MapPin className="w-6 h-6 text-green-600" />
+                      <div className="flex-1">
+                        <p className="font-bold text-green-900">
+                          Location Captured
+                        </p>
+                        <p className="text-sm text-green-700 font-mono">
+                          {location.latitude.toFixed(6)},{" "}
+                          {location.longitude.toFixed(6)}
+                        </p>
+                        <p className="text-xs text-green-600">
+                          Accuracy: {location.accuracy.toFixed(0)}m
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {loadingLocation && (
+                  <div className="bg-yellow-50 border-2 border-yellow-200 rounded-sm p-4 mb-4">
+                    <div className="flex items-center gap-3">
+                      <MapPin className="w-6 h-6 text-yellow-600 animate-pulse" />
+                      <p className="text-yellow-800 font-medium">
+                        Getting location...
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex gap-3">
+                  {!capturedImage ? (
+                    <button
+                      onClick={capturePhoto}
+                      className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 text-white py-4 rounded-sm font-bold hover:from-orange-600 hover:to-orange-700 transition flex items-center justify-center gap-2"
+                    >
+                      <Camera className="w-5 h-5" />
+                      Capture Photo
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        onClick={retakePhoto}
+                        className="flex-1 bg-gray-200 text-gray-700 py-4 rounded-sm font-bold hover:bg-gray-300 transition"
+                      >
+                        Retake
+                      </button>
+                      <button
+                        onClick={confirmCapture}
+                        className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 text-white py-4 rounded-sm font-bold hover:from-orange-600 hover:to-orange-700 transition flex items-center justify-center gap-2"
+                      >
+                        <CheckCircle className="w-5 h-5" />
+                        Confirm
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ==================== DETAILS MODAL ==================== */}
+        {detailsModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-sm shadow-sm max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-6 flex justify-between items-center rounded-t-sm">
+                <div>
+                  <h2 className="text-2xl font-bold text-white">
+                    Attendance Details
+                  </h2>
+                  <p className="text-orange-100">{detailsModal.date}</p>
+                </div>
+                <button
+                  onClick={() => setDetailsModal(null)}
+                  className="text-white hover:bg-white hover:bg-opacity-20 p-2 rounded-sm transition"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="p-6 space-y-6">
+                {detailsModal.selfie && (
+                  <div>
+                    <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
+                      <Camera className="w-5 h-5 text-orange-500" />
+                      Check-in Selfie
+                    </h3>
+                    <img
+                      src={detailsModal.selfie}
+                      alt="Check-in selfie"
+                      className="w-full max-w-md mx-auto rounded-sm shadow-lg"
+                    />
+                  </div>
+                )}
+
+                {!detailsModal.selfie && detailsModal.status !== "absent" && (
+                  <div className="bg-gray-50 border-2 border-gray-200 rounded-sm p-6 text-center">
+                    <ImageIcon className="w-12 h-12 text-gray-400 mx-auto mb-2" />
+                    <p className="text-gray-600">
+                      No selfie captured for this check-in
+                    </p>
+                  </div>
+                )}
+
+                {detailsModal.location && (
+                  <div className="bg-green-50 border-2 border-green-200 rounded-sm p-4">
+                    <h3 className="font-bold text-green-900 mb-2 flex items-center gap-2">
+                      <MapPin className="w-5 h-5" />
+                      Location
+                    </h3>
+                    <p className="text-sm text-green-700 font-mono">
+                      Lat: {detailsModal.location.latitude.toFixed(6)}, Long:{" "}
+                      {detailsModal.location.longitude.toFixed(6)}
+                    </p>
+                    <p className="text-xs text-green-600 mt-1">
+                      Accuracy: {detailsModal.location.accuracy.toFixed(0)}m
+                    </p>
+                  </div>
+                )}
+
+                {!detailsModal.location && detailsModal.status !== "absent" && (
+                  <div className="bg-gray-50 border-2 border-gray-200 rounded-sm p-4">
+                    <h3 className="font-bold text-gray-700 mb-2 flex items-center gap-2">
+                      <MapPin className="w-5 h-5" />
+                      Location
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      No location data available
+                    </p>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-2 gap-4">
+
+                  <div className="bg-orange-50 p-4 rounded-sm">
+                    <p className="text-orange-600 text-sm mb-1">Check In</p>
+                    <p className="font-bold text-gray-900">
+                      {detailsModal.checkIn}
+                    </p>
+                  </div>
+                  <div className="bg-orange-50 p-4 rounded-sm">
+                    <p className="text-orange-600 text-sm mb-1">Check Out</p>
+                    <p className="font-bold text-gray-900">
+                      {detailsModal.checkOut}
+                    </p>
+                  </div>
+                  <div className="bg-orange-50 p-4 rounded-sm">
+                    <p className="text-orange-600 text-sm mb-1">Method</p>
+                    <p className="font-bold text-gray-900">
+                      {detailsModal.checkInMethod}
+                    </p>
+                  </div>
+                  <div className="bg-orange-50 p-4 rounded-sm">
+                    <p className="text-orange-600 text-sm mb-1">IP Address</p>
+                    <p className="font-bold text-gray-900 font-mono text-sm">
+                      {detailsModal.ipAddress}
+                    </p>
+                  </div>
+                  <div className="bg-orange-50 p-4 rounded-sm col-span-2">
+                    <p className="text-orange-600 text-sm mb-1">Work Hours</p>
+                    <p className="font-bold text-gray-900">
+                      {detailsModal.workHours}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+      </div>
+    </DashboardLayout>
+  );
+}
