@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { FiHome } from "react-icons/fi";
 import DashboardLayout from "../../components/DashboardLayout";
 import {
@@ -10,501 +10,597 @@ import {
   Clock,
   Filter,
   X,
+  Search,
+  Layout,
+  CheckCircle,
+  MoreVertical,
+  AlertCircle,
+  Loader2,
 } from "lucide-react";
+import toast from "react-hot-toast";
 import NumberCard from "../../components/NumberCard";
+import Modal from "../../components/common/Modal";
+import {
+  useGetTasksQuery,
+  useCreateTaskMutation,
+  useDeleteTaskMutation,
+  useToggleTaskStatusMutation,
+} from "../../store/api/taskApi";
 
 export default function TodoPage() {
-  const [tasks, setTasks] = useState([
-    {
-      id: 1,
-      title: "Follow up with Client ABC",
-      priority: "high",
-      dueDate: "2025-11-20",
-      dueTime: "10:00",
-      completed: false,
-      category: "Sales",
-    },
-    {
-      id: 2,
-      title: "Update CRM records",
-      priority: "medium",
-      dueDate: "2025-11-19",
-      dueTime: "14:30",
-      completed: false,
-      category: "CRM",
-    },
-    {
-      id: 3,
-      title: "Prepare quarterly report",
-      priority: "high",
-      dueDate: "2025-11-21",
-      dueTime: "09:00",
-      completed: true,
-      category: "Reports",
-    },
-    {
-      id: 4,
-      title: "Team meeting notes",
-      priority: "low",
-      dueDate: "2025-11-18",
-      dueTime: "16:00",
-      completed: false,
-      category: "Admin",
-    },
-  ]);
   const [newTask, setNewTask] = useState("");
   const [newTaskPriority, setNewTaskPriority] = useState("medium");
-  const [newTaskDate, setNewTaskDate] = useState("");
-  const [newTaskTime, setNewTaskTime] = useState("");
+  const [newTaskDate, setNewTaskDate] = useState(new Date().toISOString().split("T")[0]);
+  const [newTaskTime, setNewTaskTime] = useState("09:00");
   const [newTaskCategory, setNewTaskCategory] = useState("General");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [filterPriority, setFilterPriority] = useState("all");
-  const [filterType, setFilterType] = useState("Today");
-  const [customStart, setCustomStart] = useState("");
-  const [customEnd, setCustomEnd] = useState("");
-
+  const [filterType, setFilterType] = useState("All");
   const [searchTerm, setSearchTerm] = useState("");
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [taskToDelete, setTaskToDelete] = useState(null);
+  const dropdownRef = useRef(null);
 
-  const addTask = () => {
-    if (newTask.trim()) {
+  // API Hooks
+  const { data, isLoading, refetch } = useGetTasksQuery({
+    priority: filterPriority,
+    search: searchTerm,
+    timeframe: filterType,
+  });
+
+  const [createTask] = useCreateTaskMutation();
+  const [deleteTask] = useDeleteTaskMutation();
+  const [toggleTaskStatus] = useToggleTaskStatusMutation();
+
+  const tasks = data?.tasks || [];
+
+  const addTask = async () => {
+    if (!newTask.trim()) {
+      toast.error("Please enter a task title");
+      return;
+    }
+
+    try {
       const newTaskObj = {
-        id: Date.now(),
         title: newTask,
         priority: newTaskPriority,
-        dueDate: newTaskDate || new Date().toISOString().split("T")[0],
-        dueTime: newTaskTime || "09:00",
-        completed: false,
+        due_date: newTaskDate,
+        due_time: newTaskTime,
         category: newTaskCategory,
       };
-      // Add new task at the beginning of the array
-      setTasks([newTaskObj, ...tasks]);
+
+      await createTask(newTaskObj).unwrap();
+      toast.success("Task created successfully!");
+
       // Reset form
       setNewTask("");
       setNewTaskPriority("medium");
-      setNewTaskDate("");
-      setNewTaskTime("");
+      setNewTaskDate(new Date().toISOString().split("T")[0]);
+      setNewTaskTime("09:00");
       setNewTaskCategory("General");
       setIsAddModalOpen(false);
+    } catch (err) {
+      toast.error("Failed to create task: " + (err.data?.message || err.message));
     }
   };
 
-  const toggleTask = (id) => {
-    setTasks(
-      tasks.map((task) =>
-        task.id === id ? { ...task, completed: !task.completed } : task
-      )
-    );
-  };
-
-  const deleteTask = (id) => {
-    setTasks(tasks.filter((task) => task.id !== id));
-  };
-
-  const filteredTasks = tasks.filter((task) => {
-    const matchesPriority =
-      filterPriority === "all" || task.priority === filterPriority;
-    const matchesSearch = task.title
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
-    return matchesPriority && matchesSearch;
-  });
-
-  const getPriorityColor = (priority) => {
-    switch (priority) {
-      case "high":
-        return "text-red-500 bg-red-50";
-      case "medium":
-        return "text-orange-500 bg-orange-50";
-      case "low":
-        return "text-green-500 bg-green-50";
-      default:
-        return "text-gray-500 bg-gray-50";
+  const handleToggleStatus = async (id) => {
+    try {
+      await toggleTaskStatus(id).unwrap();
+      toast.success("Task status updated!");
+    } catch (err) {
+      toast.error("Failed to update status");
     }
   };
 
-  const activeTasks = filteredTasks.filter((t) => !t.completed);
-  const completedTasks = filteredTasks.filter((t) => t.completed);
+  const confirmDelete = (task) => {
+    setTaskToDelete(task);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleDeleteTask = async () => {
+    if (!taskToDelete) return;
+    try {
+      await deleteTask(taskToDelete.id).unwrap();
+      toast.success("Task deleted successfully");
+      setIsDeleteModalOpen(false);
+      setTaskToDelete(null);
+    } catch (err) {
+      toast.error("Failed to delete task");
+    }
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsFilterOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const activeTasks = tasks.filter((t) => !t.completed);
+  const completedTasks = tasks.filter((t) => t.completed);
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen bg-gradient-to-br from-orange-0 via-white to-orange-50 ml-4 p-0">
-        {/* Header */}
-        <div className="bg-white border-b ">
-          <div className="max-w-8xl mx-auto px-6 py-4">
-            <div className="flex items-center justify-between">
-              {/* Left: Title only */}
+      <div className="ml-6 min-h-screen bg-gray-50/50 flex flex-col font-primary">
+        {/* Header Section */}
+        <div className="bg-white border-b sticky top-0 z-30">
+          <div className="max-w-8xl mx-auto px-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between py-4 gap-4">
               <div>
-                <h1 className="text-2xl font-bold text-gray-800">
-                  All To-Do Task
-                </h1>
+                <h1 className="text-2xl font-bold text-gray-800">My Tasks</h1>
                 <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
-                  <FiHome className="text-gray-700 text-sm" />
-                  <span className="text-gray-400"></span> Additional /{" "}
-                  <span className="text-[#FF7B1D] font-medium">To-Do</span>
+                  <FiHome className="text-gray-400 text-sm" />
+                  Additional / <span className="text-[#FF7B1D] font-medium">To-Do</span>
                 </p>
               </div>
 
-              {/* Right: Filter + Add Button */}
-              <div className="flex items-center gap-4">
-                {/* Date Filter Dropdown */}
-                <div className="flex items-center gap-2">
-                  <select
-                    value={filterType}
-                    onChange={(e) => setFilterType(e.target.value)}
-                    className="px-4 py-3 border border-gray-200  rounded-sm hover:bg-gray-50 font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500"
+              <div className="flex flex-wrap items-center gap-3">
+                {/* Priority Filter */}
+                <div className="relative" ref={dropdownRef}>
+                  <button
+                    onClick={() => setIsFilterOpen(!isFilterOpen)}
+                    className={`p-3 rounded-sm border transition-all shadow-sm ${isFilterOpen || filterPriority !== "all" || filterType !== "All"
+                      ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
+                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
+                      }`}
                   >
-                    <option value="Today">Today</option>
-                    <option value="Yesterday">Yesterday</option>
-                    <option value="Last 7 Days">Last 7 Days</option>
-                    <option value="This Month">This Month</option>
-                    <option value="Custom">Custom</option>
-                  </select>
+                    <Filter size={20} />
+                  </button>
 
-                  {/* Show Custom Date Range Only When Selected */}
-                  {filterType === "Custom" && (
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="date"
-                        value={customStart}
-                        onChange={(e) => setCustomStart(e.target.value)}
-                        className="px-5 py-3 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-                      />
-                      <span className="text-gray-600">to</span>
-                      <input
-                        type="date"
-                        value={customEnd}
-                        onChange={(e) => setCustomEnd(e.target.value)}
-                        className="px-3 py-3 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-                      />
+                  {isFilterOpen && (
+                    <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-sm shadow-xl z-50 animate-fadeIn">
+                      <div className="p-3 border-b bg-gray-50 flex items-center justify-between">
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Priority & Period</p>
+                        <button
+                          onClick={() => { setFilterPriority("all"); setFilterType("All"); setIsFilterOpen(false); }}
+                          className="text-[10px] text-orange-600 font-bold hover:underline"
+                        >
+                          RESET
+                        </button>
+                      </div>
+                      <div className="p-2 space-y-3">
+                        <div>
+                          <p className="text-[10px] font-bold text-gray-400 mb-2 px-2">PRIORITY</p>
+                          <div className="space-y-1">
+                            {["all", "high", "medium", "low"].map((p) => (
+                              <button
+                                key={p}
+                                onClick={() => { setFilterPriority(p); setIsFilterOpen(false); }}
+                                className={`block w-full text-left px-3 py-2 text-xs rounded-sm transition-colors ${filterPriority === p
+                                  ? "bg-orange-50 text-orange-600 font-bold"
+                                  : "text-gray-700 hover:bg-gray-50"
+                                  }`}
+                              >
+                                {p === "all" ? "All Priorities" : p.charAt(0).toUpperCase() + p.slice(1) + " Priority"}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="border-t pt-3">
+                          <p className="text-[10px] font-bold text-gray-400 mb-2 px-2">TIMEFRAME</p>
+                          <div className="space-y-1">
+                            {["All", "Today", "Yesterday", "Last 7 Days", "This Month"].map((t) => (
+                              <button
+                                key={t}
+                                onClick={() => { setFilterType(t); setIsFilterOpen(false); }}
+                                className={`block w-full text-left px-3 py-2 text-xs rounded-sm transition-colors ${filterType === t
+                                  ? "bg-orange-50 text-orange-600 font-bold"
+                                  : "text-gray-700 hover:bg-gray-50"
+                                  }`}
+                              >
+                                {t}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>
-                {/* Filter */}
-                <div className="flex items-center gap-2">
-                  <Filter className="text-gray-400" size={20} />
-                  <select
-                    value={filterPriority}
-                    onChange={(e) => setFilterPriority(e.target.value)}
-                    className="px-5 py-3 border border-gray-200  rounded-sm 
-                       focus:border-orange-500 focus:outline-none cursor-pointer"
-                  >
-                    <option value="all">All Priorities</option>
-                    <option value="high">High Priority</option>
-                    <option value="medium">Medium Priority</option>
-                    <option value="low">Low Priority</option>
-                  </select>
-                </div>
 
-                {/* Button */}
-                <button
-                  onClick={() => setIsAddModalOpen(true)}
-                  className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-2 font-semibold"
-                >
-                  <Plus size={24} />
-                  Add New Task
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Stats Cards */}
-        <div className="max-w-8xl ml-2 mt-4 mx-auto p-0">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 ">
-            <NumberCard
-              title={"Total Tasks"}
-              number={tasks.length}
-              icon={<Check className="text-blue-600" size={24} />}
-              iconBgColor={"bg-blue-100"}
-              lineBorderClass={"border-blue-500"}
-            />
-            <NumberCard
-              title={"Active"}
-              number={activeTasks.length}
-              icon={<Clock className="text-green-600" size={24} />}
-              iconBgColor={"bg-green-100"}
-              lineBorderClass={"border-green-500"}
-            />
-            <NumberCard
-              title={"Completed"}
-              number={completedTasks.length}
-              icon={<Check className="text-[#FF7B1D]" size={24} />}
-              iconBgColor={"bg-orange-100"}
-              lineBorderClass={"border-orange-500"}
-            />
-          </div>
-        </div>
-
-        <div className="max-w-8xl ml-2 mt-4 mx-auto p-0">
-
-          {/* Active Tasks */}
-          {activeTasks.length > 0 && (
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center">
-                <Clock className="text-orange-500 mr-2" size={28} />
-                Active Tasks ({activeTasks.length})
-              </h2>
-              <div className="space-y-3">
-                {activeTasks.map((task) => (
-                  <div
-                    key={task.id}
-                    className="bg-white rounded-sm p-5 shadow-md hover:shadow-xl transition-all border-t-4 border-orange-500"
-                  >
-                    <div className="flex items-start gap-4">
-                      <button
-                        onClick={() => toggleTask(task.id)}
-                        className="mt-1 w-6 h-6 border-2 border-orange-500 rounded-full hover:bg-orange-100 transition-colors flex-shrink-0"
-                      />
-                      <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                          {task.title}
-                        </h3>
-                        <div className="flex flex-wrap gap-2 items-center text-sm">
-                          <span
-                            className={`px-3 py-1 rounded-full font-medium ${getPriorityColor(
-                              task.priority
-                            )}`}
-                          >
-                            <Flag size={14} className="inline mr-1" />
-                            {task.priority.toUpperCase()}
-                          </span>
-                          <span className="text-gray-500 flex items-center">
-                            <Calendar size={14} className="mr-1" />
-                            {task.dueDate}
-                          </span>
-                          <span className="text-gray-500 flex items-center">
-                            <Clock size={14} className="mr-1" />
-                            {task.dueTime}
-                          </span>
-                          <span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-full font-medium">
-                            {task.category}
-                          </span>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => deleteTask(task.id)}
-                        className="text-red-500 hover:bg-red-50 p-2 rounded-sm transition-colors flex-shrink-0"
-                      >
-                        <Trash2 size={20} />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Completed Tasks */}
-          {completedTasks.length > 0 && (
-            <div>
-              <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center">
-                <Check className="text-green-500 mr-2" size={28} />
-                Completed Tasks ({completedTasks.length})
-              </h2>
-              <div className="space-y-3">
-                {completedTasks.map((task) => (
-                  <div
-                    key={task.id}
-                    className="bg-gray-50 rounded-sm p-5 shadow-md border-t-4 border-green-500 opacity-75"
-                  >
-                    <div className="flex items-start gap-4">
-                      <button
-                        onClick={() => toggleTask(task.id)}
-                        className="mt-1 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0"
-                      >
-                        <Check size={16} className="text-white" />
-                      </button>
-                      <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-gray-500 line-through mb-2">
-                          {task.title}
-                        </h3>
-                        <div className="flex flex-wrap gap-2 items-center text-sm">
-                          <span className="px-3 py-1 bg-gray-200 text-gray-600 rounded-full font-medium">
-                            {task.category}
-                          </span>
-                          <span className="text-gray-400 flex items-center">
-                            <Calendar size={14} className="mr-1" />
-                            {task.dueDate}
-                          </span>
-                          <span className="text-gray-400 flex items-center">
-                            <Clock size={14} className="mr-1" />
-                            {task.dueTime}
-                          </span>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => deleteTask(task.id)}
-                        className="text-red-500 hover:bg-red-50 p-2 rounded-sm transition-colors flex-shrink-0"
-                      >
-                        <Trash2 size={20} />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Empty State */}
-          {filteredTasks.length === 0 && (
-            <div className="bg-white rounded-sm shadow-lg p-12 text-center">
-              <div className="bg-orange-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Check size={40} className="text-orange-500" />
-              </div>
-              <h3 className="text-2xl font-bold text-gray-800 mb-2">
-                No tasks found
-              </h3>
-              <p className="text-gray-500">
-                Add a new task to get started with your productivity journey!
-              </p>
-            </div>
-          )}
-        </div>
-
-        {/* Add Task Modal */}
-        {isAddModalOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-sm shadow-xl w-full max-w-2xl">
-              {/* Modal Header */}
-              <div className="flex justify-between items-center p-6 border-b border-gray-200 bg-gradient-to-r from-orange-500 to-orange-600">
-                <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-                  <Plus size={28} />
-                  Add New Task
-                </h2>
-                <button
-                  onClick={() => setIsAddModalOpen(false)}
-                  className="text-white hover:bg-orange-700 p-2 rounded-sm transition"
-                >
-                  <X size={24} />
-                </button>
-              </div>
-
-              {/* Modal Body */}
-              <div className="p-6 space-y-5">
-                {/* Task Title */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Task Title *
-                  </label>
+                {/* Search Bar */}
+                <div className="relative">
                   <input
                     type="text"
-                    value={newTask}
-                    onChange={(e) => setNewTask(e.target.value)}
-                    placeholder="What needs to be done?"
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300"
+                    placeholder="Search tasks..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 pr-4 py-3 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-[#FF7B1D]/20 focus:border-[#FF7B1D] text-sm md:w-64 transition-all"
+                  />
+                  <Search
+                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                    size={18}
                   />
                 </div>
 
-                {/* Priority */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Priority *
-                  </label>
-                  <div className="grid grid-cols-3 gap-3">
-                    <button
-                      onClick={() => setNewTaskPriority("high")}
-                      className={`py-3 px-4 rounded-sm font-semibold border-2 transition ${newTaskPriority === "high"
-                        ? "bg-red-500 text-white border-red-500"
-                        : "bg-white text-red-500 border-red-200 hover:bg-red-50"
-                        }`}
-                    >
-                      <Flag size={18} className="inline mr-2" />
-                      High
-                    </button>
-                    <button
-                      onClick={() => setNewTaskPriority("medium")}
-                      className={`py-3 px-4 rounded-sm font-semibold border-2 transition ${newTaskPriority === "medium"
-                        ? "bg-orange-500 text-white border-orange-500"
-                        : "bg-white text-orange-500 border-orange-200 hover:bg-orange-50"
-                        }`}
-                    >
-                      <Flag size={18} className="inline mr-2" />
-                      Medium
-                    </button>
-                    <button
-                      onClick={() => setNewTaskPriority("low")}
-                      className={`py-3 px-4 rounded-sm font-semibold border-2 transition ${newTaskPriority === "low"
-                        ? "bg-green-500 text-white border-green-500"
-                        : "bg-white text-green-500 border-green-200 hover:bg-green-50"
-                        }`}
-                    >
-                      <Flag size={18} className="inline mr-2" />
-                      Low
-                    </button>
-                  </div>
-                </div>
-
-                {/* Date and Time */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Due Date *
-                    </label>
-                    <input
-                      type="date"
-                      value={newTaskDate}
-                      onChange={(e) => setNewTaskDate(e.target.value)}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Due Time *
-                    </label>
-                    <input
-                      type="time"
-                      value={newTaskTime}
-                      onChange={(e) => setNewTaskTime(e.target.value)}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300"
-                    />
-                  </div>
-                </div>
-
-                {/* Category */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Category
-                  </label>
-                  <select
-                    value={newTaskCategory}
-                    onChange={(e) => setNewTaskCategory(e.target.value)}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 cursor-pointer"
-                  >
-                    <option value="General">General</option>
-                    <option value="Sales">Sales</option>
-                    <option value="CRM">CRM</option>
-                    <option value="Reports">Reports</option>
-                    <option value="Admin">Admin</option>
-                    <option value="Marketing">Marketing</option>
-                    <option value="Support">Support</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Modal Footer */}
-              <div className="p-6 border-t border-gray-200 bg-gray-50 flex justify-end gap-3">
                 <button
-                  onClick={() => setIsAddModalOpen(false)}
-                  className="px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-sm hover:bg-gray-100 transition"
+                  onClick={() => setIsAddModalOpen(true)}
+                  className="px-6 py-3 rounded-sm bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 transition-all flex items-center gap-2 font-bold shadow-md hover:shadow-lg"
                 >
-                  Cancel
-                </button>
-                <button
-                  onClick={addTask}
-                  className="
-    px-8 py-3 rounded-sm font-semibold 
-    bg-gradient-to-r from-orange-500 to-orange-600 
-    text-white shadow-md transition 
-    hover:from-orange-600 hover:to-orange-700 hover:shadow-lg
-  "
-                >
-                  Add Task
+                  <Plus size={20} />
+                  New Task
                 </button>
               </div>
             </div>
           </div>
-        )}
+        </div>
+
+        <div className="max-w-8xl mx-auto px-6 py-6 font-primary w-full flex-1">
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center py-32 space-y-4">
+              <Loader2 className="w-12 h-12 text-orange-500 animate-spin" />
+              <p className="text-gray-500 font-medium">Loading your tasks...</p>
+            </div>
+          ) : (
+            <>
+              {/* Summary Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                <NumberCard
+                  title="Total Tasks"
+                  number={tasks.length}
+                  icon={<Layout className="text-blue-600" size={24} />}
+                  iconBgColor="bg-blue-100"
+                  lineBorderClass="border-blue-500"
+                />
+                <NumberCard
+                  title="High Priority"
+                  number={tasks.filter(t => t.priority === "high").length}
+                  icon={<Flag className="text-red-600" size={24} />}
+                  iconBgColor="bg-red-100"
+                  lineBorderClass="border-red-500"
+                />
+                <NumberCard
+                  title="Active Tasks"
+                  number={activeTasks.length}
+                  icon={<Clock className="text-orange-600" size={24} />}
+                  iconBgColor="bg-orange-100"
+                  lineBorderClass="border-orange-500"
+                />
+                <NumberCard
+                  title="Completed"
+                  number={completedTasks.length}
+                  icon={<CheckCircle className="text-green-600" size={24} />}
+                  iconBgColor="bg-green-100"
+                  lineBorderClass="border-green-500"
+                />
+              </div>
+
+              {tasks.length > 0 ? (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  {/* Active Tasks Column */}
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between mb-2">
+                      <h2 className="text-xl font-bold text-gray-800 flex items-center gap-3">
+                        <div className="p-2 bg-orange-100 rounded-lg">
+                          <Clock className="text-orange-600" size={20} />
+                        </div>
+                        Active Tasks
+                        <span className="px-2.5 py-0.5 bg-orange-100 text-orange-600 text-xs rounded-full font-bold">
+                          {activeTasks.length}
+                        </span>
+                      </h2>
+                    </div>
+
+                    <div className="space-y-4">
+                      {activeTasks.map((task) => (
+                        <div
+                          key={task.id}
+                          className="group relative bg-white rounded-xl border border-gray-100 p-5 hover:shadow-xl hover:shadow-orange-500/5 transition-all duration-300 transform hover:-translate-y-1"
+                        >
+                          <div className={`absolute top-0 left-0 w-1.5 h-full rounded-l-xl ${task.priority === 'high' ? 'bg-red-500' :
+                            task.priority === 'medium' ? 'bg-orange-400' :
+                              'bg-green-400'
+                            }`}></div>
+
+                          <div className="flex items-start gap-4">
+                            <button
+                              onClick={() => handleToggleStatus(task.id)}
+                              className={`mt-1 flex-shrink-0 w-6 h-6 rounded-full border-2 transition-all flex items-center justify-center group/check ${task.priority === 'high' ? 'border-red-100 hover:border-red-500' :
+                                task.priority === 'medium' ? 'border-orange-100 hover:border-orange-500' :
+                                  'border-green-100 hover:border-green-500'
+                                }`}
+                            >
+                              <Check size={12} className={`opacity-0 group-hover/check:opacity-100 transition-opacity ${task.priority === 'high' ? 'text-red-500' :
+                                task.priority === 'medium' ? 'text-orange-500' :
+                                  'text-green-500'
+                                }`} />
+                            </button>
+
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center gap-2">
+                                  <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${task.priority === 'high' ? 'bg-red-50 text-red-600' :
+                                    task.priority === 'medium' ? 'bg-orange-50 text-orange-600' :
+                                      'bg-green-50 text-green-600'
+                                    }`}>
+                                    {task.priority || 'Medium'} Priority
+                                  </span>
+                                  <span className="bg-gray-50 text-gray-500 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border border-gray-100">
+                                    {task.category || 'General'}
+                                  </span>
+                                </div>
+
+                                <button
+                                  onClick={() => confirmDelete(task)}
+                                  className="text-gray-300 hover:text-red-500 p-1.5 rounded-full hover:bg-red-50 transition-all transform hover:scale-110"
+                                >
+                                  <Trash2 size={16} />
+                                </button>
+                              </div>
+
+                              <h3 className="text-gray-800 font-bold text-lg mb-4 line-clamp-2 leading-tight group-hover:text-orange-600 transition-colors">
+                                {task.title}
+                              </h3>
+
+                              <div className="flex flex-wrap items-center gap-3">
+                                <div className="flex items-center gap-2 text-[11px] font-semibold text-gray-500 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
+                                  <Calendar size={14} className="text-orange-500" />
+                                  {new Date(task.due_date).toLocaleDateString()}
+                                </div>
+                                <div className="flex items-center gap-2 text-[11px] font-semibold text-gray-500 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
+                                  <Clock size={14} className="text-orange-500" />
+                                  {task.due_time?.slice(0, 5)}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+
+                      {activeTasks.length === 0 && (
+                        <div className="text-center py-10 bg-white rounded-sm border-2 border-dashed border-gray-100">
+                          <CheckCircle className="w-12 h-12 text-gray-200 mx-auto mb-3" />
+                          <p className="text-gray-400 font-medium text-sm italic">All caught up! No active tasks.</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Completed Tasks Column */}
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between mb-2">
+                      <h2 className="text-xl font-bold text-gray-800 flex items-center gap-3">
+                        <div className="p-2 bg-green-100 rounded-lg">
+                          <CheckCircle className="text-green-600" size={20} />
+                        </div>
+                        Completed
+                        <span className="px-2.5 py-0.5 bg-green-100 text-green-600 text-xs rounded-full font-bold">
+                          {completedTasks.length}
+                        </span>
+                      </h2>
+                    </div>
+
+                    <div className="space-y-4">
+                      {completedTasks.map((task) => (
+                        <div
+                          key={task.id}
+                          className="group relative bg-[#FBFBFC] rounded-xl border border-gray-100 p-5 flex items-start gap-4 transition-all duration-300 hover:bg-white hover:shadow-md"
+                        >
+                          <button
+                            onClick={() => handleToggleStatus(task.id)}
+                            className="mt-1 flex-shrink-0 w-6 h-6 rounded-full bg-green-500 flex items-center justify-center text-white shadow-sm shadow-green-200"
+                          >
+                            <Check size={12} strokeWidth={3} />
+                          </button>
+
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between mb-2">
+                              <h3 className="text-base font-bold text-gray-400 line-through truncate">
+                                {task.title}
+                              </h3>
+                              <button
+                                onClick={() => confirmDelete(task)}
+                                className="text-gray-300 hover:text-red-500 p-1.5 rounded-full hover:bg-red-50 transition-all"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
+
+                            <div className="flex items-center gap-3">
+                              <span className="bg-gray-100 text-gray-400 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border border-gray-100">
+                                {task.category || 'General'}
+                              </span>
+                              <div className="flex items-center gap-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                                <Calendar size={12} />
+                                Completed on {new Date(task.updated_at).toLocaleDateString()}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+
+                      {completedTasks.length === 0 && (
+                        <div className="text-center py-10 bg-white rounded-sm border-2 border-dashed border-gray-100">
+                          <AlertCircle className="w-12 h-12 text-gray-200 mx-auto mb-3" />
+                          <p className="text-gray-400 font-medium text-sm italic">No completed tasks yet.</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-24 bg-white rounded-xl border-2 border-dashed border-gray-100 mt-6 shadow-sm">
+                  <div className="bg-gray-50 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <CheckCircle className="w-12 h-12 text-gray-300" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-gray-800 mb-3">
+                    Your Task List is Empty
+                  </h3>
+                  <p className="text-gray-500 max-w-sm mx-auto mb-8 font-medium">
+                    {searchTerm || filterPriority !== "all" || filterType !== "All"
+                      ? "We couldn't find any tasks matching your filters. Try adjusting them!"
+                      : "Organize your workflow by adding your first task today. Stay productive and track your progress!"}
+                  </p>
+                  {(searchTerm || filterPriority !== "all" || filterType !== "All") && (
+                    <button
+                      onClick={() => { setSearchTerm(""); setFilterPriority("all"); setFilterType("All"); }}
+                      className="px-8 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold rounded-lg hover:shadow-lg transition-all transform hover:scale-105"
+                    >
+                      Clear all filters
+                    </button>
+                  )}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        <Modal
+          isOpen={isAddModalOpen}
+          onClose={() => setIsAddModalOpen(false)}
+          headerVariant="orange"
+          title="Add New Task"
+          subtitle="Organize your workflow and stay on track"
+          icon={<Plus size={24} />}
+          maxWidth="max-w-2xl"
+          footer={
+            <div className="flex justify-end gap-3 w-full">
+              <button
+                onClick={() => setIsAddModalOpen(false)}
+                className="px-6 py-2.5 rounded-sm border-2 border-gray-300 text-gray-700 font-semibold hover:bg-gray-100 transition-all font-primary text-sm"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={addTask}
+                className="px-6 py-2.5 rounded-sm bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold hover:from-orange-600 hover:to-orange-700 transition-all font-primary text-sm shadow-md"
+              >
+                Create Task
+              </button>
+            </div>
+          }
+        >
+          <div className="space-y-6">
+            <div>
+              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                <AlertCircle size={16} className="text-orange-500" />
+                Task Title <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={newTask}
+                onChange={(e) => setNewTask(e.target.value)}
+                placeholder="What needs to be done?"
+                className="w-full px-4 py-3 border-2 border-gray-100 rounded-sm focus:border-orange-500 outline-none transition-all text-sm bg-white"
+              />
+            </div>
+
+            <div>
+              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                <Flag size={16} className="text-orange-500" />
+                Select Priority <span className="text-red-500">*</span>
+              </label>
+              <div className="grid grid-cols-3 gap-3">
+                {["high", "medium", "low"].map((p) => (
+                  <button
+                    key={p}
+                    onClick={() => setNewTaskPriority(p)}
+                    className={`py-3 px-4 rounded-sm font-bold text-xs uppercase tracking-widest border-2 transition-all ${newTaskPriority === p
+                      ? p === 'high' ? 'bg-red-600 border-red-600 text-white shadow-md' :
+                        p === 'medium' ? 'bg-orange-600 border-orange-600 text-white shadow-md' :
+                          'bg-green-600 border-green-600 text-white shadow-md'
+                      : 'bg-white border-gray-100 text-gray-400 hover:border-gray-200'
+                      }`}
+                  >
+                    {p}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                  <Calendar size={16} className="text-orange-500" />
+                  Due Date <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="date"
+                  value={newTaskDate}
+                  onChange={(e) => setNewTaskDate(e.target.value)}
+                  className="w-full px-4 py-3 border-2 border-gray-100 rounded-sm focus:border-orange-500 outline-none transition-all text-sm bg-white"
+                />
+              </div>
+              <div>
+                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                  <Clock size={16} className="text-orange-500" />
+                  Due Time <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="time"
+                  value={newTaskTime}
+                  onChange={(e) => setNewTaskTime(e.target.value)}
+                  className="w-full px-4 py-3 border-2 border-gray-100 rounded-sm focus:border-orange-500 outline-none transition-all text-sm bg-white"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                <Layout size={16} className="text-orange-500" />
+                Task Category
+              </label>
+              <div className="relative">
+                <select
+                  value={newTaskCategory}
+                  onChange={(e) => setNewTaskCategory(e.target.value)}
+                  className="w-full px-4 py-3 border-2 border-gray-100 rounded-sm focus:border-orange-500 outline-none transition-all text-sm bg-white appearance-none cursor-pointer"
+                >
+                  {["General", "Sales", "CRM", "Reports", "Admin", "Marketing", "Support"].map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                  <MoreVertical size={16} className="text-gray-400 rotate-90" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </Modal>
+
+        {/* Delete Confirmation Modal */}
+        <Modal
+          isOpen={isDeleteModalOpen}
+          onClose={() => setIsDeleteModalOpen(false)}
+          headerVariant="simple"
+          maxWidth="max-w-md"
+          footer={
+            <div className="flex gap-4 w-full">
+              <button
+                onClick={() => setIsDeleteModalOpen(false)}
+                className="flex-1 px-6 py-3 border-2 border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-100 transition-all shadow-sm"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteTask}
+                className="flex-1 px-6 py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition-all shadow-lg flex items-center justify-center gap-2"
+              >
+                <Trash2 size={20} />
+                Delete Now
+              </button>
+            </div>
+          }
+        >
+          <div className="flex flex-col items-center text-center text-black">
+            <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mb-6 animate-bounce">
+              <AlertCircle size={48} className="text-red-600" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">Confirm Delete</h2>
+            <p className="text-gray-600 mb-2 leading-relaxed">
+              Are you sure you want to delete <span className="font-bold text-gray-800">"{taskToDelete?.title}"</span>?
+            </p>
+            <p className="text-sm text-red-500 italic">This action cannot be undone and will permanently remove all associated data.</p>
+          </div>
+        </Modal>
       </div>
     </DashboardLayout>
   );
 }
+
+

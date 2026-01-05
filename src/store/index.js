@@ -17,6 +17,7 @@ import { userApi } from './api/userApi';
 import { catalogApi } from './api/catalogApi';
 import { catalogCategoryApi } from './api/catalogCategoryApi';
 import { noteApi } from './api/noteApi';
+import { taskApi } from './api/taskApi';
 
 export const store = configureStore({
     reducer: {
@@ -38,6 +39,7 @@ export const store = configureStore({
         [catalogApi.reducerPath]: catalogApi.reducer,
         [catalogCategoryApi.reducerPath]: catalogCategoryApi.reducer,
         [noteApi.reducerPath]: noteApi.reducer,
+        [taskApi.reducerPath]: taskApi.reducer,
 
     },
     middleware: (getDefaultMiddleware) =>
@@ -58,6 +60,7 @@ export const store = configureStore({
             userApi.middleware,
             catalogApi.middleware,
             catalogCategoryApi.middleware,
-            noteApi.middleware
+            noteApi.middleware,
+            taskApi.middleware
         ),
 });

@@ -13,6 +13,7 @@ import {
   Tag,
   Clock,
   CheckCircle,
+  AlertCircle,
   Loader2,
 } from "lucide-react";
 import toast from "react-hot-toast";
@@ -159,8 +160,8 @@ export default function NotesPage() {
                   <button
                     onClick={() => setIsFilterOpen(!isFilterOpen)}
                     className={`p-3 rounded-sm border transition-all shadow-sm ${isFilterOpen || selectedCategory !== "All"
-                        ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
-                        : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
+                      ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
+                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
                       }`}
                   >
                     <Filter size={20} />
@@ -180,8 +181,8 @@ export default function NotesPage() {
                               setIsFilterOpen(false);
                             }}
                             className={`block w-full text-left px-4 py-2.5 text-sm transition-colors ${selectedCategory === cat
-                                ? "bg-orange-50 text-orange-600 font-bold"
-                                : "text-gray-700 hover:bg-gray-50"
+                              ? "bg-orange-50 text-orange-600 font-bold"
+                              : "text-gray-700 hover:bg-gray-50"
                               }`}
                           >
                             {cat}
@@ -270,16 +271,16 @@ export default function NotesPage() {
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
                       <div className={`p-1.5 rounded-sm ${note.category === 'Meeting' ? 'bg-blue-100 text-blue-600' :
-                          note.category === 'Tasks' ? 'bg-green-100 text-green-600' :
-                            note.category === 'Ideas' ? 'bg-purple-100 text-purple-600' :
-                              'bg-gray-100 text-gray-600'
+                        note.category === 'Tasks' ? 'bg-green-100 text-green-600' :
+                          note.category === 'Ideas' ? 'bg-purple-100 text-purple-600' :
+                            'bg-gray-100 text-gray-600'
                         }`}>
                         <Tag size={14} />
                       </div>
                       <span className={`text-[10px] font-bold uppercase tracking-wider ${note.category === 'Meeting' ? 'text-blue-600' :
-                          note.category === 'Tasks' ? 'text-green-600' :
-                            note.category === 'Ideas' ? 'text-purple-600' :
-                              'text-gray-600'
+                        note.category === 'Tasks' ? 'text-green-600' :
+                          note.category === 'Ideas' ? 'text-purple-600' :
+                            'text-gray-600'
                         }`}>
                         {note.category}
                       </span>
@@ -462,31 +463,32 @@ export default function NotesPage() {
             headerVariant="simple"
             maxWidth="max-w-md"
             footer={
-              <div className="flex gap-3 w-full">
+              <div className="flex gap-4 w-full">
                 <button
                   onClick={() => setShowDeleteModal(false)}
-                  className="flex-1 px-6 py-3 border-2 border-gray-200 text-gray-700 font-bold rounded-sm hover:bg-gray-100 transition-all text-sm"
+                  className="flex-1 px-6 py-3 border-2 border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-100 transition-all"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleDeleteNote}
-                  className="flex-1 px-6 py-3 bg-red-600 text-white font-bold rounded-sm hover:bg-red-700 transition-all shadow-md flex items-center justify-center gap-2 text-sm"
+                  className="flex-1 px-6 py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition-all shadow-lg flex items-center justify-center gap-2"
                 >
-                  <Trash2 size={18} />
-                  Delete Note
+                  <Trash2 size={20} />
+                  Delete Now
                 </button>
               </div>
             }
           >
-            <div className="flex flex-col items-center text-center p-2">
-              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4 text-red-600">
-                <Trash2 size={32} />
+            <div className="flex flex-col items-center text-center text-black">
+              <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mb-6 animate-bounce">
+                <AlertCircle size={48} className="text-red-600" />
               </div>
-              <h2 className="text-xl font-bold text-gray-800 mb-2 font-primary">Confirm Deletion</h2>
-              <p className="text-gray-500 text-sm leading-relaxed font-primary">
-                Are you sure you want to delete <span className="font-bold text-gray-800">"{noteToDelete?.title}"</span>? This action is permanent and cannot be undone.
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">Confirm Delete</h2>
+              <p className="text-gray-600 mb-2 leading-relaxed">
+                Are you sure you want to delete <span className="font-bold text-gray-800">"{noteToDelete?.title}"</span>?
               </p>
+              <p className="text-sm text-red-500 italic">This action cannot be undone and will permanently remove all associated data.</p>
             </div>
           </Modal>
         </div>

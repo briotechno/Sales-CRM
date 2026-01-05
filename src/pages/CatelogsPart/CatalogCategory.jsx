@@ -157,8 +157,8 @@ export default function CatalogCategoryPage() {
                                     <button
                                         onClick={() => setIsFilterOpen(!isFilterOpen)}
                                         className={`p-3 rounded-sm border transition shadow-sm ${isFilterOpen || statusFilter !== "All"
-                                                ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
-                                                : "bg-white text-black border-gray-300 hover:bg-gray-100"
+                                            ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
+                                            : "bg-white text-black border-gray-300 hover:bg-gray-100"
                                             }`}
                                     >
                                         <Filter size={20} />
@@ -176,8 +176,8 @@ export default function CatalogCategoryPage() {
                                                             setCurrentPage(1);
                                                         }}
                                                         className={`block w-full text-left px-4 py-2.5 text-sm transition-colors ${statusFilter === status
-                                                                ? "bg-orange-50 text-orange-600 font-bold"
-                                                                : "text-gray-700 hover:bg-gray-50"
+                                                            ? "bg-orange-50 text-orange-600 font-bold"
+                                                            : "text-gray-700 hover:bg-gray-50"
                                                             }`}
                                                     >
                                                         {status}
@@ -209,8 +209,8 @@ export default function CatalogCategoryPage() {
                                     }}
                                     disabled={!create}
                                     className={`px-6 py-3 rounded-sm hover:shadow-lg transition-all flex items-center gap-2 font-bold shadow-md ${create
-                                            ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white"
-                                            : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                                        ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white"
+                                        : "bg-gray-300 text-gray-500 cursor-not-allowed"
                                         }`}
                                 >
                                     <Plus size={20} />
