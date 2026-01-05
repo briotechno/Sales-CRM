@@ -209,7 +209,7 @@ export default function TodoPage() {
         </div>
 
         {/* Stats Cards */}
-        <div className="max-w-7xl ml-2 mt-4 mx-auto p-0">
+        <div className="max-w-8xl ml-2 mt-4 mx-auto p-0">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 ">
             <NumberCard
               title={"Total Tasks"}
@@ -235,7 +235,7 @@ export default function TodoPage() {
           </div>
         </div>
 
-        <div className="max-w-7xl ml-2 mt-4 mx-auto p-0">
+        <div className="max-w-8xl ml-2 mt-4 mx-auto p-0">
 
           {/* Active Tasks */}
           {activeTasks.length > 0 && (
