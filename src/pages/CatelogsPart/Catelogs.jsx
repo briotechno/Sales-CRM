@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { FiHome } from "react-icons/fi";
 import DashboardLayout from "../../components/DashboardLayout";
 import {
@@ -21,108 +21,65 @@ import {
   Handshake,
   Users,
   CheckCircle,
+  Copy,
+  LayoutGrid,
+  AlertCircle,
 } from "lucide-react";
+import { toast } from "react-hot-toast";
 import NumberCard from "../../components/NumberCard";
+import Modal from "../../components/common/Modal";
+import {
+  useGetCatalogsQuery,
+  useCreateCatalogMutation,
+  useUpdateCatalogMutation,
+  useDeleteCatalogMutation,
+} from "../../store/api/catalogApi";
+import { useGetHRMDashboardDataQuery } from "../../store/api/hrmDashboardApi";
+import usePermission from "../../hooks/usePermission";
 
 export default function CatalogsPage() {
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedCatalog, setSelectedCatalog] = useState(null);
+  const [catalogToDelete, setCatalogToDelete] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [imagePreview, setImagePreview] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState("All");
-  const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
-  const itemsPerPage = 5;
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [sortConfig, setSortConfig] = useState({ key: "id", direction: "desc" });
+  const dropdownRef = React.useRef(null);
+  const { create, read, update, delete: canDelete } = usePermission("Catalog");
+  const itemsPerPage = 8;
 
-  const [catalogs, setCatalogs] = useState([
-    {
-      id: "CAT001",
-      name: "CRM Software Suite",
-      image:
-        "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1280&h=720&fit=crop",
-      description:
-        "Complete customer relationship management solution with sales pipeline tracking",
-      minPrice: 15000,
-      maxPrice: 250000,
-      skus: 45,
-      interestedLeads: 234,
-      createdDate: "2024-03-15",
-      status: "Active",
-    },
-    {
-      id: "CAT002",
-      name: "ERP Solutions",
-      image:
-        "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1280&h=720&fit=crop",
-      description:
-        "Enterprise resource planning software for business automation",
-      minPrice: 50000,
-      maxPrice: 500000,
-      skus: 120,
-      interestedLeads: 567,
-      createdDate: "2024-04-01",
-      status: "Active",
-    },
-    {
-      id: "CAT003",
-      name: "Project Management Tools",
-      image:
-        "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=1280&h=720&fit=crop",
-      description: "Advanced project tracking and team collaboration platform",
-      minPrice: 8000,
-      maxPrice: 120000,
-      skus: 78,
-      interestedLeads: 189,
-      createdDate: "2024-02-12",
-      status: "Inactive",
-    },
-    {
-      id: "CAT004",
-      name: "Analytics Dashboard",
-      image:
-        "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1280&h=720&fit=crop",
-      description: "Business intelligence and data visualization software",
-      minPrice: 12000,
-      maxPrice: 180000,
-      skus: 156,
-      interestedLeads: 892,
-      createdDate: "2024-01-20",
-      status: "Active",
-    },
-    {
-      id: "CAT005",
-      name: "HR Management System",
-      image:
-        "https://images.unsplash.com/photo-1552664730-d307ca884978?w=1280&h=720&fit=crop",
-      description: "Complete human resource management and payroll solution",
-      minPrice: 20000,
-      maxPrice: 350000,
-      skus: 92,
-      interestedLeads: 345,
-      createdDate: "2024-05-10",
-      status: "Active",
-    },
-    {
-      id: "CAT006",
-      name: "Accounting Software",
-      image:
-        "https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=1280&h=720&fit=crop",
-      description: "Comprehensive financial management and accounting platform",
-      minPrice: 10000,
-      maxPrice: 200000,
-      skus: 67,
-      interestedLeads: 421,
-      createdDate: "2024-06-22",
-      status: "Inactive",
-    },
-  ]);
+  const { data, isLoading, refetch } = useGetCatalogsQuery({
+    page: currentPage,
+    limit: itemsPerPage,
+    status: statusFilter,
+    search: searchTerm,
+  });
+
+  const { data: dashboardData } = useGetHRMDashboardDataQuery();
+  const [createCatalog] = useCreateCatalogMutation();
+  const [updateCatalog] = useUpdateCatalogMutation();
+  const [deleteCatalog] = useDeleteCatalogMutation();
+
+  const catalogs = data?.catalogs || [];
+  const pagination = data?.pagination || {};
 
   const [formData, setFormData] = useState({
     name: "",
-    image: null,
+    category: "",
+    vendor: "",
     description: "",
     minPrice: "",
     maxPrice: "",
-    skus: "",
+    status: "Active",
+    image: null,
+    deliveryTime: "",
+    features: [""],
+    specifications: [{ key: "", value: "" }],
   });
 
   const handleInputChange = (e) => {
@@ -141,31 +98,101 @@ export default function CatalogsPage() {
     }
   };
 
-  const handleSubmit = (e) => {
+  const addFeature = () => {
+    setFormData({ ...formData, features: [...formData.features, ""] });
+  };
+
+  const updateFeature = (index, value) => {
+    const newFeatures = [...formData.features];
+    newFeatures[index] = value;
+    setFormData({ ...formData, features: newFeatures });
+  };
+
+  const removeFeature = (index) => {
+    const newFeatures = formData.features.filter((_, i) => i !== index);
+    setFormData({ ...formData, features: newFeatures.length ? newFeatures : [""] });
+  };
+
+  const addSpec = () => {
+    setFormData({ ...formData, specifications: [...formData.specifications, { key: "", value: "" }] });
+  };
+
+  const updateSpec = (index, field, value) => {
+    const newSpecs = [...formData.specifications];
+    newSpecs[index][field] = value;
+    setFormData({ ...formData, specifications: newSpecs });
+  };
+
+  const removeSpec = (index) => {
+    const newSpecs = formData.specifications.filter((_, i) => i !== index);
+    setFormData({ ...formData, specifications: newSpecs.length ? newSpecs : [{ key: "", value: "" }] });
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const newCatalog = {
-      id: `CAT00${catalogs.length + 1}`,
-      name: formData.name,
-      image:
-        imagePreview ||
-        "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1280&h=720&fit=crop",
-      description: formData.description,
-      minPrice: parseInt(formData.minPrice),
-      maxPrice: parseInt(formData.maxPrice),
-      skus: parseInt(formData.skus),
-      interestedLeads: 0,
-      createdDate: new Date().toISOString().split("T")[0],
-      status: "Active",
-    };
-    setCatalogs([...catalogs, newCatalog]);
-    setShowAddModal(false);
+    try {
+      const data = new FormData();
+
+      // Essential fields
+      const fields = [
+        'name', 'category', 'vendor', 'description',
+        'minPrice', 'maxPrice', 'status', 'deliveryTime'
+      ];
+
+      fields.forEach(field => {
+        if (formData[field] !== undefined && formData[field] !== null) {
+          data.append(field, formData[field]);
+        }
+      });
+
+      // Special handling for JSON fields
+      data.append('features', JSON.stringify(formData.features.filter(f => f.trim() !== "")));
+
+      const specObj = {};
+      formData.specifications.forEach(s => {
+        if (s.key.trim()) specObj[s.key.trim()] = s.value;
+      });
+      data.append('specifications', JSON.stringify(specObj));
+
+      // Image handling
+      if (formData.image instanceof File) {
+        data.append('image', formData.image);
+      } else if (typeof formData.image === 'string') {
+        data.append('image', formData.image);
+      }
+
+      // Default empty images array
+      data.append('images', JSON.stringify([]));
+
+      if (formData.id) {
+        await updateCatalog({ id: formData.id, data }).unwrap();
+        toast.success("Catalog updated successfully!");
+      } else {
+        await createCatalog(data).unwrap();
+        toast.success("Catalog added successfully!");
+      }
+
+      refetch();
+      setShowAddModal(false);
+      resetForm();
+    } catch (err) {
+      toast.error("Error saving catalog: " + (err?.data?.message || err.message));
+    }
+  };
+
+  const resetForm = () => {
     setFormData({
       name: "",
-      image: null,
+      category: "",
+      vendor: "",
       description: "",
       minPrice: "",
       maxPrice: "",
-      skus: "",
+      status: "Active",
+      image: null,
+      deliveryTime: "",
+      features: [""],
+      specifications: [{ key: "", value: "" }],
     });
     setImagePreview(null);
   };
@@ -178,39 +205,36 @@ export default function CatalogsPage() {
     setSortConfig({ key, direction });
   };
 
-  const handleDelete = (id) => {
-    if (window.confirm("Are you sure you want to delete this catalog?")) {
-      setCatalogs(catalogs.filter((c) => c.id !== id));
+  const handleDelete = (catalog) => {
+    setCatalogToDelete(catalog);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    try {
+      await deleteCatalog(catalogToDelete.id).unwrap();
+      toast.success("Catalog deleted successfully!");
+      setShowDeleteModal(false);
+    } catch (err) {
+      toast.error("Error deleting catalog: " + (err?.data?.message || err.message));
     }
   };
 
-  const filteredCatalogs = catalogs
-    .filter((catalog) => {
-      const matchesSearch =
-        catalog.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        catalog.id.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesStatus =
-        statusFilter === "All" || catalog.status === statusFilter;
-      return matchesSearch && matchesStatus;
-    })
-    .sort((a, b) => {
-      if (!sortConfig.key) return 0;
-      if (a[sortConfig.key] < b[sortConfig.key]) {
-        return sortConfig.direction === "asc" ? -1 : 1;
-      }
-      if (a[sortConfig.key] > b[sortConfig.key]) {
-        return sortConfig.direction === "asc" ? 1 : -1;
-      }
-      return 0;
-    });
+  const handleEdit = (catalog) => {
+    // Convert specifications object back to array for frontend
+    const specArray = catalog.specifications ? Object.entries(catalog.specifications).map(([key, value]) => ({ key, value })) : [{ key: "", value: "" }];
 
-  const totalPages = Math.ceil(filteredCatalogs.length / itemsPerPage);
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentCatalogs = filteredCatalogs.slice(
-    indexOfFirstItem,
-    indexOfLastItem
-  );
+    setFormData({
+      ...catalog,
+      features: (catalog.features && catalog.features.length > 0) ? catalog.features : [""],
+      specifications: specArray.length > 0 ? specArray : [{ key: "", value: "" }]
+    });
+    setImagePreview(catalog.image);
+    setShowAddModal(true);
+  };
+
+  const totalPages = pagination.totalPages || 1;
+  const currentCatalogs = catalogs;
 
   const handlePrev = () =>
     setCurrentPage((prev) => (prev > 1 ? prev - 1 : prev));
@@ -218,16 +242,33 @@ export default function CatalogsPage() {
     setCurrentPage((prev) => (prev < totalPages ? prev + 1 : prev));
   const handlePageChange = (page) => setCurrentPage(page);
 
-  const handleShare = (id) => {
-    const url = `${window.location.origin}/catalog/view/${id}`;
-    navigator.clipboard.writeText(url).then(() => {
-      alert(`Catalog link copied to clipboard!\n${url}`);
+  const handleShare = (catalog) => {
+    setSelectedCatalog(catalog);
+    setShowShareModal(true);
+  };
+
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text).then(() => {
+      toast.success("Link copied to clipboard!");
     });
   };
 
   const handleView = (id) => {
     window.open(`/catalog/view/${id}`, "_blank");
   };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsFilterOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const indexOfFirstItem = (currentPage - 1) * itemsPerPage;
+  const indexOfLastItem = Math.min(currentPage * itemsPerPage, pagination.total || 0);
 
   return (
     <DashboardLayout>
@@ -251,45 +292,76 @@ export default function CatalogsPage() {
 
               {/* Buttons */}
               <div className="flex flex-wrap items-center gap-2">
+                <div className="relative" ref={dropdownRef}>
+                  <button
+                    onClick={() => setIsFilterOpen(!isFilterOpen)}
+                    className={`p-3 rounded-sm border transition shadow-sm ${isFilterOpen || statusFilter !== "All"
+                      ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
+                      : "bg-white text-black border-gray-300 hover:bg-gray-100"
+                      }`}
+                  >
+                    <Filter size={20} />
+                  </button>
+
+                  {isFilterOpen && (
+                    <div className="absolute left-0 mt-2 w-32 bg-white border border-gray-200 rounded-sm shadow-xl z-50">
+                      <div className="py-1">
+                        {["All", "Active", "Inactive"].map((status) => (
+                          <button
+                            key={status}
+                            onClick={() => {
+                              setStatusFilter(status);
+                              setIsFilterOpen(false);
+                              setCurrentPage(1);
+                            }}
+                            className={`block w-full text-left px-4 py-2.5 text-sm transition-colors ${statusFilter === status
+                              ? "bg-orange-50 text-orange-600 font-bold"
+                              : "text-gray-700 hover:bg-gray-50"
+                              }`}
+                          >
+                            {status}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
                 <div className="relative">
                   <input
                     type="text"
                     placeholder="Search catalogs..."
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 pr-4 py-3 border border-gray-200 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#FF7B1D] text-sm hidden md:block"
+                    onChange={(e) => {
+                      setSearchTerm(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    className="pl-10 pr-4 py-3 border border-gray-200 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#FF7B1D] text-sm w-64"
                   />
                   <Search
-                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 hidden md:block"
+                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
                     size={16}
                   />
                 </div>
-                {["All", "Active", "Inactive"].map((status) => (
-                  <button
-                    key={status}
-                    onClick={() => {
-                      setStatusFilter(status);
-                      setCurrentPage(1);
-                    }}
-                    className={`px-5 py-3 rounded-sm font-semibold border text-sm transition ${statusFilter === status
-                      ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
-                      : "bg-white text-black border-gray-300 hover:bg-gray-100"
-                      }`}
-                  >
-                    {status}
-                  </button>
-                ))}
 
-                <button className="px-5 py-3 border border-gray-200 rounded-sm flex items-center gap-2 hover:bg-gray-100">
-                  <FileDown size={16} />
-                  <span className="text-sm font-medium">Export</span>
+                <button className="px-5 py-3 border border-gray-200 rounded-sm flex items-center gap-2 hover:bg-gray-100 transition-colors shadow-sm">
+                  <FileDown size={18} />
+                  <span className="text-sm font-semibold">Export</span>
                 </button>
 
                 <button
-                  onClick={() => setShowAddModal(true)}
-                  className="mr-6 bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-2 font-semibold"
+                  onClick={() => {
+                    resetForm();
+                    setShowAddModal(true);
+                  }}
+                  disabled={!create}
+                  className={`px-6 py-3 rounded-sm hover:shadow-lg transition-all flex items-center gap-2 font-bold shadow-md ${create
+                    ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white"
+                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    }`}
                 >
-                  + Add Catalog
+                  <Plus size={20} />
+                  Add Catalog
                 </button>
               </div>
             </div>
@@ -299,29 +371,29 @@ export default function CatalogsPage() {
         {/* Statement Card */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <NumberCard
-            title="Total Team"
-            number={"248"}
+            title="Total Employee"
+            number={dashboardData?.data?.summary?.totalEmployees?.value || "0"}
             icon={<Users className="text-blue-600" size={24} />}
             iconBgColor="bg-blue-100"
             lineBorderClass="border-blue-500"
           />
           <NumberCard
-            title="Total ID"
-            number={"186"}
-            icon={<DollarSign className="text-green-600" size={24} />}
+            title="Total Catalogs"
+            number={pagination.total || "0"}
+            icon={<LayoutGrid className="text-green-600" size={24} />}
             iconBgColor="bg-green-100"
             lineBorderClass="border-green-500"
           />
           <NumberCard
             title="Total Leads"
-            number={"18"}
+            number={dashboardData?.data?.summary?.totalLeads?.value || "0"}
             icon={<Handshake className="text-orange-600" size={24} />}
             iconBgColor="bg-orange-100"
             lineBorderClass="border-orange-500"
           />
           <NumberCard
-            title="Total Status"
-            number={"2"}
+            title="Total Active"
+            number={catalogs.filter(c => c.status === 'Active').length || "0"}
             icon={<Target className="text-purple-600" size={24} />}
             iconBgColor="bg-purple-100"
             lineBorderClass="border-purple-500"
@@ -361,18 +433,6 @@ export default function CatalogsPage() {
                 </th>
                 <th
                   className="py-3 px-4 font-semibold cursor-pointer hover:text-gray-200"
-                  onClick={() => handleSort("skus")}
-                >
-                  SKUs
-                </th>
-                <th
-                  className="py-3 px-4 font-semibold cursor-pointer hover:text-gray-200"
-                  onClick={() => handleSort("interestedLeads")}
-                >
-                  Interested Leads
-                </th>
-                <th
-                  className="py-3 px-4 font-semibold cursor-pointer hover:text-gray-200"
                   onClick={() => handleSort("createdDate")}
                 >
                   Created Date
@@ -388,7 +448,16 @@ export default function CatalogsPage() {
             </thead>
 
             <tbody>
-              {currentCatalogs.length > 0 ? (
+              {isLoading ? (
+                <tr>
+                  <td colSpan="9" className="py-20">
+                    <div className="flex justify-center flex-col items-center gap-4">
+                      <div className="w-12 h-12 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin"></div>
+                      <p className="text-gray-500 font-semibold animate-pulse">Loading catalogs...</p>
+                    </div>
+                  </td>
+                </tr>
+              ) : currentCatalogs.length > 0 ? (
                 currentCatalogs.map((catalog, index) => (
                   <tr
                     key={catalog.id}
@@ -401,29 +470,23 @@ export default function CatalogsPage() {
                       <img
                         src={catalog.image}
                         alt={catalog.name}
-                        className="w-12 h-12 rounded-md border object-cover mx-auto"
+                        className="w-12 h-12 rounded-md border object-cover mx-auto shadow-sm"
                       />
                     </td>
-                    <td className="py-3 px-4 font-medium">{catalog.id}</td>
+                    <td className="py-3 px-4 font-medium text-orange-600">{catalog.catalog_id}</td>
                     <td className="py-3 px-4 font-semibold text-gray-800">
                       {catalog.name}
                     </td>
-                    <td className="py-3 px-4">
-                      ₹{catalog.minPrice.toLocaleString()}
+                    <td className="py-3 px-4 font-medium">
+                      ₹{catalog.minPrice?.toLocaleString() || 0}
                     </td>
-                    <td className="py-3 px-4">
-                      ₹{catalog.maxPrice.toLocaleString()}
+                    <td className="py-3 px-4 font-medium">
+                      ₹{catalog.maxPrice?.toLocaleString() || 0}
                     </td>
-                    <td className="py-3 px-4">{catalog.skus}</td>
-                    <td className="py-3 px-4">
-                      <span className="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
-                        {catalog.interestedLeads}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4">{catalog.createdDate}</td>
+                    <td className="py-3 px-4 text-gray-600 text-sm">{new Date(catalog.created_at).toLocaleDateString()}</td>
                     <td className="py-3 px-4">
                       <span
-                        className={`px-3 py-1 rounded-full text-xs font-semibold ${catalog.status === "Active"
+                        className={`px-3 py-1 rounded-full text-xs font-bold ${catalog.status === "Active"
                           ? "bg-green-100 text-green-700"
                           : "bg-red-100 text-red-600"
                           }`}
@@ -432,25 +495,36 @@ export default function CatalogsPage() {
                       </span>
                     </td>
                     <td className="py-3 px-4">
-                      <div className="flex justify-center gap-3">
+                      <div className="flex justify-center gap-2">
                         <button
-                          onClick={() => handleView(catalog.id)}
-                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-sm transition-colors"
+                          onClick={() => handleView(catalog.catalog_id)}
+                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-sm transition-all"
+                          title="View"
                         >
                           <Eye size={18} />
                         </button>
-                        <button className="text-[#FF7B1D] hover:opacity-80">
+                        <button
+                          onClick={() => handleEdit(catalog)}
+                          disabled={!update}
+                          className={`p-2 rounded-sm transition-all ${update ? "text-orange-500 hover:bg-orange-50" : "text-gray-300 cursor-not-allowed"
+                            }`}
+                          title="Edit"
+                        >
                           <Edit2 size={18} />
                         </button>
                         <button
-                          onClick={() => handleDelete(catalog.id)}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-sm transition-colors"
+                          onClick={() => handleDelete(catalog)}
+                          disabled={!canDelete}
+                          className={`p-2 rounded-sm transition-all ${canDelete ? "text-red-600 hover:bg-red-50" : "text-gray-300 cursor-not-allowed"
+                            }`}
+                          title="Delete"
                         >
                           <Trash2 size={18} />
                         </button>
                         <button
-                          onClick={() => handleShare(catalog.id)}
-                          className="text-orange-500 hover:opacity-80"
+                          onClick={() => handleShare(catalog)}
+                          className="p-2 text-purple-600 hover:bg-purple-50 rounded-sm transition-all"
+                          title="Share"
                         >
                           <Share2 size={18} />
                         </button>
@@ -461,10 +535,13 @@ export default function CatalogsPage() {
               ) : (
                 <tr>
                   <td
-                    colSpan="11"
-                    className="py-6 text-gray-500 font-medium text-sm"
+                    colSpan="9"
+                    className="py-12 text-gray-500 font-medium text-sm"
                   >
-                    No catalogs found.
+                    <div className="flex flex-col items-center gap-3">
+                      <Package size={48} className="text-gray-200" />
+                      <p>No catalogs found matches your criteria.</p>
+                    </div>
                   </td>
                 </tr>
               )}
@@ -472,44 +549,50 @@ export default function CatalogsPage() {
           </table>
         </div>
 
-        {/* Pagination */}
-        <div className="flex justify-end items-center gap-3 mt-6">
-          <button
-            onClick={handlePrev}
-            disabled={currentPage === 1}
-            className={`px-4 py-2 rounded-sm text-white font-semibold transition ${currentPage === 1
-              ? "bg-gray-300 cursor-not-allowed"
-              : "bg-[#FF7B1D] hover:opacity-90"
-              }`}
-          >
-            Back
-          </button>
+        {/* 🔹 Pagination Section */}
+        <div className="flex flex-col md:flex-row justify-between items-center mt-6 gap-4 bg-gray-50 p-4 rounded-sm border border-gray-200">
+          <p className="text-sm font-semibold text-gray-700">
+            Showing <span className="text-orange-600">{indexOfFirstItem + 1}</span> to <span className="text-orange-600">{indexOfLastItem}</span> of <span className="text-orange-600">{pagination.total || 0}</span> Catalogs
+          </p>
 
           <div className="flex items-center gap-2">
-            {Array.from({ length: totalPages }, (_, i) => (
-              <button
-                key={i + 1}
-                onClick={() => handlePageChange(i + 1)}
-                className={`px-3 py-1 rounded-sm text-black font-semibold border transition ${currentPage === i + 1
-                  ? "bg-gray-200 border-gray-400"
-                  : "bg-white border-gray-300 hover:bg-gray-100"
-                  }`}
-              >
-                {i + 1}
-              </button>
-            ))}
-          </div>
+            <button
+              onClick={handlePrev}
+              disabled={currentPage === 1}
+              className={`px-4 py-2 rounded-sm font-bold transition flex items-center gap-1 ${currentPage === 1
+                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"
+                }`}
+            >
+              Previous
+            </button>
 
-          <button
-            onClick={handleNext}
-            disabled={currentPage === totalPages}
-            className={`px-4 py-2 rounded-sm text-white font-semibold transition ${currentPage === totalPages
-              ? "bg-gray-300 cursor-not-allowed"
-              : "bg-[#22C55E] hover:opacity-90"
-              }`}
-          >
-            Next
-          </button>
+            <div className="flex items-center gap-1">
+              {Array.from({ length: totalPages }, (_, i) => (
+                <button
+                  key={i + 1}
+                  onClick={() => handlePageChange(i + 1)}
+                  className={`w-10 h-10 rounded-sm font-bold transition ${currentPage === i + 1
+                    ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md"
+                    : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+                    }`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+            </div>
+
+            <button
+              onClick={handleNext}
+              disabled={currentPage === totalPages}
+              className={`px-4 py-2 rounded-sm font-bold transition flex items-center gap-1 ${currentPage === totalPages
+                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                : "bg-[#22C55E] text-white hover:opacity-90 shadow-md"
+                }`}
+            >
+              Next
+            </button>
+          </div>
         </div>
 
         {/* Add Catalog Modal */}
@@ -519,7 +602,7 @@ export default function CatalogsPage() {
               {/* Header */}
               <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-4 flex items-center justify-between shrink-0">
                 <h2 className="text-2xl font-bold text-white">
-                  Add New Catalog
+                  {formData.id ? "Edit Catalog" : "Add New Catalog"}
                 </h2>
 
                 <button
@@ -549,12 +632,70 @@ export default function CatalogsPage() {
                     />
                   </div>
 
+                  {/* Category & Vendor */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Category *
+                      </label>
+                      <select
+                        name="category"
+                        value={formData.category}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300"
+                        required
+                      >
+                        <option value="">Select Category</option>
+                        <option value="Software Development">Software Development</option>
+                        <option value="Cloud Services">Cloud Services</option>
+                        <option value="Cyber Security">Cyber Security</option>
+                        <option value="Hardware & Networking">Hardware & Networking</option>
+                        <option value="IT Consulting">IT Consulting</option>
+                        <option value="Managed IT Services">Managed IT Services</option>
+                        <option value="Data Analytics">Data Analytics</option>
+                        <option value="AI & Machine Learning">AI & Machine Learning</option>
+                        <option value="Mobile App Development">Mobile App Development</option>
+                        <option value="Web Hosting">Web Hosting</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Vendor *
+                      </label>
+                      <input
+                        type="text"
+                        name="vendor"
+                        value={formData.vendor}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300"
+                        required
+                        placeholder="e.g., TechSol"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Status */}
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Status *
+                    </label>
+                    <select
+                      name="status"
+                      value={formData.status}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300"
+                      required
+                    >
+                      <option value="Active">Active</option>
+                      <option value="Inactive">Inactive</option>
+                    </select>
+                  </div>
+
                   {/* Image Upload */}
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Catalog Image * (1280px × 720px)
+                      Catalog Image *
                     </label>
-
                     <div className="relative">
                       <input
                         type="file"
@@ -563,7 +704,6 @@ export default function CatalogsPage() {
                         className="hidden"
                         id="catalog-image"
                       />
-
                       <label
                         htmlFor="catalog-image"
                         className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-gray-300 rounded-sm cursor-pointer bg-gray-50 hover:bg-gray-100 transition-all"
@@ -575,6 +715,11 @@ export default function CatalogsPage() {
                               alt="Preview"
                               className="w-full h-full object-cover rounded-sm"
                             />
+                            <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity rounded-sm">
+                              <p className="text-white text-sm font-bold flex items-center gap-2">
+                                <Plus size={20} /> Change Image
+                              </p>
+                            </div>
                           </div>
                         ) : (
                           <div className="text-center p-4">
@@ -584,9 +729,6 @@ export default function CatalogsPage() {
                             />
                             <p className="text-sm font-semibold text-gray-600">
                               Click to upload image
-                            </p>
-                            <p className="text-xs text-gray-500 mt-1">
-                              PNG, JPG (1280×720px)
                             </p>
                           </div>
                         )}
@@ -642,20 +784,96 @@ export default function CatalogsPage() {
                     </div>
                   </div>
 
-                  {/* SKUs */}
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Number of SKUs *
+                  {/* Basic Info Bottom Row */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Delivery Time
+                      </label>
+                      <input
+                        type="text"
+                        name="deliveryTime"
+                        value={formData.deliveryTime}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300"
+                        placeholder="e.g., 2-3 Days"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Key Features */}
+                  <div className="pt-4 border-t">
+                    <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center justify-between">
+                      Key Features
+                      <button
+                        type="button"
+                        onClick={addFeature}
+                        className="text-xs bg-orange-100 text-orange-600 px-2 py-1 rounded-sm hover:bg-orange-200"
+                      >
+                        + Add Feature
+                      </button>
                     </label>
-                    <input
-                      type="number"
-                      name="skus"
-                      value={formData.skus}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300"
-                      required
-                      placeholder="0"
-                    />
+                    <div className="space-y-2">
+                      {formData.features.map((feature, idx) => (
+                        <div key={idx} className="flex gap-2">
+                          <input
+                            type="text"
+                            value={feature}
+                            onChange={(e) => updateFeature(idx, e.target.value)}
+                            className="flex-1 px-4 py-2 border border-gray-200 rounded-sm focus:border-[#FF7B1D] outline-none text-sm"
+                            placeholder={`Feature ${idx + 1}`}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeFeature(idx)}
+                            className="p-2 text-red-500 hover:bg-red-50 rounded-sm"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Specifications */}
+                  <div className="pt-4 border-t">
+                    <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center justify-between">
+                      Specifications
+                      <button
+                        type="button"
+                        onClick={addSpec}
+                        className="text-xs bg-orange-100 text-orange-600 px-2 py-1 rounded-sm hover:bg-orange-200"
+                      >
+                        + Add Spec
+                      </button>
+                    </label>
+                    <div className="space-y-2">
+                      {formData.specifications.map((spec, idx) => (
+                        <div key={idx} className="flex gap-2">
+                          <input
+                            type="text"
+                            value={spec.key}
+                            onChange={(e) => updateSpec(idx, "key", e.target.value)}
+                            className="flex-1 px-4 py-2 border border-gray-200 rounded-sm focus:border-[#FF7B1D] outline-none text-sm font-medium"
+                            placeholder="Key (e.g., Processor / OS / Cloud Provider)"
+                          />
+                          <input
+                            type="text"
+                            value={spec.value}
+                            onChange={(e) => updateSpec(idx, "value", e.target.value)}
+                            className="flex-1 px-4 py-2 border border-gray-200 rounded-sm focus:border-[#FF7B1D] outline-none text-sm"
+                            placeholder="Value (e.g., Intel i9 / Windows / AWS)"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeSpec(idx)}
+                            className="p-2 text-red-500 hover:bg-red-50 rounded-sm"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
                   </div>
 
                   {/* Form Actions */}
@@ -664,15 +882,7 @@ export default function CatalogsPage() {
                       type="button"
                       onClick={() => {
                         setShowAddModal(false);
-                        setImagePreview(null);
-                        setFormData({
-                          name: "",
-                          image: null,
-                          description: "",
-                          minPrice: "",
-                          maxPrice: "",
-                          skus: "",
-                        });
+                        resetForm();
                       }}
                       className="px-6 py-2 border-2 border-gray-300 text-gray-700 rounded-sm hover:bg-gray-100 transition-all font-semibold"
                     >
@@ -683,9 +893,93 @@ export default function CatalogsPage() {
                       onClick={handleSubmit}
                       className="px-6 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all font-semibold shadow-lg"
                     >
-                      Add Catalog
+                      {formData.id ? "Update Changes" : "Save Catalog"}
                     </button>
                   </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Delete Confirmation Modal */}
+        <Modal
+          isOpen={showDeleteModal}
+          onClose={() => setShowDeleteModal(false)}
+          headerVariant="simple"
+          maxWidth="max-w-md"
+          footer={
+            <div className="flex gap-4 w-full">
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="flex-1 px-6 py-3 border-2 border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-100 transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="flex-1 px-6 py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition-all shadow-lg flex items-center justify-center gap-2"
+              >
+                <Trash2 size={20} />
+                Delete Now
+              </button>
+            </div>
+          }
+        >
+          <div className="flex flex-col items-center text-center text-black">
+            <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mb-6 animate-bounce">
+              <AlertCircle size={48} className="text-red-600" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">Confirm Delete</h2>
+            <p className="text-gray-600 mb-2 leading-relaxed">
+              Are you sure you want to delete <span className="font-bold text-gray-800">"{catalogToDelete?.name}"</span>?
+            </p>
+            <p className="text-sm text-red-500 italic">This action cannot be undone and will permanently remove all associated data.</p>
+          </div>
+        </Modal>
+
+        {/* Share Modal */}
+        {showShareModal && (
+          <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-sm shadow-2xl w-full max-w-lg">
+              <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-4 flex items-center justify-between">
+                <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                  <Share2 size={20} />
+                  Share Catalog
+                </h2>
+                <button
+                  onClick={() => setShowShareModal(false)}
+                  className="text-white hover:bg-orange-700 p-1 rounded-lg"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+              <div className="p-6">
+                <p className="text-gray-600 mb-4 font-medium">
+                  Share "<span className="text-orange-600 font-bold">{selectedCatalog?.name}</span>" with your clients:
+                </p>
+                <div className="flex items-center gap-2 p-3 bg-gray-50 border rounded-sm">
+                  <input
+                    type="text"
+                    readOnly
+                    value={`${window.location.origin}/catalog/view/${selectedCatalog?.catalog_id}`}
+                    className="flex-1 bg-transparent outline-none text-sm text-gray-600"
+                  />
+                  <button
+                    onClick={() => copyToClipboard(`${window.location.origin}/catalog/view/${selectedCatalog?.catalog_id}`)}
+                    className="p-2 text-orange-600 hover:bg-orange-50 rounded-sm transition-all"
+                    title="Copy Link"
+                  >
+                    <Copy size={18} />
+                  </button>
+                </div>
+                <div className="mt-6 flex justify-end">
+                  <button
+                    onClick={() => setShowShareModal(false)}
+                    className="px-8 py-2 bg-gray-100 text-gray-700 rounded-sm font-semibold hover:bg-gray-200 transition-all"
+                  >
+                    Close
+                  </button>
                 </div>
               </div>
             </div>

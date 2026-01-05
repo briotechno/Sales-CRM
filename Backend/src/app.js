@@ -41,6 +41,7 @@ app.use('/api/salaries', salaryRoutes);
 app.use('/api/jobs', jobRoutes);
 app.use('/api/hrm-dashboard', hrmDashboardRoutes);
 app.use('/api/users', require('./routes/userRoutes'));
+app.use('/api/catalogs', require('./routes/catalogRoutes'));
 
 app.get('/', (req, res) => {
     res.send('API is running...');

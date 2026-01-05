@@ -26,221 +26,15 @@ import {
     Target,
 } from "lucide-react";
 
-// Mock data with enhanced fields
-const mockCatalogs = [
-    {
-        id: "CAT001",
-        name: "CRM Software Suite",
-        category: "Customer Relationship Management",
-        vendor: "TechSol Innovations",
-        images: [
-            "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1280&h=720&fit=crop",
-            "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1280&h=720&fit=crop",
-            "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=1280&h=720&fit=crop",
-        ],
-        description:
-            "Complete customer relationship management solution with sales pipeline tracking, lead management, and automated reporting. Perfect for small to medium businesses looking to scale their sales operations.",
-        minPrice: 15000,
-        maxPrice: 250000,
-        skus: 45,
-        rating: 4.8,
-        reviews: 127,
-        features: [
-            "Lead Tracking & Scoring",
-            "Sales Pipeline Visualization",
-            "Automated Email Marketing",
-            "Detailed Analytics & Reporting",
-            "Mobile App Access",
-            "Custom Workflows",
-            "Integration APIs",
-            "24/7 Support",
-        ],
-        specifications: {
-            "Deployment": "Cloud-based / On-premise",
-            "Users": "Unlimited",
-            "Storage": "500GB - 5TB",
-            "API Access": "REST & GraphQL",
-            "Mobile Support": "iOS & Android",
-            "Updates": "Automatic",
-        },
-        warranty: "12 Months Premium Support",
-        deliveryTime: "Instant Setup",
-        support: "24/7 Email & Phone Support",
-        status: "Active",
-        testimonials: [
-            {
-                name: "Rajesh Kumar",
-                company: "Tech Innovations Ltd",
-                rating: 5,
-                comment: "Exceptional CRM solution! Increased our sales efficiency by 40%.",
-            },
-            {
-                name: "Priya Sharma",
-                company: "Digital Solutions Inc",
-                rating: 4.5,
-                comment: "Great features and excellent customer support. Highly recommended!",
-            },
-        ],
-    },
-    {
-        id: "CAT002",
-        name: "ERP Solutions",
-        category: "Enterprise Resource Planning",
-        vendor: "Enterprise Systems Pro",
-        images: [
-            "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1280&h=720&fit=crop",
-            "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1280&h=720&fit=crop",
-        ],
-        description:
-            "Enterprise resource planning software for business automation. Integrate all your business processes into a single system.",
-        minPrice: 50000,
-        maxPrice: 500000,
-        skus: 120,
-        rating: 4.6,
-        reviews: 89,
-        features: [
-            "Inventory Management",
-            "Financial Accounting",
-            "Supply Chain Management",
-            "Human Resources Module",
-            "Production Planning",
-            "Quality Control",
-        ],
-        specifications: {
-            "Deployment": "Cloud-based",
-            "Users": "50-1000",
-            "Modules": "12 Core Modules",
-            "Integration": "SAP, Oracle Compatible",
-        },
-        warranty: "24 Months Enterprise Support",
-        deliveryTime: "2-4 Weeks Implementation",
-        support: "Dedicated Account Manager",
-        status: "Active",
-        testimonials: [],
-    },
-    {
-        id: "CAT003",
-        name: "Project Management Tools",
-        category: "Project Management",
-        vendor: "Agile Solutions",
-        images: [
-            "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=1280&h=720&fit=crop",
-        ],
-        description: "Advanced project tracking and team collaboration platform.",
-        minPrice: 8000,
-        maxPrice: 120000,
-        skus: 78,
-        rating: 4.7,
-        reviews: 203,
-        features: ["Task Management", "Gantt Charts", "Time Tracking", "File Sharing"],
-        specifications: {
-            "Deployment": "Cloud-based",
-            "Team Size": "5-500 members",
-            "Projects": "Unlimited",
-        },
-        warranty: "6 Months Support",
-        deliveryTime: "Instant Access",
-        support: "Email Support",
-        status: "Inactive",
-        testimonials: [],
-    },
-    {
-        id: "CAT004",
-        name: "Analytics Dashboard",
-        category: "Business Intelligence",
-        vendor: "Data Insights Corp",
-        images: [
-            "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1280&h=720&fit=crop",
-        ],
-        description: "Business intelligence and data visualization software.",
-        minPrice: 12000,
-        maxPrice: 180000,
-        skus: 156,
-        rating: 4.9,
-        reviews: 156,
-        features: ["Real-time Data", "Custom Reports", "Data Export", "API Integration"],
-        specifications: {
-            "Data Sources": "100+ Integrations",
-            "Dashboards": "Unlimited",
-            "Users": "Unlimited",
-        },
-        warranty: "12 Months Support",
-        deliveryTime: "24 Hours",
-        support: "24/7 Support",
-        status: "Active",
-        testimonials: [],
-    },
-    {
-        id: "CAT005",
-        name: "HR Management System",
-        category: "Human Resources",
-        vendor: "HR Tech Solutions",
-        images: [
-            "https://images.unsplash.com/photo-1552664730-d307ca884978?w=1280&h=720&fit=crop",
-        ],
-        description: "Complete human resource management and payroll solution.",
-        minPrice: 20000,
-        maxPrice: 350000,
-        skus: 92,
-        rating: 4.5,
-        reviews: 78,
-        features: ["Payroll Processing", "Attendance Tracking", "Employee Portal", "Recruitment"],
-        specifications: {
-            "Employees": "50-5000",
-            "Payroll": "Automated",
-            "Compliance": "India Tax Compliant",
-        },
-        warranty: "18 Months Support",
-        deliveryTime: "1 Week Setup",
-        support: "Phone & Email",
-        status: "Active",
-        testimonials: [],
-    },
-    {
-        id: "CAT006",
-        name: "Accounting Software",
-        category: "Finance & Accounting",
-        vendor: "FinTech Pro",
-        images: [
-            "https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=1280&h=720&fit=crop",
-        ],
-        description: "Comprehensive financial management and accounting platform.",
-        minPrice: 10000,
-        maxPrice: 200000,
-        skus: 67,
-        rating: 4.4,
-        reviews: 92,
-        features: ["Invoicing", "Expense Tracking", "Tax Preparation", "Bank Reconciliation"],
-        specifications: {
-            "Compliance": "GST Ready",
-            "Reports": "50+ Templates",
-            "Multi-currency": "Yes",
-        },
-        warranty: "12 Months Support",
-        deliveryTime: "Instant",
-        support: "Business Hours Support",
-        status: "Inactive",
-        testimonials: [],
-    },
-];
+import { useGetCatalogByIdQuery } from "../../store/api/catalogApi";
 
 export default function CatalogView() {
     const { id } = useParams();
-    const [catalog, setCatalog] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const { data: catalog, isLoading, error } = useGetCatalogByIdQuery(id);
     const [activeTab, setActiveTab] = useState("features");
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-    useEffect(() => {
-        // Simulate API fetch delay
-        setTimeout(() => {
-            const foundCatalog = mockCatalogs.find((c) => c.id === id);
-            setCatalog(foundCatalog);
-            setLoading(false);
-        }, 500);
-    }, [id]);
-
-    if (loading) {
+    if (isLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 via-white to-red-50">
                 <div className="text-center">
@@ -251,7 +45,7 @@ export default function CatalogView() {
         );
     }
 
-    if (!catalog) {
+    if (!catalog || error) {
         return (
             <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-orange-50 via-white to-red-50">
                 <div className="text-center bg-white p-12 rounded-3xl shadow-2xl">
@@ -340,7 +134,7 @@ export default function CatalogView() {
                         {/* Main Image */}
                         <div className="relative overflow-hidden rounded-3xl shadow-2xl aspect-video bg-gradient-to-br from-gray-100 to-gray-200 group">
                             <img
-                                src={catalog.images[currentImageIndex]}
+                                src={catalog.image || (catalog.images && catalog.images[currentImageIndex])}
                                 alt={catalog.name}
                                 className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"
                             />
@@ -354,7 +148,7 @@ export default function CatalogView() {
                             </div>
 
                             {/* Image Navigation */}
-                            {catalog.images.length > 1 && (
+                            {catalog.images && catalog.images.length > 1 && (
                                 <>
                                     <button
                                         onClick={prevImage}
@@ -387,7 +181,7 @@ export default function CatalogView() {
                         </div>
 
                         {/* Thumbnail Gallery */}
-                        {catalog.images.length > 1 && (
+                        {catalog.images && catalog.images.length > 1 && (
                             <div className="grid grid-cols-4 gap-4">
                                 {catalog.images.map((img, idx) => (
                                     <button
@@ -405,14 +199,7 @@ export default function CatalogView() {
                         )}
 
                         {/* Quick Stats Grid */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div className="bg-white p-5 rounded-2xl shadow-lg border border-orange-100 text-center hover:shadow-xl transition-all transform hover:-translate-y-1">
-                                <div className="text-orange-500 mb-2 flex justify-center">
-                                    <Grid size={28} />
-                                </div>
-                                <div className="text-3xl font-bold text-gray-800">{catalog.skus}</div>
-                                <div className="text-xs text-gray-500 uppercase tracking-wide font-semibold mt-1">SKUs</div>
-                            </div>
+                        <div className="grid grid-cols-1 gap-4 text-center">
                             <div className="bg-white p-5 rounded-2xl shadow-lg border border-orange-100 text-center hover:shadow-xl transition-all transform hover:-translate-y-1">
                                 <div className="text-green-500 mb-2 flex justify-center">
                                     <DollarSign size={28} />
@@ -420,7 +207,7 @@ export default function CatalogView() {
                                 <div className="text-2xl font-bold text-gray-800">
                                     ₹{catalog.minPrice.toLocaleString()} - ₹{catalog.maxPrice.toLocaleString()}
                                 </div>
-                                <div className="text-xs text-gray-500 uppercase tracking-wide font-semibold mt-1">Price Range</div>
+                                <div className="text-xs text-gray-500 uppercase tracking-wide font-semibold mt-1">Estimated Price Range</div>
                             </div>
                         </div>
                     </div>
@@ -457,20 +244,6 @@ export default function CatalogView() {
                                     <span className="text-sm text-gray-500 font-medium">Delivery</span>
                                 </div>
                                 <p className="text-lg font-bold text-gray-800">{catalog.deliveryTime}</p>
-                            </div>
-                            <div className="bg-white p-5 rounded-2xl shadow-md border border-gray-100">
-                                <div className="flex items-center gap-3 mb-2">
-                                    <Shield className="text-green-500" size={24} />
-                                    <span className="text-sm text-gray-500 font-medium">Warranty</span>
-                                </div>
-                                <p className="text-lg font-bold text-gray-800">{catalog.warranty}</p>
-                            </div>
-                            <div className="bg-white p-5 rounded-2xl shadow-md border border-gray-100">
-                                <div className="flex items-center gap-3 mb-2">
-                                    <Users className="text-purple-500" size={24} />
-                                    <span className="text-sm text-gray-500 font-medium">Support</span>
-                                </div>
-                                <p className="text-lg font-bold text-gray-800">{catalog.support}</p>
                             </div>
                         </div>
 
@@ -592,7 +365,7 @@ export default function CatalogView() {
                 {/* Footer */}
                 <div className="mt-16 pt-8 border-t border-gray-200 text-center">
                     <p className="text-sm text-gray-500">
-                        &copy; {new Date().getFullYear()} TechSol Solutions. All rights reserved. | Catalog ID: {catalog.id}
+                        &copy; {new Date().getFullYear()} TechSol Solutions. All rights reserved. | Catalog ID: {catalog.catalog_id}
                     </p>
                 </div>
             </main>

@@ -11,7 +11,7 @@ const storage = multer.diskStorage({
         } else if (file.fieldname === 'icon') {
             uploadDir = 'uploads/departments';
         } else if (file.fieldname === 'image') {
-            uploadDir = 'uploads/designations';
+            uploadDir = req.baseUrl.includes('catalogs') ? 'uploads/catalogs' : 'uploads/designations';
         } else if (['profile_picture', 'profile_image', 'aadhar_front', 'aadhar_back', 'pan_card', 'cancelled_cheque'].includes(file.fieldname)) {
             uploadDir = 'uploads/employees';
         }
