@@ -3,9 +3,9 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 export const catalogCategoryApi = createApi({
     reducerPath: 'catalogCategoryApi',
     baseQuery: fetchBaseQuery({
-        baseUrl: 'http://localhost:5000/api/catalog-categories',
-        prepareHeaders: (headers) => {
-            const token = localStorage.getItem('token');
+        baseUrl: `${import.meta.env.VITE_API_BASE_URL}catalog-categories`,
+        prepareHeaders: (headers, { getState }) => {
+            const token = getState().auth.token || localStorage.getItem('token');
             if (token) {
                 headers.set('authorization', `Bearer ${token}`);
             }
