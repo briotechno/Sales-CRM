@@ -19,6 +19,7 @@ import { catalogCategoryApi } from './api/catalogCategoryApi';
 import { noteApi } from './api/noteApi';
 import { taskApi } from './api/taskApi';
 import { quotationApi } from './api/quotationApi';
+import { expenseApi } from './api/expenseApi';
 
 
 export const store = configureStore({
@@ -43,6 +44,7 @@ export const store = configureStore({
         [noteApi.reducerPath]: noteApi.reducer,
         [taskApi.reducerPath]: taskApi.reducer,
         [quotationApi.reducerPath]: quotationApi.reducer,
+        [expenseApi.reducerPath]: expenseApi.reducer,
 
 
     },
@@ -66,7 +68,8 @@ export const store = configureStore({
             catalogCategoryApi.middleware,
             noteApi.middleware,
             taskApi.middleware,
-            quotationApi.middleware
+            quotationApi.middleware,
+            expenseApi.middleware
 
         ),
 });

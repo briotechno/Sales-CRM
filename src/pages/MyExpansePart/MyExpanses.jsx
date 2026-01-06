@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { FiHome } from "react-icons/fi";
-import { X, FileText } from "lucide-react";
+import { Search, Eye, Filter } from "lucide-react";
 
 import DashboardLayout from "../../components/DashboardLayout";
 import {
@@ -9,180 +9,116 @@ import {
   Trash2,
   Calendar,
   Receipt,
-  TrendingUp,
-  Download,
-  Filter,
   Edit2,
-  Upload,
+  X
 } from "lucide-react";
 import NumberCard from "../../components/NumberCard";
+import { useGetExpensesQuery } from "../../store/api/expenseApi";
+import AddExpenseModal from "../../components/Expense/AddExpenseModal";
+import EditExpenseModal from "../../components/Expense/EditExpenseModal";
+import ViewExpenseModal from "../../components/Expense/ViewExpenseModal";
+import DeleteExpenseModal from "../../components/Expense/DeleteExpenseModal";
 
 export default function ExpensePage() {
-  const [expenses, setExpenses] = useState([
-    {
-      id: 1,
-      title: "Client Lunch Meeting",
-      amount: 1250,
-      category: "Meals",
-      date: "2025-11-15",
-      status: "approved",
-      receipt: true,
-    },
-    {
-      id: 2,
-      title: "Travel - Airport Taxi",
-      amount: 450,
-      category: "Travel",
-      date: "2025-11-14",
-      status: "pending",
-      receipt: true,
-    },
-    {
-      id: 3,
-      title: "Office Supplies",
-      amount: 780,
-      category: "Supplies",
-      date: "2025-11-13",
-      status: "approved",
-      receipt: false,
-    },
-    {
-      id: 4,
-      title: "Conference Registration",
-      amount: 3500,
-      category: "Training",
-      date: "2025-11-10",
-      status: "rejected",
-      receipt: true,
-    },
-    {
-      id: 5,
-      title: "Software Subscription",
-      amount: 999,
-      category: "Software",
-      date: "2025-11-08",
-      status: "approved",
-      receipt: true,
-    },
-    {
-      id: 6,
-      title: "Software Subscription",
-      amount: 999,
-      category: "Software",
-      date: "2025-11-08",
-      status: "approved",
-      receipt: true,
-    },
-  ]);
-
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [filterStatus, setFilterStatus] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [filterType, setFilterType] = useState("Today");
+  const [filterType, setFilterType] = useState("All");
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
+  const [isDateFilterOpen, setIsDateFilterOpen] = useState(false);
+  const dateDropdownRef = useRef(null);
 
-  const itemsPerPage = 5;
-  const [newExpense, setNewExpense] = useState({
-    title: "",
-    amount: "",
-    category: "Meals",
-    date: new Date().toISOString().split("T")[0],
+  // Modals state
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [selectedExpense, setSelectedExpense] = useState(null);
+
+  const itemsPerPage = 7;
+
+  // Date Filter Logic
+  const getDateRange = () => {
+    const today = new Date();
+    const formatDate = (date) => date.toISOString().split('T')[0];
+
+    let dateFrom = "";
+    let dateTo = "";
+
+    if (filterType === "Today") {
+      dateFrom = formatDate(today);
+      dateTo = formatDate(today);
+    } else if (filterType === "Yesterday") {
+      const yesterday = new Date(today);
+      yesterday.setDate(today.getDate() - 1);
+      dateFrom = formatDate(yesterday);
+      dateTo = formatDate(yesterday);
+    } else if (filterType === "Last 7 Days") {
+      const last7 = new Date(today);
+      last7.setDate(today.getDate() - 7);
+      dateFrom = formatDate(last7);
+      dateTo = formatDate(today);
+    } else if (filterType === "This Month") {
+      const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+      dateFrom = formatDate(firstDay);
+      dateTo = formatDate(today);
+    } else if (filterType === "Custom") {
+      dateFrom = customStart;
+      dateTo = customEnd;
+    }
+    return { dateFrom, dateTo };
+  };
+
+  const { dateFrom, dateTo } = getDateRange();
+
+  const { data, isLoading } = useGetExpensesQuery({
+    page: currentPage,
+    limit: itemsPerPage,
+    search: searchTerm,
+    dateFrom,
+    dateTo
   });
 
-  const addExpense = () => {
-    if (newExpense.title && newExpense.amount) {
-      setExpenses([
-        ...expenses,
-        {
-          id: Date.now(),
-          ...newExpense,
-          amount: parseFloat(newExpense.amount),
-          status: "pending",
-          receipt: false,
-        },
-      ]);
-      setNewExpense({
-        title: "",
-        amount: "",
-        category: "Meals",
-        date: new Date().toISOString().split("T")[0],
-      });
-      setShowAddModal(false);
-    }
-  };
+  const expenses = data?.expenses || [];
+  const summary = data?.summary || {};
+  const pagination = data?.pagination || { totalPages: 1, total: 0 };
 
-  const deleteExpense = (id) => {
-    setExpenses(expenses.filter((exp) => exp.id !== id));
-  };
-
-  const filteredExpenses = expenses.filter((expense) => {
-    const matchesStatus =
-      filterStatus === "all" || expense.status === filterStatus;
-    const matchesSearch =
-      expense.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      expense.category.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesStatus && matchesSearch;
-  });
-
-  // Pagination logic
-  const totalPages = Math.ceil(filteredExpenses.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentExpenses = filteredExpenses.slice(startIndex, endIndex);
-
-  const handlePrev = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    }
-  };
-
-  const handleNext = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
-    }
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "approved":
-        return "bg-green-100 text-green-700 border-green-300";
-      case "pending":
-        return "bg-orange-100 text-orange-700 border-orange-300";
-      case "rejected":
-        return "bg-red-100 text-red-700 border-red-300";
-      default:
-        return "bg-gray-100 text-gray-700 border-gray-300";
-    }
-  };
-
-  const getCategoryIcon = (category) => {
-    const icons = {
-      Meals: "🍽️",
-      Travel: "✈️",
-      Supplies: "📦",
-      Training: "📚",
-      Software: "💻",
-      Other: "📋",
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dateDropdownRef.current && !dateDropdownRef.current.contains(event.target)) {
+        setIsDateFilterOpen(false);
+      }
     };
-    return icons[category] || "📋";
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handlePageChange = (page) => setCurrentPage(page);
+
+  const handleEdit = (expense) => {
+    setSelectedExpense(expense);
+    setIsEditModalOpen(true);
   };
 
-  const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
-  const approvedTotal = expenses
-    .filter((e) => e.status === "approved")
-    .reduce((sum, exp) => sum + exp.amount, 0);
-  const pendingTotal = expenses
-    .filter((e) => e.status === "pending")
-    .reduce((sum, exp) => sum + exp.amount, 0);
+  const handleView = (expense) => {
+    setSelectedExpense(expense);
+    setIsViewModalOpen(true);
+  };
+
+  const handleDelete = (expense) => {
+    setSelectedExpense(expense);
+    setIsDeleteModalOpen(true);
+  };
+
+  const indexOfFirstItem = (currentPage - 1) * itemsPerPage;
+  const indexOfLastItem = Math.min(currentPage * itemsPerPage, pagination.total || 0);
 
   return (
     <DashboardLayout>
       <div className="min-h-screen ml-0 bg-gradient-to-br from-orange-0 via-white to-orange-100">
         {/* Header */}
         <div className="bg-white border-b ml-4">
-          <div className="max-w-7xl mx-auto px-0 ml-6 py-4">
+          <div className="max-w-8xl mx-auto px-0 ml-6 py-4">
             <div className="flex items-center justify-between">
               {/* Left Side */}
               <div>
@@ -199,45 +135,83 @@ export default function ExpensePage() {
               </div>
 
               {/* Right Side */}
-              <div className="flex items-center gap-4 ml-auto">
-                {/* Date Filter Dropdown */}
-                <div className="flex items-center gap-2">
-                  <select
-                    value={filterType}
-                    onChange={(e) => setFilterType(e.target.value)}
-                    className="px-5 py-3 border border-gray-300 rounded-sm hover:bg-gray-50 font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  >
-                    <option value="Today">Today</option>
-                    <option value="Yesterday">Yesterday</option>
-                    <option value="Last 7 Days">Last 7 Days</option>
-                    <option value="This Month">This Month</option>
-                    <option value="Custom">Custom</option>
-                  </select>
+              <div className="flex flex-wrap items-center gap-2 ml-auto">
 
-                  {/* Show Custom Date Range Only When Selected */}
-                  {filterType === "Custom" && (
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="date"
-                        value={customStart}
-                        onChange={(e) => setCustomStart(e.target.value)}
-                        className="px-3 py-3 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-                      />
-                      <span className="text-gray-600">to</span>
-                      <input
-                        type="date"
-                        value={customEnd}
-                        onChange={(e) => setCustomEnd(e.target.value)}
-                        className="px-3 py-3 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-                      />
+                {/* Custom Date Filter Dropdown */}
+                <div className="relative" ref={dateDropdownRef}>
+                  <button
+                    onClick={() => setIsDateFilterOpen(!isDateFilterOpen)}
+                    className={`flex items-center gap-2 px-4 py-3 rounded-sm border transition shadow-sm ${isDateFilterOpen || filterType !== "Today"
+                      ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
+                      : "bg-white text-black border-gray-300 hover:bg-gray-100"
+                      }`}
+                  >
+                    <Calendar size={18} />
+                    <span className="text-sm font-medium">{filterType}</span>
+                  </button>
+
+                  {isDateFilterOpen && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-sm shadow-xl z-50 animate-fadeIn">
+                      <div className="py-1">
+                        {["Today", "Yesterday", "Last 7 Days", "This Month", "Custom"].map((option) => (
+                          <button
+                            key={option}
+                            onClick={() => {
+                              setFilterType(option);
+                              setIsDateFilterOpen(false);
+                              setCurrentPage(1);
+                            }}
+                            className={`block w-full text-left px-4 py-2.5 text-sm transition-colors ${filterType === option
+                              ? "bg-orange-50 text-orange-600 font-bold"
+                              : "text-gray-700 hover:bg-gray-50"
+                              }`}
+                          >
+                            {option}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
 
+                {/* Show Custom Date Range Only When Selected */}
+                {filterType === "Custom" && (
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="date"
+                      value={customStart}
+                      onChange={(e) => setCustomStart(e.target.value)}
+                      className="px-2 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
+                    />
+                    <span className="text-gray-600 text-xs">to</span>
+                    <input
+                      type="date"
+                      value={customEnd}
+                      onChange={(e) => setCustomEnd(e.target.value)}
+                      className="px-2 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
+                    />
+                  </div>
+                )}
+
+                {/* Search Bar */}
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Search expenses..."
+                    value={searchTerm}
+                    onChange={(e) => {
+                      setSearchTerm(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    className="pl-10 pr-4 py-3 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm w-48 lg:w-64"
+                  />
+                  <Search className="absolute left-3 top-3.5 text-gray-400" size={16} />
+                </div>
+
                 {/* Add Expense Button */}
                 <button
-                  onClick={() => setShowAddModal(true)}
-                  className="mr-6 bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-2 font-semibold"
+                  onClick={() => setIsAddModalOpen(true)}
+                  className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-5 py-3 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-md flex items-center gap-2 font-semibold text-sm mr-4"
                 >
                   <Plus size={18} />
                   Add Expense
@@ -247,34 +221,33 @@ export default function ExpensePage() {
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto ml-6 mt-4 p-0">
-          {/* Stats Cards (Receipt Based - Icon Right Side) */}
+        <div className="max-w-8xl mx-auto ml-6 mt-4 p-0">
+          {/* Stats Cards (Dynamic) */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
-            {/* Total Expenses */}
             <NumberCard
               title={"Total Expenses"}
-              number={`₹${totalExpenses}`}
+              number={`₹${summary.totalAmount || 0}`}
               icon={<DollarSign className="text-blue-600" size={24} />}
               iconBgColor={"bg-blue-100"}
               lineBorderClass={"border-blue-500"}
             />
             <NumberCard
               title={"With Receipt"}
-              number={expenses.filter((e) => e.receipt).length}
+              number={summary.receiptCount || 0}
               icon={<Receipt className="text-green-600" size={24} />}
               iconBgColor={"bg-green-100"}
               lineBorderClass={"border-green-500"}
             />
             <NumberCard
               title={"Without Receipt"}
-              number={expenses.filter((e) => !e.receipt).length}
+              number={summary.noReceiptCount || 0}
               icon={<Receipt className="text-orange-600" size={24} />}
               iconBgColor={"bg-orange-100"}
               lineBorderClass={"border-orange-500"}
             />
             <NumberCard
               title={"Total Entries"}
-              number={expenses.length}
+              number={summary.totalCount || 0}
               icon={<Calendar className="text-purple-600" size={24} />}
               iconBgColor={"bg-purple-100"}
               lineBorderClass={"border-purple-500"}
@@ -294,6 +267,9 @@ export default function ExpensePage() {
                       Description
                     </th>
                     <th className="px-4 py-3 text-left font-semibold text-sm">
+                      Category
+                    </th>
+                    <th className="px-4 py-3 text-left font-semibold text-sm">
                       Amount
                     </th>
                     <th className="px-4 py-3 text-left font-semibold text-sm">
@@ -305,239 +281,152 @@ export default function ExpensePage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {currentExpenses.map((expense, index) => (
-                    <tr
-                      key={expense.id}
-                      className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${index % 2 === 0 ? "bg-white" : "bg-gray-0"
-                        }`}
-                    >
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2 text-gray-600 text-sm">
-                          <Calendar size={14} className="text-orange-500" />
-                          {expense.date}
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 font-semibold text-gray-800 text-sm">
-                        {expense.title}
-                      </td>
-                      <td className="px-4 py-3 font-bold text-gray-800 text-sm">
-                        ₹{expense.amount}
-                      </td>
-                      <td className="px-4 py-3">
-                        {expense.receipt ? (
-                          <span className="text-green-600 font-semibold flex items-center gap-1 text-xs">
-                            <Receipt size={14} />
-                            Yes
-                          </span>
-                        ) : (
-                          <button className="text-orange-500 hover:text-orange-700 font-semibold flex items-center gap-1 text-xs">
-                            <Upload size={14} />
-                            Upload
-                          </button>
-                        )}
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center justify-end gap-2">
-                          <button className="text-[#FF7B1D] hover:opacity-80">
-                            <Edit2 size={18} />
-                          </button>
-                          <button
-                            onClick={() => deleteExpense(expense.id)}
-                            className="text-red-600 hover:bg-red-50 p-1.5 rounded-lg transition-colors"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
+                  {isLoading ? (
+                    <tr>
+                      <td colSpan="6" className="text-center py-10 text-gray-500">
+                        Loading expenses...
                       </td>
                     </tr>
-                  ))}
+                  ) : expenses.length > 0 ? (
+                    expenses.map((expense, index) => (
+                      <tr
+                        key={expense.id}
+                        className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${index % 2 === 0 ? "bg-white" : "bg-gray-0"
+                          }`}
+                      >
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2 text-gray-600 text-sm">
+                            <Calendar size={14} className="text-orange-500" />
+                            {new Date(expense.date).toLocaleDateString()}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 font-semibold text-gray-800 text-sm">
+                          {expense.title}
+                        </td>
+                        <td className="px-4 py-3 text-gray-600 text-sm">
+                          {expense.category}
+                        </td>
+                        <td className="px-4 py-3 font-bold text-gray-800 text-sm">
+                          ₹{expense.amount}
+                        </td>
+                        <td className="px-4 py-3">
+                          {expense.receipt_url ? (
+                            <span className="text-green-600 font-semibold flex items-center gap-1 text-xs">
+                              <Receipt size={14} />
+                              Yes
+                            </span>
+                          ) : (
+                            <span className="text-red-500 font-semibold flex items-center gap-1 text-xs">
+                              <X size={14} />
+                              No
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center justify-end gap-4">
+                            <button
+                              onClick={() => handleView(expense)}
+                              className="text-blue-500 hover:opacity-80"
+                            >
+                              <Eye size={18} />
+                            </button>
+                            <button
+                              onClick={() => handleEdit(expense)}
+                              className="text-[#FF7B1D] hover:opacity-80"
+                            >
+                              <Edit2 size={18} />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(expense)}
+                              className="text-red-600 hover:bg-red-50 p-1.5 rounded-lg transition-colors"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="6" className="text-center py-10">
+                        <div className="bg-orange-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3">
+                          <Receipt size={32} className="text-orange-500" />
+                        </div>
+                        <h3 className="text-lg font-bold text-gray-800 mb-1">
+                          No expenses found
+                        </h3>
+                        <p className="text-gray-500 text-sm">
+                          Add your first expense to start tracking
+                        </p>
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
-            {filteredExpenses.length === 0 && (
-              <div className="text-center py-10">
-                <div className="bg-orange-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <Receipt size={32} className="text-orange-500" />
-                </div>
-                <h3 className="text-lg font-bold text-gray-800 mb-1">
-                  No expenses found
-                </h3>
-                <p className="text-gray-500 text-sm">
-                  Add your first expense to start tracking
-                </p>
-              </div>
-            )}
           </div>
 
           {/* Pagination */}
-        <div className="flex justify-end items-center gap-3 mt-6">
-          <button
-            onClick={handlePrev}
-            disabled={currentPage === 1}
-            className={`px-4 py-2 rounded-sm text-white font-semibold transition ${currentPage === 1
-              ? "bg-gray-300 cursor-not-allowed"
-              : "bg-[#FF7B1D] hover:opacity-90"
-              }`}
-          >
-            Back
-          </button>
-
-          <div className="flex items-center gap-2">
-            {Array.from({ length: totalPages }, (_, i) => (
+          <div className="flex justify-between items-center mt-6 bg-gray-50 p-4 rounded-sm border">
+            <p className="text-sm text-gray-600">
+              Showing <span className="font-bold">{indexOfFirstItem + 1}</span> to <span className="font-bold">{indexOfLastItem}</span> of <span className="font-bold">{pagination.total}</span> expenses
+            </p>
+            <div className="flex items-center gap-2">
               <button
-                key={i + 1}
-                onClick={() => handlePageChange(i + 1)}
-                className={`px-3 py-1 rounded-sm text-black font-semibold border transition ${currentPage === i + 1
-                  ? "bg-gray-200 border-gray-400"
-                  : "bg-white border-gray-300 hover:bg-gray-100"
-                  }`}
+                onClick={() => handlePageChange(currentPage > 1 ? currentPage - 1 : 1)}
+                disabled={currentPage === 1}
+                className="px-4 py-2 border rounded-sm text-sm font-bold disabled:opacity-50 bg-white shadow-sm"
               >
-                {i + 1}
+                Previous
               </button>
-            ))}
-          </div>
 
-          <button
-            onClick={handleNext}
-            disabled={currentPage === totalPages}
-            className={`px-4 py-2 rounded-sm text-white font-semibold transition ${currentPage === totalPages
-              ? "bg-gray-300 cursor-not-allowed"
-              : "bg-[#22C55E] hover:opacity-90"
-              }`}
-          >
-            Next
-          </button>
-        </div>
-        </div>
-
-        {/* Add Expense Modal */}
-        {showAddModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex justify-center items-center z-50 animate-fadeIn">
-            <div className="bg-white rounded-sm shadow-2xl w-full max-w-2xl mx-4 relative transform transition-all animate-slideUp">
-              {/* Header with Gradient */}
-              <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white p-6">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-3">
-                    <div className="bg-white bg-opacity-20 p-2 rounded-lg">
-                      <Plus size={24} />
-                    </div>
-                    <div>
-                      <h2 className="text-2xl font-bold">Add New Expense</h2>
-                      <p className="text-sm text-white text-opacity-90 mt-1">
-                        Record a new expense transaction
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => setShowAddModal(false)}
-                    className="text-white hover:bg-orange-700 p-1 rounded-sm transition-colors"
-                  >
-                    <X size={22} className="text-white" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Form Body */}
-              <div className="p-6 space-y-5 max-h-[70vh] overflow-y-auto">
-                {/* Description Input */}
-                <div className="group">
-                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-                    <FileText size={16} className="text-[#FF7B1D]" />
-                    Description <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={newExpense.title}
-                    onChange={(e) =>
-                      setNewExpense({ ...newExpense, title: e.target.value })
-                    }
-                    placeholder="e.g., Office Supplies, Client Lunch..."
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300"
-                  />
-                </div>
-
-                {/* Amount Input */}
-                <div className="group">
-                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-                    <DollarSign size={16} className="text-[#FF7B1D]" />
-                    Amount (₹) <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    value={newExpense.amount}
-                    onChange={(e) =>
-                      setNewExpense({ ...newExpense, amount: e.target.value })
-                    }
-                    placeholder="0.00"
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300"
-                  />
-                </div>
-
-                {/* Date Input */}
-                <div className="group">
-                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-                    <Calendar size={16} className="text-[#FF7B1D]" />
-                    Date <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="date"
-                    value={newExpense.date}
-                    onChange={(e) =>
-                      setNewExpense({ ...newExpense, date: e.target.value })
-                    }
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300"
-                  />
-                </div>
-              </div>
-
-              {/* Footer with Actions */}
-              <div className="bg-gray-50 px-6 py-4 rounded-b-lg border-t border-gray-200 flex justify-end gap-3">
+              {Array.from({ length: pagination.totalPages }, (_, i) => (
                 <button
-                  onClick={() => setShowAddModal(false)}
-                  className="px-6 py-2.5 rounded-sm border-2 border-gray-300 text-gray-700 font-semibold hover:bg-gray-100 transition-all"
+                  key={i + 1}
+                  onClick={() => handlePageChange(i + 1)}
+                  className={`w-9 h-9 border rounded-sm text-sm font-bold transition-all ${currentPage === i + 1
+                    ? "bg-orange-500 text-white border-orange-500 shadow-sm"
+                    : "bg-white text-gray-700 hover:bg-gray-50 border-gray-300"
+                    }`}
                 >
-                  Cancel
+                  {i + 1}
                 </button>
-                <button
-                  onClick={addExpense}
-                  className="px-6 py-2.5 rounded-sm bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold hover:shadow-lg transform transition-all"
-                >
-                  Add Expense
-                </button>
-              </div>
+              ))}
+
+              <button
+                onClick={() => handlePageChange(currentPage < pagination.totalPages ? currentPage + 1 : currentPage)}
+                disabled={currentPage === pagination.totalPages}
+                className="px-4 py-2 border rounded-sm text-sm font-bold disabled:opacity-50 bg-white shadow-sm"
+              >
+                Next
+              </button>
             </div>
-
-            <style jsx>{`
-              @keyframes fadeIn {
-                from {
-                  opacity: 0;
-                }
-                to {
-                  opacity: 1;
-                }
-              }
-
-              @keyframes slideUp {
-                from {
-                  transform: translateY(20px);
-                  opacity: 0;
-                }
-                to {
-                  transform: translateY(0);
-                  opacity: 1;
-                }
-              }
-
-              .animate-fadeIn {
-                animation: fadeIn 0.2s ease-out;
-              }
-
-              .animate-slideUp {
-                animation: slideUp 0.3s ease-out;
-              }
-            `}</style>
           </div>
-        )}
+        </div>
+
+        {/* Modals */}
+        <AddExpenseModal
+          isOpen={isAddModalOpen}
+          onClose={() => setIsAddModalOpen(false)}
+        />
+
+        <EditExpenseModal
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          expense={selectedExpense}
+        />
+
+        <ViewExpenseModal
+          isOpen={isViewModalOpen}
+          onClose={() => setIsViewModalOpen(false)}
+          expense={selectedExpense}
+        />
+
+        <DeleteExpenseModal
+          isOpen={isDeleteModalOpen}
+          onClose={() => setIsDeleteModalOpen(false)}
+          expenseId={selectedExpense?.id}
+        />
       </div>
     </DashboardLayout>
   );

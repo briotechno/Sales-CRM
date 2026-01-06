@@ -14,6 +14,8 @@ const storage = multer.diskStorage({
             uploadDir = req.baseUrl.includes('catalogs') ? 'uploads/catalogs' : 'uploads/designations';
         } else if (['profile_picture', 'profile_image', 'aadhar_front', 'aadhar_back', 'pan_card', 'cancelled_cheque'].includes(file.fieldname)) {
             uploadDir = 'uploads/employees';
+        } else if (file.fieldname === 'receipt') {
+            uploadDir = 'uploads/expenses';
         }
 
         if (!fs.existsSync(uploadDir)) {
@@ -28,17 +30,17 @@ const storage = multer.diskStorage({
 });
 
 const fileFilter = (req, file, cb) => {
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/svg+xml'];
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/svg+xml', 'application/pdf'];
     if (allowedTypes.includes(file.mimetype)) {
         cb(null, true);
     } else {
-        cb(new Error('Invalid file type. Only JPG, PNG and SVG are allowed.'), false);
+        cb(new Error('Invalid file type. Only JPG, PNG, SVG and PDF are allowed.'), false);
     }
 };
 
 const upload = multer({
     storage: storage,
-    limits: { fileSize: 2 * 1024 * 1024 }, // 2MB limit
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
     fileFilter: fileFilter
 });
 
