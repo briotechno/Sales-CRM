@@ -215,7 +215,7 @@ export default function NotificationPage() {
       <div className="p-0 bg-gradient-to-br from-gray-0 to-gray-100 ml-6 min-h-screen">
         {/* Header */}
         <div className="bg-white border-b ">
-          <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="max-w-8xl mx-auto px-6 py-4">
             <div className="flex items-center justify-between">
               {/* Left Side */}
               <div>
@@ -324,8 +324,8 @@ export default function NotificationPage() {
                 <div
                   key={notification.id}
                   className={`bg-white rounded-sm shadow-md hover:shadow-lg transition-all p-5 border-t-4 ${notification.read
-                      ? "border-gray-300 opacity-75"
-                      : "border-orange-500"
+                    ? "border-gray-300 opacity-75"
+                    : "border-orange-500"
                     }`}
                 >
                   <div className="flex items-start gap-4">
