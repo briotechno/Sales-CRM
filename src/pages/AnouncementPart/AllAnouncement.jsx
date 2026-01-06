@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { FiHome } from "react-icons/fi";
 import DashboardLayout from "../../components/DashboardLayout";
 import {
@@ -14,12 +14,14 @@ import {
 import NumberCard from "../../components/NumberCard";
 import { useGetAnnouncementsQuery } from "../../store/api/announcementApi";
 import { useGetAnnouncementCategoriesQuery } from "../../store/api/announcementCategoryApi";
-import AddEditAnnouncementModal from "../../components/Announcement/AddEditAnnouncementModal";
+import AddAnnouncementModal from "../../components/Announcement/AddAnnouncementModal";
+import EditAnnouncementModal from "../../components/Announcement/EditAnnouncementModal";
 import ViewAnnouncementModal from "../../components/Announcement/ViewAnnouncementModal";
 import DeleteAnnouncementModal from "../../components/Announcement/DeleteAnnouncementModal";
 
 export default function AnnouncementPage() {
-  const [showAddEditModal, setShowAddEditModal] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedAnnouncement, setSelectedAnnouncement] = useState(null);
@@ -27,6 +29,18 @@ export default function AnnouncementPage() {
   const [filterCategory, setFilterCategory] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const filterDropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (filterDropdownRef.current && !filterDropdownRef.current.contains(event.target)) {
+        setIsFilterOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const { data: categoriesData } = useGetAnnouncementCategoriesQuery({ status: "Active", limit: 100 });
   const categories = categoriesData?.categories || [];
@@ -56,7 +70,7 @@ export default function AnnouncementPage() {
 
   const handleEdit = (announcement) => {
     setSelectedAnnouncement(announcement);
-    setShowAddEditModal(true);
+    setShowEditModal(true);
   };
 
   const handleDelete = (announcement) => {
@@ -122,31 +136,59 @@ export default function AnnouncementPage() {
                 </div>
 
                 {/* Filter */}
-                <div className="relative">
-                  <select
-                    value={filterCategory}
-                    onChange={(e) => {
-                      setFilterCategory(e.target.value);
-                      setCurrentPage(1);
-                    }}
-                    className="appearance-none pl-4 pr-10 py-3 border border-gray-200 rounded-sm hover:bg-gray-50 font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#FF7B1D]/20 focus:border-[#FF7B1D] text-sm bg-white cursor-pointer"
+                <div className="relative" ref={filterDropdownRef}>
+                  <button
+                    onClick={() => setIsFilterOpen(!isFilterOpen)}
+                    className={`p-3 rounded-sm border transition-all shadow-sm ${isFilterOpen || filterCategory !== "All"
+                        ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
+                        : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
+                      }`}
                   >
-                    <option value="All">All Categories</option>
-                    {categories.map(cat => (
-                      <option key={cat.id} value={cat.name}>{cat.name}</option>
-                    ))}
-                  </select>
-                  <Filter
-                    size={16}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"
-                  />
+                    <Filter size={20} />
+                  </button>
+
+                  {isFilterOpen && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-sm shadow-xl z-50">
+                      <div className="py-1 max-h-64 overflow-y-auto custom-scrollbar">
+                        <button
+                          onClick={() => {
+                            setFilterCategory("All");
+                            setIsFilterOpen(false);
+                            setCurrentPage(1);
+                          }}
+                          className={`block w-full text-left px-4 py-2.5 text-sm transition-colors ${filterCategory === "All"
+                              ? "bg-orange-50 text-orange-600 font-bold"
+                              : "text-gray-700 hover:bg-gray-50"
+                            }`}
+                        >
+                          All Categories
+                        </button>
+                        {categories.map((cat) => (
+                          <button
+                            key={cat.id}
+                            onClick={() => {
+                              setFilterCategory(cat.name);
+                              setIsFilterOpen(false);
+                              setCurrentPage(1);
+                            }}
+                            className={`block w-full text-left px-4 py-2.5 text-sm transition-colors ${filterCategory === cat.name
+                                ? "bg-orange-50 text-orange-600 font-bold"
+                                : "text-gray-700 hover:bg-gray-50"
+                              }`}
+                          >
+                            {cat.name}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* New Announcement */}
                 <button
                   onClick={() => {
                     setSelectedAnnouncement(null);
-                    setShowAddEditModal(true);
+                    setShowAddModal(true);
                   }}
                   className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-md hover:shadow-lg flex items-center gap-2 font-bold text-sm"
                 >
@@ -310,8 +352,8 @@ export default function AnnouncementPage() {
                       key={i + 1}
                       onClick={() => setCurrentPage(i + 1)}
                       className={`w-9 h-9 border rounded-sm text-sm font-bold transition-all ${currentPage === i + 1
-                          ? "bg-[#FF7B1D] text-white border-[#FF7B1D] shadow-md transform scale-105"
-                          : "bg-white text-gray-600 border-gray-200 hover:border-[#FF7B1D] hover:text-[#FF7B1D]"
+                        ? "bg-[#FF7B1D] text-white border-[#FF7B1D] shadow-md transform scale-105"
+                        : "bg-white text-gray-600 border-gray-200 hover:border-[#FF7B1D] hover:text-[#FF7B1D]"
                         }`}
                     >
                       {i + 1}
@@ -330,10 +372,17 @@ export default function AnnouncementPage() {
           )}
         </div>
 
-        <AddEditAnnouncementModal
-          isOpen={showAddEditModal}
+        <AddAnnouncementModal
+          isOpen={showAddModal}
           onClose={() => {
-            setShowAddEditModal(false);
+            setShowAddModal(false);
+          }}
+        />
+
+        <EditAnnouncementModal
+          isOpen={showEditModal}
+          onClose={() => {
+            setShowEditModal(false);
             setSelectedAnnouncement(null);
           }}
           announcement={selectedAnnouncement}

@@ -14,11 +14,13 @@ import NumberCard from "../../components/NumberCard";
 import {
     useGetAnnouncementCategoriesQuery
 } from "../../store/api/announcementCategoryApi";
-import AddEditAnnouncementCategoryModal from "../../components/Announcement/AddEditAnnouncementCategoryModal";
+import AddAnnouncementCategoryModal from "../../components/Announcement/AddAnnouncementCategoryModal";
+import EditAnnouncementCategoryModal from "../../components/Announcement/EditAnnouncementCategoryModal";
 import DeleteAnnouncementCategoryModal from "../../components/Announcement/DeleteAnnouncementCategoryModal";
 
 export default function AnnouncementCategoryPage() {
-    const [showAddEditModal, setShowAddEditModal] = useState(false);
+    const [showAddModal, setShowAddModal] = useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState(null);
     const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -40,7 +42,7 @@ export default function AnnouncementCategoryPage() {
 
     const handleEdit = (category) => {
         setSelectedCategory(category);
-        setShowAddEditModal(true);
+        setShowEditModal(true);
     };
 
     const handleDelete = (category) => {
@@ -139,7 +141,7 @@ export default function AnnouncementCategoryPage() {
                                 <button
                                     onClick={() => {
                                         setSelectedCategory(null);
-                                        setShowAddEditModal(true);
+                                        setShowAddModal(true);
                                     }}
                                     className="px-6 py-3 rounded-sm bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 transition-all flex items-center gap-2 font-bold shadow-md hover:shadow-lg text-sm"
                                 >
@@ -267,10 +269,17 @@ export default function AnnouncementCategoryPage() {
                 </div>
             </div>
 
-            <AddEditAnnouncementCategoryModal
-                isOpen={showAddEditModal}
+            <AddAnnouncementCategoryModal
+                isOpen={showAddModal}
                 onClose={() => {
-                    setShowAddEditModal(false);
+                    setShowAddModal(false);
+                }}
+            />
+
+            <EditAnnouncementCategoryModal
+                isOpen={showEditModal}
+                onClose={() => {
+                    setShowEditModal(false);
                     setSelectedCategory(null);
                 }}
                 category={selectedCategory}
