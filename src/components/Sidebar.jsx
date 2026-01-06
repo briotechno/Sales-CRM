@@ -377,7 +377,11 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           name: "Announcement",
           icon: <Megaphone size={22} />,
           path: "/additional/announcement",
-          permission: "Announcement"
+          permission: "Announcement",
+          children: [
+            { name: "All Announcement", path: "/additional/announcement" },
+            { name: "Categories", path: "/additional/announcement/category" },
+          ],
         },
       ],
     },

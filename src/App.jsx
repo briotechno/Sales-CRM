@@ -69,6 +69,7 @@ import AllInvoice from "./pages/InvoicePart/AllInvoice";
 import Notification from "./pages/NotificationPart/Notification";
 // Anouncement Part
 import AllAnouncement from "./pages/AnouncementPart/AllAnouncement";
+import AnnouncementCategoryPage from "./pages/AnouncementPart/Category";
 // Client Management Part
 import ClientManagement from "./pages/ClientManagement/ClientManagement";
 // Business Info Part
@@ -168,6 +169,7 @@ function App() {
           <Route path="/additional/invoice" element={<AllInvoice />} />
           <Route path="/additional/notification" element={<Notification />} />
           <Route path="/additional/announcement" element={<AllAnouncement />} />
+          <Route path="/additional/announcement/category" element={<AnnouncementCategoryPage />} />
           <Route path="/crm/client/all" element={<ClientManagement />} />
           <Route path="/settings/business-info" element={<BusinessInfo />} />
           <Route path="/settings/subscription" element={<ManageSubscription />} />

@@ -20,6 +20,8 @@ import { noteApi } from './api/noteApi';
 import { taskApi } from './api/taskApi';
 import { quotationApi } from './api/quotationApi';
 import { expenseApi } from './api/expenseApi';
+import { announcementApi } from './api/announcementApi';
+import { announcementCategoryApi } from './api/announcementCategoryApi';
 
 
 export const store = configureStore({
@@ -45,6 +47,8 @@ export const store = configureStore({
         [taskApi.reducerPath]: taskApi.reducer,
         [quotationApi.reducerPath]: quotationApi.reducer,
         [expenseApi.reducerPath]: expenseApi.reducer,
+        [announcementApi.reducerPath]: announcementApi.reducer,
+        [announcementCategoryApi.reducerPath]: announcementCategoryApi.reducer,
 
 
     },
@@ -69,7 +73,9 @@ export const store = configureStore({
             noteApi.middleware,
             taskApi.middleware,
             quotationApi.middleware,
-            expenseApi.middleware
+            expenseApi.middleware,
+            announcementApi.middleware,
+            announcementCategoryApi.middleware
 
         ),
 });

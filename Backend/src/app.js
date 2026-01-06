@@ -48,6 +48,8 @@ app.use('/api/notes', require('./routes/noteRoutes'));
 app.use('/api/tasks', require('./routes/taskRoutes'));
 app.use('/api/quotations', require('./routes/quotationRoutes'));
 app.use('/api/expenses', expenseRoutes);
+app.use('/api/announcements', require('./routes/announcementRoutes'));
+app.use('/api/announcement-categories', require('./routes/announcementCategoryRoutes'));
 
 
 app.get('/', (req, res) => {
