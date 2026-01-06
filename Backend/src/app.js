@@ -45,6 +45,8 @@ app.use('/api/catalogs', require('./routes/catalogRoutes'));
 app.use('/api/catalog-categories', require('./routes/catalogCategoryRoutes'));
 app.use('/api/notes', require('./routes/noteRoutes'));
 app.use('/api/tasks', require('./routes/taskRoutes'));
+app.use('/api/quotations', require('./routes/quotationRoutes'));
+
 
 app.get('/', (req, res) => {
     res.send('API is running...');

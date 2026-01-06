@@ -1,677 +1,79 @@
-// import React, { useState } from "react";
-// import { FiHome } from "react-icons/fi";
-// import DashboardLayout from "../../components/DashboardLayout";
-// import {
-//   Plus,
-//   Search,
-//   Filter,
-//   Download,
-//   Mail,
-//   Printer,
-//   Eye,
-//   Edit2,
-//   Trash2,
-//   FileText,
-//   X,
-// } from "lucide-react";
-
-// export default function QuotationPage() {
-//   const [quotations, setQuotations] = useState([
-//     {
-//       id: "QT-2024-001",
-//       client: "Acme Corporation",
-//       date: "2024-11-15",
-//       amount: 150000,
-//       status: "Pending",
-//       validUntil: "2024-12-15",
-//       description: "Website development and design services",
-//     },
-//     {
-//       id: "QT-2024-002",
-//       client: "Tech Solutions Ltd",
-//       date: "2024-11-10",
-//       amount: 250000,
-//       status: "Approved",
-//       validUntil: "2024-12-10",
-//       description: "Mobile app development",
-//     },
-//     {
-//       id: "QT-2024-003",
-//       client: "Global Industries",
-//       date: "2024-11-05",
-//       amount: 185000,
-//       status: "Rejected",
-//       validUntil: "2024-12-05",
-//       description: "CRM system implementation",
-//     },
-//     {
-//       id: "QT-2024-004",
-//       client: "Innovation Inc",
-//       date: "2024-11-18",
-//       amount: 320000,
-//       status: "Draft",
-//       validUntil: "2024-12-18",
-//       description: "E-commerce platform setup",
-//     },
-//   ]);
-
-//   const [showModal, setShowModal] = useState(false);
-//   const [showViewModal, setShowViewModal] = useState(false);
-//   const [selectedQuote, setSelectedQuote] = useState(null);
-//   const [searchTerm, setSearchTerm] = useState("");
-//   const [filterStatus, setFilterStatus] = useState("All");
-//   const [formData, setFormData] = useState({
-//     client: "",
-//     date: "",
-//     validUntil: "",
-//     amount: "",
-//     description: "",
-//   });
-
-//   const getStatusColor = (status) => {
-//     switch (status) {
-//       case "Approved":
-//         return "bg-green-100 text-green-700";
-//       case "Pending":
-//         return "bg-yellow-100 text-yellow-700";
-//       case "Rejected":
-//         return "bg-red-100 text-red-700";
-//       case "Draft":
-//         return "bg-gray-100 text-gray-700";
-//       default:
-//         return "bg-gray-100 text-gray-700";
-//     }
-//   };
-
-//   const handleInputChange = (e) => {
-//     setFormData({
-//       ...formData,
-//       [e.target.name]: e.target.value,
-//     });
-//   };
-
-//   const handleCreateQuotation = () => {
-//     if (formData.client && formData.date && formData.amount) {
-//       const newQuotation = {
-//         id: `QT-2024-${String(quotations.length + 1).padStart(3, "0")}`,
-//         client: formData.client,
-//         date: formData.date,
-//         amount: parseFloat(formData.amount),
-//         status: "Draft",
-//         validUntil: formData.validUntil,
-//         description: formData.description,
-//       };
-//       setQuotations([newQuotation, ...quotations]);
-//       setFormData({
-//         client: "",
-//         date: "",
-//         validUntil: "",
-//         amount: "",
-//         description: "",
-//       });
-//       setShowModal(false);
-//     }
-//   };
-
-//   const handleDelete = (id) => {
-//     if (window.confirm("Are you sure you want to delete this quotation?")) {
-//       setQuotations(quotations.filter((q) => q.id !== id));
-//     }
-//   };
-
-//   const handleView = (quote) => {
-//     setSelectedQuote(quote);
-//     setShowViewModal(true);
-//   };
-
-//   const handleStatusChange = (id, newStatus) => {
-//     setQuotations(
-//       quotations.map((q) => (q.id === id ? { ...q, status: newStatus } : q))
-//     );
-//   };
-
-//   const handleExport = () => {
-//     const csvContent =
-//       "data:text/csv;charset=utf-8," +
-//       "ID,Client,Date,Amount,Valid Until,Status\n" +
-//       filteredQuotations
-//         .map(
-//           (q) =>
-//             `${q.id},${q.client},${q.date},${q.amount},${q.validUntil},${q.status}`
-//         )
-//         .join("\n");
-//     const encodedUri = encodeURI(csvContent);
-//     const link = document.createElement("a");
-//     link.setAttribute("href", encodedUri);
-//     link.setAttribute("download", "quotations.csv");
-//     document.body.appendChild(link);
-//     link.click();
-//     document.body.removeChild(link);
-//   };
-
-//   const filteredQuotations = quotations.filter((q) => {
-//     const matchesSearch =
-//       q.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
-//       q.id.toLowerCase().includes(searchTerm.toLowerCase());
-//     const matchesFilter = filterStatus === "All" || q.status === filterStatus;
-//     return matchesSearch && matchesFilter;
-//   });
-
-//   const stats = {
-//     total: quotations.length,
-//     approved: quotations.filter((q) => q.status === "Approved").length,
-//     pending: quotations.filter((q) => q.status === "Pending").length,
-//     totalValue: quotations.reduce((sum, q) => sum + q.amount, 0),
-//   };
-
-//   return (
-//     <DashboardLayout>
-//       <div className="min-h-screen bg-gray-0 ml-6 p-0">
-//         {/* Header */}
-//         <div className="bg-white border-b border-orange-100 shadow-sm">
-//           <div className="max-w-7xl mx-auto px-6 py-4">
-//             <div className="flex items-center justify-between">
-//               <div>
-//                 <h1 className="text-2xl font-bold text-gray-800">
-//                   All Quotations
-//                 </h1>
-//                 <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
-//                   <FiHome className="text-gray-700 text-sm" />
-//                   <span className="text-gray-400"></span> Additional /{" "}
-//                   <span className="text-[#FF7B1D] font-medium">
-//                     All Quotations
-//                   </span>
-//                 </p>
-//               </div>
-//               <button
-//                 onClick={() => setShowModal(true)}
-//                 className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-2 font-semibold"
-//               >
-//                 <Plus size={20} />
-//                 New Quotation
-//               </button>
-//             </div>
-//           </div>
-//         </div>
-
-//         {/* Stats Cards */}
-//         <div className="max-w-7xl mx-auto px-0 py-0 mt-4">
-//           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-//             <div className="bg-white rounded-sm p-5 shadow-md border-l-4 border-orange-500 hover:shadow-lg transition-shadow">
-//               <div className="flex justify-between items-start">
-//                 <div>
-//                   <p className="text-gray-500 text-sm font-medium">
-//                     Total Quotations
-//                   </p>
-//                   <h3 className="text-3xl font-bold text-gray-800 mt-2">
-//                     {stats.total}
-//                   </h3>
-//                 </div>
-//                 <div className="bg-orange-100 p-3 rounded-sm">
-//                   <FileText className="text-orange-500" size={24} />
-//                 </div>
-//               </div>
-//             </div>
-
-//             <div className="bg-white rounded-sm p-5 shadow-md border-l-4 border-green-500 hover:shadow-lg transition-shadow">
-//               <div className="flex justify-between items-start">
-//                 <div>
-//                   <p className="text-gray-500 text-sm font-medium">Approved</p>
-//                   <h3 className="text-3xl font-bold text-green-600 mt-2">
-//                     {stats.approved}
-//                   </h3>
-//                 </div>
-//                 <div className="bg-green-100 p-3 rounded-sm">
-//                   <FileText className="text-green-500" size={24} />
-//                 </div>
-//               </div>
-//             </div>
-
-//             <div className="bg-white rounded-sm p-5 shadow-md border-l-4 border-yellow-500 hover:shadow-lg transition-shadow">
-//               <div className="flex justify-between items-start">
-//                 <div>
-//                   <p className="text-gray-500 text-sm font-medium">Pending</p>
-//                   <h3 className="text-3xl font-bold text-yellow-600 mt-2">
-//                     {stats.pending}
-//                   </h3>
-//                 </div>
-//                 <div className="bg-yellow-100 p-3 rounded-sm">
-//                   <FileText className="text-yellow-500" size={24} />
-//                 </div>
-//               </div>
-//             </div>
-
-//             <div className="bg-white rounded-sm p-5 shadow-md border-l-4 border-blue-500 hover:shadow-lg transition-shadow">
-//               <div className="flex justify-between items-start">
-//                 <div>
-//                   <p className="text-gray-500 text-sm font-medium">
-//                     Total Value
-//                   </p>
-//                   <h3 className="text-3xl font-bold text-blue-600 mt-2">
-//                     ₹{(stats.totalValue / 100000).toFixed(1)}L
-//                   </h3>
-//                 </div>
-//                 <div className="bg-blue-100 p-3 rounded-sm">
-//                   <FileText className="text-blue-500" size={24} />
-//                 </div>
-//               </div>
-//             </div>
-//           </div>
-
-//           {/* Search and Filter Bar */}
-//           <div className="bg-white rounded-sm shadow-md p-4 mb-6">
-//             <div className="flex flex-col md:flex-row gap-4">
-//               <select
-//                 value={filterStatus}
-//                 onChange={(e) => setFilterStatus(e.target.value)}
-//                 className="px-4 py-2 border border-gray-200 rounded-sm hover:bg-gray-50 font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500"
-//               >
-//                 <option value="All">All Status</option>
-//                 <option value="Draft">Draft</option>
-//                 <option value="Pending">Pending</option>
-//                 <option value="Approved">Approved</option>
-//                 <option value="Rejected">Rejected</option>
-//               </select>
-//               <button
-//                 onClick={handleExport}
-//                 className="px-4 py-2 bg-orange-50 text-orange-600 rounded-sm hover:bg-orange-100 flex items-center gap-2 font-medium"
-//               >
-//                 <Download size={20} />
-//                 Export CSV
-//               </button>
-//             </div>
-//           </div>
-
-//           {/* Quotations Table */}
-//           <div className="bg-white rounded-sm shadow-md overflow-hidden">
-//             <div className="overflow-x-auto">
-//               <table className="w-full">
-//                 <thead className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
-//                   <tr>
-//                     <th className="px-6 py-4 text-left text-sm font-semibold">
-//                       Quotation ID
-//                     </th>
-//                     <th className="px-6 py-4 text-left text-sm font-semibold">
-//                       Client
-//                     </th>
-//                     <th className="px-6 py-4 text-left text-sm font-semibold">
-//                       Date
-//                     </th>
-//                     <th className="px-6 py-4 text-left text-sm font-semibold">
-//                       Amount
-//                     </th>
-//                     <th className="px-6 py-4 text-left text-sm font-semibold">
-//                       Valid Until
-//                     </th>
-//                     <th className="px-6 py-4 text-left text-sm font-semibold">
-//                       Status
-//                     </th>
-//                     <th className="px-6 py-4 text-center text-sm font-semibold">
-//                       Actions
-//                     </th>
-//                   </tr>
-//                 </thead>
-//                 <tbody className="divide-y divide-gray-100">
-//                   {filteredQuotations.length === 0 ? (
-//                     <tr>
-//                       <td
-//                         colSpan="7"
-//                         className="px-6 py-12 text-center text-gray-500"
-//                       >
-//                         No quotations found
-//                       </td>
-//                     </tr>
-//                   ) : (
-//                     filteredQuotations.map((quote) => (
-//                       <tr
-//                         key={quote.id}
-//                         className="hover:bg-orange-50 transition-colors"
-//                       >
-//                         <td className="px-6 py-4">
-//                           <span className="font-semibold text-orange-600">
-//                             {quote.id}
-//                           </span>
-//                         </td>
-//                         <td className="px-6 py-4">
-//                           <span className="font-medium text-gray-800">
-//                             {quote.client}
-//                           </span>
-//                         </td>
-//                         <td className="px-6 py-4 text-gray-600">
-//                           {quote.date}
-//                         </td>
-//                         <td className="px-6 py-4">
-//                           <span className="font-bold text-gray-800">
-//                             ${quote.amount.toLocaleString()}
-//                           </span>
-//                         </td>
-//                         <td className="px-6 py-4 text-gray-600">
-//                           {quote.validUntil}
-//                         </td>
-//                         <td className="px-6 py-4">
-//                           <select
-//                             value={quote.status}
-//                             onChange={(e) =>
-//                               handleStatusChange(quote.id, e.target.value)
-//                             }
-//                             className={`px-3 py-1 rounded-sm text-xs font-semibold border-0 focus:outline-none focus:ring-2 focus:ring-orange-500 ${getStatusColor(
-//                               quote.status
-//                             )}`}
-//                           >
-//                             <option value="Draft">Draft</option>
-//                             <option value="Pending">Pending</option>
-//                             <option value="Approved">Approved</option>
-//                             <option value="Rejected">Rejected</option>
-//                           </select>
-//                         </td>
-//                         <td className="px-6 py-4">
-//                           <div className="flex items-center justify-center gap-2">
-//                             <button
-//                               onClick={() => handleView(quote)}
-//                               className="p-2 text-blue-600 hover:bg-blue-50 rounded-sm transition-colors"
-//                               title="View"
-//                             >
-//                               <Eye size={18} />
-//                             </button>
-//                             <button
-//                               onClick={() =>
-//                                 window.alert("Print functionality")
-//                               }
-//                               className="p-2 text-purple-600 hover:bg-purple-50 rounded-sm transition-colors"
-//                               title="Print"
-//                             >
-//                               <Printer size={18} />
-//                             </button>
-//                             <button
-//                               onClick={() => handleDelete(quote.id)}
-//                               className="p-2 text-red-600 hover:bg-red-50 rounded-sm transition-colors"
-//                               title="Delete"
-//                             >
-//                               <Trash2 size={18} />
-//                             </button>
-//                           </div>
-//                         </td>
-//                       </tr>
-//                     ))
-//                   )}
-//                 </tbody>
-//               </table>
-//             </div>
-//           </div>
-//         </div>
-
-//         {/* Create Quotation Modal */}
-//         {showModal && (
-//           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-//             <div className="bg-white rounded-sm shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-//               <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white p-6 rounded-t-sm flex justify-between items-center">
-//                 <h2 className="text-2xl font-bold">Create New Quotation</h2>
-//                 <button
-//                   onClick={() => setShowModal(false)}
-//                   className="text-white hover:bg-orange-700 p-1 rounded-sm transition-colors"
-//                 >
-//                   <X size={24} />
-//                 </button>
-//               </div>
-//               <div className="p-6 space-y-4">
-//                 <div className="grid grid-cols-2 gap-4">
-//                   <div>
-//                     <label className="block text-sm font-semibold text-gray-700 mb-2">
-//                       Client Name *
-//                     </label>
-//                     <input
-//                       type="text"
-//                       name="client"
-//                       value={formData.client}
-//                       onChange={handleInputChange}
-//                       className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-//                       placeholder="Enter client name"
-//                     />
-//                   </div>
-//                   <div>
-//                     <label className="block text-sm font-semibold text-gray-700 mb-2">
-//                       Quotation Date *
-//                     </label>
-//                     <input
-//                       type="date"
-//                       name="date"
-//                       value={formData.date}
-//                       onChange={handleInputChange}
-//                       className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-//                     />
-//                   </div>
-//                 </div>
-//                 <div className="grid grid-cols-2 gap-4">
-//                   <div>
-//                     <label className="block text-sm font-semibold text-gray-700 mb-2">
-//                       Valid Until
-//                     </label>
-//                     <input
-//                       type="date"
-//                       name="validUntil"
-//                       value={formData.validUntil}
-//                       onChange={handleInputChange}
-//                       className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-//                     />
-//                   </div>
-//                   <div>
-//                     <label className="block text-sm font-semibold text-gray-700 mb-2">
-//                       Amount *
-//                     </label>
-//                     <input
-//                       type="number"
-//                       name="amount"
-//                       value={formData.amount}
-//                       onChange={handleInputChange}
-//                       placeholder="Enter amount"
-//                       className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-//                     />
-//                   </div>
-//                 </div>
-//                 <div>
-//                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-//                     Description
-//                   </label>
-//                   <textarea
-//                     rows="4"
-//                     name="description"
-//                     value={formData.description}
-//                     onChange={handleInputChange}
-//                     placeholder="Enter quotation description"
-//                     className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-//                   ></textarea>
-//                 </div>
-//                 <div className="flex gap-3 pt-4">
-//                   <button
-//                     onClick={() => setShowModal(false)}
-//                     className="flex-1 px-6 py-3 border border-gray-300 rounded-sm hover:bg-gray-50 font-semibold text-gray-700"
-//                   >
-//                     Cancel
-//                   </button>
-//                   <button
-//                     onClick={handleCreateQuotation}
-//                     className="flex-1 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm hover:from-orange-600 hover:to-orange-700 font-semibold shadow-lg"
-//                   >
-//                     Create Quotation
-//                   </button>
-//                 </div>
-//               </div>
-//             </div>
-//           </div>
-//         )}
-
-//         {/* View Quotation Modal */}
-//         {showViewModal && selectedQuote && (
-//           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-//             <div className="bg-white rounded-sm shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-//               <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white p-6 rounded-t-sm flex justify-between items-center">
-//                 <h2 className="text-2xl font-bold">Quotation Details</h2>
-//                 <button
-//                   onClick={() => setShowViewModal(false)}
-//                   className="text-white hover:bg-orange-700 p-1 rounded-sm transition-colors"
-//                 >
-//                   <X size={24} />
-//                 </button>
-//               </div>
-//               <div className="p-6 space-y-6">
-//                 <div className="grid grid-cols-2 gap-6">
-//                   <div>
-//                     <p className="text-sm font-semibold text-gray-500 mb-1">
-//                       Quotation ID
-//                     </p>
-//                     <p className="text-lg font-bold text-orange-600">
-//                       {selectedQuote.id}
-//                     </p>
-//                   </div>
-//                   <div>
-//                     <p className="text-sm font-semibold text-gray-500 mb-1">
-//                       Status
-//                     </p>
-//                     <span
-//                       className={`inline-block px-3 py-1 rounded-sm text-sm font-semibold ${getStatusColor(
-//                         selectedQuote.status
-//                       )}`}
-//                     >
-//                       {selectedQuote.status}
-//                     </span>
-//                   </div>
-//                 </div>
-//                 <div className="grid grid-cols-2 gap-6">
-//                   <div>
-//                     <p className="text-sm font-semibold text-gray-500 mb-1">
-//                       Client Name
-//                     </p>
-//                     <p className="text-lg font-semibold text-gray-800">
-//                       {selectedQuote.client}
-//                     </p>
-//                   </div>
-//                   <div>
-//                     <p className="text-sm font-semibold text-gray-500 mb-1">
-//                       Amount
-//                     </p>
-//                     <p className="text-lg font-bold text-gray-800">
-//                       ${selectedQuote.amount.toLocaleString()}
-//                     </p>
-//                   </div>
-//                 </div>
-//                 <div className="grid grid-cols-2 gap-6">
-//                   <div>
-//                     <p className="text-sm font-semibold text-gray-500 mb-1">
-//                       Date
-//                     </p>
-//                     <p className="text-lg text-gray-800">
-//                       {selectedQuote.date}
-//                     </p>
-//                   </div>
-//                   <div>
-//                     <p className="text-sm font-semibold text-gray-500 mb-1">
-//                       Valid Until
-//                     </p>
-//                     <p className="text-lg text-gray-800">
-//                       {selectedQuote.validUntil}
-//                     </p>
-//                   </div>
-//                 </div>
-//                 <div>
-//                   <p className="text-sm font-semibold text-gray-500 mb-1">
-//                     Description
-//                   </p>
-//                   <p className="text-gray-800 bg-gray-50 p-4 rounded-sm">
-//                     {selectedQuote.description || "No description provided"}
-//                   </p>
-//                 </div>
-//                 <div className="flex gap-3 pt-4">
-//                   <button
-//                     onClick={() => setShowViewModal(false)}
-//                     className="flex-1 px-6 py-3 border border-gray-300 rounded-sm hover:bg-gray-50 font-semibold text-gray-700"
-//                   >
-//                     Close
-//                   </button>
-//                   <button
-//                     onClick={() => window.alert("Print functionality")}
-//                     className="flex-1 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm hover:from-orange-600 hover:to-orange-700 font-semibold shadow-lg flex items-center justify-center gap-2"
-//                   >
-//                     <Printer size={20} />
-//                     Print
-//                   </button>
-//                 </div>
-//               </div>
-//             </div>
-//           </div>
-//         )}
-//       </div>
-//     </DashboardLayout>
-//   );
-// }
 import React, { useState } from "react";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 import DashboardLayout from "../../components/DashboardLayout";
 import {
   Plus,
   Download,
   Eye,
-  Printer,
   Trash2,
   FileText,
   Home,
-  FileTextIcon,
+  Search,
+  AlertCircle,
+  CheckCircle,
+  DollarSign,
+  Edit2
 } from "lucide-react";
 
-// Import modal components (these would be in separate files)
 import CreateQuotationModal from "../../pages/QuotationPart/CreateQuotationModal";
 import ViewQuotationModal from "../../pages/QuotationPart/ViewQuotationModal";
 import NumberCard from "../../components/NumberCard";
 
-export default function QuotationPage() {
-  const [quotations, setQuotations] = useState([
-    {
-      id: "QT-2024-001",
-      client: "Acme Corporation",
-      date: "2024-11-15",
-      amount: 150000,
-      status: "Pending",
-      validUntil: "2024-12-15",
-      description: "Website development and design services",
-    },
-    {
-      id: "QT-2024-002",
-      client: "Tech Solutions Ltd",
-      date: "2024-11-10",
-      amount: 250000,
-      status: "Approved",
-      validUntil: "2024-12-10",
-      description: "Mobile app development",
-    },
-    {
-      id: "QT-2024-003",
-      client: "Global Industries",
-      date: "2024-11-05",
-      amount: 185000,
-      status: "Rejected",
-      validUntil: "2024-12-05",
-      description: "CRM system implementation",
-    },
-    {
-      id: "QT-2024-004",
-      client: "Innovation Inc",
-      date: "2024-11-18",
-      amount: 320000,
-      status: "Draft",
-      validUntil: "2024-12-18",
-      description: "E-commerce platform setup",
-    },
-  ]);
+import {
+  useGetQuotationsQuery,
+  useLazyGetQuotationByIdQuery,
+  useCreateQuotationMutation,
+  useUpdateQuotationMutation,
+  useDeleteQuotationMutation,
+} from "../../store/api/quotationApi";
+import { useGetBusinessInfoQuery } from "../../store/api/businessApi";
+import { toast } from "react-hot-toast";
 
+export default function QuotationPage() {
   const [showModal, setShowModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedQuote, setSelectedQuote] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("All");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
+
+  const { data, isLoading, error, refetch } = useGetQuotationsQuery({
+    page: currentPage,
+    limit: itemsPerPage,
+    status: filterStatus,
+    search: searchTerm,
+  });
+
+  const { data: businessInfo } = useGetBusinessInfoQuery();
+
+  const [createQuotation] = useCreateQuotationMutation();
+  const [updateQuotation] = useUpdateQuotationMutation();
+  const [deleteQuotation] = useDeleteQuotationMutation();
+  const [getQuotationById] = useLazyGetQuotationByIdQuery();
+
+  const quotations = data?.quotations || [];
+  const pagination = data?.pagination || { total: 0, totalPages: 1 };
+  const summary = data?.summary || { total: 0, approved: 0, pending: 0, totalValue: 0 };
+
   const [formData, setFormData] = useState({
-    client: "",
-    date: "",
+    quotationNo: `QT-${new Date().getFullYear()}-0000`,
+    clientName: "",
+    companyName: "",
+    email: "",
+    phone: "",
+    quotationDate: new Date().toISOString().split("T")[0],
     validUntil: "",
-    amount: "",
-    description: "",
+    currency: "INR",
+    lineItems: [],
+    subtotal: 0,
+    tax: 0,
+    discount: 0,
+    totalAmount: 0,
+    paymentTerms: "",
+    notes: "",
+    status: "Draft",
   });
 
   const getStatusColor = (status) => {
@@ -690,333 +92,719 @@ export default function QuotationPage() {
   };
 
   const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const resetForm = () => {
     setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
+      quotationNo: `QT-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
+      clientName: "",
+      companyName: "",
+      email: "",
+      phone: "",
+      quotationDate: new Date().toISOString().split("T")[0],
+      validUntil: "",
+      currency: "INR",
+      lineItems: [],
+      subtotal: 0,
+      tax: 0,
+      discount: 0,
+      totalAmount: 0,
+      paymentTerms: "",
+      notes: "",
+      status: "Draft",
     });
   };
 
-  const handleCreateQuotation = () => {
-    if (formData.client && formData.date && formData.amount) {
-      const newQuotation = {
-        id: `QT-2024-${String(quotations.length + 1).padStart(3, "0")}`,
-        client: formData.client,
-        date: formData.date,
-        amount: parseFloat(formData.amount),
-        status: "Draft",
-        validUntil: formData.validUntil,
-        description: formData.description,
+  const handleCreateQuotation = async () => {
+    if (!formData.clientName || !formData.quotationDate || !formData.totalAmount) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
+    try {
+      const payload = {
+        quotation_id: formData.quotationNo,
+        client_name: formData.clientName,
+        company_name: formData.companyName,
+        email: formData.email,
+        phone: formData.phone,
+        quotation_date: formData.quotationDate,
+        valid_until: formData.validUntil,
+        currency: formData.currency,
+        line_items: formData.lineItems,
+        subtotal: formData.subtotal,
+        tax: formData.tax,
+        discount: formData.discount,
+        total_amount: formData.totalAmount,
+        payment_terms: formData.paymentTerms,
+        notes: formData.notes,
+        status: formData.status,
       };
-      setQuotations([newQuotation, ...quotations]);
-      setFormData({
-        client: "",
-        date: "",
-        validUntil: "",
-        amount: "",
-        description: "",
-      });
+
+      if (formData.id) {
+        await updateQuotation({ id: formData.id, data: payload }).unwrap();
+        toast.success("Quotation updated successfully");
+      } else {
+        await createQuotation(payload).unwrap();
+        toast.success("Quotation created successfully");
+      }
       setShowModal(false);
+      resetForm();
+      refetch();
+    } catch (err) {
+      toast.error(err?.data?.message || "Error saving quotation");
     }
   };
 
-  const handleDelete = (id) => {
+  const handleEdit = async (quote) => {
+    // Reset form and close modal first to ensure fresh state
+    resetForm();
+    setShowModal(false);
+
+    try {
+      toast.loading("Fetching details...", { id: "fetch-edit" });
+      // In RTK 2.x, options should be passed as an object
+      const response = await getQuotationById(quote.id, { preferCacheValue: false }).unwrap();
+      const q = response.quotation;
+
+      if (!q) {
+        throw new Error("Quotation not found");
+      }
+
+      setFormData({
+        id: q.id,
+        quotationNo: q.quotation_id,
+        clientName: q.client_name,
+        companyName: q.company_name,
+        email: q.email,
+        phone: q.phone,
+        quotationDate: q.quotation_date ? new Date(q.quotation_date).toISOString().split('T')[0] : "",
+        validUntil: q.valid_until ? new Date(q.valid_until).toISOString().split('T')[0] : "",
+        currency: q.currency,
+        lineItems: q.line_items || [],
+        subtotal: q.subtotal || 0,
+        tax: q.tax || 0,
+        discount: q.discount || 0,
+        totalAmount: q.total_amount || 0,
+        paymentTerms: q.payment_terms || "",
+        notes: q.notes || "",
+        status: q.status || "Draft",
+      });
+
+      setShowModal(true);
+      toast.success("Details loaded", { id: "fetch-edit" });
+    } catch (err) {
+      console.error("Fetch error:", err);
+      toast.error(err?.data?.message || err.message || "Failed to load details", { id: "fetch-edit" });
+    }
+  };
+
+  const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this quotation?")) {
-      setQuotations(quotations.filter((q) => q.id !== id));
+      try {
+        await deleteQuotation(id).unwrap();
+        toast.success("Quotation deleted successfully");
+        refetch();
+      } catch (err) {
+        toast.error(err?.data?.message || "Error deleting quotation");
+      }
     }
   };
 
-  const handleView = (quote) => {
-    setSelectedQuote(quote);
-    setShowViewModal(true);
-  };
-
-  const handleStatusChange = (id, newStatus) => {
-    setQuotations(
-      quotations.map((q) => (q.id === id ? { ...q, status: newStatus } : q))
-    );
+  const handleStatusChange = async (id, newStatus) => {
+    try {
+      const quote = quotations.find(q => q.id === id);
+      const payload = {
+        client_name: quote.client_name,
+        quotation_date: quote.quotation_date,
+        total_amount: quote.total_amount,
+        status: newStatus
+      };
+      await updateQuotation({ id, data: payload }).unwrap();
+      toast.success("Status updated");
+    } catch (err) {
+      toast.error("Failed to update status");
+    }
   };
 
   const handleExport = () => {
-    const csvContent =
-      "data:text/csv;charset=utf-8," +
-      "ID,Client,Date,Amount,Valid Until,Status\n" +
-      filteredQuotations
-        .map(
-          (q) =>
-            `${q.id},${q.client},${q.date},${q.amount},${q.validUntil},${q.status}`
-        )
-        .join("\n");
-    const encodedUri = encodeURI(csvContent);
+    if (quotations.length === 0) {
+      toast.error("No data to export");
+      return;
+    }
+    const headers = ["Quotation ID", "Client Name", "Date", "Amount", "Status", "Valid Until"];
+    const csvData = quotations.map(q => [
+      q.quotation_id,
+      q.client_name,
+      new Date(q.quotation_date).toLocaleDateString(),
+      q.total_amount,
+      q.status,
+      q.valid_until ? new Date(q.valid_until).toLocaleDateString() : 'N/A'
+    ]);
+
+    const csvContent = [headers, ...csvData].map(e => e.join(",")).join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "quotations.csv");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `Quotations_Export_${new Date().toISOString().split('T')[0]}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    toast.success("Exported successfully");
   };
 
-  const filteredQuotations = quotations.filter((q) => {
-    const matchesSearch =
-      q.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      q.id.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filterStatus === "All" || q.status === filterStatus;
-    return matchesSearch && matchesFilter;
-  });
+  const handleDownload = async (quote) => {
+    let qData = quote;
+    try {
+      toast.loading("Fetching details for PDF...", { id: "fetch-pdf" });
+      const response = await getQuotationById(quote.id, { preferCacheValue: false }).unwrap();
+      qData = response.quotation;
+      toast.success("PDF Ready", { id: "fetch-pdf" });
+    } catch (err) {
+      console.error("Fetch error for PDF:", err);
+      toast.error("Using cached data for PDF", { id: "fetch-pdf" });
+    }
 
-  const stats = {
-    total: quotations.length,
-    approved: quotations.filter((q) => q.status === "Approved").length,
-    pending: quotations.filter((q) => q.status === "Pending").length,
-    totalValue: quotations.reduce((sum, q) => sum + q.amount, 0),
+    const doc = new jsPDF('p', 'mm', 'a4');
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+
+    // Standardize data
+    const q = {
+      id: qData.quotation_id || qData.id,
+      date: qData.quotation_date ? new Date(qData.quotation_date).toLocaleDateString() : qData.date,
+      validUntil: qData.valid_until ? new Date(qData.valid_until).toLocaleDateString() : (qData.validUntil || "Not Set"),
+      client: qData.client_name || qData.client || "Client Name",
+      companyName: qData.company_name || qData.companyName,
+      email: qData.email,
+      phone: qData.phone,
+      currency: qData.currency || "INR",
+      lineItems: qData.line_items || qData.lineItems || [],
+      subtotal: qData.subtotal || 0,
+      tax: qData.tax || 0,
+      discount: qData.discount || 0,
+      totalAmount: qData.total_amount || qData.amount || 0,
+      notes: qData.notes || qData.description || qData.notes,
+      paymentTerms: qData.payment_terms || qData.paymentTerms
+    };
+
+    const brandColor = [255, 123, 29]; // #FF7B1D
+    const darkColor = [31, 41, 55];    // #1F2937 (Slate 800)
+    const grayColor = [107, 114, 128]; // #6B7280 (Gray 500)
+    const lightGray = [249, 250, 251]; // #F9FAFB (Gray 50)
+    const sidebarWidth = 6;
+
+    // --- 0. Premium Background & Sidebar ---
+    // Left Sidebar Gradient-like shade
+    doc.setFillColor(255, 123, 29); // Brand Orange
+    doc.rect(0, 0, sidebarWidth, pageHeight, 'F');
+
+    // Subtle Top Gradient Bar - Increased height to 60 to cover all metadata
+    doc.setFillColor(252, 245, 240); // Very light orange tint
+    doc.rect(sidebarWidth, 0, pageWidth - sidebarWidth, 65, 'F');
+
+    // Add a light watermark/pattern or subtle background text
+    doc.setTextColor(245, 245, 245);
+    doc.setFontSize(60);
+    doc.setFont("helvetica", "bold");
+    // doc.text(businessInfo?.company_name?.substring(0, 10).toUpperCase() || "TECHVISTA", 40, 150, { angle: 45, opacity: 0.1 });
+
+    // --- 1. Header Section ---
+    const startX = sidebarWidth + 15;
+
+    // Page Watermark - Dynamic
+    doc.setTextColor(245, 245, 245);
+    doc.setFontSize(60);
+    doc.setFont("helvetica", "bold");
+    const watermarkText = (businessInfo?.company_name || "QUOTATION").split(" ")[0].toUpperCase();
+    doc.text(watermarkText, 40, 150, { angle: 45, opacity: 0.05 });
+
+    if (businessInfo?.logo_url) {
+      try {
+        const logoFullUrl = `${import.meta.env.VITE_API_BASE_URL.replace('/api/', '')}${businessInfo.logo_url}`;
+        const img = new Image();
+        img.src = logoFullUrl;
+        await new Promise((resolve, reject) => {
+          img.onload = resolve;
+          img.onerror = reject;
+        });
+        doc.addImage(img, 'PNG', startX, 15, 22, 22);
+      } catch (e) {
+        doc.setFillColor(...brandColor);
+        doc.roundedRect(startX, 15, 12, 12, 2, 2, "F");
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "bold");
+        const initials = businessInfo?.company_name
+          ? businessInfo.company_name.split(" ").map(n => n[0]).join("").toUpperCase().substring(0, 2)
+          : "TV";
+        doc.text(initials, startX + 3, 23);
+      }
+    } else {
+      doc.setFillColor(...brandColor);
+      doc.roundedRect(startX, 15, 12, 12, 2, 2, "F");
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "bold");
+      const initials = businessInfo?.company_name
+        ? businessInfo.company_name.split(" ").map(n => n[0]).join("").toUpperCase().substring(0, 2)
+        : "TV";
+      doc.text(initials, startX + 3, 23);
+    }
+
+    doc.setTextColor(...darkColor);
+    doc.setFontSize(16);
+    doc.setFont("helvetica", "bold");
+    // Position company name slightly higher to fit perfectly in the 60mm tint
+    const textStartY = businessInfo?.logo_url ? 46 : 38;
+    doc.text(businessInfo?.company_name || "TechVista IT Solutions", startX, textStartY);
+
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(...grayColor);
+    doc.text(businessInfo?.website || "www.techvista.com", startX, textStartY + 6);
+    doc.text(businessInfo?.email || "contact@techvista.com", startX, textStartY + 11);
+    doc.text(businessInfo?.phone || "+91 98765 43210", startX, textStartY + 16);
+
+    doc.setTextColor(...brandColor);
+    doc.setFontSize(28);
+    doc.setFont("helvetica", "bold");
+    doc.text("QUOTATION", pageWidth - 15, 28, { align: "right" });
+
+    // Header Details - Fixed Alignment
+    const labelX = pageWidth - 80;
+    const valueX = pageWidth - 15;
+
+    doc.setTextColor(...darkColor);
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "bold");
+    doc.text(`Quotation No:`, labelX, 41);
+    doc.text(`Date:`, labelX, 47);
+    doc.text(`Valid Until:`, labelX, 53);
+
+    doc.setFont("helvetica", "normal");
+    doc.text(String(q.id), valueX, 41, { align: "right" });
+    doc.text(String(q.date), valueX, 47, { align: "right" });
+    doc.text(String(q.validUntil), valueX, 53, { align: "right" });
+
+    // --- 2. Client Information Section ---
+    const clientBoxY = textStartY + 25;
+    doc.setFillColor(...lightGray);
+    doc.roundedRect(startX, clientBoxY, pageWidth - startX - 15, 45, 2, 2, "F");
+
+    doc.setTextColor(...darkColor);
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "bold");
+    doc.text("CLIENT DETAILS", startX + 10, clientBoxY + 12);
+
+    doc.setFontSize(10);
+    doc.text(String(q.client), startX + 10, clientBoxY + 22);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(...grayColor);
+    if (q.companyName) doc.text(String(q.companyName), startX + 10, clientBoxY + 28);
+    if (q.email || q.phone) {
+      doc.text(`${q.email || ""} | ${q.phone || ""}`, startX + 10, clientBoxY + 34);
+    }
+    doc.text(`Billing: As per records`, startX + 10, clientBoxY + 40);
+
+    // --- 3. Services Table ---
+    const tableHeaders = [["#", "Service Description", "Rate", "Qty", "Tax", "Amount"]];
+    const tableData = (q.lineItems).map((item, index) => [
+      index + 1,
+      item.name,
+      `${q.currency === "INR" ? "Rs." : "$"} ${(item.rate || 0).toLocaleString()}`,
+      item.qty,
+      `${q.tax || 0}%`,
+      `${q.currency === "INR" ? "Rs." : "$"} ${(item.total || 0).toLocaleString()}`,
+    ]);
+
+    autoTable(doc, {
+      startY: clientBoxY + 55,
+      margin: { left: startX },
+      head: tableHeaders,
+      body: tableData,
+      theme: "striped",
+      headStyles: {
+        fillColor: [31, 41, 55],
+        textColor: [255, 255, 255],
+        fontStyle: "bold",
+        fontSize: 10,
+        cellPadding: 3,
+      },
+      styles: {
+        fontSize: 9,
+        cellPadding: 3,
+        valign: "middle",
+        font: "helvetica",
+      },
+      columnStyles: {
+        0: { halign: "center", cellWidth: 10 },
+        1: { cellWidth: "auto", halign: "left" },
+        2: { halign: "right", cellWidth: 25 },
+        3: { halign: "center", cellWidth: 18 },
+        4: { halign: "center", cellWidth: 20 },
+        5: { halign: "right", cellWidth: 30 },
+      }
+    });
+
+    // --- 4. Totals Section ---
+    const finalY = doc.lastAutoTable.finalY + 10;
+    const summaryX = pageWidth - 80;
+    const summaryValueX = pageWidth - 15;
+
+    doc.setFillColor(252, 245, 240);
+    doc.roundedRect(summaryX - 5, finalY - 5, 75, 42, 2, 2, "F");
+
+    doc.setFontSize(10);
+    doc.setTextColor(...grayColor);
+    doc.setFont("helvetica", "normal");
+
+    let currentTotalY = finalY + 5;
+    const subtotalVal = q.subtotal || q.totalAmount;
+
+    doc.text("Subtotal", summaryX, currentTotalY);
+    doc.text(`${q.currency === "INR" ? "Rs." : "$"} ${(subtotalVal || 0).toLocaleString()}`, summaryValueX, currentTotalY, { align: "right" });
+
+    currentTotalY += 7;
+    if (q.discount) {
+      doc.text("Discount", summaryX, currentTotalY);
+      doc.text(`- ${q.currency === "INR" ? "Rs." : "$"} ${(q.discount || 0).toLocaleString()}`, summaryValueX, currentTotalY, { align: "right" });
+      currentTotalY += 7;
+    }
+
+    if (q.tax) {
+      doc.text(`GST (${q.tax}%)`, summaryX, currentTotalY);
+      doc.text(`${q.currency === "INR" ? "Rs." : "$"} ${(((subtotalVal || 0) * (q.tax || 0)) / 100).toLocaleString()}`, summaryValueX, currentTotalY, { align: "right" });
+      currentTotalY += 7;
+    }
+
+    doc.setDrawColor(230, 230, 230);
+    doc.line(summaryX, currentTotalY - 2, summaryValueX, currentTotalY - 2);
+    currentTotalY += 6;
+
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(...brandColor);
+    doc.text("TOTAL DUE", summaryX, currentTotalY);
+    doc.text(`${q.currency === "INR" ? "Rs." : "$"} ${(q.totalAmount || 0).toLocaleString()}`, summaryValueX, currentTotalY, { align: "right" });
+
+    // --- 5. Notes & Payment Terms ---
+    const bottomSectionY = Math.max(currentTotalY + 25, doc.lastAutoTable.finalY + 25);
+
+    doc.setTextColor(...darkColor);
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "bold");
+    doc.text("TERMS & CONDITIONS", startX, bottomSectionY);
+
+    doc.setFontSize(8.5);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(...grayColor);
+    const termsArr = [];
+    if (q.paymentTerms) termsArr.push(`Payment: ${q.paymentTerms}`);
+    if (q.notes) termsArr.push(`Notes: ${q.notes}`);
+    if (termsArr.length === 0) termsArr.push("This quotation is valid for 30 days. Standard terms apply.");
+
+    let termsY = bottomSectionY + 6;
+    termsArr.forEach(t => {
+      const splitT = doc.splitTextToSize(t, pageWidth - startX - 20);
+      doc.text(splitT, startX, termsY);
+      termsY += (splitT.length * 4) + 2;
+    });
+
+    // --- 6. Footer ---
+    const footerY = pageHeight - 20;
+    doc.setDrawColor(230, 230, 230);
+    doc.line(sidebarWidth + 10, footerY - 5, pageWidth - 15, footerY - 5);
+
+    doc.setFontSize(8);
+    doc.setTextColor(...grayColor);
+    doc.text("Digitally generated document. No signature required.", pageWidth / 2 + sidebarWidth / 2, footerY, { align: "center" });
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(...brandColor);
+    doc.text(`Exclusive Partner: ${businessInfo?.company_name || "TechVista IT Solutions"}`, pageWidth / 2 + sidebarWidth / 2, footerY + 4, { align: "center" });
+
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(...grayColor);
+    const cityState = businessInfo?.city && businessInfo?.state ? `${businessInfo.city}, ${businessInfo.state}` : "Tech Park, Bangalore";
+    doc.text(cityState, pageWidth / 2 + sidebarWidth / 2, footerY + 8, { align: "center" });
+
+    doc.save(`Quotation_${q.id}.pdf`);
   };
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5; // FIX
+  const handleView = async (quote) => {
+    // Reset selection and close modal first
+    setSelectedQuote(null);
+    setShowViewModal(false);
 
-  // Pagination logic
-  const totalPages = Math.ceil(filteredQuotations.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentQuotations = filteredQuotations.slice(startIndex, endIndex);
+    try {
+      toast.loading("Fetching details...", { id: "fetch-view" });
+      // In RTK 2.x, options should be passed as an object
+      const response = await getQuotationById(quote.id, { preferCacheValue: false }).unwrap();
 
-  const handlePrev = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
+      if (!response?.quotation) {
+        throw new Error("Quotation not found");
+      }
+
+      setSelectedQuote(response.quotation);
+      setShowViewModal(true);
+      toast.success("Details loaded", { id: "fetch-view" });
+    } catch (err) {
+      console.error("Fetch error:", err);
+      toast.error(err?.data?.message || err.message || "Failed to load details", { id: "fetch-view" });
     }
   };
 
-  const handleNext = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
-    }
-  };
+  const handlePrev = () => setCurrentPage((prev) => (prev > 1 ? prev - 1 : prev));
+  const handleNext = () => setCurrentPage((prev) => (prev < pagination.totalPages ? prev + 1 : prev));
+  const handlePageChange = (page) => setCurrentPage(page);
+
+  const indexOfFirstItem = (currentPage - 1) * itemsPerPage;
+  const indexOfLastItem = Math.min(currentPage * itemsPerPage, pagination.total);
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen ">
-        {/* Header */}
-        <div className="bg-white border-b">
-          <div className="max-w-8xl mx-auto px-0 ml-10 py-4">
-            <div className="flex items-center justify-between">
-              {/* Left Title Section */}
+      <div className="ml-6 min-h-screen">
+        {/* Header Section */}
+        <div className="bg-white border-b my-3">
+          <div className="max-w-8xl mx-auto">
+            <div className="flex items-center justify-between py-3">
               <div>
                 <h1 className="text-2xl font-bold text-gray-800">
-                  All Quotations
+                  Quotation Management
                 </h1>
                 <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
-                  <Home className="text-gray-700" size={14} />
-                  <span className="text-gray-400"></span> Additional /{" "}
-                  <span className="text-orange-500 font-medium">
+                  <Home className="text-gray-700 text-sm" />
+                  <span className="text-gray-400"></span> CRM /{" "}
+                  <span className="text-[#FF7B1D] font-medium">
                     All Quotations
                   </span>
                 </p>
               </div>
 
-              {/* Middle Filter + Export */}
-              <div className="flex flex-col lg:flex-row gap-4 mr-4 ml-auto">
-                <select
-                  value={filterStatus}
-                  onChange={(e) => setFilterStatus(e.target.value)}
-                  className="px-5 py-3 border border-gray-200 rounded-sm hover:bg-gray-50 font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                >
-                  <option value="All">All Status</option>
-                  <option value="Draft">Draft</option>
-                  <option value="Pending">Pending</option>
-                  <option value="Approved">Approved</option>
-                  <option value="Rejected">Rejected</option>
-                </select>
+              {/* Action Buttons */}
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="relative">
+                  <select
+                    value={filterStatus}
+                    onChange={(e) => {
+                      setFilterStatus(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    className={`px-4 py-3 border border-gray-200 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#FF7B1D] text-sm font-medium transition-all ${filterStatus !== "All" ? "bg-orange-50 text-orange-600 border-orange-200" : "bg-white text-gray-700"
+                      }`}
+                  >
+                    <option value="All">All Status</option>
+                    <option value="Draft">Draft</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Approved">Approved</option>
+                    <option value="Rejected">Rejected</option>
+                  </select>
+                </div>
+
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Search client or ID..."
+                    value={searchTerm}
+                    onChange={(e) => {
+                      setSearchTerm(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    className="pl-10 pr-4 py-3 border border-gray-200 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#FF7B1D] text-sm w-64 shadow-sm"
+                  />
+                  <Search
+                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                    size={16}
+                  />
+                </div>
 
                 <button
                   onClick={handleExport}
-                  className="px-5 py-3 bg-orange-50 text-orange-600 rounded-sm hover:bg-orange-100 flex items-center gap-2 font-medium"
+                  className="px-6 py-3 bg-orange-50 text-orange-600 rounded-sm hover:bg-orange-100 flex items-center gap-2 font-bold shadow-sm"
                 >
                   <Download size={20} />
                   Export CSV
                 </button>
-              </div>
 
-              {/* Right New Quotation Button */}
-              <button
-                onClick={() => setShowModal(true)}
-                className="mr-6 bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-2 font-semibold"
-              >
-                <Plus size={20} />
-                New Quotation
-              </button>
+                <button
+                  onClick={() => {
+                    resetForm();
+                    setShowModal(true);
+                  }}
+                  className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm hover:shadow-lg transition-all flex items-center gap-2 font-bold shadow-md"
+                >
+                  <Plus size={20} />
+                  New Quotation
+                </button>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Stats Cards */}
-        <div className="max-w-8xl mx-auto px-0 ml-6 py-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <NumberCard
-              title={"Total Quotations"}
-              number={stats.total}
-              icon={<FileText className="text-blue-600" size={24} />}
-              iconBgColor={"bg-blue-100"}
-              lineBorderClass={"border-blue-500"} />
+        {/* Stats Section */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <NumberCard
+            title="Total Quotations"
+            number={summary.total || "0"}
+            icon={<FileText className="text-blue-600" size={24} />}
+            iconBgColor="bg-blue-100"
+            lineBorderClass="border-blue-500"
+          />
+          <NumberCard
+            title="Total Value"
+            number={`₹${((summary.totalValue || 0) / 100000).toFixed(1)}L`}
+            icon={<DollarSign className="text-green-600" size={24} />}
+            iconBgColor="bg-green-100"
+            lineBorderClass="border-green-500"
+          />
+          <NumberCard
+            title="Pending"
+            number={summary.pending || "0"}
+            icon={<AlertCircle className="text-orange-600" size={24} />}
+            iconBgColor="bg-orange-100"
+            lineBorderClass="border-orange-500"
+          />
+          <NumberCard
+            title="Approved"
+            number={summary.approved || "0"}
+            icon={<CheckCircle className="text-purple-600" size={24} />}
+            iconBgColor="bg-purple-100"
+            lineBorderClass="border-purple-500"
+          />
+        </div>
 
-            <NumberCard
-              title={"Approved"}
-              number={stats.approved}
-              icon={<FileText className="text-green-600" size={24} />}
-              iconBgColor={"bg-green-100"}
-              lineBorderClass={"border-green-500"} />
-
-            <NumberCard
-              title={"Pending"}
-              number={stats.pending}
-              icon={<FileText className="text-orange-600" size={24} />}
-              iconBgColor={"bg-orange-100"}
-              lineBorderClass={"border-orange-500"} />
-
-            <NumberCard
-              title={"Total Value"}
-              number={`₹${(stats.totalValue / 100000).toFixed(1)}L`}
-              icon={<FileText className="text-purple-600" size={24} />}
-              iconBgColor={"bg-purple-100"}
-              lineBorderClass={"border-purple-500"} />
-          </div>
-
-          {/* Quotations Table */}
-          <div className="bg-white rounded-sm shadow-md overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
-                  <tr>
-                    <th className="px-6 py-4 text-left text-sm font-semibold">
-                      Quotation ID
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold">
-                      Client
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold">
-                      Date
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold">
-                      Amount
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold">
-                      Valid Until
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold">
-                      Status
-                    </th>
-                    <th className="px-6 py-4 text-center text-sm font-semibold">
-                      Actions
-                    </th>
+        {/* Table Section */}
+        <div className="overflow-x-auto border border-gray-200 rounded-sm shadow-sm bg-white">
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm">
+                <th className="py-4 px-6 font-semibold text-left">ID</th>
+                <th className="py-4 px-6 font-semibold text-left">Client Name</th>
+                <th className="py-4 px-6 font-semibold text-left">Date</th>
+                <th className="py-4 px-6 font-semibold text-right">Amount</th>
+                <th className="py-4 px-6 font-semibold text-left">Status</th>
+                <th className="py-4 px-6 font-semibold text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {isLoading ? (
+                <tr>
+                  <td colSpan="6" className="py-20 text-center">
+                    <div className="flex justify-center flex-col items-center gap-4">
+                      <div className="w-12 h-12 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin"></div>
+                      <p className="text-gray-500 font-semibold animate-pulse">Fetching quotations...</p>
+                    </div>
+                  </td>
+                </tr>
+              ) : error ? (
+                <tr>
+                  <td colSpan="6" className="py-16 text-center text-red-500 font-medium">
+                    Error loading quotations. Please try again.
+                  </td>
+                </tr>
+              ) : quotations.length > 0 ? (
+                quotations.map((quote) => (
+                  <tr key={quote.id} className="hover:bg-gray-50 transition-colors group">
+                    <td className="py-4 px-6 font-bold text-orange-600">{quote.quotation_id}</td>
+                    <td className="py-4 px-6 font-medium text-gray-800">{quote.client_name}</td>
+                    <td className="py-4 px-6 text-gray-600 text-sm">{new Date(quote.quotation_date).toLocaleDateString()}</td>
+                    <td className="py-4 px-6 text-right font-bold text-gray-900">
+                      {quote.currency === "INR" ? "₹" : "$"} {quote.total_amount.toLocaleString()}
+                    </td>
+                    <td className="py-4 px-6">
+                      <select
+                        value={quote.status}
+                        onChange={(e) => handleStatusChange(quote.id, e.target.value)}
+                        className={`px-3 py-1 rounded-full text-xs font-bold border-0 cursor-pointer shadow-sm ${getStatusColor(quote.status)}`}
+                      >
+                        <option value="Draft">Draft</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Approved">Approved</option>
+                        <option value="Rejected">Rejected</option>
+                      </select>
+                    </td>
+                    <td className="py-4 px-6">
+                      <div className="flex justify-center gap-2">
+                        <button
+                          onClick={() => handleView(quote)}
+                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-sm transition-all"
+                          title="View"
+                        >
+                          <Eye size={18} />
+                        </button>
+                        <button
+                          onClick={() => handleEdit(quote)}
+                          className="p-2 text-orange-500 hover:bg-orange-50 rounded-sm transition-all"
+                          title="Edit"
+                        >
+                          <Edit2 size={18} />
+                        </button>
+                        <button
+                          onClick={() => handleDownload(quote)}
+                          className="p-2 text-green-600 hover:bg-green-50 rounded-sm transition-all"
+                          title="Download PDF"
+                        >
+                          <Download size={18} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(quote.id)}
+                          className="p-2 text-red-600 hover:bg-red-50 rounded-sm transition-all shadow-sm"
+                          title="Delete"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
+                    </td>
                   </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {filteredQuotations.length === 0 ? (
-                    <tr>
-                      <td
-                        colSpan="7"
-                        className="px-6 py-12 text-center text-gray-500"
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="6" className="py-16 text-center text-gray-500">
+                    <div className="flex flex-col items-center gap-3">
+                      <FileText size={48} className="text-gray-200" />
+                      <p className="font-medium">No quotations found.</p>
+                      <button
+                        onClick={() => { resetForm(); setShowModal(true); }}
+                        className="text-orange-600 underline font-semibold mt-2"
                       >
-                        No quotations found
-                      </td>
-                    </tr>
-                  ) : (
-                    filteredQuotations.map((quote) => (
-                      <tr
-                        key={quote.id}
-                        className="hover:bg-orange-50 transition-colors"
-                      >
-                        <td className="px-6 py-4">
-                          <span className="font-semibold text-orange-600">
-                            {quote.id}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className="font-medium text-gray-800">
-                            {quote.client}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-gray-600">
-                          {quote.date}
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className="font-bold text-gray-800">
-                            ${quote.amount.toLocaleString()}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-gray-600">
-                          {quote.validUntil}
-                        </td>
-                        <td className="px-6 py-4">
-                          <select
-                            value={quote.status}
-                            onChange={(e) =>
-                              handleStatusChange(quote.id, e.target.value)
-                            }
-                            className={`px-3 py-1 rounded-sm text-xs font-semibold border-0 focus:outline-none focus:ring-2 focus:ring-orange-500 ${getStatusColor(
-                              quote.status
-                            )}`}
-                          >
-                            <option value="Draft">Draft</option>
-                            <option value="Pending">Pending</option>
-                            <option value="Approved">Approved</option>
-                            <option value="Rejected">Rejected</option>
-                          </select>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex items-center justify-center gap-2">
-                            <button
-                              onClick={() => handleView(quote)}
-                              className="p-2 text-blue-600 hover:bg-blue-50 rounded-sm transition-colors"
-                              title="View"
-                            >
-                              <Eye size={18} />
-                            </button>
-                            <button
-                              onClick={() =>
-                                window.alert("Print functionality")
-                              }
-                              className="p-2 text-purple-600 hover:bg-purple-50 rounded-sm transition-colors"
-                              title="Print"
-                            >
-                              <Printer size={18} />
-                            </button>
-                            <button
-                              onClick={() => handleDelete(quote.id)}
-                              className="p-2 text-red-600 hover:bg-red-50 rounded-sm transition-colors"
-                              title="Delete"
-                            >
-                              <Trash2 size={18} />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
+                        Create your first quotation
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
 
-          {/* Pagination */}
-          <div className="flex justify-end items-center gap-3 mt-6">
+        {/* Pagination Section */}
+        <div className="flex flex-col md:flex-row justify-between items-center mt-6 gap-4 bg-gray-50 p-4 rounded-sm border border-gray-200 mb-6 shadow-sm">
+          <p className="text-sm font-semibold text-gray-700">
+            Showing <span className="text-orange-600">{indexOfFirstItem + 1}</span> to <span className="text-orange-600">{indexOfLastItem}</span> of <span className="text-orange-600">{pagination.total || 0}</span> Quotations
+          </p>
+
+          <div className="flex items-center gap-2">
             <button
               onClick={handlePrev}
               disabled={currentPage === 1}
-              className={`px-4 py-2 rounded-sm text-white font-semibold transition ${currentPage === 1
-                ? "bg-gray-300 cursor-not-allowed"
-                : "bg-[#FF7B1D] hover:opacity-90"
+              className={`px-4 py-2 rounded-sm font-bold transition flex items-center gap-1 ${currentPage === 1 ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"
                 }`}
             >
-              Back
+              Previous
             </button>
 
-            <div className="flex items-center gap-2">
-              {Array.from({ length: totalPages }, (_, i) => (
+            <div className="flex items-center gap-1">
+              {Array.from({ length: pagination.totalPages }, (_, i) => (
                 <button
                   key={i + 1}
                   onClick={() => handlePageChange(i + 1)}
-                  className={`px-3 py-1 rounded-sm text-black font-semibold border transition ${currentPage === i + 1
-                    ? "bg-gray-200 border-gray-400"
-                    : "bg-white border-gray-300 hover:bg-gray-100"
+                  className={`w-10 h-10 rounded-sm font-bold transition ${currentPage === i + 1 ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md border-orange-500" : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
                     }`}
                 >
                   {i + 1}
@@ -1026,10 +814,8 @@ export default function QuotationPage() {
 
             <button
               onClick={handleNext}
-              disabled={currentPage === totalPages}
-              className={`px-4 py-2 rounded-sm text-white font-semibold transition ${currentPage === totalPages
-                ? "bg-gray-300 cursor-not-allowed"
-                : "bg-[#22C55E] hover:opacity-90"
+              disabled={currentPage === pagination.totalPages || pagination.totalPages === 0}
+              className={`px-4 py-2 rounded-sm font-bold transition flex items-center gap-1 ${currentPage === pagination.totalPages || pagination.totalPages === 0 ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-green-600 text-white hover:opacity-90 shadow-md"
                 }`}
             >
               Next
@@ -1040,10 +826,11 @@ export default function QuotationPage() {
         {/* Modals */}
         <CreateQuotationModal
           showModal={showModal}
-          setShowModal={setShowModal}
+          setShowModal={(val) => { setShowModal(val); if (!val) resetForm(); }}
           formData={formData}
           handleInputChange={handleInputChange}
           handleCreateQuotation={handleCreateQuotation}
+          setFormData={setFormData}
         />
 
         <ViewQuotationModal
