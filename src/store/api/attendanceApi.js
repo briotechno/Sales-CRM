@@ -45,6 +45,21 @@ export const attendanceApi = createApi({
             query: () => '/stats',
             providesTags: ['Attendance'],
         }),
+        updateAttendance: builder.mutation({
+            query: ({ id, ...data }) => ({
+                url: `/${id}`,
+                method: 'PUT',
+                body: data,
+            }),
+            invalidatesTags: ['Attendance'],
+        }),
+        deleteAttendance: builder.mutation({
+            query: (id) => ({
+                url: `/${id}`,
+                method: 'DELETE',
+            }),
+            invalidatesTags: ['Attendance'],
+        }),
     }),
 });
 
@@ -54,4 +69,6 @@ export const {
     useGetAllAttendanceQuery,
     useGetEmployeeAttendanceQuery,
     useGetDashboardStatsQuery,
+    useUpdateAttendanceMutation,
+    useDeleteAttendanceMutation,
 } = attendanceApi;

@@ -11,5 +11,7 @@ router.put('/checkout/:id', attendanceController.checkOut);
 router.get('/all', attendanceController.getAllAttendance);
 router.get('/employee/:employee_id', attendanceController.getEmployeeAttendance);
 router.get('/stats', attendanceController.getDashboardStats);
+router.put('/:id', attendanceController.updateAttendance);
+router.delete('/:id', attendanceController.deleteAttendance);
 
 module.exports = router;

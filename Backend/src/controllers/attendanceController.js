@@ -115,6 +115,33 @@ const attendanceController = {
         }
     },
 
+    updateAttendance: async (req, res) => {
+        try {
+            const { id } = req.params;
+            const userId = req.user.id;
+            const updateData = req.body;
+
+            await Attendance.update(id, updateData, userId);
+            res.json({ success: true, message: 'Attendance updated successfully' });
+        } catch (error) {
+            console.error('Error updating attendance:', error);
+            res.status(500).json({ success: false, message: 'Error updating attendance' });
+        }
+    },
+
+    deleteAttendance: async (req, res) => {
+        try {
+            const { id } = req.params;
+            const userId = req.user.id;
+
+            await Attendance.delete(id, userId);
+            res.json({ success: true, message: 'Attendance deleted successfully' });
+        } catch (error) {
+            console.error('Error deleting attendance:', error);
+            res.status(500).json({ success: false, message: 'Error deleting attendance' });
+        }
+    },
+
     getDashboardStats: async (req, res) => {
         try {
             const userId = req.user.id;

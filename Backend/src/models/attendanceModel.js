@@ -114,6 +114,21 @@ const Attendance = {
             [employeeId, userId]
         );
         return rows[0];
+    },
+
+    update: async (id, data, userId) => {
+        const fields = Object.keys(data);
+        const values = Object.values(data);
+        const setClause = fields.map(field => `${field} = ?`).join(', ');
+
+        await pool.query(
+            `UPDATE attendance SET ${setClause} WHERE id = ? AND user_id = ?`,
+            [...values, id, userId]
+        );
+    },
+
+    delete: async (id, userId) => {
+        await pool.query('DELETE FROM attendance WHERE id = ? AND user_id = ?', [id, userId]);
     }
 };
 
