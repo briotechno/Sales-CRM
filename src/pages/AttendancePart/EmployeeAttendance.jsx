@@ -1,7 +1,15 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
+
 import DashboardLayout from "../../components/DashboardLayout";
 import { FiHome } from "react-icons/fi";
 import { useSelector } from "react-redux";
+import {
+  useMarkAttendanceMutation,
+  useGetEmployeeAttendanceQuery,
+  useGetDashboardStatsQuery,
+  useCheckOutMutation
+} from "../../store/api/attendanceApi";
+import { toast } from "react-hot-toast";
 
 import {
   Calendar,
@@ -30,7 +38,8 @@ import {
   Home,
   ClipboardList,
   FileText,
-  Briefcase
+  Briefcase,
+  LogOut
 } from "lucide-react";
 import NumberCard from "../../components/NumberCard";
 
@@ -43,6 +52,8 @@ export default function EmployeeAttendance() {
   const [detailsModal, setDetailsModal] = useState(null);
 
   const user = useSelector((state) => state.auth.user);
+  const isEmployee = user?.role === "Employee";
+  const employeeId = isEmployee ? user._id : null;
 
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -53,145 +64,55 @@ export default function EmployeeAttendance() {
 
   const companyIPRange = "192.168.1.";
 
-  // Mock Data - In a real app, this would come from API based on logged in user
-  // This data should ideally represent ALL attendance records for the CURRENT user
-  const [attendanceData, setAttendanceData] = useState([
-    {
-      id: 1,
-      employeeId: "EMP001", // This should match current user ID
-      name: "Rajesh Kumar",
-      department: "Sales",
-      checkIn: "09:15 AM",
-      checkOut: "06:30 PM",
-      status: "present",
-      workHours: "9h 15m",
-      date: "2024-11-18",
-      checkInMethod: "WiFi",
-      ipAddress: "192.168.1.45",
-      selfie: null,
-      location: null,
-    },
-    {
-      id: 2,
-      employeeId: "EMP001",
-      name: "Rajesh Kumar",
-      department: "Sales",
-      checkIn: "09:00 AM",
-      checkOut: "06:00 PM",
-      status: "present",
-      workHours: "9h 00m",
-      date: "2024-11-17",
-      checkInMethod: "WiFi",
-      ipAddress: "192.168.1.45",
-      selfie: null,
-      location: null,
-    },
-    {
-      id: 3,
-      employeeId: "EMP001",
-      name: "Rajesh Kumar",
-      department: "Sales",
-      checkIn: "09:30 AM",
-      checkOut: "06:45 PM",
-      status: "late",
-      workHours: "9h 15m",
-      date: "2024-11-16",
-      checkInMethod: "WiFi",
-      ipAddress: "192.168.1.45",
-      selfie: null,
-      location: null,
-    },
-    {
-      id: 4,
-      employeeId: "EMP001",
-      name: "Rajesh Kumar",
-      department: "Sales",
-      checkIn: "-",
-      checkOut: "-",
-      status: "absent",
-      workHours: "0h 0m",
-      date: "2024-11-15",
-      checkInMethod: "-",
-      ipAddress: "-",
-      selfie: null,
-      location: null,
-    },
-    // Mock entry for today if not checked in
-    {
-      id: 999,
-      employeeId: "EMP001",
-      name: "Rajesh Kumar",
-      department: "Sales",
-      checkIn: "-",
-      checkOut: "-",
-      status: "absent", // "absent" implies not checked in yet for today's context
-      workHours: "0h 0m",
-      date: new Date().toISOString().split('T')[0], // Today
-      checkInMethod: "-",
-      ipAddress: "-",
-      selfie: null,
-      location: null,
-      isToday: true
-    }
-  ]);
+  const { data: attendanceResponse, isLoading: isAttendanceLoading } = useGetEmployeeAttendanceQuery(employeeId, {
+    skip: !employeeId
+  });
 
-  // Filter only records for the current user (mocked as EMP001 here if user data isn't fully linked)
-  // In a real scenario: const myRecords = attendanceData.filter(r => r.employeeId === user.employeeId);
-  const myRecords = attendanceData;
+  const { data: statsResponse } = useGetDashboardStatsQuery(undefined, {
+    skip: isEmployee // Employees might not need full dashboard stats, or we might want specific ones
+  });
+
+  const [markAttendance, { isLoading: isMarking }] = useMarkAttendanceMutation();
+  const [checkOut, { isLoading: isCheckingOut }] = useCheckOutMutation();
+
+  const myRecords = attendanceResponse?.data || [];
+  const myStats = attendanceResponse?.stats || {};
 
   const stats = useMemo(() => {
-    const totalRecords = myRecords.length;
-
-    // Simple logic for "Present Today"
-    // Check if there is a record for today where status is 'present', 'late', or 'half-day' and checkIn is not '-'
-    const todayStr = new Date().toISOString().split('T')[0];
-    const presentTodayRecord = myRecords.find(r => r.date === todayStr && (r.status === 'present' || r.status === 'late' || r.status === 'half-day'));
-    const isPresentToday = !!presentTodayRecord;
-
-    const totalPresent = myRecords.filter(r => r.status === "present" || r.status === "late" || r.status === "half-day").length;
-    const totalAbsent = myRecords.filter(r => r.status === "absent" && !r.isToday).length; // Don't count today as absent yet in historical stats if just started
-    const totalLeaves = myRecords.filter(r => r.status === "leave").length; // Assuming 'leave' status exists
-
-    const attendanceRate = totalRecords > 0 ? ((totalPresent / totalRecords) * 100).toFixed(1) : 0;
-
     return [
       {
-        title: "Total Leave", // Requested
-        number: totalLeaves,
-        icon: <Briefcase className="text-orange-600" size={24} />,
-        iconBgColor: "bg-orange-100",
-        // iconColor removed as it's in className
-        lineBorderClass: "border-orange-500",
+        title: "Total Present",
+        number: myStats.present_days || 0,
+        icon: <CheckCircle className="text-green-600" size={24} />,
+        iconBgColor: "bg-green-100",
+        lineBorderClass: "border-green-500",
       },
       {
-        title: "Present Today", // Requested
-        number: isPresentToday ? "Yes" : "No",
-        icon: isPresentToday ? <CheckCircle className="text-green-600" size={24} /> : <XCircle className="text-red-600" size={24} />,
-        iconBgColor: isPresentToday ? "bg-green-100" : "bg-red-100",
-        // iconColor removed
-        lineBorderClass: isPresentToday ? "border-green-500" : "border-red-500",
-      },
-      {
-        title: "Total Absent", // Requested
-        number: totalAbsent,
+        title: "Total Absent",
+        number: myStats.absent_days || 0,
         icon: <UserX className="text-red-600" size={24} />,
         iconBgColor: "bg-red-100",
-        // iconColor removed
         lineBorderClass: "border-red-500",
       },
       {
-        title: "Attendance Rate", // Requested
-        number: `${attendanceRate}%`,
+        title: "Total Leave",
+        number: myStats.leave_days || 0,
+        icon: <Briefcase className="text-orange-600" size={24} />,
+        iconBgColor: "bg-orange-100",
+        lineBorderClass: "border-orange-500",
+      },
+      {
+        title: "Attendance Rate",
+        number: myStats.total_days ? `${((myStats.present_days / myStats.total_days) * 100).toFixed(1)}% ` : "0%",
         icon: <TrendingUp className="text-blue-600" size={24} />,
         iconBgColor: "bg-blue-100",
-        // iconColor removed
         lineBorderClass: "border-blue-500",
       },
     ];
-  }, [myRecords]);
+  }, [myStats]);
 
   useEffect(() => {
-    const simulatedIP = `192.168.1.${Math.floor(Math.random() * 255)}`;
+    const simulatedIP = `192.168.1.${Math.floor(Math.random() * 255)} `;
     setUserIP(simulatedIP);
     setIsOnCompanyNetwork(simulatedIP.startsWith(companyIPRange));
   }, []);
@@ -294,44 +215,22 @@ export default function EmployeeAttendance() {
     setShowSelfieCapture(true);
   };
 
-  const handleCheckIn = (employee, selfieData, locationData) => {
-    const currentTime = new Date();
-    const timeString = currentTime.toLocaleTimeString("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    });
+  const handleCheckIn = async (employee, selfieData, locationData) => {
+    try {
+      const response = await markAttendance({
+        employee_id: user._id,
+        selfie: selfieData,
+        latitude: locationData?.latitude,
+        longitude: locationData?.longitude,
+        ip_address: userIP
+      }).unwrap();
 
-    const hour = currentTime.getHours();
-    const minute = currentTime.getMinutes();
-    const totalMinutes = hour * 60 + minute;
-    const lateThreshold = 10 * 60;
-
-    let status = "present";
-    if (totalMinutes > lateThreshold) {
-      status = "late";
+      toast.success(response.message || "Attendance marked successfully");
+      setCurrentPage("dashboard");
+    } catch (error) {
+      console.error("Error marking attendance:", error);
+      toast.error(error.data?.message || "Failed to mark attendance");
     }
-
-    setAttendanceData((prev) =>
-      prev.map((record) =>
-        record.id === employee.id // Match by specific record ID (today's placeholder)
-          ? {
-            ...record,
-            checkIn: timeString,
-            status: status,
-            checkInMethod: "WiFi",
-            ipAddress: userIP,
-            selfie: selfieData,
-            location: locationData,
-          }
-          : record
-      )
-    );
-
-    alert(
-      `✓ Check-in successful!\n${employee.name}\nTime: ${timeString}\nStatus: ${status}`
-    );
-    setCurrentPage("dashboard");
   };
 
   const getStatusBadge = (status) => {
@@ -415,7 +314,8 @@ export default function EmployeeAttendance() {
                   className={`px-6 py-3 rounded-sm font-semibold transition-all flex items-center gap-2 ${currentPage === "dashboard"
                     ? "bg-[#FF7B1D] text-white shadow-lg"
                     : "bg-orange-50 text-orange-700 hover:bg-orange-100"
-                    }`}
+                    } `}
+
                 >
                   <Home className="w-5 h-5" />
                   Dashboard
@@ -425,7 +325,8 @@ export default function EmployeeAttendance() {
                   className={`px-6 py-3 rounded-sm font-semibold transition-all flex items-center gap-2 ${currentPage === "checkin"
                     ? "bg-[#FF7B1D] text-white shadow-lg"
                     : "bg-orange-50 text-orange-700 hover:bg-orange-100"
-                    }`}
+                    } `}
+
                 >
                   <Camera className="w-5 h-5" />
                   Check-In
@@ -435,7 +336,8 @@ export default function EmployeeAttendance() {
                   className={`px-6 py-3 rounded-sm font-semibold transition-all flex items-center gap-2 ${currentPage === "records"
                     ? "bg-[#FF7B1D] text-white shadow-lg"
                     : "bg-orange-50 text-orange-700 hover:bg-orange-100"
-                    }`}
+                    } `}
+
                 >
                   <ClipboardList className="w-5 h-5" />
                   Records
@@ -450,72 +352,208 @@ export default function EmployeeAttendance() {
 
           {/* ==================== DASHBOARD PAGE ==================== */}
           {currentPage === "dashboard" && (
-            <div className="space-y-8 px-6">
+            <div className="space-y-6 px-6">
+              {/* Header */}
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-2">
+                <div>
+                  <h1 className="text-3xl font-bold text-gray-900">
+                    Welcome back, <span className="text-[#FF7B1D]">{user?.employee_name || user?.username}</span>
+                  </h1>
+                  <p className="text-gray-500 flex items-center gap-2 mt-1">
+                    <Calendar size={16} />
+                    {new Date().toLocaleDateString("en-US", { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                  </p>
+                </div>
+                <div className="flex items-center gap-3 bg-orange-50 px-4 py-2 rounded-sm border border-orange-100">
+                  <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                  <span className="text-sm font-bold text-orange-900 uppercase tracking-wider">Active Session</span>
+                </div>
+              </div>
+
+              {/* Current Status Banner (Integrated Check-Out Flow) */}
+              {(() => {
+                const todayStr = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
+                const todayRecord = myRecords.find(r => {
+                  const rDate = new Date(r.date).toLocaleDateString('en-CA');
+                  return rDate === todayStr;
+                });
+
+
+                if (todayRecord) {
+                  const hasCheckedOut = todayRecord.check_out && todayRecord.check_out !== '-';
+                  return (
+                    <div className={`p-6 rounded-sm border-l-4 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6 ${hasCheckedOut ? 'bg-green-50 border-green-500' : 'bg-orange-50 border-orange-500'}`}>
+                      <div className="flex items-center gap-4">
+                        <div className={`p-3 rounded-full ${hasCheckedOut ? 'bg-green-100' : 'bg-orange-100 animate-pulse'}`}>
+                          {hasCheckedOut ? <CheckCircle className="w-8 h-8 text-green-600" /> : <Timer className="w-8 h-8 text-orange-600" />}
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-bold text-gray-900">
+                            {hasCheckedOut ? "Shift Completed" : "Currently On Duty"}
+                          </h3>
+                          <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1">
+                            <p className="text-sm text-gray-600 flex items-center gap-1">
+                              <Clock size={14} className="text-orange-500" />
+                              Checked In: <span className="font-bold">{todayRecord.check_in}</span>
+                            </p>
+                            {hasCheckedOut ? (
+                              <>
+                                <p className="text-sm text-gray-600 flex items-center gap-1">
+                                  <LogOut size={14} className="text-red-500" />
+                                  Checked Out: <span className="font-bold">{todayRecord.check_out}</span>
+                                </p>
+                                <p className="text-sm text-gray-600 flex items-center gap-1">
+                                  <Zap size={14} className="text-blue-500" />
+                                  Work Hours: <span className="font-bold text-blue-600">{todayRecord.work_hours}</span>
+                                </p>
+                              </>
+                            ) : (
+                              <p className="text-sm text-orange-600 font-bold flex items-center gap-1">
+                                <Activity size={14} />
+                                Status: {todayRecord.status.toUpperCase()}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {!hasCheckedOut && (
+                        <button
+                          onClick={async () => {
+                            try {
+                              await checkOut({ id: todayRecord.id }).unwrap();
+                              toast.success("Checked out successfully!");
+                            } catch (error) {
+                              toast.error(error.data?.message || "Failed to check out");
+                            }
+                          }}
+
+                          disabled={isCheckingOut}
+                          className="w-full md:w-auto px-8 py-3 bg-red-500 text-white rounded-sm font-bold shadow-lg hover:bg-red-600 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                        >
+                          {isCheckingOut ? (
+                            <div className="w-5 h-5 border-2 border-white border-t-transparent animate-spin rounded-full" />
+                          ) : (
+                            <LogOut className="w-5 h-5" />
+                          )}
+                          CHECK OUT NOW
+                        </button>
+                      )}
+
+                      {hasCheckedOut && (
+                        <div className="bg-white px-4 py-2 rounded-full border border-green-200">
+                          <span className="text-green-600 font-bold text-sm tracking-wide">HAVE A GREAT DAY!</span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                } else {
+                  return (
+                    <div className="p-6 bg-blue-50 border-l-4 border-blue-500 rounded-sm shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
+                      <div className="flex items-center gap-4">
+                        <div className="p-3 bg-blue-100 rounded-full">
+                          <MapPin className="w-8 h-8 text-blue-600" />
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-bold text-gray-900">Not Checked In</h3>
+                          <p className="text-sm text-gray-600 mt-1">Start your day by marking your attendance.</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => setCurrentPage("checkin")}
+                        className="w-full md:w-auto px-8 py-3 bg-blue-600 text-white rounded-sm font-bold shadow-lg hover:bg-blue-700 active:scale-95 transition-all flex items-center justify-center gap-2"
+                      >
+                        <Zap className="w-5 h-5" />
+                        GO TO CHECK-IN
+                      </button>
+                    </div>
+                  );
+                }
+              })()}
+
+
               {/* Stats Grid */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                 {stats.map((stat, index) => (
                   <NumberCard
                     key={index}
                     title={stat.title}
-                    // number={stat.number} 
-                    // Making sure NumberCard component can handle string or number inputs if it's strictly typed or modifies it. 
-                    // If NumberCard expects a prop called 'value' or 'count' instead of number passed as child, adjustments might be needed.
-                    // Assuming NumberCard renders 'title' and some other prop or children. 
-                    // Based on previous file content, NumberCard usage was: <NumberCard title="..." icon={...} ... />
-                    // It seems the number value might be passed inside or as a prop. 
-                    // Let's pass it as a prop named 'number' as seen in the previous file's stats mapping.
-                    {...stat}
+                    number={stat.number}
+                    icon={stat.icon}
+                    iconBgColor={stat.iconBgColor}
+                    lineBorderClass={stat.lineBorderClass}
                   />
                 ))}
-
-                {/* 
-                    Explicitly passing number prop just in case spread doesn't work well 
-                    with how NumberCard expects it (though spread should work).
-                    However, earlier I saw NumberCard usage commented out // number={...}.
-                    I will create inline cards here to be safe if NumberCard is complex or customized differently.
-                    Actually, let's trust the components/NumberCard import if it exists. Reverting to explicit JSX for cards if needed or using the component.
-                    The previous 'AllAttendance.jsx' used NumberCard. I'll use it.
-                 */}
               </div>
 
 
 
-              {/* Recent Activity / Simple List */}
+
               <div className="bg-white rounded-sm shadow-xl p-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                  <Activity className="w-6 h-6 text-orange-500" />
                   Recent Attendance
                 </h2>
                 <div className="space-y-4">
-                  {myRecords
-                    .slice(0, 5)
-                    .map((record, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center gap-4 p-4 bg-orange-50 rounded-sm"
-                      >
-                        <div className={`w-12 h-12 rounded-full flex items-center justify-center ${record.status === 'present' ? 'bg-green-100' : 'bg-gray-200'}`}>
-                          {record.status === 'present' ? <CheckCircle className="w-6 h-6 text-green-600" /> : <Clock className="w-6 h-6 text-gray-600" />}
+                  {myRecords.length === 0 ? (
+                    <div className="text-center py-10 bg-gray-50 rounded-sm border-2 border-dashed border-gray-200">
+                      <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-2" />
+                      <p className="text-gray-500">No attendance records found yet.</p>
+                    </div>
+                  ) : (
+                    myRecords.slice(0, 5).map((record, index) => {
+                      const date = new Date(record.date).toLocaleDateString("en-US", {
+                        weekday: 'short',
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                      });
+
+                      const isPresent = ['present', 'late', 'half-day'].includes(record.status);
+
+                      return (
+                        <div
+                          key={index}
+                          className="flex items-center gap-4 p-4 bg-orange-50 rounded-sm border border-orange-100 hover:shadow-md transition-shadow"
+                        >
+                          <div className={`w-12 h-12 rounded-full flex items-center justify-center ${isPresent ? 'bg-green-100' : 'bg-red-100'}`}>
+                            {isPresent ? <CheckCircle className="w-6 h-6 text-green-600" /> : <UserX className="w-6 h-6 text-red-600" />}
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-bold text-gray-900">
+                              {date}
+                            </p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${record.status === 'present' ? 'bg-green-500 text-white' :
+                                record.status === 'late' ? 'bg-orange-500 text-white' :
+                                  'bg-red-500 text-white'
+                                }`}>
+                                {record.status}
+                              </span>
+                              <span className="text-xs text-gray-500 flex items-center gap-1">
+                                <Wifi className="w-3 h-3" />
+                                {record.check_in_method}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="flex items-center gap-1 justify-end">
+                              <Clock className="w-3 h-3 text-orange-500" />
+                              <p className="text-sm font-bold text-gray-900">
+                                {record.check_in}
+                              </p>
+                            </div>
+                            <p className="text-xs text-gray-500 mt-1">
+                              {record.check_out && record.check_out !== '-' ? `Out: ${record.check_out}` : 'Working...'}
+                            </p>
+                          </div>
                         </div>
-                        <div className="flex-1">
-                          <p className="font-bold text-gray-900">
-                            {record.date}
-                          </p>
-                          <p className="text-sm text-gray-600">
-                            {record.status === 'present' ? `Checked in via ${record.checkInMethod}` : 'Status: ' + record.status}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-sm font-bold text-orange-600">
-                            {record.checkIn}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {record.checkOut !== '-' ? record.checkOut : ''}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
+                      )
+                    })
+                  )}
                 </div>
               </div>
+
             </div>
           )}
 
@@ -562,53 +600,100 @@ export default function EmployeeAttendance() {
                   Today's Check-In
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {myRecords
-                    .filter((rec) => rec.isToday && rec.status === "absent")
-                    .map((record) => (
-                      <button
-                        key={record.id}
-                        onClick={() => handleCheckInClick(record)}
-                        disabled={!isOnCompanyNetwork}
-                        className={`border-2 rounded-sm p-6 text-left  ${isOnCompanyNetwork
-                          ? "border-orange-200 hover:border-orange-500 hover:bg-orange-50 cursor-pointer shadow-md hover:shadow-sm"
-                          : "border-gray-200 bg-gray-50 cursor-not-allowed opacity-50"
-                          }`}
-                      >
-                        <div className="flex items-center gap-4 mb-4">
-                          <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-4 rounded-sm shadow-sm">
-                            <UserCheck className="w-7 h-7 text-white" />
-                          </div>
-                          <div className="flex-1">
-                            <p className="font-bold text-gray-900 text-lg">
-                              {record.name}
-                            </p>
-                            <p className="text-sm text-gray-600 font-medium">
-                              {record.employeeId}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="bg-orange-50 rounded-sm px-3 py-2">
-                          <p className="text-xs text-orange-600">Department</p>
-                          <p className="text-sm font-bold text-gray-900">
-                            {record.department}
-                          </p>
-                        </div>
-                        <div className="mt-4 text-center text-orange-600 font-semibold text-sm">
-                          Click to Check-In
-                        </div>
-                      </button>
-                    ))}
-                </div>
+                  {(() => {
+                    const todayStr = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
+                    const todayRecord = myRecords.find(r => {
+                      const rDate = new Date(r.date).toLocaleDateString('en-CA');
+                      return rDate === todayStr;
+                    });
 
-                {myRecords.filter((rec) => rec.isToday && rec.status === "absent")
-                  .length === 0 && (
-                    <div className="text-center py-12 bg-gradient-to-r from-orange-50 to-orange-100 rounded-sm">
-                      <CheckCircle className="w-16 h-16 text-orange-500 mx-auto mb-4" />
-                      <p className="text-gray-700 font-bold text-xl">
-                        You have already checked in for today! 🎉
-                      </p>
-                    </div>
-                  )}
+
+                    if (!todayRecord && !isAttendanceLoading) {
+                      return (
+                        <button
+                          onClick={() => handleCheckInClick({ name: user?.name, employeeId: user?.employee_id })}
+                          disabled={!isOnCompanyNetwork}
+                          className={`border-2 rounded-sm p-6 text-left ${isOnCompanyNetwork
+                            ? "border-orange-200 hover:border-orange-500 hover:bg-orange-50 cursor-pointer shadow-md hover:shadow-sm"
+                            : "border-gray-200 bg-gray-50 cursor-not-allowed opacity-50"
+                            }`}
+
+                        >
+                          <div className="flex items-center gap-4 mb-4">
+                            <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-4 rounded-sm shadow-sm">
+                              <UserCheck className="w-7 h-7 text-white" />
+                            </div>
+                            <div className="flex-1">
+                              <p className="font-bold text-gray-900 text-lg">
+                                {user?.name}
+                              </p>
+                              <p className="text-sm text-gray-600 font-medium">
+                                {user?.employee_id}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="bg-orange-50 rounded-sm px-3 py-2">
+                            <p className="text-xs text-orange-600">Action</p>
+                            <p className="text-sm font-bold text-gray-900">
+                              Check-In for Today
+                            </p>
+                          </div>
+                          <div className="mt-4 text-center text-orange-600 font-semibold text-sm">
+                            Click to Mark Attendance
+                          </div>
+                        </button>
+                      );
+                    } else if (todayRecord) {
+                      const hasCheckedOut = todayRecord.check_out && todayRecord.check_out !== '-';
+                      return (
+                        <div className="col-span-full">
+                          <div className="text-center py-12 bg-gradient-to-r from-orange-50 to-orange-100 rounded-sm">
+                            <CheckCircle className="w-16 h-16 text-orange-500 mx-auto mb-4" />
+                            <p className="text-gray-700 font-bold text-xl">
+                              {hasCheckedOut ? "You have completed your attendance for today! 🎉" : "You have already checked in for today! 🎉"}
+                            </p>
+                            <div className="mt-4 space-y-2">
+                              <p className="text-gray-500">
+                                Checked in at <span className="font-bold text-orange-600">{todayRecord.check_in}</span>
+                              </p>
+                              {hasCheckedOut && (
+                                <p className="text-gray-500">
+                                  Checked out at <span className="font-bold text-orange-600">{todayRecord.check_out}</span>
+                                </p>
+                              )}
+                              {hasCheckedOut && (
+                                <p className="text-gray-500">
+                                  Work Hours: <span className="font-bold text-orange-600">{todayRecord.work_hours}</span>
+                                </p>
+                              )}
+                            </div>
+
+                            {!hasCheckedOut && (
+                              <button
+                                onClick={async () => {
+                                  try {
+                                    await checkOut({ id: todayRecord.id }).unwrap();
+                                    toast.success("Checked out successfully!");
+                                  } catch (error) {
+                                    toast.error(error.data?.message || "Failed to check out");
+                                  }
+                                }}
+
+                                disabled={isCheckingOut}
+                                className="mt-8 px-8 py-3 bg-red-500 text-white rounded-sm font-bold shadow-lg hover:bg-red-600 transition-colors flex items-center gap-2 mx-auto disabled:opacity-50"
+                              >
+                                {isCheckingOut ? <div className="w-5 h-5 border-2 border-white border-t-transparent animate-spin rounded-full" /> : <Clock className="w-5 h-5" />}
+                                Check Out Now
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    return null;
+                  })()}
+                </div>
               </div>
             </div>
           )}
@@ -651,37 +736,51 @@ export default function EmployeeAttendance() {
                       {myRecords.map((record) => {
                         const badge = getStatusBadge(record.status);
                         const StatusIcon = badge.icon;
-                        const methodBadge = getMethodBadge(record.checkInMethod);
+                        const methodBadge = getMethodBadge(record.check_in_method);
                         const MethodIcon = methodBadge.icon;
+
 
                         return (
                           <tr key={record.id} className="hover:bg-orange-50 transition-colors">
-                            <td className="px-6 py-4 text-sm font-bold text-gray-900">{record.date}</td>
+                            <td className="px-6 py-4 text-sm font-bold text-gray-900">
+                              {new Date(record.date).toLocaleDateString("en-US", {
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric'
+                              })}
+                            </td>
+
                             <td className="px-6 py-4 text-center">
                               <div className="flex items-center justify-center gap-2">
                                 <Clock className="w-4 h-4 text-orange-400" />
-                                <span className="text-gray-900 font-semibold">{record.checkIn}</span>
+                                <span className="text-gray-900 font-semibold">{record.check_in}</span>
                               </div>
                             </td>
+
                             <td className="px-6 py-4 text-center">
                               <span className={`inline-flex items-center gap-2 px-3 py-1 ${methodBadge.bg} ${methodBadge.text} rounded-sm text-xs font-bold`}>
                                 <MethodIcon className="w-4 h-4" />
-                                {record.checkInMethod}
+                                {record.check_in_method}
                               </span>
                             </td>
-                            <td className="px-6 py-4 text-center text-gray-900 font-semibold">{record.checkOut}</td>
+
+
+                            <td className="px-6 py-4 text-center text-gray-900 font-semibold">{record.check_out}</td>
+
                             <td className="px-6 py-4 text-center">
                               <span className="inline-flex items-center gap-2 px-3 py-1 bg-orange-100 text-orange-700 rounded-sm text-xs font-bold">
                                 <Timer className="w-4 h-4" />
-                                {record.workHours}
+                                {record.work_hours}
                               </span>
                             </td>
+
                             <td className="px-6 py-4 text-center">
                               <span className={`inline-flex items-center gap-2 px-3 py-1 ${badge.bg} ${badge.text} rounded-sm text-xs font-bold`}>
                                 <StatusIcon className="w-4 h-4" />
                                 {badge.label}
                               </span>
                             </td>
+
                             <td className="px-6 py-4 text-center">
                               <button
                                 onClick={() => setDetailsModal(record)}
@@ -901,21 +1000,22 @@ export default function EmployeeAttendance() {
                   <div className="bg-orange-50 p-4 rounded-sm">
                     <p className="text-orange-600 text-sm mb-1">Method</p>
                     <p className="font-bold text-gray-900">
-                      {detailsModal.checkInMethod}
+                      {detailsModal.check_in_method}
                     </p>
                   </div>
                   <div className="bg-orange-50 p-4 rounded-sm">
                     <p className="text-orange-600 text-sm mb-1">IP Address</p>
                     <p className="font-bold text-gray-900 font-mono text-sm">
-                      {detailsModal.ipAddress}
+                      {detailsModal.ip_address}
                     </p>
                   </div>
                   <div className="bg-orange-50 p-4 rounded-sm col-span-2">
                     <p className="text-orange-600 text-sm mb-1">Work Hours</p>
                     <p className="font-bold text-gray-900">
-                      {detailsModal.workHours}
+                      {detailsModal.work_hours}
                     </p>
                   </div>
+
                 </div>
               </div>
             </div>
