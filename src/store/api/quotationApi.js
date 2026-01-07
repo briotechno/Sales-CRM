@@ -3,7 +3,7 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 export const quotationApi = createApi({
     reducerPath: 'quotationApi',
     baseQuery: fetchBaseQuery({
-        baseUrl: 'http://localhost:5000/api/', // Verify this matches your backend URL
+        baseUrl: import.meta.env.VITE_API_BASE_URL, // Verify this matches your backend URL
         prepareHeaders: (headers) => {
             const token = localStorage.getItem('token');
             if (token) {
