@@ -20,105 +20,45 @@ import {
   Eye,
   TrendingUp,
   Users,
+  MapPin,
+  Globe,
+  Briefcase
 } from "lucide-react";
 import NumberCard from "../../components/NumberCard";
+import {
+  useGetClientsQuery,
+  useCreateClientMutation,
+  useUpdateClientMutation,
+} from "../../store/api/clientApi";
+import { toast } from "react-hot-toast";
+import DeleteClientModal from "../../components/Client/DeleteClientModal";
+import ViewClientModal from "../../components/Client/ViewClientModal";
 
 export default function AllClientPage() {
   const [showAddModal, setShowAddModal] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingId, setEditingId] = useState(null);
   const [clientType, setClientType] = useState("person");
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [selectedClients, setSelectedClients] = useState(new Set());
 
-  // Sample client data
-  const [clients, setClients] = useState([
-    {
-      id: 1,
-      type: "person",
-      name: "John Smith",
-      email: "john.smith@email.com",
-      phone: "+91 98765-43210",
-      company: "Tech Corp",
-      status: "active",
-      value: "₹4,50,000",
-      lastContact: "2024-11-15",
-      nextFollowUp: "2024-11-20",
-      deals: 3,
-      source: "Website",
-    },
-    {
-      id: 2,
-      type: "organization",
-      name: "Acme Industries",
-      email: "contact@acme.com",
-      phone: "+91 99887-76655",
-      industry: "Manufacturing",
-      status: "active",
-      value: "₹12,50,000",
-      lastContact: "2024-11-18",
-      nextFollowUp: "2024-11-22",
-      deals: 7,
-      employees: 250,
-    },
-    {
-      id: 3,
-      type: "person",
-      name: "Sarah Johnson",
-      email: "sarah.j@email.com",
-      phone: "+91 97654-32109",
-      company: "Design Studio",
-      status: "inactive",
-      value: "₹1,20,000",
-      lastContact: "2024-10-30",
-      nextFollowUp: "2024-11-25",
-      deals: 1,
-      source: "Referral",
-    },
-    {
-      id: 4,
-      type: "organization",
-      name: "Global Solutions Inc",
-      email: "info@globalsol.com",
-      phone: "+91 98888-77777",
-      industry: "Technology",
-      status: "pending",
-      value: "₹8,75,000",
-      lastContact: "2024-11-19",
-      nextFollowUp: "2024-11-24",
-      deals: 5,
-      employees: 150,
-    },
-    {
-      id: 5,
-      type: "person",
-      name: "Michael Chen",
-      email: "m.chen@email.com",
-      phone: "+91 96543-21098",
-      company: "Creative Agency",
-      status: "active",
-      value: "₹3,20,000",
-      lastContact: "2024-11-20",
-      nextFollowUp: "2024-11-23",
-      deals: 2,
-      source: "Social Media",
-    },
-    {
-      id: 6,
-      type: "person",
-      name: "Emily Rodriguez",
-      email: "emily.r@email.com",
-      phone: "+91 95432-10987",
-      company: "Marketing Pro",
-      status: "pending",
-      value: "₹2,80,000",
-      lastContact: "2024-11-17",
-      nextFollowUp: "2024-11-26",
-      deals: 4,
-      source: "Referral",
-    },
-  ]);
+  // New Modal States
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [clientToDelete, setClientToDelete] = useState(null); // ID for single delete
+  const [isBulkDelete, setIsBulkDelete] = useState(false);
 
-  const [formData, setFormData] = useState({
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [clientToView, setClientToView] = useState(null);
+
+  // API Hooks
+  const { data: clientsResponse, isLoading, refetch } = useGetClientsQuery({ search: searchTerm, status: filterStatus });
+  const [createClient, { isLoading: isCreating }] = useCreateClientMutation();
+  const [updateClient, { isLoading: isUpdating }] = useUpdateClientMutation();
+
+  const clients = clientsResponse?.data || [];
+
+  const initialFormState = {
     firstName: "",
     lastName: "",
     email: "",
@@ -139,44 +79,126 @@ export default function AllClientPage() {
     state: "",
     zipCode: "",
     country: "",
-    contractValue: "",
-    contractStart: "",
-    contractEnd: "",
-    paymentTerms: "",
     notes: "",
-  });
+    status: "active"
+  };
+
+  const [formData, setFormData] = useState(initialFormState);
 
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const openAddModal = () => {
+    setIsEditing(false);
+    setEditingId(null);
+    setFormData(initialFormState);
+    setClientType("person");
+    setShowAddModal(true);
+  };
+
+  const openEditModal = (client) => {
+    setIsEditing(true);
+    setEditingId(client.id);
+    setClientType(client.type);
+
+    setFormData({
+      firstName: client.first_name || "",
+      lastName: client.last_name || "",
+      email: client.email || "",
+      phone: client.phone || "",
+      company: client.company_name || "",
+      position: client.position || "",
+      birthday: client.birthday ? client.birthday.split('T')[0] : "",
+      source: client.source || "",
+      orgName: client.company_name || "",
+      orgEmail: client.email || "",
+      orgPhone: client.phone || "",
+      industry: client.industry || "",
+      website: client.website || "",
+      employees: client.number_of_employees || "",
+      taxId: client.tax_id || "",
+      address: client.address || "",
+      city: client.city || "",
+      state: client.state || "",
+      zipCode: client.zip_code || "",
+      country: client.country || "",
+      notes: client.notes || "",
+      status: client.status || "active"
+    });
+    setShowAddModal(true);
+  };
+
+  const openDeleteModal = (id) => {
+    setClientToDelete(id);
+    setIsBulkDelete(false);
+    setIsDeleteModalOpen(true);
+  };
+
+  const openBulkDeleteModal = () => {
+    setIsBulkDelete(true);
+    setIsDeleteModalOpen(true);
+  };
+
+  const openViewModal = (client) => {
+    setClientToView(client);
+    setIsViewModalOpen(true);
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setShowAddModal(false);
-    setFormData({});
+    try {
+      const payload = {
+        type: clientType,
+        first_name: clientType === 'person' ? formData.firstName : null,
+        last_name: clientType === 'person' ? formData.lastName : null,
+        email: clientType === 'person' ? formData.email : formData.orgEmail,
+        phone: clientType === 'person' ? formData.phone : formData.orgPhone,
+        company_name: clientType === 'person' ? formData.company : formData.orgName,
+        position: formData.position,
+        birthday: formData.birthday || null,
+        source: formData.source,
+        industry: formData.industry,
+        website: formData.website,
+        number_of_employees: formData.employees || null,
+        tax_id: formData.taxId,
+        address: formData.address,
+        city: formData.city,
+        state: formData.state,
+        zip_code: formData.zipCode,
+        country: formData.country,
+        notes: formData.notes,
+        status: formData.status
+      };
+
+      if (isEditing) {
+        await updateClient({ id: editingId, ...payload }).unwrap();
+        toast.success("Client updated successfully");
+      } else {
+        await createClient(payload).unwrap();
+        toast.success("Client created successfully");
+      }
+      setShowAddModal(false);
+      setFormData(initialFormState);
+      refetch();
+    } catch (error) {
+      console.error(error);
+      toast.error(isEditing ? "Failed to update client" : "Failed to create client");
+    }
   };
 
   const getStatusColor = (status) => {
     switch (status) {
       case "active":
-        return "bg-green-50 text-green-700 border border-green-200";
+        return "bg-green-100 text-green-700 border-green-200";
       case "inactive":
-        return "bg-gray-50 text-gray-600 border border-gray-200";
+        return "bg-gray-100 text-gray-600 border-gray-200";
       case "pending":
-        return "bg-amber-50 text-amber-700 border border-amber-200";
+        return "bg-amber-100 text-amber-700 border-amber-200";
       default:
-        return "bg-gray-50 text-gray-600 border border-gray-200";
+        return "bg-gray-100 text-gray-600 border-gray-200";
     }
   };
-
-  const filteredClients = clients.filter((client) => {
-    const matchesSearch =
-      client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      client.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter =
-      filterStatus === "all" || client.status === filterStatus;
-    return matchesSearch && matchesFilter;
-  });
 
   const toggleClientSelection = (clientId) => {
     setSelectedClients((prev) => {
@@ -191,12 +213,18 @@ export default function AllClientPage() {
   };
 
   const selectAll = () => {
-    setSelectedClients(new Set(filteredClients.map((c) => c.id)));
+    setSelectedClients(new Set(clients.map((c) => c.id)));
   };
 
   const deselectAll = () => {
     setSelectedClients(new Set());
   };
+
+  const totalClients = clients.length;
+  const activeClients = clients.filter(c => c.status === 'active').length;
+  const inactiveClients = clients.filter(c => c.status === 'inactive').length;
+  // Mock value just to show something nice
+  const totalValue = "₹" + (clients.length * 4.5).toFixed(1) + "L";
 
   return (
     <DashboardLayout>
@@ -205,7 +233,6 @@ export default function AllClientPage() {
         <div className="bg-white border-b border-orange-100 sticky top-0 z-10 shadow-sm">
           <div className="px-6 py-5">
             <div className="flex items-center justify-between gap-4 flex-wrap">
-              {/* Left: Title + Breadcrumb */}
               <div>
                 <h1 className="text-2xl font-bold text-gray-800">
                   All Clients
@@ -219,38 +246,44 @@ export default function AllClientPage() {
                 </p>
               </div>
 
-              {/* Right section */}
               <div className="flex items-center gap-4">
-                {/* Filters moved to the right side */}
                 <div className="flex items-center gap-4">
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="Search..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="px-4 py-2 border rounded-full text-sm w-64 focus:ring-2 focus:ring-orange-500 outline-none pl-10 bg-gray-50 hover:bg-white transition-colors"
+                    />
+                    <Search className="absolute left-3 top-2.5 text-gray-400 w-4 h-4" />
+                  </div>
                   <select
                     value={filterStatus}
                     onChange={(e) => setFilterStatus(e.target.value)}
-                    className="px-5 py-3 border border-orange-200 rounded-sm focus:ring-2 focus:ring-orange-400 focus:border-transparent font-medium text-gray-700"
+                    className="px-5 py-2.5 border border-orange-200 rounded-lg focus:ring-2 focus:ring-orange-400 font-medium text-gray-700 text-sm bg-white"
                   >
                     <option value="all">All Status</option>
                     <option value="active">Active</option>
                     <option value="inactive">Inactive</option>
-                    <option value="pending">Pending</option>
                   </select>
 
-                  <button className="flex items-center gap-2 px-5 py-3 border border-orange-200 rounded-sm hover:bg-orange-50 transition-all font-medium text-gray-700">
-                    <Filter size={20} />
+                  <button className="flex items-center gap-2 px-5 py-2.5 border border-orange-200 rounded-lg hover:bg-orange-50 transition-all font-medium text-gray-700 text-sm">
+                    <Filter size={16} />
                     Filters
                   </button>
 
-                  <button className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm hover:from-orange-600 hover:to-orange-700 shadow-lg hover:shadow-xl font-medium">
-                    <Download size={20} />
+                  <button className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:from-orange-600 hover:to-orange-700 shadow-md hover:shadow-lg font-medium text-sm">
+                    <Download size={16} />
                     Export
                   </button>
                 </div>
 
-                {/* Add Client Button (right-most) */}
                 <button
-                  onClick={() => setShowAddModal(true)}
-                  className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl hover:scale-105 font-medium"
+                  onClick={openAddModal}
+                  className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-2.5 rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all shadow-md hover:shadow-lg hover:scale-105 font-medium text-sm"
                 >
-                  <Plus size={20} />
+                  <Plus size={18} />
                   Add Client
                 </button>
               </div>
@@ -260,80 +293,67 @@ export default function AllClientPage() {
 
         {/* Stats Cards */}
         <div className="px-0 py-0 mt-2">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-5 mb-6">
-
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-5 mb-6 px-6">
             <NumberCard
               title="Total Clients"
-              number={"248"}
-              up={
-                <span className="flex items-center gap-1 text-green-600 text-xs">
-                  <TrendingUp size={12} />
-                  +12% this month
-                </span>
-              }
+              number={totalClients}
               icon={<Users className="text-blue-600" size={24} />}
               iconBgColor="bg-blue-100"
               lineBorderClass="border-blue-500"
             />
             <NumberCard
               title="Active Clients"
-              number={"186"}
-              up={"75% of total"}
+              number={activeClients}
               icon={<CheckCircle className="text-green-600" size={24} />}
               iconBgColor="bg-green-100"
               lineBorderClass="border-green-500"
             />
             <NumberCard
               title="Inactive Clients"
-              number={"18"}
-              up={"7% of total"}
+              number={inactiveClients}
               icon={<Clock className="text-orange-600" size={24} />}
               iconBgColor="bg-orange-100"
               lineBorderClass="border-orange-500"
             />
             <NumberCard
-              title="Total Value"
-              number={"₹1.2Cr"}
-              up={
-                <span className="flex items-center gap-1 text-green-600 text-xs">
-                  <TrendingUp size={12} />
-                  +8.5% growth
-                </span>
-              }
+              title="Pipeline Value"
+              number={totalValue}
               icon={<DollarSign className="text-purple-600" size={24} />}
               iconBgColor="bg-purple-100"
               lineBorderClass="border-purple-500"
             />
-
           </div>
 
           {/* Selection Actions Bar */}
           {selectedClients.size > 0 && (
-            <div className="bg-gradient-to-r from-orange-50 to-orange-100 border-2 border-orange-300 rounded-lg p-4 mb-6 flex items-center justify-between shadow-md">
+            <div className="mx-6 bg-orange-50 border border-orange-200 rounded-lg p-3 mb-6 flex items-center justify-between animate-fadeIn">
               <div className="flex items-center gap-4">
-                <div className="bg-white px-4 py-2 rounded-full border-2 border-orange-400 shadow-sm">
+                <div className="bg-white px-4 py-1.5 rounded-full border border-orange-300 shadow-sm">
                   <span className="text-orange-700 font-bold text-sm">
                     {selectedClients.size} Selected
                   </span>
                 </div>
                 <button
                   onClick={deselectAll}
-                  className="text-sm text-gray-700 hover:text-orange-600 font-medium underline"
+                  className="text-sm text-gray-600 hover:text-orange-600 font-medium underline transition-colors"
                 >
                   Clear Selection
                 </button>
               </div>
               <div className="flex items-center gap-3">
-                <button className="flex items-center gap-2 px-5 py-2.5 bg-white border-2 border-orange-400 text-orange-600 rounded-lg hover:bg-orange-50 transition-all font-semibold shadow-sm">
-                  <Mail size={18} />
+                <button className="flex items-center gap-2 px-4 py-2 bg-white border border-orange-300 text-orange-600 rounded-lg hover:bg-orange-50 transition-all font-semibold text-sm shadow-sm">
+                  <Mail size={16} />
                   Email Selected
                 </button>
-                <button className="flex items-center gap-2 px-5 py-2.5 bg-white border-2 border-orange-400 text-orange-600 rounded-lg hover:bg-orange-50 transition-all font-semibold shadow-sm">
-                  <Download size={18} />
+                <button className="flex items-center gap-2 px-4 py-2 bg-white border border-orange-300 text-orange-600 rounded-lg hover:bg-orange-50 transition-all font-semibold text-sm shadow-sm">
+                  <Download size={16} />
                   Export Selected
                 </button>
-                <button className="flex items-center gap-2 px-5 py-2.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all font-semibold shadow-md">
-                  <Trash2 size={18} />
+                <button
+                  onClick={openBulkDeleteModal}
+                  className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all font-semibold text-sm shadow-md"
+                >
+                  <Trash2 size={16} />
                   Delete Selected
                 </button>
               </div>
@@ -341,13 +361,13 @@ export default function AllClientPage() {
           )}
 
           {/* Bulk Selection Bar */}
-          <div className="bg-white border border-orange-100 rounded-lg p-4 mb-6 flex items-center justify-between shadow-sm">
-            <div className="flex items-center gap-4">
+          <div className="bg-white border border-gray-200 rounded-sm p-3 mb-6 mx-6 flex items-center justify-between shadow-sm">
+            <div className="flex items-center gap-3">
               <input
                 type="checkbox"
                 checked={
-                  filteredClients.length > 0 &&
-                  selectedClients.size === filteredClients.length
+                  clients.length > 0 &&
+                  selectedClients.size === clients.length
                 }
                 onChange={(e) => {
                   if (e.target.checked) {
@@ -356,150 +376,144 @@ export default function AllClientPage() {
                     deselectAll();
                   }
                 }}
-                className="w-5 h-5 text-orange-600 border-gray-300 rounded focus:ring-orange-500 focus:ring-2 cursor-pointer"
+                className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500 cursor-pointer"
               />
-              <span className="text-sm font-medium text-gray-700">
-                Select All Clients
+              <span className="text-sm font-medium text-gray-600">
+                Select All
               </span>
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-sm text-gray-600">
-                Showing {filteredClients.length} of {clients.length} clients
+              <span className="text-xs text-gray-500 font-medium bg-gray-100 px-2 py-1 rounded">
+                Displaying {clients.length} results
               </span>
             </div>
           </div>
 
           {/* Client Cards Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {filteredClients.map((client) => (
-              <div
-                key={client.id}
-                className={`bg-white rounded-lg border-2 p-6 relative transition-all hover:shadow-xl ${selectedClients.has(client.id)
-                  ? "border-orange-400 shadow-lg bg-orange-50"
-                  : "border-orange-100 hover:border-orange-200"
-                  }`}
-              >
-                {/* Checkbox in top-right corner */}
-                <div className="absolute top-5 right-5 z-10">
-                  <input
-                    type="checkbox"
-                    checked={selectedClients.has(client.id)}
-                    onChange={() => toggleClientSelection(client.id)}
-                    className="w-6 h-6 text-orange-600 border-2 border-orange-300 rounded-md focus:ring-orange-500 focus:ring-2 cursor-pointer shadow-sm"
-                  />
+          {isLoading ? (
+            <div className="flex justify-center py-20">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 gap-6 px-6 pb-12">
+              {clients.length === 0 ? (
+                <div className="col-span-full text-center py-16 bg-gray-50 rounded-xl border-dashed border-2 border-gray-200">
+                  <User className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-700">No Clients Found</h3>
+                  <p className="text-gray-500 mb-6">Get started by adding your first client.</p>
+                  <button onClick={openAddModal} className="px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 font-medium shadow-sm transition-colors">
+                    Add New Client
+                  </button>
                 </div>
-
-                <div className="flex items-start justify-between pr-10">
-                  <div className="flex items-start gap-5 flex-1">
-                    <div
-                      className={`p-4 rounded-2xl shadow-lg ${client.type === "person"
-                        ? "bg-gradient-to-br from-blue-400 to-blue-500"
-                        : "bg-gradient-to-br from-purple-400 to-purple-500"
-                        }`}
-                    >
-                      {client.type === "person" ? (
-                        <User className="text-white" size={28} />
-                      ) : (
-                        <Building2 className="text-white" size={28} />
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-3 flex-wrap">
-                        <h3 className="text-xl font-bold text-gray-900">
-                          {client.name}
-                        </h3>
-                        <span
-                          className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(
-                            client.status
-                          )}`}
-                        >
-                          {client.status.charAt(0).toUpperCase() +
-                            client.status.slice(1)}
-                        </span>
-                        <span className="px-3 py-1 rounded-full text-xs font-semibold bg-orange-50 text-orange-700 border border-orange-200">
-                          {client.type === "person" ? "Person" : "Organization"}
-                        </span>
-                      </div>
-                      <div className="grid grid-cols-1 gap-3 text-sm mb-4">
-                        <div className="flex items-center gap-2 text-gray-700">
-                          <div className="bg-orange-50 p-2 rounded-lg">
-                            <Mail size={16} className="text-orange-500" />
+              ) : clients.map((client) => {
+                const isSelected = selectedClients.has(client.id);
+                return (
+                  <div
+                    key={client.id}
+                    className={`bg-white rounded-xl border transition-all duration-200 group hover:shadow-lg ${isSelected
+                      ? "border-orange-400 shadow-md bg-orange-50/30"
+                      : "border-gray-200 hover:border-orange-200"
+                      }`}
+                  >
+                    <div className="p-6">
+                      <div className="flex justify-between items-start mb-4 relative">
+                        <div className="flex gap-4">
+                          <div
+                            className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm ${client.type === "person"
+                              ? "bg-gradient-to-br from-blue-500 to-blue-600 text-white"
+                              : "bg-gradient-to-br from-purple-500 to-purple-600 text-white"
+                              }`}
+                          >
+                            {client.type === "person" ? <User size={28} /> : <Building2 size={28} />}
                           </div>
-                          <span className="font-medium">{client.email}</span>
+                          <div>
+                            <h3 className="text-lg font-bold text-gray-900 leading-tight mb-1">
+                              {client.type === 'person' ? `${client.first_name} ${client.last_name || ''}` : client.company_name}
+                            </h3>
+                            <div className="flex items-center gap-2">
+                              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide border ${getStatusColor(client.status)}`}>
+                                {client.status || 'Active'}
+                              </span>
+                              <span className="text-xs text-gray-500 font-medium px-2 py-0.5 bg-gray-100 rounded-full border border-gray-200 capitalize">
+                                {client.type}
+                              </span>
+                            </div>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2 text-gray-700">
-                          <div className="bg-orange-50 p-2 rounded-lg">
-                            <Phone size={16} className="text-orange-500" />
+
+                        <div className="absolute top-0 right-0">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => toggleClientSelection(client.id)}
+                            className="w-5 h-5 text-orange-600 border-gray-300 rounded focus:ring-orange-500 cursor-pointer"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-3 mb-6">
+                        <div className="flex items-center gap-3 text-sm text-gray-600 group/item">
+                          <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center group-hover/item:bg-orange-50 transition-colors">
+                            <Mail size={15} className="text-gray-400 group-hover/item:text-orange-500" />
+                          </div>
+                          <span className="font-medium truncate">{client.email}</span>
+                        </div>
+                        <div className="flex items-center gap-3 text-sm text-gray-600 group/item">
+                          <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center group-hover/item:bg-orange-50 transition-colors">
+                            <Phone size={15} className="text-gray-400 group-hover/item:text-orange-500" />
                           </div>
                           <span className="font-medium">{client.phone}</span>
                         </div>
-                        <div className="flex items-center gap-2 text-gray-700">
-                          <div className="bg-orange-50 p-2 rounded-lg">
-                            {client.type === "person" ? (
-                              <Building2
-                                size={16}
-                                className="text-orange-500"
-                              />
-                            ) : (
-                              <User size={16} className="text-orange-500" />
-                            )}
+                        <div className="flex items-center gap-3 text-sm text-gray-600 group/item">
+                          <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center group-hover/item:bg-orange-50 transition-colors">
+                            {client.type === 'person' ? <Briefcase size={15} className="text-gray-400 group-hover/item:text-orange-500" /> : <Users size={15} className="text-gray-400 group-hover/item:text-orange-500" />}
                           </div>
-                          <span className="font-medium">
-                            {client.type === "person"
-                              ? client.company
-                              : `${client.employees} employees`}
+                          <span className="font-medium truncate">
+                            {client.type === 'person' ? (client.company_name || 'Individual') : `${client.number_of_employees || 0} Employees`}
                           </span>
                         </div>
                       </div>
-                      <div className="flex items-center gap-4 text-sm bg-gradient-to-r from-orange-50 to-transparent p-3 rounded-xl flex-wrap">
-                        <div className="flex items-center gap-2">
-                          <DollarSign size={18} className="text-green-600" />
-                          <span className="font-bold text-green-700 text-base">
-                            {client.value}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <Calendar size={16} className="text-gray-400" />
-                          <span className="font-medium">
-                            Last: {client.lastContact}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2 text-orange-700 font-semibold bg-orange-100 px-3 py-1 rounded-full">
-                          <AlertCircle size={16} />
-                          Next: {client.nextFollowUp}
-                        </div>
-                        <div className="text-gray-700 font-medium bg-gray-100 px-3 py-1 rounded-full">
-                          {client.deals} active deals
+
+                      <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                        <button
+                          onClick={() => openViewModal(client)}
+                          className="flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-orange-600 transition-colors px-3 py-2 hover:bg-orange-50 rounded-lg"
+                        >
+                          <Eye size={16} /> View Details
+                        </button>
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => openEditModal(client)}
+                            className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                            title="Edit"
+                          >
+                            <Edit2 size={16} />
+                          </button>
+                          <button
+                            onClick={() => openDeleteModal(client.id)}
+                            className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                            title="Delete"
+                          >
+                            <Trash2 size={16} />
+                          </button>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex items-center gap-0 mt-4 justify-end border-t border-orange-100 pt-4">
-                  <button className="p-3 text-orange-600 hover:bg-orange-50 rounded-sm transition-all">
-                    <Eye size={18} />
-                  </button>
-                  <button className="p-3 text-orange-600 hover:bg-orange-50 rounded-sm transition-all">
-                    <Edit2 size={18} />
-                  </button>
-                  <button className="p-3 text-red-600 hover:bg-red-50 rounded-sm transition-all">
-                    <Trash2 size={18} />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
-        {/* Add Client Modal */}
+        {/* Add/Edit Client Modal */}
         {showAddModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-            <div className="bg-white rounded-sm shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden border-2 border-orange-200">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 backdrop-blur-sm animate-fadeIn">
+            <div className="bg-white rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden border border-gray-100 animate-slideUp">
               <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-8 py-5 flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-white">
-                  Add New Client
+                <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+                  {isEditing ? <Edit2 size={24} /> : <Plus size={24} />}
+                  {isEditing ? "Edit Client" : "Add New Client"}
                 </h2>
                 <button
                   onClick={() => setShowAddModal(false)}
@@ -521,515 +535,336 @@ export default function AllClientPage() {
                 </button>
               </div>
 
-              <div className="overflow-y-auto max-h-[calc(90vh-90px)]">
+              <div className="overflow-y-auto max-h-[calc(90vh-90px)] custom-scrollbar">
                 <form onSubmit={handleSubmit} className="p-8">
                   {/* Client Type Selection */}
-                  <div className="mb-8">
-                    <label className="block text-sm font-bold text-gray-800 mb-4">
-                      Client Type *
-                    </label>
-                    <div className="flex gap-4">
-                      <label
-                        className="flex items-center gap-4 flex-1 p-5 border-2 rounded-2xl cursor-pointer transition-all hover:bg-orange-50"
-                        style={{
-                          borderColor:
-                            clientType === "person" ? "#f97316" : "#e5e7eb",
-                          backgroundColor:
-                            clientType === "person" ? "#fff7ed" : "white",
-                        }}
-                      >
-                        <input
-                          type="radio"
-                          name="clientType"
-                          value="person"
-                          checked={clientType === "person"}
-                          onChange={(e) => setClientType(e.target.value)}
-                          className="w-5 h-5 text-orange-500"
-                        />
-                        <div
-                          className={`p-3 rounded-xl ${clientType === "person"
-                            ? "bg-gradient-to-br from-blue-400 to-blue-500"
-                            : "bg-gray-200"
-                            }`}
-                        >
-                          <User
-                            size={24}
-                            className={
-                              clientType === "person"
-                                ? "text-white"
-                                : "text-gray-500"
-                            }
-                          />
-                        </div>
-                        <div>
-                          <div className="font-bold text-gray-900">Person</div>
-                          <div className="text-sm text-gray-600">
-                            Individual client
-                          </div>
-                        </div>
+                  {!isEditing && (
+                    <div className="mb-8">
+                      <label className="block text-sm font-bold text-gray-700 mb-4 uppercase tracking-wider">
+                        Client Type
                       </label>
-                      <label
-                        className="flex items-center gap-4 flex-1 p-5 border-2 rounded-2xl cursor-pointer transition-all hover:bg-orange-50"
-                        style={{
-                          borderColor:
-                            clientType === "organization"
-                              ? "#f97316"
-                              : "#e5e7eb",
-                          backgroundColor:
-                            clientType === "organization" ? "#fff7ed" : "white",
-                        }}
-                      >
-                        <input
-                          type="radio"
-                          name="clientType"
-                          value="organization"
-                          checked={clientType === "organization"}
-                          onChange={(e) => setClientType(e.target.value)}
-                          className="w-5 h-5 text-orange-500"
-                        />
-                        <div
-                          className={`p-3 rounded-xl ${clientType === "organization"
-                            ? "bg-gradient-to-br from-purple-400 to-purple-500"
-                            : "bg-gray-200"
-                            }`}
+                      <div className="flex gap-4">
+                        <label
+                          className={`flex items-center gap-4 flex-1 p-4 border rounded-xl cursor-pointer transition-all ${clientType === "person" ? "border-orange-500 bg-orange-50" : "border-gray-200 hover:bg-gray-50"}`}
                         >
-                          <Building2
-                            size={24}
-                            className={
-                              clientType === "organization"
-                                ? "text-white"
-                                : "text-gray-500"
-                            }
+                          <input
+                            type="radio"
+                            name="clientType"
+                            value="person"
+                            checked={clientType === "person"}
+                            onChange={(e) => setClientType(e.target.value)}
+                            className="hidden" // Hiding default radio
                           />
-                        </div>
-                        <div>
-                          <div className="font-bold text-gray-900">
-                            Organization
+                          <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${clientType === "person" ? "border-orange-500" : "border-gray-300"}`}>
+                            {clientType === "person" && <div className="w-2.5 h-2.5 bg-orange-500 rounded-full" />}
                           </div>
-                          <div className="text-sm text-gray-600">
-                            Company client
+
+                          <div
+                            className={`p-3 rounded-lg ${clientType === "person"
+                              ? "bg-blue-100 text-blue-600"
+                              : "bg-gray-100 text-gray-400"
+                              }`}
+                          >
+                            <User size={24} />
                           </div>
-                        </div>
-                      </label>
+                          <div>
+                            <div className="font-bold text-gray-900">Person</div>
+                            <div className="text-xs text-gray-500">
+                              Individual client account
+                            </div>
+                          </div>
+                        </label>
+                        <label
+                          className={`flex items-center gap-4 flex-1 p-4 border rounded-xl cursor-pointer transition-all ${clientType === "organization" ? "border-orange-500 bg-orange-50" : "border-gray-200 hover:bg-gray-50"}`}
+                        >
+                          <input
+                            type="radio"
+                            name="clientType"
+                            value="organization"
+                            checked={clientType === "organization"}
+                            onChange={(e) => setClientType(e.target.value)}
+                            className="hidden"
+                          />
+                          <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${clientType === "organization" ? "border-orange-500" : "border-gray-300"}`}>
+                            {clientType === "organization" && <div className="w-2.5 h-2.5 bg-orange-500 rounded-full" />}
+                          </div>
+
+                          <div
+                            className={`p-3 rounded-lg ${clientType === "organization"
+                              ? "bg-purple-100 text-purple-600"
+                              : "bg-gray-100 text-gray-400"
+                              }`}
+                          >
+                            <Building2 size={24} />
+                          </div>
+                          <div>
+                            <div className="font-bold text-gray-900">
+                              Organization
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              Corporate/Company account
+                            </div>
+                          </div>
+                        </label>
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   {/* Person Form */}
                   {clientType === "person" && (
-                    <>
-                      <div className="pt-6">
-                        <h3 className="text-xl font-bold text-gray-900 mb-5 flex items-center gap-3">
-                          <div className="bg-orange-100 p-3 rounded-xl shadow-sm">
-                            <User className="text-orange-600" size={20} />
-                          </div>
-                          <span className="bg-gradient-to-r from-[#FF7B1D] to-[#FF9A4D] bg-clip-text text-transparent">
-                            Personal Information
-                          </span>
-                        </h3>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                          <div className="group">
-                            <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                              First Name <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                              type="text"
-                              name="firstName"
-                              onChange={handleInputChange}
-                              className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg 
-                       focus:ring-2 focus:ring-[#FF7B1D] focus:border-[#FF7B1D] 
-                       transition-all outline-none hover:border-gray-300 shadow-sm"
-                              required
-                            />
-                          </div>
-
-                          <div className="group">
-                            <label className="text-sm font-semibold text-gray-700 mb-2">
-                              Birthday
-                            </label>
-                            <input
-                              type="date"
-                              name="birthday"
-                              onChange={handleInputChange}
-                              className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg 
-                       focus:ring-2 focus:ring-[#FF7B1D] focus:border-[#FF7B1D] 
-                       transition-all outline-none hover:border-gray-300 shadow-sm"
-                            />
-                          </div>
-
-                          <div className="group">
-                            <label className="text-sm font-semibold text-gray-700 mb-2">
-                              Source
-                            </label>
-                            <div className="relative">
-                              <select
-                                name="source"
-                                onChange={handleInputChange}
-                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg 
-                         focus:ring-2 focus:ring-[#FF7B1D] focus:border-[#FF7B1D] 
-                         transition-all outline-none cursor-pointer
-                         hover:border-gray-300 shadow-sm appearance-none bg-white"
-                              >
-                                <option value="">Select source</option>
-                                <option value="website">Website</option>
-                                <option value="referral">Referral</option>
-                                <option value="social">Social Media</option>
-                                <option value="cold-call">Cold Call</option>
-                                <option value="event">Event</option>
-                              </select>
-                              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                                <svg
-                                  className="w-5 h-5 text-gray-400"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth="2"
-                                    d="M19 9l-7 7-7-7"
-                                  />
-                                </svg>
-                              </div>
-                            </div>
-                          </div>
+                    <div className="animate-fadeIn">
+                      <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2 pb-2 border-b">
+                        <User className="text-orange-500" size={20} /> Personal Information
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <label className="text-sm font-semibold text-gray-700">First Name <span className="text-red-500">*</span></label>
+                          <input
+                            type="text"
+                            name="firstName"
+                            value={formData.firstName}
+                            onChange={handleInputChange}
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all outline-none"
+                            required
+                            placeholder="John"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-sm font-semibold text-gray-700">Last Name</label>
+                          <input
+                            type="text"
+                            name="lastName"
+                            value={formData.lastName}
+                            onChange={handleInputChange}
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all outline-none"
+                            placeholder="Doe"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-sm font-semibold text-gray-700">Email Address <span className="text-red-500">*</span></label>
+                          <input
+                            type="email"
+                            name="email"
+                            value={formData.email}
+                            onChange={handleInputChange}
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all outline-none"
+                            required
+                            placeholder="john@example.com"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-sm font-semibold text-gray-700">Phone</label>
+                          <input
+                            type="tel"
+                            name="phone"
+                            value={formData.phone}
+                            onChange={handleInputChange}
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all outline-none"
+                            placeholder="+1 234 567 890"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-sm font-semibold text-gray-700">Company (if any)</label>
+                          <input
+                            type="text"
+                            name="company"
+                            value={formData.company}
+                            onChange={handleInputChange}
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all outline-none"
+                            placeholder="Workplace name"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-sm font-semibold text-gray-700">Birthday</label>
+                          <input
+                            type="date"
+                            name="birthday"
+                            value={formData.birthday}
+                            onChange={handleInputChange}
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all outline-none"
+                          />
                         </div>
                       </div>
-                    </>
+                    </div>
                   )}
 
                   {/* Organization Form */}
                   {clientType === "organization" && (
-                    <div className="mt-8 bg-white rounded-xl shadow-md border border-gray-200 p-6 transition-all">
-                      <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-3">
-                        <div className="bg-gradient-to-r from-[#FF7B1D] to-[#FF9A4D] p-2 rounded-lg text-white shadow-sm">
-                          <Building2 size={20} />
-                        </div>
-                        Organization Information
+                    <div className="animate-fadeIn">
+                      <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2 pb-2 border-b">
+                        <Building2 className="text-orange-500" size={20} /> Organization Details
                       </h3>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                        <div className="md:col-span-2">
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            Organization Name *
-                          </label>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="md:col-span-2 space-y-2">
+                          <label className="text-sm font-semibold text-gray-700">Organization Name <span className="text-red-500">*</span></label>
                           <input
                             type="text"
                             name="orgName"
+                            value={formData.orgName}
                             onChange={handleInputChange}
-                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg 
-          focus:ring-2 focus:ring-[#FF7B1D] focus:border-[#FF7B1D]
-          hover:border-gray-300 transition-all outline-none"
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all outline-none"
                             required
+                            placeholder="Acme Corp"
                           />
                         </div>
-
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            Email *
-                          </label>
+                        <div className="space-y-2">
+                          <label className="text-sm font-semibold text-gray-700">Work Email <span className="text-red-500">*</span></label>
                           <input
                             type="email"
                             name="orgEmail"
+                            value={formData.orgEmail}
                             onChange={handleInputChange}
-                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg 
-          focus:ring-2 focus:ring-[#FF7B1D] focus:border-[#FF7B1D]
-          hover:border-gray-300 transition-all outline-none"
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all outline-none"
                             required
+                            placeholder="contact@acme.com"
                           />
                         </div>
-
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            Phone *
-                          </label>
+                        <div className="space-y-2">
+                          <label className="text-sm font-semibold text-gray-700">Work Phone <span className="text-red-500">*</span></label>
                           <input
                             type="tel"
                             name="orgPhone"
-                            placeholder="+91"
+                            value={formData.orgPhone}
+                            placeholder="+1 234 567 890"
                             onChange={handleInputChange}
-                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg 
-          focus:ring-2 focus:ring-[#FF7B1D] focus:border-[#FF7B1D]
-          hover:border-gray-300 transition-all outline-none"
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all outline-none"
                             required
                           />
                         </div>
-
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            Industry
-                          </label>
-                          <select
-                            name="industry"
-                            onChange={handleInputChange}
-                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg 
-          focus:ring-2 focus:ring-[#FF7B1D] focus:border-[#FF7B1D]
-          hover:border-gray-300 bg-white cursor-pointer outline-none appearance-none transition-all"
-                          >
-                            <option value="">Select industry</option>
-                            <option value="technology">Technology</option>
-                            <option value="healthcare">Healthcare</option>
-                            <option value="finance">Finance</option>
-                            <option value="manufacturing">Manufacturing</option>
-                            <option value="retail">Retail</option>
-                            <option value="education">Education</option>
-                          </select>
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            Website
-                          </label>
+                        <div className="space-y-2">
+                          <label className="text-sm font-semibold text-gray-700">Website</label>
                           <input
                             type="url"
                             name="website"
+                            value={formData.website}
                             onChange={handleInputChange}
-                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg 
-          focus:ring-2 focus:ring-[#FF7B1D] focus:border-[#FF7B1D]
-          hover:border-gray-300 transition-all outline-none"
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all outline-none"
+                            placeholder="https://example.com"
                           />
                         </div>
-
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            Number of Employees
-                          </label>
+                        <div className="space-y-2">
+                          <label className="text-sm font-semibold text-gray-700">Employees</label>
                           <input
                             type="number"
                             name="employees"
+                            value={formData.employees}
                             onChange={handleInputChange}
-                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg 
-          focus:ring-2 focus:ring-[#FF7B1D] focus:border-[#FF7B1D]
-          hover:border-gray-300 transition-all outline-none"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            GST / Tax ID
-                          </label>
-                          <input
-                            type="text"
-                            name="taxId"
-                            onChange={handleInputChange}
-                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg 
-          focus:ring-2 focus:ring-[#FF7B1D] focus:border-[#FF7B1D]
-          hover:border-gray-300 transition-all outline-none"
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all outline-none"
+                            placeholder="e.g. 50"
                           />
                         </div>
                       </div>
                     </div>
                   )}
 
-                  {/* Address Section */}
-                  <div className="mt-8 bg-white rounded-xl shadow-md border border-gray-200 p-6 transition-all">
-                    <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-3">
-                      <div className="bg-gradient-to-r from-[#FF7B1D] to-[#FF9A4D] p-2 rounded-lg text-white">
-                        <svg
-                          className="w-5 h-5"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                          />
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                          />
-                        </svg>
-                      </div>
-                      Address Information
+                  {/* Common Fields */}
+                  <div className="mt-8 border-t pt-6">
+                    <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2 pb-2 border-b">
+                      <MapPin className="text-orange-500" size={20} /> Communication & Address
                     </h3>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                      <div className="md:col-span-2">
-                        <label className="text-sm font-semibold text-gray-700 mb-2 block">
-                          Street Address
-                        </label>
-                        <input
-                          type="text"
-                          name="address"
-                          onChange={handleInputChange}
-                          className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:ring-2 focus:ring-[#FF7B1D] focus:border-[#FF7B1D] outline-none transition-all hover:border-gray-300"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="text-sm font-semibold text-gray-700 mb-2 block">
-                          City
-                        </label>
-                        <input
-                          type="text"
-                          name="city"
-                          onChange={handleInputChange}
-                          className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:ring-2 focus:ring-[#FF7B1D] focus:border-[#FF7B1D] outline-none transition-all hover:border-gray-300"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="text-sm font-semibold text-gray-700 mb-2 block">
-                          State / Province
-                        </label>
-                        <input
-                          type="text"
-                          name="state"
-                          onChange={handleInputChange}
-                          className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:ring-2 focus:ring-[#FF7B1D] focus:border-[#FF7B1D] outline-none transition-all hover:border-gray-300"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="text-sm font-semibold text-gray-700 mb-2 block">
-                          PIN Code
-                        </label>
-                        <input
-                          type="text"
-                          name="zipCode"
-                          onChange={handleInputChange}
-                          className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:ring-2 focus:ring-[#FF7B1D] focus:border-[#FF7B1D] outline-none transition-all hover:border-gray-300"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="text-sm font-semibold text-gray-700 mb-2 block">
-                          Country
-                        </label>
-                        <input
-                          type="text"
-                          name="country"
-                          onChange={handleInputChange}
-                          className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:ring-2 focus:ring-[#FF7B1D] focus:border-[#FF7B1D] outline-none transition-all hover:border-gray-300"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Contract & Financial Information */}
-                  <div className="mt-8 bg-white rounded-xl shadow-md border border-gray-200 p-6 transition-all">
-                    <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-3">
-                      <div className="bg-gradient-to-r from-[#FF7B1D] to-[#FF9A4D] p-2 rounded-lg text-white">
-                        <DollarSign size={20} className="text-white" />
-                      </div>
-                      Contract & Financial Details
-                    </h3>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                      <div>
-                        <label className="text-sm font-semibold text-gray-700 mb-2 block">
-                          Contract Value (₹)
-                        </label>
-                        <input
-                          type="number"
-                          name="contractValue"
-                          placeholder="₹ 0"
-                          onChange={handleInputChange}
-                          className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 outline-none 
-        focus:ring-2 focus:ring-[#FF7B1D] focus:border-[#FF7B1D] transition-all hover:border-gray-300"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="text-sm font-semibold text-gray-700 mb-2 block">
-                          Payment Terms
-                        </label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                      <div className="space-y-2">
+                        <label className="text-sm font-semibold text-gray-700">Category / Industry</label>
                         <select
-                          name="paymentTerms"
+                          name="industry"
+                          value={formData.industry}
                           onChange={handleInputChange}
-                          className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 outline-none 
-        focus:ring-2 focus:ring-[#FF7B1D] focus:border-[#FF7B1D] transition-all 
-        hover:border-gray-300 cursor-pointer appearance-none bg-white"
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white cursor-pointer outline-none"
                         >
-                          <option value="">Select terms</option>
-                          <option value="net-30">Net 30</option>
-                          <option value="net-60">Net 60</option>
-                          <option value="net-90">Net 90</option>
-                          <option value="immediate">Immediate</option>
-                          <option value="advance">Advance Payment</option>
+                          <option value="">Select industry</option>
+                          <option value="technology">Technology</option>
+                          <option value="healthcare">Healthcare</option>
+                          <option value="finance">Finance</option>
+                          <option value="manufacturing">Manufacturing</option>
+                          <option value="retail">Retail</option>
+                          <option value="education">Education</option>
+                          <option value="other">Other</option>
                         </select>
                       </div>
-
-                      <div>
-                        <label className="text-sm font-semibold text-gray-700 mb-2 block">
-                          Contract Start Date
-                        </label>
-                        <input
-                          type="date"
-                          name="contractStart"
+                      <div className="space-y-2">
+                        <label className="text-sm font-semibold text-gray-700">Source</label>
+                        <select
+                          name="source"
+                          value={formData.source}
                           onChange={handleInputChange}
-                          className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 outline-none 
-        focus:ring-2 focus:ring-[#FF7B1D] focus:border-[#FF7B1D] transition-all hover:border-gray-300"
-                        />
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 cursor-pointer outline-none bg-white"
+                        >
+                          <option value="">Select source</option>
+                          <option value="website">Website</option>
+                          <option value="referral">Referral</option>
+                          <option value="social">Social Media</option>
+                          <option value="cold-call">Cold Call</option>
+                          <option value="event">Event</option>
+                        </select>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-semibold text-gray-700">Tax ID / GSTIN</label>
+                        <input type="text" name="taxId" value={formData.taxId} onChange={handleInputChange} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none" />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-semibold text-gray-700">Status</label>
+                        <select name="status" value={formData.status} onChange={handleInputChange} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none bg-white">
+                          <option value="active">Active</option>
+                          <option value="inactive">Inactive</option>
+                          <option value="pending">Pending</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <label className="text-sm font-semibold text-gray-700">Street Address</label>
+                        <textarea
+                          name="address"
+                          value={formData.address}
+                          onChange={handleInputChange}
+                          rows="2"
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                          placeholder="123 Main St..."
+                        ></textarea>
                       </div>
 
-                      <div>
-                        <label className="text-sm font-semibold text-gray-700 mb-2 block">
-                          Contract End Date
-                        </label>
-                        <input
-                          type="date"
-                          name="contractEnd"
-                          onChange={handleInputChange}
-                          className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 outline-none 
-        focus:ring-2 focus:ring-[#FF7B1D] focus:border-[#FF7B1D] transition-all hover:border-gray-300"
-                        />
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="space-y-2">
+                          <label className="text-sm font-semibold text-gray-700">City</label>
+                          <input type="text" name="city" value={formData.city} onChange={handleInputChange} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none" />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-sm font-semibold text-gray-700">State</label>
+                          <input type="text" name="state" value={formData.state} onChange={handleInputChange} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none" />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-sm font-semibold text-gray-700">Zip Code</label>
+                          <input type="text" name="zipCode" value={formData.zipCode} onChange={handleInputChange} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none" />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-sm font-semibold text-gray-700">Country</label>
+                          <input type="text" name="country" value={formData.country} onChange={handleInputChange} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none" />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2 mt-4">
+                        <label className="text-sm font-semibold text-gray-700">Internal Notes</label>
+                        <textarea name="notes" value={formData.notes} onChange={handleInputChange} rows="3" className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none" placeholder="Any private notes about this client..." />
                       </div>
                     </div>
                   </div>
 
-                  {/* Notes Section */}
-                  <div className="mt-8 bg-white rounded-xl shadow-md border border-gray-200 p-6 transition-all">
-                    <h3 className="text-lg font-bold text-gray-900 mb-5 flex items-center gap-3">
-                      <div className="bg-gradient-to-r from-[#FF7B1D] to-[#FF9A4D] p-2 rounded-lg text-white">
-                        <svg
-                          className="w-5 h-5 text-white"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                          />
-                        </svg>
-                      </div>
-                      Additional Notes
-                    </h3>
-
-                    <textarea
-                      name="notes"
-                      onChange={handleInputChange}
-                      rows="4"
-                      placeholder="Add any additional notes about this client..."
-                      className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 outline-none 
-    focus:ring-2 focus:ring-[#FF7B1D] focus:border-[#FF7B1D] transition-all 
-    hover:border-gray-300 resize-none"
-                    />
-                  </div>
-
-                  {/* Form Actions */}
-                  <div className="flex gap-4 justify-end mt-8 pt-6 border-t-2 border-orange-100">
+                  <div className="mt-10 flex justify-end gap-4 p-4 border-t bg-gray-50 rounded-b-lg -mx-8 -mb-8">
                     <button
                       type="button"
                       onClick={() => setShowAddModal(false)}
-                      className="px-8 py-3 border-2 border-gray-300 text-gray-700 rounded-full hover:bg-gray-50 transition-all font-semibold hover:scale-105"
+                      className="px-6 py-3 border border-gray-300 text-gray-700 font-bold rounded-lg hover:bg-white transition-all shadow-sm"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
-                      className="px-8 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-full hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl font-semibold hover:scale-105"
+                      disabled={isCreating || isUpdating}
+                      className="px-8 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold rounded-lg hover:from-orange-600 hover:to-orange-700 shadow-md hover:shadow-lg transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2"
                     >
-                      Add Client
+                      {(isCreating || isUpdating) && <div className="w-5 h-5 border-2 border-white border-t-transparent animate-spin rounded-full"></div>}
+                      {isEditing ? "Update Client" : "Create Client"}
                     </button>
                   </div>
                 </form>
@@ -1037,7 +872,27 @@ export default function AllClientPage() {
             </div>
           </div>
         )}
+
+        {/* Delete Confirmation Modal */}
+        <DeleteClientModal
+          isOpen={isDeleteModalOpen}
+          onClose={() => setIsDeleteModalOpen(false)}
+          clientId={clientToDelete}
+          clientIds={Array.from(selectedClients)}
+          isBulk={isBulkDelete}
+          refetchData={refetch}
+          onClearSelection={deselectAll}
+        />
+
+        {/* View Client Modal */}
+        <ViewClientModal
+          isOpen={isViewModalOpen}
+          onClose={() => setIsViewModalOpen(false)}
+          client={clientToView}
+        />
       </div>
     </DashboardLayout>
   );
 }
+
+

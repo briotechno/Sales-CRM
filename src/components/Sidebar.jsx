@@ -210,13 +210,9 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         {
           name: "Client Management",
           icon: <Briefcase size={22} />,
-          path: "/crm/client",
+          path: "/crm/client/all",
           permission: "Client Management",
-          children: [
-            { name: "All Client", path: "/crm/client/all" },
-            { name: "Active Client", path: "/crm/client/active" },
-            { name: "Inactive", path: "/crm/client/inactive" },
-          ],
+
         },
         {
           name: "Channel Integration",

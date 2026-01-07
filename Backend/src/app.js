@@ -51,6 +51,7 @@ app.use('/api/expenses', expenseRoutes);
 app.use('/api/announcements', require('./routes/announcementRoutes'));
 app.use('/api/announcement-categories', require('./routes/announcementCategoryRoutes'));
 app.use('/api/attendance', require('./routes/attendanceRoutes'));
+app.use('/api/clients', require('./routes/clientRoutes'));
 
 
 
