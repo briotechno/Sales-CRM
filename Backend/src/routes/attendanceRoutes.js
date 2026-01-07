@@ -1,10 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const attendanceController = require('../controllers/attendanceController');
+const attendanceSettingsController = require('../controllers/attendanceSettingsController');
 const { protect } = require('../middleware/authMiddleware');
 
 router.use(protect);
 
+router.get('/settings', attendanceSettingsController.getSettings);
+router.put('/settings', attendanceSettingsController.updateSettings);
 
 router.post('/mark', attendanceController.markAttendance);
 router.put('/checkout/:id', attendanceController.checkOut);

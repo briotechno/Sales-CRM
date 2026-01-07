@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { FiHome } from "react-icons/fi";
+import { QRCodeCanvas } from "qrcode.react";
 import DashboardLayout from "../../../components/DashboardLayout";
 import {
   Clock,
@@ -42,10 +43,13 @@ import {
   useGetAllAttendanceQuery,
   useCheckOutMutation,
   useDeleteAttendanceMutation,
-  useUpdateAttendanceMutation
+  useUpdateAttendanceMutation,
+  useGetAttendanceSettingsQuery,
+  useUpdateAttendanceSettingsMutation,
 } from "../../../store/api/attendanceApi";
 import { toast } from "react-hot-toast";
 import NumberCard from "../../../components/NumberCard";
+import { useEffect } from "react";
 
 export default function AttendanceManagement() {
   const [mainTab, setMainTab] = useState("monitor");
@@ -60,6 +64,9 @@ export default function AttendanceManagement() {
 
   const [checkOut, { isLoading: isCheckingOut }] = useCheckOutMutation();
   const [deleteAttendance] = useDeleteAttendanceMutation();
+
+  const { data: settingsData, isLoading: isSettingsLoading } = useGetAttendanceSettingsQuery();
+  const [updateSettings, { isLoading: isUpdating }] = useUpdateAttendanceSettingsMutation();
 
   const [settings, setSettings] = useState({
     // General Settings
@@ -132,6 +139,15 @@ export default function AttendanceManagement() {
     { id: "night", name: "Night Shift", start: "22:00", end: "07:00" },
   ]);
 
+  useEffect(() => {
+    if (settingsData?.success && settingsData.data) {
+      setSettings(prev => ({
+        ...prev,
+        ...settingsData.data
+      }));
+    }
+  }, [settingsData]);
+
   const handleManualCheckOut = async (record) => {
     if (window.confirm(`Are you sure you want to manually check out ${record.employee_name}?`)) {
       try {
@@ -158,13 +174,61 @@ export default function AttendanceManagement() {
     setSettings((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleSave = () => {
-    alert("✓ Settings saved successfully!");
+  const handleSave = async () => {
+    try {
+      await updateSettings(settings).unwrap();
+      toast.success("Settings saved successfully!");
+    } catch (error) {
+      toast.error(error.data?.message || "Failed to save settings");
+    }
   };
 
   const handleReset = () => {
-    if (window.confirm("⚠️ Reset all settings to default?")) {
-      alert("✓ Settings reset to default!");
+    if (window.confirm("⚠️ Reset all changes to last saved state?")) {
+      if (settingsData?.success && settingsData.data) {
+        setSettings(settingsData.data);
+        toast.success("Settings restored to last saved state");
+      } else {
+        // Fallback to initial defaults if no server data
+        setSettings({
+          attendanceStartTime: "09:00",
+          attendanceEndTime: "18:00",
+          graceTime: 15,
+          halfDayStartTime: "09:00",
+          halfDayEndTime: "13:30",
+          minHoursFullDay: 8,
+          minHoursHalfDay: 4,
+          autoCheckOut: false,
+          autoCheckOutTime: "19:00",
+          wifiEnabled: false,
+          wifiSSID: "",
+          wifiPassword: "",
+          allowedIPs: "",
+          gpsEnabled: false,
+          officeLatitude: 0,
+          officeLongitude: 0,
+          geoFenceRadius: 100,
+          qrCodeEnabled: false,
+          casualLeave: 12,
+          sickLeave: 10,
+          paidLeave: 15,
+          unpaidLeave: 0,
+          overtimeEnabled: false,
+          overtimeStartAfter: "18:30",
+          overtimeRate: 1.5,
+          maxOvertimeHours: 4,
+          lateArrivalNotification: true,
+          earlyDepartureNotification: true,
+          absentNotification: true,
+          overtimeNotification: true,
+          emailNotifications: true,
+          smsNotifications: false,
+          multipleShiftsEnabled: false,
+          defaultShift: 1,
+          weekendDays: ["Sunday"],
+        });
+        toast.success("Settings reset to defaults");
+      }
     }
   };
 
@@ -786,16 +850,29 @@ export default function AttendanceManagement() {
                               </label>
                             </div>
                             {settings.qrCodeEnabled && (
-                              <div className="mt-4 pt-4 border-t border-gray-200">
-                                <div className="bg-purple-50 p-3 rounded-lg text-center">
-                                  <QrCode className="w-24 h-24 mx-auto text-purple-600 mb-2" />
-                                  <p className="text-xs text-gray-600">
-                                    QR Code will be generated for your office
-                                  </p>
-                                  <button className="mt-2 px-4 py-2 bg-purple-600 text-white rounded-lg text-xs font-semibold hover:bg-purple-700">
-                                    Generate QR Code
-                                  </button>
+                              <div className="mt-4 pt-4 border-t border-gray-200 flex flex-col items-center">
+                                <div className="bg-white p-3 rounded-lg shadow-sm border border-gray-100 mb-3">
+                                  <QRCodeCanvas
+                                    value={JSON.stringify({
+                                      type: 'attendance',
+                                      secret: settings.qrSecret,
+                                      office: settings.businessName || 'Main Office'
+                                    })}
+                                    size={160}
+                                    level="H"
+                                    includeMargin={true}
+                                  />
                                 </div>
+                                <p className="text-[10px] text-gray-500 mb-2 text-center max-w-[200px]">
+                                  Employees can scan this QR code to check in.
+                                </p>
+                                <button
+                                  onClick={() => handleSettingChange('qrSecret', Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15))}
+                                  className="text-[10px] font-bold text-purple-600 hover:text-purple-700 flex items-center gap-1"
+                                >
+                                  <RefreshCw className="w-3 h-3" />
+                                  Regenerate QR Secret
+                                </button>
                               </div>
                             )}
                           </div>
@@ -1467,6 +1544,28 @@ export default function AttendanceManagement() {
                         </div>
                       </div>
                     )}
+                    {/* Save & Reset Buttons */}
+                    <div className="mt-10 pt-6 border-t border-gray-100 flex items-center justify-end gap-3">
+                      <button
+                        onClick={handleReset}
+                        className="px-6 py-2.5 bg-gray-100 text-gray-600 rounded-sm text-sm font-bold hover:bg-gray-200 transition-all flex items-center gap-2"
+                      >
+                        <RefreshCw className="w-4 h-4" />
+                        Reset Defaults
+                      </button>
+                      <button
+                        onClick={handleSave}
+                        disabled={isUpdating}
+                        className="px-10 py-2.5 bg-[#FF7B1D] text-white rounded-sm text-sm font-bold hover:bg-[#e66a15] shadow-lg shadow-orange-200 transition-all flex items-center gap-2 disabled:opacity-50"
+                      >
+                        {isUpdating ? (
+                          <div className="w-4 h-4 border-2 border-white/30 border-t-white animate-spin rounded-full" />
+                        ) : (
+                          <Save className="w-4 h-4" />
+                        )}
+                        Save Changes
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>

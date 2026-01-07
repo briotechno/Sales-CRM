@@ -12,7 +12,7 @@ export const attendanceApi = createApi({
             return headers;
         },
     }),
-    tagTypes: ['Attendance'],
+    tagTypes: ['Attendance', 'AttendanceSettings'],
     endpoints: (builder) => ({
         markAttendance: builder.mutation({
             query: (attendanceData) => ({
@@ -60,6 +60,18 @@ export const attendanceApi = createApi({
             }),
             invalidatesTags: ['Attendance'],
         }),
+        getAttendanceSettings: builder.query({
+            query: () => '/settings',
+            providesTags: ['AttendanceSettings'],
+        }),
+        updateAttendanceSettings: builder.mutation({
+            query: (data) => ({
+                url: '/settings',
+                method: 'PUT',
+                body: data,
+            }),
+            invalidatesTags: ['AttendanceSettings'],
+        }),
     }),
 });
 
@@ -71,4 +83,6 @@ export const {
     useGetDashboardStatsQuery,
     useUpdateAttendanceMutation,
     useDeleteAttendanceMutation,
+    useGetAttendanceSettingsQuery,
+    useUpdateAttendanceSettingsMutation,
 } = attendanceApi;
