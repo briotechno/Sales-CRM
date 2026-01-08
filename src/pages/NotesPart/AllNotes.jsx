@@ -15,6 +15,8 @@ import {
   CheckCircle,
   AlertCircle,
   Loader2,
+  Pencil,
+  Eye,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import NumberCard from "../../components/NumberCard";
@@ -29,6 +31,7 @@ import {
 export default function NotesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isAdding, setIsAdding] = useState(false);
+  const [viewNote, setViewNote] = useState(null);
   const [editingNote, setEditingNote] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [noteToDelete, setNoteToDelete] = useState(null);
@@ -101,6 +104,10 @@ export default function NotesPage() {
     } catch (err) {
       toast.error("Error saving note: " + (err?.data?.message || err.message));
     }
+  };
+
+  const handleView = (note) => {
+    setViewNote(note);
   };
 
   const handleDeleteNote = async () => {
@@ -267,7 +274,7 @@ export default function NotesPage() {
               >
                 <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-orange-400 to-orange-600 opacity-0 group-hover:opacity-100 transition-opacity"></div>
 
-                <div className="p-6 flex-1">
+                <div className="p-3 flex-1">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
                       <div className={`p-1.5 rounded-sm ${note.category === 'Meeting' ? 'bg-blue-100 text-blue-600' :
@@ -299,27 +306,36 @@ export default function NotesPage() {
                   </p>
                 </div>
 
-                <div className="px-6 py-4 bg-gray-50/50 border-t border-gray-100 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity">
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleEdit(note)}
-                      className="flex items-center gap-1.5 text-xs font-bold text-orange-600 hover:text-orange-700 transition-colors"
-                    >
-                      <Edit2 size={14} />
-                      Edit
-                    </button>
-                  </div>
+                {/* ----------------------------- */}
+
+                <div className="flex items-center flex-1">
+                  <button
+                    onClick={() => handleView(note)}
+                    className="p-2 text-blue-600 hover:bg-blue-50 rounded-sm transition-colors"
+                    title="Read Details"
+                  >
+                    <Eye size={16} />
+                  </button>
+                  <button
+                    onClick={() => handleEdit(note)}
+                    className="p-2 text-orange-600 hover:bg-orange-50 rounded-sm transition-colors"
+                    title="Edit"
+                  >
+                    <Pencil size={16} />
+                  </button>
                   <button
                     onClick={() => {
                       setNoteToDelete(note);
                       setShowDeleteModal(true);
                     }}
-                    className="text-gray-400 hover:text-red-500 transition-colors"
-                    title="Delete Note"
+                    className="p-2 text-red-600 hover:bg-red-50 rounded-sm transition-colors"
+                    title="Delete"
                   >
                     <Trash2 size={16} />
                   </button>
                 </div>
+                {/* ----------------------------- */}
+
               </div>
             ))}
           </div>
@@ -455,6 +471,97 @@ export default function NotesPage() {
               </div>
             </div>
           )}
+
+          {/* View modal */}
+          <Modal
+            isOpen={!!viewNote}
+            onClose={() => setViewNote(null)}
+            title={viewNote?.title}
+            subtitle={`Category • ${viewNote?.category}`}
+            icon={<FileText />}
+            footer={
+              <div className="flex gap-4">
+                <button
+                  onClick={() => setViewNote(null)}
+                  className="flex-1 px-6 py-3 border-2 border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-100 transition"
+                >
+                  Close
+                </button>
+              </div>
+            }
+          >
+            {viewNote && (
+              <div className="space-y-8 text-black bg-white font-primary">
+                {/* Stats Grid */}
+                <div className="grid grid-cols-3 gap-6">
+                  {/* Category */}
+                  <div className="bg-orange-50 p-4 rounded-2xl border border-orange-100 flex flex-col items-center text-center group hover:shadow-md transition-shadow">
+                    <div className="bg-orange-500 p-2 rounded-xl text-white mb-2 group-hover:scale-110 transition-transform">
+                      <Tag size={20} />
+                    </div>
+                    <span className="text-lg font-bold text-orange-900">
+                      {viewNote.category}
+                    </span>
+                    <span className="text-xs font-semibold text-orange-600 uppercase tracking-widest mt-1">
+                      Category
+                    </span>
+                  </div>
+
+                  {/* Created Date */}
+                  <div className="bg-blue-50 p-4 rounded-2xl border border-blue-100 flex flex-col items-center text-center group hover:shadow-md transition-shadow">
+                    <div className="bg-blue-600 p-2 rounded-xl text-white mb-2 group-hover:scale-110 transition-transform">
+                      <Calendar size={20} />
+                    </div>
+                    <span className="text-sm font-bold text-blue-900">
+                      {new Date(viewNote.created_at).toLocaleDateString()}
+                    </span>
+                    <span className="text-xs font-semibold text-blue-600 uppercase tracking-widest mt-1">
+                      Date
+                    </span>
+                  </div>
+
+                  {/* Created Time */}
+                  <div className="bg-green-50 p-4 rounded-2xl border border-green-100 flex flex-col items-center text-center group hover:shadow-md transition-shadow">
+                    <div className="bg-green-600 p-2 rounded-xl text-white mb-2 group-hover:scale-110 transition-transform">
+                      <Clock size={20} />
+                    </div>
+                    <span className="text-sm font-bold text-green-900">
+                      {new Date(viewNote.created_at).toLocaleTimeString()}
+                    </span>
+                    <span className="text-xs font-semibold text-green-600 uppercase tracking-widest mt-1">
+                      Time
+                    </span>
+                  </div>
+                </div>
+
+                {/* Details Section */}
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                      <FileText size={16} />
+                      Note Content
+                    </h3>
+                    <p className="text-gray-700 leading-relaxed bg-gray-50 p-4 rounded-2xl border border-gray-100 whitespace-pre-line">
+                      {viewNote.content || "No content available for this note."}
+                    </p>
+                  </div>
+
+                  {/* Footer info */}
+                  <div className="pt-4 border-t border-gray-100 flex items-center gap-2 text-gray-500 italic text-sm">
+                    <Calendar size={16} />
+                    <span>
+                      Created on{" "}
+                      {new Date(viewNote.created_at).toLocaleDateString("en-US", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </Modal>
 
           {/* Delete Confirmation Modal */}
           <Modal

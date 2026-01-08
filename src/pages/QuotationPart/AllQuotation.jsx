@@ -29,10 +29,13 @@ import {
 } from "../../store/api/quotationApi";
 import { useGetBusinessInfoQuery } from "../../store/api/businessApi";
 import { toast } from "react-hot-toast";
+import DeleteQuotationModal from "./DeleteQuotationModal";
 
 export default function QuotationPage() {
   const [showModal, setShowModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [selectedQuotationId, setSelectedQuotationId] = useState(null);
   const [selectedQuote, setSelectedQuote] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("All");
@@ -753,12 +756,16 @@ export default function QuotationPage() {
                           <Download size={18} />
                         </button>
                         <button
-                          onClick={() => handleDelete(quote.id)}
+                          onClick={() => {
+                            setSelectedQuotationId(quote.id);
+                            setIsDeleteModalOpen(true);
+                          }}
                           className="p-2 text-red-600 hover:bg-red-50 rounded-sm transition-all shadow-sm"
                           title="Delete"
                         >
                           <Trash2 size={18} />
                         </button>
+
                       </div>
                     </td>
                   </tr>
@@ -839,6 +846,17 @@ export default function QuotationPage() {
           selectedQuote={selectedQuote}
           getStatusColor={getStatusColor}
         />
+
+        <DeleteQuotationModal
+          isOpen={isDeleteModalOpen}
+          onClose={() => {
+            setIsDeleteModalOpen(false);
+            setSelectedQuotationId(null);
+          }}
+          quotationId={selectedQuotationId}
+          refetch={refetch}
+        />
+
       </div>
     </DashboardLayout>
   );

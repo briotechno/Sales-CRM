@@ -1153,7 +1153,7 @@ export default function HRPolicy() {
                     onClick={() => setShowViewModal(false)}
                     className="px-6 py-2.5 text-sm font-semibold text-gray-700 bg-white border-2 border-gray-300 hover:bg-gray-100 rounded-lg transition-all"
                   >
-                    <X size={22} className="text-white" />
+                    Close Details
                   </button>
                 </div>
               </div>

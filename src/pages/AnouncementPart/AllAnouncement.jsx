@@ -140,8 +140,8 @@ export default function AnnouncementPage() {
                   <button
                     onClick={() => setIsFilterOpen(!isFilterOpen)}
                     className={`p-3 rounded-sm border transition-all shadow-sm ${isFilterOpen || filterCategory !== "All"
-                        ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
-                        : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
+                      ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
+                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
                       }`}
                   >
                     <Filter size={20} />
@@ -157,8 +157,8 @@ export default function AnnouncementPage() {
                             setCurrentPage(1);
                           }}
                           className={`block w-full text-left px-4 py-2.5 text-sm transition-colors ${filterCategory === "All"
-                              ? "bg-orange-50 text-orange-600 font-bold"
-                              : "text-gray-700 hover:bg-gray-50"
+                            ? "bg-orange-50 text-orange-600 font-bold"
+                            : "text-gray-700 hover:bg-gray-50"
                             }`}
                         >
                           All Categories
@@ -172,8 +172,8 @@ export default function AnnouncementPage() {
                               setCurrentPage(1);
                             }}
                             className={`block w-full text-left px-4 py-2.5 text-sm transition-colors ${filterCategory === cat.name
-                                ? "bg-orange-50 text-orange-600 font-bold"
-                                : "text-gray-700 hover:bg-gray-50"
+                              ? "bg-orange-50 text-orange-600 font-bold"
+                              : "text-gray-700 hover:bg-gray-50"
                               }`}
                           >
                             {cat.name}
@@ -306,21 +306,21 @@ export default function AnnouncementPage() {
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => handleView(announcement)}
-                        className="text-gray-400 hover:text-blue-600 bg-white hover:bg-blue-50 p-1.5 rounded-sm border border-transparent hover:border-blue-100 transition-all"
+                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-sm transition-colors"
                         title="Read Details"
                       >
                         <Eye size={16} />
                       </button>
                       <button
                         onClick={() => handleEdit(announcement)}
-                        className="text-gray-400 hover:text-orange-600 bg-white hover:bg-orange-50 p-1.5 rounded-sm border border-transparent hover:border-orange-100 transition-all"
+                        className="p-2 text-orange-600 hover:bg-orange-50 rounded-sm transition-colors"
                         title="Edit"
                       >
                         <Pencil size={16} />
                       </button>
                       <button
                         onClick={() => handleDelete(announcement)}
-                        className="text-gray-400 hover:text-red-500 bg-white hover:bg-red-50 p-1.5 rounded-sm border border-transparent hover:border-red-100 transition-all"
+                        className="p-2 text-red-600 hover:bg-red-50 rounded-sm transition-colors"
                         title="Delete"
                       >
                         <Trash2 size={16} />

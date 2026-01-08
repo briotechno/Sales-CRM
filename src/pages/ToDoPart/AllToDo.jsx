@@ -16,6 +16,7 @@ import {
   MoreVertical,
   AlertCircle,
   Loader2,
+  Pencil,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import NumberCard from "../../components/NumberCard";
@@ -25,6 +26,7 @@ import {
   useCreateTaskMutation,
   useDeleteTaskMutation,
   useToggleTaskStatusMutation,
+  useUpdateTaskMutation,
 } from "../../store/api/taskApi";
 
 export default function TodoPage() {
@@ -38,12 +40,14 @@ export default function TodoPage() {
   const [filterType, setFilterType] = useState("All");
   const [searchTerm, setSearchTerm] = useState("");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [taskToEdit, setTaskToEdit] = useState(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState(null);
   const dropdownRef = useRef(null);
 
   // API Hooks
-  const { data, isLoading, refetch } = useGetTasksQuery({
+  const { data, isLoading } = useGetTasksQuery({
     priority: filterPriority,
     search: searchTerm,
     timeframe: filterType,
@@ -52,6 +56,7 @@ export default function TodoPage() {
   const [createTask] = useCreateTaskMutation();
   const [deleteTask] = useDeleteTaskMutation();
   const [toggleTaskStatus] = useToggleTaskStatusMutation();
+  const [updateTask, { isLoading: isUpdating }] = useUpdateTaskMutation();
 
   const tasks = data?.tasks || [];
 
@@ -71,6 +76,7 @@ export default function TodoPage() {
       };
 
       await createTask(newTaskObj).unwrap();
+
       toast.success("Task created successfully!");
 
       // Reset form
@@ -85,6 +91,30 @@ export default function TodoPage() {
     }
   };
 
+  const handleUpdateTask = async () => {
+    if (!newTask.trim()) {
+      toast.error("Task title is required");
+      return;
+    }
+
+    try {
+      await updateTask({
+        id: taskToEdit.id,
+        title: newTask,
+        priority: newTaskPriority,
+        due_date: newTaskDate,
+        due_time: newTaskTime,
+        category: newTaskCategory,
+      }).unwrap();
+
+      toast.success("Task updated successfully!");
+      setIsEditModalOpen(false);
+      setTaskToEdit(null);
+    } catch (err) {
+      toast.error("Failed to update task");
+    }
+  };
+
   const handleToggleStatus = async (id) => {
     try {
       await toggleTaskStatus(id).unwrap();
@@ -92,6 +122,24 @@ export default function TodoPage() {
     } catch (err) {
       toast.error("Failed to update status");
     }
+  };
+
+  const formatDateForInput = (date) => {
+    if (!date) return "";
+    return new Date(date).toISOString().split("T")[0];
+  };
+
+  const handleEdit = (task) => {
+    setTaskToEdit(task);
+
+    setNewTask(task.title);
+    setNewTaskPriority(task.priority || "medium");
+    // ✅ FIX HERE
+    setNewTaskDate(formatDateForInput(task.due_date));
+    setNewTaskTime(task.due_time?.slice(0, 5));
+    setNewTaskCategory(task.category || "General");
+
+    setIsEditModalOpen(true);
   };
 
   const confirmDelete = (task) => {
@@ -271,7 +319,7 @@ export default function TodoPage() {
               </div>
 
               {tasks.length > 0 ? (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div className="grid grid-cols-1 lg:grid-cols-1 gap-8">
                   {/* Active Tasks Column */}
                   <div className="space-y-6">
                     <div className="flex items-center justify-between mb-2">
@@ -292,7 +340,7 @@ export default function TodoPage() {
                           key={task.id}
                           className="group relative bg-white rounded-xl border border-gray-100 p-5 hover:shadow-xl hover:shadow-orange-500/5 transition-all duration-300 transform hover:-translate-y-1"
                         >
-                          <div className={`absolute top-0 left-0 w-1.5 h-full rounded-l-xl ${task.priority === 'high' ? 'bg-red-500' :
+                          <div className={`absolute top-0 left-0 rounded-xl w-1.5 h-full rounded-l-xl ${task.priority === 'high' ? 'bg-red-500' :
                             task.priority === 'medium' ? 'bg-orange-400' :
                               'bg-green-400'
                             }`}></div>
@@ -325,12 +373,23 @@ export default function TodoPage() {
                                   </span>
                                 </div>
 
-                                <button
-                                  onClick={() => confirmDelete(task)}
-                                  className="text-gray-300 hover:text-red-500 p-1.5 rounded-full hover:bg-red-50 transition-all transform hover:scale-110"
-                                >
-                                  <Trash2 size={16} />
-                                </button>
+                                <div className="">
+                                  <button
+                                    onClick={() => handleEdit(task)}
+                                    className="p-2 text-orange-600 hover:bg-orange-50 rounded-sm transition-colors"
+                                    title="Edit"
+                                  >
+                                    <Pencil size={16} />
+                                  </button>
+                                  <button
+                                    onClick={() => confirmDelete(task)}
+                                    className="p-2 text-red-600 hover:bg-red-50 rounded-sm transition-colors"
+                                    title="Delete"
+                                  >
+                                    <Trash2 size={16} />
+                                  </button>
+                                </div>
+
                               </div>
 
                               <h3 className="text-gray-800 font-bold text-lg mb-4 line-clamp-2 leading-tight group-hover:text-orange-600 transition-colors">
@@ -563,6 +622,121 @@ export default function TodoPage() {
           </div>
         </Modal>
 
+        {/* Edit modal */}
+        <Modal
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          headerVariant="orange"
+          title="Edit Task"
+          subtitle="Update task details"
+          icon={<Check size={24} />}
+          maxWidth="max-w-2xl"
+          footer={
+            <div className="flex justify-end gap-3 w-full">
+              <button
+                onClick={() => setIsEditModalOpen(false)}
+                className="px-6 py-2.5 rounded-sm border-2 border-gray-300 text-gray-700 font-semibold hover:bg-gray-100 transition-all text-sm"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleUpdateTask}
+                className="px-6 py-2.5 rounded-sm bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold hover:from-orange-600 hover:to-orange-700 transition-all text-sm shadow-md"
+              >
+                Update Task
+              </button>
+            </div>
+          }
+        >
+          <div className="space-y-6">
+            {/* Title */}
+            <div>
+              <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                <AlertCircle size={16} className="text-orange-500" />
+                Task Title
+              </label>
+              <input
+                value={newTask}
+                onChange={(e) => setNewTask(e.target.value)}
+                className="w-full px-4 py-3 border-2 border-gray-100 rounded-sm focus:border-orange-500 outline-none text-sm"
+              />
+            </div>
+
+            {/* Priority */}
+            <div>
+              <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                <Flag size={16} className="text-orange-500" />
+                Priority
+              </label>
+              <div className="grid grid-cols-3 gap-3">
+                {["high", "medium", "low"].map((p) => (
+                  <button
+                    key={p}
+                    onClick={() => setNewTaskPriority(p)}
+                    className={`py-3 rounded-sm text-xs font-bold uppercase border-2 transition-all
+              ${newTaskPriority === p
+                        ? p === "high"
+                          ? "bg-red-600 border-red-600 text-white"
+                          : p === "medium"
+                            ? "bg-orange-600 border-orange-600 text-white"
+                            : "bg-green-600 border-green-600 text-white"
+                        : "bg-white border-gray-100 text-gray-400"}
+            `}
+                  >
+                    {p}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Date & Time */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                  <Calendar size={16} className="text-orange-500" />
+                  Due Date
+                </label>
+                <input
+                  type="date"
+                  value={newTaskDate}
+                  onChange={(e) => setNewTaskDate(e.target.value)}
+                  className="w-full px-4 py-3 border-2 border-gray-100 rounded-sm focus:border-orange-500"
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                  <Clock size={16} className="text-orange-500" />
+                  Due Time
+                </label>
+                <input
+                  type="time"
+                  value={newTaskTime}
+                  onChange={(e) => setNewTaskTime(e.target.value)}
+                  className="w-full px-4 py-3 border-2 border-gray-100 rounded-sm focus:border-orange-500"
+                />
+              </div>
+            </div>
+
+            {/* Category */}
+            <div>
+              <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                <Layout size={16} className="text-orange-500" />
+                Category
+              </label>
+              <select
+                value={newTaskCategory}
+                onChange={(e) => setNewTaskCategory(e.target.value)}
+                className="w-full px-4 py-3 border-2 border-gray-100 rounded-sm focus:border-orange-500"
+              >
+                {["General", "Sales", "CRM", "Reports", "Admin", "Marketing", "Support"].map(cat => (
+                  <option key={cat}>{cat}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </Modal>
+
         {/* Delete Confirmation Modal */}
         <Modal
           isOpen={isDeleteModalOpen}
@@ -602,5 +776,3 @@ export default function TodoPage() {
     </DashboardLayout>
   );
 }
-
-

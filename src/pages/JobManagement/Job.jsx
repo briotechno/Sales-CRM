@@ -546,7 +546,7 @@ export default function JobManagement() {
                             )}
                             {remove && (
                               <button
-                                onClick={() => handleDelete(job.id)}
+                                onClick={() => handleDelete(job)}
                                 className="p-2 hover:bg-red-100 rounded-sm transition-all">
                                 <Trash2 size={18} className="text-red-600" />
                               </button>

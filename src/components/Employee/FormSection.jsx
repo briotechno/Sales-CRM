@@ -39,7 +39,9 @@ const CollapsibleSection = ({ id, title, icon: Icon, children, isCollapsed, onTo
   );
 };
 
-const FormSection = ({ formData, handleChange, handleChanges, setFormData }) => {
+const FormSection = ({ formData, handleChanges, setFormData }) => {
+  const [errors, setErrors] = useState({});
+
   const [collapsedSections, setCollapsedSections] = useState({
     personal: false,
     job: true,
@@ -54,6 +56,55 @@ const FormSection = ({ formData, handleChange, handleChanges, setFormData }) => 
     setCollapsedSections((prev) => ({
       ...prev,
       [section]: !prev[section],
+    }));
+  };
+
+  const calculateAge = (dob) => {
+    const birthDate = new Date(dob);
+    const today = new Date();
+
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < birthDate.getDate())
+    ) {
+      age--;
+    }
+    return age;
+  };
+
+  const handleChange = (e) => {
+    const { name, value, files } = e.target;
+
+    if (name === "dob") {
+      const age = calculateAge(value);
+
+      setFormData((prev) => ({
+        ...prev,
+        dob: value,
+        age: age >= 18 ? age : "0",
+      }));
+
+      if (age < 18) {
+        setErrors((prev) => ({
+          ...prev,
+          dob: "Employee must be at least 18 years old",
+        }));
+      } else {
+        setErrors((prev) => {
+          const newErrors = { ...prev };
+          delete newErrors.dob;
+          return newErrors;
+        });
+      }
+      return;
+    }
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: files ? files[0] : value,
     }));
   };
 
@@ -213,8 +264,12 @@ const FormSection = ({ formData, handleChange, handleChanges, setFormData }) => 
               name="dob"
               value={formData.dob}
               onChange={handleChange}
-              className={inputStyles}
+              className={`${inputStyles} ${errors?.dob ? "border-red-500 focus:ring-red-500" : ""
+                }`}
             />
+            {errors?.dob && (
+              <p className="text-xs text-red-500 mt-1">{errors.dob}</p>
+            )}
           </div>
           <div>
             <label className={labelStyles}>Age (Auto-calculated)</label>

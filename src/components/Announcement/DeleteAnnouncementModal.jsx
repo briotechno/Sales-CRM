@@ -21,7 +21,7 @@ const DeleteAnnouncementModal = ({ isOpen, onClose, announcementId }) => {
         <div className="flex gap-4 w-full">
             <button
                 onClick={onClose}
-                className="flex-1 px-6 py-3 border-2 border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-100 transition-all font-bold"
+                className="flex-1 px-6 py-3 border-2 border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-100 transition-all"
             >
                 Cancel
             </button>
@@ -58,10 +58,11 @@ const DeleteAnnouncementModal = ({ isOpen, onClose, announcementId }) => {
                 </h2>
 
                 <p className="text-gray-600 mb-2 leading-relaxed">
-                    Are you sure you want to delete this announcement?
+                    Are you sure you want to delete this announcement{" "}
+                    <span className="font-bold text-gray-800">"{announcementId}"</span>?
                 </p>
 
-                <p className="text-sm text-red-500 italic">
+                    <p className="text-sm text-red-500 italic">
                     This action cannot be undone. All associated data will be permanently removed.
                 </p>
             </div>
