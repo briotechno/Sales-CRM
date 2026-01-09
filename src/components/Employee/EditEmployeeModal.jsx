@@ -134,12 +134,20 @@ const EditEmployeeModal = ({ isOpen, onClose, employee }) => {
                 [`${name}Preview`]: file ? URL.createObjectURL(file) : prev[`${name}Preview`],
             }));
         } else {
+            if (name === "dob") {
+                const age = calculateAge(value);
+                if (value && age < 18) {
+                    toast.dismiss();
+                    toast.error("Employee must be at least 18 years old");
+                    setFormData(prev => ({ ...prev, dob: "", age: "" }));
+                    return;
+                }
+                setFormData(prev => ({ ...prev, dob: value, age: age }));
+                return;
+            }
+
             setFormData((prev) => {
                 const updated = { ...prev, [name]: value };
-
-                if (name === "dob") {
-                    updated.age = calculateAge(value);
-                }
 
                 // Auto-update employeeName
                 if (name === "firstName" || name === "lastName") {
@@ -170,12 +178,16 @@ const EditEmployeeModal = ({ isOpen, onClose, employee }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (!formData.employeeName || !formData.email || !formData.mobile) {
-            toast.error("Please fill in required fields");
+        if (!formData.firstName.trim() || !formData.lastName.trim() || !formData.email.trim() || !formData.mobile.trim()) {
+            toast.error("First Name, Last Name, Email and Mobile are required");
             return;
         }
 
         const data = new FormData();
+
+        // Ensure employeeName is correctly synced
+        const fullName = `${formData.firstName.trim()} ${formData.lastName.trim()}`;
+        formData.employeeName = fullName;
         const mapping = {
             employeeId: 'employee_id',
             employeeName: 'employee_name',

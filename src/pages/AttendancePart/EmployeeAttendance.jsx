@@ -204,15 +204,16 @@ export default function EmployeeAttendance() {
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "user" },
-        audio: false,
+        audio: true, // Requested both for monitoring
       });
       setStream(mediaStream);
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
       }
+      toast.success("Live Monitoring Active: Camera and Microphone connected", { icon: '🎥' });
     } catch (error) {
-      console.error("Camera access error:", error);
-      alert("Unable to access camera. Please grant camera permissions.");
+      console.error("Camera/Mic access error:", error);
+      toast.error("Unable to access camera or microphone. Both are required for check-in and active monitoring.");
     }
   };
 

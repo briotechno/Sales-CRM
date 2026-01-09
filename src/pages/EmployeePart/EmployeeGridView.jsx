@@ -1,10 +1,10 @@
 import React from "react";
 import {
-  MoreVertical,
-  Check,
+  Trash2,
+  Camera,
+  Mic,
   Eye,
   Pencil,
-  Trash2,
 } from "lucide-react";
 
 /**
@@ -43,19 +43,40 @@ const EmployeeGridView = ({ employees, onEdit, onDelete, onView }) => {
             key={emp.id}
             className="bg-white border-2 border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all p-6 relative group"
           >
-            <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-              <button onClick={() => onView(emp)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-sm">
+            <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+              <button
+                onClick={(e) => { e.stopPropagation(); onView(emp, { monitor: true, type: 'video' }); }}
+                className="p-1.5 text-orange-600 hover:bg-orange-50 rounded-sm bg-white shadow-sm border border-orange-100"
+                title="View Camera"
+              >
+                <Camera size={16} />
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); onView(emp, { monitor: true, type: 'audio' }); }}
+                className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-sm bg-white shadow-sm border border-blue-100"
+                title="Listen Audio"
+              >
+                <Mic size={16} />
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); onView(emp); }}
+                className="p-1.5 text-gray-600 hover:bg-gray-50 rounded-sm bg-white shadow-sm border border-gray-100"
+                title="View Profile"
+              >
                 <Eye size={16} />
               </button>
-              <button onClick={() => onEdit(emp)} className="p-1.5 text-orange-600 hover:bg-orange-50 rounded-sm">
+              <button onClick={(e) => { e.stopPropagation(); onEdit(emp); }} className="p-1.5 text-orange-600 hover:bg-orange-50 rounded-sm bg-white shadow-sm border border-orange-100">
                 <Pencil size={16} />
               </button>
-              <button onClick={() => onDelete(emp)} className="p-1.5 text-red-600 hover:bg-red-50 rounded-sm">
+              <button onClick={(e) => { e.stopPropagation(); onDelete(emp); }} className="p-1.5 text-red-600 hover:bg-red-50 rounded-sm bg-white shadow-sm border border-red-100">
                 <Trash2 size={16} />
               </button>
             </div>
 
-            <div className="flex flex-col items-center mt-4">
+            <div
+              className="flex flex-col items-center mt-4 cursor-pointer"
+              onClick={() => onView(emp, { monitor: true })}
+            >
               <div className="relative">
                 {emp.profile_picture_url ? (
                   <img

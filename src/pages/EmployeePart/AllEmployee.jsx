@@ -55,8 +55,8 @@ const AllEmployee = () => {
     setIsEditModalOpen(true);
   };
 
-  const handleView = (emp) => {
-    navigate(`/employee-profile/${emp.id}`);
+  const handleView = (emp, options = {}) => {
+    navigate(`/employee-profile/${emp.id}`, { state: { monitor: options.monitor, type: options.type } });
   };
 
   const handleDelete = (emp) => {
@@ -335,7 +335,7 @@ const AllEmployee = () => {
           setSelectedEmployee(null);
         }}
         employeeId={selectedEmployee?.id}
-        employeeName={`${selectedEmployee?.first_name} ${selectedEmployee?.last_name}`}
+        employeeName={selectedEmployee?.employee_name}
       />
 
     </DashboardLayout>

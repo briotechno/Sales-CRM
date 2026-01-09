@@ -22,6 +22,9 @@ import {
   Globe
 } from "lucide-react";
 import { useGetEmployeeByIdQuery } from "../../../store/api/employeeApi";
+import { useLocation } from "react-router-dom";
+import { toast } from "react-hot-toast";
+import { Camera, Mic, Volume2, Maximize2, Radio, X } from "lucide-react";
 
 const DetailItem = ({ label, value }) => (
   <div className="space-y-1">
@@ -33,8 +36,46 @@ const DetailItem = ({ label, value }) => (
 export default function EmployeeProfile() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { data: response, isLoading, error } = useGetEmployeeByIdQuery(id);
   const employee = response?.data;
+
+  // Live Monitoring State
+  const [isMonitoring, setIsMonitoring] = useState(location.state?.monitor || false);
+  const [monitorType, setMonitorType] = useState(location.state?.type || 'all');
+  const [monitorStream, setMonitorStream] = useState(null);
+  const monitorVideoRef = React.useRef(null);
+
+  React.useEffect(() => {
+    if (isMonitoring) {
+      startMonitoring();
+    }
+    return () => stopMonitoring();
+  }, [isMonitoring]);
+
+  const startMonitoring = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: monitorType !== 'audio',
+        audio: true
+      });
+      setMonitorStream(stream);
+      if (monitorVideoRef.current) {
+        monitorVideoRef.current.srcObject = stream;
+      }
+      toast.success(`Connected to EMP-${id} live feed`, { icon: '📡' });
+    } catch (err) {
+      toast.error("Failed to establish live connection. Employee might be offline or permissions denied.");
+      setIsMonitoring(false);
+    }
+  };
+
+  const stopMonitoring = () => {
+    if (monitorStream) {
+      monitorStream.getTracks().forEach(track => track.stop());
+      setMonitorStream(null);
+    }
+  };
 
   const [expandedSections, setExpandedSections] = useState({
     about: true,
@@ -300,6 +341,65 @@ export default function EmployeeProfile() {
             </div>
             {/* Right Column - Details */}
             <div className="lg:col-span-2 space-y-6">
+              {/* Live Monitoring Section */}
+              {isMonitoring && (
+                <div className="bg-slate-900 rounded-sm shadow-2xl overflow-hidden border-2 border-orange-500 animate-pulse-subtle">
+                  <div className="p-4 bg-slate-800 flex items-center justify-between border-b border-slate-700">
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2 px-3 py-1 bg-red-600 rounded-full text-[10px] font-black text-white uppercase tracking-widest animate-pulse">
+                        <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
+                        Live Feed
+                      </div>
+                      <h3 className="font-bold text-white uppercase tracking-tighter text-sm">Employee Monitoring: {employee.employee_name}</h3>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button onClick={() => setMonitorType('all')} className={`p-1.5 rounded ${monitorType === 'all' ? 'bg-orange-500 text-white' : 'text-slate-400 hover:text-white'}`}><Radio size={16} /></button>
+                      <button onClick={() => setMonitorType('video')} className={`p-1.5 rounded ${monitorType === 'video' ? 'bg-orange-500 text-white' : 'text-slate-400 hover:text-white'}`}><Camera size={16} /></button>
+                      <button onClick={() => setMonitorType('audio')} className={`p-1.5 rounded ${monitorType === 'audio' ? 'bg-orange-500 text-white' : 'text-slate-400 hover:text-white'}`}><Mic size={16} /></button>
+                      <div className="w-[1px] h-4 bg-slate-700 mx-1"></div>
+                      <button onClick={() => setIsMonitoring(false)} className="text-slate-400 hover:text-white"><X size={16} /></button>
+                    </div>
+                  </div>
+
+                  <div className="relative aspect-video bg-black flex items-center justify-center group">
+                    {monitorType !== 'audio' ? (
+                      <video
+                        ref={monitorVideoRef}
+                        autoPlay
+                        playsInline
+                        muted={false}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex flex-col items-center gap-4">
+                        <div className="w-20 h-20 rounded-full bg-orange-500/10 flex items-center justify-center animate-ping absolute"></div>
+                        <div className="w-20 h-20 rounded-full bg-orange-500 flex items-center justify-center relative z-10 shadow-xl shadow-orange-500/20">
+                          <Mic className="text-white w-8 h-8" />
+                        </div>
+                        <p className="text-orange-500 font-bold tracking-widest text-xs uppercase">Audio Stream Active</p>
+                      </div>
+                    )}
+
+                    {/* HUD Overlays */}
+                    <div className="absolute bottom-4 left-4 flex flex-col gap-1 pointer-events-none">
+                      <p className="text-[10px] font-mono text-green-400 bg-black/40 px-2 py-1 rounded">CRYPTO-SYNC: SECURE</p>
+                      <p className="text-[10px] font-mono text-white/60 bg-black/40 px-2 py-1 rounded">ID: EMP-{employee.employee_id} | {new Date().toLocaleTimeString()}</p>
+                    </div>
+
+                    <div className="absolute top-4 right-4 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button className="p-2 bg-black/60 rounded text-white hover:bg-orange-500 transition-colors"><Maximize2 size={18} /></button>
+                      <button className="p-2 bg-black/60 rounded text-white hover:bg-orange-500 transition-colors"><Volume2 size={18} /></button>
+                    </div>
+                  </div>
+
+                  <div className="p-4 bg-slate-800/50 flex items-center justify-between text-[11px] text-slate-400 font-medium">
+                    <p>Status: <span className="text-green-500">Connected</span></p>
+                    <p>Encryption: <span className="text-slate-200">End-to-End AES-256</span></p>
+                    <p>Network: <span className="text-slate-200">EXCELLENT</span></p>
+                  </div>
+                </div>
+              )}
+
               {/* About Employee */}
               <div className="bg-white rounded-sm shadow overflow-hidden">
                 <div

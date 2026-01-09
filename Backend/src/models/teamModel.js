@@ -92,9 +92,13 @@ const Team = {
         if (rows.length === 0) return null;
 
         const [members] = await pool.query(`
-            SELECT e.* 
+            SELECT e.*, 
+            d.department_name, d.department_id as department_uid,
+            deg.designation_name, deg.designation_id as designation_uid
             FROM employees e
             JOIN team_members tm ON e.id = tm.employee_id
+            LEFT JOIN departments d ON e.department_id = d.id 
+            LEFT JOIN designations deg ON e.designation_id = deg.id
             WHERE tm.team_id = ?
         `, [id]);
 
