@@ -9,9 +9,59 @@ import {
   ShieldCheck,
   ChevronDown,
   ChevronUp,
+  X,
 } from "lucide-react";
 import { useGetDepartmentsQuery } from "../../store/api/departmentApi";
 import { useGetDesignationsQuery } from "../../store/api/designationApi";
+import { Country, State, City } from "country-state-city";
+
+const languagesList = [
+  "English",
+  "Hindi",
+  "Mandarin Chinese",
+  "Spanish",
+  "French",
+  "Standard Arabic",
+  "Bengali",
+  "Russian",
+  "Portuguese",
+  "Urdu",
+  "Indonesian",
+  "German",
+  "Japanese",
+  "Marathi",
+  "Telugu",
+  "Turkish",
+  "Tamil",
+  "Vietnamese",
+  "Italian",
+  "Thai",
+  "Gujarati",
+  "Kannada",
+  "Persian",
+  "Polish",
+  "Pashto",
+  "Dutch",
+  "Greek",
+  "Amharic",
+  "Yoruba",
+  "Oromo",
+  "Malayalam",
+  "Igbo",
+  "Sindhi",
+  "Nepali",
+  "Sinhala",
+  "Somali",
+  "Khmer",
+  "Turkmen",
+  "Assamese",
+  "Madurese",
+  "Hausa",
+  "Punjabi",
+  "Javanese",
+  "Wu Chinese",
+  "Korean",
+].sort();
 
 const CollapsibleSection = ({ id, title, icon: Icon, children, isCollapsed, onToggle }) => {
   return (
@@ -49,6 +99,58 @@ const FormSection = ({ formData, handleChange, handleChanges, setFormData }) => 
     login: true,
     permissions: true,
   });
+
+  const [isSameAddress, setIsSameAddress] = useState(false);
+
+  const handlePermanentAddressChange = (e) => {
+    const { name, value } = e.target;
+
+    // Call the parent handleChange first
+    handleChange(e);
+
+    // If same as permanent is checked, update correspondence address dynamically
+    if (isSameAddress) {
+      setFormData(prev => {
+        const updated = { ...prev, [name]: value };
+        const addressParts = [
+          updated.permanentAddressLine1,
+          updated.permanentAddressLine2,
+          updated.permanentAddressLine3,
+          updated.permanentCity,
+          updated.permanentState,
+          updated.permanentCountry,
+          updated.permanentPincode
+        ].filter(Boolean);
+
+        return {
+          ...updated,
+          correspondenceAddress: addressParts.join(", ")
+        };
+      });
+    }
+  };
+
+  const handleCheckboxChange = (e) => {
+    const checked = e.target.checked;
+    setIsSameAddress(checked);
+
+    if (checked) {
+      const addressParts = [
+        formData.permanentAddressLine1,
+        formData.permanentAddressLine2,
+        formData.permanentAddressLine3,
+        formData.permanentCity,
+        formData.permanentState,
+        formData.permanentCountry,
+        formData.permanentPincode
+      ].filter(Boolean);
+
+      setFormData(prev => ({
+        ...prev,
+        correspondenceAddress: addressParts.join(", ")
+      }));
+    }
+  };
 
   const toggleSection = (section) => {
     setCollapsedSections((prev) => ({
@@ -189,23 +291,29 @@ const FormSection = ({ formData, handleChange, handleChanges, setFormData }) => 
               className={inputStyles}
             />
           </div>
-          <div>
-            <label className={labelStyles}>Profile Picture</label>
-            <input
-              type="file"
-              name="profilePic"
-              accept="image/*"
-              onChange={handleChange}
-              className={fileStyles}
-            />
-            {formData.profilePicPreview && (
-              <img
-                src={formData.profilePicPreview}
-                alt="Profile"
-                className="w-24 h-24 object-cover rounded-sm border mt-2"
+          <div className="space-y-2">
+            <label className={labelStyles}>
+              Profile Picture
+            </label>
+
+            <div className="flex items-center gap-4">
+              <input
+                type="file"
+                name="profilePic"
+                accept="image/*"
+                onChange={handleChange}
+                className={fileStyles}
               />
-            )}
+              {formData.profilePicPreview && (
+                <img
+                  src={formData.profilePicPreview}
+                  alt="Profile Preview"
+                  className="w-18 h-16 object-cover rounded-md border border-gray-200"
+                />
+              )}
+            </div>
           </div>
+
           <div>
             <label className={labelStyles}>Date of Birth</label>
             <input
@@ -370,9 +478,16 @@ const FormSection = ({ formData, handleChange, handleChanges, setFormData }) => 
                 onChange={handleChange}
                 className={selectStyles}
               >
-                <option>Permanent</option>
-                <option>Contract</option>
-                <option>Intern</option>
+                <option>Full-Time Employee</option>
+                <option>Part-Time Employee</option>
+                <option>Contract Employee</option>
+                <option>Temporary Employee</option>
+                <option>Intern / Trainee</option>
+                <option>Freelancer / Consultant</option>
+                <option>Probationary Employee</option>
+                <option>Casual Employee</option>
+                <option>Remote Employee</option>
+                <option>Seasonal Employee</option>
               </select>
               <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
                 <ChevronDown size={18} className="text-gray-400" />
@@ -388,8 +503,14 @@ const FormSection = ({ formData, handleChange, handleChanges, setFormData }) => 
                 onChange={handleChange}
                 className={selectStyles}
               >
-                <option>WFO</option>
-                <option>WFH</option>
+                <option>On-Site</option>
+                <option>WFH(Remote)</option>
+                <option>Hybrid</option>
+                <option>Freelance</option>
+                <option>Field Work</option>
+                <option>Flexible Hours</option>
+                <option>Project-Based</option>
+                <option>On-Call</option>
               </select>
               <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
                 <ChevronDown size={18} className="text-gray-400" />
@@ -444,17 +565,151 @@ const FormSection = ({ formData, handleChange, handleChanges, setFormData }) => 
               className={inputStyles}
             />
           </div>
+          <div className="space-y-2">
+            <label className={labelStyles}>
+              Permanent Address (Line 1)
+            </label>
+
+            <div className="flex flex-col gap-2">
+              <input
+                type="text"
+                name="permanentAddressLine1"
+                placeholder="Enter permanent address line 1"
+                value={formData.permanentAddressLine1 || ""}
+                onChange={handlePermanentAddressChange}
+                className={inputStyles}
+              />
+
+              <label className="flex items-center gap-2 cursor-pointer select-none group">
+                <input
+                  type="checkbox"
+                  id="sameAsPermanent"
+                  checked={isSameAddress}
+                  onChange={handleCheckboxChange}
+                  className="w-4 h-4 text-[#FF7B1D] border-gray-300 rounded focus:ring-[#FF7B1D]"
+                />
+                <span className="text-sm font-medium text-gray-700 group-hover:text-[#FF7B1D] transition-colors">
+                  Same as Permanent Address
+                </span>
+              </label>
+            </div>
+          </div>
+
           <div>
-            <label className={labelStyles}>Permanent Address</label>
+            <label className={labelStyles}>Permanent Address (Line 2)</label>
             <input
               type="text"
-              name="permanentAddress"
-              placeholder="Enter permanent address"
-              value={formData.permanentAddress}
-              onChange={handleChange}
+              name="permanentAddressLine2"
+              placeholder="Enter permanent address line 2"
+              value={formData.permanentAddressLine2 || ""}
+              onChange={handlePermanentAddressChange}
               className={inputStyles}
             />
           </div>
+          <div>
+            <label className={labelStyles}>Permanent Address (Line 3)</label>
+            <input
+              type="text"
+              name="permanentAddressLine3"
+              placeholder="Enter permanent address line 3"
+              value={formData.permanentAddressLine3 || ""}
+              onChange={handlePermanentAddressChange}
+              className={inputStyles}
+            />
+          </div>
+
+          <div>
+            <label className={labelStyles}>Country</label>
+            <div className="relative">
+              <select
+                name="permanentCountry"
+                value={formData.permanentCountry || ""}
+                onChange={(e) => {
+                  handlePermanentAddressChange(e);
+                }}
+                className={selectStyles}
+              >
+                <option value="">Select Country</option>
+                {Country.getAllCountries().map((country) => (
+                  <option key={country.isoCode} value={country.isoCode}>
+                    {country.name}
+                  </option>
+                ))}
+              </select>
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                <ChevronDown size={18} className="text-gray-400" />
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label className={labelStyles}>State</label>
+            <div className="relative">
+              <select
+                name="permanentState"
+                value={formData.permanentState || ""}
+                onChange={handlePermanentAddressChange}
+                className={selectStyles}
+              >
+                <option value="">Select State</option>
+                {State.getStatesOfCountry(formData.permanentCountry)?.map((state) => (
+                  <option key={state.isoCode} value={state.isoCode}>
+                    {state.name}
+                  </option>
+                ))}
+              </select>
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                <ChevronDown size={18} className="text-gray-400" />
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label className={labelStyles}>City</label>
+            <div className="relative">
+              <select
+                name="permanentCity"
+                value={formData.permanentCity || ""}
+                onChange={handlePermanentAddressChange}
+                className={selectStyles}
+              >
+                <option value="">Select City</option>
+                {City.getCitiesOfState(formData.permanentCountry, formData.permanentState)?.map((city) => (
+                  <option key={city.name} value={city.name}>
+                    {city.name}
+                  </option>
+                ))}
+              </select>
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                <ChevronDown size={18} className="text-gray-400" />
+              </div>
+            </div>
+          </div>
+          <div>
+            <label className={labelStyles}>Pincode</label>
+            <input
+              type="text"
+              name="permanentPincode"
+              placeholder="Enter pincode"
+              value={formData.permanentPincode || ""}
+              onChange={handlePermanentAddressChange}
+              className={inputStyles}
+            />
+          </div>
+          {/* <div className="flex items-center h-full pt-6">
+            <label className="flex items-center space-x-2 cursor-pointer select-none group">
+              <input
+                type="checkbox"
+                id="sameAsPermanent"
+                checked={isSameAddress}
+                onChange={handleCheckboxChange}
+                className="w-5 h-5 text-[#FF7B1D] border-gray-300 rounded focus:ring-[#FF7B1D] cursor-pointer"
+              />
+              <span className="text-sm font-semibold text-gray-700 group-hover:text-[#FF7B1D] transition-colors">
+                Same as Permanent Address
+              </span>
+            </label>
+          </div> */}
           <div>
             <label className={labelStyles}>Correspondence Address</label>
             <input
@@ -514,29 +769,67 @@ const FormSection = ({ formData, handleChange, handleChanges, setFormData }) => 
           </div>
           <div>
             <label className={labelStyles}>Languages</label>
-            <div className="border-2 border-gray-200 rounded-sm p-3 bg-white hover:border-gray-300 transition-orange-600">
-              <div className="grid grid-cols-2 gap-3">
-                {["English", "Hindi", "Spanish", "French", "German"].map(
-                  (lang) => (
-                    <label
+            <div className="space-y-4">
+              <div className="relative">
+                <select
+                  onChange={(e) => {
+                    const selectedLanguage = e.target.value;
+                    if (
+                      selectedLanguage &&
+                      !formData.languages.includes(selectedLanguage)
+                    ) {
+                      setFormData((prev) => ({
+                        ...prev,
+                        languages: [...(prev.languages || []), selectedLanguage],
+                      }));
+                    }
+                    e.target.value = ""; // Reset dropdown
+                  }}
+                  className={selectStyles}
+                  defaultValue=""
+                >
+                  <option value="" disabled>
+                    Select Language
+                  </option>
+                  {languagesList.map((lang) => (
+                    <option
                       key={lang}
-                      className="flex items-center space-x-2 cursor-pointer group"
+                      value={lang}
+                      disabled={formData.languages.includes(lang)}
                     >
-                      <input
-                        type="checkbox"
-                        name="languages"
-                        value={lang}
-                        checked={formData.languages.includes(lang)}
-                        onChange={handleChanges}
-                        className="h-4 w-4 text-[#FF7B1D] border-gray-300 rounded  cursor-pointer"
-                      />
-                      <span className="text-sm text-gray-700 group-hover:text-gray-900">
-                        {lang}
-                      </span>
-                    </label>
-                  )
-                )}
+                      {lang}
+                    </option>
+                  ))}
+                </select>
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                  <ChevronDown size={18} className="text-gray-400" />
+                </div>
               </div>
+
+              {formData.languages && formData.languages.length > 0 && (
+                <div className="flex flex-wrap gap-2 p-3 bg-gray-50 border border-gray-200 rounded-sm">
+                  {formData.languages.map((lang) => (
+                    <div
+                      key={lang}
+                      className="bg-white border border-gray-200 text-gray-800 px-3 py-1 rounded-full text-sm flex items-center gap-2 shadow-sm"
+                    >
+                      <span>{lang}</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFormData((prev) => ({
+                            ...prev,
+                            languages: prev.languages.filter((l) => l !== lang),
+                          }));
+                        }}
+                        className="text-gray-400 hover:text-red-500 transition-colors focus:outline-none"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -574,54 +867,62 @@ const FormSection = ({ formData, handleChange, handleChanges, setFormData }) => 
           </div>
           <div>
             <label className={labelStyles}>Upload Aadhar Card (Front)</label>
-            <input
-              type="file"
-              name="aadharFront"
-              accept="image/*,.pdf"
-              onChange={handleChange}
-              className={fileStyles}
-            />
-            {formData.aadharFrontPreview && (
-              <img
-                src={formData.aadharFrontPreview}
-                alt="Profile"
-                className="w-24 h-24 object-cover rounded-sm border mt-2"
+            <div className="flex items-center gap-4">
+              <input
+                type="file"
+                name="aadharFront"
+                accept="image/*,.pdf"
+                onChange={handleChange}
+                className={fileStyles}
               />
-            )}
+              {formData.aadharFrontPreview && (
+                <img
+                  src={formData.aadharFrontPreview}
+                  alt="Profile"
+                  className="w-18 h-16 object-cover rounded-sm border"
+                />
+              )}
+            </div>
           </div>
           <div>
             <label className={labelStyles}>Upload Aadhar Card (Back)</label>
-            <input
-              type="file"
-              name="aadharBack"
-              accept="image/*,.pdf"
-              onChange={handleChange}
-              className={fileStyles}
-            />
-            {formData.aadharBackPreview && (
-              <img
-                src={formData.aadharBackPreview}
-                alt="Profile"
-                className="w-24 h-24 object-cover rounded-sm border mt-2"
+            <div className="flex items-center gap-4">
+
+              <input
+                type="file"
+                name="aadharBack"
+                accept="image/*,.pdf"
+                onChange={handleChange}
+                className={fileStyles}
               />
-            )}
+              {formData.aadharBackPreview && (
+                <img
+                  src={formData.aadharBackPreview}
+                  alt="Profile"
+                  className="w-18 h-16 object-cover rounded-sm border"
+                />
+              )}
+            </div>
           </div>
           <div>
             <label className={labelStyles}>Upload PAN Card</label>
-            <input
-              type="file"
-              name="panCard"
-              accept="image/*,.pdf"
-              onChange={handleChange}
-              className={fileStyles}
-            />
-            {formData.panCardPreview && (
-              <img
-                src={formData.panCardPreview}
-                alt="Profile"
-                className="w-24 h-24 object-cover rounded-sm border mt-2"
+            <div className="flex items-center gap-4">
+
+              <input
+                type="file"
+                name="panCard"
+                accept="image/*,.pdf"
+                onChange={handleChange}
+                className={fileStyles}
               />
-            )}
+              {formData.panCardPreview && (
+                <img
+                  src={formData.panCardPreview}
+                  alt="Profile"
+                  className="w-18 h-16 object-cover rounded-sm border"
+                />
+              )}
+            </div>
           </div>
         </div>
       </CollapsibleSection>
@@ -680,20 +981,22 @@ const FormSection = ({ formData, handleChange, handleChanges, setFormData }) => 
           </div>
           <div>
             <label className={labelStyles}>Upload Cancelled Cheque</label>
-            <input
-              type="file"
-              name="cancelCheque"
-              accept="image/*,.pdf"
-              onChange={handleChange}
-              className={fileStyles}
-            />
-            {formData.cancelChequePreview && (
-              <img
-                src={formData.cancelChequePreview}
-                alt="Profile"
-                className="w-24 h-24 object-cover rounded-sm border mt-2"
+            <div className="flex items-center gap-4">
+              <input
+                type="file"
+                name="cancelCheque"
+                accept="image/*,.pdf"
+                onChange={handleChange}
+                className={fileStyles}
               />
-            )}
+              {formData.cancelChequePreview && (
+                <img
+                  src={formData.cancelChequePreview}
+                  alt="Profile"
+                  className="w-18 h-16 object-cover rounded-sm border"
+                />
+              )}
+            </div>
           </div>
         </div>
       </CollapsibleSection>
@@ -746,7 +1049,7 @@ const FormSection = ({ formData, handleChange, handleChanges, setFormData }) => 
         </div>
       </CollapsibleSection>
 
-      <CollapsibleSection
+      {/* <CollapsibleSection
         id="permissions"
         title="Permissions Control"
         icon={ShieldCheck}
@@ -807,7 +1110,7 @@ const FormSection = ({ formData, handleChange, handleChanges, setFormData }) => 
             ))}
           </tbody>
         </table>
-      </CollapsibleSection>
+      </CollapsibleSection> */}
     </>
   );
 };

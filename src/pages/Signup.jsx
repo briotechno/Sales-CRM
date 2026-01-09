@@ -449,16 +449,45 @@ export default function Signup() {
                 </div>
               </div>
 
-              {/* Password Requirements */}
-              <div className="bg-orange-50 border border-orange-200 rounded-xl p-1.5">
-                <p className="text-xs text-gray-700 font-semibold mb-0.5">
-                  Password must contain:
+              {/* Password Requirements Checklist */}
+              <div className="bg-orange-50 border border-orange-200 rounded-xl p-2.5">
+                <p className="text-[11px] text-gray-700 font-bold mb-1.5 flex items-center gap-1.5 uppercase tracking-wider">
+                  Password Strength Checklist:
                 </p>
-                <ul className="text-xs text-gray-600 space-y-0">
-                  <li>• At least 8 characters</li>
-                  <li>• One uppercase and lowercase letter</li>
-                  <li>• One number</li>
-                </ul>
+                <div className="grid grid-cols-1 gap-1.5">
+                  <div className={`flex items-center gap-2 p-1.5 rounded-lg border transition-all duration-300 ${formData.password.length >= 8
+                      ? "bg-green-50 border-green-200 text-green-700"
+                      : "bg-white border-gray-100 text-gray-500"
+                    }`}>
+                    <div className={`w-4 h-4 rounded-full flex items-center justify-center transition-all ${formData.password.length >= 8 ? "bg-green-500" : "bg-gray-200"
+                      }`}>
+                      <Check className={`w-2.5 h-2.5 text-white ${formData.password.length >= 8 ? "opacity-100" : "opacity-0"}`} />
+                    </div>
+                    <span className="text-[10px] font-semibold">At least 8 characters</span>
+                  </div>
+
+                  <div className={`flex items-center gap-2 p-1.5 rounded-lg border transition-all duration-300 ${(/[a-z]/.test(formData.password) && /[A-Z]/.test(formData.password))
+                      ? "bg-green-50 border-green-200 text-green-700"
+                      : "bg-white border-gray-100 text-gray-500"
+                    }`}>
+                    <div className={`w-4 h-4 rounded-full flex items-center justify-center transition-all ${(/[a-z]/.test(formData.password) && /[A-Z]/.test(formData.password)) ? "bg-green-500" : "bg-gray-200"
+                      }`}>
+                      <Check className={`w-2.5 h-2.5 text-white ${(/[a-z]/.test(formData.password) && /[A-Z]/.test(formData.password)) ? "opacity-100" : "opacity-0"}`} />
+                    </div>
+                    <span className="text-[10px] font-semibold">Upper & lowercase letters</span>
+                  </div>
+
+                  <div className={`flex items-center gap-2 p-1.5 rounded-lg border transition-all duration-300 ${/\d/.test(formData.password)
+                      ? "bg-green-50 border-green-200 text-green-700"
+                      : "bg-white border-gray-100 text-gray-500"
+                    }`}>
+                    <div className={`w-4 h-4 rounded-full flex items-center justify-center transition-all ${/\d/.test(formData.password) ? "bg-green-500" : "bg-gray-200"
+                      }`}>
+                      <Check className={`w-2.5 h-2.5 text-white ${/\d/.test(formData.password) ? "opacity-100" : "opacity-0"}`} />
+                    </div>
+                    <span className="text-[10px] font-semibold">Contains at least one number</span>
+                  </div>
+                </div>
               </div>
 
               {/* Navigation Buttons */}
