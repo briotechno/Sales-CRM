@@ -238,6 +238,7 @@ const AddEmployeeModal = ({ isOpen, onClose }) => {
             handleChange={handleChange}
             handleChanges={handleChanges}
             setFormData={setFormData}
+            mode="basic"
           />
         </div>
 

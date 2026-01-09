@@ -45,7 +45,7 @@ const Employee = {
                 aadhar_front, aadhar_back, pan_card,
                 ifsc_code, account_number, account_holder_name, branch_name,
                 cancelled_cheque, username, password, status, user_id, permissions
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 newId, employee_name, profile_picture, date_of_birth, age, gender,
                 father_name, mother_name, marital_status, joining_date,
@@ -128,10 +128,15 @@ const Employee = {
     },
 
     update: async (id, data, userId) => {
-        const fields = Object.keys(data).filter(key => key !== 'id' && key !== 'employee_id' && key !== 'user_id');
+        const payload = data || {};
+        const forbiddenFields = [
+            'id', 'employee_id', 'user_id', 'department_name', 'department_uid', 'designation_name', 'designation_uid',
+            'employeeId', 'joiningDate', 'firstName', 'lastName', 'createdAt', 'updatedAt', 'permissions'
+        ];
+        const fields = Object.keys(payload).filter(key => !forbiddenFields.includes(key));
         const setClause = fields.map(field => `${field} = ?`).join(', ');
         const values = fields.map(field => {
-            const val = data[field];
+            const val = payload[field];
             return (typeof val === 'object' && val !== null) ? JSON.stringify(val) : val;
         });
 

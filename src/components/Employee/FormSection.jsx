@@ -89,7 +89,7 @@ const CollapsibleSection = ({ id, title, icon: Icon, children, isCollapsed, onTo
   );
 };
 
-const FormSection = ({ formData, handleChange, handleChanges, setFormData }) => {
+const FormSection = ({ formData, handleChange, handleChanges, setFormData, mode = "full" }) => {
   const [collapsedSections, setCollapsedSections] = useState({
     personal: false,
     job: true,
@@ -335,65 +335,70 @@ const FormSection = ({ formData, handleChange, handleChanges, setFormData }) => 
               className={readOnlyStyles}
             />
           </div>
-          <div>
-            <label className={labelStyles}>Gender</label>
-            <div className="relative">
-              <select
-                name="gender"
-                value={formData.gender}
-                onChange={handleChange}
-                className={selectStyles}
-              >
-                <option value="">Select Gender</option>
-                <option>Male</option>
-                <option>Female</option>
-                <option>Other</option>
-              </select>
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                <ChevronDown size={18} className="text-gray-400" />
+
+          {mode !== "basic" && (
+            <>
+              <div>
+                <label className={labelStyles}>Gender</label>
+                <div className="relative">
+                  <select
+                    name="gender"
+                    value={formData.gender}
+                    onChange={handleChange}
+                    className={selectStyles}
+                  >
+                    <option value="">Select Gender</option>
+                    <option>Male</option>
+                    <option>Female</option>
+                    <option>Other</option>
+                  </select>
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                    <ChevronDown size={18} className="text-gray-400" />
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-          <div>
-            <label className={labelStyles}>Father's Name</label>
-            <input
-              type="text"
-              name="fatherName"
-              placeholder="Enter father's name"
-              value={formData.fatherName}
-              onChange={handleChange}
-              className={inputStyles}
-            />
-          </div>
-          <div>
-            <label className={labelStyles}>Mother's Name</label>
-            <input
-              type="text"
-              name="motherName"
-              placeholder="Enter mother's name"
-              value={formData.motherName}
-              onChange={handleChange}
-              className={inputStyles}
-            />
-          </div>
-          <div>
-            <label className={labelStyles}>Marital Status</label>
-            <div className="relative">
-              <select
-                name="maritalStatus"
-                value={formData.maritalStatus}
-                onChange={handleChange}
-                className={selectStyles}
-              >
-                <option value="">Select Status</option>
-                <option value="Yes">Married</option>
-                <option value="No">Unmarried</option>
-              </select>
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                <ChevronDown size={18} className="text-gray-400" />
+              <div>
+                <label className={labelStyles}>Father's Name</label>
+                <input
+                  type="text"
+                  name="fatherName"
+                  placeholder="Enter father's name"
+                  value={formData.fatherName}
+                  onChange={handleChange}
+                  className={inputStyles}
+                />
               </div>
-            </div>
-          </div>
+              <div>
+                <label className={labelStyles}>Mother's Name</label>
+                <input
+                  type="text"
+                  name="motherName"
+                  placeholder="Enter mother's name"
+                  value={formData.motherName}
+                  onChange={handleChange}
+                  className={inputStyles}
+                />
+              </div>
+              <div>
+                <label className={labelStyles}>Marital Status</label>
+                <div className="relative">
+                  <select
+                    name="maritalStatus"
+                    value={formData.maritalStatus}
+                    onChange={handleChange}
+                    className={selectStyles}
+                  >
+                    <option value="">Select Status</option>
+                    <option value="Yes">Married</option>
+                    <option value="No">Unmarried</option>
+                  </select>
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                    <ChevronDown size={18} className="text-gray-400" />
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </CollapsibleSection>
 
@@ -798,266 +803,271 @@ const FormSection = ({ formData, handleChange, handleChanges, setFormData }) => 
             </div>
           </div>
 
-          {/* Blood Group & Languages */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 border-t border-gray-100 pt-6">
-            <div>
-              <label className={labelStyles}>Blood Group</label>
-              <div className="relative">
-                <select
-                  name="bloodGroup"
-                  value={formData.bloodGroup}
-                  onChange={handleChange}
-                  className={selectStyles}
-                >
-                  <option value="">Select Blood Group</option>
-                  <option>A+</option>
-                  <option>A-</option>
-                  <option>B+</option>
-                  <option>B-</option>
-                  <option>O+</option>
-                  <option>O-</option>
-                  <option>AB+</option>
-                  <option>AB-</option>
-                </select>
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                  <ChevronDown size={18} className="text-gray-400" />
-                </div>
-              </div>
-            </div>
-            <div>
-              <label className={labelStyles}>Languages Spoken</label>
-              <div className="space-y-4">
+          {mode !== "basic" && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 border-t border-gray-100 pt-6">
+              <div>
+                <label className={labelStyles}>Blood Group</label>
                 <div className="relative">
                   <select
-                    onChange={(e) => {
-                      const selectedLanguage = e.target.value;
-                      if (
-                        selectedLanguage &&
-                        !formData.languages.includes(selectedLanguage)
-                      ) {
-                        setFormData((prev) => ({
-                          ...prev,
-                          languages: [...(prev.languages || []), selectedLanguage],
-                        }));
-                      }
-                      e.target.value = ""; // Reset dropdown
-                    }}
+                    name="bloodGroup"
+                    value={formData.bloodGroup}
+                    onChange={handleChange}
                     className={selectStyles}
-                    defaultValue=""
                   >
-                    <option value="" disabled>
-                      Select Language
-                    </option>
-                    {languagesList.map((lang) => (
-                      <option
-                        key={lang}
-                        value={lang}
-                        disabled={formData.languages.includes(lang)}
-                      >
-                        {lang}
-                      </option>
-                    ))}
+                    <option value="">Select Blood Group</option>
+                    <option>A+</option>
+                    <option>A-</option>
+                    <option>B+</option>
+                    <option>B-</option>
+                    <option>O+</option>
+                    <option>O-</option>
+                    <option>AB+</option>
+                    <option>AB-</option>
                   </select>
                   <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
                     <ChevronDown size={18} className="text-gray-400" />
                   </div>
                 </div>
-
-                {formData.languages && formData.languages.length > 0 && (
-                  <div className="flex flex-wrap gap-2 p-3 bg-gray-50 border border-gray-200 rounded-sm">
-                    {formData.languages.map((lang) => (
-                      <div
-                        key={lang}
-                        className="bg-white border border-gray-200 text-gray-800 px-3 py-1 rounded-full text-sm flex items-center gap-2 shadow-sm"
-                      >
-                        <span>{lang}</span>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setFormData((prev) => ({
-                              ...prev,
-                              languages: prev.languages.filter((l) => l !== lang),
-                            }));
-                          }}
-                          className="text-gray-400 hover:text-red-500 transition-colors focus:outline-none"
+              </div>
+              <div>
+                <label className={labelStyles}>Languages Spoken</label>
+                <div className="space-y-4">
+                  <div className="relative">
+                    <select
+                      onChange={(e) => {
+                        const selectedLanguage = e.target.value;
+                        if (
+                          selectedLanguage &&
+                          !(formData.languages || []).includes(selectedLanguage)
+                        ) {
+                          setFormData((prev) => ({
+                            ...prev,
+                            languages: [...(prev.languages || []), selectedLanguage],
+                          }));
+                        }
+                        e.target.value = ""; // Reset dropdown
+                      }}
+                      className={selectStyles}
+                      defaultValue=""
+                    >
+                      <option value="" disabled>
+                        Select Language
+                      </option>
+                      {languagesList.map((lang) => (
+                        <option
+                          key={lang}
+                          value={lang}
+                          disabled={(formData.languages || []).includes(lang)}
                         >
-                          <X size={14} />
-                        </button>
-                      </div>
-                    ))}
+                          {lang}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                      <ChevronDown size={18} className="text-gray-400" />
+                    </div>
                   </div>
-                )}
+
+                  {Array.isArray(formData.languages) && formData.languages.length > 0 && (
+                    <div className="flex flex-wrap gap-2 p-3 bg-gray-50 border border-gray-200 rounded-sm">
+                      {(Array.isArray(formData.languages) ? formData.languages : []).map((lang) => (
+                        <div
+                          key={lang}
+                          className="bg-white border border-gray-200 text-gray-800 px-3 py-1 rounded-full text-sm flex items-center gap-2 shadow-sm"
+                        >
+                          <span>{lang}</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setFormData((prev) => ({
+                                ...prev,
+                                languages: (prev.languages || []).filter((l) => l !== lang),
+                              }));
+                            }}
+                            className="text-gray-400 hover:text-red-500 transition-colors focus:outline-none"
+                          >
+                            <X size={14} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </CollapsibleSection>
 
-      <CollapsibleSection
-        id="documents"
-        title="Document Details"
-        icon={FileText}
-        isCollapsed={collapsedSections.documents}
-        onToggle={() => toggleSection("documents")}
-      >
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          <div>
-            <label className={labelStyles}>Aadhar Number</label>
-            <input
-              type="text"
-              name="aadharNumber"
-              placeholder="Enter 12-digit Aadhar number"
-              value={formData.aadharNumber}
-              onChange={handleChange}
-              className={inputStyles}
-            />
-          </div>
-          <div>
-            <label className={labelStyles}>PAN Number</label>
-            <input
-              type="text"
-              name="panNumber"
-              placeholder="Enter PAN number"
-              value={formData.panNumber}
-              onChange={handleChange}
-              className={inputStyles}
-            />
-          </div>
-          <div>
-            <label className={labelStyles}>Upload Aadhar Card (Front)</label>
-            <div className="flex items-center gap-4">
-              <input
-                type="file"
-                name="aadharFront"
-                accept="image/*,.pdf"
-                onChange={handleChange}
-                className={fileStyles}
-              />
-              {formData.aadharFrontPreview && (
-                <img
-                  src={formData.aadharFrontPreview}
-                  alt="Profile"
-                  className="w-18 h-16 object-cover rounded-sm border"
+      {mode !== "basic" && (
+        <>
+          <CollapsibleSection
+            id="documents"
+            title="Document Details"
+            icon={FileText}
+            isCollapsed={collapsedSections.documents}
+            onToggle={() => toggleSection("documents")}
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              <div>
+                <label className={labelStyles}>Aadhar Number</label>
+                <input
+                  type="text"
+                  name="aadharNumber"
+                  placeholder="Enter 12-digit Aadhar number"
+                  value={formData.aadharNumber}
+                  onChange={handleChange}
+                  className={inputStyles}
                 />
-              )}
-            </div>
-          </div>
-          <div>
-            <label className={labelStyles}>Upload Aadhar Card (Back)</label>
-            <div className="flex items-center gap-4">
+              </div>
+              <div>
+                <label className={labelStyles}>PAN Number</label>
+                <input
+                  type="text"
+                  name="panNumber"
+                  placeholder="Enter PAN number"
+                  value={formData.panNumber}
+                  onChange={handleChange}
+                  className={inputStyles}
+                />
+              </div>
+              <div>
+                <label className={labelStyles}>Upload Aadhar Card (Front)</label>
+                <div className="flex items-center gap-4">
+                  <input
+                    type="file"
+                    name="aadharFront"
+                    accept="image/*,.pdf"
+                    onChange={handleChange}
+                    className={fileStyles}
+                  />
+                  {formData.aadharFrontPreview && (
+                    <img
+                      src={formData.aadharFrontPreview}
+                      alt="Profile"
+                      className="w-18 h-16 object-cover rounded-sm border"
+                    />
+                  )}
+                </div>
+              </div>
+              <div>
+                <label className={labelStyles}>Upload Aadhar Card (Back)</label>
+                <div className="flex items-center gap-4">
 
-              <input
-                type="file"
-                name="aadharBack"
-                accept="image/*,.pdf"
-                onChange={handleChange}
-                className={fileStyles}
-              />
-              {formData.aadharBackPreview && (
-                <img
-                  src={formData.aadharBackPreview}
-                  alt="Profile"
-                  className="w-18 h-16 object-cover rounded-sm border"
-                />
-              )}
-            </div>
-          </div>
-          <div>
-            <label className={labelStyles}>Upload PAN Card</label>
-            <div className="flex items-center gap-4">
+                  <input
+                    type="file"
+                    name="aadharBack"
+                    accept="image/*,.pdf"
+                    onChange={handleChange}
+                    className={fileStyles}
+                  />
+                  {formData.aadharBackPreview && (
+                    <img
+                      src={formData.aadharBackPreview}
+                      alt="Profile"
+                      className="w-18 h-16 object-cover rounded-sm border"
+                    />
+                  )}
+                </div>
+              </div>
+              <div>
+                <label className={labelStyles}>Upload PAN Card</label>
+                <div className="flex items-center gap-4">
 
-              <input
-                type="file"
-                name="panCard"
-                accept="image/*,.pdf"
-                onChange={handleChange}
-                className={fileStyles}
-              />
-              {formData.panCardPreview && (
-                <img
-                  src={formData.panCardPreview}
-                  alt="Profile"
-                  className="w-18 h-16 object-cover rounded-sm border"
-                />
-              )}
+                  <input
+                    type="file"
+                    name="panCard"
+                    accept="image/*,.pdf"
+                    onChange={handleChange}
+                    className={fileStyles}
+                  />
+                  {formData.panCardPreview && (
+                    <img
+                      src={formData.panCardPreview}
+                      alt="Profile"
+                      className="w-18 h-16 object-cover rounded-sm border"
+                    />
+                  )}
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-      </CollapsibleSection>
+          </CollapsibleSection>
 
-      <CollapsibleSection
-        id="bank"
-        title="Bank Account Details"
-        icon={CreditCard}
-        isCollapsed={collapsedSections.bank}
-        onToggle={() => toggleSection("bank")}
-      >
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          <div>
-            <label className={labelStyles}>IFSC Code</label>
-            <input
-              type="text"
-              name="ifscCode"
-              placeholder="Enter IFSC code"
-              value={formData.ifscCode}
-              onChange={handleChange}
-              className={inputStyles}
-            />
-          </div>
-          <div>
-            <label className={labelStyles}>Account Number</label>
-            <input
-              type="text"
-              name="accountNumber"
-              placeholder="Enter account number"
-              value={formData.accountNumber}
-              onChange={handleChange}
-              className={inputStyles}
-            />
-          </div>
-          <div>
-            <label className={labelStyles}>Account Holder Name</label>
-            <input
-              type="text"
-              name="accountHolderName"
-              placeholder="Enter account holder name"
-              value={formData.accountHolderName}
-              onChange={handleChange}
-              className={inputStyles}
-            />
-          </div>
-          <div>
-            <label className={labelStyles}>Branch Name</label>
-            <input
-              type="text"
-              name="branchName"
-              placeholder="Enter branch name"
-              value={formData.branchName}
-              onChange={handleChange}
-              className={inputStyles}
-            />
-          </div>
-          <div>
-            <label className={labelStyles}>Upload Cancelled Cheque</label>
-            <div className="flex items-center gap-4">
-              <input
-                type="file"
-                name="cancelCheque"
-                accept="image/*,.pdf"
-                onChange={handleChange}
-                className={fileStyles}
-              />
-              {formData.cancelChequePreview && (
-                <img
-                  src={formData.cancelChequePreview}
-                  alt="Profile"
-                  className="w-18 h-16 object-cover rounded-sm border"
+          <CollapsibleSection
+            id="bank"
+            title="Bank Account Details"
+            icon={CreditCard}
+            isCollapsed={collapsedSections.bank}
+            onToggle={() => toggleSection("bank")}
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              <div>
+                <label className={labelStyles}>IFSC Code</label>
+                <input
+                  type="text"
+                  name="ifscCode"
+                  placeholder="Enter IFSC code"
+                  value={formData.ifscCode}
+                  onChange={handleChange}
+                  className={inputStyles}
                 />
-              )}
+              </div>
+              <div>
+                <label className={labelStyles}>Account Number</label>
+                <input
+                  type="text"
+                  name="accountNumber"
+                  placeholder="Enter account number"
+                  value={formData.accountNumber}
+                  onChange={handleChange}
+                  className={inputStyles}
+                />
+              </div>
+              <div>
+                <label className={labelStyles}>Account Holder Name</label>
+                <input
+                  type="text"
+                  name="accountHolderName"
+                  placeholder="Enter account holder name"
+                  value={formData.accountHolderName}
+                  onChange={handleChange}
+                  className={inputStyles}
+                />
+              </div>
+              <div>
+                <label className={labelStyles}>Branch Name</label>
+                <input
+                  type="text"
+                  name="branchName"
+                  placeholder="Enter branch name"
+                  value={formData.branchName}
+                  onChange={handleChange}
+                  className={inputStyles}
+                />
+              </div>
+              <div>
+                <label className={labelStyles}>Upload Cancelled Cheque</label>
+                <div className="flex items-center gap-4">
+                  <input
+                    type="file"
+                    name="cancelCheque"
+                    accept="image/*,.pdf"
+                    onChange={handleChange}
+                    className={fileStyles}
+                  />
+                  {formData.cancelChequePreview && (
+                    <img
+                      src={formData.cancelChequePreview}
+                      alt="Profile"
+                      className="w-18 h-16 object-cover rounded-sm border"
+                    />
+                  )}
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-      </CollapsibleSection>
+          </CollapsibleSection>
+        </>
+      )}
 
       <CollapsibleSection
         id="login"

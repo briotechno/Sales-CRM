@@ -322,6 +322,7 @@ const EditEmployeeModal = ({ isOpen, onClose, employee }) => {
                         handleChange={handleChange}
                         handleChanges={handleChanges}
                         setFormData={setFormData}
+                        mode="full"
                     />
                 </div>
 
