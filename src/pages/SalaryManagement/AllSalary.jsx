@@ -14,6 +14,7 @@ import {
   Eye,
   X,
   Pencil,
+  Calculator,
 } from "lucide-react";
 import toast from 'react-hot-toast';
 
@@ -27,6 +28,7 @@ import AddSalaryModal from "../../components/SalaryManagement/AddSalaryModal";
 import DeleteSalaryModal from "../../components/SalaryManagement/DeleteSalaryModal";
 import ViewSalaryModal from "../../components/SalaryManagement/ViewSalaryModal";
 import EditSalaryModal from "../../components/SalaryManagement/EditSalaryModal";
+import GenerateSalaryModal from "../../components/SalaryManagement/GenerateSalaryModal";
 import usePermission from "../../hooks/usePermission";
 import { useGetDepartmentsQuery } from "../../store/api/departmentApi";
 
@@ -39,6 +41,7 @@ export default function SalaryManagement() {
   const [selectedSalary, setSelectedSalary] = useState(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedSalaryId, setSelectedSalaryId] = useState(null);
+  const [generateModalOpen, setGenerateModalOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -400,6 +403,16 @@ export default function SalaryManagement() {
                         Mark as Paid
                       </button>
                     )}
+                    <button
+                      onClick={() => {
+                        setSelectedSalary(salary);
+                        setGenerateModalOpen(true);
+                      }}
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-orange-600 text-white hover:bg-orange-700 rounded-sm transition font-bold"
+                    >
+                      <Calculator className="w-4 h-4" />
+                      Generate
+                    </button>
                     {read && (
                       <button
                         onClick={() => {
@@ -478,6 +491,14 @@ export default function SalaryManagement() {
             setSelectedSalaryId(null);
           }}
           salaryId={selectedSalaryId}
+        />
+        <GenerateSalaryModal
+          isOpen={generateModalOpen}
+          onClose={() => {
+            setGenerateModalOpen(false);
+            setSelectedSalary(null);
+          }}
+          salary={selectedSalary}
         />
 
         {/* {showAddModal && (

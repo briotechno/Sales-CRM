@@ -34,7 +34,10 @@ export default function Login() {
         token: result.token
       }));
       toast.success("Login successful!");
-      const from = location.state?.from?.pathname + (location.state?.from?.search || "") || "/dashboard";
+      const from = location.state?.from?.pathname
+        ? (location.state.from.pathname + (location.state.from.search || ""))
+        : (result.user.role === 'Employee' ? "/hrm/dashboard" : "/dashboard");
+
       navigate(from, { replace: true });
     } catch (err) {
       toast.error(err?.data?.message || "Login failed. Please check your credentials.");
