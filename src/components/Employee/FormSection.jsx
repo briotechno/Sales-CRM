@@ -527,309 +527,367 @@ const FormSection = ({ formData, handleChange, handleChanges, setFormData }) => 
         isCollapsed={collapsedSections.contact}
         onToggle={() => toggleSection("contact")}
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          <div>
-            <label className={labelStyles}>
-              Mobile Number <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="tel"
-              name="mobile"
-              placeholder="Enter mobile number"
-              value={formData.mobile}
-              onChange={handleChange}
-              className={inputStyles}
-            />
-          </div>
-          <div>
-            <label className={labelStyles}>Alternate Mobile Number</label>
-            <input
-              type="tel"
-              name="altMobile"
-              placeholder="Enter alternate number"
-              value={formData.altMobile}
-              onChange={handleChange}
-              className={inputStyles}
-            />
-          </div>
-          <div>
-            <label className={labelStyles}>
-              Email ID <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="email"
-              name="email"
-              placeholder="Enter email address"
-              value={formData.email}
-              onChange={handleChange}
-              className={inputStyles}
-            />
-          </div>
-          <div className="space-y-2">
-            <label className={labelStyles}>
-              Permanent Address (Line 1)
-            </label>
-
-            <div className="flex flex-col gap-2">
+        <div className="space-y-8">
+          {/* Basic Contact Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+            <div>
+              <label className={labelStyles}>Personal Mobile <span className="text-red-500">*</span></label>
               <input
-                type="text"
-                name="permanentAddressLine1"
-                placeholder="Enter permanent address line 1"
-                value={formData.permanentAddressLine1 || ""}
-                onChange={handlePermanentAddressChange}
+                type="tel"
+                name="mobile"
+                placeholder="Enter personal mobile"
+                value={formData.mobile}
+                onChange={handleChange}
                 className={inputStyles}
               />
-
-              <label className="flex items-center gap-2 cursor-pointer select-none group">
-                <input
-                  type="checkbox"
-                  id="sameAsPermanent"
-                  checked={isSameAddress}
-                  onChange={handleCheckboxChange}
-                  className="w-4 h-4 text-[#FF7B1D] border-gray-300 rounded focus:ring-[#FF7B1D]"
-                />
-                <span className="text-sm font-medium text-gray-700 group-hover:text-[#FF7B1D] transition-colors">
-                  Same as Permanent Address
-                </span>
-              </label>
             </div>
-          </div>
-
-          <div>
-            <label className={labelStyles}>Permanent Address (Line 2)</label>
-            <input
-              type="text"
-              name="permanentAddressLine2"
-              placeholder="Enter permanent address line 2"
-              value={formData.permanentAddressLine2 || ""}
-              onChange={handlePermanentAddressChange}
-              className={inputStyles}
-            />
-          </div>
-          <div>
-            <label className={labelStyles}>Permanent Address (Line 3)</label>
-            <input
-              type="text"
-              name="permanentAddressLine3"
-              placeholder="Enter permanent address line 3"
-              value={formData.permanentAddressLine3 || ""}
-              onChange={handlePermanentAddressChange}
-              className={inputStyles}
-            />
-          </div>
-
-          <div>
-            <label className={labelStyles}>Country</label>
-            <div className="relative">
-              <select
-                name="permanentCountry"
-                value={formData.permanentCountry || ""}
-                onChange={(e) => {
-                  handlePermanentAddressChange(e);
-                }}
-                className={selectStyles}
-              >
-                <option value="">Select Country</option>
-                {Country.getAllCountries().map((country) => (
-                  <option key={country.isoCode} value={country.isoCode}>
-                    {country.name}
-                  </option>
-                ))}
-              </select>
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                <ChevronDown size={18} className="text-gray-400" />
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <label className={labelStyles}>State</label>
-            <div className="relative">
-              <select
-                name="permanentState"
-                value={formData.permanentState || ""}
-                onChange={handlePermanentAddressChange}
-                className={selectStyles}
-              >
-                <option value="">Select State</option>
-                {State.getStatesOfCountry(formData.permanentCountry)?.map((state) => (
-                  <option key={state.isoCode} value={state.isoCode}>
-                    {state.name}
-                  </option>
-                ))}
-              </select>
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                <ChevronDown size={18} className="text-gray-400" />
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <label className={labelStyles}>City</label>
-            <div className="relative">
-              <select
-                name="permanentCity"
-                value={formData.permanentCity || ""}
-                onChange={handlePermanentAddressChange}
-                className={selectStyles}
-              >
-                <option value="">Select City</option>
-                {City.getCitiesOfState(formData.permanentCountry, formData.permanentState)?.map((city) => (
-                  <option key={city.name} value={city.name}>
-                    {city.name}
-                  </option>
-                ))}
-              </select>
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                <ChevronDown size={18} className="text-gray-400" />
-              </div>
-            </div>
-          </div>
-          <div>
-            <label className={labelStyles}>Pincode</label>
-            <input
-              type="text"
-              name="permanentPincode"
-              placeholder="Enter pincode"
-              value={formData.permanentPincode || ""}
-              onChange={handlePermanentAddressChange}
-              className={inputStyles}
-            />
-          </div>
-          {/* <div className="flex items-center h-full pt-6">
-            <label className="flex items-center space-x-2 cursor-pointer select-none group">
+            <div>
+              <label className={labelStyles}>Work Mobile</label>
               <input
-                type="checkbox"
-                id="sameAsPermanent"
-                checked={isSameAddress}
-                onChange={handleCheckboxChange}
-                className="w-5 h-5 text-[#FF7B1D] border-gray-300 rounded focus:ring-[#FF7B1D] cursor-pointer"
-              />
-              <span className="text-sm font-semibold text-gray-700 group-hover:text-[#FF7B1D] transition-colors">
-                Same as Permanent Address
-              </span>
-            </label>
-          </div> */}
-          <div>
-            <label className={labelStyles}>Correspondence Address</label>
-            <input
-              type="text"
-              name="correspondenceAddress"
-              placeholder="Enter correspondence address"
-              value={formData.correspondenceAddress}
-              onChange={handleChange}
-              className={inputStyles}
-            />
-          </div>
-          <div>
-            <label className={labelStyles}>Emergency Contact Person</label>
-            <input
-              type="text"
-              name="emergencyPerson"
-              placeholder="Enter contact person name"
-              value={formData.emergencyPerson}
-              onChange={handleChange}
-              className={inputStyles}
-            />
-          </div>
-          <div>
-            <label className={labelStyles}>Emergency Contact Number</label>
-            <input
-              type="tel"
-              name="emergencyNumber"
-              placeholder="Enter emergency number"
-              value={formData.emergencyNumber}
-              onChange={handleChange}
-              className={inputStyles}
-            />
-          </div>
-          <div>
-            <label className={labelStyles}>Blood Group</label>
-            <div className="relative">
-              <select
-                name="bloodGroup"
-                value={formData.bloodGroup}
+                type="tel"
+                name="altMobile"
+                placeholder="Enter work mobile"
+                value={formData.altMobile}
                 onChange={handleChange}
-                className={selectStyles}
-              >
-                <option value="">Select Blood Group</option>
-                <option>A+</option>
-                <option>A-</option>
-                <option>B+</option>
-                <option>B-</option>
-                <option>O+</option>
-                <option>O-</option>
-                <option>AB+</option>
-                <option>AB-</option>
-              </select>
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                <ChevronDown size={18} className="text-gray-400" />
-              </div>
+                className={inputStyles}
+              />
+            </div>
+            <div>
+              <label className={labelStyles}>Personal Email <span className="text-red-500">*</span></label>
+              <input
+                type="email"
+                name="email"
+                placeholder="Enter personal email"
+                value={formData.email}
+                onChange={handleChange}
+                className={inputStyles}
+              />
+            </div>
+            <div>
+              <label className={labelStyles}>Work Email</label>
+              <input
+                type="email"
+                name="workEmail"
+                placeholder="Enter work email"
+                value={formData.workEmail || ""}
+                onChange={handleChange}
+                className={inputStyles}
+              />
             </div>
           </div>
-          <div>
-            <label className={labelStyles}>Languages</label>
+
+          {/* Social & Professional */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 border-t border-gray-100 pt-6">
+            <div>
+              <label className={labelStyles}>LinkedIn Profile</label>
+              <input
+                type="url"
+                name="linkedinUrl"
+                placeholder="https://linkedin.com/in/..."
+                value={formData.linkedinUrl || ""}
+                onChange={handleChange}
+                className={inputStyles}
+              />
+            </div>
+            <div>
+              <label className={labelStyles}>Skype / Slack ID</label>
+              <input
+                type="text"
+                name="skypeId"
+                placeholder="Enter ID"
+                value={formData.skypeId || ""}
+                onChange={handleChange}
+                className={inputStyles}
+              />
+            </div>
+            <div>
+              <label className={labelStyles}>Emergency Contact (Name/Relation)</label>
+              <input
+                type="text"
+                name="emergencyPerson"
+                placeholder="Name - Relation"
+                value={formData.emergencyPerson}
+                onChange={handleChange}
+                className={inputStyles}
+              />
+            </div>
+            <div>
+              <label className={labelStyles}>Emergency Contact Number</label>
+              <input
+                type="tel"
+                name="emergencyNumber"
+                placeholder="Enter emergency number"
+                value={formData.emergencyNumber}
+                onChange={handleChange}
+                className={inputStyles}
+              />
+            </div>
+          </div>
+
+          {/* Address Section */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 border-t border-gray-100 pt-6">
+            {/* Permanent Address Column */}
             <div className="space-y-4">
+              <h4 className="text-sm font-bold text-gray-800 flex items-center gap-2 mb-2">
+                <span className="w-2 h-2 rounded-full bg-orange-500"></span>
+                Permanent Address
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="md:col-span-2">
+                  <label className={labelStyles}>Address Line 1</label>
+                  <input
+                    type="text"
+                    name="permanentAddressLine1"
+                    placeholder="House No, Building, Street"
+                    value={formData.permanentAddressLine1 || ""}
+                    onChange={handlePermanentAddressChange}
+                    className={inputStyles}
+                  />
+                </div>
+                <div>
+                  <label className={labelStyles}>Address Line 2</label>
+                  <input
+                    type="text"
+                    name="permanentAddressLine2"
+                    placeholder="Locality, Landmark"
+                    value={formData.permanentAddressLine2 || ""}
+                    onChange={handlePermanentAddressChange}
+                    className={inputStyles}
+                  />
+                </div>
+                <div>
+                  <label className={labelStyles}>Address Line 3</label>
+                  <input
+                    type="text"
+                    name="permanentAddressLine3"
+                    placeholder="Area, Sector"
+                    value={formData.permanentAddressLine3 || ""}
+                    onChange={handlePermanentAddressChange}
+                    className={inputStyles}
+                  />
+                </div>
+                <div>
+                  <label className={labelStyles}>Country</label>
+                  <div className="relative">
+                    <select
+                      name="permanentCountry"
+                      value={formData.permanentCountry || ""}
+                      onChange={handlePermanentAddressChange}
+                      className={selectStyles}
+                    >
+                      <option value="">Select Country</option>
+                      {Country.getAllCountries().map((country) => (
+                        <option key={country.isoCode} value={country.isoCode}>
+                          {country.name}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                      <ChevronDown size={18} className="text-gray-400" />
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <label className={labelStyles}>State</label>
+                  <div className="relative">
+                    <select
+                      name="permanentState"
+                      value={formData.permanentState || ""}
+                      onChange={handlePermanentAddressChange}
+                      className={selectStyles}
+                    >
+                      <option value="">Select State</option>
+                      {State.getStatesOfCountry(formData.permanentCountry)?.map((state) => (
+                        <option key={state.isoCode} value={state.isoCode}>
+                          {state.name}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                      <ChevronDown size={18} className="text-gray-400" />
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <label className={labelStyles}>City</label>
+                  <div className="relative">
+                    <select
+                      name="permanentCity"
+                      value={formData.permanentCity || ""}
+                      onChange={handlePermanentAddressChange}
+                      className={selectStyles}
+                    >
+                      <option value="">Select City</option>
+                      {City.getCitiesOfState(formData.permanentCountry, formData.permanentState)?.map((city) => (
+                        <option key={city.name} value={city.name}>
+                          {city.name}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                      <ChevronDown size={18} className="text-gray-400" />
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <label className={labelStyles}>Pincode</label>
+                  <input
+                    type="text"
+                    name="permanentPincode"
+                    placeholder="6-digit code"
+                    value={formData.permanentPincode || ""}
+                    onChange={handlePermanentAddressChange}
+                    className={inputStyles}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Correspondence Address Column */}
+            <div className="space-y-4 pt-8 lg:pt-0 border-t lg:border-t-0 lg:border-l border-gray-100 lg:pl-8">
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="text-sm font-bold text-gray-800 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                  Correspondence Address
+                </h4>
+                <label className="flex items-center gap-2 cursor-pointer select-none group">
+                  <input
+                    type="checkbox"
+                    checked={isSameAddress}
+                    onChange={handleCheckboxChange}
+                    className="w-4 h-4 text-[#FF7B1D] border-gray-300 rounded focus:ring-[#FF7B1D]"
+                  />
+                  <span className="text-xs font-bold text-gray-500 group-hover:text-[#FF7B1D] transition-colors">
+                    Same as Permanent
+                  </span>
+                </label>
+              </div>
+
+              {isSameAddress ? (
+                <div className="p-6 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200 text-gray-500 text-sm italic">
+                  Address is being synchronized with Permanent Address.
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="md:col-span-2">
+                    <label className={labelStyles}>Address Line 1</label>
+                    <input
+                      type="text"
+                      name="correspondenceAddress" // Using old field for primary line compatibility
+                      placeholder="House No, Building, Street"
+                      value={formData.correspondenceAddress || ""}
+                      onChange={handleChange}
+                      className={inputStyles}
+                    />
+                  </div>
+                  {/* Additional detailed fields could be added here if needed, 
+                      but keeping it simple for now as requested. */}
+                  <div className="md:col-span-2">
+                    <label className={labelStyles}>City / Town</label>
+                    <input
+                      type="text"
+                      name="correspondenceCity"
+                      placeholder="Enter city"
+                      value={formData.correspondenceCity || ""}
+                      onChange={handleChange}
+                      className={inputStyles}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Blood Group & Languages */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 border-t border-gray-100 pt-6">
+            <div>
+              <label className={labelStyles}>Blood Group</label>
               <div className="relative">
                 <select
-                  onChange={(e) => {
-                    const selectedLanguage = e.target.value;
-                    if (
-                      selectedLanguage &&
-                      !formData.languages.includes(selectedLanguage)
-                    ) {
-                      setFormData((prev) => ({
-                        ...prev,
-                        languages: [...(prev.languages || []), selectedLanguage],
-                      }));
-                    }
-                    e.target.value = ""; // Reset dropdown
-                  }}
+                  name="bloodGroup"
+                  value={formData.bloodGroup}
+                  onChange={handleChange}
                   className={selectStyles}
-                  defaultValue=""
                 >
-                  <option value="" disabled>
-                    Select Language
-                  </option>
-                  {languagesList.map((lang) => (
-                    <option
-                      key={lang}
-                      value={lang}
-                      disabled={formData.languages.includes(lang)}
-                    >
-                      {lang}
-                    </option>
-                  ))}
+                  <option value="">Select Blood Group</option>
+                  <option>A+</option>
+                  <option>A-</option>
+                  <option>B+</option>
+                  <option>B-</option>
+                  <option>O+</option>
+                  <option>O-</option>
+                  <option>AB+</option>
+                  <option>AB-</option>
                 </select>
                 <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
                   <ChevronDown size={18} className="text-gray-400" />
                 </div>
               </div>
-
-              {formData.languages && formData.languages.length > 0 && (
-                <div className="flex flex-wrap gap-2 p-3 bg-gray-50 border border-gray-200 rounded-sm">
-                  {formData.languages.map((lang) => (
-                    <div
-                      key={lang}
-                      className="bg-white border border-gray-200 text-gray-800 px-3 py-1 rounded-full text-sm flex items-center gap-2 shadow-sm"
-                    >
-                      <span>{lang}</span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setFormData((prev) => ({
-                            ...prev,
-                            languages: prev.languages.filter((l) => l !== lang),
-                          }));
-                        }}
-                        className="text-gray-400 hover:text-red-500 transition-colors focus:outline-none"
+            </div>
+            <div>
+              <label className={labelStyles}>Languages Spoken</label>
+              <div className="space-y-4">
+                <div className="relative">
+                  <select
+                    onChange={(e) => {
+                      const selectedLanguage = e.target.value;
+                      if (
+                        selectedLanguage &&
+                        !formData.languages.includes(selectedLanguage)
+                      ) {
+                        setFormData((prev) => ({
+                          ...prev,
+                          languages: [...(prev.languages || []), selectedLanguage],
+                        }));
+                      }
+                      e.target.value = ""; // Reset dropdown
+                    }}
+                    className={selectStyles}
+                    defaultValue=""
+                  >
+                    <option value="" disabled>
+                      Select Language
+                    </option>
+                    {languagesList.map((lang) => (
+                      <option
+                        key={lang}
+                        value={lang}
+                        disabled={formData.languages.includes(lang)}
                       >
-                        <X size={14} />
-                      </button>
-                    </div>
-                  ))}
+                        {lang}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                    <ChevronDown size={18} className="text-gray-400" />
+                  </div>
                 </div>
-              )}
+
+                {formData.languages && formData.languages.length > 0 && (
+                  <div className="flex flex-wrap gap-2 p-3 bg-gray-50 border border-gray-200 rounded-sm">
+                    {formData.languages.map((lang) => (
+                      <div
+                        key={lang}
+                        className="bg-white border border-gray-200 text-gray-800 px-3 py-1 rounded-full text-sm flex items-center gap-2 shadow-sm"
+                      >
+                        <span>{lang}</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFormData((prev) => ({
+                              ...prev,
+                              languages: prev.languages.filter((l) => l !== lang),
+                            }));
+                          }}
+                          className="text-gray-400 hover:text-red-500 transition-colors focus:outline-none"
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
