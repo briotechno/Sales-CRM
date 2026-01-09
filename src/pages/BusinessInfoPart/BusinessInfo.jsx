@@ -22,13 +22,22 @@ import {
   Share2,
 } from "lucide-react";
 import { useGetBusinessInfoQuery, useUpdateBusinessInfoMutation } from "../../store/api/businessApi";
+import { useGetEmployeesQuery } from "../../store/api/employeeApi";
+import { useGetClientsQuery } from "../../store/api/clientApi";
+import { useGetQuotationsQuery } from "../../store/api/quotationApi";
 import { toast } from "react-hot-toast";
 import { useEffect } from "react";
 import ShareModal from "../../components/BusinessInfo/ShareModal";
+import NumberCard from "../../components/NumberCard";
 
 export default function BusinessInfoPage() {
   const { data: businessInfo, isLoading: isFetching } = useGetBusinessInfoQuery();
   const [updateBusinessInfo, { isLoading: isUpdating }] = useUpdateBusinessInfoMutation();
+
+  // Fetch dynamic data for metrics
+  const { data: employeesData } = useGetEmployeesQuery({ page: 1, limit: 1000, status: 'All' });
+  const { data: clientsData } = useGetClientsQuery({});
+  const { data: quotationsData } = useGetQuotationsQuery({ page: 1, limit: 1000, status: 'All' });
 
   const [isEditing, setIsEditing] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
@@ -134,27 +143,11 @@ export default function BusinessInfoPage() {
     if (formData.youtube_link) window.open(formData.youtube_link, "_blank");
   };
 
-  const stats = [
-    { label: "Years in Business", value: businessInfo?.founded_year ? `${new Date().getFullYear() - businessInfo.founded_year}+` : "0", icon: Calendar, color: "blue" },
-    { label: "Total Employees", value: "180", icon: Users, color: "green" },
-    { label: "Active Clients", value: "250+", icon: Target, color: "purple" },
-    {
-      label: "Annual Revenue",
-      value: "₹50 Crores",
-      icon: TrendingUp,
-      color: "orange",
-    },
-  ];
-
-  const getColorClasses = (color) => {
-    const colors = {
-      blue: "bg-blue-100 text-blue-600 border-blue-500",
-      green: "bg-green-100 text-green-600 border-green-500",
-      purple: "bg-purple-100 text-purple-600 border-purple-500",
-      orange: "bg-orange-100 text-orange-600 border-orange-500",
-    };
-    return colors[color];
-  };
+  // Calculate dynamic metrics
+  const totalEmployees = employeesData?.pagination?.total || 0;
+  const activeClients = clientsData?.data?.filter(client => client.status === 'active').length || 0;
+  const totalQuotations = quotationsData?.pagination?.total || 0;
+  const yearsInBusiness = businessInfo?.founded_year ? new Date().getFullYear() - businessInfo.founded_year : 0;
 
   return (
     <DashboardLayout>
@@ -219,37 +212,36 @@ export default function BusinessInfoPage() {
         </div>
 
         <div className="max-w-8xl mx-auto px-0 py-0 mt-2">
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            {stats.map((stat, index) => {
-              const Icon = stat.icon;
-              return (
-                <div
-                  key={index}
-                  className={`bg-white rounded-sm p-8 shadow-md border-l-4 hover:shadow-lg transition-shadow ${getColorClasses(stat.color).split(" ")[2]
-                    }`}
-                >
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="text-gray-500 text-sm font-medium">
-                        {stat.label}
-                      </p>
-                      <h3 className="text-3xl font-bold text-gray-800 mt-2">
-                        {stat.value}
-                      </h3>
-                    </div>
-                    <div
-                      className={`p-3 rounded-sm ${getColorClasses(stat.color)
-                        .split(" ")
-                        .slice(0, 2)
-                        .join(" ")}`}
-                    >
-                      <Icon size={24} />
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+          {/* Stats Cards - Dynamic with NumberCard Component */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-6">
+            <NumberCard
+              title="Years in Business"
+              number={yearsInBusiness > 0 ? `${yearsInBusiness}+` : "0"}
+              icon={<Calendar className="text-blue-600" size={24} />}
+              iconBgColor="bg-blue-100"
+              lineBorderClass="border-blue-500"
+            />
+            <NumberCard
+              title="Total Employees"
+              number={totalEmployees}
+              icon={<Users className="text-green-600" size={24} />}
+              iconBgColor="bg-green-100"
+              lineBorderClass="border-green-500"
+            />
+            <NumberCard
+              title="Active Clients"
+              number={activeClients}
+              icon={<Target className="text-purple-600" size={24} />}
+              iconBgColor="bg-purple-100"
+              lineBorderClass="border-purple-500"
+            />
+            <NumberCard
+              title="Total Quotations"
+              number={totalQuotations}
+              icon={<FileText className="text-orange-600" size={24} />}
+              iconBgColor="bg-orange-100"
+              lineBorderClass="border-orange-500"
+            />
           </div>
 
           {/* Company Logo Section */}
