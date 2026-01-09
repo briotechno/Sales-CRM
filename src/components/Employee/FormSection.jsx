@@ -9,10 +9,59 @@ import {
   ShieldCheck,
   ChevronDown,
   ChevronUp,
+  X,
 } from "lucide-react";
 import { useGetDepartmentsQuery } from "../../store/api/departmentApi";
 import { useGetDesignationsQuery } from "../../store/api/designationApi";
 import { Country, State, City } from "country-state-city";
+
+const languagesList = [
+  "English",
+  "Hindi",
+  "Mandarin Chinese",
+  "Spanish",
+  "French",
+  "Standard Arabic",
+  "Bengali",
+  "Russian",
+  "Portuguese",
+  "Urdu",
+  "Indonesian",
+  "German",
+  "Japanese",
+  "Marathi",
+  "Telugu",
+  "Turkish",
+  "Tamil",
+  "Vietnamese",
+  "Italian",
+  "Thai",
+  "Gujarati",
+  "Kannada",
+  "Persian",
+  "Polish",
+  "Pashto",
+  "Dutch",
+  "Greek",
+  "Amharic",
+  "Yoruba",
+  "Oromo",
+  "Malayalam",
+  "Igbo",
+  "Sindhi",
+  "Nepali",
+  "Sinhala",
+  "Somali",
+  "Khmer",
+  "Turkmen",
+  "Assamese",
+  "Madurese",
+  "Hausa",
+  "Punjabi",
+  "Javanese",
+  "Wu Chinese",
+  "Korean",
+].sort();
 
 const CollapsibleSection = ({ id, title, icon: Icon, children, isCollapsed, onToggle }) => {
   return (
@@ -329,23 +378,29 @@ const FormSection = ({ formData, handleChanges, setFormData }) => {
               className={inputStyles}
             />
           </div>
-          <div>
-            <label className={labelStyles}>Profile Picture</label>
-            <input
-              type="file"
-              name="profilePic"
-              accept="image/*"
-              onChange={handleChange}
-              className={fileStyles}
-            />
-            {formData.profilePicPreview && (
-              <img
-                src={formData.profilePicPreview}
-                alt="Profile"
-                className="w-24 h-24 object-cover rounded-sm border mt-2"
+          <div className="space-y-2">
+            <label className={labelStyles}>
+              Profile Picture
+            </label>
+
+            <div className="flex items-center gap-4">
+              <input
+                type="file"
+                name="profilePic"
+                accept="image/*"
+                onChange={handleChange}
+                className={fileStyles}
               />
-            )}
+              {formData.profilePicPreview && (
+                <img
+                  src={formData.profilePicPreview}
+                  alt="Profile Preview"
+                  className="w-18 h-16 object-cover rounded-md border border-gray-200"
+                />
+              )}
+            </div>
           </div>
+
           <div>
             <label className={labelStyles}>Date of Birth</label>
             <input
@@ -805,29 +860,67 @@ const FormSection = ({ formData, handleChanges, setFormData }) => {
           </div>
           <div>
             <label className={labelStyles}>Languages</label>
-            <div className="border-2 border-gray-200 rounded-sm p-3 bg-white hover:border-gray-300 transition-orange-600">
-              <div className="grid grid-cols-2 gap-3">
-                {["English", "Hindi", "Spanish", "French", "German"].map(
-                  (lang) => (
-                    <label
+            <div className="space-y-4">
+              <div className="relative">
+                <select
+                  onChange={(e) => {
+                    const selectedLanguage = e.target.value;
+                    if (
+                      selectedLanguage &&
+                      !formData.languages.includes(selectedLanguage)
+                    ) {
+                      setFormData((prev) => ({
+                        ...prev,
+                        languages: [...(prev.languages || []), selectedLanguage],
+                      }));
+                    }
+                    e.target.value = ""; // Reset dropdown
+                  }}
+                  className={selectStyles}
+                  defaultValue=""
+                >
+                  <option value="" disabled>
+                    Select Language
+                  </option>
+                  {languagesList.map((lang) => (
+                    <option
                       key={lang}
-                      className="flex items-center space-x-2 cursor-pointer group"
+                      value={lang}
+                      disabled={formData.languages.includes(lang)}
                     >
-                      <input
-                        type="checkbox"
-                        name="languages"
-                        value={lang}
-                        checked={formData.languages.includes(lang)}
-                        onChange={handleChanges}
-                        className="h-4 w-4 text-[#FF7B1D] border-gray-300 rounded  cursor-pointer"
-                      />
-                      <span className="text-sm text-gray-700 group-hover:text-gray-900">
-                        {lang}
-                      </span>
-                    </label>
-                  )
-                )}
+                      {lang}
+                    </option>
+                  ))}
+                </select>
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                  <ChevronDown size={18} className="text-gray-400" />
+                </div>
               </div>
+
+              {formData.languages && formData.languages.length > 0 && (
+                <div className="flex flex-wrap gap-2 p-3 bg-gray-50 border border-gray-200 rounded-sm">
+                  {formData.languages.map((lang) => (
+                    <div
+                      key={lang}
+                      className="bg-white border border-gray-200 text-gray-800 px-3 py-1 rounded-full text-sm flex items-center gap-2 shadow-sm"
+                    >
+                      <span>{lang}</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFormData((prev) => ({
+                            ...prev,
+                            languages: prev.languages.filter((l) => l !== lang),
+                          }));
+                        }}
+                        className="text-gray-400 hover:text-red-500 transition-colors focus:outline-none"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -865,54 +958,62 @@ const FormSection = ({ formData, handleChanges, setFormData }) => {
           </div>
           <div>
             <label className={labelStyles}>Upload Aadhar Card (Front)</label>
-            <input
-              type="file"
-              name="aadharFront"
-              accept="image/*,.pdf"
-              onChange={handleChange}
-              className={fileStyles}
-            />
-            {formData.aadharFrontPreview && (
-              <img
-                src={formData.aadharFrontPreview}
-                alt="Profile"
-                className="w-24 h-24 object-cover rounded-sm border mt-2"
+            <div className="flex items-center gap-4">
+              <input
+                type="file"
+                name="aadharFront"
+                accept="image/*,.pdf"
+                onChange={handleChange}
+                className={fileStyles}
               />
-            )}
+              {formData.aadharFrontPreview && (
+                <img
+                  src={formData.aadharFrontPreview}
+                  alt="Profile"
+                  className="w-18 h-16 object-cover rounded-sm border"
+                />
+              )}
+            </div>
           </div>
           <div>
             <label className={labelStyles}>Upload Aadhar Card (Back)</label>
-            <input
-              type="file"
-              name="aadharBack"
-              accept="image/*,.pdf"
-              onChange={handleChange}
-              className={fileStyles}
-            />
-            {formData.aadharBackPreview && (
-              <img
-                src={formData.aadharBackPreview}
-                alt="Profile"
-                className="w-24 h-24 object-cover rounded-sm border mt-2"
+            <div className="flex items-center gap-4">
+
+              <input
+                type="file"
+                name="aadharBack"
+                accept="image/*,.pdf"
+                onChange={handleChange}
+                className={fileStyles}
               />
-            )}
+              {formData.aadharBackPreview && (
+                <img
+                  src={formData.aadharBackPreview}
+                  alt="Profile"
+                  className="w-18 h-16 object-cover rounded-sm border"
+                />
+              )}
+            </div>
           </div>
           <div>
             <label className={labelStyles}>Upload PAN Card</label>
-            <input
-              type="file"
-              name="panCard"
-              accept="image/*,.pdf"
-              onChange={handleChange}
-              className={fileStyles}
-            />
-            {formData.panCardPreview && (
-              <img
-                src={formData.panCardPreview}
-                alt="Profile"
-                className="w-24 h-24 object-cover rounded-sm border mt-2"
+            <div className="flex items-center gap-4">
+
+              <input
+                type="file"
+                name="panCard"
+                accept="image/*,.pdf"
+                onChange={handleChange}
+                className={fileStyles}
               />
-            )}
+              {formData.panCardPreview && (
+                <img
+                  src={formData.panCardPreview}
+                  alt="Profile"
+                  className="w-18 h-16 object-cover rounded-sm border"
+                />
+              )}
+            </div>
           </div>
         </div>
       </CollapsibleSection>
@@ -971,20 +1072,22 @@ const FormSection = ({ formData, handleChanges, setFormData }) => {
           </div>
           <div>
             <label className={labelStyles}>Upload Cancelled Cheque</label>
-            <input
-              type="file"
-              name="cancelCheque"
-              accept="image/*,.pdf"
-              onChange={handleChange}
-              className={fileStyles}
-            />
-            {formData.cancelChequePreview && (
-              <img
-                src={formData.cancelChequePreview}
-                alt="Profile"
-                className="w-24 h-24 object-cover rounded-sm border mt-2"
+            <div className="flex items-center gap-4">
+              <input
+                type="file"
+                name="cancelCheque"
+                accept="image/*,.pdf"
+                onChange={handleChange}
+                className={fileStyles}
               />
-            )}
+              {formData.cancelChequePreview && (
+                <img
+                  src={formData.cancelChequePreview}
+                  alt="Profile"
+                  className="w-18 h-16 object-cover rounded-sm border"
+                />
+              )}
+            </div>
           </div>
         </div>
       </CollapsibleSection>
