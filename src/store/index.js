@@ -24,6 +24,7 @@ import { announcementApi } from './api/announcementApi';
 import { announcementCategoryApi } from './api/announcementCategoryApi';
 import { attendanceApi } from './api/attendanceApi';
 import { clientApi } from './api/clientApi';
+import { invoiceApi } from './api/invoiceApi';
 
 
 
@@ -54,6 +55,7 @@ export const store = configureStore({
         [announcementCategoryApi.reducerPath]: announcementCategoryApi.reducer,
         [attendanceApi.reducerPath]: attendanceApi.reducer,
         [clientApi.reducerPath]: clientApi.reducer,
+        [invoiceApi.reducerPath]: invoiceApi.reducer,
 
 
 
@@ -83,7 +85,8 @@ export const store = configureStore({
             announcementApi.middleware,
             announcementCategoryApi.middleware,
             attendanceApi.middleware,
-            clientApi.middleware
+            clientApi.middleware,
+            invoiceApi.middleware
 
 
         ),

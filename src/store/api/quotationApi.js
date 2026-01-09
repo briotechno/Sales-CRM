@@ -12,7 +12,7 @@ export const quotationApi = createApi({
             return headers;
         },
     }),
-    tagTypes: ['Quotation'],
+    tagTypes: ['Quotation', 'Client'],
     endpoints: (builder) => ({
         getQuotations: builder.query({
             query: (params) => ({
@@ -36,7 +36,8 @@ export const quotationApi = createApi({
                 method: 'POST',
                 body: data,
             }),
-            invalidatesTags: ['Quotation'],
+            // Invalidate both Quotation and Client tags since creating a quotation can auto-create a client
+            invalidatesTags: ['Quotation', 'Client'],
         }),
         updateQuotation: builder.mutation({
             query: ({ id, data }) => ({
@@ -44,7 +45,8 @@ export const quotationApi = createApi({
                 method: 'PUT',
                 body: data,
             }),
-            invalidatesTags: (result, error, { id }) => ['Quotation', { type: 'Quotation', id }],
+            // Invalidate both Quotation and Client tags
+            invalidatesTags: (result, error, { id }) => ['Quotation', { type: 'Quotation', id }, 'Client'],
         }),
         deleteQuotation: builder.mutation({
             query: (id) => ({

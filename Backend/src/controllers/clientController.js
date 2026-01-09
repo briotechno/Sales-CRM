@@ -59,6 +59,16 @@ const clientController = {
             console.error('Error deleting client:', error);
             res.status(500).json({ success: false, message: 'Error deleting client' });
         }
+    },
+
+    getClientQuotations: async (req, res) => {
+        try {
+            const quotations = await Client.getClientQuotations(req.params.id, req.user.id);
+            res.json({ success: true, data: quotations });
+        } catch (error) {
+            console.error('Error fetching client quotations:', error);
+            res.status(500).json({ success: false, message: 'Error fetching client quotations' });
+        }
     }
 };
 

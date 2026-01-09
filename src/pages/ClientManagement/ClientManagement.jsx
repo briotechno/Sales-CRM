@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { FiHome } from "react-icons/fi";
 import DashboardLayout from "../../components/DashboardLayout";
 import {
@@ -22,7 +23,9 @@ import {
   Users,
   MapPin,
   Globe,
-  Briefcase
+  Briefcase,
+  FileText,
+  FileCheck
 } from "lucide-react";
 import NumberCard from "../../components/NumberCard";
 import {
@@ -30,11 +33,14 @@ import {
   useCreateClientMutation,
   useUpdateClientMutation,
 } from "../../store/api/clientApi";
+import { useGetQuotationsQuery } from "../../store/api/quotationApi";
 import { toast } from "react-hot-toast";
 import DeleteClientModal from "../../components/Client/DeleteClientModal";
 import ViewClientModal from "../../components/Client/ViewClientModal";
+import { useDebounce } from "../../hooks/useDebounce";
 
 export default function AllClientPage() {
+  const navigate = useNavigate();
   const [showAddModal, setShowAddModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -51,8 +57,20 @@ export default function AllClientPage() {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [clientToView, setClientToView] = useState(null);
 
+  // Quotation Selection State
+  const [quotationSearch, setQuotationSearch] = useState("");
+  const debouncedQuotationSearch = useDebounce(quotationSearch, 500);
+  const [showQuotationDropdown, setShowQuotationDropdown] = useState(false);
+  const [selectedQuotation, setSelectedQuotation] = useState(null);
+
   // API Hooks
   const { data: clientsResponse, isLoading, refetch } = useGetClientsQuery({ search: searchTerm, status: filterStatus });
+  // Dynamic search for quotations with higher limit
+  const { data: quotationsResponse } = useGetQuotationsQuery({
+    status: 'Approved',
+    search: debouncedQuotationSearch,
+    limit: 50
+  });
   const [createClient, { isLoading: isCreating }] = useCreateClientMutation();
   const [updateClient, { isLoading: isUpdating }] = useUpdateClientMutation();
 
@@ -94,7 +112,30 @@ export default function AllClientPage() {
     setEditingId(null);
     setFormData(initialFormState);
     setClientType("person");
+    setSelectedQuotation(null);
     setShowAddModal(true);
+  };
+
+  const handleSelectQuotation = (q) => {
+    setSelectedQuotation(q);
+    const names = (q.client_name || "").split(" ");
+    const firstName = names[0] || "";
+    const lastName = names.slice(1).join(" ") || "";
+
+    setFormData(prev => ({
+      ...prev,
+      firstName,
+      lastName,
+      email: q.email || "",
+      phone: q.phone || "",
+      company: q.company_name || "",
+      orgName: q.company_name || "",
+      orgEmail: q.email || "",
+      orgPhone: q.phone || "",
+      notes: q.notes || ""
+    }));
+    setQuotationSearch("");
+    setShowQuotationDropdown(false);
   };
 
   const openEditModal = (client) => {
@@ -410,92 +451,148 @@ export default function AllClientPage() {
                 return (
                   <div
                     key={client.id}
-                    className={`bg-white rounded-xl border transition-all duration-200 group hover:shadow-lg ${isSelected
-                      ? "border-orange-400 shadow-md bg-orange-50/30"
-                      : "border-gray-200 hover:border-orange-200"
+                    className={`bg-white rounded-2xl border-2 transition-all duration-300 group hover:shadow-xl hover:-translate-y-1 flex flex-col min-h-[400px] ${
+                      isSelected
+                        ? "border-orange-400 shadow-lg bg-gradient-to-br from-orange-50 to-white ring-2 ring-orange-200"
+                        : "border-gray-100 hover:border-orange-300"
                       }`}
                   >
-                    <div className="p-6">
-                      <div className="flex justify-between items-start mb-4 relative">
-                        <div className="flex gap-4">
-                          <div
-                            className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm ${client.type === "person"
-                              ? "bg-gradient-to-br from-blue-500 to-blue-600 text-white"
-                              : "bg-gradient-to-br from-purple-500 to-purple-600 text-white"
-                              }`}
-                          >
-                            {client.type === "person" ? <User size={28} /> : <Building2 size={28} />}
+                    <div className="p-6 flex flex-col flex-1">
+                      {/* Selection Checkbox - Top Right */}
+                      <div className="absolute top-4 right-4 z-10">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => toggleClientSelection(client.id)}
+                          className="w-5 h-5 text-orange-600 border-2 border-gray-300 rounded-lg focus:ring-orange-500 cursor-pointer hover:border-orange-400 transition-colors"
+                        />
+                      </div>
+
+                      {/* Header Section */}
+                      <div className="flex items-start gap-4 mb-6">
+                        <div
+                          className={`w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg transition-all duration-300 ${
+                            client.type === "person"
+                              ? "bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-blue-200"
+                              : "bg-gradient-to-br from-purple-500 to-purple-600 text-white shadow-purple-200"
+                            }`}
+                        >
+                          {client.type === "person" ? <User size={32} /> : <Building2 size={32} />}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-xl font-bold text-gray-900 leading-tight mb-2 truncate">
+                            {client.type === 'person' ? `${client.first_name} ${client.last_name || ''}` : client.company_name}
+                          </h3>
+                          <div className="flex flex-wrap items-center gap-2 mb-3">
+                            <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide border-2 ${getStatusColor(client.status)}`}>
+                              {client.status || 'Active'}
+                            </span>
+                            <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-semibold border border-gray-200 capitalize">
+                              {client.type}
+                            </span>
                           </div>
-                          <div>
-                            <h3 className="text-lg font-bold text-gray-900 leading-tight mb-1">
-                              {client.type === 'person' ? `${client.first_name} ${client.last_name || ''}` : client.company_name}
-                            </h3>
-                            <div className="flex items-center gap-2">
-                              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide border ${getStatusColor(client.status)}`}>
-                                {client.status || 'Active'}
-                              </span>
-                              <span className="text-xs text-gray-500 font-medium px-2 py-0.5 bg-gray-100 rounded-full border border-gray-200 capitalize">
-                                {client.type}
-                              </span>
+                          {client.industry && (
+                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                              <Briefcase size={14} className="text-gray-400" />
+                              <span className="font-medium">{client.industry}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Contact Information */}
+                      <div className="space-y-4 mb-6 flex-1">
+                        {client.email && (
+                          <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl hover:bg-orange-50 transition-colors group/item">
+                            <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center shadow-sm group-hover/item:bg-orange-100 transition-colors">
+                              <Mail size={16} className="text-gray-500 group-hover/item:text-orange-600" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-semibold text-gray-900 truncate">{client.email}</p>
+                              <p className="text-xs text-gray-500">Email</p>
                             </div>
                           </div>
+                        )}
+
+                        {client.phone && (
+                          <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl hover:bg-orange-50 transition-colors group/item">
+                            <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center shadow-sm group-hover/item:bg-orange-100 transition-colors">
+                              <Phone size={16} className="text-gray-500 group-hover/item:text-orange-600" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-semibold text-gray-900">{client.phone}</p>
+                              <p className="text-xs text-gray-500">Phone</p>
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl hover:bg-orange-50 transition-colors group/item">
+                          <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center shadow-sm group-hover/item:bg-orange-100 transition-colors">
+                            {client.type === 'person' ? <Building2 size={16} className="text-gray-500 group-hover/item:text-orange-600" /> : <Users size={16} className="text-gray-500 group-hover/item:text-orange-600" />}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-gray-900 truncate">
+                              {client.type === 'person' ? (client.company_name || 'Individual') : `${client.number_of_employees || 0} Employees`}
+                            </p>
+                            <p className="text-xs text-gray-500">{client.type === 'person' ? 'Company' : 'Team Size'}</p>
+                          </div>
                         </div>
 
-                        <div className="absolute top-0 right-0">
-                          <input
-                            type="checkbox"
-                            checked={isSelected}
-                            onChange={() => toggleClientSelection(client.id)}
-                            className="w-5 h-5 text-orange-600 border-gray-300 rounded focus:ring-orange-500 cursor-pointer"
-                          />
-                        </div>
+                        {client.city && (
+                          <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl hover:bg-orange-50 transition-colors group/item">
+                            <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center shadow-sm group-hover/item:bg-orange-100 transition-colors">
+                              <MapPin size={16} className="text-gray-500 group-hover/item:text-orange-600" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-semibold text-gray-900 truncate">
+                                {client.city}{client.state ? `, ${client.state}` : ''}{client.country ? `, ${client.country}` : ''}
+                              </p>
+                              <p className="text-xs text-gray-500">Location</p>
+                            </div>
+                          </div>
+                        )}
                       </div>
 
-                      <div className="space-y-3 mb-6">
-                        <div className="flex items-center gap-3 text-sm text-gray-600 group/item">
-                          <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center group-hover/item:bg-orange-50 transition-colors">
-                            <Mail size={15} className="text-gray-400 group-hover/item:text-orange-500" />
+                      {/* Action Buttons - Fixed at Bottom */}
+                      <div className="mt-auto pt-4 border-t border-gray-100">
+                        <div className="flex flex-col sm:flex-row items-stretch gap-3">
+                          {/* Primary Actions Row */}
+                          <div className="flex items-center gap-2 flex-1">
+                            <button
+                              onClick={() => openViewModal(client)}
+                              className="flex items-center justify-center gap-2 px-4 py-2.5 text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-all font-medium text-sm border border-transparent hover:border-orange-200 flex-1 min-h-[44px]"
+                            >
+                              <Eye size={16} />
+                              <span className="hidden sm:inline">View Details</span>
+                              <span className="sm:hidden">View</span>
+                            </button>
+                            <button
+                              onClick={() => navigate('/additional/invoice', { state: { client } })}
+                              className="flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:from-orange-600 hover:to-orange-700 shadow-md hover:shadow-lg transition-all font-semibold text-sm hover:scale-105 active:scale-95 flex-1 min-h-[44px]"
+                            >
+                              <FileText size={16} />
+                              <span className="hidden sm:inline">Generate Invoice</span>
+                              <span className="sm:hidden">Invoice</span>
+                            </button>
                           </div>
-                          <span className="font-medium truncate">{client.email}</span>
-                        </div>
-                        <div className="flex items-center gap-3 text-sm text-gray-600 group/item">
-                          <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center group-hover/item:bg-orange-50 transition-colors">
-                            <Phone size={15} className="text-gray-400 group-hover/item:text-orange-500" />
-                          </div>
-                          <span className="font-medium">{client.phone}</span>
-                        </div>
-                        <div className="flex items-center gap-3 text-sm text-gray-600 group/item">
-                          <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center group-hover/item:bg-orange-50 transition-colors">
-                            {client.type === 'person' ? <Briefcase size={15} className="text-gray-400 group-hover/item:text-orange-500" /> : <Users size={15} className="text-gray-400 group-hover/item:text-orange-500" />}
-                          </div>
-                          <span className="font-medium truncate">
-                            {client.type === 'person' ? (client.company_name || 'Individual') : `${client.number_of_employees || 0} Employees`}
-                          </span>
-                        </div>
-                      </div>
 
-                      <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                        <button
-                          onClick={() => openViewModal(client)}
-                          className="flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-orange-600 transition-colors px-3 py-2 hover:bg-orange-50 rounded-lg"
-                        >
-                          <Eye size={16} /> View Details
-                        </button>
-                        <div className="flex items-center gap-1">
-                          <button
-                            onClick={() => openEditModal(client)}
-                            className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-                            title="Edit"
-                          >
-                            <Edit2 size={16} />
-                          </button>
-                          <button
-                            onClick={() => openDeleteModal(client.id)}
-                            className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
-                            title="Delete"
-                          >
-                            <Trash2 size={16} />
-                          </button>
+                          {/* Secondary Actions */}
+                          <div className="flex items-center justify-center gap-1 sm:gap-2 border-l border-gray-200 pl-3 ml-0 sm:ml-2">
+                            <button
+                              onClick={() => openEditModal(client)}
+                              className="p-2.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all hover:scale-110 min-w-[44px] min-h-[44px] flex items-center justify-center"
+                              title="Edit Client"
+                            >
+                              <Edit2 size={18} />
+                            </button>
+                            <button
+                              onClick={() => openDeleteModal(client.id)}
+                              className="p-2.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all hover:scale-110 min-w-[44px] min-h-[44px] flex items-center justify-center"
+                              title="Delete Client"
+                            >
+                              <Trash2 size={18} />
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -537,6 +634,69 @@ export default function AllClientPage() {
 
               <div className="overflow-y-auto max-h-[calc(90vh-90px)] custom-scrollbar">
                 <form onSubmit={handleSubmit} className="p-8">
+                  {/* Quotation Selection (New) */}
+                  {!isEditing && (
+                    <div className="mb-10 bg-orange-50 p-6 rounded-2xl border border-orange-100 shadow-sm">
+                      <div className="flex items-center gap-3 mb-4">
+                        <FileCheck className="text-orange-600" size={24} />
+                        <h3 className="text-lg font-bold text-orange-800">Import from Approved Quotation</h3>
+                      </div>
+                      <div className="relative">
+                        <div className="relative">
+                          <input
+                            type="text"
+                            value={quotationSearch}
+                            onChange={(e) => {
+                              setQuotationSearch(e.target.value);
+                              setShowQuotationDropdown(true);
+                            }}
+                            onFocus={() => setShowQuotationDropdown(true)}
+                            className="w-full px-4 py-3 border-2 border-orange-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none transition-all pr-10 bg-white"
+                            placeholder="Search by Quotation ID or Client Name..."
+                          />
+                          <Search className="absolute right-3 top-3.5 text-orange-400" size={20} />
+                        </div>
+
+                        {showQuotationDropdown && (
+                          <div className="absolute z-50 w-full mt-2 bg-white border border-gray-100 rounded-xl shadow-2xl max-h-60 overflow-y-auto">
+                            {(quotationsResponse?.quotations || []).map(q => (
+                              <div
+                                key={q.id}
+                                onClick={() => handleSelectQuotation(q)}
+                                className="p-4 hover:bg-orange-50 cursor-pointer border-b last:border-0 transition-colors"
+                              >
+                                <div className="flex justify-between items-center mb-1">
+                                  <span className="text-[#FF7B1D] font-black text-sm">{q.quotation_id}</span>
+                                  <span className="text-[10px] font-black bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full uppercase tracking-tighter">₹{q.total_amount.toLocaleString()}</span>
+                                </div>
+                                <div className="text-sm font-bold text-gray-900">{q.client_name}</div>
+                                <div className="text-[10px] text-gray-500 font-medium">{new Date(q.quotation_date).toLocaleDateString()}</div>
+                              </div>
+                            ))}
+                            {quotationsResponse?.quotations?.length === 0 && (
+                              <div className="p-4 text-center text-gray-500 text-sm">No approved quotations found</div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      {selectedQuotation && (
+                        <div className="mt-4 flex items-center justify-between bg-white px-4 py-2 rounded-lg border border-orange-200">
+                          <div className="flex items-center gap-2">
+                            <CheckCircle className="text-green-500" size={16} />
+                            <span className="text-sm font-bold text-gray-700">Selected: <span className="text-orange-600">{selectedQuotation.quotation_id}</span></span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedQuotation(null)}
+                            className="text-xs text-red-500 font-bold hover:underline"
+                          >
+                            Clear
+                          </button>
+                        </div>
+                      )}
+                      <p className="mt-2 text-[11px] text-orange-600 font-bold italic">* Selecting a quotation will pre-fill this form for quick client creation.</p>
+                    </div>
+                  )}
                   {/* Client Type Selection */}
                   {!isEditing && (
                     <div className="mb-8">

@@ -5,6 +5,7 @@ const createQuotationsTable = async () => {
         CREATE TABLE IF NOT EXISTS quotations (
             id INT AUTO_INCREMENT PRIMARY KEY,
             quotation_id VARCHAR(50) UNIQUE NOT NULL,
+            client_id INT,
             client_name VARCHAR(255) NOT NULL,
             company_name VARCHAR(255),
             email VARCHAR(255),
@@ -23,7 +24,8 @@ const createQuotationsTable = async () => {
             user_id INT NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+            FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE SET NULL
         );
     `;
     try {
