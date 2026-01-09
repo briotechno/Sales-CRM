@@ -7,8 +7,11 @@ router.use(protect); // Protect all client routes
 
 router.post('/', clientController.createClient);
 router.get('/', clientController.getAllClients);
+router.get('/:id/quotations', clientController.getClientQuotations);
 router.get('/:id', clientController.getClientById);
 router.put('/:id', clientController.updateClient);
 router.delete('/:id', clientController.deleteClient);
+
+
 
 module.exports = router;

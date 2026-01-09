@@ -297,20 +297,21 @@ export default function AllInvoicePage() {
           <div className="bg-white border-2 border-gray-100 rounded-sm overflow-hidden shadow-sm">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-gray-50 border-b-2 border-gray-100 text-gray-700 uppercase p-4">
-                  <th className="px-6 py-4 font-black text-xs tracking-widest">Inv No.</th>
-                  <th className="px-6 py-4 font-black text-xs tracking-widest">Client Name</th>
-                  <th className="px-6 py-4 font-black text-xs tracking-widest">Date</th>
-                  <th className="px-6 py-4 font-black text-xs tracking-widest text-right">Total</th>
-                  <th className="px-6 py-4 font-black text-xs tracking-widest text-right">Balance</th>
-                  <th className="px-6 py-4 font-black text-xs tracking-widest text-center">Status</th>
-                  <th className="px-6 py-4 font-black text-xs tracking-widest text-center">Actions</th>
+                <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
+                  <th className="px-6 py-4 font-black text-xs tracking-widest uppercase">Inv No.</th>
+                  <th className="px-6 py-4 font-black text-xs tracking-widest uppercase">Client Name</th>
+                  <th className="px-6 py-4 font-black text-xs tracking-widest uppercase">Date</th>
+                  <th className="px-6 py-4 font-black text-xs tracking-widest uppercase text-right">Total Amount</th>
+                  <th className="px-6 py-4 font-black text-xs tracking-widest uppercase text-right">Paid Amount</th>
+                  <th className="px-6 py-4 font-black text-xs tracking-widest uppercase text-right">Remaining</th>
+                  <th className="px-6 py-4 font-black text-xs tracking-widest uppercase text-center">Status</th>
+                  <th className="px-6 py-4 font-black text-xs tracking-widest uppercase text-center">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-gray-100">
                 {isLoading ? (
                   <tr>
-                    <td colSpan="7" className="py-20 text-center">
+                    <td colSpan="8" className="py-20 text-center">
                       <div className="flex flex-col items-center gap-4">
                         <div className="w-12 h-12 border-4 border-orange-200 border-t-[#FF7B1D] rounded-full animate-spin"></div>
                         <p className="text-gray-500 animate-pulse font-bold">Loading Invoices...</p>
@@ -319,23 +320,35 @@ export default function AllInvoicePage() {
                   </tr>
                 ) : invoices.length > 0 ? (
                   invoices.map((invoice) => (
-                    <tr key={invoice.id} className="hover:bg-gray-50 transition-colors group">
+                    <tr key={invoice.id} className="hover:bg-orange-50 transition-colors group">
                       <td className="px-6 py-4 font-bold text-[#FF7B1D]">{invoice.invoice_number}</td>
                       <td className="px-6 py-4">
                         <div className="font-bold text-gray-900">{invoice.client_name}</div>
-                        <div className="text-[10px] text-gray-400 font-bold">{invoice.client_email}</div>
+                        <div className="text-[10px] text-gray-500 font-medium">{invoice.client_email}</div>
                       </td>
-                      <td className="px-6 py-4 text-sm font-medium text-gray-500">
+                      <td className="px-6 py-4 text-sm font-medium text-gray-600">
                         {new Date(invoice.invoice_date).toLocaleDateString()}
                       </td>
-                      <td className="px-6 py-4 text-right font-black text-gray-900">
-                        ₹{(invoice.total_amount || 0).toLocaleString()}
+                      <td className="px-6 py-4 text-right">
+                        <div className="font-black text-gray-900 text-base">
+                          ₹{(invoice.total_amount || 0).toLocaleString()}
+                        </div>
+                        <div className="text-[10px] text-gray-400 font-medium">Total</div>
                       </td>
-                      <td className="px-6 py-4 text-right font-black text-red-500">
-                        ₹{(invoice.balance_amount || 0).toLocaleString()}
+                      <td className="px-6 py-4 text-right">
+                        <div className="font-black text-green-600 text-base">
+                          ₹{(invoice.paid_amount || 0).toLocaleString()}
+                        </div>
+                        <div className="text-[10px] text-gray-400 font-medium">Paid</div>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className={`font-black text-base ${(invoice.balance_amount || 0) > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                          ₹{(invoice.balance_amount || 0).toLocaleString()}
+                        </div>
+                        <div className="text-[10px] text-gray-400 font-medium">Balance</div>
                       </td>
                       <td className="px-6 py-4 text-center">
-                        <span className={`px-3 py-1 rounded-sm text-[10px] font-black border-2 uppercase tracking-tighter ${getStatusColor(invoice.status)}`}>
+                        <span className={`px-3 py-1.5 rounded-sm text-[10px] font-black border-2 uppercase tracking-wider ${getStatusColor(invoice.status)}`}>
                           {invoice.status}
                         </span>
                       </td>
@@ -346,22 +359,22 @@ export default function AllInvoicePage() {
                               setSelectedInvoice(invoice);
                               setShowViewModal(true);
                             }}
-                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-sm transition-colors border-2 border-transparent hover:border-blue-100"
-                            title="View"
+                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-sm transition-all border-2 border-transparent hover:border-blue-200 hover:scale-110"
+                            title="View Invoice"
                           >
                             <Eye size={18} />
                           </button>
                           <button
                             onClick={() => handleEdit(invoice)}
-                            className="p-2 text-orange-500 hover:bg-orange-50 rounded-sm transition-colors border-2 border-transparent hover:border-orange-100"
-                            title="Edit"
+                            className="p-2 text-orange-500 hover:bg-orange-50 rounded-sm transition-all border-2 border-transparent hover:border-orange-200 hover:scale-110"
+                            title="Edit Invoice"
                           >
                             <Edit2 size={18} />
                           </button>
                           <button
                             onClick={() => handleDelete(invoice.id)}
-                            className="p-2 text-red-500 hover:bg-red-50 rounded-sm transition-colors border-2 border-transparent hover:border-red-100"
-                            title="Delete"
+                            className="p-2 text-red-500 hover:bg-red-50 rounded-sm transition-all border-2 border-transparent hover:border-red-200 hover:scale-110"
+                            title="Delete Invoice"
                           >
                             <Trash2 size={18} />
                           </button>
@@ -371,7 +384,7 @@ export default function AllInvoicePage() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="7" className="py-20 text-center">
+                    <td colSpan="8" className="py-20 text-center">
                       <div className="flex flex-col items-center gap-4 grayscale opacity-50">
                         <FileText size={64} className="text-gray-300" />
                         <div>
@@ -380,7 +393,7 @@ export default function AllInvoicePage() {
                         </div>
                         <button
                           onClick={() => setShowModal(true)}
-                          className="mt-4 px-6 py-2 bg-orange-500 text-white rounded-sm font-black uppercase tracking-widest text-xs"
+                          className="mt-4 px-6 py-2 bg-orange-500 text-white rounded-sm font-black uppercase tracking-widest text-xs hover:bg-orange-600 transition-colors"
                         >
                           Add Now
                         </button>

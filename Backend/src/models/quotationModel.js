@@ -24,15 +24,53 @@ const Quotation = {
             q_id = `QT-${year}-${nextNum}`;
         }
 
+        // Auto-create or find existing client
+        let client_id = null;
+        if (email) {
+            // Check if client already exists with this email
+            const [existingClients] = await pool.query(
+                'SELECT id FROM clients WHERE email = ? AND user_id = ? LIMIT 1',
+                [email, userId]
+            );
+
+            if (existingClients.length > 0) {
+                // Client exists, use existing client_id
+                client_id = existingClients[0].id;
+            } else {
+                // Create new client
+                const names = (client_name || '').split(' ');
+                const first_name = names[0] || '';
+                const last_name = names.slice(1).join(' ') || '';
+
+                const [clientResult] = await pool.query(
+                    `INSERT INTO clients (
+                        user_id, type, first_name, last_name, email, phone,
+                        company_name, status
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+                    [
+                        userId,
+                        company_name ? 'organization' : 'person',
+                        first_name,
+                        last_name,
+                        email,
+                        phone,
+                        company_name,
+                        'active'
+                    ]
+                );
+                client_id = clientResult.insertId;
+            }
+        }
+
         const [result] = await pool.query(
             `INSERT INTO quotations (
-                quotation_id, client_name, company_name, email, phone, 
+                quotation_id, client_id, client_name, company_name, email, phone, 
                 quotation_date, valid_until, currency, line_items, subtotal, 
                 tax, discount, total_amount, payment_terms, notes, 
                 status, user_id
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
-                q_id, client_name, company_name, email, phone,
+                q_id, client_id, client_name, company_name, email, phone,
                 quotation_date, valid_until, currency || 'INR',
                 JSON.stringify(line_items || []), subtotal,
                 tax, discount, total_amount, payment_terms, notes,
@@ -106,15 +144,28 @@ const Quotation = {
             discount, total_amount, payment_terms, notes, status
         } = data;
 
+        // Update or find client_id if email is provided
+        let client_id = null;
+        if (email) {
+            const [existingClients] = await pool.query(
+                'SELECT id FROM clients WHERE email = ? AND user_id = ? LIMIT 1',
+                [email, userId]
+            );
+
+            if (existingClients.length > 0) {
+                client_id = existingClients[0].id;
+            }
+        }
+
         const [result] = await pool.query(
             `UPDATE quotations SET 
-                client_name = ?, company_name = ?, email = ?, phone = ?, 
+                client_id = ?, client_name = ?, company_name = ?, email = ?, phone = ?, 
                 quotation_date = ?, valid_until = ?, currency = ?, line_items = ?, 
                 subtotal = ?, tax = ?, discount = ?, total_amount = ?, 
                 payment_terms = ?, notes = ?, status = ?
             WHERE id = ? AND user_id = ?`,
             [
-                client_name, company_name, email, phone,
+                client_id, client_name, company_name, email, phone,
                 quotation_date, valid_until, currency, JSON.stringify(line_items),
                 subtotal, tax, discount, total_amount,
                 payment_terms, notes, status, id, userId

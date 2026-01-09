@@ -92,6 +92,18 @@ const Client = {
             [id, userId]
         );
         return result.affectedRows > 0;
+    },
+
+    // Get all quotations for a specific client
+    getClientQuotations: async (clientId, userId) => {
+        const [rows] = await pool.query(
+            'SELECT * FROM quotations WHERE client_id = ? AND user_id = ? ORDER BY created_at DESC',
+            [clientId, userId]
+        );
+        return rows.map(row => ({
+            ...row,
+            line_items: typeof row.line_items === 'string' ? JSON.parse(row.line_items) : (row.line_items || [])
+        }));
     }
 };
 
