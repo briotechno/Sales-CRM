@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { toast } from "react-hot-toast";
 import { Users, Eye, EyeOff, User, Lock, Mail, TrendingUp } from "lucide-react";
@@ -14,6 +14,7 @@ export default function Login() {
   const [newPassword, setNewPassword] = useState("");
   const [showNewPassword, setShowNewPassword] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useDispatch();
   const [login, { isLoading }] = useLoginMutation();
 
@@ -33,7 +34,8 @@ export default function Login() {
         token: result.token
       }));
       toast.success("Login successful!");
-      navigate("/dashboard");
+      const from = location.state?.from?.pathname + (location.state?.from?.search || "") || "/dashboard";
+      navigate(from, { replace: true });
     } catch (err) {
       toast.error(err?.data?.message || "Login failed. Please check your credentials.");
     }

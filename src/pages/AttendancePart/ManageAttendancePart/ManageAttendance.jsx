@@ -38,6 +38,16 @@ import {
   ClipboardList,
   Filter,
   Download,
+  XCircle,
+  Briefcase,
+  Stethoscope,
+  Umbrella,
+  Coffee,
+  ChevronRight,
+  Baby,
+  Heart,
+  Flower2,
+  HeartPulse,
 } from "lucide-react";
 import {
   useGetAllAttendanceQuery,
@@ -139,11 +149,94 @@ export default function AttendanceManagement() {
     { id: "night", name: "Night Shift", start: "22:00", end: "07:00" },
   ]);
 
+  const leaveQuotas = [
+    {
+      label: "Casual Leave",
+      key: "casualLeave",
+      description: "Allocated for personal matters and short-term needs.",
+      icon: <Coffee className="w-6 h-6" />,
+      color: "orange",
+      bgColor: "bg-orange-50",
+      iconColor: "text-orange-600",
+      borderColor: "border-orange-100",
+    },
+    {
+      label: "Sick Leave",
+      key: "sickLeave",
+      description: "Dedicated for medical appointments and health recovery.",
+      icon: <Stethoscope className="w-6 h-6" />,
+      color: "red",
+      bgColor: "bg-red-50",
+      iconColor: "text-red-600",
+      borderColor: "border-red-100",
+    },
+    {
+      label: "Paid Leave",
+      key: "paidLeave",
+      description: "Annual vacation time for rest and leisure activities.",
+      icon: <Umbrella className="w-6 h-6" />,
+      color: "blue",
+      bgColor: "bg-blue-50",
+      iconColor: "text-blue-600",
+      borderColor: "border-blue-100",
+    },
+    {
+      label: "Unpaid Leave",
+      key: "unpaidLeave",
+      description: "Authorized absence without pay when quotas are exhausted.",
+      icon: <XCircle className="w-6 h-6" />,
+      color: "gray",
+      bgColor: "bg-gray-50",
+      iconColor: "text-gray-600",
+      borderColor: "border-gray-100",
+    },
+    {
+      label: "Maternity Leave",
+      key: "maternityLeave",
+      description: "Support for new mothers during and after childbirth.",
+      icon: <Baby className="w-6 h-6" />,
+      color: "pink",
+      bgColor: "bg-pink-50",
+      iconColor: "text-pink-600",
+      borderColor: "border-pink-100",
+    },
+    {
+      label: "Paternity Leave",
+      key: "paternityLeave",
+      description: "Dedicated time for fathers to support their new child.",
+      icon: <Users className="w-6 h-6" />,
+      color: "indigo",
+      bgColor: "bg-indigo-50",
+      iconColor: "text-indigo-600",
+      borderColor: "border-indigo-100",
+    },
+    {
+      label: "Bereavement Leave",
+      key: "bereavementLeave",
+      description: "Compassionate leave for the loss of a family member.",
+      icon: <Flower2 className="w-6 h-6" />,
+      color: "slate",
+      bgColor: "bg-slate-50",
+      iconColor: "text-slate-600",
+      borderColor: "border-slate-100",
+    },
+    {
+      label: "Marriage Leave",
+      key: "marriageLeave",
+      description: "Celebrating new beginnings with dedicated wedding time.",
+      icon: <Heart className="w-6 h-6" />,
+      color: "rose",
+      bgColor: "bg-rose-50",
+      iconColor: "text-rose-600",
+      borderColor: "border-rose-100",
+    },
+  ];
+
   useEffect(() => {
     if (settingsData?.success && settingsData.data) {
       setSettings(prev => ({
         ...prev,
-        ...settingsData.data
+        ...settingsData.data,
       }));
     }
   }, [settingsData]);
@@ -853,11 +946,7 @@ export default function AttendanceManagement() {
                               <div className="mt-4 pt-4 border-t border-gray-200 flex flex-col items-center">
                                 <div className="bg-white p-3 rounded-lg shadow-sm border border-gray-100 mb-3">
                                   <QRCodeCanvas
-                                    value={JSON.stringify({
-                                      type: 'attendance',
-                                      secret: settings.qrSecret,
-                                      office: settings.businessName || 'Main Office'
-                                    })}
+                                    value={`${window.location.origin}/hrm/attendance/employee?secret=${settings.qrSecret}`}
                                     size={160}
                                     level="H"
                                     includeMargin={true}
@@ -877,38 +966,6 @@ export default function AttendanceManagement() {
                             )}
                           </div>
 
-                          {/* Manual Method */}
-                          <div className="bg-white border-2 border-gray-200 rounded-lg p-4 hover:border-green-300 transition-all">
-                            <div className="flex items-center justify-between mb-3">
-                              <div className="flex items-center gap-3">
-                                <div className="p-2 bg-green-100 rounded-lg">
-                                  <Edit className="w-6 h-6 text-green-600" />
-                                </div>
-                                <div>
-                                  <h4 className="text-sm font-bold text-gray-800">
-                                    Manual Entry
-                                  </h4>
-                                  <p className="text-xs text-gray-600">
-                                    Admin can manually mark attendance
-                                  </p>
-                                </div>
-                              </div>
-                              <label className="relative inline-flex items-center cursor-pointer">
-                                <input
-                                  type="checkbox"
-                                  checked={settings.manualEnabled}
-                                  onChange={(e) =>
-                                    handleSettingChange(
-                                      "manualEnabled",
-                                      e.target.checked
-                                    )
-                                  }
-                                  className="sr-only peer"
-                                />
-                                <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
-                              </label>
-                            </div>
-                          </div>
 
                           {/* GPS Location */}
                           <div className="bg-white border-2 border-gray-200 rounded-lg p-4 hover:border-orange-300 transition-all">
@@ -1224,87 +1281,86 @@ export default function AttendanceManagement() {
 
                     {/* Leave Policy */}
                     {activeTab === "leaves" && (
-                      <div className="space-y-6">
-                        <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-lg border border-purple-200">
-                          <h3 className="text-lg font-bold text-gray-800 mb-1 flex items-center gap-2">
-                            <Calendar className="w-5 h-5 text-purple-600" />
-                            Leave Policy Configuration
-                          </h3>
-                          <p className="text-xs text-gray-600">
-                            Set annual leave quotas for employees
-                          </p>
+                      <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
+                        <div className="bg-gradient-to-r from-[#FF7B1D] to-[#e66a15] p-8 rounded-2xl text-white relative overflow-hidden shadow-xl shadow-orange-100">
+                          <div className="relative z-10 flex items-center justify-between">
+                            <div>
+                              <h3 className="text-2xl font-black mb-2 flex items-center gap-3">
+                                <Calendar className="w-8 h-8" />
+                                Leave Policy & Quotas
+                              </h3>
+                              <p className="text-orange-50 text-sm max-w-md font-medium">
+                                Configure your organization's leave architecture by defining annual quotas for various categories of time-off.
+                              </p>
+                            </div>
+                            <div className="p-4 bg-white/10 rounded-2xl backdrop-blur-md border border-white/20">
+                              <Briefcase className="w-12 h-12 text-white/80" />
+                            </div>
+                          </div>
+                          <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 blur-3xl"></div>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {[
-                            {
-                              label: "Casual Leave (Per Year)",
-                              key: "casualLeave",
-                              color: "blue",
-                              icon: Calendar,
-                            },
-                            {
-                              label: "Sick Leave (Per Year)",
-                              key: "sickLeave",
-                              color: "red",
-                              icon: AlertCircle,
-                            },
-                            {
-                              label: "Paid Leave (Per Year)",
-                              key: "paidLeave",
-                              color: "green",
-                              icon: CheckCircle,
-                            },
-                            {
-                              label: "Unpaid Leave (Per Year)",
-                              key: "unpaidLeave",
-                              color: "gray",
-                              icon: XCircle,
-                            },
-                          ].map((leave) => {
-                            const Icon = leave.icon;
-                            return (
-                              <div
-                                key={leave.key}
-                                className="bg-white border-2 border-gray-200 rounded-lg p-4"
-                              >
-                                <label className="d-block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
-                                  <Icon
-                                    className={`w-5 h-5 text-${leave.color}-500`}
-                                  />
-                                  {leave.label}
-                                </label>
-                                <input
-                                  type="number"
-                                  value={settings[leave.key]}
-                                  onChange={(e) =>
-                                    handleSettingChange(leave.key, e.target.value)
-                                  }
-                                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
-                                  min="0"
-                                  max="30"
-                                />
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                          {leaveQuotas.map((leave) => (
+                            <div
+                              key={leave.key}
+                              className={`bg-white border-2 ${leave.borderColor} rounded-2xl p-6 transition-all hover:shadow-lg hover:shadow-gray-100 group`}
+                            >
+                              <div className="flex items-start justify-between mb-6">
+                                <div className={`p-4 ${leave.bgColor} rounded-2xl transition-transform group-hover:scale-110 duration-300`}>
+                                  <span className={leave.iconColor}>{leave.icon}</span>
+                                </div>
+                                <div className="text-right">
+                                  <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">
+                                    Annual Quota
+                                  </label>
+                                  <div className="flex items-center gap-2 justify-end">
+                                    <input
+                                      type="number"
+                                      value={settings[leave.key] || 0}
+                                      onChange={(e) => handleSettingChange(leave.key, e.target.value)}
+                                      className="w-16 px-2 py-1.5 bg-gray-50 border-2 border-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF7B1D] text-center font-black text-gray-900"
+                                      min="0"
+                                      max="365"
+                                    />
+                                    <span className="text-xs font-bold text-gray-400">Days</span>
+                                  </div>
+                                </div>
                               </div>
-                            );
-                          })}
+
+                              <div>
+                                <h4 className="text-base font-bold text-gray-900 mb-1">{leave.label}</h4>
+                                <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">
+                                  {leave.description}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
                         </div>
 
-                        <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-                          <h4 className="text-sm font-bold text-gray-800 mb-2 flex items-center gap-2">
-                            <Info className="w-4 h-4 text-purple-600" />
-                            Leave Policy Notes
-                          </h4>
-                          <ul className="text-xs text-gray-700 space-y-1">
-                            <li>
-                              • Unused casual/sick leaves may carry forward to next
-                              year
-                            </li>
-                            <li>
-                              • Paid leaves are separate from casual/sick leaves
-                            </li>
-                            <li>• Unpaid leaves will deduct from salary</li>
-                            <li>• Leave approval required from manager</li>
-                          </ul>
+                        <div className="bg-[#111827] rounded-3xl p-8 text-white relative overflow-hidden shadow-2xl">
+                          <div className="relative z-10">
+                            <h4 className="text-lg font-bold mb-6 flex items-center gap-3">
+                              <Shield className="w-5 h-5 text-[#FF7B1D]" />
+                              Corporate Leave Compliance
+                            </h4>
+                            <div className="grid sm:grid-cols-2 gap-4">
+                              {[
+                                "Standard roll-over of 50% for unused casual leaves.",
+                                "Centralized manager approval hub for all requests.",
+                                "Pro-rated leave calculation for mid-year joiners.",
+                                "Public holidays are excluded from leave deductions."
+                              ].map((note, i) => (
+                                <div key={i} className="flex gap-4 p-4 bg-white/5 rounded-2xl border border-white/10 hover:bg-white/10 transition-colors">
+                                  <div className="w-6 h-6 bg-[#FF7B1D] rounded-full flex items-center justify-center flex-shrink-0 text-[10px] font-black">
+                                    {i + 1}
+                                  </div>
+                                  <p className="text-sm text-gray-300 font-medium">{note}</p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                          <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-[#FF7B1D] via-orange-400 to-yellow-500"></div>
                         </div>
                       </div>
                     )}

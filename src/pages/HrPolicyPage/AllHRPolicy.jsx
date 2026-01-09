@@ -112,7 +112,7 @@ export default function HRPolicy() {
     department: "",
     applicable_to: "all",
     status: "Active",
-    document_path: "",
+    documents: [],
   });
 
   // API Queries and Mutations
@@ -177,8 +177,23 @@ export default function HRPolicy() {
       department: "",
       applicable_to: "all",
       status: "Active",
-      document_path: "",
+      documents: [],
     });
+  };
+
+  const handleFileChange = (e) => {
+    const files = Array.from(e.target.files);
+    setFormData(prev => ({
+      ...prev,
+      documents: [...prev.documents, ...files]
+    }));
+  };
+
+  const removeFile = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      documents: prev.documents.filter((_, i) => i !== index)
+    }));
   };
 
   const handleAddPolicy = async () => {
@@ -187,13 +202,29 @@ export default function HRPolicy() {
       return;
     }
 
+    if (formData.applicable_to === "specific" && !formData.department) {
+      toast.error("Please select a department");
+      return;
+    }
+
     try {
-      await createPolicy(formData).unwrap();
+      const fData = new FormData();
+      Object.keys(formData).forEach(key => {
+        if (key !== 'documents') {
+          fData.append(key, formData[key]);
+        }
+      });
+
+      formData.documents.forEach(file => {
+        fData.append('documents', file);
+      });
+
+      await createPolicy(fData).unwrap();
       toast.success("HR Policy created successfully");
       setShowAddModal(false);
       resetForm();
     } catch (error) {
-      toast.error("Failed to create HR policy");
+      toast.error(error?.data?.message || "Failed to create HR policy");
     }
   };
 
@@ -203,13 +234,14 @@ export default function HRPolicy() {
       title: policy.title,
       category: policy.category,
       description: policy.description || "",
-      effective_date: policy.effective_date,
-      review_date: policy.review_date,
+      effective_date: policy.effective_date ? new Date(policy.effective_date).toISOString().split('T')[0] : "",
+      review_date: policy.review_date ? new Date(policy.review_date).toISOString().split('T')[0] : "",
       version: policy.version,
       department: policy.department || "",
       applicable_to: policy.applicable_to || "all",
       status: policy.status,
-      document_path: policy.document_path || "",
+      documents: [],
+      existingDocuments: policy.documents || [],
     });
     setShowEditModal(true);
   };
@@ -220,14 +252,30 @@ export default function HRPolicy() {
       return;
     }
 
+    if (formData.applicable_to === "specific" && !formData.department) {
+      toast.error("Please select a department");
+      return;
+    }
+
     try {
-      await updatePolicy({ id: selectedPolicy.id, ...formData }).unwrap();
+      const fData = new FormData();
+      Object.keys(formData).forEach(key => {
+        if (key !== 'documents') {
+          fData.append(key, formData[key]);
+        }
+      });
+
+      formData.documents.forEach(file => {
+        fData.append('documents', file);
+      });
+
+      await updatePolicy({ id: selectedPolicy.id, formData: fData }).unwrap();
       toast.success("HR Policy updated successfully");
       setShowEditModal(false);
       resetForm();
       setSelectedPolicy(null);
     } catch (error) {
-      toast.error("Failed to update HR policy");
+      toast.error(error?.data?.message || "Failed to update HR policy");
     }
   };
 
@@ -805,35 +853,72 @@ export default function HRPolicy() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Department</label>
-                      <input
-                        type="text"
-                        value={formData.department}
-                        onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                        placeholder="Leave blank for all departments"
-                      />
-                    </div>
-                    <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2">Applicable To</label>
                       <select
                         value={formData.applicable_to}
-                        onChange={(e) => setFormData({ ...formData, applicable_to: e.target.value })}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setFormData({
+                            ...formData,
+                            applicable_to: val,
+                            department: val === 'all' ? '' : formData.department
+                          });
+                        }}
                         className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                       >
                         <option value="all">All Employees</option>
                         <option value="specific">Specific Department</option>
                       </select>
                     </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Document Path</label>
-                      <input
-                        type="text"
-                        value={formData.document_path}
-                        onChange={(e) => setFormData({ ...formData, document_path: e.target.value })}
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                        placeholder="Optional document path"
-                      />
+
+                    {formData.applicable_to === 'specific' && (
+                      <div className="animate-fadeIn">
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Select Department *</label>
+                        <select
+                          value={formData.department}
+                          onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+                          className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        >
+                          <option value="">Choose Department</option>
+                          {departments.map((dep) => (
+                            <option key={dep.id} value={dep.department_name}>
+                              {dep.department_name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+
+                    <div className="col-span-2">
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Upload Documents</label>
+                      <div className="border-2 border-dashed border-gray-300 rounded-sm p-4 hover:border-orange-500 transition-colors bg-gray-50">
+                        <input
+                          type="file"
+                          multiple
+                          onChange={handleFileChange}
+                          id="policy-docs"
+                          className="hidden"
+                          accept=".pdf,.doc,.docx,.xls,.xlsx,.txt"
+                        />
+                        <label htmlFor="policy-docs" className="flex flex-col items-center cursor-pointer">
+                          <Plus className="text-gray-400 mb-2" size={24} />
+                          <span className="text-sm text-gray-500 font-medium">Click to upload multiple documents</span>
+                          <span className="text-xs text-gray-400 mt-1">PDF, DOC, DOCX, XLS, XLSX, TXT (Max 10MB)</span>
+                        </label>
+                      </div>
+
+                      {formData.documents.length > 0 && (
+                        <div className="mt-4 flex flex-wrap gap-2">
+                          {formData.documents.map((file, idx) => (
+                            <div key={idx} className="flex items-center gap-2 bg-orange-50 text-orange-700 px-3 py-1.5 rounded-sm border border-orange-200 text-xs font-semibold">
+                              <span className="max-w-[150px] truncate">{file.name}</span>
+                              <button onClick={() => removeFile(idx)} className="hover:text-red-500">
+                                <X size={14} />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                     <div className="col-span-2">
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -968,35 +1053,94 @@ export default function HRPolicy() {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Department</label>
-                      <input
-                        type="text"
-                        value={formData.department}
-                        onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                        placeholder="Leave blank for all departments"
-                      />
-                    </div>
-                    <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2">Applicable To</label>
                       <select
                         value={formData.applicable_to}
-                        onChange={(e) => setFormData({ ...formData, applicable_to: e.target.value })}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setFormData({
+                            ...formData,
+                            applicable_to: val,
+                            department: val === 'all' ? '' : formData.department
+                          });
+                        }}
                         className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                       >
                         <option value="all">All Employees</option>
                         <option value="specific">Specific Department</option>
                       </select>
                     </div>
+
+                    {formData.applicable_to === 'specific' && (
+                      <div className="animate-fadeIn">
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Select Department *</label>
+                        <select
+                          value={formData.department}
+                          onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+                          className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        >
+                          <option value="">Choose Department</option>
+                          {departments.map((dep) => (
+                            <option key={dep.id} value={dep.department_name}>
+                              {dep.department_name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+
                     <div className="col-span-2">
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Document Path</label>
-                      <input
-                        type="text"
-                        value={formData.document_path}
-                        onChange={(e) => setFormData({ ...formData, document_path: e.target.value })}
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                        placeholder="Optional document path"
-                      />
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Existing Documents</label>
+                      {formData.existingDocuments && formData.existingDocuments.length > 0 ? (
+                        <div className="flex flex-wrap gap-2 mb-4">
+                          {formData.existingDocuments.map((doc, idx) => (
+                            <div key={idx} className="flex items-center gap-2 bg-blue-50 text-blue-700 px-3 py-1.5 rounded-sm border border-blue-200 text-xs font-semibold">
+                              <FileText size={14} />
+                              <span className="max-w-[200px] truncate">Document {idx + 1}</span>
+                              <a
+                                href={`${import.meta.env.VITE_API_BASE_URL.replace('/api/', '')}${doc}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="hover:text-blue-900 ml-1"
+                              >
+                                <Eye size={14} />
+                              </a>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-xs text-gray-500 italic mb-4">No documents uploaded yet.</p>
+                      )}
+
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Upload New Documents</label>
+                      <div className="border-2 border-dashed border-gray-300 rounded-sm p-4 hover:border-orange-500 transition-colors bg-gray-50">
+                        <input
+                          type="file"
+                          multiple
+                          onChange={handleFileChange}
+                          id="edit-policy-docs"
+                          className="hidden"
+                          accept=".pdf,.doc,.docx,.xls,.xlsx,.txt"
+                        />
+                        <label htmlFor="edit-policy-docs" className="flex flex-col items-center cursor-pointer">
+                          <Plus className="text-gray-400 mb-2" size={24} />
+                          <span className="text-sm text-gray-500 font-medium">Click to upload more documents</span>
+                          <span className="text-xs text-gray-400 mt-1">PDF, DOC, DOCX, XLS, XLSX, TXT (Max 10MB)</span>
+                        </label>
+                      </div>
+
+                      {formData.documents.length > 0 && (
+                        <div className="mt-4 flex flex-wrap gap-2">
+                          {formData.documents.map((file, idx) => (
+                            <div key={idx} className="flex items-center gap-2 bg-orange-50 text-orange-700 px-3 py-1.5 rounded-sm border border-orange-200 text-xs font-semibold">
+                              <span className="max-w-[150px] truncate">{file.name}</span>
+                              <button onClick={() => removeFile(idx)} className="hover:text-red-500">
+                                <X size={14} />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                     <div className="col-span-2">
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -1137,13 +1281,30 @@ export default function HRPolicy() {
                     </div>
                   )}
 
-                  {selectedPolicy.document_path && (
+                  {selectedPolicy.documents && selectedPolicy.documents.length > 0 && (
                     <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                      <label className="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-2">
+                      <label className="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-3">
                         <FileText size={16} className="text-blue-600" />
-                        Attached Document
+                        Attached Documents ({selectedPolicy.documents.length})
                       </label>
-                      <p className="text-sm text-gray-600">{selectedPolicy.document_path}</p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {selectedPolicy.documents.map((doc, idx) => (
+                          <a
+                            key={idx}
+                            href={`${import.meta.env.VITE_API_BASE_URL.replace('/api/', '')}${doc}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-3 p-3 bg-white rounded-sm border border-blue-100 hover:border-blue-400 hover:shadow-md transition-all group"
+                          >
+                            <div className="bg-blue-100 p-2 rounded-sm group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                              <Download size={16} />
+                            </div>
+                            <span className="text-sm text-gray-600 font-medium truncate">
+                              Document {idx + 1}
+                            </span>
+                          </a>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>

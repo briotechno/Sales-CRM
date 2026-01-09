@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
 
 import DashboardLayout from "../../components/DashboardLayout";
 import { Html5QrcodeScanner } from "html5-qrcode";
@@ -58,6 +59,8 @@ export default function EmployeeAttendance() {
   const [activeCheckInMethod, setActiveCheckInMethod] = useState([]);
 
   const user = useSelector((state) => state.auth.user);
+  const [searchParams] = useSearchParams();
+  const urlQrSecret = searchParams.get("secret");
   const isEmployee = user?.role === "Employee";
   const employeeId = isEmployee ? user._id : null;
 
@@ -138,6 +141,13 @@ export default function EmployeeAttendance() {
 
   const myRecords = attendanceResponse?.data || [];
   const myStats = attendanceResponse?.stats || {};
+
+  useEffect(() => {
+    if (urlQrSecret && user && settings && !scannedData) {
+      setScannedData({ secret: urlQrSecret });
+      handleCheckInClick(user, { secret: urlQrSecret });
+    }
+  }, [urlQrSecret, user, settings]);
 
   const stats = useMemo(() => {
     return [

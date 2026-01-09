@@ -6,8 +6,9 @@ const hrPolicyController = {
         try {
             const userId = req.user.id;
             const data = { ...req.body };
-            if (req.file) {
-                data.document_path = `/uploads/policies/${req.file.filename}`;
+            if (req.files && req.files.length > 0) {
+                const paths = req.files.map(file => `/uploads/policies/${file.filename}`);
+                data.document_path = JSON.stringify(paths);
             }
             const policyId = await HRPolicy.create(data, userId);
             res.status(201).json({ message: 'HR Policy created successfully', policyId });
@@ -26,7 +27,21 @@ const hrPolicyController = {
                 department: req.query.department
             };
             const policies = await HRPolicy.findAll(userId, filters);
-            res.json(policies);
+
+            const results = policies.map(policy => {
+                if (policy.document_path) {
+                    try {
+                        policy.documents = JSON.parse(policy.document_path);
+                    } catch (e) {
+                        policy.documents = [policy.document_path];
+                    }
+                } else {
+                    policy.documents = [];
+                }
+                return policy;
+            });
+
+            res.json(results);
         } catch (error) {
             res.status(500).json({ message: error.message });
         }
@@ -37,6 +52,18 @@ const hrPolicyController = {
             const userId = req.user.id;
             const policy = await HRPolicy.findById(req.params.id, userId);
             if (!policy) return res.status(404).json({ message: 'HR Policy not found' });
+
+            // Parse document_path if it's a JSON string
+            if (policy.document_path) {
+                try {
+                    policy.documents = JSON.parse(policy.document_path);
+                } catch (e) {
+                    policy.documents = [policy.document_path];
+                }
+            } else {
+                policy.documents = [];
+            }
+
             res.json(policy);
         } catch (error) {
             res.status(500).json({ message: error.message });
@@ -47,8 +74,9 @@ const hrPolicyController = {
         try {
             const userId = req.user.id;
             const data = { ...req.body };
-            if (req.file) {
-                data.document_path = `/uploads/policies/${req.file.filename}`;
+            if (req.files && req.files.length > 0) {
+                const paths = req.files.map(file => `/uploads/policies/${file.filename}`);
+                data.document_path = JSON.stringify(paths);
             }
             await HRPolicy.update(req.params.id, data, userId);
             res.json({ message: 'HR Policy updated successfully' });

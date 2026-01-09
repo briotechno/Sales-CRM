@@ -40,10 +40,10 @@ export const hrPolicyApi = createApi({
             invalidatesTags: ['HRPolicy'],
         }),
         updateHRPolicy: builder.mutation({
-            query: ({ id, ...updates }) => ({
+            query: ({ id, formData }) => ({
                 url: `hr-policies/${id}`,
                 method: 'PUT',
-                body: updates,
+                body: formData,
             }),
             invalidatesTags: ['HRPolicy'],
         }),
