@@ -25,6 +25,13 @@ const AddEmployeeModal = ({ isOpen, onClose }) => {
     altMobile: "",
     email: "",
     permanentAddress: "",
+    permanentAddressLine1: "",
+    permanentAddressLine2: "",
+    permanentAddressLine3: "",
+    permanentCity: "",
+    permanentState: "",
+    permanentCountry: "",
+    permanentPincode: "",
     correspondenceAddress: "",
     emergencyPerson: "",
     emergencyNumber: "",
@@ -103,8 +110,9 @@ const AddEmployeeModal = ({ isOpen, onClose }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    console.log(formData);
     // Basic validation
-    if (!formData.employeeName || !formData.email || !formData.mobile) {
+    if (!formData.firstName || !formData.lastName || !formData.email || !formData.mobile) {
       toast.error("Please fill in required fields");
       return;
     }

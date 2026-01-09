@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useGetDepartmentsQuery } from "../../store/api/departmentApi";
 import { useGetDesignationsQuery } from "../../store/api/designationApi";
+import { Country, State, City } from "country-state-city";
 
 const CollapsibleSection = ({ id, title, icon: Icon, children, isCollapsed, onToggle }) => {
   return (
@@ -41,6 +42,7 @@ const CollapsibleSection = ({ id, title, icon: Icon, children, isCollapsed, onTo
 
 const FormSection = ({ formData, handleChanges, setFormData }) => {
   const [errors, setErrors] = useState({});
+  const [isSameAddress, setIsSameAddress] = useState(false);
 
   const [collapsedSections, setCollapsedSections] = useState({
     personal: false,
@@ -106,6 +108,93 @@ const FormSection = ({ formData, handleChanges, setFormData }) => {
       ...prev,
       [name]: files ? files[0] : value,
     }));
+  };
+
+  const handlePermanentAddressChange = (e) => {
+    const { name, value } = e.target;
+
+    setFormData((prev) => {
+      const updatedFormData = {
+        ...prev,
+        [name]: value,
+      };
+
+      if (name === "permanentCountry") {
+        updatedFormData.permanentState = "";
+        updatedFormData.permanentCity = "";
+      } else if (name === "permanentState") {
+        updatedFormData.permanentCity = "";
+      }
+
+      const line1 = updatedFormData.permanentAddressLine1 || "";
+      const line2 = updatedFormData.permanentAddressLine2 || "";
+      const line3 = updatedFormData.permanentAddressLine3 || "";
+
+      const city = updatedFormData.permanentCity || "";
+
+      const stateCode = updatedFormData.permanentState || "";
+      const countryCode = updatedFormData.permanentCountry || "";
+      const pincode = updatedFormData.permanentPincode || "";
+
+      const countryName = countryCode
+        ? Country.getCountryByCode(countryCode)?.name
+        : "";
+      const stateName =
+        countryCode && stateCode
+          ? State.getStateByCodeAndCountry(stateCode, countryCode)?.name
+          : "";
+
+      const fullAddress = [
+        line1,
+        line2,
+        line3,
+        city,
+        stateName,
+        countryName,
+        pincode ? `Pincode: ${pincode}` : "",
+      ]
+        .filter(Boolean)
+        .join(", ");
+
+      // Update original permanentAddress field for backend compatibility
+      updatedFormData.permanentAddress = fullAddress;
+
+      if (isSameAddress) {
+        updatedFormData.correspondenceAddress = fullAddress;
+      }
+
+      return updatedFormData;
+    });
+  };
+
+
+
+
+  const handleCheckboxChange = (e) => {
+    const checked = e.target.checked;
+    setIsSameAddress(checked);
+
+    if (checked) {
+      setFormData((prev) => {
+        const line1 = prev.permanentAddressLine1 || '';
+        const line2 = prev.permanentAddressLine2 || '';
+        const line3 = prev.permanentAddressLine3 || '';
+        const city = prev.permanentCity || '';
+        const stateCode = prev.permanentState || '';
+        const countryCode = prev.permanentCountry || '';
+        const pincode = prev.permanentPincode || '';
+
+        const countryName = countryCode ? Country.getCountryByCode(countryCode)?.name : '';
+        const stateName = (countryCode && stateCode) ? State.getStateByCodeAndCountry(stateCode, countryCode)?.name : '';
+
+        const fullAddress = [line1, line2, line3, city, stateName, countryName, pincode ? `Pincode: ${pincode}` : ''].filter(Boolean).join(', ');
+
+        return {
+          ...prev,
+          correspondenceAddress: fullAddress
+        };
+      });
+    }
   };
 
   const { data: deptData, isLoading: departmentsLoading } = useGetDepartmentsQuery({ limit: 100 });
@@ -425,9 +514,16 @@ const FormSection = ({ formData, handleChanges, setFormData }) => {
                 onChange={handleChange}
                 className={selectStyles}
               >
-                <option>Permanent</option>
-                <option>Contract</option>
-                <option>Intern</option>
+                <option>Full-Time Employee</option>
+                <option>Part-Time Employee</option>
+                <option>Contract Employee</option>
+                <option>Temporary Employee</option>
+                <option>Intern / Trainee</option>
+                <option>Freelancer / Consultant</option>
+                <option>Probationary Employee</option>
+                <option>Casual Employee</option>
+                <option>Remote Employee</option>
+                <option>Seasonal Employee</option>
               </select>
               <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
                 <ChevronDown size={18} className="text-gray-400" />
@@ -443,8 +539,14 @@ const FormSection = ({ formData, handleChanges, setFormData }) => {
                 onChange={handleChange}
                 className={selectStyles}
               >
-                <option>WFO</option>
-                <option>WFH</option>
+                <option>On-Site</option>
+                <option>WFH(Remote)</option>
+                <option>Hybrid</option>
+                <option>Freelance</option>
+                <option>Field Work</option>
+                <option>Flexible Hours</option>
+                <option>Project-Based</option>
+                <option>On-Call</option>
               </select>
               <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
                 <ChevronDown size={18} className="text-gray-400" />
@@ -499,17 +601,151 @@ const FormSection = ({ formData, handleChanges, setFormData }) => {
               className={inputStyles}
             />
           </div>
+          <div className="space-y-2">
+            <label className={labelStyles}>
+              Permanent Address (Line 1)
+            </label>
+
+            <div className="flex flex-col gap-2">
+              <input
+                type="text"
+                name="permanentAddressLine1"
+                placeholder="Enter permanent address line 1"
+                value={formData.permanentAddressLine1 || ""}
+                onChange={handlePermanentAddressChange}
+                className={inputStyles}
+              />
+
+              <label className="flex items-center gap-2 cursor-pointer select-none group">
+                <input
+                  type="checkbox"
+                  id="sameAsPermanent"
+                  checked={isSameAddress}
+                  onChange={handleCheckboxChange}
+                  className="w-4 h-4 text-[#FF7B1D] border-gray-300 rounded focus:ring-[#FF7B1D]"
+                />
+                <span className="text-sm font-medium text-gray-700 group-hover:text-[#FF7B1D] transition-colors">
+                  Same as Permanent Address
+                </span>
+              </label>
+            </div>
+          </div>
+
           <div>
-            <label className={labelStyles}>Permanent Address</label>
+            <label className={labelStyles}>Permanent Address (Line 2)</label>
             <input
               type="text"
-              name="permanentAddress"
-              placeholder="Enter permanent address"
-              value={formData.permanentAddress}
-              onChange={handleChange}
+              name="permanentAddressLine2"
+              placeholder="Enter permanent address line 2"
+              value={formData.permanentAddressLine2 || ""}
+              onChange={handlePermanentAddressChange}
               className={inputStyles}
             />
           </div>
+          <div>
+            <label className={labelStyles}>Permanent Address (Line 3)</label>
+            <input
+              type="text"
+              name="permanentAddressLine3"
+              placeholder="Enter permanent address line 3"
+              value={formData.permanentAddressLine3 || ""}
+              onChange={handlePermanentAddressChange}
+              className={inputStyles}
+            />
+          </div>
+
+          <div>
+            <label className={labelStyles}>Country</label>
+            <div className="relative">
+              <select
+                name="permanentCountry"
+                value={formData.permanentCountry || ""}
+                onChange={(e) => {
+                  handlePermanentAddressChange(e);
+                }}
+                className={selectStyles}
+              >
+                <option value="">Select Country</option>
+                {Country.getAllCountries().map((country) => (
+                  <option key={country.isoCode} value={country.isoCode}>
+                    {country.name}
+                  </option>
+                ))}
+              </select>
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                <ChevronDown size={18} className="text-gray-400" />
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label className={labelStyles}>State</label>
+            <div className="relative">
+              <select
+                name="permanentState"
+                value={formData.permanentState || ""}
+                onChange={handlePermanentAddressChange}
+                className={selectStyles}
+              >
+                <option value="">Select State</option>
+                {State.getStatesOfCountry(formData.permanentCountry)?.map((state) => (
+                  <option key={state.isoCode} value={state.isoCode}>
+                    {state.name}
+                  </option>
+                ))}
+              </select>
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                <ChevronDown size={18} className="text-gray-400" />
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label className={labelStyles}>City</label>
+            <div className="relative">
+              <select
+                name="permanentCity"
+                value={formData.permanentCity || ""}
+                onChange={handlePermanentAddressChange}
+                className={selectStyles}
+              >
+                <option value="">Select City</option>
+                {City.getCitiesOfState(formData.permanentCountry, formData.permanentState)?.map((city) => (
+                  <option key={city.name} value={city.name}>
+                    {city.name}
+                  </option>
+                ))}
+              </select>
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                <ChevronDown size={18} className="text-gray-400" />
+              </div>
+            </div>
+          </div>
+          <div>
+            <label className={labelStyles}>Pincode</label>
+            <input
+              type="text"
+              name="permanentPincode"
+              placeholder="Enter pincode"
+              value={formData.permanentPincode || ""}
+              onChange={handlePermanentAddressChange}
+              className={inputStyles}
+            />
+          </div>
+          {/* <div className="flex items-center h-full pt-6">
+            <label className="flex items-center space-x-2 cursor-pointer select-none group">
+              <input
+                type="checkbox"
+                id="sameAsPermanent"
+                checked={isSameAddress}
+                onChange={handleCheckboxChange}
+                className="w-5 h-5 text-[#FF7B1D] border-gray-300 rounded focus:ring-[#FF7B1D] cursor-pointer"
+              />
+              <span className="text-sm font-semibold text-gray-700 group-hover:text-[#FF7B1D] transition-colors">
+                Same as Permanent Address
+              </span>
+            </label>
+          </div> */}
           <div>
             <label className={labelStyles}>Correspondence Address</label>
             <input
@@ -801,7 +1037,7 @@ const FormSection = ({ formData, handleChanges, setFormData }) => {
         </div>
       </CollapsibleSection>
 
-      <CollapsibleSection
+      {/* <CollapsibleSection
         id="permissions"
         title="Permissions Control"
         icon={ShieldCheck}
@@ -862,7 +1098,7 @@ const FormSection = ({ formData, handleChanges, setFormData }) => {
             ))}
           </tbody>
         </table>
-      </CollapsibleSection>
+      </CollapsibleSection> */}
     </>
   );
 };
