@@ -50,6 +50,10 @@ app.use('/api/quotations', require('./routes/quotationRoutes'));
 app.use('/api/expenses', expenseRoutes);
 app.use('/api/announcements', require('./routes/announcementRoutes'));
 app.use('/api/announcement-categories', require('./routes/announcementCategoryRoutes'));
+app.use('/api/attendance', require('./routes/attendanceRoutes'));
+app.use('/api/clients', require('./routes/clientRoutes'));
+app.use('/api/invoices', require('./routes/invoiceRoutes'));
+
 
 
 app.get('/', (req, res) => {

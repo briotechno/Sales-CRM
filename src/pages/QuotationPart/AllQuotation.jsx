@@ -155,7 +155,7 @@ export default function QuotationPage() {
       }
       setShowModal(false);
       resetForm();
-      refetch();
+      // No need to manually refetch - RTK Query will auto-refetch due to cache invalidation
     } catch (err) {
       toast.error(err?.data?.message || "Error saving quotation");
     }
@@ -168,8 +168,8 @@ export default function QuotationPage() {
 
     try {
       toast.loading("Fetching details...", { id: "fetch-edit" });
-      // In RTK 2.x, options should be passed as an object
-      const response = await getQuotationById(quote.id, { preferCacheValue: false }).unwrap();
+      // Force refetch to get the latest data from server
+      const response = await getQuotationById(quote.id, { forceRefetch: true }).unwrap();
       const q = response.quotation;
 
       if (!q) {
@@ -544,8 +544,8 @@ export default function QuotationPage() {
 
     try {
       toast.loading("Fetching details...", { id: "fetch-view" });
-      // In RTK 2.x, options should be passed as an object
-      const response = await getQuotationById(quote.id, { preferCacheValue: false }).unwrap();
+      // Force refetch to get the latest data from server
+      const response = await getQuotationById(quote.id, { forceRefetch: true }).unwrap();
 
       if (!response?.quotation) {
         throw new Error("Quotation not found");

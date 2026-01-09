@@ -51,7 +51,9 @@ const protect = async (req, res, next) => {
                         role: 'Employee',
                         permissions: emp.permissions ? (typeof emp.permissions === 'string' ? JSON.parse(emp.permissions) : emp.permissions) : [],
                         username: emp.username,
+                        employee_name: emp.employee_name,
                         email: emp.email
+
                     };
                     return next();
                 }

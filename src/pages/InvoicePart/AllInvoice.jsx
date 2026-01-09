@@ -1,564 +1,427 @@
 import React, { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import DashboardLayout from "../../components/DashboardLayout";
 import {
+  Plus,
   Download,
-  Printer,
-  ArrowLeft,
-  Mail,
-  Phone,
-  MapPin,
-  Calendar,
-  CreditCard,
-  Package,
-  User,
-  Building,
+  Eye,
+  Trash2,
   FileText,
-  Globe,
+  Home,
+  Search,
+  AlertCircle,
+  CheckCircle,
+  DollarSign,
+  Edit2,
+  CreditCard
 } from "lucide-react";
 
-const InvoiceViewPage = () => {
-  const [loading, setLoading] = useState(true);
-  const [invoice, setInvoice] = useState(null);
+import CreateInvoiceModal from "./CreateInvoiceModal";
+import ViewInvoiceModal from "./ViewInvoiceModal";
+import NumberCard from "../../components/NumberCard";
+import {
+  useGetInvoicesQuery,
+  useCreateInvoiceMutation,
+  useUpdateInvoiceMutation,
+  useDeleteInvoiceMutation
+} from "../../store/api/invoiceApi";
+import { toast } from "react-hot-toast";
 
+export default function AllInvoicePage() {
+  const location = useLocation();
+  const [showModal, setShowModal] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
+
+  const { data: invoicesResponse, isLoading, refetch } = useGetInvoicesQuery({
+    status: filterStatus,
+    search: searchTerm,
+  });
+
+  const [createInvoice] = useCreateInvoiceMutation();
+  const [updateInvoice] = useUpdateInvoiceMutation();
+  const [deleteInvoice] = useDeleteInvoiceMutation();
+
+  const invoices = invoicesResponse?.data || [];
+
+  const initialFormState = {
+    invoiceNo: `INV-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
+    clientId: null,
+    clientName: "",
+    email: "",
+    phone: "",
+    address: "",
+    invoiceDate: new Date().toISOString().split("T")[0],
+    dueDate: "",
+    lineItems: [],
+    subtotal: 0,
+    tax: 0,
+    discount: 0,
+    totalAmount: 0,
+    paidAmount: 0,
+    balanceAmount: 0,
+    status: "Unpaid",
+    notes: "",
+    quotationId: "",
+  };
+
+  const [formData, setFormData] = useState(initialFormState);
+
+  // Effect to handle navigation from Client Card
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setInvoice({
-        id: "INV001",
-        invoiceNumber: "RUSH-INV-2025-001",
-        date: "2025-08-23",
-        dueDate: "2025-09-23",
-        vendor: "Abnish Kumar",
-        user: "NK Yadav",
-        userEmail: "nkyadav@example.com",
-        userPhone: "+91 98765 12345",
-        userAddress: "456 Park Avenue, Patna, Bihar - 800002",
-        orderId: "RUSH8038403",
-        amount: 5222,
-        payment: "COD",
-        status: "Paid",
-        items: [
-          {
-            id: 1,
-            sku: "SKU-001",
-            hssn: "1234567890",
-            description: "Premium Package Item A",
-            quantity: 2,
-            unitPrice: 2000,
-            total: 4000,
-          },
-          {
-            id: 2,
-            sku: "SKU-002",
-            hssn: "0987654321",
-            description: "Standard Package Item B",
-            quantity: 1,
-            unitPrice: 440,
-            total: 440,
-          },
-        ],
-        itemCost: 4440,
-        cgst: 235,
-        sgst: 235,
-        totalGst: 470,
-        handlingCharges: 312,
-        total: 5222,
-        notes: "Thank you for your business. Payment due within 30 days.",
-        terms:
-          "Please pay within 30 days of invoice date. Late payments may incur additional charges.",
-      });
-      setLoading(false);
-    }, 300);
-    return () => clearTimeout(timer);
-  }, []);
+    if (location.state?.client) {
+      const { client, quotation } = location.state;
 
-  const handlePrint = () => window.print();
-  const handleDownload = () =>
-    alert("Download functionality would be implemented here");
-  const handleBack = () => window.history.back();
+      let initialData = {
+        ...initialFormState,
+        clientId: client.id,
+        clientName: client.type === 'person' ? `${client.first_name} ${client.last_name || ''}` : client.company_name,
+        email: client.email,
+        phone: client.phone,
+        address: client.address || '',
+      };
 
-  const statusColors = {
-    Paid: "bg-green-50 text-green-700 border-green-500",
-    Pending: "bg-yellow-50 text-yellow-700 border-yellow-500",
-    Cancelled: "bg-red-50 text-red-700 border-red-500",
+      if (quotation) {
+        initialData = {
+          ...initialData,
+          quotationId: quotation.quotation_id,
+          lineItems: (quotation.line_items || []).map(item => ({
+            id: Date.now() + Math.random(),
+            name: item.name,
+            qty: item.qty,
+            rate: item.rate,
+            total: item.total
+          })),
+          subtotal: quotation.subtotal,
+          tax: quotation.tax,
+          discount: quotation.discount,
+          totalAmount: quotation.total_amount,
+          notes: quotation.notes
+        };
+      }
+
+      setFormData(initialData);
+      setShowModal(true);
+      // Clear location state to prevent modal reopening on refresh
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
-  const formatDate = (dateStr) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
+  const handleCreateInvoice = async () => {
+    if (!formData.clientName || !formData.invoiceDate) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
+    try {
+      const payload = {
+        invoice_number: formData.invoiceNo,
+        client_id: formData.clientId,
+        client_name: formData.clientName,
+        client_email: formData.email,
+        client_phone: formData.phone,
+        client_address: formData.address,
+        invoice_date: formData.invoiceDate,
+        due_date: formData.dueDate,
+        items: formData.lineItems,
+        subtotal: formData.subtotal,
+        tax_rate: formData.tax,
+        tax_amount: (formData.subtotal * (formData.tax || 0)) / 100,
+        total_amount: formData.totalAmount,
+        paid_amount: formData.paidAmount,
+        balance_amount: formData.balanceAmount,
+        status: formData.status,
+        notes: formData.notes,
+        quotation_id: formData.quotationId
+      };
+
+      if (formData.id) {
+        await updateInvoice({ id: formData.id, ...payload }).unwrap();
+        toast.success("Invoice updated successfully");
+      } else {
+        await createInvoice(payload).unwrap();
+        toast.success("Invoice generated successfully");
+      }
+      setShowModal(false);
+      setFormData(initialFormState);
+      refetch();
+    } catch (err) {
+      toast.error(err?.data?.message || "Error saving invoice");
+    }
+  };
+
+  const handleEdit = (invoice) => {
+    setFormData({
+      id: invoice.id,
+      invoiceNo: invoice.invoice_number,
+      clientId: invoice.client_id,
+      clientName: invoice.client_name,
+      email: invoice.client_email,
+      phone: invoice.client_phone,
+      address: invoice.client_address,
+      invoiceDate: invoice.invoice_date ? new Date(invoice.invoice_date).toISOString().split('T')[0] : "",
+      dueDate: invoice.due_date ? new Date(invoice.due_date).toISOString().split('T')[0] : "",
+      lineItems: invoice.items || [],
+      subtotal: invoice.subtotal || 0,
+      tax: invoice.tax_rate || 0,
+      discount: invoice.discount || 0,
+      totalAmount: invoice.total_amount || 0,
+      paidAmount: invoice.paid_amount || 0,
+      balanceAmount: invoice.balance_amount || 0,
+      status: invoice.status || "Unpaid",
+      notes: invoice.notes || "",
+      quotationId: invoice.quotation_id || "",
     });
+    setShowModal(true);
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-white p-6">
-        <div className="max-w-5xl mx-auto">
-          <div
-            className="bg-white rounded-lg shadow-xl p-8 animate-pulse border-2"
-            style={{ borderColor: "#FF7B1D" }}
-          >
-            <div className="h-8 bg-gray-200 rounded w-1/3 mb-6"></div>
-            <div className="space-y-4">
-              <div className="h-4 bg-gray-200 rounded w-full"></div>
-              <div className="h-4 bg-gray-200 rounded w-5/6"></div>
-              <div className="h-4 bg-gray-200 rounded w-4/6"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const handleDelete = async (id) => {
+    if (window.confirm("Are you sure you want to delete this invoice?")) {
+      try {
+        await deleteInvoice(id).unwrap();
+        toast.success("Invoice deleted successfully");
+        refetch();
+      } catch (err) {
+        toast.error("Error deleting invoice");
+      }
+    }
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "Paid": return "bg-green-100 text-green-700 border-green-200";
+      case "Partial": return "bg-yellow-100 text-yellow-700 border-yellow-200";
+      case "Unpaid": return "bg-red-100 text-red-700 border-red-200";
+      default: return "bg-gray-100 text-gray-700 border-gray-200";
+    }
+  };
+
+  const totalInvoices = invoices.length;
+  const paidInvoices = invoices.filter(i => i.status === 'Paid').length;
+  const totalValue = invoices.reduce((sum, i) => sum + parseFloat(i.total_amount || 0), 0);
+  const pendingBalance = invoices.reduce((sum, i) => sum + parseFloat(i.balance_amount || 0), 0);
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen bg-white p-6">
-        <div className="max-w-5xl mx-auto">
-          {/* Action Bar */}
-          <div className="mb-6 flex items-center justify-between">
-            <button
-              onClick={handleBack}
-              className="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-gray-50 text-black font-bold rounded-sm shadow-md border-2 transition-all hover:scale-105"
-              style={{ borderColor: "#FF7B1D" }}
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Back to Invoices
-            </button>
-            <div className="flex gap-3">
-              <button
-                onClick={handleDownload}
-                className="flex items-center gap-2 px-5 py-2.5 text-white font-bold rounded-sm shadow-md transition-all hover:scale-105"
-                style={{ backgroundColor: "#FF7B1D" }}
-                onMouseEnter={(e) =>
-                  (e.target.style.backgroundColor = "#E66A0D")
-                }
-                onMouseLeave={(e) =>
-                  (e.target.style.backgroundColor = "#FF7B1D")
-                }
-              >
-                <Download className="w-4 h-4" />
-                Download
-              </button>
-              <button
-                onClick={handlePrint}
-                className="flex items-center gap-2 px-5 py-2.5 bg-green-500 hover:bg-green-600 text-white font-bold rounded-sm shadow-md transition-all hover:scale-105"
-              >
-                <Printer className="w-4 h-4" />
-                Print
-              </button>
-            </div>
-          </div>
-
-          {/* Invoice Container */}
-          <div
-            className="bg-white rounded-sm shadow-xl overflow-hidden border-2"
-            style={{ borderColor: "#FF7B1D" }}
-          >
-            {/* Header */}
-            <div
-              className="text-white p-8"
-              style={{ backgroundColor: "#FF7B1D" }}
-            >
-              <div className="flex justify-between items-start">
-                <div>
-                  <h1 className="text-4xl font-bold mb-2">INVOICE</h1>
-                  <p className="text-white text-lg font-semibold">
-                    {invoice.invoiceNumber}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <div className="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2">
-                    <p className="text-xs uppercase tracking-wider mb-1 text-white">
-                      Status
-                    </p>
-                    <span
-                      className={`inline-block px-4 py-2 rounded-sm text-sm font-bold border-2 ${
-                        statusColors[invoice.status]
-                      }`}
-                    >
-                      {invoice.status}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="p-8">
-              {/* Date Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div
-                  className="bg-white rounded-lg p-4 border-2 shadow-md"
-                  style={{ borderColor: "#FF7B1D" }}
-                >
-                  <div className="flex items-center gap-3 mb-2">
-                    <Calendar
-                      className="w-5 h-5"
-                      style={{ color: "#FF7B1D" }}
-                    />
-                    <p className="text-xs font-bold text-black uppercase tracking-wide">
-                      Invoice Date
-                    </p>
-                  </div>
-                  <p className="text-lg font-bold text-black">
-                    {formatDate(invoice.date)}
-                  </p>
-                </div>
-                <div
-                  className="bg-white rounded-sm p-4 border-2 shadow-md"
-                  style={{ borderColor: "#FF7B1D" }}
-                >
-                  <div className="flex items-center gap-3 mb-2">
-                    <Calendar
-                      className="w-5 h-5"
-                      style={{ color: "#FF7B1D" }}
-                    />
-                    <p className="text-xs font-bold text-black uppercase tracking-wide">
-                      Due Date
-                    </p>
-                  </div>
-                  <p className="text-lg font-bold text-black">
-                    {formatDate(invoice.dueDate)}
-                  </p>
-                </div>
-                <div
-                  className="bg-white rounded-sm p-4 border-2 shadow-md"
-                  style={{ borderColor: "#FF7B1D" }}
-                >
-                  <div className="flex items-center gap-3 mb-2">
-                    <Package className="w-5 h-5" style={{ color: "#FF7B1D" }} />
-                    <p className="text-xs font-bold text-black uppercase tracking-wide">
-                      Order ID
-                    </p>
-                  </div>
-                  <p className="text-lg font-bold text-black">
-                    {invoice.orderId}
-                  </p>
-                </div>
-              </div>
-
-              {/* Company and Customer Info */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                {/* Company Info */}
-                <div
-                  className="bg-white rounded-sm p-6 border-2 shadow-md"
-                  style={{ borderColor: "#FF7B1D" }}
-                >
-                  <div className="flex items-center gap-3 mb-4">
-                    <div
-                      className="p-2 rounded-sm"
-                      style={{ backgroundColor: "#FF7B1D" }}
-                    >
-                      <Building className="w-5 h-5 text-white" />
-                    </div>
-                    <h3 className="text-lg font-bold text-black">
-                      Company Details
-                    </h3>
-                  </div>
-                  <div className="space-y-3">
-                    <p className="text-xl font-bold text-black">
-                      Rush Delivery Services
-                    </p>
-                    <div className="flex items-start gap-2 text-sm text-black">
-                      <Mail
-                        className="w-4 h-4 mt-0.5"
-                        style={{ color: "#FF7B1D" }}
-                      />
-                      <span>info@rushdelivery.com</span>
-                    </div>
-                    <div className="flex items-start gap-2 text-sm text-black">
-                      <Phone
-                        className="w-4 h-4 mt-0.5"
-                        style={{ color: "#FF7B1D" }}
-                      />
-                      <span>+91 1800 123 4567</span>
-                    </div>
-                    <div className="flex items-start gap-2 text-sm text-black">
-                      <MapPin
-                        className="w-4 h-4 mt-0.5"
-                        style={{ color: "#FF7B1D" }}
-                      />
-                      <span>
-                        123 Business Park, Patna, Bihar - 800001, India
-                      </span>
-                    </div>
-                    <div className="flex items-start gap-2 text-sm text-black">
-                      <Globe
-                        className="w-4 h-4 mt-0.5"
-                        style={{ color: "#FF7B1D" }}
-                      />
-                      <span>www.rushdelivery.com</span>
-                    </div>
-                    <div
-                      className="mt-3 pt-3 border-t-2"
-                      style={{ borderColor: "#FF7B1D" }}
-                    >
-                      <p className="text-xs font-bold text-black">
-                        GSTIN: 10AABCU9603R1ZM
-                      </p>
-                      <p className="text-xs font-bold text-black">
-                        PAN: AABCU9603R
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Customer Info */}
-                <div
-                  className="bg-white rounded-sm p-6 border-2 shadow-md"
-                  style={{ borderColor: "#FF7B1D" }}
-                >
-                  <div className="flex items-center gap-3 mb-4">
-                    <div
-                      className="p-2 rounded-lg"
-                      style={{ backgroundColor: "#FF7B1D" }}
-                    >
-                      <User className="w-5 h-5 text-white" />
-                    </div>
-                    <h3 className="text-lg font-bold text-black">Bill To</h3>
-                  </div>
-                  <div className="space-y-3">
-                    <p className="text-xl font-bold text-black">
-                      {invoice.user}
-                    </p>
-                    <div className="flex items-start gap-2 text-sm text-black">
-                      <Mail
-                        className="w-4 h-4 mt-0.5"
-                        style={{ color: "#FF7B1D" }}
-                      />
-                      <span>{invoice.userEmail}</span>
-                    </div>
-                    <div className="flex items-start gap-2 text-sm text-black">
-                      <Phone
-                        className="w-4 h-4 mt-0.5"
-                        style={{ color: "#FF7B1D" }}
-                      />
-                      <span>{invoice.userPhone}</span>
-                    </div>
-                    <div className="flex items-start gap-2 text-sm text-black">
-                      <MapPin
-                        className="w-4 h-4 mt-0.5"
-                        style={{ color: "#FF7B1D" }}
-                      />
-                      <span>{invoice.userAddress}</span>
-                    </div>
-                    <div
-                      className="mt-3 pt-3 border-t-2"
-                      style={{ borderColor: "#FF7B1D" }}
-                    >
-                      <p className="text-sm font-bold text-black">
-                        Vendor: {invoice.vendor}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Payment Method */}
-              <div
-                className="bg-white rounded-sm p-4 border-2 shadow-md mb-8"
-                style={{ borderColor: "#FF7B1D" }}
-              >
-                <div className="flex items-center gap-3">
-                  <CreditCard
-                    className="w-5 h-5"
-                    style={{ color: "#FF7B1D" }}
-                  />
-                  <p className="text-sm font-bold text-black">
-                    Payment Method:{" "}
-                    <span
-                      className="ml-2 px-3 py-1 rounded-sm text-xs text-white font-bold"
-                      style={{ backgroundColor: "#FF7B1D" }}
-                    >
-                      {invoice.payment}
-                    </span>
-                  </p>
-                </div>
-              </div>
-
-              {/* Items Table */}
-              <div className="mb-8">
-                <h3 className="text-lg font-bold text-black mb-4 flex items-center gap-2">
-                  <FileText className="w-5 h-5" style={{ color: "#FF7B1D" }} />
-                  Invoice Items
-                </h3>
-                <div
-                  className="overflow-x-auto border-2 rounded-sm"
-                  style={{ borderColor: "#FF7B1D" }}
-                >
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr
-                        className="text-white"
-                        style={{ backgroundColor: "#FF7B1D" }}
-                      >
-                        <th className="p-4 text-left font-bold">SKU/HSSN</th>
-                        <th className="p-4 text-left font-bold">Description</th>
-                        <th className="p-4 text-center font-bold">Quantity</th>
-                        <th className="p-4 text-right font-bold">Unit Price</th>
-                        <th className="p-4 text-right font-bold">Total</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {invoice.items.map((item, idx) => (
-                        <tr
-                          key={item.id}
-                          className={
-                            idx % 2 === 0 ? "bg-orange-50" : "bg-white"
-                          }
-                        >
-                          <td
-                            className="p-4 text-black font-medium border-b"
-                            style={{ borderColor: "#FFE5D0" }}
-                          >
-                            <div className="text-xs text-gray-600">
-                              SKU: {item.sku}
-                            </div>
-                            <div className="text-xs text-gray-600">
-                              HSSN: {item.hssn}
-                            </div>
-                          </td>
-                          <td
-                            className="p-4 text-black font-medium border-b"
-                            style={{ borderColor: "#FFE5D0" }}
-                          >
-                            {item.description}
-                          </td>
-                          <td
-                            className="p-4 text-center text-black font-semibold border-b"
-                            style={{ borderColor: "#FFE5D0" }}
-                          >
-                            {item.quantity}
-                          </td>
-                          <td
-                            className="p-4 text-right text-black font-semibold border-b"
-                            style={{ borderColor: "#FFE5D0" }}
-                          >
-                            ₹{item.unitPrice.toLocaleString()}
-                          </td>
-                          <td
-                            className="p-4 text-right font-bold border-b"
-                            style={{ color: "#FF7B1D", borderColor: "#FFE5D0" }}
-                          >
-                            ₹{item.total.toLocaleString()}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              {/* Totals */}
-              <div className="flex justify-end">
-                <div className="w-full md:w-1/2">
-                  <div
-                    className="bg-white rounded-sm p-6 border-2 shadow-md"
-                    style={{ borderColor: "#FF7B1D" }}
-                  >
-                    <div className="space-y-3">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-black font-semibold">
-                          Item Cost:
-                        </span>
-                        <span className="text-black font-bold">
-                          ₹{invoice.itemCost.toLocaleString()}
-                        </span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-black font-semibold">CGST:</span>
-                        <span className="text-black font-bold">
-                          ₹{invoice.cgst.toLocaleString()}
-                        </span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-black font-semibold">SGST:</span>
-                        <span className="text-black font-bold">
-                          ₹{invoice.sgst.toLocaleString()}
-                        </span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-black font-semibold">
-                          Total GST:
-                        </span>
-                        <span className="text-black font-bold">
-                          ₹{invoice.totalGst.toLocaleString()}
-                        </span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-black font-semibold">
-                          Handling Charges:
-                        </span>
-                        <span className="text-black font-bold">
-                          ₹{invoice.handlingCharges.toLocaleString()}
-                        </span>
-                      </div>
-                      <div
-                        className="border-t-2 pt-3 mt-3"
-                        style={{ borderColor: "#FF7B1D" }}
-                      >
-                        <div className="flex justify-between">
-                          <span className="text-lg font-bold text-black">
-                            Total Amount:
-                          </span>
-                          <span
-                            className="text-2xl font-bold"
-                            style={{ color: "#FF7B1D" }}
-                          >
-                            ₹{invoice.total.toLocaleString()}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Notes and Terms */}
-              {(invoice.notes || invoice.terms) && (
-                <div className="mt-8 space-y-4">
-                  {invoice.notes && (
-                    <div
-                      className="bg-white rounded-sm p-4 border-2 shadow-sm"
-                      style={{ borderColor: "#FF7B1D" }}
-                    >
-                      <h4 className="font-bold text-black mb-2">Notes:</h4>
-                      <p className="text-sm text-black">{invoice.notes}</p>
-                    </div>
-                  )}
-                  {invoice.terms && (
-                    <div
-                      className="bg-white rounded-sm p-4 border-2 shadow-sm"
-                      style={{ borderColor: "#FF7B1D" }}
-                    >
-                      <h4 className="font-bold text-black mb-2">
-                        Terms & Conditions:
-                      </h4>
-                      <p className="text-sm text-black">{invoice.terms}</p>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Footer */}
-            <div
-              className="bg-white p-6 border-t-2"
-              style={{ borderColor: "#FF7B1D" }}
-            >
-              <p className="text-center text-sm text-black font-semibold">
-                Thank you for your business! For any queries, please contact us.
+      <div className="ml-6 min-h-screen bg-white text-black">
+        {/* Header Section */}
+        <div className="bg-white border-b sticky top-0 z-10 p-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-black text-gray-900 tracking-tight">Invoice Management</h1>
+              <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
+                <Home size={14} /> CRM / <span className="text-[#FF7B1D] font-bold">Invoices</span>
               </p>
-              <p className="text-center text-xs text-gray-600 mt-2">
-                This is a computer-generated invoice and does not require a
-                signature.
-              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                <input
+                  type="text"
+                  placeholder="Search invoice or client..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 pr-4 py-2.5 border-2 border-gray-100 rounded-sm focus:border-[#FF7B1D] outline-none text-sm w-64 transition-all"
+                />
+              </div>
+
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                className="px-4 py-2.5 border-2 border-gray-100 rounded-sm focus:border-[#FF7B1D] outline-none text-sm font-bold bg-white"
+              >
+                <option value="all">All Status</option>
+                <option value="Paid">Paid</option>
+                <option value="Partial">Partial</option>
+                <option value="Unpaid">Unpaid</option>
+              </select>
+
+              <button
+                onClick={() => {
+                  setFormData(initialFormState);
+                  setShowModal(true);
+                }}
+                className="flex items-center gap-2 bg-[#FF7B1D] text-white px-6 py-2.5 rounded-sm hover:bg-[#E66A0D] transition-all font-black text-sm shadow-lg active:scale-95"
+              >
+                <Plus size={18} /> NEW INVOICE
+              </button>
             </div>
           </div>
         </div>
+
+        <div className="p-6">
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <NumberCard
+              title="Total Invoices"
+              number={totalInvoices}
+              icon={<FileText className="text-blue-600" size={24} />}
+              iconBgColor="bg-blue-100"
+              lineBorderClass="border-blue-500"
+            />
+            <NumberCard
+              title="Paid Invoices"
+              number={paidInvoices}
+              icon={<CheckCircle className="text-green-600" size={24} />}
+              iconBgColor="bg-green-100"
+              lineBorderClass="border-green-500"
+            />
+            <NumberCard
+              title="Total Revenue"
+              number={`₹${(totalValue / 100000).toFixed(2)}L`}
+              icon={<DollarSign className="text-orange-600" size={24} />}
+              iconBgColor="bg-orange-100"
+              lineBorderClass="border-orange-500"
+            />
+            <NumberCard
+              title="Pending Balance"
+              number={`₹${(pendingBalance / 100000).toFixed(2)}L`}
+              icon={<CreditCard className="text-red-500" size={24} />}
+              iconBgColor="bg-red-50"
+              lineBorderClass="border-red-500"
+            />
+          </div>
+
+          {/* Invoices Table */}
+          <div className="bg-white border-2 border-gray-100 rounded-sm overflow-hidden shadow-sm">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
+                  <th className="px-6 py-4 font-black text-xs tracking-widest uppercase">Inv No.</th>
+                  <th className="px-6 py-4 font-black text-xs tracking-widest uppercase">Client Name</th>
+                  <th className="px-6 py-4 font-black text-xs tracking-widest uppercase">Date</th>
+                  <th className="px-6 py-4 font-black text-xs tracking-widest uppercase text-right">Total Amount</th>
+                  <th className="px-6 py-4 font-black text-xs tracking-widest uppercase text-right">Paid Amount</th>
+                  <th className="px-6 py-4 font-black text-xs tracking-widest uppercase text-right">Remaining</th>
+                  <th className="px-6 py-4 font-black text-xs tracking-widest uppercase text-center">Status</th>
+                  <th className="px-6 py-4 font-black text-xs tracking-widest uppercase text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {isLoading ? (
+                  <tr>
+                    <td colSpan="8" className="py-20 text-center">
+                      <div className="flex flex-col items-center gap-4">
+                        <div className="w-12 h-12 border-4 border-orange-200 border-t-[#FF7B1D] rounded-full animate-spin"></div>
+                        <p className="text-gray-500 animate-pulse font-bold">Loading Invoices...</p>
+                      </div>
+                    </td>
+                  </tr>
+                ) : invoices.length > 0 ? (
+                  invoices.map((invoice) => (
+                    <tr key={invoice.id} className="hover:bg-orange-50 transition-colors group">
+                      <td className="px-6 py-4 font-bold text-[#FF7B1D]">{invoice.invoice_number}</td>
+                      <td className="px-6 py-4">
+                        <div className="font-bold text-gray-900">{invoice.client_name}</div>
+                        <div className="text-[10px] text-gray-500 font-medium">{invoice.client_email}</div>
+                      </td>
+                      <td className="px-6 py-4 text-sm font-medium text-gray-600">
+                        {new Date(invoice.invoice_date).toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="font-black text-gray-900 text-base">
+                          ₹{(invoice.total_amount || 0).toLocaleString()}
+                        </div>
+                        <div className="text-[10px] text-gray-400 font-medium">Total</div>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="font-black text-green-600 text-base">
+                          ₹{(invoice.paid_amount || 0).toLocaleString()}
+                        </div>
+                        <div className="text-[10px] text-gray-400 font-medium">Paid</div>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className={`font-black text-base ${(invoice.balance_amount || 0) > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                          ₹{(invoice.balance_amount || 0).toLocaleString()}
+                        </div>
+                        <div className="text-[10px] text-gray-400 font-medium">Balance</div>
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <span className={`px-3 py-1.5 rounded-sm text-[10px] font-black border-2 uppercase tracking-wider ${getStatusColor(invoice.status)}`}>
+                          {invoice.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <div className="flex justify-center gap-2">
+                          <button
+                            onClick={() => {
+                              setSelectedInvoice(invoice);
+                              setShowViewModal(true);
+                            }}
+                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-sm transition-all border-2 border-transparent hover:border-blue-200 hover:scale-110"
+                            title="View Invoice"
+                          >
+                            <Eye size={18} />
+                          </button>
+                          <button
+                            onClick={() => handleEdit(invoice)}
+                            className="p-2 text-orange-500 hover:bg-orange-50 rounded-sm transition-all border-2 border-transparent hover:border-orange-200 hover:scale-110"
+                            title="Edit Invoice"
+                          >
+                            <Edit2 size={18} />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(invoice.id)}
+                            className="p-2 text-red-500 hover:bg-red-50 rounded-sm transition-all border-2 border-transparent hover:border-red-200 hover:scale-110"
+                            title="Delete Invoice"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="8" className="py-20 text-center">
+                      <div className="flex flex-col items-center gap-4 grayscale opacity-50">
+                        <FileText size={64} className="text-gray-300" />
+                        <div>
+                          <p className="text-xl font-black text-gray-400 uppercase tracking-tighter">No Invoices Found</p>
+                          <p className="text-sm text-gray-400 font-bold mt-1">Ready to create your first invoice?</p>
+                        </div>
+                        <button
+                          onClick={() => setShowModal(true)}
+                          className="mt-4 px-6 py-2 bg-orange-500 text-white rounded-sm font-black uppercase tracking-widest text-xs hover:bg-orange-600 transition-colors"
+                        >
+                          Add Now
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
+
+      {/* Modals */}
+      <CreateInvoiceModal
+        showModal={showModal}
+        setShowModal={setShowModal}
+        formData={formData}
+        setFormData={setFormData}
+        handleInputChange={handleInputChange}
+        handleCreateInvoice={handleCreateInvoice}
+      />
+
+      <ViewInvoiceModal
+        showModal={showViewModal}
+        setShowModal={setShowViewModal}
+        invoice={selectedInvoice}
+      />
     </DashboardLayout>
   );
-};
-
-export default InvoiceViewPage;
+}

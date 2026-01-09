@@ -1,7 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import DashboardLayout from "../../components/DashboardLayout";
 import { FiHome } from "react-icons/fi";
-
 import {
   Calendar,
   Clock,
@@ -30,6 +29,14 @@ import {
   ClipboardList,
   FileText,
 } from "lucide-react";
+import {
+  useGetAllAttendanceQuery,
+  useGetDashboardStatsQuery,
+  useMarkAttendanceMutation
+} from "../../store/api/attendanceApi";
+import { useGetDepartmentsQuery } from "../../store/api/departmentApi";
+import { toast } from "react-hot-toast";
+import { useSelector } from "react-redux";
 import NumberCard from "../../components/NumberCard";
 
 export default function AttendanceApp() {
@@ -51,107 +58,21 @@ export default function AttendanceApp() {
   const [loadingLocation, setLoadingLocation] = useState(false);
 
   const companyIPRange = "192.168.1.";
-  const departments = [
-    "Sales",
-    "Marketing",
-    "HR",
-    "IT",
-    "Finance",
-    "Operations",
-  ];
 
-  const [attendanceData, setAttendanceData] = useState([
-    {
-      id: 1,
-      employeeId: "EMP001",
-      name: "Rajesh Kumar",
-      department: "Sales",
-      checkIn: "09:15 AM",
-      checkOut: "06:30 PM",
-      status: "present",
-      workHours: "9h 15m",
-      date: "2024-11-18",
-      checkInMethod: "WiFi",
-      ipAddress: "192.168.1.45",
-      selfie: null,
-      location: null,
-    },
-    {
-      id: 2,
-      employeeId: "EMP002",
-      name: "Priya Sharma",
-      department: "Marketing",
-      checkIn: "08:45 AM",
-      checkOut: "05:45 PM",
-      status: "present",
-      workHours: "9h 0m",
-      date: "2024-11-18",
-      checkInMethod: "QR Code",
-      ipAddress: "192.168.1.52",
-      selfie: null,
-      location: null,
-    },
-    {
-      id: 3,
-      employeeId: "EMP003",
-      name: "Amit Patel",
-      department: "HR",
-      checkIn: "-",
-      checkOut: "-",
-      status: "absent",
-      workHours: "0h 0m",
-      date: "2024-11-18",
-      checkInMethod: "-",
-      ipAddress: "-",
-      selfie: null,
-      location: null,
-    },
-    {
-      id: 4,
-      employeeId: "EMP004",
-      name: "Sneha Singh",
-      department: "Sales",
-      checkIn: "-",
-      checkOut: "-",
-      status: "absent",
-      workHours: "0h 0m",
-      date: "2024-11-18",
-      checkInMethod: "-",
-      ipAddress: "-",
-      selfie: null,
-      location: null,
-    },
-    {
-      id: 5,
-      employeeId: "EMP005",
-      name: "Vikram Mehta",
-      department: "IT",
-      checkIn: "-",
-      checkOut: "-",
-      status: "absent",
-      workHours: "0h 0m",
-      date: "2024-11-18",
-      checkInMethod: "-",
-      ipAddress: "-",
-      selfie: null,
-      location: null,
-    },
-    {
-      id: 6,
-      employeeId: "EMP006",
-      name: "Neha Gupta",
-      department: "Finance",
-      checkIn: "-",
-      checkOut: "-",
-      status: "absent",
-      workHours: "0h 0m",
-      date: "2024-11-18",
-      checkInMethod: "-",
-      ipAddress: "-",
-      selfie: null,
-      location: null,
-    },
-  ]);
+  // API Hooks
+  const { data: attendanceResponse, isLoading: isAttendanceLoading } = useGetAllAttendanceQuery({
+    status: filterStatus !== 'all' ? filterStatus : undefined,
+    department_id: filterDepartment !== 'all' ? filterDepartment : undefined,
+    date: new Date().toISOString().split('T')[0] // Default to today
+  });
+
+  const { data: statsResponse } = useGetDashboardStatsQuery();
+  const { data: departmentsResponse } = useGetDepartmentsQuery({ limit: 100 });
+  const [markAttendance, { isLoading: isMarking }] = useMarkAttendanceMutation();
+
+  const attendanceData = attendanceResponse?.data || [];
+  const departments = departmentsResponse?.departments || [];
+  const statsData = statsResponse?.data || {};
 
   useEffect(() => {
     const simulatedIP = `192.168.1.${Math.floor(Math.random() * 255)}`;
@@ -256,44 +177,22 @@ export default function AttendanceApp() {
     setShowSelfieCapture(true);
   };
 
-  const handleCheckIn = (employee, selfieData, locationData) => {
-    const currentTime = new Date();
-    const timeString = currentTime.toLocaleTimeString("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    });
+  const handleCheckIn = async (employee, selfieData, locationData) => {
+    try {
+      const response = await markAttendance({
+        employee_id: employee.id, // Assuming selectedEmployee has id
+        selfie: selfieData,
+        latitude: locationData?.latitude,
+        longitude: locationData?.longitude,
+        ip_address: userIP
+      }).unwrap();
 
-    const hour = currentTime.getHours();
-    const minute = currentTime.getMinutes();
-    const totalMinutes = hour * 60 + minute;
-    const lateThreshold = 10 * 60;
-
-    let status = "present";
-    if (totalMinutes > lateThreshold) {
-      status = "late";
+      toast.success(response.message || "Attendance marked successfully");
+      setCurrentPage("dashboard");
+    } catch (error) {
+      console.error("Error marking attendance:", error);
+      toast.error(error.data?.message || "Failed to mark attendance");
     }
-
-    setAttendanceData((prev) =>
-      prev.map((record) =>
-        record.employeeId === employee.employeeId
-          ? {
-            ...record,
-            checkIn: timeString,
-            status: status,
-            checkInMethod: "WiFi",
-            ipAddress: userIP,
-            selfie: selfieData,
-            location: locationData,
-          }
-          : record
-      )
-    );
-
-    alert(
-      `✓ Check-in successful!\n${employee.name}\nTime: ${timeString}\nStatus: ${status}`
-    );
-    setCurrentPage("dashboard");
   };
 
   const handleExport = () => {
@@ -334,64 +233,60 @@ export default function AttendanceApp() {
   };
 
   const stats = useMemo(() => {
-  const total = attendanceData.length;
-  const present = attendanceData.filter(a => a.status === "present").length;
-  const absent = attendanceData.filter(a => a.status === "absent").length;
-  const late = attendanceData.filter(a => a.status === "late").length;
-  const halfDay = attendanceData.filter(a => a.status === "half-day").length;
+    const total = statsData.total || 0;
+    const present = statsData.present || 0;
+    const absent = statsData.absent || 0;
+    const late = statsData.late || 0;
+    const halfDay = statsData.half_day || 0;
 
-  const attendanceRate =
-    total > 0 ? (((present + late + halfDay) / total) * 100).toFixed(1) : 0;
+    const attendanceRate =
+      total > 0 ? (((present + late + halfDay) / total) * 100).toFixed(1) : 0;
 
-  return [
-    {
-      title: "Total Employees",
-      number: total,
-      icon: Users,
-      iconBgColor: "bg-blue-100",
-      iconColor: "text-blue-600",
-      lineBorderClass: "border-blue-500",
-    },
-    {
-      title: "Present Today",
-      number: present,
-      icon: UserCheck,
-      iconBgColor: "bg-green-100",
-      iconColor: "text-green-600",
-      lineBorderClass: "border-green-500",
-    },
-    {
-      title: "Absent",
-      number: absent,
-      icon: UserX,
-      iconBgColor: "bg-orange-100",
-      iconColor: "text-orange-600",
-      lineBorderClass: "border-orange-500",
-    },
-    {
-      title: "Attendance Rate",
-      number: `${attendanceRate}%`,
-      icon: TrendingUp,
-      iconBgColor: "bg-purple-100",
-      iconColor: "text-purple-600",
-      lineBorderClass: "border-purple-500",
-    },
-  ];
-}, [attendanceData]);
+    return [
+      {
+        title: "Total Employees",
+        number: total,
+        icon: Users,
+        iconBgColor: "bg-blue-100",
+        iconColor: "text-blue-600",
+        lineBorderClass: "border-blue-500",
+      },
+      {
+        title: "Present Today",
+        number: present,
+        icon: UserCheck,
+        iconBgColor: "bg-green-100",
+        iconColor: "text-green-600",
+        lineBorderClass: "border-green-500",
+      },
+      {
+        title: "Absent",
+        number: absent,
+        icon: UserX,
+        iconBgColor: "bg-orange-100",
+        iconColor: "text-orange-600",
+        lineBorderClass: "border-orange-500",
+      },
+      {
+        title: "Attendance Rate",
+        number: `${attendanceRate}%`,
+        icon: TrendingUp,
+        iconBgColor: "bg-purple-100",
+        iconColor: "text-purple-600",
+        lineBorderClass: "border-purple-500",
+      },
+    ];
+  }, [statsData]);
 
 
   const filteredAttendance = useMemo(() => {
     return attendanceData.filter((record) => {
       const matchesSearch =
-        record.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        record.employeeId.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesStatus =
-        filterStatus === "all" || record.status === filterStatus;
-      const matchesDepartment =
-        filterDepartment === "all" || record.department === filterDepartment;
-      return matchesSearch && matchesStatus && matchesDepartment;
+        (record.employee_name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (record.emp_uid || "").toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesSearch;
     });
-  }, [attendanceData, searchQuery, filterStatus, filterDepartment]);
+  }, [attendanceData, searchQuery]);
 
   const getStatusBadge = (status) => {
     const badges = {
@@ -504,35 +399,18 @@ export default function AttendanceApp() {
             <div className="space-y-8">
               {/* Stats Grid */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                <NumberCard
-                  title="Total Employees"
-                  // number={total}
-                  icon={<Users className="text-blue-600" size={24} />}
-                  iconBgColor="bg-blue-100"
-                  lineBorderClass="border-blue-500"
-                />
-                <NumberCard
-                  title="Present Today"
-                  // number={present}
-                  icon={<UserCheck className="text-green-600" size={24} />}
-                  iconBgColor="bg-green-100"
-                  lineBorderClass="border-green-500"
-                />
-                <NumberCard
-                  title="Absent"
-                  // number={absent.toString()}
-                  icon={<UserX className="text-orange-600" size={24} />}
-                  iconBgColor="bg-orange-100"
-                  lineBorderClass="border-orange-500"
-                />
-                <NumberCard
-                  title="Attendance Rate"
-                  // number={`${attendanceRate}%`}
-                  icon={<TrendingUp className="text-purple-600" size={24} />}
-                  iconBgColor="bg-purple-100"
-                  lineBorderClass="border-purple-500"
-                />
+                {stats.map((stat, index) => (
+                  <NumberCard
+                    key={index}
+                    title={stat.title}
+                    number={stat.number}
+                    icon={<stat.icon size={24} className={stat.iconColor} />}
+                    iconBgColor={stat.iconBgColor}
+                    lineBorderClass={stat.lineBorderClass}
+                  />
+                ))}
               </div>
+
 
               {/* Network Status
               <div className="bg-white rounded-sm shadow-xl p-6 border border-orange-100">
@@ -626,20 +504,21 @@ export default function AttendanceApp() {
                         )}
                         <div className="flex-1">
                           <p className="font-bold text-gray-900">
-                            {record.name}
+                            {record.employee_name}
                           </p>
                           <p className="text-sm text-gray-600">
-                            {record.department}
+                            {record.department_name}
                           </p>
                         </div>
                         <div className="text-right">
                           <p className="text-sm font-bold text-orange-600">
-                            {record.checkIn}
+                            {record.check_in}
                           </p>
                           <p className="text-xs text-gray-500">
-                            {record.checkInMethod}
+                            {record.check_in_method}
                           </p>
                         </div>
+
                       </div>
                     ))}
                 </div>
@@ -775,11 +654,12 @@ export default function AttendanceApp() {
                   >
                     <option value="all">All Departments</option>
                     {departments.map((dept) => (
-                      <option key={dept} value={dept}>
-                        {dept}
+                      <option key={dept.id} value={dept.id}>
+                        {dept.department_name}
                       </option>
                     ))}
                   </select>
+
                   <select
                     value={filterStatus}
                     onChange={(e) => setFilterStatus(e.target.value)}
@@ -837,9 +717,10 @@ export default function AttendanceApp() {
                         const badge = getStatusBadge(record.status);
                         const StatusIcon = badge.icon;
                         const methodBadge = getMethodBadge(
-                          record.checkInMethod
+                          record.check_in_method
                         );
                         const MethodIcon = methodBadge.icon;
+
 
                         return (
                           <tr
@@ -862,46 +743,51 @@ export default function AttendanceApp() {
                                 )}
                                 <div>
                                   <p className="font-bold text-gray-900">
-                                    {record.name}
+                                    {record.employee_name}
                                   </p>
                                   <p className="text-sm text-orange-600 font-medium">
-                                    {record.employeeId}
+                                    {record.emp_uid}
                                   </p>
                                 </div>
+
                               </div>
                             </td>
                             <td className="px-6 py-4">
                               <span className="text-gray-700 font-medium">
-                                {record.department}
+                                {record.department_name}
                               </span>
                             </td>
+
                             <td className="px-6 py-4 text-center">
                               <div className="flex items-center justify-center gap-2">
                                 <Clock className="w-4 h-4 text-orange-400" />
                                 <span className="text-gray-900 font-semibold">
-                                  {record.checkIn}
+                                  {record.check_in}
                                 </span>
                               </div>
                             </td>
+
                             <td className="px-6 py-4 text-center">
                               <span
                                 className={`inline-flex items-center gap-2 px-3 py-1 ${methodBadge.bg} ${methodBadge.text} rounded-sm text-xs font-bold`}
                               >
                                 <MethodIcon className="w-4 h-4" />
-                                {record.checkInMethod}
+                                {record.check_in_method}
                               </span>
                             </td>
+
                             <td className="px-6 py-4 text-center">
                               <span className="text-gray-900 font-semibold">
-                                {record.checkOut}
+                                {record.check_out}
                               </span>
                             </td>
                             <td className="px-6 py-4 text-center">
                               <span className="inline-flex items-center gap-2 px-3 py-1 bg-orange-100 text-orange-700 rounded-sm text-xs font-bold">
                                 <Timer className="w-4 h-4" />
-                                {record.workHours}
+                                {record.work_hours}
                               </span>
                             </td>
+
                             <td className="px-6 py-4 text-center">
                               <span
                                 className={`inline-flex items-center gap-2 px-3 py-1 ${badge.bg} ${badge.text} rounded-sm text-xs font-bold`}
@@ -1115,44 +1001,51 @@ export default function AttendanceApp() {
                   <div className="bg-orange-50 p-4 rounded-sm">
                     <p className="text-orange-600 text-sm mb-1">Employee ID</p>
                     <p className="font-bold text-gray-900">
-                      {detailsModal.employeeId}
+                      {detailsModal.emp_uid}
                     </p>
+
                   </div>
                   <div className="bg-orange-50 p-4 rounded-sm">
                     <p className="text-orange-600 text-sm mb-1">Department</p>
                     <p className="font-bold text-gray-900">
-                      {detailsModal.department}
+                      {detailsModal.department_name}
                     </p>
+
                   </div>
                   <div className="bg-orange-50 p-4 rounded-sm">
                     <p className="text-orange-600 text-sm mb-1">Check In</p>
                     <p className="font-bold text-gray-900">
-                      {detailsModal.checkIn}
+                      {detailsModal.check_in}
                     </p>
+
                   </div>
                   <div className="bg-orange-50 p-4 rounded-sm">
                     <p className="text-orange-600 text-sm mb-1">Check Out</p>
                     <p className="font-bold text-gray-900">
-                      {detailsModal.checkOut}
+                      {detailsModal.check_out}
                     </p>
+
                   </div>
                   <div className="bg-orange-50 p-4 rounded-sm">
                     <p className="text-orange-600 text-sm mb-1">Method</p>
                     <p className="font-bold text-gray-900">
-                      {detailsModal.checkInMethod}
+                      {detailsModal.check_in_method}
                     </p>
+
                   </div>
                   <div className="bg-orange-50 p-4 rounded-sm">
                     <p className="text-orange-600 text-sm mb-1">IP Address</p>
                     <p className="font-bold text-gray-900 font-mono text-sm">
-                      {detailsModal.ipAddress}
+                      {detailsModal.ip_address}
                     </p>
+
                   </div>
                   <div className="bg-orange-50 p-4 rounded-sm col-span-2">
                     <p className="text-orange-600 text-sm mb-1">Work Hours</p>
                     <p className="font-bold text-gray-900">
-                      {detailsModal.workHours}
+                      {detailsModal.work_hours}
                     </p>
+
                   </div>
                 </div>
               </div>

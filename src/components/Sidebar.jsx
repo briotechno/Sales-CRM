@@ -123,22 +123,30 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       }
 
       // Safety check
-      if (!perms || typeof perms !== 'object') return false;
+      if (!perms) return false;
 
-      // Check if module exists AND has read entitlement
-      // The structure is { "Module Name": { "read": true, ... } }
+      // Handle both object-based module permissions and flat ID-based permissions
+
+      // 1. Check if the key itself is a granted permission (Flat structure: { "perm_id": true })
+      if (perms[key] === true) return true;
+
+      // 2. Check if it's a module object (Module structure: { "Module Name": { "read": true } })
       const modulePerms = perms[key];
-
-      // If module permission object exists, check for 'read' or 'view'
-      if (modulePerms && (modulePerms.read === true || modulePerms.view === true)) {
-        return true;
+      if (modulePerms && typeof modulePerms === 'object') {
+        if (modulePerms.read === true || modulePerms.view === true || modulePerms.view_all === true) {
+          return true;
+        }
       }
+
+      // 3. Fallback for specific IDs if key looks like one
+      // If we use IDs like 'attendance_view_all' in the permission field, step 1 handles it.
 
       return false;
     }
 
     return false;
   };
+
 
   const menuItems = [
     {
@@ -202,13 +210,9 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         {
           name: "Client Management",
           icon: <Briefcase size={22} />,
-          path: "/crm/client",
+          path: "/crm/client/all",
           permission: "Client Management",
-          children: [
-            { name: "All Client", path: "/crm/client/all" },
-            { name: "Active Client", path: "/crm/client/active" },
-            { name: "Inactive", path: "/crm/client/inactive" },
-          ],
+
         },
         {
           name: "Channel Integration",
@@ -243,23 +247,26 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         {
           name: "Attendance",
           icon: <CalendarCheck size={22} />,
-          path: (checkPermission("Attendance Management") || user?.role === 'Super Admin' || user?.role === 'Admin') ? null : "/hrm/attendance/employee",
-          permission: "Attendance Management",
-          children: (checkPermission("Attendance Management") || user?.role === 'Super Admin' || user?.role === 'Admin') ? [
+          children: [
             {
               name: "My Attendance",
               path: "/hrm/attendance/employee",
             },
+
             {
               name: "All Attendance",
               path: "/hrm/attendance",
+              permission: "attendance_view_all"
             },
             {
               name: "Manage Attendance",
               path: "/hrm/attendance/manage",
+              permission: "attendance_edit"
             },
-          ] : undefined,
+          ],
         },
+
+
         {
           name: "Leave Management",
           icon: <ClipboardList size={22} />,
@@ -414,14 +421,25 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
 
   /* Filtering */
   const filteredMenuItems = menuItems.map(section => {
-    const filteredItems = section.items.filter(item => {
-      if (item.name === "Logout") return true;
-      // If no permission key is set, assume it's public or visible
-      if (!item.permission) return true;
-      return checkPermission(item.permission);
-    });
+    const filteredItems = section.items
+      .filter(item => {
+        if (item.name === "Logout") return true;
+        if (!item.permission) return true;
+        return checkPermission(item.permission);
+      })
+      .map(item => {
+        if (item.children) {
+          const filteredChildren = item.children.filter(child => {
+            if (!child.permission) return true;
+            return checkPermission(child.permission);
+          });
+          return { ...item, children: filteredChildren.length > 0 ? filteredChildren : undefined };
+        }
+        return item;
+      });
     return { ...section, items: filteredItems };
   }).filter(section => section.items.length > 0);
+
 
   return (
     <>
