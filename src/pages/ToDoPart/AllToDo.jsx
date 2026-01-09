@@ -177,7 +177,7 @@ export default function TodoPage() {
       <div className="ml-6 min-h-screen bg-gray-50/50 flex flex-col font-primary">
         {/* Header Section */}
         <div className="bg-white border-b sticky top-0 z-30">
-          <div className="max-w-8xl mx-auto px-6">
+          <div className="max-w-8xl mx-auto">
             <div className="flex flex-col md:flex-row md:items-center justify-between py-4 gap-4">
               <div>
                 <h1 className="text-2xl font-bold text-gray-800">My Tasks</h1>
@@ -203,13 +203,8 @@ export default function TodoPage() {
                   {isFilterOpen && (
                     <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-sm shadow-xl z-50 animate-fadeIn">
                       <div className="p-3 border-b bg-gray-50 flex items-center justify-between">
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Priority & Period</p>
-                        <button
-                          onClick={() => { setFilterPriority("all"); setFilterType("All"); setIsFilterOpen(false); }}
-                          className="text-[10px] text-orange-600 font-bold hover:underline"
-                        >
-                          RESET
-                        </button>
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Filter by Priority & Period</p>
+
                       </div>
                       <div className="p-2 space-y-3">
                         <div>
@@ -268,7 +263,7 @@ export default function TodoPage() {
 
                 <button
                   onClick={() => setIsAddModalOpen(true)}
-                  className="px-6 py-3 rounded-sm bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 transition-all flex items-center gap-2 font-bold shadow-md hover:shadow-lg"
+                  className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm hover:shadow-lg transition-all flex items-center gap-2 font-bold shadow-md"
                 >
                   <Plus size={20} />
                   New Task
@@ -278,7 +273,7 @@ export default function TodoPage() {
           </div>
         </div>
 
-        <div className="max-w-8xl mx-auto px-6 py-6 font-primary w-full flex-1">
+        <div className="max-w-8xl mx-auto py-6 font-primary w-full flex-1">
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-32 space-y-4">
               <Loader2 className="w-12 h-12 text-orange-500 animate-spin" />

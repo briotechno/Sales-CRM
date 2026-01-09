@@ -141,17 +141,19 @@ export default function ExpensePage() {
                 <div className="relative" ref={dateDropdownRef}>
                   <button
                     onClick={() => setIsDateFilterOpen(!isDateFilterOpen)}
-                    className={`flex items-center gap-2 px-4 py-3 rounded-sm border transition shadow-sm ${isDateFilterOpen || filterType !== "Today"
-                      ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
-                      : "bg-white text-black border-gray-300 hover:bg-gray-100"
+                    className={`flex items-center gap-2 p-3 rounded-sm border transition-all shadow-sm ${isDateFilterOpen || filterType !== "Today"
+                      ? "bg-white text-gray-700 border-gray-300 hover:bg-orange-500 hover:text-white hover:border-[#FF7B1D]"
+                      : "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
                       }`}
                   >
-                    <Calendar size={18} />
-                    <span className="text-sm font-medium">{filterType}</span>
+                    <Filter size={20} />
                   </button>
 
                   {isDateFilterOpen && (
                     <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-sm shadow-xl z-50 animate-fadeIn">
+                      <div className="p-2 border-b bg-gray-50">
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Filter by Expanses</p>
+                      </div>
                       <div className="py-1">
                         {["Today", "Yesterday", "Last 7 Days", "This Month", "Custom"].map((option) => (
                           <button
@@ -211,7 +213,7 @@ export default function ExpensePage() {
                 {/* Add Expense Button */}
                 <button
                   onClick={() => setIsAddModalOpen(true)}
-                  className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-5 py-3 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-md flex items-center gap-2 font-semibold text-sm mr-4"
+                  className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm hover:shadow-lg transition-all flex items-center gap-2 font-bold shadow-md"
                 >
                   <Plus size={18} />
                   Add Expense

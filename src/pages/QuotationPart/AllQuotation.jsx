@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import DashboardLayout from "../../components/DashboardLayout";
@@ -13,7 +13,8 @@ import {
   AlertCircle,
   CheckCircle,
   DollarSign,
-  Edit2
+  Edit2,
+  Filter
 } from "lucide-react";
 
 import CreateQuotationModal from "../../pages/QuotationPart/CreateQuotationModal";
@@ -40,6 +41,8 @@ export default function QuotationPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
+  const [isStatusFilterOpen, setIsStatusFilterOpen] = useState(false);
+  const statusDropdownRef = useRef(null);
   const itemsPerPage = 8;
 
   const { data, isLoading, error, refetch } = useGetQuotationsQuery({
@@ -570,6 +573,23 @@ export default function QuotationPage() {
   const indexOfFirstItem = (currentPage - 1) * itemsPerPage;
   const indexOfLastItem = Math.min(currentPage * itemsPerPage, pagination.total);
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        statusDropdownRef.current &&
+        !statusDropdownRef.current.contains(event.target)
+      ) {
+        setIsStatusFilterOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   return (
     <DashboardLayout>
       <div className="ml-6 min-h-screen">
@@ -592,23 +612,47 @@ export default function QuotationPage() {
 
               {/* Action Buttons */}
               <div className="flex flex-wrap items-center gap-2">
-                <div className="relative">
-                  <select
-                    value={filterStatus}
-                    onChange={(e) => {
-                      setFilterStatus(e.target.value);
-                      setCurrentPage(1);
-                    }}
-                    className={`px-4 py-3 border border-gray-200 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#FF7B1D] text-sm font-medium transition-all ${filterStatus !== "All" ? "bg-orange-50 text-orange-600 border-orange-200" : "bg-white text-gray-700"
+                <div className="relative" ref={statusDropdownRef}>
+                  <button
+                    onClick={() => setIsStatusFilterOpen(!isStatusFilterOpen)}
+                    className={`flex items-center gap-2 px-4 py-3 rounded-sm border transition shadow-sm ${isStatusFilterOpen || filterStatus !== "All"
+                      ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
+                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
                       }`}
                   >
-                    <option value="All">All Status</option>
-                    <option value="Draft">Draft</option>
-                    <option value="Pending">Pending</option>
-                    <option value="Approved">Approved</option>
-                    <option value="Rejected">Rejected</option>
-                  </select>
+                    <Filter size={20} />
+                  </button>
+
+                  {isStatusFilterOpen && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-sm shadow-xl z-50 animate-fadeIn">
+                      <div className="py-1">
+                        {[
+                          { label: "All Status", value: "All" },
+                          { label: "Draft", value: "Draft" },
+                          { label: "Pending", value: "Pending" },
+                          { label: "Approved", value: "Approved" },
+                          { label: "Rejected", value: "Rejected" },
+                        ].map((option) => (
+                          <button
+                            key={option.value}
+                            onClick={() => {
+                              setFilterStatus(option.value);
+                              setIsStatusFilterOpen(false);
+                              setCurrentPage(1);
+                            }}
+                            className={`block w-full text-left px-4 py-2.5 text-sm transition-colors ${filterStatus === option.value
+                              ? "bg-orange-50 text-orange-600 font-bold"
+                              : "text-gray-700 hover:bg-gray-50"
+                              }`}
+                          >
+                            {option.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
+
 
                 <div className="relative">
                   <input

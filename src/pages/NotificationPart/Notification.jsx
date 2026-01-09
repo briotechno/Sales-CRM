@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { FiHome } from "react-icons/fi";
 import DashboardLayout from "../../components/DashboardLayout";
 import {
@@ -111,6 +111,38 @@ export default function NotificationPage() {
   const [filterType, setFilterType] = useState("all");
   const [filterRead, setFilterRead] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
+  const [isTypeFilterOpen, setIsTypeFilterOpen] = useState(false);
+  const [isReadFilterOpen, setIsReadFilterOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+
+  const readDropdownRef = useRef(null);
+  const typeDropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      // Type filter
+      if (
+        typeDropdownRef.current &&
+        !typeDropdownRef.current.contains(event.target)
+      ) {
+        setIsTypeFilterOpen(false);
+      }
+
+      // Read filter
+      if (
+        readDropdownRef.current &&
+        !readDropdownRef.current.contains(event.target)
+      ) {
+        setIsReadFilterOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const getIcon = (iconName) => {
     const icons = {
@@ -178,11 +210,63 @@ export default function NotificationPage() {
   };
 
   const deleteAllRead = () => {
-    if (
-      window.confirm("Are you sure you want to delete all read notifications?")
-    ) {
-      setNotifications(notifications.filter((n) => !n.read));
-    }
+    setNotifications(notifications.filter((n) => !n.read));
+    setIsDeleteModalOpen(false);
+  };
+
+  const ConfirmDeleteModal = ({ isOpen, onClose, onConfirm, isLoading }) => {
+    if (!isOpen) return null;
+
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+        <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6 animate-scaleIn">
+
+          {/* Icon */}
+          <div className="flex justify-center mb-5">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center animate-bounce">
+              <AlertCircle size={36} className="text-red-600" />
+            </div>
+          </div>
+
+          {/* Content */}
+          <h2 className="text-2xl font-bold text-gray-800 text-center mb-2">
+            Confirm Delete
+          </h2>
+
+          <p className="text-gray-600 mb-2 leading-relaxed">
+            Are you sure you want to delete all{" "}
+            <span className="font-bold text-gray-800">"read notifications"</span>?
+          </p>
+
+          <p className="text-sm text-red-500 text-center mb-5 italic">
+            This action cannot be undone. All associated data will be permanently removed.
+          </p>
+
+          {/* Actions */}
+          <div className="flex gap-4">
+            <button
+              onClick={onClose}
+              className="flex-1 px-5 py-3 border-2 border-gray-200 rounded-xl font-semibold text-gray-700 hover:bg-gray-100 transition-all"
+            >
+              Cancel
+            </button>
+
+            <button
+              onClick={onConfirm}
+              disabled={isLoading}
+              className="flex-1 px-5 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-all shadow-lg hover:shadow-red-200 flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              {isLoading ? (
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <Trash2 size={18} />
+              )}
+              {isLoading ? "Deleting..." : "Delete"}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   const filteredNotifications = notifications.filter((n) => {
@@ -214,8 +298,8 @@ export default function NotificationPage() {
     <DashboardLayout>
       <div className="p-0 bg-gradient-to-br from-gray-0 to-gray-100 ml-6 min-h-screen">
         {/* Header */}
-        <div className="bg-white border-b ">
-          <div className="max-w-8xl mx-auto px-6 py-4">
+        <div className="bg-white border-b">
+          <div className="max-w-8xl mx-auto py-4">
             <div className="flex items-center justify-between">
               {/* Left Side */}
               <div>
@@ -232,41 +316,109 @@ export default function NotificationPage() {
               </div>
               <div className="flex gap-3">
                 <div className="flex flex-col md:flex-row gap-4">
-                  <select
-                    value={filterType}
-                    onChange={(e) => setFilterType(e.target.value)}
-                    className="px-4 py-2 border border-gray-200 rounded-sm hover:bg-gray-50 font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  >
-                    <option value="all">All Types</option>
-                    <option value="invoice">Invoice</option>
-                    <option value="quotation">Quotation</option>
-                    <option value="overdue">Overdue</option>
-                    <option value="meeting">Meeting</option>
-                    <option value="expense">Expense</option>
-                    <option value="team">Team</option>
-                    <option value="target">Target</option>
-                    <option value="email">Email</option>
-                  </select>
-                  <select
-                    value={filterRead}
-                    onChange={(e) => setFilterRead(e.target.value)}
-                    className="px-4 py-2 border border-gray-200 rounded-sm hover:bg-gray-50 font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  >
-                    <option value="all">All</option>
-                    <option value="unread">Unread</option>
-                    <option value="read">Read</option>
-                  </select>
+                  {/* ------------------------------------------ */}
+                  <div className="relative" ref={typeDropdownRef}>
+                    <button
+                      onClick={() => setIsTypeFilterOpen(!isTypeFilterOpen)}
+                      className={`flex items-center gap-2 px-4 py-3 rounded-sm border transition shadow-sm ${isTypeFilterOpen || filterType !== "all"
+                        ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
+                        : "bg-white text-black border-gray-300 hover:bg-gray-100"
+                        }`}
+                    >
+                      <FileText size={18} />
+                      <span className="text-sm font-medium">
+                        {filterType === "all" ? "All Types" : filterType}
+                      </span>
+                    </button>
+
+                    {isTypeFilterOpen && (
+                      <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-sm shadow-xl z-50 animate-fadeIn">
+                        <div className="p-2 border-b bg-gray-50">
+                          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Filter by Notification</p>
+                        </div>
+                        <div className="py-1">
+                          {[
+                            { label: "All Types", value: "all" },
+                            { label: "Invoice", value: "invoice" },
+                            { label: "Quotation", value: "quotation" },
+                            { label: "Overdue", value: "overdue" },
+                            { label: "Meeting", value: "meeting" },
+                            { label: "Expense", value: "expense" },
+                            { label: "Team", value: "team" },
+                            { label: "Target", value: "target" },
+                            { label: "Email", value: "email" },
+                          ].map((option) => (
+                            <button
+                              key={option.value}
+                              onClick={() => {
+                                setFilterType(option.value);
+                                setIsTypeFilterOpen(false);
+                                setCurrentPage(1);
+                              }}
+                              className={`block w-full text-left px-4 py-2.5 text-sm transition-colors ${filterType === option.value
+                                ? "bg-orange-50 text-orange-600 font-bold"
+                                : "text-gray-700 hover:bg-gray-50"
+                                }`}
+                            >
+                              {option.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* ------------------------------------------ */}
+                  <div className="relative" ref={readDropdownRef}>
+                    <button
+                      onClick={() => setIsReadFilterOpen(!isReadFilterOpen)}
+                      className={`flex items-center gap-2 px-4 py-3 rounded-sm border transition shadow-sm ${isReadFilterOpen || filterRead !== "all"
+                        ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
+                        : "bg-white text-black border-gray-300 hover:bg-gray-100"
+                        }`}
+                    >
+                      <Filter size={20} />
+                    </button>
+
+                    {isReadFilterOpen && (
+                      <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-sm shadow-xl z-50 animate-fadeIn">
+                        <div className="py-1">
+                          {[
+                            { label: "All", value: "all" },
+                            { label: "Unread", value: "unread" },
+                            { label: "Read", value: "read" },
+                          ].map((option) => (
+                            <button
+                              key={option.value}
+                              onClick={() => {
+                                setFilterRead(option.value);
+                                setIsReadFilterOpen(false);
+                                setCurrentPage(1);
+                              }}
+                              className={`block w-full text-left px-4 py-2.5 text-sm transition-colors ${filterRead === option.value
+                                ? "bg-orange-50 text-orange-600 font-bold"
+                                : "text-gray-700 hover:bg-gray-50"
+                                }`}
+                            >
+                              {option.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <button
-                  onClick={deleteAllRead}
+                  onClick={() => setIsDeleteModalOpen(true)}
                   className="px-4 py-2 border border-gray-300 rounded-sm hover:bg-gray-50 font-semibold text-gray-700 flex items-center gap-2"
                 >
                   <Trash2 size={18} />
                   Clear Read
                 </button>
+
                 <button
                   onClick={markAllAsRead}
-                  className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-2 font-semibold"
+                  className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm hover:shadow-lg transition-all flex items-center gap-2 font-bold shadow-md"
                 >
                   <Check size={20} />
                   Mark All Read
@@ -277,7 +429,7 @@ export default function NotificationPage() {
         </div>
 
         {/* Stats Cards */}
-        <div className="max-w-7xl mx-auto px-0 mt-2 py-0">
+        <div className="px-0 mt-2 py-0">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
             <NumberCard
               title={"Total Notifications"}
@@ -366,7 +518,7 @@ export default function NotificationPage() {
                         </div>
                         <button
                           onClick={() => deleteNotification(notification.id)}
-                          className="text-gray-400 hover:text-red-500 transition-colors p-1"
+                          className="text-red-600 hover:bg-red-50 p-1.5 rounded-lg transition-colors"
                         >
                           <Trash2 size={18} />
                         </button>
@@ -395,6 +547,12 @@ export default function NotificationPage() {
           </div>
         </div>
       </div>
+      <ConfirmDeleteModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={deleteAllRead}
+      />
+
     </DashboardLayout>
   );
 }

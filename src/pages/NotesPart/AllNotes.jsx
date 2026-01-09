@@ -151,7 +151,7 @@ export default function NotesPage() {
       <div className="ml-6 min-h-screen bg-gray-50/50">
         {/* Header Section */}
         <div className="bg-white border-b sticky top-0 z-30">
-          <div className="max-w-8xl mx-auto px-6">
+          <div className="max-w-8xl mx-auto">
             <div className="flex flex-col md:flex-row md:items-center justify-between py-4 gap-4">
               <div>
                 <h1 className="text-2xl font-bold text-gray-800">My Notes</h1>
@@ -166,9 +166,9 @@ export default function NotesPage() {
                 <div className="relative" ref={dropdownRef}>
                   <button
                     onClick={() => setIsFilterOpen(!isFilterOpen)}
-                    className={`p-3 rounded-sm border transition-all shadow-sm ${isFilterOpen || selectedCategory !== "All"
+                    className={`p-3 rounded-sm border transition-all shadow-sm ${isFilterOpen
                       ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
-                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
+                      : "bg-white text-gray-700 border-gray-300 hover:bg-orange-500 hover:text-white hover:border-[#FF7B1D]"
                       }`}
                   >
                     <Filter size={20} />
@@ -177,7 +177,7 @@ export default function NotesPage() {
                   {isFilterOpen && (
                     <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-sm shadow-xl z-50 animate-fadeIn">
                       <div className="p-2 border-b bg-gray-50">
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Filter by Category</p>
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Filter by Notes</p>
                       </div>
                       <div className="py-1">
                         {categories.map((cat) => (
@@ -220,7 +220,7 @@ export default function NotesPage() {
                     resetForm();
                     setIsAdding(true);
                   }}
-                  className="px-6 py-3 rounded-sm bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 transition-all flex items-center gap-2 font-bold shadow-md hover:shadow-lg"
+                  className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm hover:shadow-lg transition-all flex items-center gap-2 font-bold shadow-md"
                 >
                   <Plus size={20} />
                   New Note
@@ -230,7 +230,7 @@ export default function NotesPage() {
           </div>
         </div>
 
-        <div className="max-w-8xl mx-auto px-6 py-6 font-primary">
+        <div className="max-w-8xl mx-auto py-6 font-primary">
           {/* Summary Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             <NumberCard
