@@ -6,6 +6,8 @@ import {
   CheckCircle,
   XCircle,
   Layers,
+  Percent,
+  Flag,
 } from "lucide-react";
 import Modal from "../common/Modal";
 
@@ -27,6 +29,8 @@ const ViewPipelineModal = ({ isOpen, onClose, pipeline }) => {
     </div>
   );
 
+  const stages = Array.isArray(pipeline.stages) ? pipeline.stages : [];
+
   return (
     <Modal
       isOpen={isOpen}
@@ -42,7 +46,7 @@ const ViewPipelineModal = ({ isOpen, onClose, pipeline }) => {
         <div className="grid grid-cols-3 gap-6">
           <StatCard
             icon={<Layers size={20} />}
-            value={pipeline.stages}
+            value={stages.length}
             label="Stages"
             color="blue"
           />
@@ -69,19 +73,57 @@ const ViewPipelineModal = ({ isOpen, onClose, pipeline }) => {
           <DetailRow
             icon={<DollarSign size={16} />}
             label="Total Deal Value"
-            value={`₹ ${pipeline.totalDealValue.toLocaleString()}`}
+            value={`₹ ${Number(pipeline.totalDealValue || 0).toLocaleString()}`}
           />
           <DetailRow
             icon={<Calendar size={16} />}
             label="Created Date"
             value={pipeline.createdDate}
           />
-          <DetailRow
-            icon={<Activity size={16} />}
-            label="Current Stage"
-            value={pipeline.stageLabel}
-          />
         </div>
+
+        {/* Stages List */}
+        <div>
+          <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+            <Layers size={20} className="text-[#FF7B1D]" />
+            Pipeline Stages
+          </h3>
+          <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2">
+            {stages.length > 0 ? (
+              stages.map((stage, index) => (
+                <div key={index} className="flex items-center justify-between p-4 border border-gray-200 rounded-xl hover:border-orange-300 transition-all bg-gray-50 hover:bg-white">
+                  <div className="flex items-center gap-4">
+                    <div className="w-8 h-8 flex items-center justify-center bg-orange-100 text-orange-600 font-bold rounded-full text-sm">
+                      {index + 1}
+                    </div>
+                    <div>
+                      <p className="font-bold text-gray-800 flex items-center gap-2">
+                        {stage.name}
+                        {(stage.is_final === 1 || stage.is_final === true) && (
+                          <span className="text-[10px] bg-green-100 text-green-600 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider flex items-center gap-1">
+                            <Flag size={10} /> Final
+                          </span>
+                        )}
+                      </p>
+                      {stage.description && (
+                        <p className="text-sm text-gray-500 line-clamp-1" title={stage.description}>
+                          {stage.description}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm font-semibold text-gray-600 bg-white px-3 py-1 rounded-lg border">
+                    <Percent size={14} className="text-gray-400" />
+                    {stage.probability}%
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-gray-500 italic text-center py-4">No stages found.</p>
+            )}
+          </div>
+        </div>
+
       </div>
     </Modal>
   );

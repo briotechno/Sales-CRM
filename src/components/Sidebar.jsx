@@ -204,6 +204,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           permission: "Pipeline Management",
           children: [
             { name: "Manage Pipeline", path: "/crm/pipeline/manage" },
+            { name: "Manage Stages", path: "/crm/pipeline/stages" },
             { name: "Analytics", path: "/crm/pipeline/analytics" },
           ],
         },

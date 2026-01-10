@@ -1277,7 +1277,10 @@ export default function CRMLeadDetail() {
 
   // Format currency helper
   const formatCurrency = (value) => {
-    const [intPart] = value.toFixed(0).split(".");
+    const num = Number(value);
+    if (isNaN(num)) return "₹0";
+
+    const [intPart] = num.toFixed(0).split(".");
     const lastThree = intPart.substring(intPart.length - 3);
     const otherNumbers = intPart.substring(0, intPart.length - 3);
     const formatted =
@@ -1388,9 +1391,8 @@ export default function CRMLeadDetail() {
                     >
                       {pipelineStage}
                       <svg
-                        className={`w-4 h-4 transition-transform ${
-                          showDropdown ? "rotate-180" : ""
-                        }`}
+                        className={`w-4 h-4 transition-transform ${showDropdown ? "rotate-180" : ""
+                          }`}
                         fill="none"
                         stroke="currentColor"
                         strokeWidth="2"
@@ -1488,79 +1490,71 @@ export default function CRMLeadDetail() {
               <div className="flex px-0">
                 <button
                   onClick={() => setActiveTab("activities")}
-                  className={`px-6 py-4 font-semibold flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${
-                    activeTab === "activities"
+                  className={`px-6 py-4 font-semibold flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${activeTab === "activities"
                       ? "border-orange-500 text-orange-500"
                       : "border-transparent text-gray-500 hover:text-gray-700"
-                  }`}
+                    }`}
                 >
                   <Zap className="w-5 h-5" /> Activities
                 </button>
                 <button
                   onClick={() => setActiveTab("notes")}
-                  className={`px-6 py-4 font-semibold flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${
-                    activeTab === "notes"
+                  className={`px-6 py-4 font-semibold flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${activeTab === "notes"
                       ? "border-orange-500 text-orange-500"
                       : "border-transparent text-gray-500 hover:text-gray-700"
-                  }`}
+                    }`}
                 >
                   <FileText className="w-5 h-5" /> Notes
                 </button>
                 <button
                   onClick={() => setActiveTab("calls")}
-                  className={`px-6 py-4 font-semibold flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${
-                    activeTab === "calls"
+                  className={`px-6 py-4 font-semibold flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${activeTab === "calls"
                       ? "border-orange-500 text-orange-500"
                       : "border-transparent text-gray-500 hover:text-gray-700"
-                  }`}
+                    }`}
                 >
                   <Phone className="w-5 h-5" /> Calls
                 </button>
                 <button
                   onClick={() => setActiveTab("files")}
-                  className={`px-6 py-4 font-semibold flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${
-                    activeTab === "files"
+                  className={`px-6 py-4 font-semibold flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${activeTab === "files"
                       ? "border-orange-500 text-orange-500"
                       : "border-transparent text-gray-500 hover:text-gray-700"
-                  }`}
+                    }`}
                 >
                   <File className="w-5 h-5" /> Files
                 </button>
                 <button
                   onClick={() => setActiveTab("email")}
-                  className={`px-6 py-4 font-semibold flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${
-                    activeTab === "email"
+                  className={`px-6 py-4 font-semibold flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${activeTab === "email"
                       ? "border-orange-500 text-orange-500"
                       : "border-transparent text-gray-500 hover:text-gray-700"
-                  }`}
+                    }`}
                 >
                   <Mail className="w-5 h-5" /> Email
                 </button>
                 <button
                   onClick={() => setActiveTab("whatsapp")}
-                  className={`px-6 py-4 font-semibold flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${
-                    activeTab === "whatsapp"
+                  className={`px-6 py-4 font-semibold flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${activeTab === "whatsapp"
                       ? "border-orange-500 text-orange-500"
                       : "border-transparent text-gray-500 hover:text-gray-700"
-                  }`}
+                    }`}
                 >
                   <FaWhatsapp
                     size={22}
-                    className={`${
-                      activeTab === "whatsapp"
+                    className={`${activeTab === "whatsapp"
                         ? "text-grey-500"
                         : "text-grey-400"
-                    }`}
+                      }`}
                   />
                   WhatsApp
                 </button>
                 <button
                   onClick={() => setActiveTab("meeting")}
-                  className={`px-6 py-4 font-semibold flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${
-                    activeTab === "meeting"
+                  className={`px-6 py-4 font-semibold flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${activeTab === "meeting"
                       ? "border-orange-500 text-orange-500"
                       : "border-transparent text-gray-500 hover:text-gray-700"
-                  }`}
+                    }`}
                 >
                   <Users className="w-5 h-5" /> Meeting
                 </button>

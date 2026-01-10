@@ -1,8 +1,9 @@
+
 import React from "react";
 import { AlertCircle, Trash2 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import Modal from "../common/Modal";
-// import { useDeletePipelineMutation } from "../../store/api/pipelineApi";
+import { useDeletePipelineMutation } from "../../store/api/pipelineApi";
 
 const DeletePipelineModal = ({
   isOpen,
@@ -11,7 +12,7 @@ const DeletePipelineModal = ({
   pipelineName,
   refetchPipelines,
 }) => {
-//   const [deletePipeline, { isLoading }] = useDeletePipelineMutation();
+  const [deletePipeline, { isLoading }] = useDeletePipelineMutation();
 
   const handleDelete = async () => {
     try {
@@ -40,16 +41,15 @@ const DeletePipelineModal = ({
 
       <button
         onClick={handleDelete}
-        // disabled={isLoading}
+        disabled={isLoading}
         className="flex-1 px-6 py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition-all shadow-lg hover:shadow-red-200 flex items-center justify-center gap-2 disabled:opacity-50"
       >
-        Delete
-        {/* {isLoading ? (
+        {isLoading ? (
           <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
         ) : (
           <Trash2 size={20} />
         )}
-        {isLoading ? "Deleting..." : "Delete Now"} */}
+        {isLoading ? "Deleting..." : "Delete Now"}
       </button>
     </div>
   );
