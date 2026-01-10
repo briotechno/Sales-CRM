@@ -672,10 +672,16 @@ export default function JobManagement() {
                         value={formData.type}
                         onChange={handleInputChange}
                         className="w-full px-4 py-3 border-2 border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300">
-                        <option>Full-time</option>
-                        <option>Part-time</option>
-                        <option>Contract</option>
-                        <option>Internship</option>
+                        <option>Full-Time Employee</option>
+                        <option>Part-Time Employee</option>
+                        <option>Contract Employee</option>
+                        <option>Temporary Employee</option>
+                        <option>Intern / Trainee</option>
+                        <option>Freelancer / Consultant</option>
+                        <option>Probationary Employee</option>
+                        <option>Casual Employee</option>
+                        <option>Remote Employee</option>
+                        <option>Seasonal Employee</option>
                       </select>
                     </div>
                     <div>
