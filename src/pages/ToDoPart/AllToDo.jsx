@@ -317,151 +317,154 @@ export default function TodoPage() {
                 <div className="grid grid-cols-1 lg:grid-cols-1 gap-8">
                   {/* Active Tasks Column */}
                   <div className="space-y-6">
-                    <div className="flex items-center justify-between mb-2">
-                      <h2 className="text-xl font-bold text-gray-800 flex items-center gap-3">
-                        <div className="p-2 bg-orange-100 rounded-lg">
-                          <Clock className="text-orange-600" size={20} />
+                    <div className="flex items-center justify-between mb-2 px-2">
+                      <div className="flex items-center gap-4">
+                        <div className="p-2.5 bg-orange-100 rounded-xl shadow-inner">
+                          <Clock className="text-orange-600" size={24} />
                         </div>
-                        Active Tasks
-                        <span className="px-2.5 py-0.5 bg-orange-100 text-orange-600 text-xs rounded-full font-bold">
-                          {activeTasks.length}
-                        </span>
-                      </h2>
+                        <div>
+                          <h2 className="text-2xl font-black text-gray-900 tracking-tight">Active Tasks</h2>
+                          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-0.5">Tasks to be done</p>
+                        </div>
+                      </div>
+                      <span className="px-4 py-1.5 bg-orange-600 text-white text-sm rounded-full font-black shadow-lg shadow-orange-600/20">
+                        {activeTasks.length}
+                      </span>
                     </div>
 
-                    <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       {activeTasks.map((task) => (
                         <div
                           key={task.id}
-                          className="group relative bg-white rounded-xl border border-gray-100 p-5 hover:shadow-xl hover:shadow-orange-500/5 transition-all duration-300 transform hover:-translate-y-1"
+                          className="group bg-white rounded-3xl border border-gray-100 p-6 hover:shadow-2xl hover:shadow-orange-500/10 transition-all duration-300 relative overflow-hidden"
                         >
-                          <div className={`absolute top-0 left-0 rounded-xl w-1.5 h-full rounded-l-xl ${task.priority === 'high' ? 'bg-red-500' :
-                            task.priority === 'medium' ? 'bg-orange-400' :
-                              'bg-green-400'
+                          <div className={`absolute top-0 left-0 bottom-0 w-2 ${task.priority === 'high' ? 'bg-red-500' :
+                            task.priority === 'medium' ? 'bg-orange-500' :
+                              'bg-green-500'
                             }`}></div>
 
-                          <div className="flex items-start gap-4">
-                            <button
-                              onClick={() => handleToggleStatus(task.id)}
-                              className={`mt-1 flex-shrink-0 w-6 h-6 rounded-full border-2 transition-all flex items-center justify-center group/check ${task.priority === 'high' ? 'border-red-100 hover:border-red-500' :
-                                task.priority === 'medium' ? 'border-orange-100 hover:border-orange-500' :
-                                  'border-green-100 hover:border-green-500'
-                                }`}
-                            >
-                              <Check size={12} className={`opacity-0 group-hover/check:opacity-100 transition-opacity ${task.priority === 'high' ? 'text-red-500' :
-                                task.priority === 'medium' ? 'text-orange-500' :
-                                  'text-green-500'
-                                }`} />
-                            </button>
-
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center justify-between mb-3">
-                                <div className="flex items-center gap-2">
-                                  <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${task.priority === 'high' ? 'bg-red-50 text-red-600' :
-                                    task.priority === 'medium' ? 'bg-orange-50 text-orange-600' :
-                                      'bg-green-50 text-green-600'
-                                    }`}>
-                                    {task.priority || 'Medium'} Priority
-                                  </span>
-                                  <span className="bg-gray-50 text-gray-500 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border border-gray-100">
-                                    {task.category || 'General'}
-                                  </span>
-                                </div>
-
-                                <div className="">
-                                  <button
-                                    onClick={() => handleEdit(task)}
-                                    className="p-2 text-orange-600 hover:bg-orange-50 rounded-sm transition-colors"
-                                    title="Edit"
-                                  >
-                                    <Pencil size={16} />
-                                  </button>
-                                  <button
-                                    onClick={() => confirmDelete(task)}
-                                    className="p-2 text-red-600 hover:bg-red-50 rounded-sm transition-colors"
-                                    title="Delete"
-                                  >
-                                    <Trash2 size={16} />
-                                  </button>
-                                </div>
-
+                          <div className="space-y-6">
+                            <div className="flex items-start justify-between">
+                              <div className="flex items-center gap-3">
+                                <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${task.priority === 'high' ? 'bg-red-50 text-red-600' :
+                                  task.priority === 'medium' ? 'bg-orange-50 text-orange-600' :
+                                    'bg-green-50 text-green-600'
+                                  }`}>
+                                  {task.priority || 'Medium'}
+                                </span>
+                                <span className="bg-gray-50 text-gray-500 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border border-gray-100">
+                                  {task.category || 'General'}
+                                </span>
                               </div>
+                              <div className="flex items-center gap-1">
+                                <button
+                                  onClick={() => handleEdit(task)}
+                                  className="p-2 text-orange-600 hover:bg-orange-50 rounded-sm transition-colors"
+                                >
+                                  <Pencil size={16} />
+                                </button>
+                                <button
+                                  onClick={() => confirmDelete(task)}
+                                  className="p-2 text-red-600 hover:bg-red-50 rounded-sm transition-colors"
+                                >
+                                  <Trash2 size={16} />
+                                </button>
+                              </div>
+                            </div>
 
-                              <h3 className="text-gray-800 font-bold text-lg mb-4 line-clamp-2 leading-tight group-hover:text-orange-600 transition-colors">
+                            <div>
+                              <h3 className="text-lg font-black text-gray-900 leading-tight line-clamp-2 group-hover:text-orange-600 transition-colors">
                                 {task.title}
                               </h3>
+                            </div>
 
-                              <div className="flex flex-wrap items-center gap-3">
-                                <div className="flex items-center gap-2 text-[11px] font-semibold text-gray-500 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
-                                  <Calendar size={14} className="text-orange-500" />
-                                  {new Date(task.due_date).toLocaleDateString()}
+                            <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-gray-50">
+                              <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-1.5 text-[12px] font-black text-gray-500 uppercase tracking-tight bg-gray-100/50 px-2.5 py-1.5 rounded-lg">
+                                  <Calendar size={16} className="text-orange-500" />
+                                  {new Date(task.due_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                                 </div>
-                                <div className="flex items-center gap-2 text-[11px] font-semibold text-gray-500 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
-                                  <Clock size={14} className="text-orange-500" />
+                                <div className="flex items-center gap-1.5 text-[12px] font-black text-gray-500 uppercase tracking-tight bg-gray-100/50 px-2.5 py-1.5 rounded-lg">
+                                  <Clock size={16} className="text-orange-500" />
                                   {task.due_time?.slice(0, 5)}
                                 </div>
                               </div>
+
+                              <button
+                                onClick={() => handleToggleStatus(task.id)}
+                                className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all shadow-lg ${task.priority === 'high' ? 'bg-red-50 text-red-500 hover:bg-red-500 hover:text-white hover:shadow-red-500/20' :
+                                  task.priority === 'medium' ? 'bg-orange-50 text-orange-500 hover:bg-orange-500 hover:text-white hover:shadow-orange-500/20' :
+                                    'bg-green-50 text-green-500 hover:bg-green-500 hover:text-white hover:shadow-green-500/20'
+                                  }`}
+                              >
+                                <Check size={20} className="stroke-[3px]" />
+                              </button>
                             </div>
                           </div>
                         </div>
                       ))}
 
                       {activeTasks.length === 0 && (
-                        <div className="text-center py-10 bg-white rounded-sm border-2 border-dashed border-gray-100">
-                          <CheckCircle className="w-12 h-12 text-gray-200 mx-auto mb-3" />
-                          <p className="text-gray-400 font-medium text-sm italic">All caught up! No active tasks.</p>
+                        <div className="md:col-span-2 text-center py-20 bg-white rounded-3xl border-2 border-dashed border-gray-100">
+                          <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-white shadow-xl">
+                            <CheckCircle className="w-10 h-10 text-green-500" />
+                          </div>
+                          <h3 className="text-lg font-black text-gray-900">Zero Active Tasks</h3>
+                          <p className="text-sm text-gray-400 font-bold max-w-[200px] mx-auto mt-1">You're all caught up! Enjoy your free time.</p>
                         </div>
                       )}
                     </div>
                   </div>
 
-                  {/* Completed Tasks Column */}
+                  {/* Completed Tasks Section */}
                   <div className="space-y-6">
-                    <div className="flex items-center justify-between mb-2">
-                      <h2 className="text-xl font-bold text-gray-800 flex items-center gap-3">
-                        <div className="p-2 bg-green-100 rounded-lg">
-                          <CheckCircle className="text-green-600" size={20} />
+                    <div className="flex items-center justify-between mb-2 px-2">
+                      <div className="flex items-center gap-4">
+                        <div className="p-2.5 bg-green-100 rounded-xl shadow-inner">
+                          <CheckCircle className="text-green-600" size={24} />
                         </div>
-                        Completed
-                        <span className="px-2.5 py-0.5 bg-green-100 text-green-600 text-xs rounded-full font-bold">
-                          {completedTasks.length}
-                        </span>
-                      </h2>
+                        <div>
+                          <h2 className="text-2xl font-black text-gray-900 tracking-tight">Completed</h2>
+                          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-0.5">Successfully finished</p>
+                        </div>
+                      </div>
+                      <span className="px-4 py-1.5 bg-green-600 text-white text-sm rounded-full font-black shadow-lg shadow-green-600/20">
+                        {completedTasks.length}
+                      </span>
                     </div>
 
-                    <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 opacity-70 hover:opacity-100 transition-opacity duration-500">
                       {completedTasks.map((task) => (
                         <div
                           key={task.id}
-                          className="group relative bg-[#FBFBFC] rounded-xl border border-gray-100 p-5 flex items-start gap-4 transition-all duration-300 hover:bg-white hover:shadow-md"
+                          className="group bg-gray-50/50 rounded-3xl border border-gray-100 p-6 transition-all duration-300 relative overflow-hidden flex items-start gap-4 hover:bg-white hover:shadow-xl hover:shadow-green-500/5"
                         >
                           <button
                             onClick={() => handleToggleStatus(task.id)}
-                            className="mt-1 flex-shrink-0 w-6 h-6 rounded-full bg-green-500 flex items-center justify-center text-white shadow-sm shadow-green-200"
+                            className="mt-1 flex-shrink-0 w-8 h-8 rounded-xl bg-green-500 flex items-center justify-center text-white shadow-lg shadow-green-500/20 hover:scale-110 active:scale-95 transition-all"
                           >
-                            <Check size={12} strokeWidth={3} />
+                            <Check size={16} strokeWidth={4} />
                           </button>
 
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between mb-2">
-                              <h3 className="text-base font-bold text-gray-400 line-through truncate">
+                              <h3 className="text-md font-bold text-gray-400 line-through truncate group-hover:text-gray-500 transition-colors">
                                 {task.title}
                               </h3>
                               <button
                                 onClick={() => confirmDelete(task)}
-                                className="text-gray-300 hover:text-red-500 p-1.5 rounded-full hover:bg-red-50 transition-all"
-                              >
+                                className="p-2 text-red-600 hover:bg-red-50 rounded-sm transition-colors"                              >
                                 <Trash2 size={16} />
                               </button>
                             </div>
 
-                            <div className="flex items-center gap-3">
-                              <span className="bg-gray-100 text-gray-400 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border border-gray-100">
+                            <div className="flex flex-wrap items-center gap-4">
+                              <span className="bg-white text-gray-400 px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border border-gray-100 shadow-sm">
                                 {task.category || 'General'}
                               </span>
-                              <div className="flex items-center gap-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                                <Calendar size={12} />
-                                Completed on {new Date(task.updated_at).toLocaleDateString()}
+                              <div className="flex items-center gap-1.5 text-[9px] font-black text-gray-400 uppercase tracking-widest bg-white px-3 py-1 rounded-lg border border-gray-100 shadow-sm">
+                                <Calendar size={12} className="text-green-500/50" />
+                                Done on {new Date(task.updated_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                               </div>
                             </div>
                           </div>
@@ -469,35 +472,52 @@ export default function TodoPage() {
                       ))}
 
                       {completedTasks.length === 0 && (
-                        <div className="text-center py-10 bg-white rounded-sm border-2 border-dashed border-gray-100">
-                          <AlertCircle className="w-12 h-12 text-gray-200 mx-auto mb-3" />
-                          <p className="text-gray-400 font-medium text-sm italic">No completed tasks yet.</p>
+                        <div className="md:col-span-2 text-center py-16 bg-white/50 rounded-3xl border-2 border-dashed border-gray-100">
+                          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <AlertCircle className="w-8 h-8 text-gray-300" />
+                          </div>
+                          <p className="text-sm text-gray-400 font-bold uppercase tracking-widest italic">No completions yet.</p>
                         </div>
                       )}
                     </div>
                   </div>
                 </div>
               ) : (
-                <div className="text-center py-24 bg-white rounded-xl border-2 border-dashed border-gray-100 mt-6 shadow-sm">
-                  <div className="bg-gray-50 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <CheckCircle className="w-12 h-12 text-gray-300" />
+                <div className="text-center py-32 bg-white rounded-[40px] border-2 border-dashed border-gray-100 mt-6 shadow-sm overflow-hidden relative group">
+                  <div className="absolute inset-0 bg-gradient-to-b from-orange-50/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>
+
+                  <div className="relative z-10 text-black">
+                    <div className="bg-gradient-to-br from-orange-50 to-orange-100/50 w-32 h-32 rounded-[32px] flex items-center justify-center mx-auto mb-8 shadow-inner shadow-white border-2 border-white rotate-3 group-hover:rotate-6 transition-transform duration-500">
+                      <CheckCircle className="w-16 h-16 text-orange-500" strokeWidth={1.5} />
+                    </div>
+
+                    <h3 className="text-4xl font-black text-gray-900 mb-4 tracking-tight">
+                      Master Your Day
+                    </h3>
+                    <p className="text-gray-500 max-w-sm mx-auto mb-10 text-lg font-medium leading-relaxed italic">
+                      {searchTerm || filterPriority !== "all" || filterType !== "All"
+                        ? "We couldn't find any tasks matching your filters. Time for a broader view!"
+                        : "Your workspace is pristine. Ready to conquer your next big objective?"}
+                    </p>
+
+                    <div className="flex items-center justify-center gap-4">
+                      {searchTerm || filterPriority !== "all" || filterType !== "All" ? (
+                        <button
+                          onClick={() => { setSearchTerm(""); setFilterPriority("all"); setFilterType("All"); }}
+                          className="px-10 py-4 bg-gray-900 text-white font-black rounded-2xl hover:bg-gray-800 hover:shadow-2xl transition-all active:scale-95 text-sm uppercase tracking-widest"
+                        >
+                          Reset Filters
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => setIsAddModalOpen(true)}
+                          className="px-12 py-4 bg-orange-600 text-white font-black rounded-2xl hover:bg-orange-700 hover:shadow-2xl hover:shadow-orange-600/20 transition-all active:scale-95 text-sm uppercase tracking-widest"
+                        >
+                          Add Your First Task
+                        </button>
+                      )}
+                    </div>
                   </div>
-                  <h3 className="text-2xl font-bold text-gray-800 mb-3">
-                    Your Task List is Empty
-                  </h3>
-                  <p className="text-gray-500 max-w-sm mx-auto mb-8 font-medium">
-                    {searchTerm || filterPriority !== "all" || filterType !== "All"
-                      ? "We couldn't find any tasks matching your filters. Try adjusting them!"
-                      : "Organize your workflow by adding your first task today. Stay productive and track your progress!"}
-                  </p>
-                  {(searchTerm || filterPriority !== "all" || filterType !== "All") && (
-                    <button
-                      onClick={() => { setSearchTerm(""); setFilterPriority("all"); setFilterType("All"); }}
-                      className="px-8 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold rounded-lg hover:shadow-lg transition-all transform hover:scale-105"
-                    >
-                      Clear all filters
-                    </button>
-                  )}
                 </div>
               )}
             </>
@@ -508,31 +528,33 @@ export default function TodoPage() {
           isOpen={isAddModalOpen}
           onClose={() => setIsAddModalOpen(false)}
           headerVariant="orange"
-          title="Add New Task"
-          subtitle="Organize your workflow and stay on track"
-          icon={<Plus size={24} />}
+          title="Create New Task"
+          subtitle="Define your next milestone and stay organized"
+          icon={<Plus size={24} strokeWidth={3} />}
           maxWidth="max-w-2xl"
           footer={
-            <div className="flex justify-end gap-3 w-full">
+            <div className="flex justify-end gap-3 w-full bg-gray-50 py-5 rounded-b-3xl border-t border-gray-100">
               <button
                 onClick={() => setIsAddModalOpen(false)}
-                className="px-6 py-2.5 rounded-sm border-2 border-gray-300 text-gray-700 font-semibold hover:bg-gray-100 transition-all font-primary text-sm"
+                className="px-6 py-2.5 rounded-sm border-2 border-gray-300 text-gray-700 font-semibold hover:bg-gray-100 transition-all font-primary"
               >
                 Cancel
               </button>
               <button
                 onClick={addTask}
-                className="px-6 py-2.5 rounded-sm bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold hover:from-orange-600 hover:to-orange-700 transition-all font-primary text-sm shadow-md"
+                className="px-6 py-2.5 rounded-sm bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold hover:from-orange-600 hover:to-orange-700 transition-all font-primary"
               >
                 Create Task
               </button>
             </div>
           }
         >
-          <div className="space-y-6">
+          <div className="space-y-6 px-2">
+
+            {/* Task Title */}
             <div>
-              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-                <AlertCircle size={16} className="text-orange-500" />
+              <label className="flex items-center gap-2 text-xs font-black text-gray-400 uppercase tracking-widest mb-2">
+                <AlertCircle size={14} className="text-orange-500" />
                 Task Title <span className="text-red-500">*</span>
               </label>
               <input
@@ -540,142 +562,30 @@ export default function TodoPage() {
                 value={newTask}
                 onChange={(e) => setNewTask(e.target.value)}
                 placeholder="What needs to be done?"
-                className="w-full px-4 py-3 border-2 border-gray-100 rounded-sm focus:border-orange-500 outline-none transition-all text-sm bg-white"
-              />
-            </div>
-
-            <div>
-              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-                <Flag size={16} className="text-orange-500" />
-                Select Priority <span className="text-red-500">*</span>
-              </label>
-              <div className="grid grid-cols-3 gap-3">
-                {["high", "medium", "low"].map((p) => (
-                  <button
-                    key={p}
-                    onClick={() => setNewTaskPriority(p)}
-                    className={`py-3 px-4 rounded-sm font-bold text-xs uppercase tracking-widest border-2 transition-all ${newTaskPriority === p
-                      ? p === 'high' ? 'bg-red-600 border-red-600 text-white shadow-md' :
-                        p === 'medium' ? 'bg-orange-600 border-orange-600 text-white shadow-md' :
-                          'bg-green-600 border-green-600 text-white shadow-md'
-                      : 'bg-white border-gray-100 text-gray-400 hover:border-gray-200'
-                      }`}
-                  >
-                    {p}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-                  <Calendar size={16} className="text-orange-500" />
-                  Due Date <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="date"
-                  value={newTaskDate}
-                  onChange={(e) => setNewTaskDate(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-gray-100 rounded-sm focus:border-orange-500 outline-none transition-all text-sm bg-white"
-                />
-              </div>
-              <div>
-                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-                  <Clock size={16} className="text-orange-500" />
-                  Due Time <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="time"
-                  value={newTaskTime}
-                  onChange={(e) => setNewTaskTime(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-gray-100 rounded-sm focus:border-orange-500 outline-none transition-all text-sm bg-white"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-                <Layout size={16} className="text-orange-500" />
-                Task Category
-              </label>
-              <div className="relative">
-                <select
-                  value={newTaskCategory}
-                  onChange={(e) => setNewTaskCategory(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-gray-100 rounded-sm focus:border-orange-500 outline-none transition-all text-sm bg-white appearance-none cursor-pointer"
-                >
-                  {["General", "Sales", "CRM", "Reports", "Admin", "Marketing", "Support"].map(cat => (
-                    <option key={cat} value={cat}>{cat}</option>
-                  ))}
-                </select>
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                  <MoreVertical size={16} className="text-gray-400 rotate-90" />
-                </div>
-              </div>
-            </div>
-          </div>
-        </Modal>
-
-        {/* Edit modal */}
-        <Modal
-          isOpen={isEditModalOpen}
-          onClose={() => setIsEditModalOpen(false)}
-          headerVariant="orange"
-          title="Edit Task"
-          subtitle="Update task details"
-          icon={<Check size={24} />}
-          maxWidth="max-w-2xl"
-          footer={
-            <div className="flex justify-end gap-3 w-full">
-              <button
-                onClick={() => setIsEditModalOpen(false)}
-                className="px-6 py-2.5 rounded-sm border-2 border-gray-300 text-gray-700 font-semibold hover:bg-gray-100 transition-all text-sm"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleUpdateTask}
-                className="px-6 py-2.5 rounded-sm bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold hover:from-orange-600 hover:to-orange-700 transition-all text-sm shadow-md"
-              >
-                Update Task
-              </button>
-            </div>
-          }
-        >
-          <div className="space-y-6">
-            {/* Title */}
-            <div>
-              <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                <AlertCircle size={16} className="text-orange-500" />
-                Task Title
-              </label>
-              <input
-                value={newTask}
-                onChange={(e) => setNewTask(e.target.value)}
-                className="w-full px-4 py-3 border-2 border-gray-100 rounded-sm focus:border-orange-500 outline-none text-sm"
+                className="w-full px-6 py-4 bg-gray-50 border-2 border-transparent focus:border-orange-500 focus:bg-white rounded-2xl outline-none transition-all text-sm font-bold text-gray-700 placeholder:text-gray-300 shadow-inner"
               />
             </div>
 
             {/* Priority */}
             <div>
-              <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                <Flag size={16} className="text-orange-500" />
-                Priority
+              <label className="flex items-center gap-2 text-xs font-black text-gray-400 uppercase tracking-widest mb-3">
+                <Flag size={14} className="text-orange-500" />
+                Priority <span className="text-red-500">*</span>
               </label>
               <div className="grid grid-cols-3 gap-3">
                 {["high", "medium", "low"].map((p) => (
                   <button
                     key={p}
                     onClick={() => setNewTaskPriority(p)}
-                    className={`py-3 rounded-sm text-xs font-bold uppercase border-2 transition-all
+                    className={`py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all
               ${newTaskPriority === p
                         ? p === "high"
-                          ? "bg-red-600 border-red-600 text-white"
+                          ? "bg-red-500 text-white shadow-lg shadow-red-500/20"
                           : p === "medium"
-                            ? "bg-orange-600 border-orange-600 text-white"
-                            : "bg-green-600 border-green-600 text-white"
-                        : "bg-white border-gray-100 text-gray-400"}
+                            ? "bg-orange-500 text-white shadow-lg shadow-orange-500/20"
+                            : "bg-green-500 text-white shadow-lg shadow-green-500/20"
+                        : "bg-gray-50 text-gray-400 hover:bg-white hover:shadow-sm border border-gray-100"
+                      }
             `}
                   >
                     {p}
@@ -687,47 +597,174 @@ export default function TodoPage() {
             {/* Date & Time */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                  <Calendar size={16} className="text-orange-500" />
-                  Due Date
+                <label className="flex items-center gap-2 text-xs font-black text-gray-400 uppercase tracking-widest mb-2">
+                  <Calendar size={14} className="text-orange-500" />
+                  Due Date <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="date"
                   value={newTaskDate}
                   onChange={(e) => setNewTaskDate(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-gray-100 rounded-sm focus:border-orange-500"
+                  className="w-full px-6 py-4 bg-gray-50 border-2 border-transparent focus:border-orange-500 focus:bg-white rounded-2xl outline-none transition-all text-sm font-bold text-gray-700 shadow-inner"
                 />
               </div>
 
               <div>
-                <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                  <Clock size={16} className="text-orange-500" />
-                  Due Time
+                <label className="flex items-center gap-2 text-xs font-black text-gray-400 uppercase tracking-widest mb-2">
+                  <Clock size={14} className="text-orange-500" />
+                  Due Time <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="time"
                   value={newTaskTime}
                   onChange={(e) => setNewTaskTime(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-gray-100 rounded-sm focus:border-orange-500"
+                  className="w-full px-6 py-4 bg-gray-50 border-2 border-transparent focus:border-orange-500 focus:bg-white rounded-2xl outline-none transition-all text-sm font-bold text-gray-700 shadow-inner"
                 />
               </div>
             </div>
 
             {/* Category */}
             <div>
-              <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                <Layout size={16} className="text-orange-500" />
-                Category
+              <label className="flex items-center gap-2 text-xs font-black text-gray-400 uppercase tracking-widest mb-2">
+                <Layout size={14} className="text-orange-500" />
+                Task Category
               </label>
-              <select
-                value={newTaskCategory}
-                onChange={(e) => setNewTaskCategory(e.target.value)}
-                className="w-full px-4 py-3 border-2 border-gray-100 rounded-sm focus:border-orange-500"
+
+              <div className="relative">
+                <select
+                  value={newTaskCategory}
+                  onChange={(e) => setNewTaskCategory(e.target.value)}
+                  className="w-full px-6 py-4 bg-gray-50 border-2 border-transparent focus:border-orange-500 focus:bg-white rounded-2xl outline-none transition-all text-sm font-bold text-gray-700 appearance-none shadow-inner"
+                >
+                  {["General", "Sales", "CRM", "Reports", "Admin", "Marketing", "Support"].map(
+                    (cat) => (
+                      <option key={cat} value={cat}>
+                        {cat}
+                      </option>
+                    )
+                  )}
+                </select>
+
+                <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                  <MoreVertical size={16} className="rotate-90" />
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </Modal>
+
+
+        {/* Edit modal */}
+        <Modal
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          headerVariant="orange"
+          title="Refine Task"
+          subtitle="Update details to keep your workflow accurate"
+          icon={<Pencil size={24} strokeWidth={3} />}
+          maxWidth="max-w-2xl"
+          footer={
+            <div className="flex justify-end gap-3 w-full bg-gray-50/50 p-4 rounded-b-3xl mt-6 border-t border-gray-100">
+              <button
+                onClick={() => setIsEditModalOpen(false)}
+                className="px-8 py-3 rounded-2xl text-gray-600 font-black hover:bg-white hover:shadow-sm transition-all text-xs uppercase tracking-widest"
               >
-                {["General", "Sales", "CRM", "Reports", "Admin", "Marketing", "Support"].map(cat => (
-                  <option key={cat}>{cat}</option>
+                Cancel
+              </button>
+              <button
+                onClick={handleUpdateTask}
+                className="px-10 py-3 rounded-2xl bg-orange-600 text-white font-black hover:bg-orange-700 hover:shadow-xl hover:shadow-orange-600/20 transition-all text-xs uppercase tracking-widest shadow-lg shadow-orange-600/10 active:scale-95"
+              >
+                Save Changes
+              </button>
+            </div>
+          }
+        >
+          <div className="space-y-8 p-2">
+            <div>
+              <label className="flex items-center gap-2 text-xs font-black text-gray-400 uppercase tracking-widest mb-3">
+                <AlertCircle size={16} className="text-orange-500" />
+                Task Title <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={newTask}
+                onChange={(e) => setNewTask(e.target.value)}
+                placeholder="What needs to be done?"
+                className="w-full px-6 py-4 bg-gray-50 border-2 border-transparent focus:border-orange-500 focus:bg-white rounded-2xl outline-none transition-all text-sm font-bold text-gray-700 placeholder:text-gray-300 shadow-inner"
+              />
+            </div>
+
+            <div>
+              <label className="flex items-center gap-2 text-xs font-black text-gray-400 uppercase tracking-widest mb-3">
+                <Flag size={16} className="text-orange-500" />
+                Select Priority <span className="text-red-500">*</span>
+              </label>
+              <div className="grid grid-cols-3 gap-4">
+                {["high", "medium", "low"].map((p) => (
+                  <button
+                    key={p}
+                    onClick={() => setNewTaskPriority(p)}
+                    className={`py-4 px-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${newTaskPriority === p
+                      ? p === 'high' ? 'bg-red-500 text-white shadow-xl shadow-red-500/20' :
+                        p === 'medium' ? 'bg-orange-500 text-white shadow-xl shadow-orange-500/20' :
+                          'bg-green-500 text-white shadow-xl shadow-green-500/20'
+                      : 'bg-gray-50 text-gray-400 hover:bg-white hover:shadow-sm border border-gray-100'
+                      }`}
+                  >
+                    {p}
+                  </button>
                 ))}
-              </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div>
+                <label className="flex items-center gap-2 text-xs font-black text-gray-400 uppercase tracking-widest mb-3">
+                  <Calendar size={16} className="text-orange-500" />
+                  Due Date <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="date"
+                  value={newTaskDate}
+                  onChange={(e) => setNewTaskDate(e.target.value)}
+                  className="w-full px-6 py-4 bg-gray-50 border-2 border-transparent focus:border-orange-500 focus:bg-white rounded-2xl outline-none transition-all text-sm font-bold text-gray-700 shadow-inner"
+                />
+              </div>
+              <div>
+                <label className="flex items-center gap-2 text-xs font-black text-gray-400 uppercase tracking-widest mb-3">
+                  <Clock size={16} className="text-orange-500" />
+                  Due Time <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="time"
+                  value={newTaskTime}
+                  onChange={(e) => setNewTaskTime(e.target.value)}
+                  className="w-full px-6 py-4 bg-gray-50 border-2 border-transparent focus:border-orange-500 focus:bg-white rounded-2xl outline-none transition-all text-sm font-bold text-gray-700 shadow-inner"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="flex items-center gap-2 text-xs font-black text-gray-400 uppercase tracking-widest mb-3">
+                <Layout size={16} className="text-orange-500" />
+                Task Category
+              </label>
+              <div className="relative group/select">
+                <select
+                  value={newTaskCategory}
+                  onChange={(e) => setNewTaskCategory(e.target.value)}
+                  className="w-full px-6 py-4 bg-gray-50 border-2 border-transparent focus:border-orange-500 focus:bg-white rounded-2xl outline-none transition-all text-sm font-bold text-gray-700 appearance-none shadow-inner"
+                >
+                  {["General", "Sales", "CRM", "Reports", "Admin", "Marketing", "Support"].map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+                <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 group-focus-within/select:text-orange-500 transition-colors">
+                  <MoreVertical size={16} className="rotate-90" />
+                </div>
+              </div>
             </div>
           </div>
         </Modal>
@@ -739,19 +776,25 @@ export default function TodoPage() {
           headerVariant="simple"
           maxWidth="max-w-md"
           footer={
+
             <div className="flex gap-4 w-full">
               <button
                 onClick={() => setIsDeleteModalOpen(false)}
-                className="flex-1 px-6 py-3 border-2 border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-100 transition-all shadow-sm"
+                className="flex-1 px-6 py-3 border-2 border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-100 transition-all"
               >
                 Cancel
               </button>
               <button
                 onClick={handleDeleteTask}
-                className="flex-1 px-6 py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition-all shadow-lg flex items-center justify-center gap-2"
+                disabled={isLoading}
+                className="flex-1 px-6 py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition-all shadow-lg hover:shadow-red-200 flex items-center justify-center gap-2 disabled:opacity-50"
               >
-                <Trash2 size={20} />
-                Delete Now
+                {isLoading ? (
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                ) : (
+                  <Trash2 size={20} />
+                )}
+                {isLoading ? "Deleting..." : "Delete Now"}
               </button>
             </div>
           }
@@ -760,11 +803,19 @@ export default function TodoPage() {
             <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mb-6 animate-bounce">
               <AlertCircle size={48} className="text-red-600" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">Confirm Delete</h2>
+
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">
+              Confirm Delete
+            </h2>
+
             <p className="text-gray-600 mb-2 leading-relaxed">
-              Are you sure you want to delete <span className="font-bold text-gray-800">"{taskToDelete?.title}"</span>?
+              Are you sure you want to delete the designation{" "}
+              <span className="font-bold text-gray-800">"{taskToDelete?.title}"</span>?
             </p>
-            <p className="text-sm text-red-500 italic">This action cannot be undone and will permanently remove all associated data.</p>
+
+            <p className="text-sm text-red-500 italic">
+              This action cannot be undone. All associated data will be permanently removed.
+            </p>
           </div>
         </Modal>
       </div>
