@@ -156,16 +156,19 @@ export default function CatalogCategoryPage() {
                                 <div className="relative" ref={dropdownRef}>
                                     <button
                                         onClick={() => setIsFilterOpen(!isFilterOpen)}
-                                        className={`p-3 rounded-sm border transition shadow-sm ${isFilterOpen || statusFilter !== "All"
+                                        className={`p-3 rounded-sm border transition-all shadow-sm ${isFilterOpen
                                             ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
-                                            : "bg-white text-black border-gray-300 hover:bg-gray-100"
+                                            : "bg-white text-gray-700 border-gray-300 hover:bg-orange-500 hover:text-white hover:border-[#FF7B1D]"
                                             }`}
                                     >
                                         <Filter size={20} />
                                     </button>
 
                                     {isFilterOpen && (
-                                        <div className="absolute left-0 mt-2 w-32 bg-white border border-gray-200 rounded-sm shadow-xl z-50">
+                                        <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-sm shadow-xl z-50 animate-fadeIn">
+                                            <div className="p-2 border-b bg-gray-50">
+                                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Filter by Category</p>
+                                            </div>
                                             <div className="py-1">
                                                 {["All", "Active", "Inactive"].map((status) => (
                                                     <button
@@ -208,7 +211,7 @@ export default function CatalogCategoryPage() {
                                         setShowAddModal(true);
                                     }}
                                     disabled={!create}
-                                    className={`px-6 py-3 rounded-sm hover:shadow-lg transition-all flex items-center gap-2 font-bold shadow-md ${create
+                                    className={`px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm hover:shadow-lg transition-all flex items-center gap-2 font-bold shadow-md ${create
                                         ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white"
                                         : "bg-gray-300 text-gray-500 cursor-not-allowed"
                                         }`}
@@ -222,7 +225,7 @@ export default function CatalogCategoryPage() {
                 </div>
 
                 {/* Info Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     <NumberCard
                         title="Total Categories"
                         number={pagination.total || "0"}

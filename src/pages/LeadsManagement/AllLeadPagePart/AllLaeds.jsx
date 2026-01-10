@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { FiHome, FiGrid } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "../../../components/DashboardLayout";
-import { Download, Upload, Filter, UserPlus, List, Trash2, FileText, Users, CheckCircle, Clock, DollarSign, Workflow, Server, Type, Phone } from "lucide-react";
+import { Download, Upload, Filter, UserPlus, List, Trash2, Users, Server, Type, Phone, Loader2 } from "lucide-react";
 import AddLeadPopup from "../../../components/AddNewLeads/AddNewLead";
 import BulkUploadLeads from "../../../components/AddNewLeads/BulkUpload";
 import FilterPopup from "../../../pages/LeadsManagement/FilterPopup";
@@ -10,6 +10,8 @@ import AssignLeadsModal from "../../../pages/LeadsManagement/AllLeadPagePart/Ass
 import LeadsListView from "../../../pages/LeadsManagement/AllLeadPagePart/LeadsList";
 import LeadsGridView from "../../../pages/LeadsManagement/AllLeadPagePart/LeadsGridView";
 import NumberCard from "../../../components/NumberCard";
+import { useGetLeadsQuery, useDeleteLeadMutation, useUpdateLeadMutation } from "../../../store/api/leadApi";
+import { toast } from "react-hot-toast";
 
 export default function LeadsList() {
   const navigate = useNavigate();
@@ -31,197 +33,71 @@ export default function LeadsList() {
   const itemsPerPage = 7;
   const [showBulkUploadPopup, setShowBulkUploadPopup] = useState(false);
   const [openLeadMenu, setOpenLeadMenu] = useState(false);
+  const [leadToEdit, setLeadToEdit] = useState(null);
 
-  const [leadsData, setLeadsData] = useState([
-    {
-      id: "L001",
-      name: "Linda White",
-      email: "linda@gmail.com",
-      phone: "(193) 7839 748",
-      type: "Person",
-      createdAt: "2025-11-10 10:35 AM",
-      status: "Active",
-      visibility: "Public",
-      tag: "Contacted",
-      value: 3500000,
-      location: "Austin, United States",
-      priority: "High",
-      services: "Consulting",
-      pipeline: "Sales",
-      calls: 5,
-      date: "2025-11-10",
-    },
-    {
-      id: "L002",
-      name: "Emily Johnson",
-      email: "emily@gmail.com",
-      phone: "(179) 7382 829",
-      type: "Person",
-      createdAt: "2025-11-11 12:15 PM",
-      status: "Active",
-      visibility: "Private",
-      tag: "Not Contacted",
-      value: 3500000,
-      location: "Newyork, United States",
-      priority: "Medium",
-      services: "Development",
-      pipeline: "Marketing",
-      calls: 2,
-      date: "2025-11-11",
-    },
-    {
-      id: "L003",
-      name: "John Smith",
-      email: "john@gmail.com",
-      phone: "(123) 4567 890",
-      type: "Person",
-      createdAt: "2025-11-12 09:42 AM",
-      status: "Active",
-      visibility: "Public",
-      tag: "Closed",
-      value: 3200000,
-      location: "Chester, United Kingdom",
-      priority: "Low",
-      services: "Support",
-      pipeline: "Sales",
-      calls: 8,
-      date: "2025-11-12",
-    },
-    {
-      id: "L004",
-      name: "Michael Brown",
-      email: "micael@gmail.com",
-      phone: "(184) 2719 738",
-      type: "Organization",
-      createdAt: "2025-11-12 11:20 AM",
-      status: "Active",
-      visibility: "Public",
-      tag: "Lost",
-      value: 4100000,
-      location: "London, United Kingdom",
-      priority: "High",
-      services: "Consulting",
-      pipeline: "Support",
-      calls: 3,
-      date: "2025-11-12",
-    },
-    {
-      id: "L005",
-      name: "Chris Johnson",
-      email: "chris@gmail.com",
-      phone: "(162) 8920 713",
-      type: "Person",
-      createdAt: "2025-11-13 02:15 PM",
-      status: "Active",
-      visibility: "Private",
-      tag: "Contacted",
-      value: 3500000,
-      location: "Atlanta, United States",
-      priority: "Medium",
-      services: "Development",
-      pipeline: "Sales",
-      calls: 6,
-      date: "2025-11-13",
-    },
-    {
-      id: "L006",
-      name: "Maria Garcia",
-      email: "maria@gmail.com",
-      phone: "(120) 3728 039",
-      type: "Person",
-      createdAt: "2025-11-13 03:45 PM",
-      status: "Active",
-      visibility: "Public",
-      tag: "Not Contacted",
-      value: 4100000,
-      location: "Denver, United States",
-      priority: "High",
-      services: "Consulting",
-      pipeline: "Marketing",
-      calls: 1,
-      date: "2025-11-13",
-    },
-    {
-      id: "L007",
-      name: "David Lee",
-      email: "david@gmail.com",
-      phone: "(183) 9302 890",
-      type: "Person",
-      createdAt: "2025-11-14 09:30 AM",
-      status: "Active",
-      visibility: "Public",
-      tag: "Closed",
-      value: 3100000,
-      location: "Charlotte, United States",
-      priority: "Low",
-      services: "Support",
-      pipeline: "Sales",
-      calls: 4,
-      date: "2025-11-14",
-    },
-    {
-      id: "L008",
-      name: "Karen Davis",
-      email: "darleeo@gmail.com",
-      phone: "(163) 2459 315",
-      type: "Organization",
-      createdAt: "2025-11-14 11:00 AM",
-      status: "Inactive",
-      visibility: "Private",
-      tag: "Lost",
-      value: 4000000,
-      location: "Detroit, United States",
-      priority: "Medium",
-      services: "Development",
-      pipeline: "Support",
-      calls: 7,
-      date: "2025-11-14",
-    },
-  ]);
+  // RTK Query hooks
+  const { data: leadsResponse, isLoading, isError, refetch } = useGetLeadsQuery({
+    page: currentPage,
+    limit: itemsPerPage,
+    search: searchQuery,
+    status: filterStatus,
+    tag: filterTag,
+    type: filterType,
+    priority: filterPriority,
+    services: filterServices,
+    dateFrom: filterDateFrom,
+    dateTo: filterDateTo,
+  });
 
-  const handleLeadClick = (lead) => {
-    navigate(`/crm/leads/profile/:id${lead.id}`, { state: { lead } });
+  const [deleteLead] = useDeleteLeadMutation();
+  const [updateLead] = useUpdateLeadMutation();
+
+  const leadsData = leadsResponse?.leads || [];
+  const totalLeads = leadsResponse?.pagination?.total || 0;
+  const totalPages = leadsResponse?.pagination?.totalPages || 1;
+
+  const handleLeadClick = async (lead) => {
+    if (!lead.is_read) {
+      try {
+        await updateLead({ id: lead.id, data: { is_read: 1 } }).unwrap();
+      } catch (err) {
+        console.error("Failed to mark lead as read", err);
+      }
+    }
+    navigate(`/crm/leads/profile/${lead.id}`, { state: { lead } });
   };
 
   const handleAddLead = () => {
+    setLeadToEdit(null);
+    setIsModalOpen(true);
+  };
+
+  const handleEditLead = (lead) => {
+    setLeadToEdit(lead);
     setIsModalOpen(true);
   };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
+    setLeadToEdit(null);
   };
 
-  const handleAddNewLead = (newLead) => {
-    const newId = `L${String(leadsData.length + 1).padStart(3, "0")}`;
-    const now = new Date();
-    const formattedDate = `${now.getFullYear()}-${String(
-      now.getMonth() + 1
-    ).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")} ${String(
-      now.getHours() % 12 || 12
-    ).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")} ${now.getHours() >= 12 ? "PM" : "AM"
-      }`;
-
-    setLeadsData([
-      ...leadsData,
-      {
-        id: newId,
-        ...newLead,
-        createdAt: formattedDate,
-        calls: 0,
-      },
-    ]);
-  };
-
-  const handleDeleteLead = (id) => {
+  const handleDeleteLead = async (id) => {
     if (window.confirm("Are you sure you want to delete this lead?")) {
-      setLeadsData(leadsData.filter((lead) => lead.id !== id));
-      setSelectedLeads(selectedLeads.filter((leadId) => leadId !== id));
+      try {
+        await deleteLead(id).unwrap();
+        toast.success("Lead deleted successfully");
+        setSelectedLeads(selectedLeads.filter((leadId) => leadId !== id));
+      } catch (error) {
+        toast.error("Failed to delete lead");
+        console.error(error);
+      }
     }
   };
 
-  const handleDeleteSelected = () => {
+  const handleDeleteSelected = async () => {
     if (selectedLeads.length === 0) {
-      alert("Please select leads to delete");
+      toast.error("Please select leads to delete");
       return;
     }
     if (
@@ -229,10 +105,15 @@ export default function LeadsList() {
         `Are you sure you want to delete ${selectedLeads.length} lead(s)?`
       )
     ) {
-      setLeadsData(
-        leadsData.filter((lead) => !selectedLeads.includes(lead.id))
-      );
-      setSelectedLeads([]);
+      // Delete leads sequentially or parallely
+      try {
+        await Promise.all(selectedLeads.map(id => deleteLead(id).unwrap()));
+        toast.success("Selected leads deleted successfully");
+        setSelectedLeads([]);
+      } catch (error) {
+        toast.error("Failed to delete some leads");
+        console.error(error);
+      }
     }
   };
 
@@ -243,16 +124,16 @@ export default function LeadsList() {
   };
 
   const handleSelectAll = () => {
-    if (selectedLeads.length === currentLeads.length) {
+    if (selectedLeads.length === leadsData.length) {
       setSelectedLeads([]);
     } else {
-      setSelectedLeads(currentLeads.map((lead) => lead.id));
+      setSelectedLeads(leadsData.map((lead) => lead.id));
     }
   };
 
   const handleAssignLeads = () => {
     if (selectedLeads.length === 0) {
-      alert("Please select leads to assign");
+      toast.error("Please select leads to assign");
       return;
     }
     setIsAssignModalOpen(true);
@@ -262,7 +143,7 @@ export default function LeadsList() {
     const totalRecipients =
       assignmentData.teams.length + assignmentData.employees.length;
 
-    alert(
+    toast.success(
       `${selectedLeads.length} leads assigned to ${totalRecipients} recipient(s) successfully!`
     );
 
@@ -286,27 +167,23 @@ export default function LeadsList() {
       "Tag",
       "Value",
       "Priority",
-      "Services",
       "Pipeline",
-      "Calls",
     ];
     const csvContent = [
       headers.join(","),
-      ...filteredLeads.map((lead) =>
+      ...leadsData.map((lead) =>
         [
           lead.id,
           `"${lead.name}"`,
-          lead.email,
-          lead.phone,
-          lead.type,
+          lead.email || "",
+          lead.mobile_number || "",
+          lead.type || "",
           `"${lead.createdAt}"`,
-          lead.status,
-          lead.tag,
-          lead.value,
-          lead.priority,
-          lead.services,
-          lead.pipeline,
-          lead.calls,
+          lead.status || "",
+          lead.tag || "",
+          lead.value || "",
+          lead.priority || "",
+          lead.pipeline_name || "",
         ].join(",")
       ),
     ].join("\n");
@@ -320,52 +197,32 @@ export default function LeadsList() {
     window.URL.revokeObjectURL(url);
   };
 
-  const filteredLeads = leadsData.filter((lead) => {
-    const matchesSearch =
-      lead.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      lead.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      lead.phone.includes(searchQuery);
-    const matchesStatus =
-      filterStatus === "All" || lead.status === filterStatus;
-    const matchesTag = filterTag === "All" || lead.tag === filterTag;
-    const matchesType = filterType === "All" || lead.type === filterType;
-    const matchesPriority =
-      filterPriority === "All" || lead.priority === filterPriority;
-    const matchesServices =
-      filterServices === "All" || lead.services === filterServices;
-    return (
-      matchesSearch &&
-      matchesStatus &&
-      matchesTag &&
-      matchesType &&
-      matchesPriority &&
-      matchesServices
-    );
-  });
-
-  const totalPages = Math.ceil(filteredLeads.length / itemsPerPage);
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentLeads = filteredLeads.slice(indexOfFirstItem, indexOfLastItem);
-
   const handlePageChange = (page) => setCurrentPage(page);
   const handlePrev = () =>
     setCurrentPage((prev) => (prev > 1 ? prev - 1 : prev));
   const handleNext = () =>
     setCurrentPage((prev) => (prev < totalPages ? prev + 1 : prev));
 
+  // Dashboard Summary Data (Can be dynamic later)
+  const dashboardStats = {
+    totalLeads: totalLeads || 0,
+    activeLeads: leadsResponse?.summary?.active || 0, // Assuming backend sends summary
+    convertedLeads: leadsResponse?.summary?.converted || 0,
+    lostLeads: leadsResponse?.summary?.lost || 0
+  };
+
   return (
     <DashboardLayout>
-      <div className="p-0 ml-6 bg-gray-0 min-h-screen">
+      <div className="p-0 ml-6 bg-gray-50 min-h-screen">
         {/* Header */}
-        <div className="flex justify-between items-center flex-wrap gap-3 bg-white border-b py-3">
+        <div className="flex justify-between items-center flex-wrap gap-3 bg-white border-b py-3 px-6 shadow-sm">
           <div>
             <h1 className="text-2xl font-bold text-gray-800">
               Leads Management
             </h1>
             <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
               <FiHome className="text-gray-700 text-sm" />
-              <span className="text-gray-400"></span> CRM /{" "}
+              <span className="text-gray-400">/</span> CRM <span className="text-gray-400">/</span>{" "}
               <span className="text-[#FF7B1D] font-medium">All Leads</span>
             </p>
           </div>
@@ -378,9 +235,9 @@ export default function LeadsList() {
                   setFilterStatus(status);
                   setCurrentPage(1);
                 }}
-                className={`px-3 py-2 rounded-sm font-semibold border text-sm transition ${filterStatus === status
+                className={`px-3 py-2 rounded-md font-medium border text-sm transition ${filterStatus === status
                   ? "bg-[#FF7B1D] text-white border-[#FF7B1D]"
-                  : "bg-white text-black border-gray-300 hover:bg-gray-100"
+                  : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
                   }`}
               >
                 {status}
@@ -389,18 +246,18 @@ export default function LeadsList() {
 
             <button
               onClick={() => setIsFilterOpen(true)}
-              className="flex items-center gap-2 bg-white text-black border border-gray-300 px-4 py-2 rounded-sm font-semibold hover:bg-gray-100 transition"
+              className="flex items-center gap-2 bg-white text-gray-700 border border-gray-300 px-4 py-2 rounded-md font-medium hover:bg-gray-50 transition"
             >
               <Filter size={18} />
-              More Filters
+              Filters
             </button>
 
-            <div className="flex border border-gray-300 rounded-sm overflow-hidden ml-2">
+            <div className="flex border border-gray-300 rounded-md overflow-hidden ml-2 bg-white">
               <button
                 onClick={() => setView("list")}
                 className={`p-2 transition ${view === "list"
-                  ? "bg-[#FF7B1D] text-white"
-                  : "bg-white text-black hover:bg-gray-100"
+                  ? "bg-orange-50 text-[#FF7B1D]"
+                  : "text-gray-600 hover:bg-gray-50"
                   }`}
               >
                 <List size={18} />
@@ -409,8 +266,8 @@ export default function LeadsList() {
               <button
                 onClick={() => setView("grid")}
                 className={`p-2 transition border-l border-gray-300 ${view === "grid"
-                  ? "bg-[#FF7B1D] text-white"
-                  : "bg-white text-black hover:bg-gray-100"
+                  ? "bg-orange-50 text-[#FF7B1D]"
+                  : "text-gray-600 hover:bg-gray-50"
                   }`}
               >
                 <FiGrid size={18} />
@@ -419,7 +276,7 @@ export default function LeadsList() {
 
             <button
               onClick={handleExport}
-              className="flex items-center gap-2 bg-white text-black border border-gray-300 px-4 py-2 rounded-sm font-semibold hover:bg-gray-100 transition"
+              className="flex items-center gap-2 bg-white text-gray-700 border border-gray-300 px-4 py-2 rounded-md font-medium hover:bg-gray-50 transition"
             >
               <Download size={18} />
               Export
@@ -428,22 +285,22 @@ export default function LeadsList() {
             <div className="flex flex-col sm:flex-row gap-3 relative">
               <button
                 onClick={() => setOpenLeadMenu(!openLeadMenu)}
-                className="bg-[#F26422] text-white px-6 py-2.5 rounded-sm flex items-center justify-center gap-2 font-semibold hover:bg-[#d95a1f] transition-all shadow-sm hover:shadow-lg"
+                className="bg-[#FF7B1D] text-white px-5 py-2.5 rounded-md flex items-center justify-center gap-2 font-semibold hover:bg-[#e06915] transition-all shadow-md"
               >
                 <UserPlus size={20} /> Add Lead
               </button>
 
               {openLeadMenu && (
-                <div className="absolute top-full left-0 mt-2 w-40 bg-white border shadow-md rounded-sm z-50">
+                <div className="absolute top-full right-0 mt-2 w-48 bg-white border border-gray-200 shadow-xl rounded-lg z-50 overflow-hidden">
                   <button
                     onClick={() => {
                       setOpenLeadMenu(false);
                       handleAddLead();
                     }}
-                    className="w-full flex items-center gap-2 text-left px-4 py-2 hover:bg-gray-100"
+                    className="w-full flex items-center gap-3 text-left px-4 py-3 hover:bg-orange-50 text-gray-700 hover:text-orange-600 transition"
                   >
                     <UserPlus size={16} />
-                    Single Lead
+                    Add Single Lead
                   </button>
 
                   <button
@@ -451,7 +308,7 @@ export default function LeadsList() {
                       setOpenLeadMenu(false);
                       handleBulkUpload();
                     }}
-                    className="w-full flex items-center gap-2 text-left px-4 py-2 hover:bg-gray-100"
+                    className="w-full flex items-center gap-3 text-left px-4 py-3 hover:bg-orange-50 text-gray-700 hover:text-orange-600 transition"
                   >
                     <Upload size={16} />
                     Bulk Upload
@@ -480,57 +337,58 @@ export default function LeadsList() {
           setFilterSubtype={setFilterSubtype}
         />
 
-        {/* Statement Card */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 my-3">
+        {/* Statement Card - Using Static Data for now unless endpoint provides stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 my-6 px-6">
           <NumberCard
-            title="Total Clients"
-            number={"248"}
+            title="Total Leads"
+            number={totalLeads.toString()}
             icon={<Users className="text-blue-600" size={24} />}
             iconBgColor="bg-blue-100"
             lineBorderClass="border-blue-500"
           />
           <NumberCard
-            title="Total Service"
-            number={"186"}
+            title="Active Leads"
+            number={dashboardStats.activeLeads.toString()} // Fallback
             icon={<Server className="text-green-600" size={24} />}
             iconBgColor="bg-green-100"
             lineBorderClass="border-green-500"
           />
+          {/* Placeholder stats */}
           <NumberCard
-            title="Total Type"
-            number={"18"}
+            title="Converted"
+            number={dashboardStats.convertedLeads.toString()}
             icon={<Type className="text-orange-600" size={24} />}
             iconBgColor="bg-orange-100"
             lineBorderClass="border-orange-500"
           />
           <NumberCard
-            title="Total Calls"
-            number={"24"}
+            title="Lost"
+            number={dashboardStats.lostLeads.toString()}
             icon={<Phone className="text-purple-600" size={24} />}
             iconBgColor="bg-purple-100"
             lineBorderClass="border-purple-500"
           />
         </div>
-        
+
         {/* Action Bar with Selection */}
         {selectedLeads.length > 0 && (
-          <div className="bg-orange-500 text-white p-4 rounded-sm mb-4 shadow-sm flex justify-between items-center">
-            <div className="flex items-center gap-4">
-              <span className="font-semibold">
+          <div className="bg-orange-50 border border-orange-200 mx-6 p-4 rounded-lg mb-4 flex justify-between items-center animate-fadeIn">
+            <div className="flex items-center gap-4 text-orange-800">
+              <span className="font-semibold text-lg">
                 {selectedLeads.length} Lead(s) Selected
               </span>
             </div>
             <div className="flex gap-3">
               <button
                 onClick={handleAssignLeads}
-                className="flex items-center gap-2 bg-white text-orange-500 px-4 py-2 rounded-sm font-semibold hover:bg-gray-100 transition"
+                className="flex items-center gap-2 bg-white border border-orange-300 text-orange-600 px-4 py-2 rounded-md font-semibold hover:bg-orange-50 transition"
               >
                 <UserPlus size={18} />
                 Assign Leads
               </button>
               <button
                 onClick={handleDeleteSelected}
-                className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-sm font-semibold hover:bg-red-700 transition"
+                className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-md font-semibold hover:bg-red-700 transition shadow-sm"
               >
                 <Trash2 size={18} />
                 Delete Selected
@@ -539,69 +397,93 @@ export default function LeadsList() {
           </div>
         )}
 
-        {/* List or Grid View */}
-        {view === "list" ? (
-          <LeadsListView
-            currentLeads={currentLeads}
-            selectedLeads={selectedLeads}
-            handleSelectAll={handleSelectAll}
-            handleSelectLead={handleSelectLead}
-            handleLeadClick={handleLeadClick}
-            currentPage={currentPage}
-            itemsPerPage={itemsPerPage}
-          />
-        ) : (
-          <LeadsGridView
-            leadsData={leadsData}
-            filterStatus={filterStatus}
-            handleLeadClick={handleLeadClick}
-            selectedLeads={selectedLeads}
-            handleSelectLead={handleSelectLead}
-          />
-        )}
-
-        {/* Pagination */}
-        {view === "list" && filteredLeads.length > 0 && (
-
-          <div className="flex justify-end items-center gap-3 mt-6">
-            <button
-              onClick={handlePrev}
-              disabled={currentPage === 1}
-              className={`px-4 py-2 rounded-sm text-white font-semibold transition ${currentPage === 1
-                ? "bg-gray-300 cursor-not-allowed"
-                : "bg-[#FF7B1D] hover:opacity-90"
-                }`}
-            >
-              Back
-            </button>
-
-            <div className="flex items-center gap-2">
-              {Array.from({ length: totalPages }, (_, i) => (
-                <button
-                  key={i + 1}
-                  onClick={() => handlePageChange(i + 1)}
-                  className={`px-3 py-1 rounded-sm text-black font-semibold border transition ${currentPage === i + 1
-                    ? "bg-gray-200 border-gray-400"
-                    : "bg-white border-gray-300 hover:bg-gray-100"
-                    }`}
-                >
-                  {i + 1}
-                </button>
-              ))}
+        {/* Content Area */}
+        <div className="px-6 pb-6">
+          {isLoading ? (
+            <div className="flex justify-center items-center h-64">
+              <Loader2 size={40} className="animate-spin text-orange-500" />
             </div>
+          ) : isError ? (
+            <div className="text-center text-red-500 py-10">
+              Failed to load leads. Please try again.
+            </div>
+          ) : leadsData.length === 0 ? (
+            <div className="text-center py-10 bg-white rounded-lg border border-gray-200 shadow-sm">
+              <Users size={48} className="mx-auto text-gray-300 mb-4" />
+              <h3 className="text-xl font-semibold text-gray-700">No Leads Found</h3>
+              <p className="text-gray-500 mt-2">Try adjusting your filters or add a new lead.</p>
+            </div>
+          ) : (
+            <>
+              {/* List or Grid View */}
+              {view === "list" ? (
+                <LeadsListView
+                  currentLeads={leadsData}
+                  selectedLeads={selectedLeads}
+                  handleSelectAll={handleSelectAll}
+                  handleSelectLead={handleSelectLead}
+                  handleLeadClick={handleLeadClick}
+                  currentPage={currentPage}
+                  itemsPerPage={itemsPerPage}
+                  handleDeleteLead={handleDeleteLead}
+                  handleEditLead={handleEditLead}
+                />
+              ) : (
+                <LeadsGridView
+                  leadsData={leadsData}
+                  filterStatus={filterStatus}
+                  handleLeadClick={handleLeadClick}
+                  selectedLeads={selectedLeads}
+                  handleSelectLead={handleSelectLead}
+                />
+              )}
 
-            <button
-              onClick={handleNext}
-              disabled={currentPage === totalPages}
-              className={`px-4 py-2 rounded-sm text-white font-semibold transition ${currentPage === totalPages
-                ? "bg-gray-300 cursor-not-allowed"
-                : "bg-[#22C55E] hover:opacity-90"
-                }`}
-            >
-              Next
-            </button>
-          </div>
-        )}
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex justify-between items-center mt-6 bg-gray-50 p-4 rounded-sm border">
+                  <p className="text-sm text-gray-600">
+                    Showing <span className="font-bold">{((currentPage - 1) * itemsPerPage) + 1}</span> to <span className="font-bold">{Math.min(currentPage * itemsPerPage, totalLeads)}</span> of <span className="font-bold">{totalLeads}</span> leads
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handlePrev}
+                      disabled={currentPage === 1}
+                      className="px-4 py-2 border rounded-sm text-sm font-bold disabled:opacity-50 bg-white hover:bg-gray-50 text-gray-700"
+                    >
+                      Previous
+                    </button>
+
+                    {Array.from({ length: totalPages }, (_, i) => i + 1)
+                      .filter(p => p === 1 || p === totalPages || (p >= currentPage - 1 && p <= currentPage + 1))
+                      .map((p, i, arr) => (
+                        <React.Fragment key={p}>
+                          {i > 0 && arr[i - 1] !== p - 1 && <span className="px-2">...</span>}
+                          <button
+                            onClick={() => handlePageChange(p)}
+                            className={`w-9 h-9 border rounded-sm text-sm font-bold ${currentPage === p
+                              ? "bg-orange-500 text-white border-orange-500"
+                              : "bg-white text-gray-700 hover:bg-gray-50"
+                              }`}
+                          >
+                            {p}
+                          </button>
+                        </React.Fragment>
+                      ))
+                    }
+
+                    <button
+                      onClick={handleNext}
+                      disabled={currentPage === totalPages}
+                      className="px-4 py-2 border rounded-sm text-sm font-bold disabled:opacity-50 bg-white hover:bg-gray-50 text-gray-700"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
 
         {/* Modals */}
         <AssignLeadsModal
@@ -615,7 +497,7 @@ export default function LeadsList() {
           <AddLeadPopup
             isOpen={isModalOpen}
             onClose={handleCloseModal}
-            onAdd={handleAddNewLead}
+            leadToEdit={leadToEdit}
           />
         )}
 

@@ -50,7 +50,10 @@ export default function LeadsGridView({
   };
 
   const formatCurrency = (value) => {
-    const [intPart] = value.toFixed(0).split(".");
+    const num = Number(value);
+    if (isNaN(num)) return "₹0";
+
+    const [intPart] = num.toFixed(0).split(".");
     const lastThree = intPart.substring(intPart.length - 3);
     const otherNumbers = intPart.substring(0, intPart.length - 3);
     const formatted =

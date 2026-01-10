@@ -50,6 +50,12 @@ export default function AttendanceApp() {
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [detailsModal, setDetailsModal] = useState(null);
 
+  // Live Monitoring State for Check-in Grid
+  const [monitoringEmployee, setMonitoringEmployee] = useState(null);
+  const [monitorStream, setMonitorStream] = useState(null);
+  const [monitorType, setMonitorType] = useState(null); // 'camera' or 'mic'
+  const monitorVideoRef = useRef(null);
+
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const [stream, setStream] = useState(null);
@@ -173,8 +179,52 @@ export default function AttendanceApp() {
       alert("Please connect to company WiFi network to check in");
       return;
     }
+    stopLiveMonitoring();
     setSelectedEmployee(employee);
     setShowSelfieCapture(true);
+  };
+
+  const startLiveMonitoring = async (employee, type) => {
+    try {
+      // If already monitoring this employee and type, stop it
+      if (monitoringEmployee?.id === employee.id && monitorType === type) {
+        stopLiveMonitoring();
+        return;
+      }
+
+      // Stop any existing stream first
+      stopLiveMonitoring();
+
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: type === 'camera',
+        audio: true
+      });
+
+      setMonitorStream(stream);
+      setMonitoringEmployee(employee);
+      setMonitorType(type);
+
+      if (type === 'camera' && monitorVideoRef.current) {
+        monitorVideoRef.current.srcObject = stream;
+      }
+
+      toast.success(`Broadcasting live ${type} from ${employee.name}`, {
+        icon: type === 'camera' ? '🎥' : '🎤',
+        duration: 3000
+      });
+    } catch (error) {
+      console.error("Monitoring access error:", error);
+      toast.error(`Unable to access ${type}. Please grant permissions.`);
+    }
+  };
+
+  const stopLiveMonitoring = () => {
+    if (monitorStream) {
+      monitorStream.getTracks().forEach(track => track.stop());
+      setMonitorStream(null);
+    }
+    setMonitoringEmployee(null);
+    setMonitorType(null);
   };
 
   const handleCheckIn = async (employee, selfieData, locationData) => {
@@ -566,53 +616,138 @@ export default function AttendanceApp() {
               {/* Employee List */}
               <div className="bg-white rounded-sm shadow-sm p-6">
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                  Available for Check-In
+                  Check-In <span className="text-orange-500">& Monitoring Terminal</span>
                 </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {attendanceData
-                    .filter((emp) => emp.status === "absent")
-                    .map((employee) => (
-                      <button
-                        key={employee.id}
-                        onClick={() => handleCheckInClick(employee)}
-                        disabled={!isOnCompanyNetwork}
-                        className={`border-2 rounded-sm p-6 text-left  ${isOnCompanyNetwork
-                          ? "border-orange-200 hover:border-orange-500 hover:bg-orange-50 cursor-pointer shadow-md hover:shadow-sm"
-                          : "border-gray-200 bg-gray-50 cursor-not-allowed opacity-50"
-                          }`}
-                      >
-                        <div className="flex items-center gap-4 mb-4">
-                          <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-4 rounded-sm shadow-sm">
-                            <UserCheck className="w-7 h-7 text-white" />
+                    .map((employee) => {
+                      const isCheckedIn = employee.status === 'present' || employee.status === 'late' || employee.status === 'half-day';
+                      const isCheckedOut = employee.check_out && employee.check_out !== '-';
+                      const canMonitor = isCheckedIn && !isCheckedOut;
+
+                      return (
+                        <div
+                          key={employee.id}
+                          className={`border-2 rounded-lg p-6 text-left transition-all duration-300 relative group overflow-hidden ${isOnCompanyNetwork
+                            ? (canMonitor ? "border-green-200 bg-white shadow-md hover:shadow-xl" : "border-gray-100 bg-gray-50/50 shadow-sm")
+                            : "border-gray-200 bg-gray-50 cursor-not-allowed opacity-50"
+                            }`}
+                        >
+                          {/* Live Feed HUD Overlay */}
+                          {monitoringEmployee?.id === employee.id && canMonitor && (
+                            <div className="absolute top-0 left-0 w-full h-1 bg-orange-500 animate-pulse z-20"></div>
+                          )}
+
+                          <div className="flex items-start justify-between mb-4">
+                            <div className="flex items-center gap-4">
+                              <div className="relative">
+                                <div className={`transition-all duration-500 overflow-hidden rounded-xl shadow-lg ${(monitoringEmployee?.id === employee.id && monitorType === 'camera' && canMonitor) ? 'w-32 h-32' : 'w-16 h-16'}`}>
+                                  {monitoringEmployee?.id === employee.id && monitorType === 'camera' && canMonitor ? (
+                                    <video
+                                      ref={monitorVideoRef}
+                                      autoPlay
+                                      playsInline
+                                      className="w-full h-full object-cover scale-x-[-1]"
+                                    />
+                                  ) : (
+                                    <div className={`w-full h-full flex items-center justify-center ${isCheckedIn ? (isCheckedOut ? 'bg-slate-400' : 'bg-green-500') : 'bg-gradient-to-br from-orange-500 to-orange-600'}`}>
+                                      {isCheckedIn ? <CheckCircle className="w-8 h-8 text-white" /> : <UserCheck className="w-8 h-8 text-white" />}
+                                    </div>
+                                  )}
+                                </div>
+                                {monitoringEmployee?.id === employee.id && canMonitor && (
+                                  <div className="absolute -bottom-2 -right-2 bg-red-600 text-white text-[10px] font-black px-2 py-0.5 rounded-full animate-bounce shadow-lg">
+                                    LIVE
+                                  </div>
+                                )}
+                              </div>
+
+                              <div className="flex-1">
+                                <p className="font-extrabold text-gray-900 text-xl tracking-tight leading-tight">
+                                  {employee.name || employee.employee_name}
+                                </p>
+                                <p className="text-sm text-orange-600 font-bold mt-1">
+                                  {employee.employeeId || employee.emp_uid}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="flex flex-col gap-2">
+                              {/* Camera Toggle - Enabled only if Checked In & Not Checked Out */}
+                              <button
+                                onClick={(e) => { e.stopPropagation(); if (canMonitor) startLiveMonitoring(employee, 'camera'); }}
+                                disabled={!canMonitor}
+                                className={`p-2.5 rounded-lg transition-all duration-300 shadow-sm border ${!canMonitor ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed' :
+                                    (monitoringEmployee?.id === employee.id && monitorType === 'camera' ? 'bg-orange-500 text-white border-orange-600 scale-110' : 'bg-gray-50 text-gray-600 border-gray-100 hover:bg-orange-50 hover:text-orange-600 hover:border-orange-200')
+                                  }`}
+                                title={canMonitor ? "Toggle Camera Feed" : "Monitoring disabled (Employee not on duty)"}
+                              >
+                                <Camera className="w-5 h-5" />
+                              </button>
+                              {/* Mic Toggle - Enabled only if Checked In & Not Checked Out */}
+                              <button
+                                onClick={(e) => { e.stopPropagation(); if (canMonitor) startLiveMonitoring(employee, 'mic'); }}
+                                disabled={!canMonitor}
+                                className={`p-2.5 rounded-lg transition-all duration-300 shadow-sm border ${!canMonitor ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed' :
+                                    (monitoringEmployee?.id === employee.id && monitorType === 'mic' ? 'bg-blue-500 text-white border-blue-600 scale-110' : 'bg-gray-50 text-gray-600 border-gray-100 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200')
+                                  }`}
+                                title={canMonitor ? "Toggle Audio Feed" : "Monitoring disabled (Employee not on duty)"}
+                              >
+                                {monitoringEmployee?.id === employee.id && monitorType === 'mic' && canMonitor ? <Activity className="w-5 h-5 animate-pulse" /> : <Mic className="w-5 h-5" />}
+                              </button>
+                            </div>
                           </div>
-                          <div className="flex-1">
-                            <p className="font-bold text-gray-900 text-lg">
-                              {employee.name}
-                            </p>
-                            <p className="text-sm text-gray-600 font-medium">
-                              {employee.employeeId}
-                            </p>
+
+                          <div className="grid grid-cols-2 gap-3 mb-6">
+                            <div className="bg-orange-50/50 rounded-xl px-4 py-3 border border-orange-100/50">
+                              <p className="text-[10px] text-orange-600 font-bold uppercase tracking-wider mb-0.5">Department</p>
+                              <p className="text-sm font-black text-gray-800 truncate">
+                                {employee.department || employee.department_name}
+                              </p>
+                            </div>
+                            <div className={`rounded-xl px-4 py-3 border ${isCheckedIn ? (isCheckedOut ? 'bg-slate-100 border-slate-200' : 'bg-green-50 border-green-100') : 'bg-slate-50 border-slate-100'}`}>
+                              <p className={`text-[10px] font-bold uppercase tracking-wider mb-0.5 ${isCheckedIn ? (isCheckedOut ? 'text-slate-500' : 'text-green-600') : 'text-slate-500'}`}>Status</p>
+                              <p className={`text-sm font-black ${isCheckedIn ? (isCheckedOut ? 'text-slate-700' : 'text-green-700') : 'text-slate-700'}`}>
+                                {isCheckedOut ? "CHECKED OUT" : employee.status.toUpperCase()}
+                              </p>
+                            </div>
                           </div>
+
+                          {!isCheckedIn && (
+                            <button
+                              onClick={() => handleCheckInClick(employee)}
+                              disabled={!isOnCompanyNetwork}
+                              className={`w-full py-4 rounded-xl font-black text-sm uppercase tracking-widest transition-all duration-300 shadow-lg active:scale-95 ${isOnCompanyNetwork
+                                ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:shadow-orange-200 hover:-translate-y-1"
+                                : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                                }`}
+                            >
+                              Check In Now
+                            </button>
+                          )}
+                          {isCheckedIn && !isCheckedOut && (
+                            <div className="w-full py-4 bg-green-100 text-green-700 rounded-xl text-center font-black text-sm uppercase tracking-widest border border-green-200">
+                              Currently On Duty
+                            </div>
+                          )}
+                          {isCheckedOut && (
+                            <div className="w-full py-4 bg-slate-100 text-slate-500 rounded-xl text-center font-black text-sm uppercase tracking-widest border border-slate-200 italic">
+                              Shift Completed
+                            </div>
+                          )}
                         </div>
-                        <div className="bg-orange-50 rounded-sm px-3 py-2">
-                          <p className="text-xs text-orange-600">Department</p>
-                          <p className="text-sm font-bold text-gray-900">
-                            {employee.department}
-                          </p>
-                        </div>
-                      </button>
-                    ))}
+                      );
+                    })}
                 </div>
 
-                {attendanceData.filter((emp) => emp.status === "absent")
-                  .length === 0 && (
-                    <div className="text-center py-12 bg-gradient-to-r from-orange-50 to-orange-100 rounded-sm">
-                      <CheckCircle className="w-16 h-16 text-orange-500 mx-auto mb-4" />
-                      <p className="text-gray-700 font-bold text-xl">
-                        All employees have checked in! 🎉
-                      </p>
-                    </div>
-                  )}
+                {attendanceData.length === 0 && (
+                  <div className="text-center py-12 bg-gradient-to-r from-orange-50 to-orange-100 rounded-sm">
+                    <CheckCircle className="w-16 h-16 text-orange-500 mx-auto mb-4" />
+                    <p className="text-gray-700 font-bold text-xl">
+                      All employees have checked in! 🎉
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           )}

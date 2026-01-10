@@ -55,8 +55,8 @@ const AllEmployee = () => {
     setIsEditModalOpen(true);
   };
 
-  const handleView = (emp) => {
-    navigate(`/employee-profile/${emp.id}`);
+  const handleView = (emp, options = {}) => {
+    navigate(`/employee-profile/${emp.id}`, { state: { monitor: options.monitor, type: options.type } });
   };
 
   const handleDelete = (emp) => {
@@ -217,15 +217,14 @@ const AllEmployee = () => {
             <table className="w-full border-collapse text-center">
               <thead>
                 <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm">
-                  <th className="py-3 px-4 font-semibold">S.N</th>
-                  <th className="py-3 px-4 font-semibold">Profile</th>
+                  <th className="py-3 px-4 font-semibold text-center">S.N</th>
+                  <th className="py-3 px-4 font-semibold text-center">Profile</th>
                   <th className="py-3 px-4 font-semibold text-left">Emp ID</th>
                   <th className="py-3 px-4 font-semibold text-left">Employee Name</th>
                   <th className="py-3 px-4 font-semibold text-left">Department</th>
-                  <th className="py-3 px-4 font-semibold text-left">Designation</th>
-                  <th className="py-3 px-4 font-semibold">Join Date</th>
-                  <th className="py-3 px-4 font-semibold">Status</th>
-                  <th className="py-3 px-4 font-semibold">Action</th>
+                  <th className="py-3 px-4 font-semibold text-left">Profile Status</th>
+                  <th className="py-3 px-4 font-semibold text-center">Status</th>
+                  <th className="py-3 px-4 font-semibold text-center">Action</th>
                 </tr>
               </thead>
               <tbody className="text-sm">
@@ -251,10 +250,36 @@ const AllEmployee = () => {
                       </td>
                       <td className="py-3 px-4 text-left font-medium text-gray-800">{emp.employee_name}</td>
                       <td className="py-3 px-4 text-left">{emp.department_name}</td>
-                      <td className="py-3 px-4 text-left">{emp.designation_name}</td>
-                      <td className="py-3 px-4">{new Date(emp.joining_date).toLocaleDateString()}</td>
+                      <td className="py-3 px-4 text-left min-w-[120px]">
+                        {(() => {
+                          const essentialFields = [
+                            'gender', 'father_name', 'mother_name', 'marital_status',
+                            'permanent_address_l1', 'permanent_city', 'permanent_state', 'permanent_country', 'permanent_pincode',
+                            'aadhar_number', 'pan_number', 'aadhar_front', 'aadhar_back', 'pan_card',
+                            'ifsc_code', 'account_number', 'account_holder_name', 'branch_name'
+                          ];
+                          const completed = essentialFields.filter(f => emp[f] && emp[f] !== 'null' && emp[f] !== '');
+                          const percent = Math.round((completed.length / essentialFields.length) * 100);
+                          return (
+                            <div className="flex flex-col gap-1">
+                              <div className="flex justify-between text-[10px] font-bold">
+                                <span>{percent}%</span>
+                                <span className={percent === 100 ? "text-green-500" : "text-orange-500"}>
+                                  {percent === 100 ? "Complete" : "Pending"}
+                                </span>
+                              </div>
+                              <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                                <div
+                                  className={`h-full rounded-full transition-all duration-700 ${percent === 100 ? "bg-green-500" : "bg-orange-500"}`}
+                                  style={{ width: `${percent}%` }}
+                                ></div>
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </td>
                       <td className="py-3 px-4">
-                        <span className={`px-3 py-1 text-xs font-semibold rounded-full ${getStatusClass(emp.status)}`}>
+                        <span className={`px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full ${getStatusClass(emp.status)}`}>
                           {emp.status}
                         </span>
                       </td>
@@ -335,7 +360,7 @@ const AllEmployee = () => {
           setSelectedEmployee(null);
         }}
         employeeId={selectedEmployee?.id}
-        employeeName={`${selectedEmployee?.first_name} ${selectedEmployee?.last_name}`}
+        employeeName={selectedEmployee?.employee_name}
       />
 
     </DashboardLayout>

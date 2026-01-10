@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
 
 import DashboardLayout from "../../components/DashboardLayout";
 import { Html5QrcodeScanner } from "html5-qrcode";
@@ -58,6 +59,8 @@ export default function EmployeeAttendance() {
   const [activeCheckInMethod, setActiveCheckInMethod] = useState([]);
 
   const user = useSelector((state) => state.auth.user);
+  const [searchParams] = useSearchParams();
+  const urlQrSecret = searchParams.get("secret");
   const isEmployee = user?.role === "Employee";
   const employeeId = isEmployee ? user._id : null;
 
@@ -139,6 +142,13 @@ export default function EmployeeAttendance() {
   const myRecords = attendanceResponse?.data || [];
   const myStats = attendanceResponse?.stats || {};
 
+  useEffect(() => {
+    if (urlQrSecret && user && settings && !scannedData) {
+      setScannedData({ secret: urlQrSecret });
+      handleCheckInClick(user, { secret: urlQrSecret });
+    }
+  }, [urlQrSecret, user, settings]);
+
   const stats = useMemo(() => {
     return [
       {
@@ -194,15 +204,16 @@ export default function EmployeeAttendance() {
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "user" },
-        audio: false,
+        audio: true, // Requested both for monitoring
       });
       setStream(mediaStream);
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
       }
+      toast.success("Live Monitoring Active: Camera and Microphone connected", { icon: '🎥' });
     } catch (error) {
-      console.error("Camera access error:", error);
-      alert("Unable to access camera. Please grant camera permissions.");
+      console.error("Camera/Mic access error:", error);
+      toast.error("Unable to access camera or microphone. Both are required for check-in and active monitoring.");
     }
   };
 

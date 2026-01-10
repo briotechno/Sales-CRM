@@ -1,10 +1,10 @@
 import React from "react";
 import {
-  MoreVertical,
-  Check,
+  Trash2,
+  Camera,
+  Mic,
   Eye,
   Pencil,
-  Trash2,
 } from "lucide-react";
 
 /**
@@ -38,92 +38,137 @@ const EmployeeGridView = ({ employees, onEdit, onDelete, onView }) => {
   return (
     <div className="min-h-screen bg-gray-0 p-0 ml-6">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {employees.map((emp) => (
-          <div
-            key={emp.id}
-            className="bg-white border-2 border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all p-6 relative group"
-          >
-            <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-              <button onClick={() => onView(emp)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-sm">
-                <Eye size={16} />
-              </button>
-              <button onClick={() => onEdit(emp)} className="p-1.5 text-orange-600 hover:bg-orange-50 rounded-sm">
-                <Pencil size={16} />
-              </button>
-              <button onClick={() => onDelete(emp)} className="p-1.5 text-red-600 hover:bg-red-50 rounded-sm">
-                <Trash2 size={16} />
-              </button>
-            </div>
+        {employees.map((emp) => {
+          const essentialFields = [
+            'gender', 'father_name', 'mother_name', 'marital_status',
+            'permanent_address_l1', 'permanent_city', 'permanent_state', 'permanent_country', 'permanent_pincode',
+            'aadhar_number', 'pan_number', 'aadhar_front', 'aadhar_back', 'pan_card',
+            'ifsc_code', 'account_number', 'account_holder_name', 'branch_name'
+          ];
+          const completed = essentialFields.filter(f => emp[f] && emp[f] !== 'null' && emp[f] !== '');
+          const percent = Math.round((completed.length / essentialFields.length) * 100);
 
-            <div className="flex flex-col items-center mt-4">
-              <div className="relative">
-                {emp.profile_picture_url ? (
-                  <img
-                    src={emp.profile_picture_url}
-                    alt={emp.employee_name}
-                    className="w-20 h-20 rounded-full border-4 border-gray-100 object-cover"
-                  />
-                ) : (
-                  <div className="w-20 h-20 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-bold text-2xl border-4 border-gray-100">
-                    {emp.employee_name?.substring(0, 1)}
-                  </div>
-                )}
-                <div className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
+          return (
+            <div
+              key={emp.id}
+              className="bg-white border-2 border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all p-6 relative group"
+            >
+              <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                <button
+                  onClick={(e) => { e.stopPropagation(); onView(emp, { monitor: true, type: 'video' }); }}
+                  className="p-1.5 text-orange-600 hover:bg-orange-50 rounded-sm bg-white shadow-sm border border-orange-100"
+                  title="View Camera"
+                >
+                  <Camera size={16} />
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); onView(emp, { monitor: true, type: 'audio' }); }}
+                  className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-sm bg-white shadow-sm border border-blue-100"
+                  title="Listen Audio"
+                >
+                  <Mic size={16} />
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); onView(emp); }}
+                  className="p-1.5 text-gray-600 hover:bg-gray-50 rounded-sm bg-white shadow-sm border border-gray-100"
+                  title="View Profile"
+                >
+                  <Eye size={16} />
+                </button>
+                <button onClick={(e) => { e.stopPropagation(); onEdit(emp); }} className="p-1.5 text-orange-600 hover:bg-orange-50 rounded-sm bg-white shadow-sm border border-orange-100">
+                  <Pencil size={16} />
+                </button>
+                <button onClick={(e) => { e.stopPropagation(); onDelete(emp); }} className="p-1.5 text-red-600 hover:bg-red-50 rounded-sm bg-white shadow-sm border border-red-100">
+                  <Trash2 size={16} />
+                </button>
               </div>
 
-              <h3 className="text-lg font-bold text-gray-800 mt-3 text-center">
-                {emp.employee_name}
-              </h3>
-              <p className="text-sm text-orange-600 font-semibold mt-1">
-                {emp.employee_id}
-              </p>
-              <p
-                className={`text-xs font-semibold px-3 py-1 rounded-full mt-2 ${getDesignationColor(
-                  emp.designation_name
-                )}`}
+              <div
+                className="flex flex-col items-center mt-4 cursor-pointer"
+                onClick={() => onView(emp, { monitor: true })}
               >
-                {emp.designation_name || "N/A"}
-              </p>
-              <p className="text-xs text-gray-500 mt-1 uppercase tracking-wider font-medium">
-                {emp.department_name || "N/A"}
-              </p>
-            </div>
+                <div className="relative">
+                  {emp.profile_picture_url ? (
+                    <img
+                      src={emp.profile_picture_url}
+                      alt={emp.employee_name}
+                      className="w-20 h-20 rounded-full border-4 border-gray-100 object-cover"
+                    />
+                  ) : (
+                    <div className="w-20 h-20 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-bold text-2xl border-4 border-gray-100">
+                      {emp.employee_name?.substring(0, 1)}
+                    </div>
+                  )}
+                  <div className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
+                </div>
 
-            <div className="flex justify-between items-center mt-6 text-center border-t pt-4">
-              <div>
-                <p className="text-[10px] text-gray-500 uppercase">Projects</p>
-                <p className="text-sm font-bold text-gray-800">20</p>
+                <h3 className="text-lg font-bold text-gray-800 mt-3 text-center">
+                  {emp.employee_name}
+                </h3>
+                <p className="text-sm text-orange-600 font-semibold mt-1">
+                  {emp.employee_id}
+                </p>
+                <p
+                  className={`text-xs font-semibold px-3 py-1 rounded-full mt-2 ${getDesignationColor(
+                    emp.designation_name
+                  )}`}
+                >
+                  {emp.designation_name || "N/A"}
+                </p>
+                <p className="text-xs text-gray-500 mt-1 uppercase tracking-wider font-medium">
+                  {emp.department_name || "N/A"}
+                </p>
               </div>
-              <div>
-                <p className="text-[10px] text-gray-500 uppercase">Tasks</p>
-                <p className="text-sm font-bold text-gray-800">13</p>
-              </div>
-              <div>
-                <p className="text-[10px] text-gray-500 uppercase">Gender</p>
-                <p className="text-sm font-bold text-gray-800">{emp.gender}</p>
-              </div>
-            </div>
 
-            <div className="mt-6">
-              <div className="flex justify-between items-center mb-2">
-                <p className="text-xs text-gray-600 font-medium">
-                  Productivity
-                </p>
-                <p className="text-xs font-bold text-gray-800">
-                  {65}%
-                </p>
+              <div className="flex justify-between items-center mt-6 text-center border-t pt-4">
+                <div>
+                  <p className="text-[10px] text-gray-500 uppercase">Projects</p>
+                  <p className="text-sm font-bold text-gray-800">20</p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-gray-500 uppercase">Tasks</p>
+                  <p className="text-sm font-bold text-gray-800">13</p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-gray-500 uppercase">Gender</p>
+                  <p className="text-sm font-bold text-gray-800">{emp.gender}</p>
+                </div>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-1.5">
-                <div
-                  className={`h-1.5 rounded-full ${getProductivityColor(65)}`}
-                  style={{ width: `${65}%` }}
-                ></div>
+
+              <div className="mt-4 pt-4 border-t border-gray-100 flex flex-col gap-4">
+                <div>
+                  <div className="flex justify-between items-center mb-1.5">
+                    <p className="text-[10px] text-gray-500 uppercase font-black">Profile Completion</p>
+                    <p className={`text-[10px] font-black ${percent === 100 ? "text-green-600" : "text-orange-600"}`}>
+                      {percent}%
+                    </p>
+                  </div>
+                  <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all duration-700 ${percent === 100 ? "bg-green-500" : "bg-orange-500"}`}
+                      style={{ width: `${percent}%` }}
+                    ></div>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex justify-between items-center mb-1.5">
+                    <p className="text-[10px] text-gray-500 uppercase font-black">Productivity</p>
+                    <p className="text-[10px] font-black text-gray-800">65%</p>
+                  </div>
+                  <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                    <div
+                      className={`h-full rounded-full ${getProductivityColor(65)}`}
+                      style={{ width: `${65}%` }}
+                    ></div>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
-    </div>
+    </div >
   );
 };
 

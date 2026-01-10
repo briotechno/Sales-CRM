@@ -7,7 +7,11 @@ const Employee = {
             father_name, mother_name, marital_status, joining_date,
             department_id, designation_id, employee_type, work_type,
             mobile_number, alternate_mobile_number, email,
+            work_email, work_mobile_number, linkedin_url, skype_id,
             permanent_address, correspondence_address,
+            permanent_address_l1, permanent_address_l2, permanent_address_l3,
+            permanent_city, permanent_state, permanent_country, permanent_pincode,
+            correspondence_city,
             emergency_contact_person, emergency_contact_number,
             blood_group, languages, aadhar_number, pan_number,
             aadhar_front, aadhar_back, pan_card,
@@ -31,19 +35,27 @@ const Employee = {
                 father_name, mother_name, marital_status, joining_date,
                 department_id, designation_id, employee_type, work_type,
                 mobile_number, alternate_mobile_number, email,
+                work_email, work_mobile_number, linkedin_url, skype_id,
                 permanent_address, correspondence_address,
+                permanent_address_l1, permanent_address_l2, permanent_address_l3,
+                permanent_city, permanent_state, permanent_country, permanent_pincode,
+                correspondence_city,
                 emergency_contact_person, emergency_contact_number,
                 blood_group, languages, aadhar_number, pan_number,
                 aadhar_front, aadhar_back, pan_card,
                 ifsc_code, account_number, account_holder_name, branch_name,
                 cancelled_cheque, username, password, status, user_id, permissions
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 newId, employee_name, profile_picture, date_of_birth, age, gender,
                 father_name, mother_name, marital_status, joining_date,
                 department_id, designation_id, employee_type, work_type,
                 mobile_number, alternate_mobile_number, email,
+                work_email, work_mobile_number, linkedin_url, skype_id,
                 permanent_address, correspondence_address,
+                permanent_address_l1, permanent_address_l2, permanent_address_l3,
+                permanent_city, permanent_state, permanent_country, permanent_pincode,
+                correspondence_city,
                 emergency_contact_person, emergency_contact_number,
                 blood_group, languages, aadhar_number, pan_number,
                 aadhar_front, aadhar_back, pan_card,
@@ -116,10 +128,15 @@ const Employee = {
     },
 
     update: async (id, data, userId) => {
-        const fields = Object.keys(data).filter(key => key !== 'id' && key !== 'employee_id' && key !== 'user_id');
+        const payload = data || {};
+        const forbiddenFields = [
+            'id', 'employee_id', 'user_id', 'department_name', 'department_uid', 'designation_name', 'designation_uid',
+            'employeeId', 'joiningDate', 'firstName', 'lastName', 'createdAt', 'updatedAt', 'permissions'
+        ];
+        const fields = Object.keys(payload).filter(key => !forbiddenFields.includes(key));
         const setClause = fields.map(field => `${field} = ?`).join(', ');
         const values = fields.map(field => {
-            const val = data[field];
+            const val = payload[field];
             return (typeof val === 'object' && val !== null) ? JSON.stringify(val) : val;
         });
 

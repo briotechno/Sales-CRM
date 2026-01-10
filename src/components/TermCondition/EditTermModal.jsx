@@ -94,8 +94,8 @@ const EditTermModal = ({ isOpen, onClose, term, onSubmit, loading }) => {
           >
             <option value="">Select Department</option>
             {departments.map((dept) => (
-              <option key={dept.id} value={dept.name}>
-                {dept.name}
+              <option key={dept.id} value={dept.department_name}>
+                {dept.department_name}
               </option>
             ))}
           </select>
@@ -115,8 +115,8 @@ const EditTermModal = ({ isOpen, onClose, term, onSubmit, loading }) => {
           >
             <option value="">Select Designation</option>
             {designations.map((dsg) => (
-              <option key={dsg.id} value={dsg.name}>
-                {dsg.name}
+              <option key={dsg.id} value={dsg.designation_name}>
+                {dsg.designation_name}
               </option>
             ))}
           </select>

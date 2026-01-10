@@ -53,6 +53,9 @@ app.use('/api/announcement-categories', require('./routes/announcementCategoryRo
 app.use('/api/attendance', require('./routes/attendanceRoutes'));
 app.use('/api/clients', require('./routes/clientRoutes'));
 app.use('/api/invoices', require('./routes/invoiceRoutes'));
+app.use('/api', require('./routes/pipelineRoutes'));
+app.use('/api/leads', require('./routes/leadRoutes'));
+app.use('/api/stages', require('./routes/stageRoutes'));
 
 
 

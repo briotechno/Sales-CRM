@@ -22,6 +22,7 @@ import CreateCallLogModal from "./components/LeadManagement/LeadPipLineStatus/Cr
 
 //pipline management part
 import ManagePipline from "./pages/PipelineManagement/ManagePipline";
+import ManageStage from "./pages/PipelineManagement/ManageStage";
 import Analytics from "./pages/PipelineManagement/Analytics";
 // Department part
 import AllDepartment from "./pages/DepartmentPart/AllDepartment";
@@ -143,6 +144,7 @@ function App() {
           />
           <Route path="/crm/champions/lead" element={<Lead />} />
           <Route path="/crm/pipeline/manage" element={<ManagePipline />} />
+          <Route path="/crm/pipeline/stages" element={<ManageStage />} />
           <Route path="/crm/pipeline/analytics" element={<Analytics />} />
           <Route path="/hrm/dashboard" element={<HrmDashboard />} />
           <Route path="/hrm/department" element={<AllDepartment />} />

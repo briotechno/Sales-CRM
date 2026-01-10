@@ -23,13 +23,22 @@ const storage = multer.diskStorage({
 
 const upload = multer({
     storage,
-    limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
+    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+    fileFilter: (req, file, cb) => {
+        const allowedTypes = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.txt'];
+        const ext = path.extname(file.originalname).toLowerCase();
+        if (allowedTypes.includes(ext)) {
+            cb(null, true);
+        } else {
+            cb(new Error('Only documents (PDF, DOC, DOCX, XLS, XLSX, TXT) are allowed'));
+        }
+    }
 });
 
-router.post('/', protect, upload.single('document'), hrPolicyController.createPolicy);
+router.post('/', protect, upload.array('documents', 10), hrPolicyController.createPolicy);
 router.get('/', protect, hrPolicyController.getAllPolicies);
 router.get('/:id', protect, hrPolicyController.getPolicyById);
-router.put('/:id', protect, upload.single('document'), hrPolicyController.updatePolicy);
+router.put('/:id', protect, upload.array('documents', 10), hrPolicyController.updatePolicy);
 router.delete('/:id', protect, hrPolicyController.deletePolicy);
 
 module.exports = router;

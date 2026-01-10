@@ -54,30 +54,79 @@ const ViewTeamModal = ({ isOpen, onClose, teamId }) => {
                             </div>
 
                             <div>
-                                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                                    Team Members ({team.members?.length || 0})
+                                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-6">
+                                    Team Organizational Hierarchy
                                 </p>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    {team.members && team.members.length > 0 ? (
-                                        team.members.map((member) => (
-                                            <div key={member.id} className="flex items-center gap-3 p-3 bg-gray-50 border border-gray-100 rounded-sm">
-                                                <div className="h-10 w-10 flex items-center justify-center bg-orange-100 text-orange-600 rounded-full font-bold overflow-hidden">
-                                                    {member.profile_picture ? (
-                                                        <img src={`http://localhost:5000${member.profile_picture}`} alt="" className="w-full h-full object-cover" />
-                                                    ) : (
-                                                        member.employee_name?.charAt(0)
-                                                    )}
+
+                                <div className="space-y-8">
+                                    {Object.entries(
+                                        (team.members || []).reduce((acc, member) => {
+                                            const dept = member.department_name || "General";
+                                            if (!acc[dept]) acc[dept] = {};
+                                            const desig = member.designation_name || "Member";
+                                            if (!acc[dept][desig]) acc[dept][desig] = [];
+                                            acc[dept][desig].push(member);
+                                            return acc;
+                                        }, {})
+                                    ).map(([deptName, designations]) => (
+                                        <div key={deptName} className="relative pl-6 border-l-2 border-orange-100 py-2">
+                                            {/* Department Header */}
+                                            <div className="absolute -left-[9px] top-6 w-4 h-4 rounded-full bg-orange-500 border-4 border-white shadow-sm"></div>
+                                            <div className="flex items-center gap-3 mb-6">
+                                                <div className="bg-orange-600 text-white px-4 py-1.5 rounded-sm text-xs font-black uppercase tracking-widest shadow-md">
+                                                    {deptName}
                                                 </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="text-sm font-bold text-gray-800 truncate">{member.employee_name}</p>
-                                                    <p className="text-xs text-gray-500 truncate">{member.designation_name || "Employee"}</p>
-                                                </div>
+                                                <div className="h-[2px] flex-1 bg-gradient-to-r from-orange-200 to-transparent"></div>
                                             </div>
-                                        ))
-                                    ) : (
-                                        <p className="text-sm text-gray-500 col-span-2 text-center py-4 bg-gray-50 rounded-sm italic">
-                                            No members assigned to this team.
-                                        </p>
+
+                                            {/* Designations Grid */}
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                                {Object.entries(designations).map(([desigName, membersUnderDesig]) => (
+                                                    <div key={desigName} className="space-y-3">
+                                                        <div className="flex items-center gap-2 mb-2">
+                                                            <div className="w-2 h-2 rounded-full bg-blue-400"></div>
+                                                            <span className="text-[10px] font-black text-blue-600 uppercase tracking-tight">{desigName}</span>
+                                                        </div>
+
+                                                        {/* Members under this designation */}
+                                                        <div className="space-y-3 ml-2">
+                                                            {membersUnderDesig.map((member) => (
+                                                                <div key={member.id} className="group flex items-center gap-4 p-3 bg-white border-2 border-slate-100 rounded-xl hover:border-orange-200 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 shadow-sm">
+                                                                    <div className="h-12 w-12 flex-shrink-0 flex items-center justify-center bg-gradient-to-br from-orange-100 to-orange-50 text-orange-600 rounded-xl font-bold overflow-hidden shadow-sm border border-orange-200">
+                                                                        {member.profile_picture ? (
+                                                                            <img
+                                                                                src={`${import.meta.env.VITE_API_BASE_URL.replace('/api/', '')}${member.profile_picture}`}
+                                                                                alt=""
+                                                                                className="w-full h-full object-cover transition-transform group-hover:scale-110"
+                                                                            />
+                                                                        ) : (
+                                                                            <span className="text-lg">{member.employee_name?.charAt(0)}</span>
+                                                                        )}
+                                                                    </div>
+                                                                    <div className="flex-1 min-w-0">
+                                                                        <p className="text-sm font-black text-gray-800 line-clamp-1">{member.employee_name}</p>
+                                                                        <div className="flex items-center gap-2 mt-0.5">
+                                                                            <span className="text-[10px] text-orange-500 font-bold uppercase tracking-tight">
+                                                                                {member.employee_id}
+                                                                            </span>
+                                                                            <span className="text-[10px] text-gray-400">•</span>
+                                                                            <span className="text-[10px] text-slate-400 font-medium tracking-tight">VERIFIED</span>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    ))}
+
+                                    {(!team.members || team.members.length === 0) && (
+                                        <div className="text-center py-12 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
+                                            <Users size={48} className="mx-auto text-slate-300 mb-3" />
+                                            <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">No Structure Defined</p>
+                                        </div>
                                     )}
                                 </div>
                             </div>

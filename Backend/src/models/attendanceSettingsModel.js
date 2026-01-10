@@ -18,7 +18,8 @@ const AttendanceSettings = {
             'officeLatitude', 'officeLongitude', 'geoFenceRadius',
             'breakEnabled', 'breakDuration', 'maxBreaks',
             'deductBreakTime', 'casualLeave', 'sickLeave',
-            'paidLeave', 'unpaidLeave', 'lateArrivalNotification',
+            'paidLeave', 'unpaidLeave', 'maternityLeave', 'paternityLeave',
+            'bereavementLeave', 'marriageLeave', 'lateArrivalNotification',
             'earlyDepartureNotification', 'absentNotification',
             'overtimeNotification', 'emailNotifications',
             'smsNotifications', 'weekendDays', 'publicHolidays', 'overtimeEnabled',
@@ -30,7 +31,8 @@ const AttendanceSettings = {
         const numericFields = [
             'graceTime', 'halfDayMinHours', 'fullDayMinHours', 'lateMarkAfter',
             'geoFenceRadius', 'breakDuration', 'maxBreaks', 'casualLeave',
-            'sickLeave', 'paidLeave', 'unpaidLeave', 'maxOvertimeHours', 'overtimeRate'
+            'sickLeave', 'paidLeave', 'unpaidLeave', 'maternityLeave',
+            'paternityLeave', 'bereavementLeave', 'marriageLeave', 'maxOvertimeHours', 'overtimeRate'
         ];
 
         Object.keys(data).forEach(key => {

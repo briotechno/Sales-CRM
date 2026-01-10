@@ -58,11 +58,12 @@ const DeleteExpenseModal = ({ isOpen, onClose, expenseId }) => {
                 </h2>
 
                 <p className="text-gray-600 mb-2 leading-relaxed">
-                    Are you sure you want to delete this expense?
+                    Are you sure you want to delete the expense{" "}
+                    <span className="font-bold text-gray-800">"{expenseId}"</span>?
                 </p>
 
                 <p className="text-sm text-red-500 italic">
-                    This action cannot be undone.
+                    This action cannot be undone. All associated data will be permanently removed.
                 </p>
             </div>
         </Modal>

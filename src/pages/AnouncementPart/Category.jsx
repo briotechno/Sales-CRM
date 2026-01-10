@@ -73,7 +73,7 @@ export default function AnnouncementCategoryPage() {
             <div className=" ml-6 min-h-screen">
                 {/* Header Section */}
                 <div className="bg-white border-b sticky top-0 z-30">
-                    <div className="max-w-8xl mx-auto px-6 py-4">
+                    <div className="max-w-8xl mx-auto py-4">
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                             <div>
                                 <h1 className="text-2xl font-bold text-gray-800">
@@ -87,23 +87,6 @@ export default function AnnouncementCategoryPage() {
 
                             {/* Right Side: Filter + New Button */}
                             <div className="flex flex-wrap items-center gap-3">
-                                <div className="relative">
-                                    <input
-                                        type="text"
-                                        placeholder="Search..."
-                                        value={searchTerm}
-                                        onChange={(e) => {
-                                            setSearchTerm(e.target.value);
-                                            setCurrentPage(1);
-                                        }}
-                                        className="pl-10 pr-4 py-3 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-[#FF7B1D]/20 focus:border-[#FF7B1D] text-sm w-full md:w-64 transition-all"
-                                    />
-                                    <Search
-                                        className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                                        size={18}
-                                    />
-                                </div>
-
                                 {/* Filter */}
                                 <div className="relative" ref={dropdownRef}>
                                     <button
@@ -138,12 +121,30 @@ export default function AnnouncementCategoryPage() {
                                         </div>
                                     )}
                                 </div>
+
+                                <div className="relative">
+                                    <input
+                                        type="text"
+                                        placeholder="Search..."
+                                        value={searchTerm}
+                                        onChange={(e) => {
+                                            setSearchTerm(e.target.value);
+                                            setCurrentPage(1);
+                                        }}
+                                        className="pl-10 pr-4 py-3 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-[#FF7B1D]/20 focus:border-[#FF7B1D] text-sm w-full md:w-64 transition-all"
+                                    />
+                                    <Search
+                                        className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                                        size={18}
+                                    />
+                                </div>
+
                                 <button
                                     onClick={() => {
                                         setSelectedCategory(null);
                                         setShowAddModal(true);
                                     }}
-                                    className="px-6 py-3 rounded-sm bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 transition-all flex items-center gap-2 font-bold shadow-md hover:shadow-lg text-sm"
+                                    className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm hover:shadow-lg transition-all flex items-center gap-2 font-bold shadow-md"
                                 >
                                     <Plus size={20} />
                                     Add Category
@@ -153,9 +154,9 @@ export default function AnnouncementCategoryPage() {
                     </div>
                 </div>
 
-                <div className="max-w-8xl mx-auto px-6 py-6">
+                <div className="max-w-8xl mx-auto">
                     {/* Info Cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div className="grid grid-cols-1 md:grid-cols-1 gap-4 mb-6">
                         <NumberCard
                             title="Total Categories"
                             number={pagination.total}

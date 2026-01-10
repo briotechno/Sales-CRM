@@ -18,7 +18,8 @@ const EditDepartmentModal = ({ isOpen, onClose, department, refetchDashboard }) 
             setDepartmentName(department.department_name || "");
             setDepartmentDescription(department.description || "");
             setStatus(department.status || "Active");
-            setIconPreview(department.icon || null);
+            const baseUrl = import.meta.env.VITE_API_BASE_URL.replace('/api/', '');
+            setIconPreview(department.icon ? `${baseUrl}${department.icon}` : null);
         }
     }, [department]);
 

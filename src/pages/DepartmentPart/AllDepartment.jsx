@@ -254,10 +254,31 @@ const AllDepartment = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="10" className="py-10 text-gray-500 font-medium">
-                    {isLoading ? "Loading..." : "No departments found."}
+                  <td
+                    colSpan="10"
+                    className="py-12 text-center"
+                  >
+                    {isLoading ? (
+                      <span className="text-gray-500 font-medium">
+                        Loading...
+                      </span>
+                    ) : (
+                      <div className="flex flex-col items-center gap-3">
+                        <p className="text-gray-500 font-medium">
+                          No departments found.
+                        </p>
+
+                        <button
+                          onClick={() => setIsAddModalOpen(true)}
+                          className="px-5 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold rounded-sm shadow hover:shadow-md transition-all"
+                        >
+                          Create first Department
+                        </button>
+                      </div>
+                    )}
                   </td>
                 </tr>
+
               )}
             </tbody>
           </table>

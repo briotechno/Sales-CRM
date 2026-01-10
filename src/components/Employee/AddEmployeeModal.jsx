@@ -24,8 +24,19 @@ const AddEmployeeModal = ({ isOpen, onClose }) => {
     mobile: "",
     altMobile: "",
     email: "",
+    workEmail: "",
+    linkedinUrl: "",
+    skypeId: "",
     permanentAddress: "",
+    permanentAddressLine1: "",
+    permanentAddressLine2: "",
+    permanentAddressLine3: "",
+    permanentCity: "",
+    permanentState: "",
+    permanentCountry: "",
+    permanentPincode: "",
     correspondenceAddress: "",
+    correspondenceCity: "",
     emergencyPerson: "",
     emergencyNumber: "",
     bloodGroup: "",
@@ -70,11 +81,20 @@ const AddEmployeeModal = ({ isOpen, onClose }) => {
         [`${name}Preview`]: file ? URL.createObjectURL(file) : null
       }));
     } else {
+      if (name === "dob") {
+        const age = calculateAge(value);
+        if (value && age < 18) {
+          toast.dismiss();
+          toast.error("Employee must be at least 18 years old");
+          setFormData(prev => ({ ...prev, dob: "", age: "" }));
+          return;
+        }
+        setFormData(prev => ({ ...prev, dob: value, age: age }));
+        return;
+      }
+
       setFormData((prev) => {
         const updated = { ...prev, [name]: value };
-        if (name === "dob") {
-          updated.age = calculateAge(value);
-        }
         // Auto-update employeeName
         if (name === "firstName" || name === "lastName") {
           const fName = name === "firstName" ? value : (prev.firstName || "");
@@ -103,13 +123,18 @@ const AddEmployeeModal = ({ isOpen, onClose }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    console.log(formData);
     // Basic validation
-    if (!formData.employeeName || !formData.email || !formData.mobile) {
-      toast.error("Please fill in required fields");
+    if (!formData.firstName.trim() || !formData.lastName.trim() || !formData.email.trim() || !formData.mobile.trim()) {
+      toast.error("First Name, Last Name, Email and Mobile are required");
       return;
     }
 
     const data = new FormData();
+
+    // Ensure employeeName is correctly synced one last time
+    const fullName = `${formData.firstName.trim()} ${formData.lastName.trim()}`;
+    formData.employeeName = fullName;
 
     // Mapping frontend field names to backend expected names
     const mapping = {
@@ -127,10 +152,21 @@ const AddEmployeeModal = ({ isOpen, onClose }) => {
       employeeType: 'employee_type',
       workType: 'work_type',
       mobile: 'mobile_number',
-      altMobile: 'alternate_mobile_number',
+      altMobile: 'work_mobile_number',
       email: 'email',
+      workEmail: 'work_email',
+      linkedinUrl: 'linkedin_url',
+      skypeId: 'skype_id',
       permanentAddress: 'permanent_address',
+      permanentAddressLine1: 'permanent_address_l1',
+      permanentAddressLine2: 'permanent_address_l2',
+      permanentAddressLine3: 'permanent_address_l3',
+      permanentCity: 'permanent_city',
+      permanentState: 'permanent_state',
+      permanentCountry: 'permanent_country',
+      permanentPincode: 'permanent_pincode',
       correspondenceAddress: 'correspondence_address',
+      correspondenceCity: 'correspondence_city',
       emergencyPerson: 'emergency_contact_person',
       emergencyNumber: 'emergency_contact_number',
       bloodGroup: 'blood_group',
@@ -202,6 +238,7 @@ const AddEmployeeModal = ({ isOpen, onClose }) => {
             handleChange={handleChange}
             handleChanges={handleChanges}
             setFormData={setFormData}
+            mode="basic"
           />
         </div>
 

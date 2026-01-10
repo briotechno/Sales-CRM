@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
+import ProfileCompletionBanner from "./ProfileCompletionBanner";
 
 const DashboardLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -19,6 +20,7 @@ const DashboardLayout = ({ children }) => {
         ${sidebarOpen ? "ml-56" : "ml-0"} 
         md:ml-56`}
       >
+        <ProfileCompletionBanner />
         {children}
       </main>
     </div>

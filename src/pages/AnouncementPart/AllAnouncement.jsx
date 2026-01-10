@@ -100,7 +100,7 @@ export default function AnnouncementPage() {
       <div className=" ml-6 min-h-screen">
         {/* Header */}
         <div className="bg-white border-b sticky top-0 z-30">
-          <div className="max-w-8xl mx-auto px-6 py-4">
+          <div className="max-w-8xl mx-auto py-4">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
                 <h1 className="text-2xl font-bold text-gray-800">
@@ -117,6 +117,54 @@ export default function AnnouncementPage() {
 
               {/* Right Side: Filter + New Button */}
               <div className="flex flex-wrap items-center gap-3">
+                {/* Filter */}
+                <div className="relative" ref={filterDropdownRef}>
+                  <button
+                    onClick={() => setIsFilterOpen(!isFilterOpen)}
+                    className={`p-3 rounded-sm border transition-all shadow-sm ${isFilterOpen || filterCategory !== "All"
+                      ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
+                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
+                      }`}
+                  >
+                    <Filter size={20} />
+                  </button>
+
+                  {isFilterOpen && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-sm shadow-xl z-50">
+                      <div className="py-1 max-h-64 overflow-y-auto custom-scrollbar">
+                        <button
+                          onClick={() => {
+                            setFilterCategory("All");
+                            setIsFilterOpen(false);
+                            setCurrentPage(1);
+                          }}
+                          className={`block w-full text-left px-4 py-2.5 text-sm transition-colors ${filterCategory === "All"
+                            ? "bg-orange-50 text-orange-600 font-bold"
+                            : "text-gray-700 hover:bg-gray-50"
+                            }`}
+                        >
+                          All Categories
+                        </button>
+                        {categories.map((cat) => (
+                          <button
+                            key={cat.id}
+                            onClick={() => {
+                              setFilterCategory(cat.name);
+                              setIsFilterOpen(false);
+                              setCurrentPage(1);
+                            }}
+                            className={`block w-full text-left px-4 py-2.5 text-sm transition-colors ${filterCategory === cat.name
+                              ? "bg-orange-50 text-orange-600 font-bold"
+                              : "text-gray-700 hover:bg-gray-50"
+                              }`}
+                          >
+                            {cat.name}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
                 {/* Search */}
                 <div className="relative">
                   <input
@@ -135,62 +183,13 @@ export default function AnnouncementPage() {
                   />
                 </div>
 
-                {/* Filter */}
-                <div className="relative" ref={filterDropdownRef}>
-                  <button
-                    onClick={() => setIsFilterOpen(!isFilterOpen)}
-                    className={`p-3 rounded-sm border transition-all shadow-sm ${isFilterOpen || filterCategory !== "All"
-                        ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
-                        : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
-                      }`}
-                  >
-                    <Filter size={20} />
-                  </button>
-
-                  {isFilterOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-sm shadow-xl z-50">
-                      <div className="py-1 max-h-64 overflow-y-auto custom-scrollbar">
-                        <button
-                          onClick={() => {
-                            setFilterCategory("All");
-                            setIsFilterOpen(false);
-                            setCurrentPage(1);
-                          }}
-                          className={`block w-full text-left px-4 py-2.5 text-sm transition-colors ${filterCategory === "All"
-                              ? "bg-orange-50 text-orange-600 font-bold"
-                              : "text-gray-700 hover:bg-gray-50"
-                            }`}
-                        >
-                          All Categories
-                        </button>
-                        {categories.map((cat) => (
-                          <button
-                            key={cat.id}
-                            onClick={() => {
-                              setFilterCategory(cat.name);
-                              setIsFilterOpen(false);
-                              setCurrentPage(1);
-                            }}
-                            className={`block w-full text-left px-4 py-2.5 text-sm transition-colors ${filterCategory === cat.name
-                                ? "bg-orange-50 text-orange-600 font-bold"
-                                : "text-gray-700 hover:bg-gray-50"
-                              }`}
-                          >
-                            {cat.name}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
                 {/* New Announcement */}
                 <button
                   onClick={() => {
                     setSelectedAnnouncement(null);
                     setShowAddModal(true);
                   }}
-                  className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-md hover:shadow-lg flex items-center gap-2 font-bold text-sm"
+                  className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm hover:shadow-lg transition-all flex items-center gap-2 font-bold shadow-md"
                 >
                   <Plus size={20} />
                   New Announcement
@@ -306,21 +305,21 @@ export default function AnnouncementPage() {
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => handleView(announcement)}
-                        className="text-gray-400 hover:text-blue-600 bg-white hover:bg-blue-50 p-1.5 rounded-sm border border-transparent hover:border-blue-100 transition-all"
+                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-sm transition-colors"
                         title="Read Details"
                       >
                         <Eye size={16} />
                       </button>
                       <button
                         onClick={() => handleEdit(announcement)}
-                        className="text-gray-400 hover:text-orange-600 bg-white hover:bg-orange-50 p-1.5 rounded-sm border border-transparent hover:border-orange-100 transition-all"
+                        className="p-2 text-orange-600 hover:bg-orange-50 rounded-sm transition-colors"
                         title="Edit"
                       >
                         <Pencil size={16} />
                       </button>
                       <button
                         onClick={() => handleDelete(announcement)}
-                        className="text-gray-400 hover:text-red-500 bg-white hover:bg-red-50 p-1.5 rounded-sm border border-transparent hover:border-red-100 transition-all"
+                        className="p-2 text-red-600 hover:bg-red-50 rounded-sm transition-colors"
                         title="Delete"
                       >
                         <Trash2 size={16} />

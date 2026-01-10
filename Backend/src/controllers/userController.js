@@ -34,14 +34,22 @@ const getUserProfile = async (req, res) => {
 // @access  Private
 const updateUserProfile = async (req, res) => {
     try {
+        const data = { ...(req.body || {}) };
+
+        // Handle file uploads for employees
+        if (req.files) {
+            if (req.files.profile_picture) data.profile_picture = `/uploads/employees/${req.files.profile_picture[0].filename}`;
+            if (req.files.aadhar_front) data.aadhar_front = `/uploads/employees/${req.files.aadhar_front[0].filename}`;
+            if (req.files.aadhar_back) data.aadhar_back = `/uploads/employees/${req.files.aadhar_back[0].filename}`;
+            if (req.files.pan_card) data.pan_card = `/uploads/employees/${req.files.pan_card[0].filename}`;
+            if (req.files.cancelled_cheque) data.cancelled_cheque = `/uploads/employees/${req.files.cancelled_cheque[0].filename}`;
+        }
+
         if (req.user.role === 'Employee') {
             // Employee Update
-            // Check if profile exists
             const employee = await Employee.findById(req.user._id, req.user.id);
             if (employee) {
-                // For now, restrict what employees can update if needed, but here we pass body
-                // Employee.update(id, data, userId)
-                await Employee.update(req.user._id, req.body, req.user.id);
+                await Employee.update(req.user._id, data, req.user.id);
                 const updatedEmployee = await Employee.findById(req.user._id, req.user.id);
                 res.json(updatedEmployee);
             } else {
@@ -52,7 +60,7 @@ const updateUserProfile = async (req, res) => {
             const user = await User.findById(req.user.id);
 
             if (user) {
-                const updated = await User.update(req.user.id, req.body);
+                const updated = await User.update(req.user.id, data);
                 if (updated) {
                     const updatedUser = await User.findById(req.user.id);
                     res.json({
