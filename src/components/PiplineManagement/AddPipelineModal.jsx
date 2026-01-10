@@ -1,237 +1,224 @@
 import React, { useState } from "react";
-import { X, GripVertical, Edit2, Trash2 } from "lucide-react";
+import {
+  X,
+  GripVertical,
+  Edit2,
+  Trash2,
+  Workflow,
+  Layers,
+  FileText,
+} from "lucide-react";
+import { toast } from "react-hot-toast";
+import Modal from "../common/Modal";
 
-export default function AddPipelineModal({ isOpen, onClose }) {
+const AddPipelineModal = ({ isOpen, onClose }) => {
   const [pipelineName, setPipelineName] = useState("");
-
   const [stages, setStages] = useState([
     { name: "Inpipeline", description: "" },
     { name: "Follow Up", description: "" },
     { name: "Schedule Service", description: "" },
   ]);
 
-  // Popup States
-  const [isAddStageOpen, setIsAddStageOpen] = useState(false);
-  const [isEditStageOpen, setIsEditStageOpen] = useState(false);
-  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
-
-  // Stage Form Fields
+  const [isStageModalOpen, setIsStageModalOpen] = useState(false);
+  const [editIndex, setEditIndex] = useState(null);
   const [stageName, setStageName] = useState("");
   const [stageDescription, setStageDescription] = useState("");
-  const [editIndex, setEditIndex] = useState(null);
-  const [deleteIndex, setDeleteIndex] = useState(null);
 
-  if (!isOpen) return null;
-
-  /***********************
-   ADD STAGE
-  ************************/
-  const handleAddStage = () => {
-    if (!stageName.trim()) return;
-
-    setStages([...stages, { name: stageName, description: stageDescription }]);
+  const openAddStage = () => {
+    setEditIndex(null);
     setStageName("");
     setStageDescription("");
-    setIsAddStageOpen(false);
+    setIsStageModalOpen(true);
   };
 
-  /***********************
-   EDIT STAGE
-  ************************/
   const openEditStage = (index) => {
     setEditIndex(index);
     setStageName(stages[index].name);
     setStageDescription(stages[index].description);
-    setIsEditStageOpen(true);
+    setIsStageModalOpen(true);
   };
 
-  const handleUpdateStage = () => {
-    let updated = [...stages];
-    updated[editIndex] = { name: stageName, description: stageDescription };
-    setStages(updated);
+  const saveStage = () => {
+    if (!stageName.trim()) return toast.error("Stage name is required");
 
-    setIsEditStageOpen(false);
-    setStageName("");
-    setStageDescription("");
+    if (editIndex !== null) {
+      const updated = [...stages];
+      updated[editIndex] = { name: stageName, description: stageDescription };
+      setStages(updated);
+    } else {
+      setStages([...stages, { name: stageName, description: stageDescription }]);
+    }
+
+    setIsStageModalOpen(false);
   };
 
-  /***********************
-   DELETE STAGE
-  ************************/
-  const handleDeleteStage = () => {
-    let updated = stages.filter((_, i) => i !== deleteIndex);
-    setStages(updated);
-    setIsDeleteConfirmOpen(false);
+  const deleteStage = (index) => {
+    setStages(stages.filter((_, i) => i !== index));
   };
+
+  const handleAddPipeline = () => {
+    if (!pipelineName.trim())
+      return toast.error("Pipeline name is required");
+
+    if (!stages.length)
+      return toast.error("At least one stage is required");
+
+    toast.success("Pipeline added successfully");
+    onClose();
+  };
+
+  const footer = (
+    <>
+      <button
+        onClick={onClose}
+        className="px-6 py-2.5 rounded-sm border-2 border-gray-300 text-gray-700 font-semibold hover:bg-gray-100 transition-all"
+      >
+        Cancel
+      </button>
+      <button
+        onClick={handleAddPipeline}
+        className="px-6 py-2.5 rounded-sm bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold hover:shadow-lg transition-all"
+      >
+        Add Pipeline
+      </button>
+    </>
+  );
 
   return (
     <>
-      {/* MAIN PIPELINE POPUP */}
-      <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
-        <div className="bg-white rounded-md shadow-md w-full max-w-3xl p-6 relative">
-          <button onClick={onClose} className="absolute top-4 right-4">
-            <X size={22} className="text-gray-500" />
-          </button>
-
-          <h2 className="text-xl font-semibold text-gray-800 mb-6">
-            Add New Pipeline
-          </h2>
-
+      <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+        title="Add Pipeline"
+        subtitle="Create pipeline stages for better lead flow"
+        icon={<Workflow size={24} />}
+        footer={footer}
+      >
+        <div className="space-y-6">
           {/* Pipeline Name */}
-          <label className="font-medium">Pipeline Name *</label>
-          <input
-            className="w-full border rounded-md px-3 py-2 mt-1 mb-5"
-            value={pipelineName}
-            onChange={(e) => setPipelineName(e.target.value)}
-            placeholder="Enter Pipeline Name"
-          />
-
-          {/* Stage Header */}
-          <div className="flex justify-between items-center mb-2">
-            <label className="font-medium">Pipeline Stages *</label>
-
-            <button
-              className="text-orange-500 font-medium"
-              onClick={() => setIsAddStageOpen(true)}
-            >
-              + Add New
-            </button>
+          <div>
+            <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+              <Layers size={16} className="text-[#FF7B1D]" />
+              Pipeline Name <span className="text-red-500">*</span>
+            </label>
+            <input
+              value={pipelineName}
+              onChange={(e) => setPipelineName(e.target.value)}
+              placeholder="e.g. Sales Pipeline"
+              className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D]/20 outline-none transition-all"
+            />
           </div>
 
-          {/* Stages List */}
-          <div className="space-y-3 mb-6">
-            {stages.map((stage, i) => (
-              <div
-                key={i}
-                className="flex justify-between border rounded-md px-4 py-3"
+          {/* Stages */}
+          <div>
+            <div className="flex justify-between items-center mb-3">
+              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                <FileText size={16} className="text-[#FF7B1D]" />
+                Pipeline Stages
+              </label>
+
+              <button
+                onClick={openAddStage}
+                className="text-sm font-semibold text-[#FF7B1D] hover:underline"
               >
-                <div className="flex items-center gap-3">
-                  <GripVertical size={18} className="text-gray-500" />
-                  <div>
-                    <p className="font-medium">{stage.name}</p>
-                    {stage.description && (
-                      <p className="text-sm text-gray-500">
-                        {stage.description}
+                + Add Stage
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              {stages.map((stage, i) => (
+                <div
+                  key={i}
+                  className="flex justify-between items-center border-2 border-gray-200 rounded-lg px-4 py-3 hover:border-orange-300 transition-all"
+                >
+                  <div className="flex gap-3">
+                    <GripVertical
+                      size={18}
+                      className="text-gray-400 mt-1"
+                    />
+                    <div>
+                      <p className="font-semibold text-gray-800">
+                        {stage.name}
                       </p>
-                    )}
+                      {stage.description && (
+                        <p className="text-sm text-gray-500">
+                          {stage.description}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex gap-4">
+                    <Edit2
+                      size={18}
+                      className="text-gray-600 cursor-pointer hover:text-orange-500"
+                      onClick={() => openEditStage(i)}
+                    />
+                    <Trash2
+                      size={18}
+                      className="text-red-500 cursor-pointer"
+                      onClick={() => deleteStage(i)}
+                    />
                   </div>
                 </div>
-
-                <div className="flex items-center gap-4">
-                  <Edit2
-                    size={18}
-                    className="cursor-pointer text-gray-600"
-                    onClick={() => openEditStage(i)}
-                  />
-                  <Trash2
-                    size={18}
-                    className="cursor-pointer text-red-500"
-                    onClick={() => {
-                      setDeleteIndex(i);
-                      setIsDeleteConfirmOpen(true);
-                    }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Footer */}
-          <div className="flex justify-end gap-3">
-            <button
-              className="px-5 py-2 bg-gray-100 rounded-md"
-              onClick={onClose}
-            >
-              Cancel
-            </button>
-
-            <button className="px-5 py-2 bg-[#FF7B1D] text-white rounded-md">
-              Add Pipeline
-            </button>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+      </Modal>
 
-      {/* ADD / EDIT STAGE POPUP — SAME UI */}
-      {(isAddStageOpen || isEditStageOpen) && (
+      {/* ADD / EDIT STAGE MODAL */}
+      {isStageModalOpen && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[60]">
-          <div className="bg-white rounded-md shadow-md w-full max-w-lg p-6 relative">
+          <div className="bg-white rounded-xl shadow-lg w-full max-w-lg p-6 relative">
             <button
-              onClick={() => {
-                setIsAddStageOpen(false);
-                setIsEditStageOpen(false);
-              }}
+              onClick={() => setIsStageModalOpen(false)}
               className="absolute top-4 right-4"
             >
               <X size={22} className="text-gray-500" />
             </button>
 
-            <h3 className="text-lg font-semibold mb-4">
-              {isEditStageOpen ? "Edit Stage" : "Add Stage"}
+            <h3 className="text-lg font-semibold mb-5">
+              {editIndex !== null ? "Edit Stage" : "Add Stage"}
             </h3>
 
-            <label className="font-medium">Stage Name *</label>
-            <input
-              className="w-full border rounded-md px-3 py-2 mt-1 mb-4"
-              value={stageName}
-              onChange={(e) => setStageName(e.target.value)}
-              placeholder="Stage Name"
-            />
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-semibold text-gray-700 mb-1 block">
+                  Stage Name *
+                </label>
+                <input
+                  value={stageName}
+                  onChange={(e) => setStageName(e.target.value)}
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D]/20 outline-none"
+                />
+              </div>
 
-            <label className="font-medium">Description</label>
-            <textarea
-              className="w-full border rounded-md px-3 py-2 mt-1 mb-6"
-              rows={3}
-              value={stageDescription}
-              onChange={(e) => setStageDescription(e.target.value)}
-              placeholder="Description"
-            />
-
-            <div className="flex justify-end gap-3">
-              <button
-                className="px-5 py-2 bg-gray-100 rounded-md"
-                onClick={() => {
-                  setIsAddStageOpen(false);
-                  setIsEditStageOpen(false);
-                }}
-              >
-                Cancel
-              </button>
-
-              <button
-                className="px-5 py-2 bg-[#FF7B1D] text-white rounded-md"
-                onClick={isEditStageOpen ? handleUpdateStage : handleAddStage}
-              >
-                {isEditStageOpen ? "Update Stage" : "Save Stage"}
-              </button>
+              <div>
+                <label className="text-sm font-semibold text-gray-700 mb-1 block">
+                  Description
+                </label>
+                <textarea
+                  rows={3}
+                  value={stageDescription}
+                  onChange={(e) => setStageDescription(e.target.value)}
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg resize-none focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D]/20 outline-none"
+                />
+              </div>
             </div>
-          </div>
-        </div>
-      )}
 
-      {/* DELETE CONFIRM POPUP */}
-      {isDeleteConfirmOpen && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[70]">
-          <div className="bg-white rounded-md shadow-md w-full max-w-sm p-6">
-            <h3 className="text-lg font-semibold mb-4">Confirm Delete</h3>
-
-            <p className="text-gray-600 mb-6">
-              Are you sure you want to delete this stage?
-            </p>
-
-            <div className="flex justify-end gap-3">
+            <div className="flex justify-end gap-3 mt-6">
               <button
+                onClick={() => setIsStageModalOpen(false)}
                 className="px-5 py-2 bg-gray-100 rounded-md"
-                onClick={() => setIsDeleteConfirmOpen(false)}
               >
                 Cancel
               </button>
-
               <button
-                className="px-5 py-2 bg-red-500 text-white rounded-md"
-                onClick={handleDeleteStage}
+                onClick={saveStage}
+                className="px-5 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-md"
               >
-                Delete
+                Save Stage
               </button>
             </div>
           </div>
@@ -239,4 +226,6 @@ export default function AddPipelineModal({ isOpen, onClose }) {
       )}
     </>
   );
-}
+};
+
+export default AddPipelineModal;

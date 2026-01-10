@@ -1,34 +1,37 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { FiHome } from "react-icons/fi";
 import DashboardLayout from "../../components/DashboardLayout";
 import AddPipelineModal from "../../components/PiplineManagement/AddPipelineModal";
 import {
   Download,
   Plus,
-  Edit,
   Trash2,
   X,
   Eye,
-  TrendingUp,
   DollarSign,
-  Calendar,
-  Activity,
-  Type,
-  Server,
   Users,
-  Phone,
-  DollarSignIcon,
   Handshake,
   Target,
+  Pencil,
+  Filter,
 } from "lucide-react";
 import NumberCard from "../../components/NumberCard";
+import EditPipelineModal from "../../components/PiplineManagement/EditPipelineModal";
+import DeletePipelineModal from "../../components/PiplineManagement/DeletePipelineModal";
+import ViewPipelineModal from "../../components/PiplineManagement/ViewPipelineModal";
 
 const PipelineList = () => {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddPipelineOpen, setIsAddPipelineOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [filterStatus, setFilterStatus] = useState("All");
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [isViewOpen, setIsViewOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [selectedPipeline, setSelectedPipeline] = useState(null);
+  const [isStatusFilterOpen, setIsStatusFilterOpen] = useState(false);
+  const statusDropdownRef = useRef(null);
 
   // Pipeline data
   const [pipelines] = useState([
@@ -166,6 +169,20 @@ const PipelineList = () => {
     },
   ]);
 
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (
+        statusDropdownRef.current &&
+        !statusDropdownRef.current.contains(e.target)
+      ) {
+        setIsStatusFilterOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   // Format currency
   const formatCurrency = (value) => {
     return `₹${(value / 1000).toFixed(0)},${(value % 1000)
@@ -178,8 +195,10 @@ const PipelineList = () => {
     const matchesSearch = pipeline.name
       .toLowerCase()
       .includes(searchQuery.toLowerCase());
+
     const matchesStatus =
-      filterStatus === "All" || pipeline.status === filterStatus;
+      filterStatus === "all" || pipeline.status === filterStatus;
+
     return matchesSearch && matchesStatus;
   });
 
@@ -255,21 +274,51 @@ const PipelineList = () => {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            {["All", "Active", "Inactive"].map((status) => (
+            {/* Filter */}
+            <div className="relative" ref={statusDropdownRef}>
               <button
-                key={status}
-                onClick={() => {
-                  setFilterStatus(status);
-                  setCurrentPage(1);
-                }}
-                className={`px-3 py-2 rounded-sm font-semibold border text-sm transition ${filterStatus === status
-                    ? "bg-[#FF7B1D] text-white border-[#FF7B1D]"
+                onClick={() => setIsStatusFilterOpen(!isStatusFilterOpen)}
+                className={`flex items-center gap-2 px-4 py-3 rounded-sm border transition shadow-sm
+      ${isStatusFilterOpen || filterStatus !== "all"
+                    ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
                     : "bg-white text-black border-gray-300 hover:bg-gray-100"
                   }`}
               >
-                {status}
+                <Filter size={20} />
+                <span className="text-sm font-semibold capitalize">
+                  {filterStatus === "all" ? "All Status" : filterStatus}
+                </span>
               </button>
-            ))}
+
+              {isStatusFilterOpen && (
+                <div className="absolute right-0 mt-2 w-44 bg-white border border-gray-200 rounded-sm shadow-xl z-50 animate-fadeIn">
+                  <div className="py-1">
+                    {[
+                      { label: "All", value: "all" },
+                      { label: "Active", value: "Active" },
+                      { label: "Inactive", value: "Inactive" },
+                    ].map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={() => {
+                          setFilterStatus(option.value);
+                          setCurrentPage(1);
+                          setIsStatusFilterOpen(false);
+                        }}
+                        className={`block w-full text-left px-4 py-2.5 text-sm transition-colors
+              ${filterStatus === option.value
+                            ? "bg-orange-50 text-orange-600 font-bold"
+                            : "text-gray-700 hover:bg-gray-50"
+                          }`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
 
             <button
               onClick={handleExport}
@@ -364,8 +413,8 @@ const PipelineList = () => {
                     <td className="py-3 px-4">
                       <span
                         className={`px-3 py-1 text-xs font-semibold rounded-full ${pipeline.status === "Active"
-                            ? "bg-green-100 text-green-600"
-                            : "bg-red-100 text-red-600"
+                          ? "bg-green-100 text-green-600"
+                          : "bg-red-100 text-red-600"
                           }`}
                       >
                         {pipeline.status}
@@ -374,19 +423,30 @@ const PipelineList = () => {
                     <td className="py-3 px-4">
                       <div className="flex justify-center gap-3">
                         <button
-                          onClick={() => console.log("Edit", pipeline.id)}
-                          className="text-[#FF7B1D] hover:opacity-80"
+                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-sm transition-colors"
+                          onClick={() => {
+                            setSelectedPipeline(pipeline);
+                            setIsViewOpen(true);
+                          }}
                         >
-                          <Edit size={18} />
+                          <Eye size={18} />
                         </button>
                         <button
-                          onClick={() => handleDeletePipeline(pipeline.id)}
-                          className="text-red-500 hover:opacity-80"
+                          className="p-2 text-orange-600 hover:bg-orange-50 rounded-sm transition-colors"
+                          onClick={() => {
+                            setSelectedPipeline(pipeline);
+                            setIsEditOpen(true);
+                          }}
                         >
-                          <Trash2 size={18} />
+                          <Pencil size={18} />
                         </button>
-                        <button className="text-[#FF7B1D] hover:opacity-80">
-                          <Eye size={18} />
+                        <button
+                          onClick={() => {
+                            setSelectedPipeline(pipeline);
+                            setIsDeleteOpen(true);
+                          }}
+                          className="p-2 text-red-600 hover:bg-red-50 rounded-sm transition-colors"                        >
+                          <Trash2 size={18} />
                         </button>
                       </div>
                     </td>
@@ -513,6 +573,32 @@ const PipelineList = () => {
         isOpen={isAddPipelineOpen}
         onClose={() => setIsAddPipelineOpen(false)}
       />
+      <ViewPipelineModal
+        isOpen={isViewOpen}
+        pipeline={selectedPipeline}
+        onClose={() => {
+          setIsViewOpen(false);
+          setSelectedPipeline(null);
+        }}
+      />
+      <EditPipelineModal
+        isOpen={isEditOpen}
+        pipeline={selectedPipeline}
+        onClose={() => setIsEditOpen(false)}
+        onUpdate={(data) => console.log("Updated pipeline", data)}
+      />
+      {selectedPipeline && (
+        <DeletePipelineModal
+          isOpen={isDeleteOpen}
+          onClose={() => {
+            setIsDeleteOpen(false);
+            setSelectedPipeline(null);
+          }}
+          pipelineId={selectedPipeline.id}
+          pipelineName={selectedPipeline.name}
+        />
+      )}
+
     </DashboardLayout>
   );
 };
