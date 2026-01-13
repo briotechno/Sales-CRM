@@ -148,7 +148,7 @@ export default function EnterpriseManagement() {
                             {/* ADD */}
                             <button
                                 onClick={() => setIsAddEnterpriseOpen(true)}
-                                className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm flex items-center gap-2 font-bold shadow-md hover:from-orange-600 hover:to-orange-700 transition shadow-md"
+                                className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm flex items-center gap-2 font-bold shadow-md hover:from-orange-600 hover:to-orange-700 transition"
                             >
                                 <Plus size={20} />
                                 Add Enterprise

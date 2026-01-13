@@ -29,6 +29,9 @@ import { pipelineApi } from './api/pipelineApi';
 import { leadApi } from './api/leadApi';
 import { stageApi } from './api/stageApi';
 import { enterpriseApi } from './api/enterpriseApi';
+import { subscriptionApi } from './api/subscriptionApi';
+import { productKeyApi } from './api/productKeyApi';
+import { planApi } from './api/planApi';
 
 
 
@@ -64,6 +67,9 @@ export const store = configureStore({
         [leadApi.reducerPath]: leadApi.reducer,
         [stageApi.reducerPath]: stageApi.reducer,
         [enterpriseApi.reducerPath]: enterpriseApi.reducer,
+        [subscriptionApi.reducerPath]: subscriptionApi.reducer,
+        [productKeyApi.reducerPath]: productKeyApi.reducer,
+        [planApi.reducerPath]: planApi.reducer,
 
 
 
@@ -98,7 +104,10 @@ export const store = configureStore({
             pipelineApi.middleware,
             leadApi.middleware,
             stageApi.middleware,
-            enterpriseApi.middleware
+            enterpriseApi.middleware,
+            subscriptionApi.middleware,
+            productKeyApi.middleware,
+            planApi.middleware
 
 
         ),

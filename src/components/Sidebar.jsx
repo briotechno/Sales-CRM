@@ -32,6 +32,7 @@ import {
   Building2,
   CreditCard,
   KeyRound,
+  Package,
 } from "lucide-react";
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
@@ -183,6 +184,12 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           icon: <CreditCard size={16} />,
           path: "/superadmin/subscriptions",
           permission: "Subscription Management",
+        },
+        {
+          name: "Plan Management",
+          icon: <Package size={22} />,
+          path: "/superadmin/plans",
+          permission: "Plan Management",
         },
         {
           name: "Generate Product Keys",

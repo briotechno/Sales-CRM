@@ -1,26 +1,28 @@
 import React from "react";
-import { Trash2, AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle, Trash2, Loader2 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import Modal from "../common/Modal";
-import { useDeleteProductKeyMutation } from "../../store/api/productKeyApi";
+import { useDeletePlanMutation } from "../../store/api/planApi";
 
-const DeleteProductKeyModal = ({ isOpen, onClose, productKey }) => {
-    const [deleteProductKey, { isLoading }] = useDeleteProductKeyMutation();
+const DeletePlanModal = ({
+    isOpen,
+    onClose,
+    plan,
+}) => {
+    const [deletePlan, { isLoading }] = useDeletePlanMutation();
 
     const handleDelete = async () => {
         try {
-            await deleteProductKey(productKey.id).unwrap();
-            toast.success("Product key deleted successfully");
+            await deletePlan(plan.id).unwrap();
+            toast.success("Plan deleted successfully");
             onClose();
-        } catch (error) {
-            toast.error("Failed to delete product key");
+        } catch (err) {
+            toast.error(err?.data?.message || "Failed to delete plan");
         }
     };
 
-    if (!productKey) return null;
-
     const footer = (
-        <div className="flex gap-4 w-full font-bold">
+        <div className="flex gap-4 w-full font-semibold">
             <button
                 onClick={onClose}
                 disabled={isLoading}
@@ -33,7 +35,11 @@ const DeleteProductKeyModal = ({ isOpen, onClose, productKey }) => {
                 disabled={isLoading}
                 className="flex-1 px-6 py-3 bg-red-600 text-white font-bold rounded-sm hover:bg-red-700 transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50"
             >
-                {isLoading ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
+                {isLoading ? (
+                    <Loader2 size={18} className="animate-spin" />
+                ) : (
+                    <Trash2 size={18} />
+                )}
                 {isLoading ? "Deleting..." : "Delete Now"}
             </button>
         </div>
@@ -57,18 +63,16 @@ const DeleteProductKeyModal = ({ isOpen, onClose, productKey }) => {
                 </h2>
 
                 <p className="text-gray-600 mb-2 leading-relaxed font-semibold px-4">
-                    Are you sure you want to delete the product key for{" "}
-                    <span className="text-red-600">
-                        "{productKey.enterprise}"
-                    </span>?
+                    Are you sure you want to delete the plan{" "}
+                    <span className="text-red-600 font-black italic">"{plan?.name}"</span>?
                 </p>
 
                 <p className="text-sm text-gray-400 font-semibold italic">
-                    This action cannot be undone.
+                    All enterprises currently on this plan might be affected.
                 </p>
             </div>
         </Modal>
     );
 };
 
-export default DeleteProductKeyModal;
+export default DeletePlanModal;

@@ -105,6 +105,7 @@ import EnterpriseManagement from "./pages/SuperAdmin/EnterpriseManagement/Enterp
 import SubscriptionManagement from "./pages/SuperAdmin/SubscriptionManagement/SubscriptionManagement";
 import ProductKeys from "./pages/SuperAdmin/ProductKeys/ProductKeys";
 import PaymentGateways from "./pages/SuperAdmin/PaymentGateways/PaymentGateways";
+import PlanManagement from "./pages/SuperAdmin/PlanManagement/PlanManagement";
 // Header components
 import NotificationPage from "./pages/TopBarComponents/Notification";
 import MailPage from "./pages/TopBarComponents/MailPage";
@@ -197,6 +198,7 @@ function App() {
             <Route path="/superadmin/enterprises" element={<EnterpriseManagement />} />
             <Route path="/superadmin/subscriptions" element={<SubscriptionManagement />} />
             <Route path="/superadmin/productkeys" element={<ProductKeys />} />
+            <Route path="/superadmin/plans" element={<PlanManagement />} />
             <Route path="/superadmin/paymentgateways" element={<PaymentGateways />} />
             <Route path="/superadmin/paymentgateways/Cashfree" element={<Cashfree />} />
             <Route path="/superadmin/paymentgateways/PhonePay" element={<PhonePay />} />

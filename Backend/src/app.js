@@ -57,6 +57,9 @@ app.use('/api', require('./routes/pipelineRoutes'));
 app.use('/api/leads', require('./routes/leadRoutes'));
 app.use('/api/stages', require('./routes/stageRoutes'));
 app.use('/api/enterprises', require('./routes/enterpriseRoutes'));
+app.use('/api/subscriptions', require('./routes/subscriptionRoutes'));
+app.use('/api/product-keys', require('./routes/productKeyRoutes'));
+app.use('/api/plans', require('./routes/planRoutes'));
 
 
 
