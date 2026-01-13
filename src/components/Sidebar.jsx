@@ -29,6 +29,10 @@ import {
   Menu,
   X,
   HelpCircle,
+  Building2,
+  CreditCard,
+  KeyRound,
+  Package,
 } from "lucide-react";
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
@@ -158,6 +162,52 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           path: "/dashboard",
           permission: "Dashboard" // Matches JSON key
         },
+      ],
+    },
+    {
+      section: "Super Admin",
+      items: [
+        {
+          name: "Admin Dashboard",
+          icon: <LayoutDashboard size={22} />,
+          path: "/superadmin/dashboard",
+          permission: "Super Admin Dashboard"
+        },
+        {
+          name: "Enterprise Management",
+          icon: <Building2 size={22} />,
+          path: "/superadmin/enterprises",
+          permission: "Enterprise Management",
+        },
+        {
+          name: "Subscription Management",
+          icon: <CreditCard size={16} />,
+          path: "/superadmin/subscriptions",
+          permission: "Subscription Management",
+        },
+        {
+          name: "Plan Management",
+          icon: <Package size={22} />,
+          path: "/superadmin/plans",
+          permission: "Plan Management",
+        },
+        {
+          name: "Generate Product Keys",
+          icon: <KeyRound size={22} />,
+          path: "/superadmin/productkeys",
+          permission: "Product Key Management",
+        },
+        {
+          name: "Payment Gateways",
+          icon: <Wallet size={22} />,
+          path: "/superadmin/paymentgateways",
+          permission: "Payment Gateway Management",
+          children: [
+            { name: "Cashfree", path: "/superadmin/paymentgateways/cashfree" },
+            { name: "PhonePay", path: "/superadmin/paymentgateways/PhonePay" },
+            { name: "Razorpay", path: "/superadmin/paymentgateways/razorpay" },
+          ],
+        }
       ],
     },
     {
@@ -421,25 +471,36 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
   ];
 
   /* Filtering */
-  const filteredMenuItems = menuItems.map(section => {
-    const filteredItems = section.items
-      .filter(item => {
-        if (item.name === "Logout") return true;
-        if (!item.permission) return true;
-        return checkPermission(item.permission);
-      })
-      .map(item => {
-        if (item.children) {
-          const filteredChildren = item.children.filter(child => {
-            if (!child.permission) return true;
-            return checkPermission(child.permission);
-          });
-          return { ...item, children: filteredChildren.length > 0 ? filteredChildren : undefined };
-        }
-        return item;
-      });
-    return { ...section, items: filteredItems };
-  }).filter(section => section.items.length > 0);
+  const filteredMenuItems = menuItems
+    .filter((section) => {
+      if (section.section === "Super Admin") {
+        return user?.role === "Super Admin";
+      }
+      return true;
+    })
+    .map((section) => {
+      const filteredItems = section.items
+        .filter((item) => {
+          if (item.name === "Logout") return true;
+          if (!item.permission) return true;
+          return checkPermission(item.permission);
+        })
+        .map((item) => {
+          if (item.children) {
+            const filteredChildren = item.children.filter((child) => {
+              if (!child.permission) return true;
+              return checkPermission(child.permission);
+            });
+            return {
+              ...item,
+              children: filteredChildren.length > 0 ? filteredChildren : undefined,
+            };
+          }
+          return item;
+        });
+      return { ...section, items: filteredItems };
+    })
+    .filter((section) => section.items.length > 0);
 
 
   return (

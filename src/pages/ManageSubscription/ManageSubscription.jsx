@@ -193,8 +193,8 @@ const ManageSubscription = () => {
                   <button
                     onClick={() => setBillingCycle("monthly")}
                     className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all duration-300 ${billingCycle === "monthly"
-                        ? "bg-[#FF7B1D] text-white shadow-[0_8px_16px_rgba(255,123,29,0.2)]"
-                        : "text-gray-400 hover:text-gray-600"
+                      ? "bg-[#FF7B1D] text-white shadow-[0_8px_16px_rgba(255,123,29,0.2)]"
+                      : "text-gray-400 hover:text-gray-600"
                       }`}
                   >
                     Monthly
@@ -202,8 +202,8 @@ const ManageSubscription = () => {
                   <button
                     onClick={() => setBillingCycle("yearly")}
                     className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-bold rounded-xl transition-all duration-300 ${billingCycle === "yearly"
-                        ? "bg-[#FF7B1D] text-white shadow-[0_8px_16px_rgba(255,123,29,0.2)]"
-                        : "text-gray-400 hover:text-gray-600"
+                      ? "bg-[#FF7B1D] text-white shadow-[0_8px_16px_rgba(255,123,29,0.2)]"
+                      : "text-gray-400 hover:text-gray-600"
                       }`}
                   >
                     Yearly
@@ -312,12 +312,12 @@ const ManageSubscription = () => {
             <div className="grid lg:grid-cols-3 gap-8 pb-12">
               {plans.map((plan) => (
                 <div key={plan.id} className={`bg-white rounded-[32px] p-8 border-2 transition-all duration-500 group relative ${plan.id === activePlanId
-                    ? "border-orange-500 shadow-2xl shadow-orange-500/10"
-                    : "border-gray-100 hover:border-orange-200 hover:shadow-xl"
+                  ? "border-orange-500 shadow-2xl shadow-orange-500/10"
+                  : "border-gray-100 hover:border-orange-200 hover:shadow-xl"
                   }`}>
                   {plan.popular && (
-                    <div className="absolute top-0 right-10 -translate-y-1/2 flex items-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[2px] shadow-lg">
-                      Popular Choice
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-[2px] shadow-lg whitespace-nowrap">
+                      MOST POPULAR
                     </div>
                   )}
 
@@ -350,8 +350,8 @@ const ManageSubscription = () => {
                     disabled={plan.id === activePlanId}
                     onClick={() => setActivePlanId(plan.id)}
                     className={`w-full py-4 rounded-xl font-black text-sm tracking-wide transition-all duration-300 flex items-center justify-center gap-2 shadow-lg ${plan.id === activePlanId
-                        ? "bg-gray-100 text-gray-400 cursor-default shadow-none"
-                        : "bg-gray-900 text-white hover:bg-black hover:shadow-gray-900/40 active:scale-95 translate-y-0 hover:-translate-y-1"
+                      ? "bg-gray-100 text-gray-400 cursor-default shadow-none"
+                      : "bg-gray-900 text-white hover:bg-black hover:shadow-gray-900/40 active:scale-95 translate-y-0 hover:-translate-y-1"
                       }`}>
                     {plan.id === activePlanId ? "Active Component" : plan.rank > currentPlan.rank ? "Move Up to " + plan.name : "Downgrade"}
                     {plan.id !== activePlanId && (plan.rank > currentPlan.rank ? <MoveUp size={16} /> : <MoveDown size={16} />)}

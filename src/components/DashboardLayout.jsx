@@ -17,8 +17,8 @@ const DashboardLayout = ({ children }) => {
       {/* Main Content */}
       <main
         className={`mt-12 p-4 bg-white min-h-screen transition-all duration-300
-        ${sidebarOpen ? "ml-56" : "ml-0"} 
-        md:ml-56`}
+        ${sidebarOpen ? "ml-64" : "ml-0"} 
+        md:ml-64`}
       >
         <ProfileCompletionBanner />
         {children}

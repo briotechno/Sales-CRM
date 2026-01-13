@@ -95,8 +95,8 @@ export default function Signup() {
       const { confirmPassword, ...signupData } = formData;
       await signup(signupData).unwrap();
 
-      toast.success("Signup successful! Please login.");
-      navigate("/login");
+      toast.success("Signup successful! Please select a subscription plan.");
+      navigate("/packages?signed_up=true");
     } catch (err) {
       toast.error(err?.data?.message || "Signup failed. Please try again.");
     }
@@ -456,8 +456,8 @@ export default function Signup() {
                 </p>
                 <div className="grid grid-cols-1 gap-1.5">
                   <div className={`flex items-center gap-2 p-1.5 rounded-lg border transition-all duration-300 ${formData.password.length >= 8
-                      ? "bg-green-50 border-green-200 text-green-700"
-                      : "bg-white border-gray-100 text-gray-500"
+                    ? "bg-green-50 border-green-200 text-green-700"
+                    : "bg-white border-gray-100 text-gray-500"
                     }`}>
                     <div className={`w-4 h-4 rounded-full flex items-center justify-center transition-all ${formData.password.length >= 8 ? "bg-green-500" : "bg-gray-200"
                       }`}>
@@ -467,8 +467,8 @@ export default function Signup() {
                   </div>
 
                   <div className={`flex items-center gap-2 p-1.5 rounded-lg border transition-all duration-300 ${(/[a-z]/.test(formData.password) && /[A-Z]/.test(formData.password))
-                      ? "bg-green-50 border-green-200 text-green-700"
-                      : "bg-white border-gray-100 text-gray-500"
+                    ? "bg-green-50 border-green-200 text-green-700"
+                    : "bg-white border-gray-100 text-gray-500"
                     }`}>
                     <div className={`w-4 h-4 rounded-full flex items-center justify-center transition-all ${(/[a-z]/.test(formData.password) && /[A-Z]/.test(formData.password)) ? "bg-green-500" : "bg-gray-200"
                       }`}>
@@ -478,8 +478,8 @@ export default function Signup() {
                   </div>
 
                   <div className={`flex items-center gap-2 p-1.5 rounded-lg border transition-all duration-300 ${/\d/.test(formData.password)
-                      ? "bg-green-50 border-green-200 text-green-700"
-                      : "bg-white border-gray-100 text-gray-500"
+                    ? "bg-green-50 border-green-200 text-green-700"
+                    : "bg-white border-gray-100 text-gray-500"
                     }`}>
                     <div className={`w-4 h-4 rounded-full flex items-center justify-center transition-all ${/\d/.test(formData.password) ? "bg-green-500" : "bg-gray-200"
                       }`}>
