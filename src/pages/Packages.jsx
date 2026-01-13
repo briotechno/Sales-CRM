@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 import {
   ChevronLeft,
@@ -9,10 +9,16 @@ import {
   Database,
   Zap,
   Shield,
+  Loader2,
+  ArrowRight,
 } from "lucide-react";
+import { toast } from "react-hot-toast";
 
 const PricingPage = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [isSelecting, setIsSelecting] = useState(null);
+  const [searchParams] = useSearchParams();
+  const isSignedUp = searchParams.get("signed_up") === "true";
 
   // Sample packages data
   const packages = [
@@ -190,7 +196,7 @@ const PricingPage = () => {
 
   const navigate = useNavigate();
 
-  const itemsPerPage = 4;
+  const itemsPerPage = 3;
   const totalSlides = Math.ceil(packages.length / itemsPerPage);
 
   const nextSlide = () => {
@@ -228,6 +234,22 @@ const PricingPage = () => {
     return pkg.price + Math.max(0, additionalCost);
   };
 
+  const handleSelectPlan = (pkg) => {
+    setIsSelecting(pkg.id);
+    toast.success(`${pkg.name} Plan selected! Redirecting to login...`, {
+      icon: '🚀',
+      style: {
+        borderRadius: '10px',
+        border: '1px solid #FF7B1D',
+        color: '#FF7B1D',
+      },
+    });
+
+    setTimeout(() => {
+      navigate("/login");
+    }, 1500);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-orange-100 py-12 px-4">
       {/* Decorative Elements */}
@@ -244,19 +266,19 @@ const PricingPage = () => {
       </div>
 
       {/* Header */}
-      <div className="max-w-7xl mx-auto text-center mb-12 relative z-10">
-        <div className="inline-block mb-4">
-          <span className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-2 rounded-full text-sm font-semibold shadow-lg">
-            🚀 Flexible Pricing Plans
+      <div className="max-w-7xl mx-auto text-center mb-16 relative z-10">
+        <div className="inline-block mb-6">
+          <span className="bg-orange-100 text-[#FF7B1D] px-6 py-2 rounded-full text-xs font-black uppercase tracking-[2px] border border-orange-200 shadow-sm animate-bounce">
+            🚀 Choose Your Momentum
           </span>
         </div>
-        <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-4">
-          Choose Your{" "}
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-600">
-            Perfect Plan
+        <h1 className="text-5xl md:text-7xl font-black text-gray-900 mb-6 tracking-tighter">
+          {isSignedUp ? "Welcome! " : "Choose Your "}
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF7B1D] to-orange-400">
+            {isSignedUp ? "Choose Your Plan" : "Perfect Plan"}
           </span>
         </h1>
-        <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+        <p className="text-lg md:text-xl text-gray-500 max-w-2xl mx-auto leading-relaxed font-medium">
           Customize employees and storage to match your business needs. Scale as
           you grow.
         </p>
@@ -283,7 +305,7 @@ const PricingPage = () => {
         )}
 
         {/* Packages Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 px-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 px-8 max-w-6xl mx-auto pt-10">
           {getCurrentPackages().map((pkg) => {
             const custom = packageCustomizations[pkg.id];
             const finalPrice = calculatePrice(pkg);
@@ -291,133 +313,171 @@ const PricingPage = () => {
             return (
               <div
                 key={pkg.id}
-                className={`relative bg-white rounded-2xl shadow-xl overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 ${
-                  pkg.popular ? "ring-4 ring-orange-500" : ""
-                }`}
+                className={`relative bg-white rounded-3xl transition-all duration-500 hover:shadow-[0_20px_50px_rgba(255,123,29,0.15)] group flex flex-col ${pkg.popular
+                  ? "ring-2 ring-orange-500 scale-105 z-20 shadow-2xl"
+                  : "border border-orange-100 hover:border-orange-500 shadow-xl"
+                  }`}
               >
                 {pkg.popular && (
-                  <div className="absolute top-0 right-0 bg-gradient-to-r from-orange-500 to-orange-600 text-white px-4 py-1 rounded-bl-lg font-semibold text-sm">
-                    Most Popular
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-2 rounded-full font-bold text-xs uppercase tracking-widest shadow-lg z-30 whitespace-nowrap">
+                    MOST POPULAR
                   </div>
                 )}
 
-                <div className="p-6">
+                <div className="p-8 flex-1 flex flex-col">
                   {/* Package Header */}
-                  <div className="text-center mb-6">
-                    <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                  <div className="text-center mb-8">
+                    <h3 className="text-2xl font-black text-gray-900 mb-4 group-hover:text-orange-600 transition-colors">
                       {pkg.name}
                     </h3>
                     <div className="flex items-baseline justify-center gap-1">
-                      <span className="text-gray-600 text-lg">₹</span>
-                      <span className="text-4xl font-bold text-orange-600">
+                      <span className="text-gray-400 text-lg font-bold">₹</span>
+                      <span className="text-5xl font-black text-gray-900 tracking-tighter">
                         {finalPrice.toLocaleString()}
                       </span>
-                      <span className="text-gray-600">/month</span>
+                      <span className="text-gray-400 font-medium whitespace-nowrap">/ month</span>
                     </div>
                   </div>
 
-                  {/* Employee Customization */}
-                  <div className="mb-6">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Users className="w-4 h-4 text-orange-500" />
-                      <label className="text-sm font-semibold text-gray-700">
-                        Employees
-                      </label>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <button
-                        onClick={() =>
-                          handleEmployeeChange(
-                            pkg.id,
-                            Math.max(pkg.defaultEmployees, custom.employees - 1)
-                          )
-                        }
-                        disabled={custom.employees <= pkg.defaultEmployees}
-                        className="w-10 h-10 flex items-center justify-center bg-orange-500 hover:bg-orange-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg font-bold text-xl transition-all duration-200 shadow-md hover:shadow-lg"
-                      >
-                        -
-                      </button>
-                      <div className="flex-1 text-center">
-                        <span className="text-2xl font-bold text-orange-600">
-                          {custom.employees}
-                        </span>
-                        <p className="text-xs text-gray-500">
+                  <div className="space-y-8 mb-8">
+                    {/* Employee Customization */}
+                    <div className="bg-orange-50/50 rounded-2xl p-4 border border-orange-100 group-hover:bg-white group-hover:border-orange-200 transition-all">
+                      <div className="flex items-center justify-between mb-3 px-1">
+                        <div className="flex items-center gap-2">
+                          <div className="p-2 bg-white rounded-lg shadow-sm">
+                            <Users className="w-4 h-4 text-orange-500" />
+                          </div>
+                          <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                            Employees
+                          </span>
+                        </div>
+                        <span className="text-[10px] font-bold text-orange-400">
                           Max: {pkg.maxEmployees}
-                        </p>
-                      </div>
-                      <button
-                        onClick={() =>
-                          handleEmployeeChange(
-                            pkg.id,
-                            Math.min(pkg.maxEmployees, custom.employees + 1)
-                          )
-                        }
-                        disabled={custom.employees >= pkg.maxEmployees}
-                        className="w-10 h-10 flex items-center justify-center bg-orange-500 hover:bg-orange-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg font-bold text-xl transition-all duration-200 shadow-md hover:shadow-lg"
-                      >
-                        +
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Storage Customization */}
-                  <div className="mb-6">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Database className="w-4 h-4 text-orange-500" />
-                      <label className="text-sm font-semibold text-gray-700">
-                        Storage
-                      </label>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <button
-                        onClick={() =>
-                          handleStorageChange(
-                            pkg.id,
-                            Math.max(pkg.defaultStorage, custom.storage - 5)
-                          )
-                        }
-                        disabled={custom.storage <= pkg.defaultStorage}
-                        className="w-10 h-10 flex items-center justify-center bg-orange-500 hover:bg-orange-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg font-bold text-xl transition-all duration-200 shadow-md hover:shadow-lg"
-                      >
-                        -
-                      </button>
-                      <div className="flex-1 text-center">
-                        <span className="text-2xl font-bold text-orange-600">
-                          {custom.storage} GB
                         </span>
-                        <p className="text-xs text-gray-500">
-                          Max: {pkg.maxStorage} GB
-                        </p>
                       </div>
-                      <button
-                        onClick={() =>
-                          handleStorageChange(
-                            pkg.id,
-                            Math.min(pkg.maxStorage, custom.storage + 5)
-                          )
-                        }
-                        disabled={custom.storage >= pkg.maxStorage}
-                        className="w-10 h-10 flex items-center justify-center bg-orange-500 hover:bg-orange-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg font-bold text-xl transition-all duration-200 shadow-md hover:shadow-lg"
-                      >
-                        +
-                      </button>
+                      <div className="flex items-center justify-between bg-white rounded-xl p-1 shadow-sm border border-gray-100">
+                        <button
+                          onClick={() =>
+                            handleEmployeeChange(
+                              pkg.id,
+                              Math.max(pkg.defaultEmployees, custom.employees - 1)
+                            )
+                          }
+                          disabled={custom.employees <= pkg.defaultEmployees}
+                          className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white hover:bg-orange-500 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-gray-400 rounded-lg transition-all"
+                        >
+                          <span className="text-xl font-bold">-</span>
+                        </button>
+                        <div className="text-center">
+                          <span className="text-xl font-black text-gray-900">
+                            {custom.employees}
+                          </span>
+                        </div>
+                        <button
+                          onClick={() =>
+                            handleEmployeeChange(
+                              pkg.id,
+                              Math.min(pkg.maxEmployees, custom.employees + 1)
+                            )
+                          }
+                          disabled={custom.employees >= pkg.maxEmployees}
+                          className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white hover:bg-orange-500 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-gray-400 rounded-lg transition-all"
+                        >
+                          <span className="text-xl font-bold">+</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Storage Customization */}
+                    <div className="bg-orange-50/50 rounded-2xl p-4 border border-orange-100 group-hover:bg-white group-hover:border-orange-200 transition-all">
+                      <div className="flex items-center justify-between mb-3 px-1">
+                        <div className="flex items-center gap-2">
+                          <div className="p-2 bg-white rounded-lg shadow-sm">
+                            <Database className="w-4 h-4 text-orange-500" />
+                          </div>
+                          <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                            Storage
+                          </span>
+                        </div>
+                        <span className="text-[10px] font-bold text-orange-400">
+                          Max: {pkg.maxStorage}GB
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between bg-white rounded-xl p-1 shadow-sm border border-gray-100">
+                        <button
+                          onClick={() =>
+                            handleStorageChange(
+                              pkg.id,
+                              Math.max(pkg.defaultStorage, custom.storage - 5)
+                            )
+                          }
+                          disabled={custom.storage <= pkg.defaultStorage}
+                          className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white hover:bg-orange-500 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-gray-400 rounded-lg transition-all"
+                        >
+                          <span className="text-xl font-bold">-</span>
+                        </button>
+                        <div className="text-center">
+                          <span className="text-xl font-black text-gray-900">
+                            {custom.storage} <span className="text-sm font-bold text-gray-400 uppercase">GB</span>
+                          </span>
+                        </div>
+                        <button
+                          onClick={() =>
+                            handleStorageChange(
+                              pkg.id,
+                              Math.min(pkg.maxStorage, custom.storage + 5)
+                            )
+                          }
+                          disabled={custom.storage >= pkg.maxStorage}
+                          className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white hover:bg-orange-500 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-gray-400 rounded-lg transition-all"
+                        >
+                          <span className="text-xl font-bold">+</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
 
                   {/* Features */}
-                  <div className="mb-6 space-y-2">
-                    {pkg.features.map((feature, idx) => (
-                      <div key={idx} className="flex items-start gap-2">
-                        <Check className="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5" />
-                        <span className="text-sm text-gray-600">{feature}</span>
-                      </div>
-                    ))}
+                  <div className="mb-10 flex-1">
+                    <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-[2px] mb-4 px-1">
+                      Key Features
+                    </h4>
+                    <ul className="space-y-4">
+                      {pkg.features.map((feature, idx) => (
+                        <li key={idx} className="flex items-start gap-3">
+                          <div className="mt-1 w-5 h-5 rounded-full bg-orange-50 flex items-center justify-center flex-shrink-0 group-hover:bg-orange-500 transition-colors">
+                            <Check className="w-3 h-3 text-orange-600 group-hover:text-white transition-colors" />
+                          </div>
+                          <span className="text-sm font-medium text-gray-600 leading-tight">
+                            {feature}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
 
                   {/* Action Button */}
-                  <div>
-                    <button className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg">
-                      Get Started
+                  <div className="mt-auto">
+                    <button
+                      onClick={() => handleSelectPlan(pkg)}
+                      disabled={isSelecting !== null}
+                      className={`w-full py-5 rounded-2xl font-black text-sm uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-3 ${isSelecting === pkg.id
+                        ? "bg-gray-100 text-gray-400"
+                        : "bg-gray-900 text-white hover:bg-[#FF7B1D] hover:shadow-[0_15px_30px_rgba(255,123,29,0.3)] shadow-[0_10px_20px_rgba(0,0,0,0.1)] active:scale-95 translate-y-0 hover:-translate-y-1"
+                        }`}
+                    >
+                      {isSelecting === pkg.id ? (
+                        <>
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                          Applying...
+                        </>
+                      ) : (
+                        <>
+                          Select Plan
+                          <ArrowRight className="w-5 h-5" />
+                        </>
+                      )
+                      }
                     </button>
                   </div>
                 </div>
@@ -433,11 +493,10 @@ const PricingPage = () => {
               <button
                 key={idx}
                 onClick={() => setCurrentSlide(idx)}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  idx === currentSlide
-                    ? "w-8 bg-orange-600"
-                    : "w-2 bg-orange-300"
-                }`}
+                className={`h-2 rounded-full transition-all duration-300 ${idx === currentSlide
+                  ? "w-8 bg-orange-600"
+                  : "w-2 bg-orange-300"
+                  }`}
               />
             ))}
           </div>
