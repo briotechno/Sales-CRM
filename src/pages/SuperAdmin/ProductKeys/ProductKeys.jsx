@@ -13,7 +13,9 @@ import {
     Eye,
     Edit2,
     Trash2,
-    Loader2
+    Loader2,
+    Copy,
+    Check
 } from "lucide-react";
 import AddProductKeyModal from "../../../components/ProductKeys/AddProductKeyModal";
 import ViewProductKeyModal from "../../../components/ProductKeys/ViewProductKeyModal";
@@ -100,6 +102,11 @@ export default function ProductKeys() {
         } catch (error) {
             toast.error("Failed to generate key");
         }
+    };
+
+    const handleCopy = (key) => {
+        navigator.clipboard.writeText(key);
+        toast.success("Product key copied to clipboard!");
     };
 
     const handlePageChange = (page) => setCurrentPage(page);
@@ -304,7 +311,16 @@ export default function ProductKeys() {
                                         <td className="px-4 py-4 font-semibold text-sm">KEY-{pk.id}</td>
                                         <td className="px-4 py-4">
                                             <div className="font-bold text-gray-800 text-sm">{pk.enterprise}</div>
-                                            <div className="text-[11px] text-gray-400 font-bold uppercase tracking-wider">{pk.product_key}</div>
+                                            <div className="flex items-center gap-2 group/copy">
+                                                <div className="text-[11px] text-gray-400 font-bold uppercase tracking-wider">{pk.product_key}</div>
+                                                <button
+                                                    onClick={() => handleCopy(pk.product_key)}
+                                                    className="p-1 hover:bg-orange-50 text-gray-400 hover:text-orange-600 rounded-sm transition-all opacity-0 group-hover/copy:opacity-100"
+                                                    title="Copy Key"
+                                                >
+                                                    <Copy size={12} />
+                                                </button>
+                                            </div>
                                         </td>
                                         <td className="px-4 py-4 text-sm font-semibold text-gray-700">{pk.plan}</td>
                                         <td className="px-4 py-4">
@@ -324,18 +340,31 @@ export default function ProductKeys() {
                                         <td className="px-4 py-4">
                                             <div className="flex justify-end gap-3">
                                                 <button
+                                                    onClick={() => handleCopy(pk.product_key)}
+                                                    className="p-2 text-gray-600 hover:bg-gray-100 rounded-sm transition-colors"
+                                                    title="Copy Key"
+                                                >
+                                                    <Copy size={18} />
+                                                </button>
+                                                <button
                                                     onClick={() => { setSelectedKey(pk); setIsViewOpen(true); }}
-                                                    className="p-2 text-blue-600 hover:bg-blue-50 rounded-sm transition-colors">
+                                                    className="p-2 text-blue-600 hover:bg-blue-50 rounded-sm transition-colors"
+                                                    title="View Details"
+                                                >
                                                     <Eye size={18} />
                                                 </button>
                                                 <button
                                                     onClick={() => { setSelectedKey(pk); setIsEditOpen(true); }}
-                                                    className="p-2 text-orange-600 hover:bg-orange-50 rounded-sm transition-colors">
+                                                    className="p-2 text-orange-600 hover:bg-orange-50 rounded-sm transition-colors"
+                                                    title="Edit Key"
+                                                >
                                                     <Edit2 size={18} />
                                                 </button>
                                                 <button
                                                     onClick={() => { setSelectedKey(pk); setIsDeleteOpen(true); }}
-                                                    className="p-2 text-red-600 hover:bg-red-50 rounded-sm transition-colors">
+                                                    className="p-2 text-red-600 hover:bg-red-50 rounded-sm transition-colors"
+                                                    title="Delete Key"
+                                                >
                                                     <Trash2 size={16} />
                                                 </button>
                                             </div>
