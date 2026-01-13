@@ -29,6 +29,9 @@ import {
   Menu,
   X,
   HelpCircle,
+  Building2,
+  CreditCard,
+  KeyRound,
 } from "lucide-react";
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
@@ -158,6 +161,46 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           path: "/dashboard",
           permission: "Dashboard" // Matches JSON key
         },
+      ],
+    },
+    {
+      section: "Super Admin",
+      items: [
+        {
+          name: "Admin Dashboard",
+          icon: <LayoutDashboard size={22} />,
+          path: "/superadmin/dashboard",
+          permission: "Super Admin Dashboard"
+        },
+        {
+          name: "Enterprise Management",
+          icon: <Building2 size={22} />,
+          path: "/superadmin/enterprises",
+          permission: "Enterprise Management",
+        },
+        {
+          name: "Subscription Management",
+          icon: <CreditCard size={16} />,
+          path: "/superadmin/subscriptions",
+          permission: "Subscription Management",
+        },
+        {
+          name: "Generate Product Keys",
+          icon: <KeyRound size={22} />,
+          path: "/superadmin/productkeys",
+          permission: "Product Key Management",
+        },
+        {
+          name: "Payment Gateways",
+          icon: <Wallet size={22} />,
+          path: "/superadmin/paymentgateways",
+          permission: "Payment Gateway Management",
+          children: [
+            { name: "Cashfree", path: "/superadmin/paymentgateways/cashfree" },
+            { name: "PhonePay", path: "/superadmin/paymentgateways/PhonePay" },
+            { name: "Razorpay", path: "/superadmin/paymentgateways/razorpay" },
+          ],
+        }
       ],
     },
     {

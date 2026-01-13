@@ -100,6 +100,11 @@ import LandingPage from "./pages/LandingPage";
 // logout
 
 import Logout from "./pages/Logout";
+import SuperAdmin from "./pages/SuperAdmin/Dashboard/SuperAdmin";
+import EnterpriseManagement from "./pages/SuperAdmin/EnterpriseManagement/EnterpriseManagement";
+import SubscriptionManagement from "./pages/SuperAdmin/SubscriptionManagement/SubscriptionManagement";
+import ProductKeys from "./pages/SuperAdmin/ProductKeys/ProductKeys";
+import PaymentGateways from "./pages/SuperAdmin/PaymentGateways/PaymentGateways";
 // Header components
 import NotificationPage from "./pages/TopBarComponents/Notification";
 import MailPage from "./pages/TopBarComponents/MailPage";
@@ -108,6 +113,9 @@ import LeadsReminder from "./components/Reminder";
 // Meeting reminder
 import MeetingReminder from "./components/Meeting";
 import ProtectedRoute from "./components/ProtectedRoute";
+import Cashfree from "./pages/SuperAdmin/PaymentGateways/Cashfree.jsx";
+import Razorpay from "./pages/SuperAdmin/PaymentGateways/Razorpay.jsx";
+import PhonePay from "./pages/SuperAdmin/PaymentGateways/PhonePay.jsx";
 
 function App() {
   return (
@@ -180,6 +188,17 @@ function App() {
           <Route path="/additional/catelogs" element={<Catelogs />} />
           <Route path="/additional/catalog-categories" element={<CatalogCategory />} />
           <Route path="/hrm/teams" element={<TeamManagement />} />
+
+          {/* Admin Page */}
+          <Route path="/superadmin/dashboard" element={<SuperAdmin />} />
+          <Route path="/superadmin/enterprises" element={<EnterpriseManagement />} />
+          <Route path="/superadmin/subscriptions" element={<SubscriptionManagement />} />
+          <Route path="/superadmin/productkeys" element={<ProductKeys />} />
+          <Route path="/superadmin/paymentgateways" element={<PaymentGateways />} />
+          <Route path="/superadmin/paymentgateways/Cashfree" element={<Cashfree />} />
+          <Route path="/superadmin/paymentgateways/PhonePay" element={<PhonePay />} />
+          <Route path="/superadmin/paymentgateways/Razorpay" element={<Razorpay />} />
+
         </Route>
       </Routes>
       <LeadsReminder />
