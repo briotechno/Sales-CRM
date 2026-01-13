@@ -1,24 +1,16 @@
-const bcrypt = require('bcryptjs');
 const { pool } = require('../src/config/db');
-require('dotenv').config();
+const bcrypt = require('bcryptjs');
 
-const seedSuperAdmin = async () => {
-    const firstName = 'Super';
-    const lastName = 'Admin';
-    const email = 'superadmin@gmail.com';
-    const mobileNumber = '1234567890';
-    const businessName = 'Sales CRM';
-    const businessType = 'Management';
-    const gst = '00AAAAA0000A1Z5';
-    const address = 'Main Office';
-    const password = 'superadmin123';
-    const role = 'Super Admin';
-
+async function seedSuperAdmin() {
     try {
-        // Check if user already exists
-        const [rows] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
-        if (rows.length > 0) {
-            console.log('Super Admin already exists.');
+        const email = 'superadmin@gmail.com';
+        const password = 'password123'; // Default password
+        const role = 'Super Admin';
+
+        // Check if exists
+        const [existing] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
+        if (existing.length > 0) {
+            console.log('Super Admin already exists in users table.');
             process.exit(0);
         }
 
@@ -27,39 +19,27 @@ const seedSuperAdmin = async () => {
 
         await pool.query(
             `INSERT INTO users (
-                firstName, 
-                lastName, 
-                email, 
-                mobileNumber, 
-                businessName, 
-                businessType, 
-                gst, 
-                address, 
-                password,
-                role
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                firstName, lastName, email, mobileNumber, 
+                businessName, businessType, gst, address, 
+                password, role, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
             [
-                firstName,
-                lastName,
-                email,
-                mobileNumber,
-                businessName,
-                businessType,
-                gst,
-                address,
-                hashedPassword,
-                role
+                'Super', 'Admin', email, '0000000000',
+                'Admin Console', 'System', 'N/A', 'HQ',
+                hashedPassword, role
             ]
         );
 
-        console.log('Super Admin created successfully!');
-        console.log('Email: ' + email);
-        console.log('Password: ' + password);
+        console.log(`Super Admin created successfully.`);
+        console.log(`Email: ${email}`);
+        console.log(`Password: ${password}`);
+
         process.exit(0);
+
     } catch (error) {
         console.error('Error seeding Super Admin:', error);
         process.exit(1);
     }
-};
+}
 
 seedSuperAdmin();
