@@ -464,25 +464,36 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
   ];
 
   /* Filtering */
-  const filteredMenuItems = menuItems.map(section => {
-    const filteredItems = section.items
-      .filter(item => {
-        if (item.name === "Logout") return true;
-        if (!item.permission) return true;
-        return checkPermission(item.permission);
-      })
-      .map(item => {
-        if (item.children) {
-          const filteredChildren = item.children.filter(child => {
-            if (!child.permission) return true;
-            return checkPermission(child.permission);
-          });
-          return { ...item, children: filteredChildren.length > 0 ? filteredChildren : undefined };
-        }
-        return item;
-      });
-    return { ...section, items: filteredItems };
-  }).filter(section => section.items.length > 0);
+  const filteredMenuItems = menuItems
+    .filter((section) => {
+      if (section.section === "Super Admin") {
+        return user?.role === "Super Admin";
+      }
+      return true;
+    })
+    .map((section) => {
+      const filteredItems = section.items
+        .filter((item) => {
+          if (item.name === "Logout") return true;
+          if (!item.permission) return true;
+          return checkPermission(item.permission);
+        })
+        .map((item) => {
+          if (item.children) {
+            const filteredChildren = item.children.filter((child) => {
+              if (!child.permission) return true;
+              return checkPermission(child.permission);
+            });
+            return {
+              ...item,
+              children: filteredChildren.length > 0 ? filteredChildren : undefined,
+            };
+          }
+          return item;
+        });
+      return { ...section, items: filteredItems };
+    })
+    .filter((section) => section.items.length > 0);
 
 
   return (

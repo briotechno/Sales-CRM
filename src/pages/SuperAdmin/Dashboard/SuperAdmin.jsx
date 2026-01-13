@@ -65,7 +65,7 @@ export default function SuperAdmin() {
             <div className="min-h-screen">
                 {/* Header */}
                 <div className="bg-white border-b my-3">
-                    <div className="max-w-7xl mx-auto px-0 ml-10 py-4">
+                    <div className="max-w-7xl mx-auto px-6 py-4">
                         <div className="flex items-center justify-between">
                             <div>
                                 <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
@@ -94,7 +94,7 @@ export default function SuperAdmin() {
                     {/* Stats Grid */}
                     <div className="filter blur-sm pointer-events-none">
 
-                        <div className="p-0 ml-6 space-y-8">
+                        <div className="p-0 px-6 space-y-8">
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                                 <NumberCard
                                     title="Total Enterprises"

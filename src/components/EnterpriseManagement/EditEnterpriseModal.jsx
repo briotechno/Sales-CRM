@@ -1,52 +1,69 @@
 import React, { useState, useEffect } from "react";
-import { Building2, Save, Mail, Users } from "lucide-react";
+import {
+  Building2,
+  Save,
+  Mail,
+  Loader2,
+  User,
+  Phone,
+  Briefcase,
+  FileText,
+  MapPin,
+  Calendar,
+  ToggleLeft,
+  Layers,
+} from "lucide-react";
 import { toast } from "react-hot-toast";
 import Modal from "../common/Modal";
-// 👉 tamari actual API hook lagavo
-// import { useUpdateEnterpriseMutation } from "../../store/api/enterpriseApi";
+import { useUpdateEnterpriseMutation } from "../../store/api/enterpriseApi";
 
-const EditEnterpriseModal = ({ isOpen, onClose, enterprise, refetchDashboard }) => {
-  const [name, setName] = useState("");
-  const [owner, setOwner] = useState("");
-  const [email, setEmail] = useState("");
-  const [plan, setPlan] = useState("Enterprise");
-  const [status, setStatus] = useState("Active");
-  const [users, setUsers] = useState(0);
+const EditEnterpriseModal = ({ isOpen, onClose, enterprise }) => {
+  const [form, setForm] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    mobileNumber: "",
+    businessName: "",
+    businessType: "",
+    gst: "",
+    address: "",
+    plan: "Starter",
+    status: "Active",
+    onboardingDate: "",
+  });
 
-  // const [updateEnterprise, { isLoading }] = useUpdateEnterpriseMutation();
-  const isLoading = false;
+  const [updateEnterprise, { isLoading }] = useUpdateEnterpriseMutation();
 
   useEffect(() => {
     if (enterprise) {
-      setName(enterprise.name || "");
-      setOwner(enterprise.owner || "");
-      setEmail(enterprise.email || "");
-      setPlan(enterprise.plan || "Enterprise");
-      setStatus(enterprise.status || "Active");
-      setUsers(enterprise.users || 0);
+      setForm({
+        firstName: enterprise.firstName || "",
+        lastName: enterprise.lastName || "",
+        email: enterprise.email || "",
+        mobileNumber: enterprise.mobileNumber || "",
+        businessName: enterprise.businessName || "",
+        businessType: enterprise.businessType || "",
+        gst: enterprise.gst || "",
+        address: enterprise.address || "",
+        plan: enterprise.plan || "Starter",
+        status: enterprise.status || "Active",
+        onboardingDate: enterprise.onboardingDate ? new Date(enterprise.onboardingDate).toISOString().split('T')[0] : "",
+      });
     }
   }, [enterprise]);
 
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
   const handleUpdate = async () => {
-    if (!name.trim()) {
-      toast.error("Enterprise name is required");
+    if (!form.businessName.trim() || !form.firstName.trim() || !form.email.trim()) {
+      toast.error("Business name, First name, and Email are required");
       return;
     }
 
     try {
-      const payload = {
-        name,
-        owner,
-        email,
-        plan,
-        status,
-        users,
-      };
-
-      // await updateEnterprise({ id: enterprise.id, data: payload }).unwrap();
-
-      if (refetchDashboard) refetchDashboard();
-
+      await updateEnterprise({ id: enterprise.id, ...form }).unwrap();
       toast.success("Enterprise updated successfully");
       onClose();
     } catch (err) {
@@ -58,16 +75,17 @@ const EditEnterpriseModal = ({ isOpen, onClose, enterprise, refetchDashboard }) 
     <>
       <button
         onClick={onClose}
-        className="px-6 py-2.5 rounded-sm border-2 border-gray-300 font-semibold hover:bg-gray-100"
+        disabled={isLoading}
+        className="px-6 py-2.5 rounded-sm border-2 border-gray-300 font-semibold hover:bg-gray-100 disabled:opacity-50"
       >
         Cancel
       </button>
       <button
         onClick={handleUpdate}
         disabled={isLoading}
-        className="px-6 py-2.5 rounded-sm bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold flex items-center gap-2 disabled:opacity-50"
+        className="px-6 py-2.5 rounded-sm bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold flex items-center gap-2 disabled:opacity-50 active:scale-95 transition-all shadow-md shadow-orange-500/20"
       >
-        <Save size={18} />
+        {isLoading ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
         {isLoading ? "Saving..." : "Save Changes"}
       </button>
     </>
@@ -78,92 +96,182 @@ const EditEnterpriseModal = ({ isOpen, onClose, enterprise, refetchDashboard }) 
       isOpen={isOpen}
       onClose={onClose}
       title="Edit Enterprise"
-      subtitle={enterprise?.id}
+      subtitle={`Enterprise ID: ENT-${enterprise?.id}`}
       icon={<Building2 size={24} />}
       footer={footer}
     >
-      <div className="space-y-5 text-black">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 px-1">
 
-        {/* Enterprise Name */}
+        {/* First Name */}
         <div>
-          <label className="text-sm font-semibold text-gray-700 mb-2 block">
-            Enterprise Name <span className="text-red-500">*</span>
+          <label className="flex items-center gap-2 text-sm font-semibold mb-1 text-gray-700">
+            <User size={16} className="text-[#FF7B1D]" />
+            First Name *
           </label>
           <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="w-full px-4 py-3 border-2 rounded-lg focus:border-[#FF7B1D]"
+            name="firstName"
+            value={form.firstName}
+            onChange={handleChange}
+            placeholder="John"
+            className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all"
           />
         </div>
 
-        {/* Owner */}
+        {/* Last Name */}
         <div>
-          <label className="text-sm font-semibold text-gray-700 mb-2 block">
-            Owner Name
+          <label className="flex items-center gap-2 text-sm font-semibold mb-1 text-gray-700">
+            <User size={16} className="text-[#FF7B1D]" />
+            Last Name
           </label>
           <input
-            value={owner}
-            onChange={(e) => setOwner(e.target.value)}
-            className="w-full px-4 py-3 border-2 rounded-lg focus:border-[#FF7B1D]"
+            name="lastName"
+            value={form.lastName}
+            onChange={handleChange}
+            placeholder="Doe"
+            className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all"
           />
         </div>
 
         {/* Email */}
         <div>
-          <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-            <Mail size={14} /> Email
+          <label className="flex items-center gap-2 text-sm font-semibold mb-1 text-gray-700">
+            <Mail size={16} className="text-[#FF7B1D]" />
+            Email Address *
           </label>
           <input
+            name="email"
             type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-4 py-3 border-2 rounded-lg focus:border-[#FF7B1D]"
+            value={form.email}
+            onChange={handleChange}
+            placeholder="admin@company.com"
+            className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all"
+          />
+        </div>
+
+        {/* Mobile Number */}
+        <div>
+          <label className="flex items-center gap-2 text-sm font-semibold mb-1 text-gray-700">
+            <Phone size={16} className="text-[#FF7B1D]" />
+            Mobile Number
+          </label>
+          <input
+            name="mobileNumber"
+            value={form.mobileNumber}
+            onChange={handleChange}
+            placeholder="+1 234 567 890"
+            className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all"
+          />
+        </div>
+
+        {/* Business Name */}
+        <div>
+          <label className="flex items-center gap-2 text-sm font-semibold mb-1 text-gray-700">
+            <Building2 size={16} className="text-[#FF7B1D]" />
+            Business Name *
+          </label>
+          <input
+            name="businessName"
+            value={form.businessName}
+            onChange={handleChange}
+            placeholder="TechVista Solutions"
+            className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all"
+          />
+        </div>
+
+        {/* Business Type */}
+        <div>
+          <label className="flex items-center gap-2 text-sm font-semibold mb-1 text-gray-700">
+            <Briefcase size={16} className="text-[#FF7B1D]" />
+            Business Type
+          </label>
+          <select
+            name="businessType"
+            value={form.businessType}
+            onChange={handleChange}
+            className="w-full px-4 py-3 border rounded-lg bg-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all cursor-pointer"
+          >
+            <option value="">Select Type</option>
+            <option value="person">Person</option>
+            <option value="organisation">Organisation</option>
+          </select>
+        </div>
+
+        {/* GST */}
+        <div>
+          <label className="flex items-center gap-2 text-sm font-semibold mb-1 text-gray-700">
+            <FileText size={16} className="text-[#FF7B1D]" />
+            GST Number
+          </label>
+          <input
+            name="gst"
+            value={form.gst}
+            onChange={handleChange}
+            placeholder="GSTIN12345"
+            className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all"
+          />
+        </div>
+
+        {/* Address */}
+        <div>
+          <label className="flex items-center gap-2 text-sm font-semibold mb-1 text-gray-700">
+            <MapPin size={16} className="text-[#FF7B1D]" />
+            Address
+          </label>
+          <input
+            name="address"
+            value={form.address}
+            onChange={handleChange}
+            placeholder="123 Main St"
+            className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all"
           />
         </div>
 
         {/* Plan & Status */}
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="text-sm font-semibold text-gray-700 mb-2 block">
-              Plan
-            </label>
-            <select
-              value={plan}
-              onChange={(e) => setPlan(e.target.value)}
-              className="w-full px-4 py-3 border-2 rounded-lg"
-            >
-              <option>Basic</option>
-              <option>Professional</option>
-              <option>Enterprise</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="text-sm font-semibold text-gray-700 mb-2 block">
-              Status
-            </label>
-            <select
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-              className="w-full px-4 py-3 border-2 rounded-lg"
-            >
-              <option>Active</option>
-              <option>Inactive</option>
-              <option>Trial</option>
-            </select>
-          </div>
+        <div>
+          <label className="flex items-center gap-2 text-sm font-semibold mb-1 text-gray-700">
+            <Layers size={16} className="text-[#FF7B1D]" />
+            Plan
+          </label>
+          <select
+            name="plan"
+            value={form.plan}
+            onChange={handleChange}
+            className="w-full px-4 py-3 border rounded-lg bg-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all cursor-pointer"
+          >
+            <option value="Starter">Starter</option>
+            <option value="Professional">Professional</option>
+            <option value="Enterprise">Enterprise</option>
+          </select>
         </div>
 
-        {/* Users */}
         <div>
-          <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-            <Users size={14} /> Total Users
+          <label className="flex items-center gap-2 text-sm font-semibold mb-1 text-gray-700">
+            <ToggleLeft size={16} className="text-[#FF7B1D]" />
+            Status
+          </label>
+          <select
+            name="status"
+            value={form.status}
+            onChange={handleChange}
+            className="w-full px-4 py-3 border rounded-lg bg-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all cursor-pointer"
+          >
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
+            <option value="Trial">Trial</option>
+          </select>
+        </div>
+
+        <div>
+          <label className="flex items-center gap-2 text-sm font-semibold mb-1 text-gray-700">
+            <Calendar size={16} className="text-[#FF7B1D]" />
+            Onboarding Date
           </label>
           <input
-            type="number"
-            value={users}
-            onChange={(e) => setUsers(e.target.value)}
-            className="w-full px-4 py-3 border-2 rounded-lg focus:border-[#FF7B1D]"
+            name="onboardingDate"
+            type="date"
+            value={form.onboardingDate}
+            onChange={handleChange}
+            className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all"
           />
         </div>
       </div>

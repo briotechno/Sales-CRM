@@ -66,7 +66,7 @@ export default function ProductKeys() {
             <div className="min-h-screen">
                 {/* Header */}
                 <div className="bg-white border-b sticky top-0 z-30">
-                    <div className="pl-6 py-4 flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+                    <div className="px-6 py-4 flex flex-col md:flex-row md:justify-between md:items-center gap-4">
                         {/* Title & Breadcrumb */}
                         <div>
                             <h1 className="text-2xl font-bold flex items-center gap-2">
@@ -135,7 +135,7 @@ export default function ProductKeys() {
                 </div>
 
                 {/* Quick Generate Card */}
-                <div className="rounded-lg shadow-lg border border-gray-100 pl-6 py-4">
+                <div className="rounded-lg shadow-lg border border-gray-100 px-6 py-4">
                     <h3 className="text-lg font-semibold text-gray-800 mb-4">Quick Generate</h3>
 
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -177,7 +177,7 @@ export default function ProductKeys() {
                 </div>
 
                 {/* Product Keys Table */}
-                <div className="bg-white pl-6 py-4 rounded-lg shadow-md border border-gray-100 overflow-x-auto">
+                <div className="bg-white px-6 py-4 rounded-lg shadow-md border border-gray-100 overflow-x-auto">
                     <table className="w-full min-w-[800px]">
                         <thead className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
                             <tr>

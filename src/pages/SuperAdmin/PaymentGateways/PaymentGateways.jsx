@@ -65,7 +65,7 @@ export default function PaymentGateways() {
             <div className="min-h-screen">
                 {/* Header */}
                 <div className="bg-white border-b my-3">
-                    <div className="max-w-7xl mx-auto px-0 ml-10 py-4">
+                    <div className="max-w-7xl mx-auto px-6 py-4">
                         <div className="flex items-center justify-between">
                             <div>
                                 <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
@@ -85,14 +85,14 @@ export default function PaymentGateways() {
                 </div>
 
                 {/* Gateways Grid */}
-                <div className="p-0 ml-6 space-y-8">
+                <div className="p-0 px-6 space-y-8">
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         {gateways.map((gw) => (
                             <div
                                 key={gw.id}
                                 className={`bg-white rounded-sm shadow-sm border overflow-hidden flex flex-col transition-all duration-300 ${activeGatewayParam === gw.slug
-                                        ? 'border-[#FF7B1D] ring-2 ring-[#FF7B1D] ring-opacity-20 translate-y-[-4px]'
-                                        : 'border-gray-100'
+                                    ? 'border-[#FF7B1D] ring-2 ring-[#FF7B1D] ring-opacity-20 translate-y-[-4px]'
+                                    : 'border-gray-100'
                                     }`}
                             >
                                 <div className="p-6 border-b bg-gray-50/50 flex justify-between items-center">

@@ -117,6 +117,8 @@ import Cashfree from "./pages/SuperAdmin/PaymentGateways/Cashfree.jsx";
 import Razorpay from "./pages/SuperAdmin/PaymentGateways/Razorpay.jsx";
 import PhonePay from "./pages/SuperAdmin/PaymentGateways/PhonePay.jsx";
 
+import RoleProtectedRoute from "./components/RoleProtectedRoute";
+
 function App() {
   return (
     <Router>
@@ -189,15 +191,17 @@ function App() {
           <Route path="/additional/catalog-categories" element={<CatalogCategory />} />
           <Route path="/hrm/teams" element={<TeamManagement />} />
 
-          {/* Admin Page */}
-          <Route path="/superadmin/dashboard" element={<SuperAdmin />} />
-          <Route path="/superadmin/enterprises" element={<EnterpriseManagement />} />
-          <Route path="/superadmin/subscriptions" element={<SubscriptionManagement />} />
-          <Route path="/superadmin/productkeys" element={<ProductKeys />} />
-          <Route path="/superadmin/paymentgateways" element={<PaymentGateways />} />
-          <Route path="/superadmin/paymentgateways/Cashfree" element={<Cashfree />} />
-          <Route path="/superadmin/paymentgateways/PhonePay" element={<PhonePay />} />
-          <Route path="/superadmin/paymentgateways/Razorpay" element={<Razorpay />} />
+          {/* Super Admin Routes */}
+          <Route element={<RoleProtectedRoute allowedRoles={['Super Admin']} />}>
+            <Route path="/superadmin/dashboard" element={<SuperAdmin />} />
+            <Route path="/superadmin/enterprises" element={<EnterpriseManagement />} />
+            <Route path="/superadmin/subscriptions" element={<SubscriptionManagement />} />
+            <Route path="/superadmin/productkeys" element={<ProductKeys />} />
+            <Route path="/superadmin/paymentgateways" element={<PaymentGateways />} />
+            <Route path="/superadmin/paymentgateways/Cashfree" element={<Cashfree />} />
+            <Route path="/superadmin/paymentgateways/PhonePay" element={<PhonePay />} />
+            <Route path="/superadmin/paymentgateways/Razorpay" element={<Razorpay />} />
+          </Route>
 
         </Route>
       </Routes>

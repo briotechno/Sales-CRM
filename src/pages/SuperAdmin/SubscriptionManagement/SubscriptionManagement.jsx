@@ -47,43 +47,68 @@ export default function SubscriptionManagement() {
     const subscriptions = [
         {
             id: "SUB001",
-            name: "TechVista Monthly",
+            name: "TechVista Solutions",
             plan: "Enterprise",
             status: "Active",
             users: 156,
+            amount: 16499,
+            billingCycle: "Monthly",
             onboardingDate: "2023-11-15",
+            expiryDate: "2024-11-15",
+            leads: "Unlimited",
+            storage: "500GB",
         },
         {
             id: "SUB002",
-            name: "Global Marketing Pro",
+            name: "Global Marketing Inc",
             plan: "Professional",
             status: "Active",
             users: 45,
+            amount: 64990,
+            billingCycle: "Yearly",
             onboardingDate: "2023-12-01",
+            expiryDate: "2024-12-01",
+            leads: "10000",
+            storage: "50GB",
         },
         {
             id: "SUB003",
-            name: "Creative Minds Starter",
-            plan: "Basic",
+            name: "Creative Minds Studio",
+            plan: "Starter",
             status: "Inactive",
             users: 12,
+            amount: 2499,
+            billingCycle: "Monthly",
             onboardingDate: "2023-12-10",
+            expiryDate: "2024-01-10",
+            leads: "1000",
+            storage: "5GB",
         },
         {
             id: "SUB004",
-            name: "Innovate AI Trial",
+            name: "Innovate AI",
             plan: "Enterprise",
             status: "Trial",
             users: 80,
+            amount: 0,
+            billingCycle: "Monthly",
             onboardingDate: "2024-01-02",
+            expiryDate: "2024-01-16",
+            leads: "Unlimited",
+            storage: "500GB",
         },
         {
             id: "SUB005",
-            name: "Nexus Healthcare Plan",
+            name: "Nexus Healthcare",
             plan: "Professional",
             status: "Inactive",
             users: 65,
+            amount: 6499,
+            billingCycle: "Monthly",
             onboardingDate: "2023-10-20",
+            expiryDate: "2023-11-20",
+            leads: "10000",
+            storage: "50GB",
         },
     ];
 
@@ -105,7 +130,7 @@ export default function SubscriptionManagement() {
 
                 {/* HEADER */}
                 <div className="bg-white border-b sticky top-0 z-30 mb-3">
-                    <div className="pl-6 py-4 flex flex-col md:flex-row justify-between gap-4">
+                    <div className="px-6 py-4 flex flex-col md:flex-row justify-between gap-4">
                         <div>
                             <h1 className="text-2xl font-bold flex items-center gap-2">
                                 <CreditCard className="text-[#FF7B1D]" />
@@ -134,7 +159,7 @@ export default function SubscriptionManagement() {
                                         <div className="p-3 border-b bg-gray-50 text-xs font-bold text-gray-500">
                                             Filter by Status
                                         </div>
-                                        {["all", "active", "inactive", "trial"].map((status) => (
+                                        {["all", "active", "inactive", "trial", "expired"].map((status) => (
                                             <button
                                                 key={status}
                                                 onClick={() => {
@@ -182,16 +207,16 @@ export default function SubscriptionManagement() {
                 </div>
 
                 {/* Statement Cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 px-6 mb-6">
                     <NumberCard
-                        title="Total Id"
+                        title="Total Subscription"
                         number={totalSubscriptions}
                         icon={<Users className="text-blue-600" size={24} />}
                         iconBgColor="bg-blue-100"
                         lineBorderClass="border-blue-500"
                     />
                     <NumberCard
-                        title="Total Subscription"
+                        title="Active Subscription"
                         number={activeSubscriptions}
                         icon={<CreditCard className="text-green-600" size={24} />}
                         iconBgColor="bg-green-100"
@@ -214,7 +239,7 @@ export default function SubscriptionManagement() {
                 </div>
 
                 {/* TABLE */}
-                <div className="pl-6 py-4 bg-white rounded-sm shadow-lg">
+                <div className="px-6 py-4 bg-white rounded-sm shadow-lg overflow-x-auto">
                     <table className="w-full">
                         <thead className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
                             <tr>
@@ -228,35 +253,34 @@ export default function SubscriptionManagement() {
                             </tr>
                         </thead>
 
-                        <tbody>
+                        <tbody className="divide-y divide-gray-100">
                             {filteredSubscriptions.length > 0 ? (
                                 filteredSubscriptions.map((sub) => (
-                                    <tr key={sub.id} className="border-b hover:bg-gray-50">
+                                    <tr key={sub.id} className="border-b hover:bg-gray-50 transition-colors">
                                         <td className="px-4 py-3 font-semibold text-sm">{sub.id}</td>
 
-                                        <td className="px-4 py-3 font-semibold">{sub.name}</td>
-                                        <td className="px-4 py-3 text-sm">{sub.plan}</td>
+                                        <td className="px-4 py-3 font-semibold text-gray-800">{sub.name}</td>
+
+                                        <td className="px-4 py-3 text-sm">
+                                            <span className="font-semibold text-gray-700">{sub.plan}</span>
+                                            <div className="text-[10px] text-gray-400 capitalize">{sub.billingCycle}ly</div>
+                                        </td>
 
                                         <td className="px-4 py-3">
                                             <span
-                                                className={`inline-flex items-center gap-1 px-2 py-1 rounded-sm text-xs font-bold ${sub.status === "Active"
-                                                    ? "bg-green-100 text-green-700"
-                                                    : sub.status === "Trial"
-                                                        ? "bg-yellow-100 text-yellow-700"
-                                                        : "bg-red-100 text-red-700"
+                                                className={`inline-flex items-center gap-1 px-2 py-1 rounded-sm text-xs font-bold ${sub.status === "Active" ? "bg-green-100 text-green-700" :
+                                                        sub.status === "Trial" ? "bg-yellow-100 text-yellow-700" :
+                                                            "bg-red-100 text-red-700"
                                                     }`}
                                             >
-                                                {sub.status === "Active" ? (
-                                                    <CheckCircle2 size={12} />
-                                                ) : (
-                                                    <XCircle size={12} />
-                                                )}
+                                                {sub.status === "Active" ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
                                                 {sub.status}
                                             </span>
                                         </td>
 
-                                        <td className="px-4 py-3 text-sm">{sub.users}</td>
-                                        <td className="px-4 py-3 text-sm">{sub.onboardingDate}</td>
+                                        <td className="px-4 py-3 text-sm font-medium text-gray-600">{sub.users}</td>
+
+                                        <td className="px-4 py-3 text-sm text-gray-500">{sub.onboardingDate}</td>
 
                                         {/* ACTION */}
                                         <td className="px-4 py-3">
@@ -291,16 +315,8 @@ export default function SubscriptionManagement() {
                                 ))
                             ) : (
                                 <tr>
-                                    <td colSpan="7" className="py-12 text-center">
-                                        <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                                            <Building2 className="text-orange-500" size={32} />
-                                        </div>
-                                        <h3 className="font-bold text-gray-800">
-                                            No subscriptions found
-                                        </h3>
-                                        <p className="text-sm text-gray-500">
-                                            Add your first subscription to get started
-                                        </p>
+                                    <td colSpan="7" className="py-12 text-center text-gray-500">
+                                        No found subscriptions
                                     </td>
                                 </tr>
                             )}

@@ -12,28 +12,43 @@ import {
     Plus,
     Home,
     Users,
-    Plane,
-    Projector,
     Target,
     Handshake,
+    Loader2,
 } from "lucide-react";
 import NumberCard from "../../../components/NumberCard";
 import AddEnterpriseModal from "../../../components/EnterpriseManagement/AddEnterpriseModal";
 import ViewEnterpriseModal from "../../../components/EnterpriseManagement/ViewEnterpriseModal";
 import EditEnterpriseModal from "../../../components/EnterpriseManagement/EditEnterpriseModal";
 import DeleteEnterpriseModal from "../../../components/EnterpriseManagement/DeleteEnterpriseModal";
+import { useGetEnterprisesQuery } from "../../../store/api/enterpriseApi";
 
 export default function EnterpriseManagement() {
     const [searchTerm, setSearchTerm] = useState("");
     const [isFilterOpen, setIsFilterOpen] = useState(false);
-    const [filterPriority, setFilterPriority] = useState("all");
+    const [filterStatus, setFilterStatus] = useState("all");
     const [isAddEnterpriseOpen, setIsAddEnterpriseOpen] = useState(false);
     const [isViewOpen, setIsViewOpen] = useState(false);
     const [isEditOpen, setIsEditOpen] = useState(false);
     const [isDeleteOpen, setIsDeleteOpen] = useState(false);
     const [selectedEnterprise, setSelectedEnterprise] = useState(null);
 
+    // Pagination State
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 7;
+
     const filterRef = useRef(null);
+
+    // FETCH DATA
+    const { data: response, isLoading, isError, refetch } = useGetEnterprisesQuery({
+        status: filterStatus,
+        searchTerm: searchTerm,
+        page: currentPage,
+        limit: itemsPerPage
+    });
+
+    const enterprises = response?.data || [];
+    const pagination = response?.pagination || { totalPages: 1, total: 0 };
 
     useEffect(() => {
         const handleClickOutside = (e) => {
@@ -45,85 +60,16 @@ export default function EnterpriseManagement() {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    const fetchEnterprises = async () => {
-        // API call here
-    };
-    const refetchDashboard = async () => {
-        await fetchEnterprises(); // or whatever API call you use
-    };
-
-    const enterprises = [
-        {
-            id: "ENT001",
-            name: "TechVista Solutions",
-            owner: "Harsh Patel",
-            email: "harsh@techvista.com",
-            plan: "Enterprise",
-            status: "Active",
-            onboardingDate: "2023-11-15",
-            users: 156,
-        },
-        {
-            id: "ENT002",
-            name: "Global Marketing Inc",
-            owner: "Sneha Reddy",
-            email: "sneha@globalmkt.com",
-            plan: "Professional",
-            status: "Active",
-            onboardingDate: "2023-12-01",
-            users: 45,
-        },
-        {
-            id: "ENT003",
-            name: "Creative Minds Studio",
-            owner: "Rajesh Kumar",
-            email: "rajesh@creativeminds.in",
-            plan: "Basic",
-            status: "Active",
-            onboardingDate: "2023-12-10",
-            users: 12,
-        },
-        {
-            id: "ENT004",
-            name: "Innovate AI",
-            owner: "Priya Sharma",
-            email: "priya@innovateai.com",
-            plan: "Enterprise",
-            status: "Trial",
-            onboardingDate: "2024-01-02",
-            users: 80,
-        },
-        {
-            id: "ENT005",
-            name: "Nexus Healthcare",
-            owner: "Dr. Anjali Singh",
-            email: "anjali@nexushealth.org",
-            plan: "Professional",
-            status: "Inactive",
-            onboardingDate: "2023-10-20",
-            users: 65,
-        },
-    ];
-
-    const totalEnterprises = enterprises.length;
+    const totalEnterprises = pagination.total;
     const activeEnterprises = enterprises.filter(e => e.status === "Active").length;
-    const totalUsers = enterprises.reduce((acc, e) => acc + e.users, 0);
     const totalPlans = new Set(enterprises.map(e => e.plan)).size;
 
-    const filteredEnterprises = enterprises.filter((ent) => {
-        const matchesSearch =
-            [ent.name, ent.owner, ent.id]
-                .join(" ")
-                .toLowerCase()
-                .includes(searchTerm.toLowerCase());
+    const handlePageChange = (page) => setCurrentPage(page);
+    const handlePrev = () => setCurrentPage((prev) => (prev > 1 ? prev - 1 : prev));
+    const handleNext = () => setCurrentPage((prev) => (prev < pagination.totalPages ? prev + 1 : prev));
 
-        const matchesStatus =
-            filterPriority === "all" ||
-            ent.status.toLowerCase() === filterPriority;
-
-        return matchesSearch && matchesStatus;
-    });
-
+    const indexOfFirstItem = (currentPage - 1) * itemsPerPage;
+    const indexOfLastItem = Math.min(currentPage * itemsPerPage, pagination.total || 0);
 
     return (
         <DashboardLayout>
@@ -131,7 +77,7 @@ export default function EnterpriseManagement() {
 
                 {/* HEADER */}
                 <div className="bg-white border-b sticky top-0 z-30 mb-3">
-                    <div className="pl-6 py-4 flex flex-col md:flex-row justify-between gap-4">
+                    <div className="px-6 py-4 flex flex-col md:flex-row justify-between gap-4">
                         <div>
                             <h1 className="text-2xl font-bold flex items-center gap-2">
                                 <Building2 className="text-[#FF7B1D]" />
@@ -148,8 +94,8 @@ export default function EnterpriseManagement() {
                             <div className="relative" ref={filterRef}>
                                 <button
                                     onClick={() => setIsFilterOpen(!isFilterOpen)}
-                                    className={`p-3 border rounded-sm shadow-sm ${isFilterOpen
-                                        ? "bg-orange-500 text-white"
+                                    className={`p-3 border rounded-sm shadow-sm transition-all ${isFilterOpen || filterStatus !== "all"
+                                        ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white"
                                         : "bg-white text-gray-700"
                                         }`}
                                 >
@@ -159,24 +105,24 @@ export default function EnterpriseManagement() {
                                 {isFilterOpen && (
                                     <div className="absolute right-0 mt-2 w-40 bg-white border rounded-sm shadow-lg z-50">
                                         <div className="p-3 border-b bg-gray-50 text-xs font-bold text-gray-500">
-                                            Enterprise Management
+                                            Filter by Status
                                         </div>
                                         {["all", "active", "inactive", "trial"].map((status) => (
                                             <button
                                                 key={status}
                                                 onClick={() => {
-                                                    setFilterPriority(status);
+                                                    setFilterStatus(status);
                                                     setIsFilterOpen(false);
+                                                    setCurrentPage(1);
                                                 }}
-                                                className={`w-full text-left px-4 py-2 text-xs ${filterPriority === status
-                                                    ? "bg-orange-100 text-orange-600 font-bold"
+                                                className={`w-full text-left px-4 py-2.5 text-xs transition-colors ${filterStatus === status
+                                                    ? "bg-orange-50 text-orange-600 font-bold"
                                                     : "hover:bg-gray-100"
                                                     }`}
                                             >
                                                 {status.toUpperCase()}
                                             </button>
                                         ))}
-
                                     </div>
                                 )}
                             </div>
@@ -190,16 +136,19 @@ export default function EnterpriseManagement() {
                                 <input
                                     type="text"
                                     placeholder="Search enterprises..."
-                                    className="pl-10 pr-4 py-3 border rounded-sm text-sm w-64"
+                                    className="pl-10 pr-4 py-3 border border-gray-300 rounded-sm text-sm w-64 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all font-semibold"
                                     value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    onChange={(e) => {
+                                        setSearchTerm(e.target.value);
+                                        setCurrentPage(1);
+                                    }}
                                 />
                             </div>
 
                             {/* ADD */}
                             <button
                                 onClick={() => setIsAddEnterpriseOpen(true)}
-                                className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm flex items-center gap-2 font-bold shadow-md"
+                                className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm flex items-center gap-2 font-bold shadow-md hover:from-orange-600 hover:to-orange-700 transition shadow-md"
                             >
                                 <Plus size={20} />
                                 Add Enterprise
@@ -210,31 +159,31 @@ export default function EnterpriseManagement() {
                 </div>
 
                 {/* Statement Cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 px-6 mb-6">
                     <NumberCard
-                        title="Total Id"
-                        number={totalEnterprises}
+                        title="Total Records"
+                        number={isLoading ? "..." : totalEnterprises}
                         icon={<Users className="text-blue-600" size={24} />}
                         iconBgColor="bg-blue-100"
                         lineBorderClass="border-blue-500"
                     />
                     <NumberCard
-                        title="Total Enterprise"
-                        number={activeEnterprises}
+                        title="Active Enterprise"
+                        number={isLoading ? "..." : activeEnterprises}
                         icon={<Building2 className="text-green-600" size={24} />}
                         iconBgColor="bg-green-100"
                         lineBorderClass="border-green-500"
                     />
                     <NumberCard
-                        title="Total Plan"
-                        number={totalPlans}
+                        title="Total Plans"
+                        number={isLoading ? "..." : totalPlans}
                         icon={<Handshake className="text-orange-600" size={24} />}
                         iconBgColor="bg-orange-100"
                         lineBorderClass="border-orange-500"
                     />
                     <NumberCard
-                        title="Total Users"
-                        number={totalUsers}
+                        title="Active Trials"
+                        number={isLoading ? "..." : enterprises.filter(e => e.status === "Trial").length}
                         icon={<Target className="text-purple-600" size={24} />}
                         iconBgColor="bg-purple-100"
                         lineBorderClass="border-purple-500"
@@ -242,40 +191,64 @@ export default function EnterpriseManagement() {
                 </div>
 
                 {/* TABLE */}
-                <div className="pl-6 py-4 bg-white rounded-sm shadow-lg">
+                <div className="mx-6 bg-white rounded-sm shadow-lg overflow-x-auto min-h-[400px]">
                     <table className="w-full">
-                        <thead className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
+                        <thead className="bg-gradient-to-r from-orange-500 to-orange-600 text-white sticky top-0">
                             <tr>
-                                <th className="px-4 py-3 text-left text-sm">ID</th>
-                                <th className="px-4 py-3 text-left text-sm">Enterprise</th>
-                                <th className="px-4 py-3 text-left text-sm">Plan</th>
-                                <th className="px-4 py-3 text-left text-sm">Status</th>
-                                <th className="px-4 py-3 text-left text-sm">Users</th>
-                                <th className="px-4 py-3 text-left text-sm">Onboarding</th>
-                                <th className="px-4 py-3 text-right text-sm">Action</th>
+                                <th className="px-4 py-4 text-left text-sm font-semibold">ID</th>
+                                <th className="px-4 py-4 text-left text-sm font-semibold">Enterprise Name</th>
+                                <th className="px-4 py-4 text-left text-sm font-semibold text-nowrap">Contact Person</th>
+                                <th className="px-4 py-4 text-left text-sm font-semibold">Plan</th>
+                                <th className="px-4 py-4 text-left text-sm font-semibold">Status</th>
+                                <th className="px-4 py-4 text-left text-sm font-semibold">Onboarding</th>
+                                <th className="px-4 py-4 text-right text-sm font-semibold">Action</th>
                             </tr>
                         </thead>
 
-                        <tbody>
-                            {filteredEnterprises.length > 0 ? (
-                                filteredEnterprises.map((ent) => (
-                                    <tr key={ent.id} className="border-b hover:bg-gray-50">
-                                        <td className="px-4 py-3 font-semibold text-sm">{ent.id}</td>
+                        <tbody className="divide-y divide-gray-100">
+                            {isLoading ? (
+                                <tr>
+                                    <td colSpan="7" className="py-20 text-center text-sm font-medium text-gray-500">
+                                        <div className="flex flex-col items-center gap-3 font-semibold">
+                                            <Loader2 size={30} className="text-orange-500 animate-spin" />
+                                            <p>Loading enterprises...</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ) : isError ? (
+                                <tr>
+                                    <td colSpan="7" className="py-20 text-center">
+                                        <div className="flex flex-col items-center gap-2">
+                                            <XCircle size={30} className="text-red-500" />
+                                            <p className="text-gray-500 text-sm font-semibold">Error loading data</p>
+                                            <button onClick={() => refetch()} className="text-orange-500 text-sm font-bold hover:underline">Try Again</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ) : enterprises.length > 0 ? (
+                                enterprises.map((ent) => (
+                                    <tr key={ent.id} className="border-b hover:bg-gray-50 transition-colors">
+                                        <td className="px-4 py-4 font-semibold text-sm">ENT-{ent.id}</td>
 
-                                        <td className="px-4 py-3">
-                                            <div className="font-semibold">{ent.name}</div>
-                                            <div className="text-xs text-gray-400">
-                                                {ent.owner} • {ent.email}
+                                        <td className="px-4 py-4">
+                                            <div className="font-semibold text-gray-800 text-sm">{ent.businessName}</div>
+                                        </td>
+
+                                        <td className="px-4 py-4 text-sm font-semibold">
+                                            <div className="text-gray-800">{ent.firstName} {ent.lastName}</div>
+                                            <div className="text-[11px] text-gray-400 font-medium">
+                                                {ent.email}
                                             </div>
                                         </td>
 
-                                        <td className="px-4 py-3 text-sm">{ent.plan}</td>
+                                        <td className="px-4 py-4 text-sm font-semibold text-gray-700">{ent.plan}</td>
 
-                                        <td className="px-4 py-3">
+                                        <td className="px-4 py-4">
                                             <span
-                                                className={`inline-flex items-center gap-1 px-2 py-1 rounded-sm text-xs font-bold ${ent.status === "Active"
+                                                className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-sm text-xs font-semibold ${ent.status === "Active"
                                                     ? "bg-green-100 text-green-700"
-                                                    : "bg-red-100 text-red-700"
+                                                    : ent.status === "Trial" ? "bg-yellow-100 text-yellow-700"
+                                                        : "bg-red-100 text-red-700"
                                                     }`}
                                             >
                                                 {ent.status === "Active" ? (
@@ -287,11 +260,10 @@ export default function EnterpriseManagement() {
                                             </span>
                                         </td>
 
-                                        <td className="px-4 py-3 text-sm">{ent.users}</td>
-                                        <td className="px-4 py-3 text-sm">{ent.onboardingDate}</td>
+                                        <td className="px-4 py-4 text-sm font-semibold text-gray-500">{ent.onboardingDate ? new Date(ent.onboardingDate).toLocaleDateString() : 'N/A'}</td>
 
                                         {/* ACTION */}
-                                        <td className="px-4 py-3">
+                                        <td className="px-4 py-4 text-right">
                                             <div className="flex justify-end gap-3">
                                                 <button
                                                     onClick={() => {
@@ -323,27 +295,69 @@ export default function EnterpriseManagement() {
                                 ))
                             ) : (
                                 <tr>
-                                    <td colSpan="7" className="py-12 text-center">
-                                        <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                                            <Building2 className="text-orange-500" size={32} />
+                                    <td colSpan="7" className="py-20 text-center text-gray-500">
+                                        <div className="flex flex-col items-center">
+                                            <div className="w-16 h-16 bg-orange-50 rounded-full flex items-center justify-center mb-3">
+                                                <Building2 className="text-orange-500" size={32} />
+                                            </div>
+                                            <h3 className="font-bold text-gray-800">
+                                                No enterprises found
+                                            </h3>
+                                            <p className="text-sm text-gray-500 font-semibold">
+                                                {searchTerm ? `No results for "${searchTerm}"` : "Add your first enterprise to get started"}
+                                            </p>
                                         </div>
-                                        <h3 className="font-bold text-gray-800">
-                                            No enterprises found
-                                        </h3>
-                                        <p className="text-sm text-gray-500">
-                                            Add your first enterprise to get started
-                                        </p>
                                     </td>
                                 </tr>
                             )}
                         </tbody>
                     </table>
                 </div>
+
+                {/* 🔹 Pagination */}
+                <div className="flex justify-between items-center mt-6 bg-gray-50 p-4 mx-6 rounded-sm border shadow-sm mb-10 font-semibold">
+                    <p className="text-sm text-gray-600">
+                        Showing <span className="font-bold">{indexOfFirstItem + 1}</span> to <span className="font-bold">{indexOfLastItem}</span> of <span className="font-bold">{pagination.total}</span> enterprises
+                    </p>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={handlePrev}
+                            disabled={currentPage === 1}
+                            className="px-4 py-2 border border-gray-300 rounded-sm text-sm font-bold disabled:opacity-50 bg-white hover:bg-gray-50 transition-colors shadow-sm"
+                        >
+                            Previous
+                        </button>
+
+                        {Array.from({ length: pagination.totalPages }, (_, i) => {
+                            let pageNum = i + 1;
+                            return (
+                                <button
+                                    key={pageNum}
+                                    onClick={() => handlePageChange(pageNum)}
+                                    className={`w-9 h-9 border rounded-sm text-sm font-bold transition-all ${currentPage === pageNum
+                                        ? "bg-orange-500 text-white border-orange-500"
+                                        : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                                        }`}
+                                >
+                                    {pageNum}
+                                </button>
+                            );
+                        })}
+
+                        <button
+                            onClick={handleNext}
+                            disabled={currentPage === pagination.totalPages}
+                            className="px-4 py-2 border border-gray-300 rounded-sm text-sm font-bold disabled:opacity-50 bg-white hover:bg-gray-50 transition-colors shadow-sm"
+                        >
+                            Next
+                        </button>
+                    </div>
+                </div>
+
             </div>
             <AddEnterpriseModal
                 isOpen={isAddEnterpriseOpen}
                 onClose={() => setIsAddEnterpriseOpen(false)}
-                refetchDashboard={() => { }}
             />
             <ViewEnterpriseModal
                 isOpen={isViewOpen}
@@ -354,13 +368,11 @@ export default function EnterpriseManagement() {
                 isOpen={isEditOpen}
                 onClose={() => setIsEditOpen(false)}
                 enterprise={selectedEnterprise}
-                refetchDashboard={refetchDashboard}
             />
             <DeleteEnterpriseModal
                 isOpen={isDeleteOpen}
                 onClose={() => setIsDeleteOpen(false)}
                 enterprise={selectedEnterprise}
-                refetchDashboard={refetchDashboard}
             />
 
         </DashboardLayout>

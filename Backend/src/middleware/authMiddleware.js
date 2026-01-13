@@ -79,4 +79,12 @@ const protect = async (req, res, next) => {
     }
 };
 
-module.exports = { protect };
+const superAdmin = (req, res, next) => {
+    if (req.user && req.user.role === 'Super Admin') {
+        next();
+    } else {
+        res.status(403).json({ message: 'Not authorized as a Super Admin' });
+    }
+};
+
+module.exports = { protect, superAdmin };
