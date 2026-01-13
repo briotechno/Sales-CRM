@@ -18,11 +18,20 @@ import {
     Handshake,
 } from "lucide-react";
 import NumberCard from "../../../components/NumberCard";
+import AddEnterpriseModal from "../../../components/EnterpriseManagement/AddEnterpriseModal";
+import ViewEnterpriseModal from "../../../components/EnterpriseManagement/ViewEnterpriseModal";
+import EditEnterpriseModal from "../../../components/EnterpriseManagement/EditEnterpriseModal";
+import DeleteEnterpriseModal from "../../../components/EnterpriseManagement/DeleteEnterpriseModal";
 
 export default function EnterpriseManagement() {
     const [searchTerm, setSearchTerm] = useState("");
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [filterPriority, setFilterPriority] = useState("all");
+    const [isAddEnterpriseOpen, setIsAddEnterpriseOpen] = useState(false);
+    const [isViewOpen, setIsViewOpen] = useState(false);
+    const [isEditOpen, setIsEditOpen] = useState(false);
+    const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+    const [selectedEnterprise, setSelectedEnterprise] = useState(null);
 
     const filterRef = useRef(null);
 
@@ -35,6 +44,13 @@ export default function EnterpriseManagement() {
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
+
+    const fetchEnterprises = async () => {
+        // API call here
+    };
+    const refetchDashboard = async () => {
+        await fetchEnterprises(); // or whatever API call you use
+    };
 
     const enterprises = [
         {
@@ -88,6 +104,11 @@ export default function EnterpriseManagement() {
             users: 65,
         },
     ];
+
+    const totalEnterprises = enterprises.length;
+    const activeEnterprises = enterprises.filter(e => e.status === "Active").length;
+    const totalUsers = enterprises.reduce((acc, e) => acc + e.users, 0);
+    const totalPlans = new Set(enterprises.map(e => e.plan)).size;
 
     const filteredEnterprises = enterprises.filter((ent) => {
         const matchesSearch =
@@ -176,10 +197,14 @@ export default function EnterpriseManagement() {
                             </div>
 
                             {/* ADD */}
-                            <button className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm flex items-center gap-2 font-bold shadow-md">
+                            <button
+                                onClick={() => setIsAddEnterpriseOpen(true)}
+                                className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm flex items-center gap-2 font-bold shadow-md"
+                            >
                                 <Plus size={20} />
                                 Add Enterprise
                             </button>
+
                         </div>
                     </div>
                 </div>
@@ -188,28 +213,28 @@ export default function EnterpriseManagement() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <NumberCard
                         title="Total Id"
-                        // number={totalItems || "0"}
+                        number={totalEnterprises}
                         icon={<Users className="text-blue-600" size={24} />}
                         iconBgColor="bg-blue-100"
                         lineBorderClass="border-blue-500"
                     />
                     <NumberCard
                         title="Total Enterprise"
-                        // number={teams.length > 0 ? (teams.reduce((acc, t) => acc + (t.total_members || 0), 0) / teams.length).toFixed(1) : "0"}
+                        number={activeEnterprises}
                         icon={<Building2 className="text-green-600" size={24} />}
                         iconBgColor="bg-green-100"
                         lineBorderClass="border-green-500"
                     />
                     <NumberCard
                         title="Total Plan"
-                        // number={teams.filter(t => t.status === 'Active').length || "0"}
+                        number={totalPlans}
                         icon={<Handshake className="text-orange-600" size={24} />}
                         iconBgColor="bg-orange-100"
                         lineBorderClass="border-orange-500"
                     />
                     <NumberCard
                         title="Total Users"
-                        // number={teams.filter(t => t.status === 'Inactive').length || "0"}
+                        number={totalUsers}
                         icon={<Target className="text-purple-600" size={24} />}
                         iconBgColor="bg-purple-100"
                         lineBorderClass="border-purple-500"
@@ -268,13 +293,28 @@ export default function EnterpriseManagement() {
                                         {/* ACTION */}
                                         <td className="px-4 py-3">
                                             <div className="flex justify-end gap-3">
-                                                <button className="text-blue-500 hover:opacity-80">
+                                                <button
+                                                    onClick={() => {
+                                                        setSelectedEnterprise(ent);
+                                                        setIsViewOpen(true);
+                                                    }}
+                                                    className="p-2 text-blue-600 hover:bg-blue-50 rounded-sm transition-colors">
                                                     <Eye size={18} />
                                                 </button>
-                                                <button className="text-orange-500 hover:opacity-80">
+                                                <button
+                                                    onClick={() => {
+                                                        setSelectedEnterprise(ent);
+                                                        setIsEditOpen(true);
+                                                    }}
+                                                    className="p-2 text-orange-600 hover:bg-orange-50 rounded-sm transition-colors">
                                                     <Edit2 size={18} />
                                                 </button>
-                                                <button className="text-red-600 hover:bg-red-50 p-1.5 rounded-lg">
+                                                <button
+                                                    onClick={() => {
+                                                        setSelectedEnterprise(ent);
+                                                        setIsDeleteOpen(true);
+                                                    }}
+                                                    className="p-2 text-red-600 hover:bg-red-50 rounded-sm transition-colors">
                                                     <Trash2 size={16} />
                                                 </button>
                                             </div>
@@ -300,6 +340,29 @@ export default function EnterpriseManagement() {
                     </table>
                 </div>
             </div>
+            <AddEnterpriseModal
+                isOpen={isAddEnterpriseOpen}
+                onClose={() => setIsAddEnterpriseOpen(false)}
+                refetchDashboard={() => { }}
+            />
+            <ViewEnterpriseModal
+                isOpen={isViewOpen}
+                onClose={() => setIsViewOpen(false)}
+                enterprise={selectedEnterprise}
+            />
+            <EditEnterpriseModal
+                isOpen={isEditOpen}
+                onClose={() => setIsEditOpen(false)}
+                enterprise={selectedEnterprise}
+                refetchDashboard={refetchDashboard}
+            />
+            <DeleteEnterpriseModal
+                isOpen={isDeleteOpen}
+                onClose={() => setIsDeleteOpen(false)}
+                enterprise={selectedEnterprise}
+                refetchDashboard={refetchDashboard}
+            />
+
         </DashboardLayout>
     );
 }

@@ -15,11 +15,28 @@ import {
     Edit2,
     Trash2
 } from "lucide-react";
+import AddProductKeyModal from "../../../components/ProductKeys/AddProductKeyModal";
+import ViewProductKeyModal from "../../../components/ProductKeys/ViewProductKeyModal";
+import EditProductKeyModal from "../../../components/ProductKeys/EditProductKeyModal";
+import DeleteProductKeyModal from "../../../components/ProductKeys/DeleteProductKeyModal";
 
 export default function ProductKeys() {
     const [searchTerm, setSearchTerm] = useState("");
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [filterPriority, setFilterPriority] = useState("all");
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [isViewOpen, setIsViewOpen] = useState(false);
+    const [isEditOpen, setIsEditOpen] = useState(false);
+    const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+
+    const [selectedKey, setSelectedKey] = useState(null);
+    const [newKeyData, setNewKeyData] = useState({
+        enterprise: "",
+        plan: "",
+        validity: "",
+        users: "",
+    });
+
     const filterRef = useRef(null);
 
     const productKeys = [
@@ -105,10 +122,14 @@ export default function ProductKeys() {
                             </div>
 
                             {/* Add */}
-                            <button className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm flex items-center gap-2 font-bold shadow-md">
+                            <button
+                                onClick={() => setIsAddModalOpen(true)}
+                                className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm flex items-center gap-2 font-bold shadow-md"
+                            >
                                 <Plus size={20} />
                                 Generate New Key
                             </button>
+
                         </div>
                     </div>
                 </div>
@@ -196,9 +217,21 @@ export default function ProductKeys() {
                                         <td className="px-4 py-3 text-sm">{pk.generatedOn}</td>
                                         <td className="px-4 py-3">
                                             <div className="flex justify-end gap-3">
-                                                <button className="text-blue-500 hover:opacity-80"><Eye size={18} /></button>
-                                                <button className="text-orange-500 hover:opacity-80"><Edit2 size={18} /></button>
-                                                <button className="text-red-600 hover:bg-red-50 p-1.5 rounded-lg"><Trash2 size={16} /></button>
+                                                <button
+                                                    onClick={() => { setSelectedKey(pk); setIsViewOpen(true); }}
+                                                    className="p-2 text-blue-600 hover:bg-blue-50 rounded-sm transition-colors">
+                                                    <Eye size={18} />
+                                                </button>
+                                                <button
+                                                    onClick={() => { setSelectedKey(pk); setIsEditOpen(true); }}
+                                                    className="p-2 text-orange-600 hover:bg-orange-50 rounded-sm transition-colors">
+                                                    <Edit2 size={18} />
+                                                </button>
+                                                <button
+                                                    onClick={() => { setSelectedKey(pk); setIsDeleteOpen(true); }}
+                                                    className="p-2 text-red-600 hover:bg-red-50 rounded-sm transition-colors">
+                                                    <Trash2 size={16} />
+                                                </button>
                                             </div>
                                         </td>
                                     </tr>
@@ -218,6 +251,27 @@ export default function ProductKeys() {
                     </table>
                 </div>
             </div>
+            <AddProductKeyModal
+                isOpen={isAddModalOpen}
+                onClose={() => setIsAddModalOpen(false)}
+                newKeyData={newKeyData}
+                setNewKeyData={setNewKeyData}
+            />
+            <ViewProductKeyModal
+                isOpen={isViewOpen}
+                onClose={() => setIsViewOpen(false)}
+                productKey={selectedKey}
+            />
+            <EditProductKeyModal
+                isOpen={isEditOpen}
+                onClose={() => setIsEditOpen(false)}
+                productKey={selectedKey}
+            />
+            <DeleteProductKeyModal
+                isOpen={isDeleteOpen}
+                onClose={() => setIsDeleteOpen(false)}
+                productKey={selectedKey}
+            />
         </DashboardLayout>
     );
 }

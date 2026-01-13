@@ -17,11 +17,20 @@ import {
     Users,
 } from "lucide-react";
 import NumberCard from "../../../components/NumberCard";
+import AddSubscriptionModal from "../../../components/SubscriptionManagement/AddSubscriptionModal";
+import ViewSubscriptionModal from "../../../components/SubscriptionManagement/ViewSubscriptionModal";
+import EditSubscriptionModal from "../../../components/SubscriptionManagement/EditSubscriptionModal";
+import DeleteSubscriptionModal from "../../../components/SubscriptionManagement/DeleteSubscriptionModal";
 
 export default function SubscriptionManagement() {
     const [searchTerm, setSearchTerm] = useState("");
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [filterStatus, setFilterStatus] = useState("all");
+    const [isAddSubscriptionOpen, setIsAddSubscriptionOpen] = useState(false);
+    const [isViewOpen, setIsViewOpen] = useState(false);
+    const [isEditOpen, setIsEditOpen] = useState(false);
+    const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+    const [selectedSubscription, setSelectedSubscription] = useState(null);
 
     const filterRef = useRef(null);
 
@@ -77,6 +86,11 @@ export default function SubscriptionManagement() {
             onboardingDate: "2023-10-20",
         },
     ];
+
+    const totalSubscriptions = subscriptions.length;
+    const activeSubscriptions = subscriptions.filter(s => s.status === "Active").length;
+    const totalUsers = subscriptions.reduce((acc, s) => acc + s.users, 0);
+    const totalPlans = new Set(subscriptions.map(s => s.plan)).size;
 
     // 🔥 FILTER + SEARCH LOGIC
     const filteredSubscriptions = subscriptions.filter((sub) => {
@@ -155,10 +169,14 @@ export default function SubscriptionManagement() {
                             </div>
 
                             {/* ADD */}
-                            <button className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm flex items-center gap-2 font-bold shadow-md">
+                            <button
+                                onClick={() => setIsAddSubscriptionOpen(true)}
+                                className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm flex items-center gap-2 font-bold shadow-md"
+                            >
                                 <Plus size={20} />
                                 Add Subscription
                             </button>
+
                         </div>
                     </div>
                 </div>
@@ -167,28 +185,28 @@ export default function SubscriptionManagement() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <NumberCard
                         title="Total Id"
-                        // number={totalItems || "0"}
+                        number={totalSubscriptions}
                         icon={<Users className="text-blue-600" size={24} />}
                         iconBgColor="bg-blue-100"
                         lineBorderClass="border-blue-500"
                     />
                     <NumberCard
                         title="Total Subscription"
-                        // number={teams.length > 0 ? (teams.reduce((acc, t) => acc + (t.total_members || 0), 0) / teams.length).toFixed(1) : "0"}
+                        number={activeSubscriptions}
                         icon={<CreditCard className="text-green-600" size={24} />}
                         iconBgColor="bg-green-100"
                         lineBorderClass="border-green-500"
                     />
                     <NumberCard
                         title="Total Plan"
-                        // number={teams.filter(t => t.status === 'Active').length || "0"}
+                        number={totalPlans}
                         icon={<Handshake className="text-orange-600" size={24} />}
                         iconBgColor="bg-orange-100"
                         lineBorderClass="border-orange-500"
                     />
                     <NumberCard
                         title="Total Users"
-                        // number={teams.filter(t => t.status === 'Inactive').length || "0"}
+                        number={totalUsers}
                         icon={<Target className="text-purple-600" size={24} />}
                         iconBgColor="bg-purple-100"
                         lineBorderClass="border-purple-500"
@@ -243,13 +261,28 @@ export default function SubscriptionManagement() {
                                         {/* ACTION */}
                                         <td className="px-4 py-3">
                                             <div className="flex justify-end gap-3">
-                                                <button className="text-blue-500">
+                                                <button
+                                                    onClick={() => {
+                                                        setSelectedSubscription(sub);
+                                                        setIsViewOpen(true);
+                                                    }}
+                                                    className="p-2 text-blue-600 hover:bg-blue-50 rounded-sm transition-colors">
                                                     <Eye size={18} />
                                                 </button>
-                                                <button className="text-orange-500">
+                                                <button
+                                                    onClick={() => {
+                                                        setSelectedSubscription(sub);
+                                                        setIsEditOpen(true);
+                                                    }}
+                                                    className="p-2 text-orange-600 hover:bg-orange-50 rounded-sm transition-colors">
                                                     <Edit2 size={18} />
                                                 </button>
-                                                <button className="text-red-600 hover:bg-red-50 p-1.5 rounded-lg">
+                                                <button
+                                                    onClick={() => {
+                                                        setSelectedSubscription(sub);
+                                                        setIsDeleteOpen(true);
+                                                    }}
+                                                    className="p-2 text-red-600 hover:bg-red-50 rounded-sm transition-colors">
                                                     <Trash2 size={16} />
                                                 </button>
                                             </div>
@@ -276,6 +309,26 @@ export default function SubscriptionManagement() {
                 </div>
 
             </div>
+            <AddSubscriptionModal
+                isOpen={isAddSubscriptionOpen}
+                onClose={() => setIsAddSubscriptionOpen(false)}
+                refetchDashboard={() => { }}
+            />
+            <ViewSubscriptionModal
+                isOpen={isViewOpen}
+                onClose={() => setIsViewOpen(false)}
+                subscription={selectedSubscription}
+            />
+            <EditSubscriptionModal
+                isOpen={isEditOpen}
+                onClose={() => setIsEditOpen(false)}
+                subscription={selectedSubscription}
+            />
+            <DeleteSubscriptionModal
+                isOpen={isDeleteOpen}
+                onClose={() => setIsDeleteOpen(false)}
+                subscription={selectedSubscription}
+            />
         </DashboardLayout>
     );
 }
