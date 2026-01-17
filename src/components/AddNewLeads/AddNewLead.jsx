@@ -165,7 +165,10 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
       onClose();
     } catch (error) {
       console.error("Failed to save lead:", error);
-      toast.error(error?.data?.message || "Failed to save lead");
+      // Don't show toast for limit errors, global modal handles that
+      if (!error?.data?.limitReached && error.status !== 402) {
+        toast.error(error?.data?.message || "Failed to save lead");
+      }
     }
   };
 

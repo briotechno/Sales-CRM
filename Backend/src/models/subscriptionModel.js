@@ -2,11 +2,11 @@ const { pool } = require('../config/db');
 
 const Subscription = {
     create: async (data) => {
-        const { name, plan, status, users, amount, billingCycle, onboardingDate, expiryDate, leads, storage, features } = data;
+        const { enterprise_id, name, plan, status, users, amount, billingCycle, onboardingDate, expiryDate, leads, storage, features } = data;
         const [result] = await pool.query(
-            `INSERT INTO subscriptions (enterprise_name, plan, status, users, amount, billingCycle, onboardingDate, expiryDate, leads, storage, features) 
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [name, plan, status || 'Active', users || 0, amount || 0.00, billingCycle || 'Monthly', onboardingDate, expiryDate, leads, storage, JSON.stringify(features || [])]
+            `INSERT INTO subscriptions (enterprise_id, enterprise_name, plan, status, users, amount, billingCycle, onboardingDate, expiryDate, leads, storage, features) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [enterprise_id, name, plan, status || 'Active', users || 0, amount || 0.00, billingCycle || 'Monthly', onboardingDate, expiryDate, leads, storage, JSON.stringify(features || [])]
         );
         return result.insertId;
     },
@@ -61,13 +61,21 @@ const Subscription = {
         return rows[0];
     },
 
+    findActiveByEnterpriseId: async (enterpriseId) => {
+        const [rows] = await pool.query(
+            'SELECT * FROM subscriptions WHERE enterprise_id = ? AND status = "Active" ORDER BY expiryDate DESC LIMIT 1',
+            [enterpriseId]
+        );
+        return rows[0];
+    },
+
     update: async (id, data) => {
-        const { name, plan, status, users, amount, billingCycle, onboardingDate, expiryDate, leads, storage, features } = data;
+        const { enterprise_id, name, plan, status, users, amount, billingCycle, onboardingDate, expiryDate, leads, storage, features } = data;
         const [result] = await pool.query(
             `UPDATE subscriptions SET 
-             enterprise_name = ?, plan = ?, status = ?, users = ?, amount = ?, billingCycle = ?, onboardingDate = ?, expiryDate = ?, leads = ?, storage = ?, features = ? 
+             enterprise_id = ?, enterprise_name = ?, plan = ?, status = ?, users = ?, amount = ?, billingCycle = ?, onboardingDate = ?, expiryDate = ?, leads = ?, storage = ?, features = ? 
              WHERE id = ?`,
-            [name, plan, status, users, amount, billingCycle, onboardingDate, expiryDate, leads, storage, JSON.stringify(features || []), id]
+            [enterprise_id, name, plan, status, users, amount, billingCycle, onboardingDate, expiryDate, leads, storage, JSON.stringify(features || []), id]
         );
         return result.affectedRows > 0;
     },
@@ -75,6 +83,14 @@ const Subscription = {
     delete: async (id) => {
         const [result] = await pool.query('DELETE FROM subscriptions WHERE id = ?', [id]);
         return result.affectedRows > 0;
+    },
+
+    findByEnterpriseId: async (enterpriseId) => {
+        const [rows] = await pool.query(
+            'SELECT * FROM subscriptions WHERE enterprise_id = ? ORDER BY onboardingDate DESC',
+            [enterpriseId]
+        );
+        return rows;
     }
 };
 

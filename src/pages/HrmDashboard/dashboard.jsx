@@ -11,7 +11,8 @@ import {
   Award,
   Home,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  RefreshCw,
 } from "lucide-react";
 import {
   BarChart,
@@ -29,7 +30,7 @@ import NumberCard from "../../components/NumberCard";
 import { useGetHRMDashboardDataQuery } from "../../store/api/hrmDashboardApi";
 
 export default function HRMDashboard() {
-  const { data: dashboardResponse, isLoading, isError, error } = useGetHRMDashboardDataQuery();
+  const { data: dashboardResponse, isLoading, isFetching, isError, error, refetch } = useGetHRMDashboardDataQuery();
 
   // Handle loading state
   if (isLoading) {
@@ -86,7 +87,7 @@ export default function HRMDashboard() {
       <div className="min-h-screen ">
         {/* Header */}
         <div className="bg-white border-b">
-          <div className="max-w-7xl mx-auto px-0 ml-10 py-4 bg-white border-b my-3">
+          <div className="w-full px-6 py-4">
             <div className="flex items-center justify-between">
               {/* Left Title Section */}
               <div className="">
@@ -100,6 +101,15 @@ export default function HRMDashboard() {
                     All Dashboard
                   </span>
                 </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={refetch}
+                  className="p-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-600 transition-colors shadow-sm"
+                  title="Refresh Dashboard"
+                >
+                  <RefreshCw size={20} className={isFetching ? "animate-spin" : ""} />
+                </button>
               </div>
             </div>
           </div>

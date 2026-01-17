@@ -115,7 +115,7 @@ export default function PlanManagement() {
                                 <th className="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Plan Details</th>
                                 <th className="px-6 py-4 text-sm font-semibold uppercase tracking-wider text-center">Price</th>
                                 <th className="px-6 py-4 text-sm font-semibold uppercase tracking-wider text-center">Users</th>
-                                <th className="px-6 py-4 text-sm font-semibold uppercase tracking-wider text-center">Leads</th>
+                                <th className="px-6 py-4 text-sm font-semibold uppercase tracking-wider text-center">Monthly Leads</th>
                                 <th className="px-6 py-4 text-sm font-semibold uppercase tracking-wider text-center">Storage</th>
                                 <th className="px-6 py-4 text-right text-sm font-semibold uppercase tracking-wider">Actions</th>
                             </tr>
@@ -168,8 +168,8 @@ export default function PlanManagement() {
                                         </td>
                                         <td className="px-6 py-4 text-center">
                                             <div className="flex flex-col items-center">
-                                                <Zap size={16} className="text-orange-500 mb-1" />
-                                                <span className="text-sm font-bold text-gray-700">{plan.default_leads}</span>
+                                                <Zap size={16} className="text-[#00C853] mb-1" />
+                                                <span className="text-sm font-bold text-gray-700">{plan.monthly_leads}</span>
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 text-center">

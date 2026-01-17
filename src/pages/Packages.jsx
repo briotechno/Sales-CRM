@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 import {
@@ -13,6 +13,8 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
+import { useOnboardEnterpriseMutation } from "../store/api/enterpriseApi";
+import { useGetPlansQuery } from "../store/api/planApi";
 
 const PricingPage = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -20,184 +22,34 @@ const PricingPage = () => {
   const [searchParams] = useSearchParams();
   const isSignedUp = searchParams.get("signed_up") === "true";
 
-  // Sample packages data
-  const packages = [
-    {
-      id: 1,
-      name: "Starter",
-      price: 999,
-      defaultEmployees: 5,
-      defaultStorage: 10,
-      maxEmployees: 10,
-      maxStorage: 50,
-      features: [
-        "Basic CRM Features",
-        "Email Support",
-        "Mobile App Access",
-        "Basic Reports",
-      ],
-    },
-    {
-      id: 2,
-      name: "Professional",
-      price: 2499,
-      defaultEmployees: 15,
-      defaultStorage: 50,
-      maxEmployees: 50,
-      maxStorage: 200,
-      features: [
-        "Advanced CRM Features",
-        "Priority Support",
-        "Custom Dashboards",
-        "Advanced Analytics",
-        "API Access",
-      ],
-      popular: true,
-    },
-    {
-      id: 3,
-      name: "Business",
-      price: 4999,
-      defaultEmployees: 30,
-      defaultStorage: 100,
-      maxEmployees: 100,
-      maxStorage: 500,
-      features: [
-        "All Professional Features",
-        "24/7 Support",
-        "White Label Option",
-        "Advanced Integrations",
-        "Custom Reports",
-      ],
-    },
-    {
-      id: 4,
-      name: "Enterprise",
-      price: 9999,
-      defaultEmployees: 50,
-      defaultStorage: 250,
-      maxEmployees: 500,
-      maxStorage: 2000,
-      features: [
-        "All Business Features",
-        "Dedicated Account Manager",
-        "Custom Development",
-        "SLA Guarantee",
-        "Unlimited Integrations",
-      ],
-    },
-    {
-      id: 5,
-      name: "Startup",
-      price: 1499,
-      defaultEmployees: 8,
-      defaultStorage: 25,
-      maxEmployees: 20,
-      maxStorage: 100,
-      features: [
-        "Standard CRM Features",
-        "Email & Chat Support",
-        "Team Collaboration",
-        "Basic Analytics",
-      ],
-    },
-    {
-      id: 6,
-      name: "Growth",
-      price: 3499,
-      defaultEmployees: 20,
-      defaultStorage: 75,
-      maxEmployees: 75,
-      maxStorage: 300,
-      features: [
-        "Advanced Features",
-        "Priority Support",
-        "Marketing Automation",
-        "Custom Workflows",
-        "Data Export",
-      ],
-    },
-    {
-      id: 7,
-      name: "Scale",
-      price: 6999,
-      defaultEmployees: 40,
-      defaultStorage: 150,
-      maxEmployees: 150,
-      maxStorage: 750,
-      features: [
-        "All Growth Features",
-        "Premium Support",
-        "Advanced Security",
-        "Multi-region Support",
-        "Custom Integrations",
-      ],
-    },
-    {
-      id: 8,
-      name: "Ultimate",
-      price: 14999,
-      defaultEmployees: 100,
-      defaultStorage: 500,
-      maxEmployees: 1000,
-      maxStorage: 5000,
-      features: [
-        "Unlimited Everything",
-        "White Glove Support",
-        "Enterprise Security",
-        "Custom Infrastructure",
-        "Dedicated Resources",
-      ],
-    },
-    {
-      id: 9,
-      name: "Premium",
-      price: 5499,
-      defaultEmployees: 25,
-      defaultStorage: 120,
-      maxEmployees: 80,
-      maxStorage: 400,
-      features: [
-        "Premium CRM Features",
-        "24/7 Priority Support",
-        "Advanced Automation",
-        "Custom Branding",
-        "API Access",
-      ],
-    },
-    {
-      id: 10,
-      name: "Corporate",
-      price: 11999,
-      defaultEmployees: 75,
-      defaultStorage: 350,
-      maxEmployees: 300,
-      maxStorage: 1500,
-      features: [
-        "Enterprise Features",
-        "Dedicated Support Team",
-        "Custom Solutions",
-        "Advanced Compliance",
-        "Unlimited API Calls",
-      ],
-    },
-  ];
+  // FETCH DYNAMIC PLANS
+  const { data: response, isLoading: plansLoading, isError: plansError } = useGetPlansQuery({
+    limit: 100 // Fetch all for slider
+  });
+
+  const dynamicPlans = response?.data || [];
 
   // State for each package's customization
-  const [packageCustomizations, setPackageCustomizations] = useState(
-    packages.reduce((acc, pkg) => {
-      acc[pkg.id] = {
-        employees: pkg.defaultEmployees,
-        storage: pkg.defaultStorage,
-      };
-      return acc;
-    }, {})
-  );
+  const [packageCustomizations, setPackageCustomizations] = useState({});
+
+  // Initialize customizations when plans are loaded
+  useEffect(() => {
+    if (dynamicPlans.length > 0) {
+      const initialCustomizations = dynamicPlans.reduce((acc, plan) => {
+        acc[plan.id] = {
+          employees: plan.default_users || 0,
+          storage: plan.default_storage || 0,
+        };
+        return acc;
+      }, {});
+      setPackageCustomizations(initialCustomizations);
+    }
+  }, [dynamicPlans]);
 
   const navigate = useNavigate();
 
   const itemsPerPage = 3;
-  const totalSlides = Math.ceil(packages.length / itemsPerPage);
+  const totalSlides = Math.ceil(dynamicPlans.length / itemsPerPage);
 
   const nextSlide = () => {
     setCurrentSlide((prev) => (prev + 1) % totalSlides);
@@ -209,7 +61,7 @@ const PricingPage = () => {
 
   const getCurrentPackages = () => {
     const start = currentSlide * itemsPerPage;
-    return packages.slice(start, start + itemsPerPage);
+    return dynamicPlans.slice(start, start + itemsPerPage);
   };
 
   const handleEmployeeChange = (pkgId, value) => {
@@ -228,26 +80,49 @@ const PricingPage = () => {
 
   const calculatePrice = (pkg) => {
     const custom = packageCustomizations[pkg.id];
-    const empDiff = custom.employees - pkg.defaultEmployees;
-    const storageDiff = custom.storage - pkg.defaultStorage;
+    if (!custom) return parseFloat(pkg.price);
+    const empDiff = custom.employees - pkg.default_users;
+    const storageDiff = custom.storage - pkg.default_storage;
     const additionalCost = empDiff * 50 + storageDiff * 2;
-    return pkg.price + Math.max(0, additionalCost);
+    return parseFloat(pkg.price) + Math.max(0, additionalCost);
   };
 
-  const handleSelectPlan = (pkg) => {
-    setIsSelecting(pkg.id);
-    toast.success(`${pkg.name} Plan selected! Redirecting to login...`, {
-      icon: '🚀',
-      style: {
-        borderRadius: '10px',
-        border: '1px solid #FF7B1D',
-        color: '#FF7B1D',
-      },
-    });
+  const [onboardEnterprise, { isLoading: isOnboarding }] = useOnboardEnterpriseMutation();
 
-    setTimeout(() => {
-      navigate("/login");
-    }, 1500);
+  const handleSelectPlan = async (pkg) => {
+    setIsSelecting(pkg.id);
+    const custom = packageCustomizations[pkg.id];
+    const finalPrice = calculatePrice(pkg);
+
+    try {
+      if (isSignedUp) {
+        await onboardEnterprise({
+          plan: pkg.name,
+          employees: custom.employees,
+          storage: custom.storage,
+          price: finalPrice
+        }).unwrap();
+
+        toast.success(`${pkg.name} Plan selected! Welcome to your dashboard!`, {
+          icon: '🚀',
+        });
+
+        setTimeout(() => {
+          navigate("/crm/dashboard");
+        }, 1500);
+      } else {
+        toast.success(`${pkg.name} Plan selected! Redirecting to login...`, {
+          icon: '🚀',
+        });
+
+        setTimeout(() => {
+          navigate("/login");
+        }, 1500);
+      }
+    } catch (err) {
+      toast.error(err?.data?.message || "Failed to select plan. Please try again.");
+      setIsSelecting(null);
+    }
   };
 
   return (
@@ -306,184 +181,211 @@ const PricingPage = () => {
 
         {/* Packages Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 px-8 max-w-6xl mx-auto pt-10">
-          {getCurrentPackages().map((pkg) => {
-            const custom = packageCustomizations[pkg.id];
-            const finalPrice = calculatePrice(pkg);
+          {plansLoading ? (
+            <div className="col-span-full py-20 text-center">
+              <Loader2 className="w-12 h-12 text-orange-500 animate-spin mx-auto mb-4" />
+              <p className="text-gray-500 font-bold uppercase tracking-widest text-sm">Loading Premium Plans...</p>
+            </div>
+          ) : plansError ? (
+            <div className="col-span-full py-20 text-center">
+              <div className="bg-red-50 border border-red-100 rounded-3xl p-8 max-w-md mx-auto">
+                <p className="text-red-600 font-bold mb-2">Ops! Something went wrong.</p>
+                <p className="text-gray-500 text-sm mb-4">We couldn't load the subscription plans at this moment.</p>
+                <button onClick={() => window.location.reload()} className="px-6 py-2 bg-red-600 text-white rounded-full font-bold text-sm">Retry</button>
+              </div>
+            </div>
+          ) : getCurrentPackages().length > 0 ? (
+            getCurrentPackages().map((pkg) => {
+              const custom = packageCustomizations[pkg.id] || { employees: pkg.default_users, storage: pkg.default_storage };
+              const finalPrice = calculatePrice(pkg);
+              // Priority: key_features > description
+              const rawFeatures = pkg.key_features || pkg.description || "Premium Features Access";
+              const features = rawFeatures.split(/[,\n]/).map(f => f.trim()).filter(f => f);
+              const isPopular = pkg.name.toLowerCase().includes('pro') || pkg.name.toLowerCase().includes('popular');
 
-            return (
-              <div
-                key={pkg.id}
-                className={`relative bg-white rounded-3xl transition-all duration-500 hover:shadow-[0_20px_50px_rgba(255,123,29,0.15)] group flex flex-col ${pkg.popular
-                  ? "ring-2 ring-orange-500 scale-105 z-20 shadow-2xl"
-                  : "border border-orange-100 hover:border-orange-500 shadow-xl"
-                  }`}
-              >
-                {pkg.popular && (
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-2 rounded-full font-bold text-xs uppercase tracking-widest shadow-lg z-30 whitespace-nowrap">
-                    MOST POPULAR
-                  </div>
-                )}
-
-                <div className="p-8 flex-1 flex flex-col">
-                  {/* Package Header */}
-                  <div className="text-center mb-8">
-                    <h3 className="text-2xl font-black text-gray-900 mb-4 group-hover:text-orange-600 transition-colors">
-                      {pkg.name}
-                    </h3>
-                    <div className="flex items-baseline justify-center gap-1">
-                      <span className="text-gray-400 text-lg font-bold">₹</span>
-                      <span className="text-5xl font-black text-gray-900 tracking-tighter">
-                        {finalPrice.toLocaleString()}
-                      </span>
-                      <span className="text-gray-400 font-medium whitespace-nowrap">/ month</span>
+              return (
+                <div
+                  key={pkg.id}
+                  className={`relative bg-white rounded-3xl transition-all duration-500 hover:shadow-[0_20px_50px_rgba(255,123,29,0.15)] group flex flex-col ${isPopular
+                    ? "ring-2 ring-orange-500 scale-105 z-20 shadow-2xl"
+                    : "border border-orange-100 hover:border-orange-500 shadow-xl"
+                    }`}
+                >
+                  {isPopular && (
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-2 rounded-full font-bold text-xs uppercase tracking-widest shadow-lg z-30 whitespace-nowrap">
+                      MOST POPULAR
                     </div>
-                  </div>
+                  )}
 
-                  <div className="space-y-8 mb-8">
-                    {/* Employee Customization */}
-                    <div className="bg-orange-50/50 rounded-2xl p-4 border border-orange-100 group-hover:bg-white group-hover:border-orange-200 transition-all">
-                      <div className="flex items-center justify-between mb-3 px-1">
-                        <div className="flex items-center gap-2">
-                          <div className="p-2 bg-white rounded-lg shadow-sm">
-                            <Users className="w-4 h-4 text-orange-500" />
-                          </div>
-                          <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
-                            Employees
-                          </span>
-                        </div>
-                        <span className="text-[10px] font-bold text-orange-400">
-                          Max: {pkg.maxEmployees}
+                  <div className="p-8 flex-1 flex flex-col">
+                    {/* Package Header */}
+                    <div className="text-center mb-8">
+                      <h3 className="text-2xl font-black text-gray-900 mb-4 group-hover:text-orange-600 transition-colors">
+                        {pkg.name}
+                      </h3>
+                      <div className="flex items-baseline justify-center gap-1">
+                        <span className="text-gray-400 text-lg font-bold">₹</span>
+                        <span className="text-5xl font-black text-gray-900 tracking-tighter">
+                          {finalPrice.toLocaleString()}
                         </span>
-                      </div>
-                      <div className="flex items-center justify-between bg-white rounded-xl p-1 shadow-sm border border-gray-100">
-                        <button
-                          onClick={() =>
-                            handleEmployeeChange(
-                              pkg.id,
-                              Math.max(pkg.defaultEmployees, custom.employees - 1)
-                            )
-                          }
-                          disabled={custom.employees <= pkg.defaultEmployees}
-                          className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white hover:bg-orange-500 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-gray-400 rounded-lg transition-all"
-                        >
-                          <span className="text-xl font-bold">-</span>
-                        </button>
-                        <div className="text-center">
-                          <span className="text-xl font-black text-gray-900">
-                            {custom.employees}
-                          </span>
-                        </div>
-                        <button
-                          onClick={() =>
-                            handleEmployeeChange(
-                              pkg.id,
-                              Math.min(pkg.maxEmployees, custom.employees + 1)
-                            )
-                          }
-                          disabled={custom.employees >= pkg.maxEmployees}
-                          className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white hover:bg-orange-500 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-gray-400 rounded-lg transition-all"
-                        >
-                          <span className="text-xl font-bold">+</span>
-                        </button>
+                        <span className="text-gray-400 font-medium whitespace-nowrap">/ month</span>
                       </div>
                     </div>
 
-                    {/* Storage Customization */}
-                    <div className="bg-orange-50/50 rounded-2xl p-4 border border-orange-100 group-hover:bg-white group-hover:border-orange-200 transition-all">
-                      <div className="flex items-center justify-between mb-3 px-1">
-                        <div className="flex items-center gap-2">
-                          <div className="p-2 bg-white rounded-lg shadow-sm">
-                            <Database className="w-4 h-4 text-orange-500" />
+                    <div className="space-y-8 mb-8">
+                      {/* Employee Customization */}
+                      <div className="bg-orange-50/50 rounded-2xl p-4 border border-orange-100 group-hover:bg-white group-hover:border-orange-200 transition-all">
+                        <div className="flex items-center justify-between mb-3 px-1">
+                          <div className="flex items-center gap-2">
+                            <div className="p-2 bg-white rounded-lg shadow-sm">
+                              <Users className="w-4 h-4 text-orange-500" />
+                            </div>
+                            <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                              Employees
+                            </span>
                           </div>
-                          <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
-                            Storage
+                          <span className="text-[10px] font-bold text-orange-400">
+                            Max: {pkg.default_users * 10}
                           </span>
                         </div>
-                        <span className="text-[10px] font-bold text-orange-400">
-                          Max: {pkg.maxStorage}GB
-                        </span>
+                        <div className="flex items-center justify-between bg-white rounded-xl p-1 shadow-sm border border-gray-100">
+                          <button
+                            onClick={() =>
+                              handleEmployeeChange(
+                                pkg.id,
+                                Math.max(pkg.default_users, custom.employees - 1)
+                              )
+                            }
+                            disabled={custom.employees <= pkg.default_users}
+                            className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white hover:bg-orange-500 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-gray-400 rounded-lg transition-all"
+                          >
+                            <span className="text-xl font-bold">-</span>
+                          </button>
+                          <div className="text-center">
+                            <span className="text-xl font-black text-gray-900">
+                              {custom.employees}
+                            </span>
+                          </div>
+                          <button
+                            onClick={() =>
+                              handleEmployeeChange(
+                                pkg.id,
+                                Math.min(pkg.default_users * 10, custom.employees + 1)
+                              )
+                            }
+                            disabled={custom.employees >= pkg.default_users * 10}
+                            className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white hover:bg-orange-500 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-gray-400 rounded-lg transition-all"
+                          >
+                            <span className="text-xl font-bold">+</span>
+                          </button>
+                        </div>
                       </div>
-                      <div className="flex items-center justify-between bg-white rounded-xl p-1 shadow-sm border border-gray-100">
-                        <button
-                          onClick={() =>
-                            handleStorageChange(
-                              pkg.id,
-                              Math.max(pkg.defaultStorage, custom.storage - 5)
-                            )
-                          }
-                          disabled={custom.storage <= pkg.defaultStorage}
-                          className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white hover:bg-orange-500 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-gray-400 rounded-lg transition-all"
-                        >
-                          <span className="text-xl font-bold">-</span>
-                        </button>
-                        <div className="text-center">
-                          <span className="text-xl font-black text-gray-900">
-                            {custom.storage} <span className="text-sm font-bold text-gray-400 uppercase">GB</span>
+
+                      {/* Storage Customization */}
+                      <div className="bg-orange-50/50 rounded-2xl p-4 border border-orange-100 group-hover:bg-white group-hover:border-orange-200 transition-all">
+                        <div className="flex items-center justify-between mb-3 px-1">
+                          <div className="flex items-center gap-2">
+                            <div className="p-2 bg-white rounded-lg shadow-sm">
+                              <Database className="w-4 h-4 text-orange-500" />
+                            </div>
+                            <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                              Storage
+                            </span>
+                          </div>
+                          <span className="text-[10px] font-bold text-orange-400">
+                            Max: {pkg.default_storage * 20}GB
                           </span>
                         </div>
-                        <button
-                          onClick={() =>
-                            handleStorageChange(
-                              pkg.id,
-                              Math.min(pkg.maxStorage, custom.storage + 5)
-                            )
-                          }
-                          disabled={custom.storage >= pkg.maxStorage}
-                          className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white hover:bg-orange-500 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-gray-400 rounded-lg transition-all"
-                        >
-                          <span className="text-xl font-bold">+</span>
-                        </button>
+                        <div className="flex items-center justify-between bg-white rounded-xl p-1 shadow-sm border border-gray-100">
+                          <button
+                            onClick={() =>
+                              handleStorageChange(
+                                pkg.id,
+                                Math.max(pkg.default_storage, custom.storage - 5)
+                              )
+                            }
+                            disabled={custom.storage <= pkg.default_storage}
+                            className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white hover:bg-orange-500 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-gray-400 rounded-lg transition-all"
+                          >
+                            <span className="text-xl font-bold">-</span>
+                          </button>
+                          <div className="text-center">
+                            <span className="text-xl font-black text-gray-900">
+                              {custom.storage} <span className="text-sm font-bold text-gray-400 uppercase">GB</span>
+                            </span>
+                          </div>
+                          <button
+                            onClick={() =>
+                              handleStorageChange(
+                                pkg.id,
+                                Math.min(pkg.default_storage * 20, custom.storage + 5)
+                              )
+                            }
+                            disabled={custom.storage >= pkg.default_storage * 20}
+                            className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white hover:bg-orange-500 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-gray-400 rounded-lg transition-all"
+                          >
+                            <span className="text-xl font-bold">+</span>
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Features */}
-                  <div className="mb-10 flex-1">
-                    <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-[2px] mb-4 px-1">
-                      Key Features
-                    </h4>
-                    <ul className="space-y-4">
-                      {pkg.features.map((feature, idx) => (
-                        <li key={idx} className="flex items-start gap-3">
-                          <div className="mt-1 w-5 h-5 rounded-full bg-orange-50 flex items-center justify-center flex-shrink-0 group-hover:bg-orange-500 transition-colors">
-                            <Check className="w-3 h-3 text-orange-600 group-hover:text-white transition-colors" />
-                          </div>
-                          <span className="text-sm font-medium text-gray-600 leading-tight">
-                            {feature}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+                    {/* Features */}
+                    <div className="mb-10 flex-1">
+                      <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-[2px] mb-4 px-1">
+                        Key Features
+                      </h4>
+                      <ul className="space-y-4">
+                        {features.map((feature, idx) => (
+                          <li key={idx} className="flex items-start gap-3">
+                            <div className="mt-1 w-5 h-5 rounded-full bg-orange-50 flex items-center justify-center flex-shrink-0 group-hover:bg-orange-500 transition-colors">
+                              <Check className="w-3 h-3 text-orange-600 group-hover:text-white transition-colors" />
+                            </div>
+                            <span className="text-sm font-medium text-gray-600 leading-tight">
+                              {feature}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
 
-                  {/* Action Button */}
-                  <div className="mt-auto">
-                    <button
-                      onClick={() => handleSelectPlan(pkg)}
-                      disabled={isSelecting !== null}
-                      className={`w-full py-5 rounded-2xl font-black text-sm uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-3 ${isSelecting === pkg.id
-                        ? "bg-gray-100 text-gray-400"
-                        : "bg-gray-900 text-white hover:bg-[#FF7B1D] hover:shadow-[0_15px_30px_rgba(255,123,29,0.3)] shadow-[0_10px_20px_rgba(0,0,0,0.1)] active:scale-95 translate-y-0 hover:-translate-y-1"
-                        }`}
-                    >
-                      {isSelecting === pkg.id ? (
-                        <>
-                          <Loader2 className="w-5 h-5 animate-spin" />
-                          Applying...
-                        </>
-                      ) : (
-                        <>
-                          Select Plan
-                          <ArrowRight className="w-5 h-5" />
-                        </>
-                      )
-                      }
-                    </button>
+                    {/* Action Button */}
+                    <div className="mt-auto">
+                      <button
+                        onClick={() => handleSelectPlan(pkg)}
+                        disabled={isSelecting !== null}
+                        className={`w-full py-5 rounded-2xl font-black text-sm uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-3 ${isSelecting === pkg.id
+                          ? "bg-gray-100 text-gray-400"
+                          : "bg-gray-900 text-white hover:bg-[#FF7B1D] hover:shadow-[0_15px_30px_rgba(255,123,29,0.3)] shadow-[0_10px_20px_rgba(0,0,0,0.1)] active:scale-95 translate-y-0 hover:-translate-y-1"
+                          }`}
+                      >
+                        {isSelecting === pkg.id ? (
+                          <>
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                            Applying...
+                          </>
+                        ) : (
+                          <>
+                            Select Plan
+                            <ArrowRight className="w-5 h-5" />
+                          </>
+                        )
+                        }
+                      </button>
+                    </div>
                   </div>
                 </div>
+              );
+            })
+          ) : (
+            <div className="col-span-full py-20 text-center">
+              <div className="w-20 h-20 bg-orange-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Package className="text-orange-500 opacity-50" size={40} />
               </div>
-            );
-          })}
+              <h3 className="font-bold text-gray-800 uppercase tracking-tighter text-xl text-center">No Plans Available</h3>
+              <p className="text-sm text-gray-400 font-semibold tracking-wide text-center">Check back later for new subscription options.</p>
+            </div>
+          )}
         </div>
 
         {/* Slide Indicators */}

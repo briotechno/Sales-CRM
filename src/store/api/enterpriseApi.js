@@ -48,6 +48,26 @@ export const enterpriseApi = createApi({
             }),
             invalidatesTags: ['Enterprise'],
         }),
+        onboardEnterprise: builder.mutation({
+            query: (data) => ({
+                url: 'enterprises/onboard',
+                method: 'POST',
+                body: data,
+            }),
+            invalidatesTags: ['Enterprise'],
+        }),
+        redeemKey: builder.mutation({
+            query: (data) => ({
+                url: 'enterprises/redeem-key',
+                method: 'POST',
+                body: data,
+            }),
+            invalidatesTags: ['Enterprise'],
+        }),
+        getSubscriptionStats: builder.query({
+            query: () => 'enterprises/subscription-stats',
+            providesTags: ['Enterprise', 'Subscription'],
+        }),
     }),
 });
 
@@ -56,5 +76,8 @@ export const {
     useGetEnterpriseByIdQuery,
     useCreateEnterpriseMutation,
     useUpdateEnterpriseMutation,
-    useDeleteEnterpriseMutation
+    useDeleteEnterpriseMutation,
+    useOnboardEnterpriseMutation,
+    useRedeemKeyMutation,
+    useGetSubscriptionStatsQuery
 } = enterpriseApi;

@@ -119,6 +119,7 @@ import Razorpay from "./pages/SuperAdmin/PaymentGateways/Razorpay.jsx";
 import PhonePay from "./pages/SuperAdmin/PaymentGateways/PhonePay.jsx";
 
 import RoleProtectedRoute from "./components/RoleProtectedRoute";
+import GlobalModals from "./components/common/GlobalModals";
 
 function App() {
   return (
@@ -209,6 +210,7 @@ function App() {
       </Routes>
       <LeadsReminder />
       <MeetingReminder />
+      <GlobalModals />
     </Router>
   );
 }

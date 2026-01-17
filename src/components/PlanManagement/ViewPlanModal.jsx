@@ -47,9 +47,9 @@ const ViewPlanModal = ({ isOpen, onClose, plan }) => {
                         icon={<Users size={20} className="text-blue-500" />}
                     />
                     <DetailRow
-                        label="Leads Limit"
-                        value={plan.default_leads}
-                        icon={<Zap size={20} className="text-orange-500" />}
+                        label="Monthly Leads"
+                        value={plan.monthly_leads}
+                        icon={<Zap size={20} className="text-[#00C853]" />}
                     />
                     <DetailRow
                         label="Included Storage"
@@ -57,6 +57,24 @@ const ViewPlanModal = ({ isOpen, onClose, plan }) => {
                         icon={<HardDrive size={20} className="text-purple-500" />}
                     />
                 </div>
+
+                {/* Key Features */}
+                {plan.key_features && (
+                    <div className="space-y-3">
+                        <div className="text-[10px] uppercase text-gray-400 font-bold tracking-widest pl-1">Key Features Included</div>
+                        <div className="flex flex-wrap gap-2">
+                            {plan.key_features.split(',').map((feature, index) => (
+                                <span
+                                    key={index}
+                                    className="px-3 py-1.5 bg-orange-50 text-orange-600 rounded-full text-xs font-bold border border-orange-100 flex items-center gap-2"
+                                >
+                                    <Zap size={10} className="fill-orange-500" />
+                                    {feature.trim()}
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+                )}
             </div>
         </Modal>
     );

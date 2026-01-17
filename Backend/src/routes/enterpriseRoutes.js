@@ -5,18 +5,25 @@ const {
     getAllEnterprises,
     getEnterpriseById,
     updateEnterprise,
-    deleteEnterprise
+    deleteEnterprise,
+    completeOnboarding,
+    redeemKey,
+    getSubscriptionStats
 } = require('../controllers/enterpriseController');
 const { protect, superAdmin } = require('../middleware/authMiddleware');
 
-// All enterprise routes are restricted to Super Admins
 router.use(protect);
-router.use(superAdmin);
 
-router.post('/', createEnterprise);
-router.get('/', getAllEnterprises);
-router.get('/:id', getEnterpriseById);
-router.put('/:id', updateEnterprise);
-router.delete('/:id', deleteEnterprise);
+// Publicly available for authenticated users to complete their own onboarding
+router.post('/onboard', completeOnboarding);
+router.post('/redeem-key', redeemKey);
+router.get('/subscription-stats', getSubscriptionStats);
+
+// Restricted to Super Admins
+router.post('/', superAdmin, createEnterprise);
+router.get('/', superAdmin, getAllEnterprises);
+router.get('/:id', superAdmin, getEnterpriseById);
+router.put('/:id', superAdmin, updateEnterprise);
+router.delete('/:id', superAdmin, deleteEnterprise);
 
 module.exports = router;

@@ -2,16 +2,17 @@ const { pool } = require('../config/db');
 
 const ProductKey = {
     create: async (data) => {
-        const { product_key, enterprise, plan, status, users, validity, generatedOn, expiresOn } = data;
+        const { product_key, enterprise, plan, status, users, leads, storage, validity, generatedOn, expiresOn } = data;
         const [result] = await pool.query(
-            `INSERT INTO product_keys (product_key, enterprise, plan, status, users, validity, generatedOn, expiresOn) 
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-            [product_key, enterprise, plan, status || 'Pending', users || 0, validity, generatedOn, expiresOn]
+            `INSERT INTO product_keys (product_key, enterprise, plan, status, users, leads, storage, validity, generatedOn, expiresOn) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [product_key, enterprise, plan, status || 'Pending', users || 0, leads || 0, storage || 0, validity, generatedOn, expiresOn]
         );
         return result.insertId;
     },
 
     findAll: async (filters = {}) => {
+        // ... (rest is same)
         let query = 'SELECT * FROM product_keys WHERE 1=1';
         const params = [];
 
@@ -38,6 +39,7 @@ const ProductKey = {
     },
 
     countAll: async (filters = {}) => {
+        // ... (same)
         let query = 'SELECT COUNT(*) as total FROM product_keys WHERE 1=1';
         const params = [];
 
@@ -62,18 +64,31 @@ const ProductKey = {
     },
 
     update: async (id, data) => {
-        const { enterprise, plan, status, users, validity, expiresOn } = data;
+        const { enterprise, plan, status, users, leads, storage, validity, expiresOn } = data;
         const [result] = await pool.query(
             `UPDATE product_keys SET 
-             enterprise = ?, plan = ?, status = ?, users = ?, validity = ?, expiresOn = ? 
+             enterprise = ?, plan = ?, status = ?, users = ?, leads = ?, storage = ?, validity = ?, expiresOn = ? 
              WHERE id = ?`,
-            [enterprise, plan, status, users, validity, expiresOn, id]
+            [enterprise, plan, status, users, leads || 0, storage || 0, validity, expiresOn, id]
         );
         return result.affectedRows > 0;
     },
 
     delete: async (id) => {
         const [result] = await pool.query('DELETE FROM product_keys WHERE id = ?', [id]);
+        return result.affectedRows > 0;
+    },
+
+    findByKey: async (productKey) => {
+        const [rows] = await pool.query('SELECT * FROM product_keys WHERE product_key = ?', [productKey]);
+        return rows[0];
+    },
+
+    updateStatusByKey: async (productKey, status, enterpriseId) => {
+        const [result] = await pool.query(
+            'UPDATE product_keys SET status = ?, enterprise_id = ? WHERE product_key = ?',
+            [status, enterpriseId, productKey]
+        );
         return result.affectedRows > 0;
     }
 };

@@ -76,9 +76,14 @@ export default function BusinessInfoPage() {
   // Sync with fetched data
   useEffect(() => {
     if (businessInfo) {
-      setFormData({
-        ...businessInfo,
-        logo: null, // Don't overwrite with string URL, wait for file upload
+      setFormData(prev => {
+        const newData = { ...prev };
+        Object.keys(businessInfo).forEach(key => {
+          if (businessInfo[key] !== null && businessInfo[key] !== undefined && businessInfo[key] !== "") {
+            newData[key] = businessInfo[key];
+          }
+        });
+        return { ...newData, logo: null };
       });
     }
   }, [businessInfo]);
@@ -173,7 +178,13 @@ export default function BusinessInfoPage() {
               {/* Right Side – Added Share Button */}
               <div className="flex items-center mr- gap-3">
                 <button
-                  onClick={() => setIsShareModalOpen(true)}
+                  onClick={() => {
+                    if (!businessInfo?.id) {
+                      toast.error("Please save your business information first to enable sharing.");
+                      return;
+                    }
+                    setIsShareModalOpen(true);
+                  }}
                   className="px-5 py-3 border border-gray-300 rounded-sm hover:bg-gray-50 font-semibold text-gray-700 flex items-center gap-2"
                 >
                   <Share2 size={18} />

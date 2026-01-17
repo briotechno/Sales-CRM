@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Package, DollarSign, Users, Zap, HardDrive, Layout, Loader2, Save } from "lucide-react";
+import { Package, DollarSign, Users, Zap, HardDrive, Layout, Loader2, Save, Plus, X, Check } from "lucide-react";
 import Modal from "../common/Modal";
 import { toast } from "react-hot-toast";
 import { useCreatePlanMutation } from "../../store/api/planApi";
@@ -8,17 +8,39 @@ const AddPlanModal = ({ isOpen, onClose }) => {
     const [form, setForm] = useState({
         name: "",
         description: "",
+        key_features: [],
         price: 0,
         default_users: 0,
-        default_leads: 0,
+        monthly_leads: 0,
         default_storage: 0
     });
+    const [currentFeature, setCurrentFeature] = useState("");
 
     const [createPlan, { isLoading }] = useCreatePlanMutation();
 
     const handleChange = (e) => {
         const { name, value } = e.target;
         setForm(prev => ({ ...prev, [name]: value }));
+    };
+
+    const addFeature = () => {
+        if (!currentFeature.trim()) return;
+        if (form.key_features.includes(currentFeature.trim())) {
+            toast.error("Feature already added");
+            return;
+        }
+        setForm(prev => ({
+            ...prev,
+            key_features: [...prev.key_features, currentFeature.trim()]
+        }));
+        setCurrentFeature("");
+    };
+
+    const removeFeature = (index) => {
+        setForm(prev => ({
+            ...prev,
+            key_features: prev.key_features.filter((_, i) => i !== index)
+        }));
     };
 
     const handleAdd = async () => {
@@ -33,11 +55,13 @@ const AddPlanModal = ({ isOpen, onClose }) => {
             setForm({
                 name: "",
                 description: "",
+                key_features: [],
                 price: 0,
                 default_users: 0,
-                default_leads: 0,
+                monthly_leads: 0,
                 default_storage: 0
             });
+            setCurrentFeature("");
             onClose();
         } catch (error) {
             toast.error(error?.data?.message || "Failed to create plan");
@@ -103,6 +127,58 @@ const AddPlanModal = ({ isOpen, onClose }) => {
                     ></textarea>
                 </div>
 
+                {/* Key Features */}
+                <div className="md:col-span-2">
+                    <label className="flex items-center gap-2 text-sm font-semibold mb-1 text-gray-700">
+                        <Plus size={16} className="text-[#FF7B1D]" /> Key Features
+                    </label>
+                    <div className="flex gap-2">
+                        <input
+                            value={currentFeature}
+                            onChange={(e) => setCurrentFeature(e.target.value)}
+                            onKeyPress={(e) => e.key === 'Enter' && addFeature()}
+                            placeholder="Add a feature (e.g. 24/7 Support)"
+                            className="flex-1 px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all font-semibold"
+                        />
+                        <button
+                            type="button"
+                            onClick={addFeature}
+                            className="px-6 py-3 bg-orange-500 text-white rounded-lg font-bold hover:bg-orange-600 transition-colors"
+                        >
+                            Add
+                        </button>
+                    </div>
+
+                    {/* Feature List */}
+                    <div className="space-y-2 mt-4 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
+                        {form.key_features.map((feature, index) => (
+                            <div
+                                key={index}
+                                className="flex items-center justify-between gap-3 bg-gray-50 p-3 rounded-xl border border-gray-100 group hover:border-orange-200 hover:bg-white transition-all shadow-sm"
+                            >
+                                <div className="flex items-center gap-3">
+                                    <div className="w-6 h-6 rounded-full bg-orange-100 flex items-center justify-center flex-shrink-0 group-hover:bg-orange-500 transition-colors">
+                                        <Check className="w-3.5 h-3.5 text-orange-600 group-hover:text-white transition-colors" />
+                                    </div>
+                                    <span className="text-sm font-bold text-gray-700">{feature}</span>
+                                </div>
+                                <button
+                                    onClick={() => removeFeature(index)}
+                                    className="p-1 px-2 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all opacity-0 group-hover:opacity-100"
+                                    title="Remove Feature"
+                                >
+                                    <X size={16} />
+                                </button>
+                            </div>
+                        ))}
+                        {form.key_features.length === 0 && (
+                            <div className="text-center py-6 bg-gray-50/50 rounded-xl border border-dashed border-gray-200">
+                                <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">No features added yet</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
                 {/* Price */}
                 <div>
                     <label className="flex items-center gap-2 text-sm font-semibold mb-1 text-gray-700">
@@ -131,17 +207,17 @@ const AddPlanModal = ({ isOpen, onClose }) => {
                     />
                 </div>
 
-                {/* Leads */}
+                {/* Monthly Leads */}
                 <div>
                     <label className="flex items-center gap-2 text-sm font-semibold mb-1 text-gray-700">
-                        <Zap size={16} className="text-[#FF7B1D]" /> Monthly Leads Limit
+                        <Zap size={16} className="text-[#00C853]" /> Monthly Leads
                     </label>
                     <input
                         type="number"
-                        name="default_leads"
-                        value={form.default_leads}
+                        name="monthly_leads"
+                        value={form.monthly_leads}
                         onChange={handleChange}
-                        className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all font-semibold"
+                        className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all font-semibold"
                     />
                 </div>
 

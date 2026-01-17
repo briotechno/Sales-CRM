@@ -1,8 +1,9 @@
 import React from "react";
-import { KeyRound, Users, Calendar, ShieldCheck, Tag, Info } from "lucide-react";
+import { KeyRound, Users, Calendar, ShieldCheck, Tag, Info, Zap, HardDrive } from "lucide-react";
 import Modal from "../common/Modal";
 
 const ViewProductKeyModal = ({ isOpen, onClose, productKey }) => {
+    // ... (rest of component start)
     if (!productKey) return null;
 
     const footer = (
@@ -78,6 +79,17 @@ const ViewProductKeyModal = ({ isOpen, onClose, productKey }) => {
                         label="Validity"
                         value={productKey.validity}
                         icon={<Info size={18} className="text-blue-500" />}
+                    />
+                    {/* New Fields */}
+                    <DetailRow
+                        label="Monthly Leads"
+                        value={productKey.leads || 0}
+                        icon={<Zap size={18} className="text-yellow-500" />}
+                    />
+                    <DetailRow
+                        label="Storage"
+                        value={`${productKey.storage || 0} GB`}
+                        icon={<HardDrive size={18} className="text-purple-500" />}
                     />
                 </div>
             </div>

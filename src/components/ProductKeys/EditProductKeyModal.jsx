@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Modal from "../common/Modal";
-import { KeyRound, Building2, Layers, ToggleLeft, Users, Calendar, Loader2, Save } from "lucide-react";
+import { KeyRound, Building2, Layers, ToggleLeft, Users, Calendar, Loader2, Save, Zap, HardDrive } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { useUpdateProductKeyMutation } from "../../store/api/productKeyApi";
 import { useGetPlansQuery } from "../../store/api/planApi";
@@ -12,6 +12,8 @@ const EditProductKeyModal = ({ isOpen, onClose, productKey }) => {
         plan: "Starter",
         status: "Pending",
         users: 0,
+        leads: 0,
+        storage: 0,
         validity: "1 Month",
         expiresOn: "",
     });
@@ -29,6 +31,8 @@ const EditProductKeyModal = ({ isOpen, onClose, productKey }) => {
                 plan: productKey.plan || "Starter",
                 status: productKey.status || "Pending",
                 users: productKey.users || 0,
+                leads: productKey.leads || 0,
+                storage: productKey.storage || 0,
                 validity: productKey.validity || "1 Month",
                 expiresOn: productKey.expiresOn ? new Date(productKey.expiresOn).toISOString().split('T')[0] : "",
             });
@@ -178,6 +182,34 @@ const EditProductKeyModal = ({ isOpen, onClose, productKey }) => {
                         type="date"
                         name="expiresOn"
                         value={form.expiresOn}
+                        onChange={handleChange}
+                        className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all font-semibold"
+                    />
+                </div>
+
+                {/* Leads */}
+                <div>
+                    <label className="flex items-center gap-2 text-sm font-semibold mb-1 text-gray-700">
+                        <Zap size={16} className="text-[#FF7B1D]" /> Monthly Leads
+                    </label>
+                    <input
+                        type="number"
+                        name="leads"
+                        value={form.leads}
+                        onChange={handleChange}
+                        className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all font-semibold"
+                    />
+                </div>
+
+                {/* Storage */}
+                <div>
+                    <label className="flex items-center gap-2 text-sm font-semibold mb-1 text-gray-700">
+                        <HardDrive size={16} className="text-[#FF7B1D]" /> Storage (GB)
+                    </label>
+                    <input
+                        type="number"
+                        name="storage"
+                        value={form.storage}
                         onChange={handleChange}
                         className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all font-semibold"
                     />
