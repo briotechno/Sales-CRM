@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
 import { toast } from "react-hot-toast";
+import { setCredentials } from "../store/slices/authSlice";
 import {
   Users,
   Eye,
@@ -77,6 +79,8 @@ export default function Signup() {
     }
   };
 
+  const dispatch = useDispatch();
+
   const handleSignup = async (e) => {
     if (e) e.preventDefault();
 
@@ -93,7 +97,13 @@ export default function Signup() {
     try {
       // Create user data without confirmPassword for the API
       const { confirmPassword, ...signupData } = formData;
-      await signup(signupData).unwrap();
+      const response = await signup(signupData).unwrap();
+
+      // Dispatch credentials to log the user in
+      dispatch(setCredentials({
+        user: response.user,
+        token: response.token
+      }));
 
       toast.success("Signup successful! Please select a subscription plan.");
       navigate("/packages?signed_up=true");

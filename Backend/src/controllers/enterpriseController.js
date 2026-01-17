@@ -1,6 +1,67 @@
 const Enterprise = require('../models/enterpriseModel');
+const Subscription = require('../models/subscriptionModel');
 
 const enterpriseController = {
+    // @desc    Complete onboarding for new enterprise (Select plan)
+    // @route   POST /api/enterprises/onboard
+    // @access  Private
+    completeOnboarding: async (req, res) => {
+        try {
+            const { plan, employees, storage, price } = req.body;
+            const userEmail = req.user.email;
+
+            // Find the enterprise by email
+            const enterprise = await Enterprise.findByEmail(userEmail);
+
+            if (!enterprise) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Enterprise not found for this user'
+                });
+            }
+
+            // Update enterprise plan
+            await Enterprise.update(enterprise.id, {
+                ...enterprise,
+                plan: plan,
+                status: 'Active'
+            });
+
+            // Create initial subscription record
+            const expiryDate = new Date();
+            expiryDate.setMonth(expiryDate.getMonth() + 1); // 1 month from now
+
+            await Subscription.create({
+                name: enterprise.businessName,
+                plan: plan,
+                status: 'Active',
+                users: employees,
+                amount: price,
+                billingCycle: 'Monthly',
+                onboardingDate: new Date(),
+                expiryDate: expiryDate,
+                leads: 0, // Initial
+                storage: storage,
+                features: []
+            });
+
+            res.status(200).json({
+                success: true,
+                message: 'Onboarding completed successfully',
+                data: {
+                    enterpriseId: enterprise.id,
+                    plan: plan
+                }
+            });
+        } catch (error) {
+            console.error('Onboarding error:', error);
+            res.status(500).json({
+                success: false,
+                message: error.message || 'Server Error'
+            });
+        }
+    },
+
     // @desc    Create new enterprise
     // @route   POST /api/enterprises
     // @access  Private/SuperAdmin

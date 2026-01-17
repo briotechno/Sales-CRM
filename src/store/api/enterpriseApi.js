@@ -48,6 +48,14 @@ export const enterpriseApi = createApi({
             }),
             invalidatesTags: ['Enterprise'],
         }),
+        onboardEnterprise: builder.mutation({
+            query: (data) => ({
+                url: 'enterprises/onboard',
+                method: 'POST',
+                body: data,
+            }),
+            invalidatesTags: ['Enterprise'],
+        }),
     }),
 });
 
@@ -56,5 +64,6 @@ export const {
     useGetEnterpriseByIdQuery,
     useCreateEnterpriseMutation,
     useUpdateEnterpriseMutation,
-    useDeleteEnterpriseMutation
+    useDeleteEnterpriseMutation,
+    useOnboardEnterpriseMutation
 } = enterpriseApi;

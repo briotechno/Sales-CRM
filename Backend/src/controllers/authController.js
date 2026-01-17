@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const User = require('../models/userModel');
 const Employee = require('../models/employeeModel');
+const Enterprise = require('../models/enterpriseModel');
 const generateToken = require('../utils/generateToken');
 
 // @desc    Register a new user
@@ -32,6 +33,7 @@ const registerUser = async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
+        // 1. Create User entry (Admin)
         const userId = await User.create({
             firstName,
             lastName,
@@ -45,11 +47,30 @@ const registerUser = async (req, res) => {
         });
 
         if (userId) {
+            // 2. Create Enterprise entry
+            const enterpriseId = await Enterprise.create({
+                firstName,
+                lastName,
+                email,
+                mobileNumber,
+                businessName,
+                businessType,
+                gst,
+                address,
+                plan: 'Starter', // Default initial plan
+                status: 'Active',
+                onboardingDate: new Date()
+            });
+
+            const token = generateToken(userId, 'Admin');
+
             res.status(201).json({
                 status: true,
                 message: 'User registered successfully',
+                token,
                 user: {
                     _id: userId,
+                    enterpriseId,
                     firstName,
                     lastName,
                     email,
@@ -57,9 +78,9 @@ const registerUser = async (req, res) => {
                     businessName,
                     businessType,
                     gst,
-                    address
+                    address,
+                    role: 'Admin'
                 },
-
             });
         } else {
             res.status(400).json({
@@ -68,6 +89,7 @@ const registerUser = async (req, res) => {
             });
         }
     } catch (error) {
+        console.error('Signup error:', error);
         res.status(500).json({
             status: false,
             message: error.message

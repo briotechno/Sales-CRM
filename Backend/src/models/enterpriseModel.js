@@ -61,6 +61,11 @@ const Enterprise = {
         return rows[0];
     },
 
+    findByEmail: async (email) => {
+        const [rows] = await pool.query('SELECT * FROM enterprises WHERE email = ?', [email]);
+        return rows[0];
+    },
+
     update: async (id, data) => {
         const { firstName, lastName, email, mobileNumber, businessName, businessType, gst, address, plan, status, onboardingDate } = data;
         const [result] = await pool.query(
