@@ -83,6 +83,14 @@ const Subscription = {
     delete: async (id) => {
         const [result] = await pool.query('DELETE FROM subscriptions WHERE id = ?', [id]);
         return result.affectedRows > 0;
+    },
+
+    findByEnterpriseId: async (enterpriseId) => {
+        const [rows] = await pool.query(
+            'SELECT * FROM subscriptions WHERE enterprise_id = ? ORDER BY onboardingDate DESC',
+            [enterpriseId]
+        );
+        return rows;
     }
 };
 

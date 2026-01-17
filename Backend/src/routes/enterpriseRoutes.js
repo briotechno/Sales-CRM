@@ -6,7 +6,9 @@ const {
     getEnterpriseById,
     updateEnterprise,
     deleteEnterprise,
-    completeOnboarding
+    completeOnboarding,
+    redeemKey,
+    getSubscriptionStats
 } = require('../controllers/enterpriseController');
 const { protect, superAdmin } = require('../middleware/authMiddleware');
 
@@ -14,6 +16,8 @@ router.use(protect);
 
 // Publicly available for authenticated users to complete their own onboarding
 router.post('/onboard', completeOnboarding);
+router.post('/redeem-key', redeemKey);
+router.get('/subscription-stats', getSubscriptionStats);
 
 // Restricted to Super Admins
 router.post('/', superAdmin, createEnterprise);

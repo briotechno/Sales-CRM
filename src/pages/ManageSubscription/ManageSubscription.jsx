@@ -19,59 +19,121 @@ import {
   HardDrive,
   CreditCard as CardIcon,
   RefreshCw,
+  KeyRound,
 } from "lucide-react";
+import { useRedeemKeyMutation, useGetSubscriptionStatsQuery } from "../../store/api/enterpriseApi";
+import { useGetPlansQuery } from "../../store/api/planApi";
+import { toast } from "react-hot-toast";
+import { Loader2, Package } from "lucide-react";
 
 const ManageSubscription = () => {
   const [billingCycle, setBillingCycle] = useState("monthly");
-  const [activePlanId, setActivePlanId] = useState("professional");
+  const [productKey, setProductKey] = useState("");
 
-  const plans = [
+  const { data: statsResponse, isLoading: statsLoading, refetch } = useGetSubscriptionStatsQuery();
+  const { data: plansResponse, isLoading: plansLoading } = useGetPlansQuery({ limit: 100 });
+  const [redeemKey, { isLoading: isRedeeming }] = useRedeemKeyMutation();
+
+  const stats = statsResponse?.data;
+  const activeSubscription = stats?.activeSubscription;
+  const activePlanName = activeSubscription?.plan?.toLowerCase() || "starter";
+
+  const handleRedeem = async () => {
+    if (!productKey) {
+      toast.error("Please enter a product key");
+      return;
+    }
+    try {
+      await redeemKey({ productKey }).unwrap();
+      toast.success("Product key redeemed successfully! Your plan has been updated.");
+      setProductKey("");
+    } catch (err) {
+      toast.error(err?.data?.message || "Failed to redeem product key");
+    }
+  };
+
+  const dynamicPlans = plansResponse?.data || [];
+
+  const plans = dynamicPlans.map((plan, index) => ({
+    id: plan.name.toLowerCase(),
+    rank: index + 1,
+    name: plan.name,
+    description: plan.description || `Perfect for ${plan.name} level operations.`,
+    price: {
+      monthly: parseFloat(plan.price),
+      yearly: parseFloat(plan.price) * 10 // Mock yearly if not in DB
+    },
+    icon: plan.name.toLowerCase() === 'starter' ? <Zap size={20} /> :
+      plan.name.toLowerCase() === 'professional' ? <Crown size={20} /> : <Sparkles size={20} />,
+    limits: {
+      users: plan.default_users,
+      leads: plan.default_leads,
+      storage: `${plan.default_storage}GB`
+    },
+    features: (plan.key_features || "Basic Features,Email Support").split(',').map(f => f.trim()),
+    popular: plan.name.toLowerCase() === 'professional'
+  }));
+
+  const usageData = stats ? [
     {
-      id: "starter",
-      rank: 1,
-      name: "Starter",
-      description: "Perfect for small teams and startups just getting started.",
-      price: { monthly: 2499, yearly: 24990 },
-      icon: <Zap size={20} />,
-      limits: { users: 5, leads: 1000, storage: "5GB" },
-      features: ["5 Team Members", "1,000 Leads/mo", "Basic CRM", "Email Support"],
+      label: "Team Members",
+      used: stats.usage.employees,
+      total: activeSubscription?.users || 0,
+      icon: <Users size={16} />,
+      color: "bg-blue-500"
     },
     {
-      id: "professional",
-      rank: 2,
-      name: "Professional",
-      description: "The most popular choice for growing businesses needing more power.",
-      price: { monthly: 6499, yearly: 64990 },
-      icon: <Crown size={20} />,
-      limits: { users: 25, leads: 10000, storage: "50GB" },
-      features: ["25 Team Members", "10,000 Leads/mo", "Advanced CRM", "Priority Support", "API Access"],
-      popular: true,
+      label: "Monthly Leads",
+      used: stats.usage.leads,
+      total: activeSubscription?.leads || 0,
+      icon: <Zap size={16} />,
+      color: "bg-orange-500"
     },
     {
-      id: "enterprise",
-      rank: 3,
-      name: "Enterprise",
-      description: "Complete control and unlimited power for large scale operations.",
-      price: { monthly: 16499, yearly: 164990 },
-      icon: <Sparkles size={20} />,
-      limits: { users: "Unlimited", leads: "Unlimited", storage: "500GB" },
-      features: ["Unlimited Team", "Unlimited Leads", "Custom Branding", "Dedicated Manager", "24/7 Support"],
+      label: "Cloud Storage",
+      used: stats.usage.storage,
+      total: activeSubscription?.storage || 0,
+      unit: "GB",
+      icon: <HardDrive size={16} />,
+      color: "bg-purple-500"
     },
-  ];
+  ] : [];
 
-  const usageData = [
-    { label: "Team Members", used: 18, total: 25, icon: <Users size={16} />, color: "bg-blue-500" },
-    { label: "Monthly Leads", used: 7420, total: 10000, icon: <Zap size={16} />, color: "bg-orange-500" },
-    { label: "Cloud Storage", used: 32, total: 50, unit: "GB", icon: <HardDrive size={16} />, color: "bg-purple-500" },
-  ];
+  const billingHistory = stats?.billingHistory.map(sub => ({
+    id: `SUB-${sub.id.toString().padStart(4, '0')}`,
+    date: new Date(sub.onboardingDate).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    }),
+    amount: `₹${parseFloat(sub.amount).toLocaleString()}`,
+    status: sub.status,
+    method: "Product Key"
+  })) || [];
 
-  const billingHistory = [
-    { id: "INV-2024-001", date: "Dec 15, 2023", amount: "₹6,499.00", status: "Paid", method: "Visa •••• 4242" },
-    { id: "INV-2023-012", date: "Nov 15, 2023", amount: "₹6,499.00", status: "Paid", method: "Visa •••• 4242" },
-    { id: "INV-2023-011", date: "Oct 15, 2023", amount: "₹6,499.00", status: "Paid", method: "Visa •••• 4242" },
-  ];
+  const currentPlan = plans.find((p) => p.id === activePlanName) || plans[0];
 
-  const currentPlan = plans.find((p) => p.id === activePlanId);
+  if (statsLoading || plansLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex flex-col items-center justify-center min-h-[80vh] ml-6">
+          <Loader2 className="w-12 h-12 text-orange-500 animate-spin mb-4" />
+          <p className="text-gray-500 font-bold uppercase tracking-widest text-sm">Loading Subscription Details...</p>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (!currentPlan) {
+    return (
+      <DashboardLayout>
+        <div className="flex flex-col items-center justify-center min-h-[80vh] ml-6">
+          <Package className="w-12 h-12 text-gray-300 mb-4" />
+          <p className="text-gray-500 font-bold">No Plan Found</p>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -90,11 +152,20 @@ const ManageSubscription = () => {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <button className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-gray-600 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg transition-all">
+              <button
+                onClick={() => {
+                  refetch();
+                  toast.success("Billing data synchronized!");
+                }}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-gray-600 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg transition-all"
+              >
                 <RefreshCw size={16} />
                 Sync Billing
               </button>
-              <button className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-gray-900 border border-transparent rounded-lg hover:bg-black shadow-sm transition-all">
+              <button
+                onClick={() => document.getElementById('plans-section')?.scrollIntoView({ behavior: 'smooth' })}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-gray-900 border border-transparent rounded-lg hover:bg-black shadow-sm transition-all"
+              >
                 Upgrade Plan
               </button>
             </div>
@@ -121,12 +192,14 @@ const ManageSubscription = () => {
                           Active
                         </span>
                       </div>
-                      <p className="text-gray-500 text-sm mt-1">Your next charge is <span className="text-gray-900 font-semibold">₹{currentPlan.price[billingCycle].toLocaleString()}</span> on <span className="text-gray-900 font-semibold text-sm">Jan 15, 2025</span></p>
+                      <p className="text-gray-500 text-sm mt-1">
+                        Your next charge is <span className="text-gray-900 font-semibold">₹{currentPlan?.price[billingCycle].toLocaleString()}</span> on <span className="text-gray-900 font-semibold text-sm">{activeSubscription ? new Date(activeSubscription.expiryDate).toLocaleDateString() : 'N/A'}</span>
+                      </p>
                     </div>
                   </div>
                   <div className="hidden sm:block text-right">
-                    <div className="text-sm text-gray-400 font-medium">Billed {billingCycle}ly</div>
-                    <div className="text-lg font-bold text-gray-900">₹{currentPlan.price[billingCycle].toLocaleString()}/mo</div>
+                    <div className="text-sm text-gray-400 font-medium">Billed {activeSubscription?.billingCycle || billingCycle}</div>
+                    <div className="text-lg font-bold text-gray-900">₹{currentPlan?.price[billingCycle].toLocaleString()}/mo</div>
                   </div>
                 </div>
 
@@ -135,19 +208,19 @@ const ManageSubscription = () => {
                     <div className="text-xs font-bold text-gray-400 uppercase tracking-wider">Payment Method</div>
                     <div className="flex items-center gap-2 text-sm font-semibold text-gray-700">
                       <FiCreditCard className="text-orange-500" />
-                      Visa •••• 4242
+                      Product Key Activation
                     </div>
                   </div>
                   <div className="space-y-1">
                     <div className="text-xs font-bold text-gray-400 uppercase tracking-wider">Plan Created</div>
                     <div className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                       <Calendar size={14} className="text-orange-500" />
-                      Oct 12, 2023
+                      {activeSubscription ? new Date(activeSubscription.onboardingDate).toLocaleDateString() : 'N/A'}
                     </div>
                   </div>
                   <div className="space-y-1 col-span-2 sm:col-span-1">
                     <button className="text-sm font-bold text-orange-600 hover:text-orange-700 underline decoration-2 underline-offset-4 flex items-center gap-1">
-                      Update details <ArrowRight size={14} />
+                      View details <ArrowRight size={14} />
                     </button>
                   </div>
                 </div>
@@ -215,7 +288,41 @@ const ManageSubscription = () => {
                 </div>
               </div>
 
-              {/* PAYMENT DETAILS */}
+              {/* REDEEM PRODUCT KEY */}
+              <div className="bg-white rounded-2xl shadow-sm border border-orange-100 p-6 bg-gradient-to-br from-white to-orange-50/30">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 bg-orange-100 rounded-lg">
+                    <KeyRound className="w-5 h-5 text-orange-600" />
+                  </div>
+                  <h4 className="text-sm font-bold text-gray-900 uppercase tracking-widest">Redeem Product Key</h4>
+                </div>
+                <p className="text-xs text-gray-500 mb-4 leading-relaxed">
+                  Have a license key? Enter it below to instantly upgrade or extend your current subscription.
+                </p>
+                <div className="space-y-3">
+                  <input
+                    type="text"
+                    placeholder="XXXX-XXXX-XXXX-XXXX"
+                    value={productKey}
+                    onChange={(e) => setProductKey(e.target.value.toUpperCase())}
+                    className="w-full px-4 py-3 bg-white border-2 border-orange-100 rounded-xl text-sm font-mono placeholder-gray-300 focus:outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 transition-all font-bold"
+                  />
+                  <button
+                    onClick={handleRedeem}
+                    disabled={isRedeeming}
+                    className="w-full py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl font-bold text-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-md shadow-orange-500/20 active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {isRedeeming ? (
+                      <RefreshCw size={16} className="animate-spin" />
+                    ) : (
+                      <Zap size={16} />
+                    )}
+                    Activate Key
+                  </button>
+                </div>
+              </div>
+
+              {/* PAYMENT DETAILS (Existing) */}
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                 <h4 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-6">Support & Help</h4>
                 <div className="space-y-4">
@@ -303,7 +410,7 @@ const ManageSubscription = () => {
           </div>
 
           {/* PLAN UPGRADE SECTION */}
-          <div className="mt-20">
+          <div className="mt-20" id="plans-section">
             <div className="text-center mb-12">
               <h2 className="text-3xl font-black text-gray-900 mb-2">Explored other possibilities?</h2>
               <p className="text-gray-500">Fine tune your experience by switching to a plan that fits your current momentum.</p>
@@ -311,7 +418,7 @@ const ManageSubscription = () => {
 
             <div className="grid lg:grid-cols-3 gap-8 pb-12">
               {plans.map((plan) => (
-                <div key={plan.id} className={`bg-white rounded-[32px] p-8 border-2 transition-all duration-500 group relative ${plan.id === activePlanId
+                <div key={plan.id} className={`bg-white rounded-[32px] p-8 border-2 transition-all duration-500 group relative ${plan.id === activePlanName
                   ? "border-orange-500 shadow-2xl shadow-orange-500/10"
                   : "border-gray-100 hover:border-orange-200 hover:shadow-xl"
                   }`}>
@@ -322,11 +429,11 @@ const ManageSubscription = () => {
                   )}
 
                   <div className="flex items-center justify-between mb-8">
-                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${plan.id === activePlanId ? "bg-orange-500 text-white" : "bg-orange-50 text-orange-600 group-hover:bg-orange-100"
+                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${plan.id === activePlanName ? "bg-orange-500 text-white" : "bg-orange-50 text-orange-600 group-hover:bg-orange-100"
                       }`}>
                       {plan.icon}
                     </div>
-                    {plan.id === activePlanId && <BadgeCheck className="text-orange-500" size={24} />}
+                    {plan.id === activePlanName && <BadgeCheck className="text-orange-500" size={24} />}
                   </div>
 
                   <h3 className="text-xl font-bold text-gray-900 mb-1">{plan.name}</h3>
@@ -347,14 +454,14 @@ const ManageSubscription = () => {
                   </ul>
 
                   <button
-                    disabled={plan.id === activePlanId}
-                    onClick={() => setActivePlanId(plan.id)}
-                    className={`w-full py-4 rounded-xl font-black text-sm tracking-wide transition-all duration-300 flex items-center justify-center gap-2 shadow-lg ${plan.id === activePlanId
+                    disabled={plan.id === activePlanName}
+                    onClick={() => toast.error("Online payment integration coming soon. Please use a Product Key to upgrade.")}
+                    className={`w-full py-4 rounded-xl font-black text-sm tracking-wide transition-all duration-300 flex items-center justify-center gap-2 shadow-lg ${plan.id === activePlanName
                       ? "bg-gray-100 text-gray-400 cursor-default shadow-none"
                       : "bg-gray-900 text-white hover:bg-black hover:shadow-gray-900/40 active:scale-95 translate-y-0 hover:-translate-y-1"
                       }`}>
-                    {plan.id === activePlanId ? "Active Component" : plan.rank > currentPlan.rank ? "Move Up to " + plan.name : "Downgrade"}
-                    {plan.id !== activePlanId && (plan.rank > currentPlan.rank ? <MoveUp size={16} /> : <MoveDown size={16} />)}
+                    {plan.id === activePlanName ? "Active Plan" : plan.rank > currentPlan.rank ? "Move Up to " + plan.name : "Downgrade"}
+                    {plan.id !== activePlanName && (plan.rank > currentPlan.rank ? <MoveUp size={16} /> : <MoveDown size={16} />)}
                   </button>
                 </div>
               ))}

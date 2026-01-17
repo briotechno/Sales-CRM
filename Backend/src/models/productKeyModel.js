@@ -75,6 +75,19 @@ const ProductKey = {
     delete: async (id) => {
         const [result] = await pool.query('DELETE FROM product_keys WHERE id = ?', [id]);
         return result.affectedRows > 0;
+    },
+
+    findByKey: async (productKey) => {
+        const [rows] = await pool.query('SELECT * FROM product_keys WHERE product_key = ?', [productKey]);
+        return rows[0];
+    },
+
+    updateStatusByKey: async (productKey, status, enterpriseId) => {
+        const [result] = await pool.query(
+            'UPDATE product_keys SET status = ?, enterprise_id = ? WHERE product_key = ?',
+            [status, enterpriseId, productKey]
+        );
+        return result.affectedRows > 0;
     }
 };
 

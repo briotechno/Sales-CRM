@@ -11,7 +11,7 @@ const AddPlanModal = ({ isOpen, onClose }) => {
         key_features: [],
         price: 0,
         default_users: 0,
-        default_leads: 0,
+        monthly_leads: 0,
         default_storage: 0
     });
     const [currentFeature, setCurrentFeature] = useState("");
@@ -58,7 +58,7 @@ const AddPlanModal = ({ isOpen, onClose }) => {
                 key_features: [],
                 price: 0,
                 default_users: 0,
-                default_leads: 0,
+                monthly_leads: 0,
                 default_storage: 0
             });
             setCurrentFeature("");
@@ -207,17 +207,17 @@ const AddPlanModal = ({ isOpen, onClose }) => {
                     />
                 </div>
 
-                {/* Leads */}
+                {/* Monthly Leads */}
                 <div>
                     <label className="flex items-center gap-2 text-sm font-semibold mb-1 text-gray-700">
-                        <Zap size={16} className="text-[#FF7B1D]" /> Monthly Leads Limit
+                        <Zap size={16} className="text-[#00C853]" /> Monthly Leads
                     </label>
                     <input
                         type="number"
-                        name="default_leads"
-                        value={form.default_leads}
+                        name="monthly_leads"
+                        value={form.monthly_leads}
                         onChange={handleChange}
-                        className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all font-semibold"
+                        className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all font-semibold"
                     />
                 </div>
 

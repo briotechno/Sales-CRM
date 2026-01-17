@@ -36,7 +36,7 @@ const Plan = {
     },
 
     create: async (data) => {
-        let { name, description, key_features, price, default_users, default_leads, default_storage } = data;
+        let { name, description, key_features, price, default_users, monthly_leads, default_storage } = data;
 
         // Handle array type from frontend
         if (Array.isArray(key_features)) {
@@ -44,14 +44,14 @@ const Plan = {
         }
 
         const [result] = await pool.query(
-            'INSERT INTO plans (name, description, key_features, price, default_users, default_leads, default_storage) VALUES (?, ?, ?, ?, ?, ?, ?)',
-            [name, description, key_features, price, default_users, default_leads, default_storage]
+            'INSERT INTO plans (name, description, key_features, price, default_users, monthly_leads, default_storage) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            [name, description, key_features, price, default_users, monthly_leads || 0, default_storage]
         );
         return result.insertId;
     },
 
     update: async (id, data) => {
-        let { name, description, key_features, price, default_users, default_leads, default_storage } = data;
+        let { name, description, key_features, price, default_users, monthly_leads, default_storage } = data;
 
         // Handle array type from frontend
         if (Array.isArray(key_features)) {
@@ -59,8 +59,8 @@ const Plan = {
         }
 
         await pool.query(
-            'UPDATE plans SET name = ?, description = ?, key_features = ?, price = ?, default_users = ?, default_leads = ?, default_storage = ? WHERE id = ?',
-            [name, description, key_features, price, default_users, default_leads, default_storage, id]
+            'UPDATE plans SET name = ?, description = ?, key_features = ?, price = ?, default_users = ?, monthly_leads = ?, default_storage = ? WHERE id = ?',
+            [name, description, key_features, price, default_users, monthly_leads || 0, default_storage, id]
         );
         return true;
     },
@@ -68,6 +68,11 @@ const Plan = {
     delete: async (id) => {
         await pool.query('DELETE FROM plans WHERE id = ?', [id]);
         return true;
+    },
+
+    findByName: async (name) => {
+        const [rows] = await pool.query('SELECT * FROM plans WHERE name = ?', [name]);
+        return rows[0];
     }
 };
 

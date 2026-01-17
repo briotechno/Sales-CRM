@@ -108,7 +108,7 @@ const PricingPage = () => {
         });
 
         setTimeout(() => {
-          navigate("/dashboard");
+          navigate("/crm/dashboard");
         }, 1500);
       } else {
         toast.success(`${pkg.name} Plan selected! Redirecting to login...`, {

@@ -1,4 +1,5 @@
 const BusinessInfo = require('../models/businessInfoModel');
+const User = require('../models/userModel');
 
 const createOrUpdateBusinessInfo = async (req, res) => {
     try {
@@ -30,7 +31,25 @@ const getBusinessInfo = async (req, res) => {
         const info = await BusinessInfo.findByUserId(userId);
 
         if (!info) {
-            return res.status(404).json({ message: 'Business information not found' });
+            // Fallback to User data if business info not found
+            const user = await User.findById(userId);
+            if (!user) {
+                return res.status(404).json({ message: 'User not found' });
+            }
+
+            const fallbackInfo = {
+                user_id: userId,
+                company_name: user.businessName || '',
+                legal_name: user.businessName || '',
+                business_type: user.businessType || 'Private Limited Company',
+                email: user.email || '',
+                phone: user.mobileNumber || '',
+                gst_number: user.gst || '',
+                street_address: user.address || '',
+                industry: 'Information Technology' // Default
+            };
+
+            return res.status(200).json(fallbackInfo);
         }
 
         res.status(200).json(info);

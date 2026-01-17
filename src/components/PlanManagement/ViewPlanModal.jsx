@@ -47,9 +47,9 @@ const ViewPlanModal = ({ isOpen, onClose, plan }) => {
                         icon={<Users size={20} className="text-blue-500" />}
                     />
                     <DetailRow
-                        label="Leads Limit"
-                        value={plan.default_leads}
-                        icon={<Zap size={20} className="text-orange-500" />}
+                        label="Monthly Leads"
+                        value={plan.monthly_leads}
+                        icon={<Zap size={20} className="text-[#00C853]" />}
                     />
                     <DetailRow
                         label="Included Storage"

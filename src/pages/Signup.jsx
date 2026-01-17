@@ -40,6 +40,7 @@ export default function Signup() {
     address: "",
     password: "",
     confirmPassword: "",
+    productKey: "",
   });
 
   const handleChange = (e) => {
@@ -105,8 +106,15 @@ export default function Signup() {
         token: response.token
       }));
 
-      toast.success("Signup successful! Please select a subscription plan.");
-      navigate("/packages?signed_up=true");
+      toast.success(response.user.planActivated
+        ? "Signup successful! Your plan has been activated."
+        : "Signup successful! Please select a subscription plan.");
+
+      if (response.user.planActivated) {
+        navigate("/crm/dashboard");
+      } else {
+        navigate("/packages?signed_up=true");
+      }
     } catch (err) {
       toast.error(err?.data?.message || "Signup failed. Please try again.");
     }
@@ -457,6 +465,28 @@ export default function Signup() {
                     )}
                   </button>
                 </div>
+              </div>
+
+              {/* Product Key (Optional) */}
+              <div className="pt-2 border-t border-gray-100 flex flex-col gap-2">
+                <label className="flex items-center gap-2 text-[11px] font-bold text-orange-600 uppercase tracking-wider">
+                  <Check className="w-3 h-3" /> Have a Product Key? (Optional)
+                </label>
+                <div className="relative">
+                  <FileText className="absolute left-2.5 top-1/2 -translate-y-1/2 text-black w-4 h-4" />
+                  <input
+                    type="text"
+                    name="productKey"
+                    placeholder="Enter Product Key to activate plan"
+                    value={formData.productKey}
+                    onChange={handleChange}
+                    onKeyPress={handleKeyPress}
+                    className="w-full pl-9 pr-3 py-3 bg-orange-50 border-2 border-orange-100 rounded-xl text-gray-800 placeholder-gray-400 font-mono transition-all focus:border-orange-500 focus:ring-2 focus:ring-orange-200 focus:outline-none"
+                  />
+                </div>
+                <p className="text-[10px] text-gray-500 font-medium">
+                  Entering a valid product key will activate your plan immediately.
+                </p>
               </div>
 
               {/* Password Requirements Checklist */}

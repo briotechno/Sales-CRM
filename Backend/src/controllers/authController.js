@@ -3,6 +3,10 @@ const User = require('../models/userModel');
 const Employee = require('../models/employeeModel');
 const Enterprise = require('../models/enterpriseModel');
 const generateToken = require('../utils/generateToken');
+const ProductKey = require('../models/productKeyModel');
+const Plan = require('../models/planModel');
+const Subscription = require('../models/subscriptionModel');
+const BusinessInfo = require('../models/businessInfoModel');
 
 // @desc    Register a new user
 // @route   POST /api/auth/signup
@@ -17,7 +21,8 @@ const registerUser = async (req, res) => {
         businessType,
         gst,
         address,
-        password
+        password,
+        productKey
     } = req.body;
 
     try {
@@ -47,6 +52,20 @@ const registerUser = async (req, res) => {
         });
 
         if (userId) {
+            let finalPlan = 'Starter';
+            let keyData = null;
+
+            if (productKey) {
+                keyData = await ProductKey.findByKey(productKey);
+                if (!keyData) {
+                    return res.status(400).json({ status: false, message: 'Invalid product key' });
+                }
+                if (keyData.status === 'Active' || keyData.status === 'Used') {
+                    return res.status(400).json({ status: false, message: 'Product key already used' });
+                }
+                finalPlan = keyData.plan;
+            }
+
             // 2. Create Enterprise entry
             const enterpriseId = await Enterprise.create({
                 admin_id: userId,
@@ -58,10 +77,52 @@ const registerUser = async (req, res) => {
                 businessType,
                 gst,
                 address,
-                plan: 'Starter', // Default initial plan
+                plan: finalPlan,
                 status: 'Active',
                 onboardingDate: new Date()
             });
+
+            // 2.1 Create initial BusinessInfo entry
+            await BusinessInfo.createOrUpdate({
+                user_id: userId,
+                company_name: businessName,
+                legal_name: businessName,
+                business_type: businessType,
+                email: email,
+                phone: mobileNumber,
+                gst_number: gst,
+                street_address: address
+            });
+
+            // 3. If product key was used, activate subscription immediately
+            if (keyData) {
+                const planDetails = await Plan.findByName(finalPlan);
+                const expiryDate = new Date();
+
+                // Validity is like "1 Month", "3 Months", "1 Year"
+                if (keyData.validity === '1 Month') expiryDate.setMonth(expiryDate.getMonth() + 1);
+                else if (keyData.validity === '3 Months') expiryDate.setMonth(expiryDate.getMonth() + 3);
+                else if (keyData.validity === '1 Year') expiryDate.setFullYear(expiryDate.getFullYear() + 1);
+                else expiryDate.setMonth(expiryDate.getMonth() + 1); // Default
+
+                await Subscription.create({
+                    enterprise_id: enterpriseId,
+                    name: businessName,
+                    plan: finalPlan,
+                    status: 'Active',
+                    users: keyData.users || (planDetails ? planDetails.default_users : 0),
+                    amount: planDetails ? planDetails.price : 0,
+                    billingCycle: keyData.validity === '1 Year' ? 'Yearly' : 'Monthly',
+                    onboardingDate: new Date(),
+                    expiryDate: expiryDate,
+                    leads: planDetails ? planDetails.monthly_leads : 0,
+                    storage: planDetails ? planDetails.default_storage : 0,
+                    features: []
+                });
+
+                // Mark key as Active/Used
+                await ProductKey.updateStatusByKey(productKey, 'Active', enterpriseId);
+            }
 
             const token = generateToken(userId, 'Admin');
 
@@ -80,7 +141,8 @@ const registerUser = async (req, res) => {
                     businessType,
                     gst,
                     address,
-                    role: 'Admin'
+                    role: 'Admin',
+                    planActivated: !!keyData // Flag for frontend redirection
                 },
             });
         } else {
