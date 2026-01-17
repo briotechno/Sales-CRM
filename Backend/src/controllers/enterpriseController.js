@@ -11,8 +11,8 @@ const enterpriseController = {
     // @access  Private
     completeOnboarding: async (req, res) => {
         try {
-            const { plan, employees, storage, price } = req.body;
-            const userId = req.user.id; // Corrected to use req.user.id
+            const { plan, employees, storage, price, leads } = req.body;
+            const userId = req.user.id;
 
             // Find the enterprise by admin_id
             const enterprise = await Enterprise.findByAdminId(userId);
@@ -23,6 +23,9 @@ const enterpriseController = {
                     message: 'Enterprise not found for this user'
                 });
             }
+
+            // Fetch Plan details to get defaults (especially leads if not passed)
+            const planDetails = await Plan.findByName(plan);
 
             // Update enterprise plan
             await Enterprise.update(enterprise.id, {
@@ -45,8 +48,8 @@ const enterpriseController = {
                 billingCycle: 'Monthly',
                 onboardingDate: new Date(),
                 expiryDate: expiryDate,
-                leads: 0, // Initial
-                storage: storage,
+                leads: leads || (planDetails ? planDetails.monthly_leads : 0),
+                storage: storage || (planDetails ? planDetails.default_storage : 0),
                 features: []
             });
 
@@ -227,8 +230,8 @@ const enterpriseController = {
                 billingCycle: keyData.validity === '1 Year' ? 'Yearly' : 'Monthly',
                 onboardingDate: new Date(),
                 expiryDate: expiryDate,
-                leads: planDetails ? planDetails.monthly_leads : 0,
-                storage: planDetails ? planDetails.default_storage : 0,
+                leads: keyData.leads || (planDetails ? planDetails.monthly_leads : 0),
+                storage: keyData.storage || (planDetails ? planDetails.default_storage : 0),
                 features: []
             });
 
@@ -257,6 +260,17 @@ const enterpriseController = {
             }
 
             const activeSubscription = await Subscription.findActiveByEnterpriseId(enterprise.id);
+
+            // Fallback to Plan limits if Subscription has 0/missing limits (fixes legacy/buggy data)
+            if (activeSubscription) {
+                if (!activeSubscription.leads || !activeSubscription.storage) {
+                    const planDetails = await Plan.findByName(activeSubscription.plan);
+                    if (planDetails) {
+                        if (!activeSubscription.leads) activeSubscription.leads = planDetails.monthly_leads;
+                        if (!activeSubscription.storage) activeSubscription.storage = planDetails.default_storage;
+                    }
+                }
+            }
 
             // Usage counts
             const [empRows] = await pool.query('SELECT COUNT(*) as count FROM employees WHERE user_id = ?', [userId]);

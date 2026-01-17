@@ -77,25 +77,30 @@ const ManageSubscription = () => {
   const usageData = stats ? [
     {
       label: "Team Members",
-      used: stats.usage.employees,
-      total: activeSubscription?.users || 0,
+      used: Number(stats.usage?.employees || 0),
+      total: activeSubscription?.users,
+      unit: "",
       icon: <Users size={16} />,
-      color: "bg-blue-500"
+      color: "bg-blue-500",
+      bg: "bg-blue-100"
     },
     {
       label: "Monthly Leads",
-      used: stats.usage.leads,
-      total: activeSubscription?.leads || 0,
+      used: Number(stats.usage?.leads || 0),
+      total: activeSubscription?.leads,
+      unit: "",
       icon: <Zap size={16} />,
-      color: "bg-orange-500"
+      color: "bg-orange-500",
+      bg: "bg-orange-100"
     },
     {
       label: "Cloud Storage",
-      used: stats.usage.storage,
-      total: activeSubscription?.storage || 0,
+      used: Number(stats.usage?.storage || 0),
+      total: activeSubscription?.storage,
       unit: "GB",
       icon: <HardDrive size={16} />,
-      color: "bg-purple-500"
+      color: "bg-purple-500",
+      bg: "bg-purple-100"
     },
   ] : [];
 
@@ -233,27 +238,43 @@ const ManageSubscription = () => {
                   <button className="text-sm font-semibold text-gray-400 hover:text-gray-600">See details</button>
                 </div>
                 <div className="grid gap-8">
-                  {usageData.map((item, idx) => (
-                    <div key={idx} className="space-y-3">
-                      <div className="flex items-center justify-between text-sm font-semibold">
-                        <div className="flex items-center gap-2 text-gray-700">
-                          <span className="p-1.5 bg-gray-50 rounded-lg text-gray-400 group-hover:text-orange-500 transition-colors">
-                            {item.icon}
-                          </span>
-                          {item.label}
+                  {usageData.map((item, idx) => {
+                    const isUnlimited = item.total === "Unlimited" || item.total === -1 || item.total === "0" || item.total === 0;
+                    // Note: Depending on logic, 0 might mean 0 allowed, OR unlimited. 
+                    // But usually leads=0 means 0 allowed. 
+                    // However, if we want to show safe UI, let's treat explicit high numbers as unlimited or just string "Unlimited".
+                    // Let's assume standard logic: Total is a number. If it's string "Unlimited", handle it.
+
+                    const totalNum = Number(item.total || 0);
+                    const isTrulyUnlimited = item.total === "Unlimited" || item.total === -1;
+
+                    const totalDisplay = isTrulyUnlimited ? "∞" : totalNum.toLocaleString();
+                    const percentage = isTrulyUnlimited || totalNum === 0
+                      ? (item.used > 0 ? 100 : 0) // Full bar if used > 0 but total is 0 (over limit?) or just 0.
+                      : Math.min((item.used / totalNum) * 100, 100);
+
+                    return (
+                      <div key={idx} className="space-y-3">
+                        <div className="flex items-center justify-between text-sm font-semibold">
+                          <div className="flex items-center gap-2 text-gray-700">
+                            <div className={`p-1.5 rounded-lg ${item.bg || 'bg-gray-50'} text-gray-600`}>
+                              {item.icon}
+                            </div>
+                            {item.label}
+                          </div>
+                          <div className="text-gray-400">
+                            <span className="text-gray-900">{item.used.toLocaleString()}</span> / {totalDisplay} {item.unit}
+                          </div>
                         </div>
-                        <div className="text-gray-400">
-                          <span className="text-gray-900">{item.used.toLocaleString()}</span> / {item.total === "Unlimited" ? "∞" : item.total.toLocaleString()} {item.unit || ""}
+                        <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full ${item.color} rounded-full transition-all duration-1000 ease-out`}
+                            style={{ width: `${percentage}%` }}
+                          ></div>
                         </div>
                       </div>
-                      <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
-                        <div
-                          className={`h-full ${item.color} rounded-full transition-all duration-1000 ease-out`}
-                          style={{ width: `${(item.used / (item.total === 'Unlimited' ? item.used : item.total)) * 100}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               </div>
             </div>

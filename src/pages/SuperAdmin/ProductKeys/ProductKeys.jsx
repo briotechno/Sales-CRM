@@ -42,7 +42,9 @@ export default function ProductKeys() {
         enterprise: "",
         plan: "",
         validity: "1 Month",
-        users: 0
+        users: 0,
+        leads: 0,
+        storage: 0
     });
 
     // Pagination State
@@ -72,12 +74,35 @@ export default function ProductKeys() {
     const productKeys = response?.data || [];
     const pagination = response?.pagination || { totalPages: 1, total: 0 };
 
-    // Set default plan when plans load
+    // Set defaults when plans load or plan selection changes
     useEffect(() => {
-        if (plansList.length > 0 && !quickData.plan) {
-            setQuickData(prev => ({ ...prev, plan: plansList[0].name }));
+        if (plansList.length > 0) {
+            const currentPlanName = quickData.plan || plansList[0].name;
+            const selectedPlan = plansList.find(p => p.name === currentPlanName);
+
+            if (selectedPlan) {
+                // If plan changed or just initialized, update defaults
+                // We check if quickData.plan !== currentPlanName to avoid infinite loop if we depended on other things,
+                // but here we want to update limits whenever plan changes.
+                // To avoid overwriting user edits immediately if checking `plansList` changes, we need care.
+                // Simpler: Just update whenever quickData.plan matches a new plan.
+
+                // Only update if the logic implies a plan switch or init
+                setQuickData(prev => {
+                    // Prevent overwrite if values match already (optimization)
+                    if (prev.plan === currentPlanName && prev.users === selectedPlan.default_users) return prev;
+
+                    return {
+                        ...prev,
+                        plan: currentPlanName,
+                        users: selectedPlan.default_users || 0,
+                        leads: selectedPlan.monthly_leads || 0,
+                        storage: selectedPlan.default_storage || 0
+                    };
+                });
+            }
         }
-    }, [plansList]);
+    }, [quickData.plan, plansList]);
 
     useEffect(() => {
         const handleClickOutside = (e) => {
@@ -90,17 +115,26 @@ export default function ProductKeys() {
     }, []);
 
     const handleQuickGenerate = async () => {
-        if (!quickData.enterprise || !quickData.users || !quickData.plan) {
-            toast.error("Please fill enterprise, plan and user fields");
+        if (!quickData.enterprise || !quickData.plan) {
+            toast.error("Please select Enterprise and Plan");
             return;
         }
 
         try {
             await createProductKey(quickData).unwrap();
             toast.success("Product key generated successfully");
-            setQuickData({ enterprise: "", plan: plansList[0]?.name || "", validity: "1 Month", users: 0 });
+            // Reset form
+            const defaultPlan = plansList.find(p => p.name === quickData.plan) || plansList[0];
+            setQuickData({
+                enterprise: "",
+                plan: defaultPlan?.name || "",
+                validity: "1 Month",
+                users: defaultPlan?.default_users || 0,
+                leads: defaultPlan?.monthly_leads || 0,
+                storage: defaultPlan?.default_storage || 0
+            });
         } catch (error) {
-            toast.error("Failed to generate key");
+            toast.error(error?.data?.message || "Failed to generate key");
         }
     };
 
@@ -203,7 +237,7 @@ export default function ProductKeys() {
                         Quick Generate
                     </h3>
 
-                    <div className="grid grid-cols-1 md:grid-cols-5 gap-5">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
                         <div className="space-y-2">
                             <label className="block text-xs font-bold text-gray-500 uppercase">Enterprise</label>
                             <select
@@ -249,15 +283,37 @@ export default function ProductKeys() {
                             <label className="block text-xs font-bold text-gray-500 uppercase">Users Limit</label>
                             <input
                                 type="number"
-                                placeholder="50"
+                                placeholder="Users"
                                 value={quickData.users}
-                                onChange={(e) => setQuickData({ ...quickData, users: e.target.value })}
+                                onChange={(e) => setQuickData({ ...quickData, users: parseInt(e.target.value) || 0 })}
+                                className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 font-semibold transition"
+                            />
+                        </div>
+
+                        {/* New Fields */}
+                        <div className="space-y-2">
+                            <label className="block text-xs font-bold text-gray-500 uppercase">Monthly Leads</label>
+                            <input
+                                type="number"
+                                placeholder="Leads"
+                                value={quickData.leads}
+                                onChange={(e) => setQuickData({ ...quickData, leads: parseInt(e.target.value) || 0 })}
+                                className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 font-semibold transition"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="block text-xs font-bold text-gray-500 uppercase">Storage (GB)</label>
+                            <input
+                                type="number"
+                                placeholder="Storage"
+                                value={quickData.storage}
+                                onChange={(e) => setQuickData({ ...quickData, storage: parseInt(e.target.value) || 0 })}
                                 className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 font-semibold transition"
                             />
                         </div>
 
                         {/* Generate Button */}
-                        <div className="flex items-end">
+                        <div className="flex items-end lg:col-span-2">
                             <button
                                 onClick={handleQuickGenerate}
                                 disabled={isGenerating}

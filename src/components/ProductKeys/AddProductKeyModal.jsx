@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { KeyRound, Layers, Building2, Calendar, Users, Loader2 } from "lucide-react";
+import { KeyRound, Layers, Building2, Calendar, Users, Loader2, Zap, HardDrive } from "lucide-react";
 import Modal from "../common/Modal";
 import { toast } from "react-hot-toast";
 import { useCreateProductKeyMutation } from "../../store/api/productKeyApi";
@@ -12,6 +12,8 @@ const AddProductKeyModal = ({ isOpen, onClose }) => {
     plan: "",
     validity: "1 Month",
     users: "",
+    leads: "",
+    storage: ""
   });
 
   const [createProductKey, { isLoading }] = useCreateProductKeyMutation();
@@ -21,10 +23,26 @@ const AddProductKeyModal = ({ isOpen, onClose }) => {
   const enterprisesList = enterprisesResponse?.data || [];
 
   useEffect(() => {
-    if (plansList.length > 0 && !form.plan) {
-      setForm(prev => ({ ...prev, plan: plansList[0].name }));
+    if (plansList.length > 0) {
+      const currentPlanName = form.plan || plansList[0].name;
+      const selectedPlan = plansList.find(p => p.name === currentPlanName);
+
+      if (selectedPlan) {
+        setForm(prev => {
+          // If detailed fields align with plan, avoid redundant updates (simple check)
+          if (prev.plan === currentPlanName && prev.users == selectedPlan.default_users) return prev;
+
+          return {
+            ...prev,
+            plan: currentPlanName,
+            users: selectedPlan.default_users || 0,
+            leads: selectedPlan.monthly_leads || 0,
+            storage: selectedPlan.default_storage || 0
+          };
+        });
+      }
     }
-  }, [plansList]);
+  }, [plansList, form.plan]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -155,6 +173,38 @@ const AddProductKeyModal = ({ isOpen, onClose }) => {
             value={form.users}
             onChange={handleChange}
             placeholder="50"
+            className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all font-semibold"
+          />
+        </div>
+
+        {/* Monthly Leads */}
+        <div>
+          <label className="flex items-center gap-2 text-sm font-semibold mb-1 text-gray-700">
+            <Zap size={16} className="text-[#FF7B1D]" />
+            Monthly Leads
+          </label>
+          <input
+            name="leads"
+            type="number"
+            value={form.leads}
+            onChange={handleChange}
+            placeholder="Leads"
+            className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all font-semibold"
+          />
+        </div>
+
+        {/* Storage */}
+        <div>
+          <label className="flex items-center gap-2 text-sm font-semibold mb-1 text-gray-700">
+            <HardDrive size={16} className="text-[#FF7B1D]" />
+            Storage (GB)
+          </label>
+          <input
+            name="storage"
+            type="number"
+            value={form.storage}
+            onChange={handleChange}
+            placeholder="GB"
             className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all font-semibold"
           />
         </div>

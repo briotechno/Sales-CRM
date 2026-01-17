@@ -41,10 +41,10 @@ import {
 } from "recharts";
 import NumberCard from "../../components/NumberCard";
 import { useGetCRMStatsQuery } from "../../store/api/crmDashboardApi";
-import { Loader2 } from "lucide-react";
+import { Loader2, RefreshCw } from "lucide-react";
 
 export default function CRMDashboard() {
-  const { data: stats, isLoading } = useGetCRMStatsQuery();
+  const { data: stats, isLoading, isFetching, refetch } = useGetCRMStatsQuery();
 
   if (isLoading) {
     return (
@@ -78,7 +78,7 @@ export default function CRMDashboard() {
       <div className="min-h-screen ">
         {/* Header */}
         <div className="bg-white border-b my-3">
-          <div className="max-w-7xl mx-auto px-0 ml-10 py-4">
+          <div className="w-full px-6 py-4">
             <div className="flex items-center justify-between">
               {/* Left Title Section */}
               <div>
@@ -92,6 +92,15 @@ export default function CRMDashboard() {
                     All Dashboard
                   </span>
                 </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={refetch}
+                  className="p-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-600 transition-colors shadow-sm"
+                  title="Refresh Dashboard"
+                >
+                  <RefreshCw size={20} className={isFetching ? "animate-spin" : ""} />
+                </button>
               </div>
             </div>
           </div>

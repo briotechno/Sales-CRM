@@ -35,6 +35,7 @@ import { subscriptionApi } from './api/subscriptionApi';
 import { productKeyApi } from './api/productKeyApi';
 import { planApi } from './api/planApi';
 import { crmDashboardApi } from './api/crmDashboardApi';
+import { mainDashboardApi } from './api/mainDashboardApi';
 
 
 
@@ -75,6 +76,7 @@ export const store = configureStore({
         [productKeyApi.reducerPath]: productKeyApi.reducer,
         [planApi.reducerPath]: planApi.reducer,
         [crmDashboardApi.reducerPath]: crmDashboardApi.reducer,
+        [mainDashboardApi.reducerPath]: mainDashboardApi.reducer,
 
 
 
@@ -114,6 +116,7 @@ export const store = configureStore({
             productKeyApi.middleware,
             planApi.middleware,
             crmDashboardApi.middleware,
+            mainDashboardApi.middleware,
             limitErrorMiddleware
         ),
 });
