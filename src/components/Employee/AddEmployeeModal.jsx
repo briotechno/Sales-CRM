@@ -204,7 +204,10 @@ const AddEmployeeModal = ({ isOpen, onClose }) => {
       toast.success("Employee added successfully!");
       onClose();
     } catch (err) {
-      toast.error(err.data?.message || "Failed to add employee");
+      // Don't show toast for limit errors, the global modal handles that
+      if (!err.data?.limitReached && err.status !== 402) {
+        toast.error(err.data?.message || "Failed to add employee");
+      }
     }
   };
 

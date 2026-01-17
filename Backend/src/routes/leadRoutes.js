@@ -8,8 +8,9 @@ const {
     deleteLead
 } = require('../controllers/leadController');
 const { protect } = require('../middleware/authMiddleware');
+const { checkLimit } = require('../middleware/limitMiddleware');
 
-router.post('/', protect, createLead);
+router.post('/', protect, checkLimit('leads'), createLead);
 router.get('/', protect, getLeads);
 router.get('/:id', protect, getLeadById);
 router.put('/:id', protect, updateLead);

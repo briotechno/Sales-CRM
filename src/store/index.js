@@ -1,5 +1,7 @@
 import { configureStore } from '@reduxjs/toolkit';
 import authReducer from './slices/authSlice';
+import uiReducer from './slices/uiSlice';
+import { limitErrorMiddleware } from './middleware/limitErrorMiddleware';
 import { authApi } from './api/authApi';
 import { businessApi } from './api/businessApi';
 import { departmentApi } from './api/departmentApi';
@@ -38,6 +40,7 @@ import { planApi } from './api/planApi';
 export const store = configureStore({
     reducer: {
         auth: authReducer,
+        ui: uiReducer,
         [authApi.reducerPath]: authApi.reducer,
         [businessApi.reducerPath]: businessApi.reducer,
         [departmentApi.reducerPath]: departmentApi.reducer,
@@ -107,8 +110,7 @@ export const store = configureStore({
             enterpriseApi.middleware,
             subscriptionApi.middleware,
             productKeyApi.middleware,
-            planApi.middleware
-
-
+            planApi.middleware,
+            limitErrorMiddleware
         ),
 });

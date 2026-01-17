@@ -9,6 +9,7 @@ const {
 } = require('../controllers/employeeController');
 
 const { protect } = require('../middleware/authMiddleware');
+const { checkLimit } = require('../middleware/limitMiddleware');
 const upload = require('../middleware/uploadMiddleware');
 
 const employeeUploadFields = [
@@ -19,7 +20,7 @@ const employeeUploadFields = [
     { name: 'cancelled_cheque', maxCount: 1 }
 ];
 
-router.post('/', protect, upload.fields(employeeUploadFields), createEmployee);
+router.post('/', protect, checkLimit('users'), upload.fields(employeeUploadFields), createEmployee);
 router.get('/', protect, getEmployees);
 router.get('/:id', protect, getEmployeeById);
 router.put('/:id', protect, upload.fields(employeeUploadFields), updateEmployee);

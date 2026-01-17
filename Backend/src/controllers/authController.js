@@ -49,6 +49,7 @@ const registerUser = async (req, res) => {
         if (userId) {
             // 2. Create Enterprise entry
             const enterpriseId = await Enterprise.create({
+                admin_id: userId,
                 firstName,
                 lastName,
                 email,

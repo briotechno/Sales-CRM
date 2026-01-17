@@ -32,6 +32,7 @@ const enterpriseController = {
             expiryDate.setMonth(expiryDate.getMonth() + 1); // 1 month from now
 
             await Subscription.create({
+                enterprise_id: enterprise.id,
                 name: enterprise.businessName,
                 plan: plan,
                 status: 'Active',

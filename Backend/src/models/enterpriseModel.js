@@ -2,11 +2,11 @@ const { pool } = require('../config/db');
 
 const Enterprise = {
     create: async (data) => {
-        const { firstName, lastName, email, mobileNumber, businessName, businessType, gst, address, plan, status, onboardingDate } = data;
+        const { admin_id, firstName, lastName, email, mobileNumber, businessName, businessType, gst, address, plan, status, onboardingDate } = data;
         const [result] = await pool.query(
-            `INSERT INTO enterprises (firstName, lastName, email, mobileNumber, businessName, businessType, gst, address, plan, status, onboardingDate) 
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [firstName, lastName, email, mobileNumber, businessName, businessType, gst, address, plan || 'Starter', status || 'Active', onboardingDate]
+            `INSERT INTO enterprises (admin_id, firstName, lastName, email, mobileNumber, businessName, businessType, gst, address, plan, status, onboardingDate) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [admin_id, firstName, lastName, email, mobileNumber, businessName, businessType, gst, address, plan || 'Starter', status || 'Active', onboardingDate]
         );
         return result.insertId;
     },
@@ -66,13 +66,18 @@ const Enterprise = {
         return rows[0];
     },
 
+    findByAdminId: async (adminId) => {
+        const [rows] = await pool.query('SELECT * FROM enterprises WHERE admin_id = ?', [adminId]);
+        return rows[0];
+    },
+
     update: async (id, data) => {
-        const { firstName, lastName, email, mobileNumber, businessName, businessType, gst, address, plan, status, onboardingDate } = data;
+        const { admin_id, firstName, lastName, email, mobileNumber, businessName, businessType, gst, address, plan, status, onboardingDate } = data;
         const [result] = await pool.query(
             `UPDATE enterprises SET 
-             firstName = ?, lastName = ?, email = ?, mobileNumber = ?, businessName = ?, businessType = ?, gst = ?, address = ?, plan = ?, status = ?, onboardingDate = ? 
+             admin_id = ?, firstName = ?, lastName = ?, email = ?, mobileNumber = ?, businessName = ?, businessType = ?, gst = ?, address = ?, plan = ?, status = ?, onboardingDate = ? 
              WHERE id = ?`,
-            [firstName, lastName, email, mobileNumber, businessName, businessType, gst, address, plan, status, onboardingDate, id]
+            [admin_id, firstName, lastName, email, mobileNumber, businessName, businessType, gst, address, plan, status, onboardingDate, id]
         );
         return result.affectedRows > 0;
     },

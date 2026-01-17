@@ -11,7 +11,8 @@ import { X } from "lucide-react";
  * @param {React.ReactNode} icon - Icon to display in header (optional)
  * @param {React.ReactNode} children - Modal body content
  * @param {React.ReactNode} footer - Modal footer content (optional)
- * @param {string} maxWidth - Tailwind max-width class (default: 'max-w-2xl')
+ * @param {string} maxWidth - Tailwind max-width class (default: 'max-w-md')
+ * @param {string} zIndex - Tailwind z-index class (default: 'z-50')
  * @param {boolean} showCloseButton - Whether to show the X close button (default: true)
  * @param {string} headerVariant - 'orange' (default) or 'simple'
  */
@@ -24,6 +25,7 @@ const Modal = ({
     children,
     footer,
     maxWidth = "max-w-2xl",
+    zIndex = "z-50",
     showCloseButton = true,
     headerVariant = "orange"
 }) => {
@@ -47,7 +49,7 @@ const Modal = ({
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex justify-center items-center z-50 animate-fadeIn p-4">
+        <div className={`fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex justify-center items-center ${zIndex} animate-fadeIn p-4`}>
             <div
                 className={`bg-white rounded-sm shadow-2xl w-full ${maxWidth} relative transform transition-all animate-slideUp overflow-hidden`}
                 onClick={(e) => e.stopPropagation()}
@@ -100,7 +102,7 @@ const Modal = ({
                     {headerVariant === 'simple' && subtitle && (
                         <p className="text-gray-600 mb-6">{subtitle}</p>
                     )}
-                    <div className="max-h-[70vh] overflow-y-auto custom-scrollbar">
+                    <div className="max-h-[70vh] overflow-y-auto overflow-x-hidden custom-scrollbar">
                         {children}
                     </div>
                 </div>
