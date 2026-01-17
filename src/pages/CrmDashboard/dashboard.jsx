@@ -40,196 +40,29 @@ import {
   AreaChart,
 } from "recharts";
 import NumberCard from "../../components/NumberCard";
+import { useGetCRMStatsQuery } from "../../store/api/crmDashboardApi";
+import { Loader2 } from "lucide-react";
 
 export default function CRMDashboard() {
+  const { data: stats, isLoading } = useGetCRMStatsQuery();
 
-  const recentLeads = [
-    {
-      name: "John Smith",
-      company: "Tech Corp",
-      status: "Hot",
-      value: "₹10L",
-      email: "john@tech.com",
-      source: "Website",
-      avatar: "JS",
-    },
-    {
-      name: "Sarah Johnson",
-      company: "Design Co",
-      status: "Warm",
-      value: "₹6.5L",
-      email: "sarah@design.com",
-      source: "Referral",
-      avatar: "SJ",
-    },
-    {
-      name: "Mike Brown",
-      company: "Marketing Inc",
-      status: "Cold",
-      value: "₹4L",
-      email: "mike@marketing.com",
-      source: "LinkedIn",
-      avatar: "MB",
-    },
-    {
-      name: "Emily Davis",
-      company: "Sales Ltd",
-      status: "Hot",
-      value: "₹12L",
-      email: "emily@sales.com",
-      source: "Direct",
-      avatar: "ED",
-    },
-  ];
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-screen">
+          <Loader2 className="w-12 h-12 text-orange-500 animate-spin" />
+        </div>
+      </DashboardLayout>
+    );
+  }
 
-  const champions = [
-    {
-      name: "Alice Cooper",
-      deals: 45,
-      revenue: "₹1.95Cr",
-      rating: 5,
-      avatar: "AC",
-      badge: "🏆",
-    },
-    {
-      name: "Bob Martin",
-      deals: 38,
-      revenue: "₹1.58Cr",
-      rating: 5,
-      avatar: "BM",
-      badge: "⭐",
-    },
-    {
-      name: "Carol White",
-      deals: 32,
-      revenue: "₹1.30Cr",
-      rating: 4,
-      avatar: "CW",
-      badge: "🎯",
-    },
-  ];
-
-  const clients = [
-    {
-      name: "Acme Corporation",
-      contact: "Jane Doe",
-      value: "₹37L",
-      status: "Active",
-      lastContact: "2 days ago",
-    },
-    {
-      name: "Global Tech Solutions",
-      contact: "Tom Wilson",
-      value: "₹56L",
-      status: "Active",
-      lastContact: "1 week ago",
-    },
-    {
-      name: "Innovative Designs",
-      contact: "Lisa Brown",
-      value: "₹19L",
-      status: "Pending",
-      lastContact: "3 days ago",
-    },
-  ];
-
-  const channels = [
-    {
-      name: "Email Marketing",
-      leads: 847,
-      conversion: "12.5%",
-      color: "from-blue-400 to-blue-600",
-      icon: "📧",
-    },
-    {
-      name: "Social Media",
-      leads: 623,
-      conversion: "8.3%",
-      color: "from-purple-400 to-purple-600",
-      icon: "📱",
-    },
-    {
-      name: "Direct Sales",
-      leads: 445,
-      conversion: "22.1%",
-      color: "from-green-400 to-green-600",
-      icon: "🎯",
-    },
-    {
-      name: "Referrals",
-      leads: 932,
-      conversion: "18.9%",
-      color: "from-orange-400 to-orange-600",
-      icon: "🤝",
-    },
-  ];
-
-  const activities = [
-    {
-      type: "call",
-      contact: "John Smith",
-      time: "10 mins ago",
-      action: "Follow-up call scheduled",
-    },
-    {
-      type: "email",
-      contact: "Sarah Johnson",
-      time: "1 hour ago",
-      action: "Proposal sent",
-    },
-    {
-      type: "meeting",
-      contact: "Mike Brown",
-      time: "2 hours ago",
-      action: "Demo completed",
-    },
-    {
-      type: "call",
-      contact: "Emily Davis",
-      time: "4 hours ago",
-      action: "Contract negotiation",
-    },
-  ];
-
-  const upcomingTasks = [
-    {
-      task: "Follow up with Tech Corp",
-      priority: "High",
-      dueTime: "Today, 2:00 PM",
-    },
-    {
-      task: "Send proposal to Design Co",
-      priority: "Medium",
-      dueTime: "Today, 4:30 PM",
-    },
-    {
-      task: "Schedule demo for Acme Corp",
-      priority: "High",
-      dueTime: "Tomorrow, 10:00 AM",
-    },
-    {
-      task: "Review contract terms",
-      priority: "Low",
-      dueTime: "Tomorrow, 3:00 PM",
-    },
-  ];
-
-  const pipelineData = [
-    { name: "Sales", stages: 5, deals: 315, value: 450000 },
-    { name: "Marketing", stages: 4, deals: 447, value: 315000 },
-    { name: "Calls", stages: 6, deals: 654, value: 840000 },
-    { name: "Email", stages: 3, deals: 545, value: 610000 },
-    { name: "Chats", stages: 4, deals: 787, value: 470000 },
-  ];
-
-  const revenueData = [
-    { month: "Jan", revenue: 32 },
-    { month: "Feb", revenue: 38 },
-    { month: "Mar", revenue: 35 },
-    { month: "Apr", revenue: 42 },
-    { month: "May", revenue: 45 },
-    { month: "Jun", revenue: 48 },
-  ];
+  const recentLeads = stats?.recentLeads || [];
+  const champions = stats?.champions || [];
+  const channels = stats?.channels || [];
+  const upcomingTasks = stats?.upcomingTasks || [];
+  const pipelineData = stats?.pipelineData || [];
+  const revenueData = stats?.revenueTrend || [];
+  const summary = stats?.summary || { totalQuotations: 0, conversions: 0, revenue: 0, champions: 0 };
 
   const COLORS = ["#fb923c", "#f97316", "#ea580c", "#c2410c", "#9a3412"];
 
@@ -271,32 +104,32 @@ export default function CRMDashboard() {
 
             <NumberCard
               title="Total Quotations"
-              number={"2,847"}
-              up={"+12.5%"}
+              number={summary.totalQuotations.toLocaleString()}
+              up={"+0%"}
               icon={<Users className="text-blue-600" size={24} />}
               iconBgColor="bg-blue-100"
               lineBorderClass="border-blue-500"
             />
             <NumberCard
               title="Conversions"
-              number={"1,234"}
-              up={"+8.2%"}
+              number={summary.conversions.toLocaleString()}
+              up={"+0%"}
               icon={<Target className="text-green-600" size={24} />}
               iconBgColor="bg-green-100"
               lineBorderClass="border-green-500"
             />
             <NumberCard
               title="Revenue"
-              number={"₹45.2L"}
-              up={"+15.3%"}
+              number={formatCurrency(summary.revenue)}
+              up={"+0%"}
               icon={<DollarSign className="text-orange-600" size={24} />}
               iconBgColor="bg-orange-100"
               lineBorderClass="border-orange-500"
             />
             <NumberCard
               title="Champions"
-              number={"156"}
-              up={"+18.7%"}
+              number={summary.champions.toLocaleString()}
+              up={"+0%"}
               icon={<Award className="text-purple-600" size={24} />}
               iconBgColor="bg-purple-100"
               lineBorderClass="border-purple-500"

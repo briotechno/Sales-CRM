@@ -60,6 +60,7 @@ app.use('/api/enterprises', require('./routes/enterpriseRoutes'));
 app.use('/api/subscriptions', require('./routes/subscriptionRoutes'));
 app.use('/api/product-keys', require('./routes/productKeyRoutes'));
 app.use('/api/plans', require('./routes/planRoutes'));
+app.use('/api/crm-dashboard', require('./routes/crmDashboardRoutes'));
 
 
 
