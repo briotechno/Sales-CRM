@@ -13,6 +13,7 @@ import {
     CheckCircle,
     XCircle,
     Layers,
+    AlertCircle,
 } from "lucide-react";
 import NumberCard from "../../components/NumberCard";
 import Modal from "../../components/common/Modal";
@@ -265,30 +266,81 @@ const EditStageModal = ({ isOpen, onClose, stage }) => {
     );
 };
 
-const DeleteStageModal = ({ isOpen, onClose, stage }) => {
-    const [deleteStage, { isLoading }] = useDeleteStageMutation();
+const DeleteStageModal = ({ isOpen, onClose, stage, refetchStages }) => {
+  const [deleteStage, { isLoading }] = useDeleteStageMutation();
 
-    const handleDelete = async () => {
-        try {
-            await deleteStage(stage.id).unwrap();
-            toast.success("Stage deleted successfully");
-            onClose();
-        } catch (error) {
-            toast.error(error?.data?.message || "Failed to delete stage");
-        }
-    };
+  const handleDelete = async () => {
+    try {
+      await deleteStage(stage.id).unwrap();
 
-    return (
-        <Modal isOpen={isOpen} onClose={onClose} title="Delete Stage" icon={<Trash2 size={24} className="text-red-600" />}>
-            <div className="text-center space-y-4">
-                <p className="text-gray-600">Are you sure you want to delete the stage <b>{stage?.name}</b>?</p>
-                <div className="flex justify-center gap-3 pt-2">
-                    <button onClick={onClose} className="px-4 py-2 border rounded-sm hover:bg-gray-100">Cancel</button>
-                    <button onClick={handleDelete} disabled={isLoading} className="px-4 py-2 bg-red-600 text-white rounded-sm hover:opacity-90">{isLoading ? "Deleting..." : "Delete"}</button>
-                </div>
-            </div>
-        </Modal>
-    );
+      if (refetchStages) {
+        refetchStages();
+      }
+
+      toast.success("Stage deleted successfully");
+      onClose();
+    } catch (error) {
+      toast.error(error?.data?.message || "Failed to delete stage");
+    }
+  };
+
+  if (!stage) return null;
+
+  const footer = (
+    <div className="flex gap-4 w-full">
+      <button
+        onClick={onClose}
+        className="flex-1 px-6 py-3 border-2 border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-100 transition-all"
+      >
+        Cancel
+      </button>
+
+      <button
+        onClick={handleDelete}
+        disabled={isLoading}
+        className="flex-1 px-6 py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition-all shadow-lg hover:shadow-red-200 flex items-center justify-center gap-2 disabled:opacity-50"
+      >
+        {isLoading ? (
+          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+        ) : (
+          <Trash2 size={20} />
+        )}
+        {isLoading ? "Deleting..." : "Delete Now"}
+      </button>
+    </div>
+  );
+
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      headerVariant="simple"
+      maxWidth="max-w-md"
+      footer={footer}
+    >
+      <div className="flex flex-col items-center text-center text-black">
+        <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mb-6 animate-bounce">
+          <AlertCircle size={48} className="text-red-600" />
+        </div>
+
+        <h2 className="text-2xl font-bold text-gray-800 mb-2">
+          Confirm Delete
+        </h2>
+
+        <p className="text-gray-600 mb-2 leading-relaxed">
+          Are you sure you want to delete the stage{" "}
+          <span className="font-bold text-gray-800">
+            "{stage.name}"
+          </span>
+          ?
+        </p>
+
+        <p className="text-sm text-red-500 italic">
+          This action cannot be undone. All related data will be permanently removed.
+        </p>
+      </div>
+    </Modal>
+  );
 };
 
 export default ManageStage;
