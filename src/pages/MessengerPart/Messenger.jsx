@@ -13,7 +13,8 @@ import {
   EmptyState,
 } from "../../pages/MessengerPart/MessengerComponents";
 
-const SOCKET_URL = "http://localhost:5000"; // Adjust based on your backend port
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const SOCKET_URL = API_BASE_URL;
 
 export default function MessengerPage() {
   const { user: currentUser } = useSelector((state) => state.auth);
@@ -78,7 +79,7 @@ export default function MessengerPage() {
   useEffect(() => {
     const fetchContacts = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/messenger/contacts", {
+        const response = await fetch(`${API_BASE_URL}/api/messenger/contacts`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
@@ -109,7 +110,7 @@ export default function MessengerPage() {
   useEffect(() => {
     if (socket && currentUser) {
       // Fetch current employee ID
-      fetch("http://localhost:5000/api/users/profile", {
+      fetch(`${API_BASE_URL}/api/users/profile`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
@@ -234,7 +235,7 @@ export default function MessengerPage() {
       if (selectedChat) {
         try {
           const response = await fetch(
-            `http://localhost:5000/api/messenger/history/${selectedChat.id}/${selectedChat.type}`,
+            `${API_BASE_URL}/api/messenger/history/${selectedChat.id}/${selectedChat.type}`,
             {
               headers: {
                 Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -366,7 +367,7 @@ export default function MessengerPage() {
             attachedFiles.forEach(file => formData.append('file', file.file));
           }
 
-          const response = await fetch('http://localhost:5000/api/messenger/send', {
+          const response = await fetch(`${API_BASE_URL}/api/messenger/send`, {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${localStorage.getItem('token')}`
