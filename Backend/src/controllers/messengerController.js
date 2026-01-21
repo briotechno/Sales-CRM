@@ -184,7 +184,7 @@ const messengerController = {
 
             res.status(201).json({
                 success: true,
-                message: savedMsg
+                message: savedMsg[0]
             });
         } catch (error) {
             console.error('Error sending message:', error);

@@ -23,7 +23,6 @@ export default function MessengerPage() {
   const [currentUserType, setCurrentUserType] = useState('employee');
 
   // State Management
-  const [activeTab, setActiveTab] = useState("team");
   const [selectedChat, setSelectedChat] = useState(null);
   const [message, setMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -567,8 +566,7 @@ export default function MessengerPage() {
   };
 
   // Computed values
-  const contacts = activeTab === "team" ? teamMembers : clients;
-  const filteredContacts = contacts.filter(
+  const filteredContacts = teamMembers.filter(
     (contact) =>
       contact.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       contact.role.toLowerCase().includes(searchQuery.toLowerCase())
@@ -631,30 +629,9 @@ export default function MessengerPage() {
               </div>
             </div>
 
-            {/* Navigation Tabs */}
+            {/* Navigation Tabs Removed */}
             <div className="px-6 pb-2 bg-white shrink-0">
-              <div className="flex p-1.5 bg-gray-50 rounded-[20px] gap-1">
-                <button
-                  onClick={() => setActiveTab("team")}
-                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all duration-300 ${activeTab === "team"
-                    ? "bg-white text-orange-600 shadow-sm"
-                    : "text-gray-400 hover:text-gray-600"
-                    }`}
-                >
-                  <Users size={14} />
-                  Team
-                </button>
-                <button
-                  onClick={() => setActiveTab("clients")}
-                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all duration-300 ${activeTab === "clients"
-                    ? "bg-white text-orange-600 shadow-sm"
-                    : "text-gray-400 hover:text-gray-600"
-                    }`}
-                >
-                  <User size={14} />
-                  Clients
-                </button>
-              </div>
+              <div className="h-4"></div>
             </div>
 
             {/* Contacts List */}

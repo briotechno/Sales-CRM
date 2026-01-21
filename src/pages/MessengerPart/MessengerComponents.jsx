@@ -851,15 +851,15 @@ export function ChatInput({
       )}
 
       {/* Main Input Area */}
-      <div className="max-w-7xl mx-auto flex items-end gap-3 md:gap-4">
+      <div className="max-w-7xl mx-auto flex items-center gap-2 md:gap-3 px-4 pb-4">
         {/* Attachment Menu */}
         <div className="relative" ref={attachmentMenuRef}>
           <button
             onClick={() => setShowAttachmentMenu(!showAttachmentMenu)}
-            className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 group ${showAttachmentMenu ? "bg-orange-500 text-white shadow-lg shadow-orange-200" : "bg-gray-50 text-gray-400 hover:bg-orange-50 hover:text-orange-600"
+            className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 group ${showAttachmentMenu ? "bg-orange-500 text-white shadow-lg shadow-orange-200" : "bg-gray-100/80 text-gray-400 hover:bg-gray-200"
               }`}
           >
-            <Paperclip size={20} className={showAttachmentMenu ? "" : "group-hover:rotate-12 transition-transform"} />
+            <Paperclip size={20} className={showAttachmentMenu ? "" : "group-hover:rotate-12 transition-transform shadow-sm"} />
           </button>
 
           {showAttachmentMenu && (
@@ -891,13 +891,13 @@ export function ChatInput({
 
         {/* Input Box */}
         <div className="flex-1 relative">
-          <div className={`bg-gray-50 rounded-[28px] border-2 transition-all p-1.5 flex items-end ${message.length > 0 ? "border-orange-200 bg-white ring-4 ring-orange-50/50" : "border-transparent"}`}>
+          <div className={`bg-gray-100/80 rounded-[32px] transition-all p-1.5 flex items-center gap-1 border-2 border-transparent ${message.length > 0 ? "bg-white border-orange-100 shadow-sm" : ""}`}>
             <button
               ref={emojiPickerRef}
               onClick={() => setShowEmojiPicker(!showEmojiPicker)}
               className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${showEmojiPicker ? "text-orange-500" : "text-gray-400 hover:text-orange-500"}`}
             >
-              <Smile size={22} />
+              <Smile size={22} className="opacity-80" />
             </button>
 
             <textarea
@@ -910,7 +910,7 @@ export function ChatInput({
                 }
               }}
               placeholder={editingMessage ? "Modify your message..." : "Type something brilliant..."}
-              className="flex-1 bg-transparent border-none focus:outline-none focus:ring-0 text-[15px] py-2.5 px-2 placeholder-gray-400 min-h-[44px] max-h-48 custom-scrollbar resize-none"
+              className="flex-1 bg-transparent border-none focus:outline-none focus:ring-0 text-sm py-2.5 pl-1 pr-4 placeholder-gray-400/80 min-h-[44px] max-h-48 custom-scrollbar resize-none font-medium text-gray-700"
               style={{ height: 'auto' }}
             />
 
@@ -941,19 +941,19 @@ export function ChatInput({
           {message.trim() || attachedFiles.length > 0 ? (
             <button
               onClick={onSend}
-              className="w-14 h-14 bg-gradient-to-br from-orange-500 to-orange-600 text-white rounded-[22px] flex items-center justify-center shadow-lg shadow-orange-200 hover:scale-105 active:scale-95 transition-all group"
+              className="w-12 h-12 bg-orange-500 text-white rounded-full flex items-center justify-center shadow-lg shadow-orange-100 hover:scale-105 active:scale-95 transition-all group"
             >
-              <Send size={22} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+              <Send size={20} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
             </button>
           ) : (
             <button
               onClick={handleVoiceMessage}
-              className={`w-14 h-14 flex items-center justify-center rounded-[22px] shadow-lg transition-all group ${isRecording
+              className={`w-12 h-12 flex items-center justify-center rounded-full transition-all group shadow-sm ${isRecording
                 ? "bg-red-500 text-white shadow-red-200 animate-pulse-slow"
-                : "bg-white text-orange-500 hover:bg-orange-500 hover:text-white shadow-gray-100"
+                : "bg-gray-100/80 text-orange-500 hover:bg-gray-200"
                 }`}
             >
-              {isRecording ? <Square size={20} fill="white" /> : <Mic size={22} className="group-hover:scale-110 transition-transform" />}
+              {isRecording ? <Square size={18} fill="white" /> : <Mic size={22} className="group-hover:scale-110 transition-transform" />}
             </button>
           )}
         </div>

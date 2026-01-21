@@ -37,25 +37,37 @@ const initializeSocket = (server) => {
         socket.on('stop_typing', (room) => socket.in(room).emit('stop_typing', room));
 
         socket.on('new_message', async (newMessage) => {
+            if (!newMessage) return;
+
             const chat = newMessage.conversationId || newMessage.conversation_id;
             const participants = newMessage.participants;
 
-            if (!participants) return console.log('Participants not defined');
+            if (!participants || !chat) {
+                return console.error('Invalid message: missing participants or conversation ID', newMessage);
+            }
 
             const senderId = newMessage.sender?.id || newMessage.sender_id;
             const senderType = newMessage.sender?.type || newMessage.sender_type;
 
+            if (!senderId || !senderType) {
+                return console.error('Invalid message: missing sender info', newMessage);
+            }
+
             // Persist message if not already saved via REST
             if (!newMessage.id) {
-                const messageId = await Messenger.saveMessage({
-                    conversation_id: chat,
-                    sender_id: senderId,
-                    sender_type: senderType,
-                    text: newMessage.text,
-                    message_type: newMessage.messageType || 'text',
-                    reply_to_id: newMessage.replyToId
-                });
-                newMessage.id = messageId;
+                try {
+                    const messageId = await Messenger.saveMessage({
+                        conversation_id: chat,
+                        sender_id: senderId,
+                        sender_type: senderType,
+                        text: newMessage.text,
+                        message_type: newMessage.messageType || 'text',
+                        reply_to_id: newMessage.replyToId
+                    });
+                    newMessage.id = messageId;
+                } catch (saveError) {
+                    return console.error('Error saving socket message:', saveError);
+                }
             }
 
             // Broadcast to other participants
