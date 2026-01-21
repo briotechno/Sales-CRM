@@ -83,15 +83,9 @@ export default function SuperAdmin() {
                         </div>
                     </div>
                 </div>
-
-                {/* Overlay Text */}
-                <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/30">
-                    <h1 className="text-white text-4xl font-bold uppercase tracking-wider">
-                        Admin page under construction
-                    </h1>
-                </div>
+              
                 {/* Stats Grid */}
-                <div className="filter blur-sm pointer-events-none">
+                <div className="pointer-events-none">
 
                     <div className="p-0 px-6 space-y-8">
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

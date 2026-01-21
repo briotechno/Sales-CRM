@@ -15,7 +15,12 @@ import { useGetTasksQuery } from "../store/api/taskApi";
 
 export default function TaskReminderPopup() {
     const [isVisible, setIsVisible] = useState(false);
+    const [openTaskId, setOpenTaskId] = useState(null);
+
     const audioRef = useRef(null);
+    const toggleTask = (id) => {
+        setOpenTaskId(prev => (prev === id ? null : id));
+    };
 
     const { startDate, endDate } = React.useMemo(() => {
         const start = new Date();
@@ -73,7 +78,7 @@ export default function TaskReminderPopup() {
         const timer = setTimeout(() => {
             setIsVisible(true);
             playNotificationSound(hasHighToday);
-        }, 3000);
+        }, 60000);
 
 
         return () => clearTimeout(timer);
@@ -123,7 +128,7 @@ export default function TaskReminderPopup() {
                                 <h3 className="text-white font-bold text-lg">Task Reminder</h3>
                                 <p className="text-white text-xs opacity-90">
                                     {pendingTasks.some((t) => isHighPriorityToday(t))
-                                        ? "🚨 HIGH PRIORITY task due TODAY!"
+                                        ? "🚨 HIGH PRIORITY TASK DUE TODAY!"
                                         : "Pending tasks ⏰"}
                                 </p>
 
@@ -140,78 +145,121 @@ export default function TaskReminderPopup() {
 
                     {/* Content */}
 
-                    <div className="p-5 bg-gradient-to-br from-orange-50 to-white overflow-y-auto max-h-[400px] space-y-4">
+                    <div className="p-5 bg-gradient-to-br from-orange-50 to-white overflow-y-auto max-h-[400px] space-y-3">
 
-                        {pendingTasks.map((task) => (
-                            <div
-                                key={task.id}
-                                className="bg-white rounded-xl border p-3 shadow-sm space-y-3"
-                            >
-                                {isHighPriorityToday(task) && (
-                                    <div className="bg-red-100 border border-red-300 text-red-700 px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2 animate-pulse">
-                                        🚨 ACTION REQUIRED TODAY – HIGH PRIORITY
-                                    </div>
-                                )}
-                                <div className="grid grid-cols-2 gap-3">
-                                    <InfoBox icon={<Briefcase />} label="Task ID" value={task.id} />
-                                    <InfoBox icon={<IdCard />} label="Lead ID" value={task.user_id || "-"} />
-                                </div>
+                        {pendingTasks.map((task) => {
+                            const isOpen = openTaskId === task.id;
 
-                                <InfoBox icon={<Star />} label="Task Title" value={task.title} />
-
-                                <div className="bg-white p-3 rounded-xl border">
-                                    <p className="text-xs text-gray-500 font-medium mb-1">Task Category</p>
-                                    <p className="text-sm font-semibold text-gray-800">{task.category || "-"}</p>
-                                </div>
-
-                                <div className="flex items-center justify-between bg-white p-3 rounded-xl border">
-                                    <div className="flex items-center gap-2">
-                                        <div className="bg-orange-100 p-2 rounded-lg">
-                                            <AlertCircle size={14} className="text-orange-600" />
-                                        </div>
-                                        <p className="text-xs text-gray-500 font-medium">Priority</p>
-                                    </div>
-                                    <span
-                                        className={`px-3 py-1 rounded-full text-xs font-bold border ${getPriorityColor(
-                                            task.priority
-                                        )}`}
+                            return (
+                                <div
+                                    key={task.id}
+                                    className="bg-white rounded-xl border shadow-sm overflow-hidden"
+                                >
+                                    {/* 🔹 ACCORDION HEADER */}
+                                    {/* 🔹 ACCORDION HEADER */}
+                                    <button
+                                        onClick={() => toggleTask(task.id)}
+                                        className={`w-full flex items-center justify-between px-4 py-3 transition
+        ${isHighPriorityToday(task)
+                                                ? "bg-red-50 hover:bg-red-100 border-l-4 border-red-500"
+                                                : "hover:bg-orange-50"
+                                            }`}
                                     >
-                                        {task.priority || "-"}
-                                    </span>
-                                </div>
+                                        <div className="flex items-center gap-2 truncate">
+                                            {isHighPriorityToday(task) && (
+                                                <span className="text-red-600 text-sm">🚨</span>
+                                            )}
 
-                                <div className="grid grid-cols-2 gap-4">
-                                    {/* Due Date */}
-                                    <div className="flex flex-col gap-1 p-3 rounded-xl border bg-gradient-to-r from-orange-100 to-red-100">
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <Calendar className="text-orange-700" size={14} />
-                                            <span className="text-xs font-bold text-orange-700">Due Date</span>
+                                            <p
+                                                className={`text-sm font-semibold truncate
+                ${isHighPriorityToday(task)
+                                                        ? "text-red-700"
+                                                        : "text-gray-800"
+                                                    }`}
+                                            >
+                                                {task.title}
+                                            </p>
                                         </div>
-                                        <p className="text-sm font-bold text-orange-900">
-                                            {task.due_date
-                                                ? new Date(task.due_date).toLocaleDateString(undefined, {
-                                                    month: "short",
-                                                    day: "numeric",
-                                                    year: "numeric",
-                                                })
-                                                : "-"}
-                                        </p>
-                                    </div>
 
-                                    {/* Due Time */}
-                                    <div className="flex flex-col gap-1 p-3 rounded-xl border bg-gradient-to-r from-orange-100 to-red-100">
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <Clock className="text-orange-700" size={14} />
-                                            <span className="text-xs font-bold text-orange-700">Due Time</span>
+                                        <div className="flex items-center gap-2">
+                                            <span
+                                                className={`px-3 py-1 rounded-full text-xs font-bold border
+                ${getPriorityColor(task.priority)}
+                ${isHighPriorityToday(task) ? "animate-pulse" : ""}
+            `}
+                                            >
+                                                {task.priority || "-"}
+                                            </span>
+
+                                            <span
+                                                className={`text-xs transform transition-transform
+                ${isOpen ? "rotate-180" : ""}
+                ${isHighPriorityToday(task) ? "text-red-600" : "text-gray-500"}
+            `}
+                                            >
+                                                ▼
+                                            </span>
                                         </div>
-                                        <p className="text-sm font-bold text-orange-900">
-                                            {task.due_time ? task.due_time.slice(0, 5) : "-"}
-                                        </p>
-                                    </div>
+                                    </button>
+
+                                    {/* 🔹 ACCORDION BODY */}
+                                    {isOpen && (
+                                        <div className="p-4 space-y-4 border-t bg-gradient-to-br from-orange-50 to-white">
+
+                                            {isHighPriorityToday(task) && (
+                                                <div className="bg-red-100 border border-red-300 text-red-700 px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2 animate-pulse">
+                                                    🚨 ACTION REQUIRED TODAY – HIGH PRIORITY
+                                                </div>
+                                            )}
+
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <InfoBox icon={<Briefcase />} label="Task ID" value={task.id} />
+                                                <InfoBox icon={<IdCard />} label="Lead ID" value={task.user_id || "-"} />
+                                            </div>
+
+                                            <div className="bg-white p-3 rounded-xl border">
+                                                <p className="text-xs text-gray-500 font-medium mb-1">Task Category</p>
+                                                <p className="text-sm font-semibold text-gray-800">
+                                                    {task.category || "-"}
+                                                </p>
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-4">
+                                                {/* Due Date */}
+                                                <div className="flex flex-col gap-1 p-3 rounded-xl border bg-gradient-to-r from-orange-100 to-red-100">
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <Calendar className="text-orange-700" size={14} />
+                                                        <span className="text-xs font-bold text-orange-700">Due Date</span>
+                                                    </div>
+                                                    <p className="text-sm font-bold text-orange-900">
+                                                        {task.due_date
+                                                            ? new Date(task.due_date).toLocaleDateString(undefined, {
+                                                                month: "short",
+                                                                day: "numeric",
+                                                                year: "numeric",
+                                                            })
+                                                            : "-"}
+                                                    </p>
+                                                </div>
+
+                                                {/* Due Time */}
+                                                <div className="flex flex-col gap-1 p-3 rounded-xl border bg-gradient-to-r from-orange-100 to-red-100">
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <Clock className="text-orange-700" size={14} />
+                                                        <span className="text-xs font-bold text-orange-700">Due Time</span>
+                                                    </div>
+                                                    <p className="text-sm font-bold text-orange-900">
+                                                        {task.due_time ? task.due_time.slice(0, 5) : "-"}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
+
                 </div>
             </div>
 
