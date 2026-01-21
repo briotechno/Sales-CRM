@@ -34,6 +34,8 @@ import {
   FileText,
   Video as VideoIcon,
   MapPin,
+  MessageSquare,
+  Square,
 } from "lucide-react";
 
 // Contacts List Component
@@ -58,33 +60,30 @@ export function ContactsList({ contacts, selectedChat, onChatSelect }) {
         <div
           key={contact.id}
           onClick={() => onChatSelect(contact)}
-          className={`p-3.5 border-b border-gray-100 cursor-pointer transition-all duration-200 hover:shadow-md ${
-            selectedChat?.id === contact.id
+          className={`p-3.5 border-b border-gray-100 cursor-pointer transition-all duration-200 hover:shadow-md ${selectedChat?.id === contact.id
               ? "bg-gradient-to-r from-orange-50 to-orange-100 border-l-4 border-l-orange-500"
               : "bg-white hover:bg-orange-50"
-          }`}
+            }`}
         >
           <div className="flex items-start gap-3">
             <div className="relative flex-shrink-0">
               <div
-                className={`w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold text-white shadow-md ${
-                  contact.status === "online"
+                className={`w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold text-white shadow-md ${contact.status === "online"
                     ? "bg-gradient-to-br from-orange-400 to-orange-600"
                     : contact.status === "away"
-                    ? "bg-gradient-to-br from-yellow-400 to-yellow-600"
-                    : "bg-gradient-to-br from-gray-400 to-gray-600"
-                }`}
+                      ? "bg-gradient-to-br from-yellow-400 to-yellow-600"
+                      : "bg-gradient-to-br from-gray-400 to-gray-600"
+                  }`}
               >
                 {contact.avatar}
               </div>
               <div
-                className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white shadow-sm ${
-                  contact.status === "online"
+                className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white shadow-sm ${contact.status === "online"
                     ? "bg-green-500"
                     : contact.status === "away"
-                    ? "bg-yellow-500"
-                    : "bg-gray-400"
-                }`}
+                      ? "bg-yellow-500"
+                      : "bg-gray-400"
+                  }`}
               />
             </div>
             <div className="flex-1 min-w-0">
@@ -135,13 +134,12 @@ export function ChatHeader({
               {selectedChat.avatar}
             </div>
             <div
-              className={`absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-white shadow-md ${
-                selectedChat.status === "online"
+              className={`absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-white shadow-md ${selectedChat.status === "online"
                   ? "bg-green-500"
                   : selectedChat.status === "away"
-                  ? "bg-yellow-500"
-                  : "bg-gray-400"
-              }`}
+                    ? "bg-yellow-500"
+                    : "bg-gray-400"
+                }`}
             />
           </div>
           <div>
@@ -211,11 +209,10 @@ export function ChatHeader({
           </button>
           <button
             onClick={onToggleChatInfo}
-            className={`p-2.5 rounded-lg transition-all duration-200 ${
-              showChatInfo
+            className={`p-2.5 rounded-lg transition-all duration-200 ${showChatInfo
                 ? "bg-orange-100 text-orange-600"
                 : "hover:bg-orange-50 text-gray-600 hover:text-orange-600"
-            }`}
+              }`}
           >
             <Info size={18} />
           </button>
@@ -279,17 +276,15 @@ export function ChatMessages({
             )}
 
             <div
-              className={`flex ${
-                msg.sender === "me" ? "justify-end" : "justify-start"
-              } animate-fadeIn`}
+              className={`flex ${msg.sender === "me" ? "justify-end" : "justify-start"
+                } animate-fadeIn`}
             >
               <div className="relative max-w-md">
                 <div
-                  className={`px-4 py-2.5 rounded-2xl shadow-md transition-all duration-200 hover:shadow-lg ${
-                    msg.sender === "me"
+                  className={`px-4 py-2.5 rounded-2xl shadow-md transition-all duration-200 hover:shadow-lg ${msg.sender === "me"
                       ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-br-md"
                       : "bg-white border border-gray-200 text-gray-800 rounded-bl-md"
-                  }`}
+                    }`}
                 >
                   {/* Voice Message */}
                   {msg.isVoice && (
@@ -353,21 +348,19 @@ export function ChatMessages({
                   <div className="flex items-center justify-end gap-2 mt-1.5">
                     {msg.edited && (
                       <span
-                        className={`text-xs italic ${
-                          msg.sender === "me"
+                        className={`text-xs italic ${msg.sender === "me"
                             ? "text-orange-200"
                             : "text-gray-400"
-                        }`}
+                          }`}
                       >
                         edited
                       </span>
                     )}
                     <p
-                      className={`text-xs font-medium ${
-                        msg.sender === "me"
+                      className={`text-xs font-medium ${msg.sender === "me"
                           ? "text-orange-100"
                           : "text-gray-400"
-                      }`}
+                        }`}
                     >
                       {msg.time}
                     </p>
@@ -575,13 +568,12 @@ export function ChatInfoSidebar({ selectedChat, messages, starredMessages }) {
               {selectedChat.avatar}
             </div>
             <div
-              className={`absolute bottom-1 right-1 w-5 h-5 rounded-full border-4 border-white shadow-lg ${
-                selectedChat.status === "online"
+              className={`absolute bottom-1 right-1 w-5 h-5 rounded-full border-4 border-white shadow-lg ${selectedChat.status === "online"
                   ? "bg-green-500"
                   : selectedChat.status === "away"
-                  ? "bg-yellow-500"
-                  : "bg-gray-400"
-              }`}
+                    ? "bg-yellow-500"
+                    : "bg-gray-400"
+                }`}
             />
           </div>
           <h3 className="text-xl font-bold text-gray-800 mb-1">
@@ -627,13 +619,12 @@ export function ChatInfoSidebar({ selectedChat, messages, starredMessages }) {
             </h4>
             <div className="flex items-center gap-3 p-2 rounded-lg bg-gray-50">
               <div
-                className={`w-3 h-3 rounded-full shadow-sm ${
-                  selectedChat.status === "online"
+                className={`w-3 h-3 rounded-full shadow-sm ${selectedChat.status === "online"
                     ? "bg-green-500 animate-pulse"
                     : selectedChat.status === "away"
-                    ? "bg-yellow-500"
-                    : "bg-gray-400"
-                }`}
+                      ? "bg-yellow-500"
+                      : "bg-gray-400"
+                  }`}
               />
               <span className="text-sm text-gray-700 font-medium capitalize">
                 {selectedChat.status}
@@ -880,11 +871,10 @@ export function ChatInput({
           <div className="relative" ref={attachmentMenuRef}>
             <button
               onClick={() => setShowAttachmentMenu(!showAttachmentMenu)}
-              className={`p-2.5 rounded-xl transition-all duration-200 flex-shrink-0 group ${
-                showAttachmentMenu
+              className={`p-2.5 rounded-xl transition-all duration-200 flex-shrink-0 group ${showAttachmentMenu
                   ? "bg-orange-100 text-orange-600"
                   : "hover:bg-orange-50 text-gray-600"
-              }`}
+                }`}
             >
               <Paperclip
                 className="group-hover:text-orange-600 transition-colors"
@@ -975,8 +965,8 @@ export function ChatInput({
                   editingMessage
                     ? "Edit your message..."
                     : replyingTo
-                    ? "Type your reply..."
-                    : "Type a message..."
+                      ? "Type your reply..."
+                      : "Type a message..."
                 }
                 rows={1}
                 className="flex-1 px-4 py-3 text-sm bg-transparent border-none focus:outline-none resize-none placeholder-gray-400 max-h-32 overflow-y-auto custom-scrollbar"
@@ -987,11 +977,10 @@ export function ChatInput({
               <div className="relative pb-2 pr-2" ref={emojiPickerRef}>
                 <button
                   onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                  className={`p-1.5 rounded-lg transition-all duration-200 flex-shrink-0 group ${
-                    showEmojiPicker
+                  className={`p-1.5 rounded-lg transition-all duration-200 flex-shrink-0 group ${showEmojiPicker
                       ? "bg-orange-100 text-orange-600"
                       : "hover:bg-orange-50 text-gray-600"
-                  }`}
+                    }`}
                 >
                   <Smile
                     className="group-hover:text-orange-600 transition-colors"
@@ -1036,11 +1025,10 @@ export function ChatInput({
           ) : (
             <button
               onClick={handleVoiceMessage}
-              className={`p-3 rounded-xl transition-all duration-200 shadow-md hover:shadow-lg flex-shrink-0 ${
-                isRecording
+              className={`p-3 rounded-xl transition-all duration-200 shadow-md hover:shadow-lg flex-shrink-0 ${isRecording
                   ? "bg-red-500 text-white animate-pulse scale-110"
                   : "bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 hover:scale-105"
-              } active:scale-95`}
+                } active:scale-95`}
               title={isRecording ? "Stop recording" : "Record voice message"}
             >
               <Mic size={18} />
