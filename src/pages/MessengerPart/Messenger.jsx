@@ -19,7 +19,8 @@ export default function MessengerPage() {
   const { user: currentUser } = useSelector((state) => state.auth);
   const [socket, setSocket] = useState(null);
   const [socketConnected, setSocketConnected] = useState(false);
-  const [currentEmployeeId, setCurrentEmployeeId] = useState(null);
+  const [currentUserId, setCurrentUserId] = useState(null);
+  const [currentUserType, setCurrentUserType] = useState('employee');
 
   // State Management
   const [activeTab, setActiveTab] = useState("team");
@@ -55,6 +56,12 @@ export default function MessengerPage() {
   const emojiPickerRef = useRef(null);
   const attachmentMenuRef = useRef(null);
   const recordingIntervalRef = useRef(null);
+  const selectedChatRef = useRef(null);
+
+  // Sync ref with state
+  useEffect(() => {
+    selectedChatRef.current = selectedChat;
+  }, [selectedChat]);
 
   // Data fetching and Socket setup
   useEffect(() => {
@@ -100,19 +107,20 @@ export default function MessengerPage() {
         .then(data => {
           console.log('Profile API response:', data);
 
-          // The API returns employee data directly (not nested in .employee)
           if (data.id) {
-            const employeeId = data.id;
-            setCurrentEmployeeId(employeeId);
-            socket.emit("setup", { id: employeeId, type: "employee" });
-            console.log('Socket setup with employee ID:', employeeId);
+            const userId = data.id;
+            const type = currentUser.role === 'Admin' ? 'user' : 'employee';
+            setCurrentUserId(userId);
+            setCurrentUserType(type);
+            socket.emit("setup", { id: userId, type: type });
+            console.log('Socket setup with ID:', userId, 'type:', type);
           } else {
-            console.error('No employee ID in profile response:', data);
-            toast.error('Failed to load employee profile');
+            console.error('No ID in profile response:', data);
+            toast.error('Failed to load user profile');
           }
         })
         .catch(err => {
-          console.error("Error fetching employee profile:", err);
+          console.error("Error fetching user profile:", err);
           toast.error('Failed to load profile. Please refresh.');
         });
 
@@ -122,16 +130,71 @@ export default function MessengerPage() {
       });
 
       socket.on("message_received", (newMessage) => {
-        const convId = newMessage.conversationId;
+        console.log('Real-time message received:', newMessage);
+        const convId = newMessage.conversationId || newMessage.conversation_id;
+        const senderId = newMessage.sender_id || newMessage.sender?.id;
+        const senderType = newMessage.sender_type || newMessage.sender?.type;
+
         setChatMessages((prev) => ({
           ...prev,
           [convId]: [...(prev[convId] || []), newMessage],
         }));
-        toast.success("New message received!");
+
+        // Update unread count and last message in contact lists
+        const updateList = (list) => {
+          const isFromCurrentChat = selectedChatRef.current &&
+            Number(selectedChatRef.current.id) === Number(senderId) &&
+            selectedChatRef.current.type === senderType;
+
+          return list.map(item => {
+            if (Number(item.id) === Number(senderId) && item.type === senderType) {
+              return {
+                ...item,
+                unread: isFromCurrentChat ? 0 : (item.unread || 0) + 1,
+                lastMessage: newMessage.text,
+                time: 'Just now',
+                lastMessageTime: new Date().toISOString()
+              };
+            }
+            return item;
+          }).sort((a, b) => {
+            // Bring contacts with 'Just now' to the top
+            if (a.time === 'Just now' && b.time !== 'Just now') return -1;
+            if (a.time !== 'Just now' && b.time === 'Just now') return 1;
+            return 0;
+          });
+        };
+
+        setTeamMembers(prev => updateList(prev));
+        setClients(prev => updateList(prev));
+
+        if (!(selectedChatRef.current && Number(selectedChatRef.current.id) === Number(senderId))) {
+          toast.success(`New message from ${newMessage.sender_name || 'Team'}`);
+        }
       });
 
       socket.on("typing", (room) => setTypingIndicator(room));
       socket.on("stop_typing", () => setTypingIndicator(null));
+
+      socket.on("message_delivered", ({ messageId, conversationId }) => {
+        setChatMessages(prev => {
+          const msgs = prev[conversationId] || [];
+          return {
+            ...prev,
+            [conversationId]: msgs.map(m => m.id === messageId ? { ...m, is_delivered: true } : m)
+          };
+        });
+      });
+
+      socket.on("messages_read", ({ conversationId, readBy, readByType }) => {
+        setChatMessages(prev => {
+          const msgs = prev[conversationId] || [];
+          return {
+            ...prev,
+            [conversationId]: msgs.map(m => (Number(m.sender_id) !== Number(readBy) || m.sender_type !== readByType) ? { ...m, is_read: true, is_delivered: true } : m)
+          };
+        });
+      });
     }
   }, [socket, currentUser]);
 
@@ -170,6 +233,24 @@ export default function MessengerPage() {
     fetchHistory();
   }, [selectedChat, socket]);
 
+  // Mark as read when messages change or chat is selected
+  useEffect(() => {
+    if (socket && socketConnected && selectedChat && currentConversationId) {
+      const messages = chatMessages[currentConversationId] || [];
+      const hasUnread = messages.some(m => !m.is_read && (Number(m.sender_id) === Number(selectedChat.id) && m.sender_type === selectedChat.type));
+
+      if (hasUnread) {
+        socket.emit("mark_as_read", {
+          conversationId: currentConversationId,
+          userId: currentUserId,
+          userType: currentUserType,
+          otherId: selectedChat.id,
+          otherType: selectedChat.type
+        });
+      }
+    }
+  }, [chatMessages, selectedChat, currentConversationId, socket, socketConnected]);
+
   // Auto-scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -182,7 +263,8 @@ export default function MessengerPage() {
       message: message.trim(),
       selectedChat,
       currentConversationId,
-      currentEmployeeId,
+      currentUserId,
+      currentUserType,
       socketConnected
     });
 
@@ -196,8 +278,8 @@ export default function MessengerPage() {
       return;
     }
 
-    if (!currentEmployeeId) {
-      toast.error('Employee ID not loaded. Please refresh the page.');
+    if (!currentUserId) {
+      toast.error('User information not loaded. Please refresh the page.');
       return;
     }
 
@@ -206,50 +288,44 @@ export default function MessengerPage() {
         // Edit logic would go here
         setEditingMessage(null);
       } else {
-        const newMessage = {
-          conversationId: currentConversationId,
-          sender: { id: currentEmployeeId, type: 'employee' },
+        // 1. Prepare temp message for optimistic UI
+        const tempId = Date.now();
+        const tempMessage = {
+          id: tempId,
+          conversation_id: currentConversationId || 'temp',
+          sender_id: currentUserId,
+          sender_type: currentUserType,
+          sender_name: currentUser.role === 'Admin' ? `${currentUser.firstName} ${currentUser.lastName}` : (currentUser.employee_name || currentUser.name),
           text: message.trim(),
           time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
           participants: [
-            { id: currentEmployeeId, type: 'employee' },
+            { id: currentUserId, type: currentUserType },
             { id: selectedChat.id, type: selectedChat.type }
           ],
-          messageType: attachedFiles.length > 0 ? 'file' : 'text'
+          messageType: attachedFiles.length > 0 ? 'file' : 'text',
+          isTemp: true
         };
 
-        console.log('Sending message:', newMessage);
-
         // Update local state immediately for responsiveness
-        const tempId = Date.now();
         setChatMessages(prev => ({
           ...prev,
-          [currentConversationId]: [...(prev[currentConversationId] || []), {
-            ...newMessage,
-            id: tempId,
-            sender_id: currentEmployeeId,
-            sender_type: 'employee',
-            created_at: new Date().toISOString()
-          }]
+          [currentConversationId || 'temp']: [...(prev[currentConversationId || 'temp'] || []), tempMessage]
         }));
 
-        // Emit via socket for real-time delivery
-        if (socket && socketConnected) {
-          socket.emit("new_message", newMessage);
-          console.log('Message emitted via socket');
-        }
+        setMessage("");
+        setAttachedFiles([]);
 
-        // Save via REST API
+        // 2. Save via REST API
         try {
           const formData = new FormData();
-          if (currentConversationId) {
+          if (currentConversationId && currentConversationId !== 'temp') {
             formData.append('conversationId', currentConversationId);
           } else {
             formData.append('otherId', selectedChat.id);
             formData.append('otherType', selectedChat.type);
           }
-          formData.append('text', message.trim());
-          formData.append('messageType', attachedFiles.length > 0 ? 'file' : 'text');
+          formData.append('text', tempMessage.text);
+          formData.append('messageType', tempMessage.messageType);
 
           if (attachedFiles.length > 0) {
             attachedFiles.forEach(file => formData.append('file', file.file));
@@ -266,18 +342,52 @@ export default function MessengerPage() {
           const data = await response.json();
           console.log('Message saved via API:', data);
 
-          if (!data.success) {
-            toast.error(data.message || 'Failed to send message');
+          if (data.success && data.message) {
+            const savedMsg = data.message;
+
+            // Update conversation ID if it was a first message
+            if (!currentConversationId || currentConversationId === 'temp') {
+              setCurrentConversationId(savedMsg.conversation_id);
+            }
+
+            // Replace temp message with real one in state
+            setChatMessages(prev => {
+              const convId = savedMsg.conversation_id;
+              const currentMsgs = prev[convId] || prev['temp'] || [];
+              const updatedMsgs = currentMsgs.map(m => m.id === tempId ? savedMsg : m);
+
+              // If we were using 'temp', move messages to the real convId
+              const newState = { ...prev };
+              if (prev['temp']) delete newState['temp'];
+              newState[convId] = updatedMsgs;
+              return newState;
+            });
+
+            // 3. Emit via socket (now WITH real ID and participants)
+            if (socket && socketConnected) {
+              socket.emit("new_message", {
+                ...savedMsg,
+                conversationId: savedMsg.conversation_id,
+                participants: [
+                  { id: currentUserId, type: currentUserType },
+                  { id: selectedChat.id, type: selectedChat.type }
+                ]
+              });
+              console.log('Message emitted via socket with verified ID');
+            }
           } else {
-            toast.success('Message sent!');
+            toast.error(data.message || 'Failed to send message');
+            // Remove temp message on failure
+            setChatMessages(prev => ({
+              ...prev,
+              [currentConversationId || 'temp']: (prev[currentConversationId || 'temp'] || []).filter(m => m.id !== tempId)
+            }));
           }
         } catch (apiError) {
           console.error('API Error:', apiError);
           toast.error('Failed to save message');
         }
 
-        setMessage("");
-        setAttachedFiles([]);
         setReplyingTo(null);
       }
     } catch (error) {
@@ -328,6 +438,11 @@ export default function MessengerPage() {
 
   const handleChatSelect = (contact) => {
     setSelectedChat(contact);
+    // Reset unread for this contact
+    const resetUnread = (list) => list.map(item => (Number(item.id) === Number(contact.id) && item.type === contact.type) ? { ...item, unread: 0 } : item);
+    setTeamMembers(prev => resetUnread(prev));
+    setClients(prev => resetUnread(prev));
+
     setShowChatInfo(false);
     setChatSearchQuery("");
     setReplyingTo(null);
@@ -467,9 +582,9 @@ export default function MessengerPage() {
     : messages;
 
   return (
-    <DashboardLayout>
-      <div className="h-[calc(100vh-4rem)] ml-5 bg-white rounded-3xl overflow-hidden shadow-2xl border border-gray-100">
-        <div className="flex h-full">
+    <DashboardLayout isFullHeight={true}>
+      <div className="flex-1 min-h-0 ml-5 bg-white rounded-3xl overflow-hidden shadow-2xl border border-gray-100 flex flex-col">
+        <div className="flex flex-1 min-h-0">
           {/* Sidebar */}
           <div className="w-[380px] bg-gray-50/30 flex flex-col h-full border-r border-gray-100">
             {/* Header */}
@@ -583,6 +698,8 @@ export default function MessengerPage() {
                       messages={filteredMessages}
                       typingIndicator={typingIndicator}
                       selectedChatId={selectedChat.id}
+                      currentUserId={currentUserId}
+                      currentUserType={currentUserType}
                       messagesEndRef={messagesEndRef}
                       showMessageMenu={showMessageMenu}
                       setShowMessageMenu={setShowMessageMenu}

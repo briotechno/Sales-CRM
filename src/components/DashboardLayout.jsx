@@ -3,11 +3,11 @@ import Header from "./Header";
 import Sidebar from "./Sidebar";
 import ProfileCompletionBanner from "./ProfileCompletionBanner";
 
-const DashboardLayout = ({ children }) => {
+const DashboardLayout = ({ children, isFullHeight = false }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div>
+    <div className={isFullHeight ? "h-screen overflow-hidden" : ""}>
       {/* Header */}
       <Header />
 
@@ -16,12 +16,16 @@ const DashboardLayout = ({ children }) => {
 
       {/* Main Content */}
       <main
-        className={`mt-12 p-4 bg-white min-h-screen transition-all duration-300
+        className={`mt-[56px] p-4 bg-white transition-all duration-300
         ${sidebarOpen ? "ml-64" : "ml-0"} 
-        md:ml-64`}
+        md:ml-64 ${isFullHeight ? "h-[calc(100vh-56px)] flex flex-col overflow-hidden" : "min-h-screen"}`}
       >
         <ProfileCompletionBanner />
-        {children}
+        {isFullHeight ? (
+          <div className="flex-1 min-h-0 flex flex-col">
+            {children}
+          </div>
+        ) : children}
       </main>
     </div>
   );
@@ -384,13 +388,13 @@ export default DashboardLayout;
 //                     </span>
 //                   </td>
 //                   <td className="px-4 py-4">
-//                     <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-sm text-xs font-semibold border ${getCategoryColor(leave.leaveCategory)}`}>
+//                     <span className={`inline - flex items - center gap - 1 px - 3 py - 1 rounded - sm text - xs font - semibold border ${ getCategoryColor(leave.leaveCategory) } `}>
 //                       {leave.leaveCategory === 'Paid' ? <DollarSign className="w-3 h-3" /> : <AlertCircle className="w-3 h-3" />}
 //                       {leave.leaveCategory}
 //                     </span>
 //                   </td>
 //                   <td className="px-4 py-4">
-//                     <span className={`inline-flex items-center px-3 py-1 rounded-sm text-xs font-semibold border ${getStatusColor(leave.status)}`}>
+//                     <span className={`inline - flex items - center px - 3 py - 1 rounded - sm text - xs font - semibold border ${ getStatusColor(leave.status) } `}>
 //                       {leave.status}
 //                     </span>
 //                   </td>
@@ -498,14 +502,14 @@ export default DashboardLayout;
 //                   </div>
 //                   <div className="bg-gray-50 rounded-sm p-3">
 //                     <p className="text-xs text-gray-600 font-medium mb-1">Leave Category</p>
-//                     <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-sm text-xs font-semibold border ${getCategoryColor(selectedLeave.leaveCategory)}`}>
+//                     <span className={`inline - flex items - center gap - 1 px - 3 py - 1 rounded - sm text - xs font - semibold border ${ getCategoryColor(selectedLeave.leaveCategory) } `}>
 //                       {selectedLeave.leaveCategory === 'Paid' ? <DollarSign className="w-3 h-3" /> : <AlertCircle className="w-3 h-3" />}
 //                       {selectedLeave.leaveCategory}
 //                     </span>
 //                   </div>
 //                   <div className="bg-gray-50 rounded-sm p-3">
 //                     <p className="text-xs text-gray-600 font-medium mb-1">Status</p>
-//                     <span className={`inline-flex items-center px-3 py-1 rounded-sm text-xs font-semibold border ${getStatusColor(selectedLeave.status)}`}>
+//                     <span className={`inline - flex items - center px - 3 py - 1 rounded - sm text - xs font - semibold border ${ getStatusColor(selectedLeave.status) } `}>
 //                       {selectedLeave.status}
 //                     </span>
 //                   </div>

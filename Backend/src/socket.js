@@ -15,11 +15,15 @@ const initializeSocket = (server) => {
     io.on('connection', (socket) => {
         console.log('New client connected:', socket.id);
 
-        socket.on('setup', (userData) => {
+        socket.on('setup', async (userData) => {
             // userData should have { id: employeeId, type: 'employee' }
             const userKey = `${userData.id}_${userData.type}`;
             socket.join(userKey);
             onlineUsers.set(userKey, socket.id);
+
+            // Mark all messages for this user as delivered
+            await Messenger.markAllAsDeliveredForUser(userData.id, userData.type);
+
             console.log('User joined room:', userKey);
             socket.emit('connected');
         });
@@ -33,17 +37,20 @@ const initializeSocket = (server) => {
         socket.on('stop_typing', (room) => socket.in(room).emit('stop_typing', room));
 
         socket.on('new_message', async (newMessage) => {
-            const chat = newMessage.conversationId;
-            const participants = newMessage.participants; // [ {id, type}, {id, type} ]
+            const chat = newMessage.conversationId || newMessage.conversation_id;
+            const participants = newMessage.participants;
 
             if (!participants) return console.log('Participants not defined');
+
+            const senderId = newMessage.sender?.id || newMessage.sender_id;
+            const senderType = newMessage.sender?.type || newMessage.sender_type;
 
             // Persist message if not already saved via REST
             if (!newMessage.id) {
                 const messageId = await Messenger.saveMessage({
                     conversation_id: chat,
-                    sender_id: newMessage.sender.id,
-                    sender_type: newMessage.sender.type,
+                    sender_id: senderId,
+                    sender_type: senderType,
                     text: newMessage.text,
                     message_type: newMessage.messageType || 'text',
                     reply_to_id: newMessage.replyToId
@@ -53,13 +60,48 @@ const initializeSocket = (server) => {
 
             // Broadcast to other participants
             participants.forEach(p => {
-                if (p.id === newMessage.sender.id && p.type === newMessage.sender.type) return;
+                if (Number(p.id) === Number(senderId) && p.type === senderType) return;
 
                 const userKey = `${p.id}_${p.type}`;
-                // Send to participant's personal room (for multi-device sync)
+                const isOnline = onlineUsers.has(userKey);
+
+                if (isOnline) {
+                    Messenger.markAsDelivered(newMessage.id);
+                    newMessage.is_delivered = true;
+                }
+
                 socket.in(userKey).emit('message_received', newMessage);
-                // Also send to conversation room if active
                 socket.in(chat).emit('message_received', newMessage);
+
+                // Notify sender if delivered
+                if (isOnline) {
+                    const senderKey = `${senderId}_${senderType}`;
+                    socket.in(senderKey).emit('message_delivered', {
+                        messageId: newMessage.id,
+                        conversationId: chat
+                    });
+                }
+            });
+        });
+
+        socket.on('mark_as_read', async (data) => {
+            const { conversationId, userId, userType, otherId, otherType } = data;
+            await Messenger.markAsRead(conversationId, userId, userType);
+
+            // Notify the sender that their messages were read
+            const otherKey = `${otherId}_${otherType}`;
+            socket.in(otherKey).emit('messages_read', {
+                conversationId,
+                readBy: userId,
+                readByType: userType
+            });
+
+            // Also notify other devices of the reader (sync)
+            const myKey = `${userId}_${userType}`;
+            socket.in(myKey).emit('messages_read', {
+                conversationId,
+                readBy: userId,
+                readByType: userType
             });
         });
 

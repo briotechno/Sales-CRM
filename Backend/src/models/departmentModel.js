@@ -2,7 +2,7 @@ const { pool } = require('../config/db');
 
 const Department = {
     create: async (data, userId) => {
-        const { department_name, icon, status, description } = data;
+        const { department_name, icon, status, description, permissions } = data;
 
         // Check if department name already exists for this user
         const [existing] = await pool.query('SELECT id FROM departments WHERE department_name = ? AND user_id = ?', [department_name, userId]);
@@ -21,8 +21,10 @@ const Department = {
         }
 
         const [result] = await pool.query(
-            'INSERT INTO departments (department_id, department_name, icon, status, description, user_id) VALUES (?, ?, ?, ?, ?, ?)',
-            [newId, department_name, icon, status, description, userId]
+            'INSERT INTO departments (department_id, department_name, icon, status, description, permissions, user_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            [newId, department_name, icon, status, description,
+                typeof permissions === 'object' ? JSON.stringify(permissions || []) : (permissions || '[]'),
+                userId]
         );
         return result.insertId;
     },
@@ -85,10 +87,12 @@ const Department = {
     },
 
     update: async (id, data, userId) => {
-        const { department_name, icon, status, description } = data;
+        const { department_name, icon, status, description, permissions } = data;
         await pool.query(
-            'UPDATE departments SET department_name = ?, icon = ?, status = ?, description = ? WHERE id = ? AND user_id = ?',
-            [department_name, icon, status, description, id, userId]
+            'UPDATE departments SET department_name = ?, icon = ?, status = ?, description = ?, permissions = ? WHERE id = ? AND user_id = ?',
+            [department_name, icon, status, description,
+                typeof permissions === 'object' ? JSON.stringify(permissions || []) : (permissions || '[]'),
+                id, userId]
         );
     },
 

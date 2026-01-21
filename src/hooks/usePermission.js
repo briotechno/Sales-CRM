@@ -1,8 +1,9 @@
 import { useSelector } from 'react-redux';
+import { permissionCategories } from '../pages/EmployeePart/permissionsData';
 
 /**
- * Custom hook to check user permissions for a specific module.
- * @param {string} moduleName - The name of the module to check permissions for (must match keys in user.permissions).
+ * Custom hook to check user permissions for a specific module or action.
+ * @param {string} moduleName - The name of the module (e.g., "Leads Management") 
  * @returns {object} - An object containing boolean values for { create, read, update, delete }.
  */
 const usePermission = (moduleName) => {
@@ -21,22 +22,42 @@ const usePermission = (moduleName) => {
     if (user.role === 'Employee') {
         let perms = user.permissions;
 
-        // Parse if string (legacy handling, though Redux should typically store it parsed)
+        // Parse if string
         if (typeof perms === 'string') {
             try {
                 perms = JSON.parse(perms);
             } catch (e) {
-                console.error("Failed to parse permissions in usePermission hook", e);
                 return { create: false, read: false, update: false, delete: false };
             }
         }
 
-        if (!perms || typeof perms !== 'object') {
+        if (!perms) {
             return { create: false, read: false, update: false, delete: false };
         }
 
-        const modulePerms = perms[moduleName];
+        // NEW Flat Array Logic
+        if (Array.isArray(perms)) {
+            const categoryPerms = permissionCategories[moduleName] || [];
 
+            const hasAction = (actionKeywords) => {
+                return categoryPerms.some(cp =>
+                    actionKeywords.some(keyword => cp.id.includes(keyword)) &&
+                    perms.includes(cp.id)
+                );
+            };
+
+            return {
+                create: hasAction(['create', 'add', 'submit']),
+                read: hasAction(['view', 'read', 'list', 'use']),
+                update: hasAction(['edit', 'update', 'manage', 'configure', 'assign', 'approve']),
+                delete: hasAction(['delete', 'remove', 'cancel']),
+                // Direct access for custom checks
+                hasPermission: (actionId) => perms.includes(actionId)
+            };
+        }
+
+        // OLD Object Structure Logic (Fallback)
+        const modulePerms = perms[moduleName];
         if (!modulePerms) {
             return { create: false, read: false, update: false, delete: false };
         }

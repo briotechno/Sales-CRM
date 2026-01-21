@@ -51,9 +51,9 @@ const Messenger = {
 
         const [result] = await pool.query(
             `INSERT INTO messenger_messages 
-             (conversation_id, sender_id, sender_type, text, message_type, file_url, file_name, file_size, duration, reply_to_id) 
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [conversation_id, sender_id, sender_type, text, message_type || 'text', file_url, file_name, file_size, duration, reply_to_id]
+             (conversation_id, sender_id, sender_type, text, message_type, file_url, file_name, file_size, duration, reply_to_id, is_delivered) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [conversation_id, sender_id, sender_type, text, message_type || 'text', file_url, file_name, file_size, duration, reply_to_id, msgData.is_delivered || false]
         );
 
         // Update conversation's last message
@@ -68,9 +68,14 @@ const Messenger = {
     // Get messages for a conversation
     getMessages: async (conversationId, limit = 50, offset = 0) => {
         const [rows] = await pool.query(
-            `SELECT * FROM messenger_messages
-             WHERE conversation_id = ? 
-             ORDER BY created_at ASC 
+            `SELECT m.*, 
+             COALESCE(e.employee_name, CONCAT(u.firstName, ' ', u.lastName)) as sender_name,
+             DATE_FORMAT(m.created_at, '%h:%i %p') as time
+             FROM messenger_messages m
+             LEFT JOIN employees e ON m.sender_id = e.id AND m.sender_type = 'employee'
+             LEFT JOIN users u ON m.sender_id = u.id AND m.sender_type = 'user'
+             WHERE m.conversation_id = ? 
+             ORDER BY m.created_at ASC 
              LIMIT ? OFFSET ?`,
             [conversationId, limit, offset]
         );
@@ -105,12 +110,15 @@ const Messenger = {
                 WHEN participant_one_id = ? AND participant_one_type = ? THEN participant_two_type 
                 ELSE participant_one_type 
              END as other_type,
-             (SELECT COUNT(*) FROM messenger_messages WHERE conversation_id = c.id AND sender_id != ? AND is_read = FALSE) as unread_count
+             (SELECT COUNT(*) FROM messenger_messages 
+              WHERE conversation_id = c.id 
+              AND (sender_id != ? OR sender_type != ?) 
+              AND is_read = FALSE) as unread_count
              FROM messenger_conversations c
              WHERE (participant_one_id = ? AND participant_one_type = ?) 
              OR (participant_two_id = ? AND participant_two_type = ?)
              ORDER BY last_message_time DESC`,
-            [userId, userType, userId, userType, userId, userId, userType, userId, userType]
+            [userId, userType, userId, userType, userId, userType, userId, userType, userId, userType]
         );
         return rows;
     },
@@ -118,9 +126,40 @@ const Messenger = {
     // Mark messages as read
     markAsRead: async (conversationId, userId, userType) => {
         await pool.query(
-            `UPDATE messenger_messages SET is_read = TRUE 
-             WHERE conversation_id = ? AND sender_id != ? AND is_read = FALSE`,
-            [conversationId, userId]
+            `UPDATE messenger_messages SET is_read = TRUE, is_delivered = TRUE
+             WHERE conversation_id = ? AND (sender_id != ? OR sender_type != ?) AND is_read = FALSE`,
+            [conversationId, userId, userType]
+        );
+    },
+
+    // Mark as delivered
+    markAsDelivered: async (messageId) => {
+        await pool.query(
+            `UPDATE messenger_messages SET is_delivered = TRUE WHERE id = ? AND is_delivered = FALSE`,
+            [messageId]
+        );
+    },
+
+    markConversationAsDelivered: async (conversationId, userId, userType) => {
+        await pool.query(
+            `UPDATE messenger_messages SET is_delivered = TRUE 
+             WHERE conversation_id = ? AND (sender_id != ? OR sender_type != ?) AND is_delivered = FALSE`,
+            [conversationId, userId, userType]
+        );
+    },
+
+    markAllAsDeliveredForUser: async (userId, userType) => {
+        await pool.query(
+            `UPDATE messenger_messages m
+             JOIN messenger_conversations c ON m.conversation_id = c.id
+             SET m.is_delivered = TRUE 
+             WHERE (
+                (c.participant_one_id = ? AND c.participant_one_type = ?) 
+                OR (c.participant_two_id = ? AND c.participant_two_type = ?)
+             )
+             AND (m.sender_id != ? OR m.sender_type != ?) 
+             AND m.is_delivered = FALSE`,
+            [userId, userType, userId, userType, userId, userType]
         );
     },
 

@@ -279,14 +279,10 @@ export function ChatMessages({
   showReactionPicker,
   setShowReactionPicker,
   onReaction,
-  onReply,
-  onEdit,
-  onDelete,
-  onCopy,
-  onStar,
-  onPin,
   onForward,
   starredMessages,
+  currentUserId,
+  currentUserType,
 }) {
   const reactions = ["👍", "❤️", "😂", "😮", "😢", "🔥"];
 
@@ -297,16 +293,22 @@ export function ChatMessages({
 
       <div className="space-y-8 pb-4 relative z-10">
         {messages.map((msg, idx) => {
-          // Check if message is from current user (support both old and new format)
-          const isMe = msg.sender === "me" || msg.sender_type === 'employee';
+          // Check if message is from current user
+          const isMe = (Number(msg.sender_id) === Number(currentUserId) && msg.sender_type === currentUserType) || msg.sender === "me";
           const showTime = idx === 0 || messages[idx - 1].time !== msg.time;
+
+          const getInitials = () => {
+            if (msg.sender_name) return msg.sender_name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+            if (typeof msg.sender === 'string') return msg.sender.substring(0, 2);
+            return "??";
+          };
 
           return (
             <div key={msg.id} className={`group relative flex flex-col ${isMe ? "items-end" : "items-start"}`}>
               {showTime && (
                 <div className="w-full flex justify-center mb-6 mt-2">
                   <span className="px-4 py-1.5 bg-gray-50 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] rounded-full border border-gray-100 shadow-sm">
-                    {msg.time}
+                    {msg.time || 'Just now'}
                   </span>
                 </div>
               )}
@@ -332,7 +334,7 @@ export function ChatMessages({
               <div className={`flex w-full ${isMe ? "justify-end" : "justify-start"} items-end gap-2 group/msg`}>
                 {!isMe && (
                   <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-100 to-orange-200 flex-shrink-0 flex items-center justify-center text-[10px] font-black text-orange-700 shadow-sm uppercase">
-                    {msg.sender.substring(0, 2)}
+                    {getInitials()}
                   </div>
                 )}
 
@@ -416,12 +418,14 @@ export function ChatMessages({
                         </span>
                       )}
 
-                      {msg.sender === "me" && (
+                      {(msg.sender === "me" || (Number(msg.sender_id) === Number(currentUserId) && msg.sender_type === currentUserType)) && (
                         <div className="flex items-center gap-0.5">
-                          {msg.read ? (
-                            <CheckCheck size={14} className="text-green-300 drop-shadow-[0_0_2px_rgba(34,197,94,0.5)]" />
+                          {msg.is_read || msg.read ? (
+                            <CheckCheck size={14} className="text-blue-300 drop-shadow-[0_0_4px_rgba(59,130,246,0.6)]" />
+                          ) : msg.is_delivered ? (
+                            <CheckCheck size={14} className="text-white/70" />
                           ) : (
-                            <Check size={14} className="text-white opacity-50" />
+                            <Check size={14} className="text-white/50" />
                           )}
                         </div>
                       )}
@@ -1034,7 +1038,7 @@ export function EmptyState() {
             ))}
           </div>
           <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest border-l border-gray-200 pl-6">
-            24 team members online
+            Team members currently active
           </p>
         </div>
       </div>

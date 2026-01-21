@@ -193,7 +193,9 @@ const AddEmployeeModal = ({ isOpen, onClose }) => {
       } else if (Array.isArray(formData[key])) {
         data.append(backendKey, JSON.stringify(formData[key]));
       } else if (key === 'permissions') {
-        data.append(backendKey, JSON.stringify(formData[key]));
+        const permsObj = formData[key] || {};
+        const permsList = Object.keys(permsObj).filter(id => permsObj[id]);
+        data.append(backendKey, JSON.stringify(permsList));
       } else if (formData[key] !== null && formData[key] !== undefined) {
         data.append(backendKey, formData[key]);
       }
