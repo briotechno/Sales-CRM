@@ -120,6 +120,7 @@ import PhonePay from "./pages/SuperAdmin/PaymentGateways/PhonePay.jsx";
 
 import RoleProtectedRoute from "./components/RoleProtectedRoute";
 import GlobalModals from "./components/common/GlobalModals";
+import TaskReminderPopup from "./components/TaskReminderPopup.jsx";
 
 function App() {
   return (
@@ -210,6 +211,7 @@ function App() {
       </Routes>
       <LeadsReminder />
       <MeetingReminder />
+      <TaskReminderPopup/>
       <GlobalModals />
     </Router>
   );
