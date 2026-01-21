@@ -117,6 +117,19 @@ const initializeSocket = (server) => {
             });
         });
 
+        socket.on('reaction', async (data) => {
+            const { messageId, emoji, conversationId, userId, userType } = data;
+            try {
+                if (userId && userType) {
+                    await Messenger.addReaction(messageId, userId, userType, emoji);
+                }
+                // Broadcast to everyone in the chat room
+                io.to(conversationId).emit('reaction_received', { messageId, emoji, conversationId });
+            } catch (err) {
+                console.error('Error handling reaction:', err);
+            }
+        });
+
         socket.on('disconnect', () => {
             console.log('User disconnected:', socket.id);
             // Cleanup onlineUsers map (requires iterating or a reverse map)

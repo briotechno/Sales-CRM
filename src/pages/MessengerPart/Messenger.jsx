@@ -56,11 +56,23 @@ export default function MessengerPage() {
   const attachmentMenuRef = useRef(null);
   const recordingIntervalRef = useRef(null);
   const selectedChatRef = useRef(null);
+  const textareaRef = useRef(null);
 
   // Sync ref with state
   useEffect(() => {
     selectedChatRef.current = selectedChat;
   }, [selectedChat]);
+
+  // Sync editor with message state for clearing/resetting
+  useEffect(() => {
+    if (textareaRef.current) {
+      if (message === "" && textareaRef.current.innerText !== "") {
+        textareaRef.current.innerText = "";
+      } else if (editingMessage && message === editingMessage.text && textareaRef.current.innerText === "") {
+        textareaRef.current.innerText = message;
+      }
+    }
+  }, [message, editingMessage]);
 
   // Data fetching and Socket setup
   useEffect(() => {
@@ -157,10 +169,9 @@ export default function MessengerPage() {
             }
             return item;
           }).sort((a, b) => {
-            // Bring contacts with 'Just now' to the top
-            if (a.time === 'Just now' && b.time !== 'Just now') return -1;
-            if (a.time !== 'Just now' && b.time === 'Just now') return 1;
-            return 0;
+            const timeA = a.lastMessageTime ? new Date(a.lastMessageTime).getTime() : 0;
+            const timeB = b.lastMessageTime ? new Date(b.lastMessageTime).getTime() : 0;
+            return timeB - timeA;
           });
         };
 
@@ -174,6 +185,26 @@ export default function MessengerPage() {
 
       socket.on("typing", (room) => setTypingIndicator(room));
       socket.on("stop_typing", () => setTypingIndicator(null));
+
+      socket.on("reaction_received", ({ messageId, emoji, conversationId }) => {
+        setChatMessages((prev) => {
+          const messages = prev[conversationId] || [];
+          return {
+            ...prev,
+            [conversationId]: messages.map((msg) =>
+              msg.id === messageId
+                ? {
+                  ...msg,
+                  reactions: {
+                    ...msg.reactions,
+                    [emoji]: (msg.reactions?.[emoji] || 0) + 1,
+                  },
+                }
+                : msg
+            ),
+          };
+        });
+      });
 
       socket.on("message_delivered", ({ messageId, conversationId }) => {
         setChatMessages(prev => {
@@ -304,6 +335,11 @@ export default function MessengerPage() {
           messageType: attachedFiles.length > 0 ? 'file' : 'text',
           isTemp: true
         };
+
+        // Close emoji picker on send
+        setShowEmojiPicker(false);
+        setEditingMessage(null);
+        setReplyingTo(null);
 
         // Update local state immediately for responsiveness
         setChatMessages(prev => ({
@@ -473,7 +509,13 @@ export default function MessengerPage() {
 
   const handleReaction = (messageId, emoji) => {
     if (socket && currentConversationId) {
-      socket.emit("reaction", { messageId, emoji, conversationId: currentConversationId });
+      socket.emit("reaction", {
+        messageId,
+        emoji,
+        conversationId: currentConversationId,
+        userId: currentUserId,
+        userType: currentUserType
+      });
     }
 
     setChatMessages((prev) => {
@@ -518,6 +560,10 @@ export default function MessengerPage() {
     setEditingMessage(msg);
     setReplyingTo(null);
     setMessage(msg.text);
+    if (textareaRef.current) {
+      textareaRef.current.innerText = msg.text;
+      textareaRef.current.focus();
+    }
     setShowMessageMenu(null);
   };
 
@@ -720,6 +766,7 @@ export default function MessengerPage() {
                     onFileSelect={handleFileSelect}
                     fileInputRef={fileInputRef}
                     emojiPickerRef={emojiPickerRef}
+                    textareaRef={textareaRef}
                     attachmentMenuRef={attachmentMenuRef}
                     isRecording={isRecording}
                     recordingDuration={recordingDuration}

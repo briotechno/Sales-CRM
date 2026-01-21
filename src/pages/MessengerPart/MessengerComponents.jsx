@@ -406,7 +406,7 @@ export function ChatMessages({
                     )}
 
                     {/* Message Text */}
-                    <p className={`text-[15px] leading-[1.6] font-medium selection:bg-white/30 selection:text-white ${isMe ? "drop-shadow-sm" : ""}`}>
+                    <p className={`leading-[1.6] font-medium selection:bg-white/30 selection:text-white ${isMe ? "drop-shadow-sm" : ""} ${/^(\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff])+$/.test(msg.text.trim()) && msg.text.trim().length <= 8 ? "text-4xl py-2" : "text-[15px]"}`}>
                       {msg.text}
                     </p>
 
@@ -475,7 +475,7 @@ export function ChatMessages({
 
                   {/* Reaction Picker Popover */}
                   {showReactionPicker === msg.id && (
-                    <div className="absolute bottom-full left-0 mb-4 bg-white/90 backdrop-blur-xl rounded-full shadow-2xl p-2 flex gap-1 z-30 animate-scaleUp border border-orange-50 ring-4 ring-black/5">
+                    <div className={`absolute bottom-full ${isMe ? "right-0" : "left-0"} mb-4 bg-white/90 backdrop-blur-xl rounded-full shadow-2xl p-2 flex gap-1 z-30 animate-scaleUp border border-orange-50 ring-4 ring-black/5`}>
                       {reactions.map((emoji) => (
                         <button
                           key={emoji}
@@ -757,6 +757,7 @@ export function ChatInput({
   onFileSelect,
   fileInputRef,
   emojiPickerRef,
+  textareaRef,
   attachmentMenuRef,
   isRecording,
   recordingDuration,
@@ -774,8 +775,27 @@ export function ChatInput({
   ];
 
   const handleEmojiClick = (emoji) => {
-    setMessage((prev) => prev + emoji);
-    setShowEmojiPicker(false);
+    const editor = textareaRef.current;
+    if (!editor) return;
+
+    editor.focus();
+    const selection = window.getSelection();
+    if (!selection.rangeCount) return;
+
+    const range = selection.getRangeAt(0);
+    range.deleteContents();
+
+    const textNode = document.createTextNode(emoji);
+    range.insertNode(textNode);
+
+    // Move cursor after emoji
+    range.setStartAfter(textNode);
+    range.setEndAfter(textNode);
+    selection.removeAllRanges();
+    selection.addRange(range);
+
+    // Update state
+    setMessage(editor.innerText);
   };
 
   const handleAttachmentClick = (type) => {
@@ -900,22 +920,27 @@ export function ChatInput({
               <Smile size={22} className="opacity-80" />
             </button>
 
-            <textarea
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              onKeyPress={(e) => {
+            <div
+              ref={textareaRef}
+              contentEditable
+              onInput={(e) => setMessage(e.currentTarget.innerText)}
+              onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
                   onSend();
                 }
               }}
-              placeholder={editingMessage ? "Modify your message..." : "Type something brilliant..."}
-              className="flex-1 bg-transparent border-none focus:outline-none focus:ring-0 text-sm py-2.5 pl-1 pr-4 placeholder-gray-400/80 min-h-[44px] max-h-48 custom-scrollbar resize-none font-medium text-gray-700"
-              style={{ height: 'auto' }}
+              className="flex-1 bg-transparent border-none focus:outline-none focus:ring-0 text-sm py-2.5 pl-1 pr-4 placeholder-gray-400/80 min-h-[44px] max-h-48 custom-scrollbar overflow-y-auto font-medium text-gray-700 break-words empty:before:content-[attr(data-placeholder)] empty:before:text-gray-400/80"
+              data-placeholder={editingMessage ? "Modify your message..." : "Type something brilliant..."}
+              onPaste={(e) => {
+                e.preventDefault();
+                const text = e.clipboardData.getData("text/plain");
+                document.execCommand("insertText", false, text);
+              }}
             />
 
             {showEmojiPicker && (
-              <div className="absolute bottom-full right-0 mb-4 bg-white/95 backdrop-blur-xl border border-gray-100 rounded-[32px] shadow-2xl p-4 w-[320px] animate-scaleUp z-50 overflow-hidden">
+              <div className="absolute bottom-full left-0 md:left-[-12px] mb-4 bg-white/95 backdrop-blur-xl border border-gray-100 rounded-[32px] shadow-2xl p-4 w-[320px] animate-scaleUp z-50 overflow-hidden">
                 <div className="mb-3 flex items-center justify-between px-2">
                   <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Pick an emoji</span>
                   <X size={14} className="text-gray-300 cursor-pointer hover:text-gray-600" onClick={() => setShowEmojiPicker(false)} />
