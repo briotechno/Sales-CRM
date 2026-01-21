@@ -1,6 +1,9 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import DashboardLayout from "../../components/DashboardLayout";
 import { MessageCircle, Search, Users, User, X } from "lucide-react";
+import { useSelector } from "react-redux";
+import { io } from "socket.io-client";
+import toast from "react-hot-toast";
 import {
   ChatHeader,
   ChatMessages,
@@ -10,7 +13,14 @@ import {
   EmptyState,
 } from "../../pages/MessengerPart/MessengerComponents";
 
+const SOCKET_URL = "http://localhost:5000"; // Adjust based on your backend port
+
 export default function MessengerPage() {
+  const { user: currentUser } = useSelector((state) => state.auth);
+  const [socket, setSocket] = useState(null);
+  const [socketConnected, setSocketConnected] = useState(false);
+  const [currentEmployeeId, setCurrentEmployeeId] = useState(null);
+
   // State Management
   const [activeTab, setActiveTab] = useState("team");
   const [selectedChat, setSelectedChat] = useState(null);
@@ -20,7 +30,13 @@ export default function MessengerPage() {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
   const [showChatInfo, setShowChatInfo] = useState(false);
-  const [chatMessages, setChatMessages] = useState({});
+
+  const [teamMembers, setTeamMembers] = useState([]);
+  const [clients, setClients] = useState([]);
+  const [recentChats, setRecentChats] = useState([]);
+  const [chatMessages, setChatMessages] = useState({}); // { conversationId: [messages] }
+  const [currentConversationId, setCurrentConversationId] = useState(null);
+
   const [typingIndicator, setTypingIndicator] = useState(null);
   const [attachedFiles, setAttachedFiles] = useState([]);
   const [isRecording, setIsRecording] = useState(false);
@@ -40,163 +56,235 @@ export default function MessengerPage() {
   const attachmentMenuRef = useRef(null);
   const recordingIntervalRef = useRef(null);
 
-  // Data
-  const teamMembers = [
-    {
-      id: 1,
-      name: "Sarah Johnson",
-      role: "Sales Manager",
-      avatar: "SJ",
-      status: "online",
-      lastMessage: "Can you send me the Q4 report?",
-      time: "2m",
-      unread: 2,
-      email: "sarah.j@company.com",
-      phone: "+91 98765 43210",
-    },
-    {
-      id: 2,
-      name: "Mike Chen",
-      role: "CRM Specialist",
-      avatar: "MC",
-      status: "online",
-      lastMessage: "Meeting at 3 PM confirmed",
-      time: "15m",
-      unread: 0,
-      email: "mike.c@company.com",
-      phone: "+91 98765 43211",
-    },
-    {
-      id: 3,
-      name: "Emily Davis",
-      role: "Sales Rep",
-      avatar: "ED",
-      status: "away",
-      lastMessage: "Thanks for your help!",
-      time: "1h",
-      unread: 0,
-      email: "emily.d@company.com",
-      phone: "+91 98765 43212",
-    },
-    {
-      id: 4,
-      name: "James Wilson",
-      role: "Account Manager",
-      avatar: "JW",
-      status: "offline",
-      lastMessage: "Let me check and get back",
-      time: "3h",
-      unread: 1,
-      email: "james.w@company.com",
-      phone: "+91 98765 43213",
-    },
-    {
-      id: 5,
-      name: "Alex Turner",
-      role: "Business Analyst",
-      avatar: "AT",
-      status: "online",
-      lastMessage: "Data analysis complete",
-      time: "5h",
-      unread: 0,
-      email: "alex.t@company.com",
-      phone: "+91 98765 43214",
-    },
-    {
-      id: 6,
-      name: "Lisa Anderson",
-      role: "Marketing Lead",
-      avatar: "LA",
-      status: "away",
-      lastMessage: "Campaign results are in",
-      time: "6h",
-      unread: 3,
-      email: "lisa.a@company.com",
-      phone: "+91 98765 43215",
-    },
-  ];
-
-  const clients = [
-    {
-      id: 10,
-      name: "Acme Corporation",
-      role: "Enterprise Client",
-      avatar: "AC",
-      status: "online",
-      lastMessage: "When can we schedule a demo?",
-      time: "10m",
-      unread: 3,
-      email: "contact@acme.com",
-      phone: "+91 98765 43220",
-    },
-    {
-      id: 11,
-      name: "Tech Innovators",
-      role: "Premium Client",
-      avatar: "TI",
-      status: "online",
-      lastMessage: "Invoice received, thank you",
-      time: "45m",
-      unread: 0,
-      email: "info@techinnovators.com",
-      phone: "+91 98765 43221",
-    },
-    {
-      id: 12,
-      name: "Global Solutions",
-      role: "Standard Client",
-      avatar: "GS",
-      status: "away",
-      lastMessage: "Need support with integration",
-      time: "2h",
-      unread: 1,
-      email: "support@globalsolutions.com",
-      phone: "+91 98765 43222",
-    },
-  ];
-
-  // Initialize chat messages
+  // Data fetching and Socket setup
   useEffect(() => {
-    const initialMessages = {};
-    [...teamMembers, ...clients].forEach((contact) => {
-      initialMessages[contact.id] = [
-        {
-          id: 1,
-          sender: "them",
-          text: "Hello! How are you today?",
-          time: "10:30 AM",
-          read: true,
-          reactions: {},
-          edited: false,
+    const fetchContacts = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/api/messenger/contacts", {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
+        const data = await response.json();
+        if (data.success) {
+          setTeamMembers(data.team);
+          setClients(data.clients);
+          console.log('Loaded contacts:', { team: data.team.length, clients: data.clients.length });
+        } else {
+          console.error('Failed to fetch contacts:', data);
+          toast.error(data.message || "Failed to load contacts");
+        }
+      } catch (error) {
+        console.error("Error fetching contacts:", error);
+        toast.error("Failed to load contacts");
+      }
+    };
+
+    fetchContacts();
+
+    const newSocket = io(SOCKET_URL);
+    setSocket(newSocket);
+
+    return () => newSocket.close();
+  }, [currentUser]);
+
+  useEffect(() => {
+    if (socket && currentUser) {
+      // Fetch current employee ID
+      fetch("http://localhost:5000/api/users/profile", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
-        {
-          id: 2,
-          sender: "me",
-          text: "Hi! I am doing great, thanks for asking!",
-          time: "10:32 AM",
-          read: true,
-          reactions: {},
-          edited: false,
-        },
-        {
-          id: 3,
-          sender: "them",
-          text: contact.lastMessage,
-          time: "10:35 AM",
-          read: false,
-          reactions: {},
-          edited: false,
-        },
-      ];
-    });
-    setChatMessages(initialMessages);
-  }, []);
+      })
+        .then(res => res.json())
+        .then(data => {
+          console.log('Profile API response:', data);
+
+          // The API returns employee data directly (not nested in .employee)
+          if (data.id) {
+            const employeeId = data.id;
+            setCurrentEmployeeId(employeeId);
+            socket.emit("setup", { id: employeeId, type: "employee" });
+            console.log('Socket setup with employee ID:', employeeId);
+          } else {
+            console.error('No employee ID in profile response:', data);
+            toast.error('Failed to load employee profile');
+          }
+        })
+        .catch(err => {
+          console.error("Error fetching employee profile:", err);
+          toast.error('Failed to load profile. Please refresh.');
+        });
+
+      socket.on("connected", () => {
+        setSocketConnected(true);
+        console.log('Socket connected successfully');
+      });
+
+      socket.on("message_received", (newMessage) => {
+        const convId = newMessage.conversationId;
+        setChatMessages((prev) => ({
+          ...prev,
+          [convId]: [...(prev[convId] || []), newMessage],
+        }));
+        toast.success("New message received!");
+      });
+
+      socket.on("typing", (room) => setTypingIndicator(room));
+      socket.on("stop_typing", () => setTypingIndicator(null));
+    }
+  }, [socket, currentUser]);
+
+  // Fetch history when chat is selected
+  useEffect(() => {
+    const fetchHistory = async () => {
+      if (selectedChat) {
+        try {
+          const response = await fetch(
+            `http://localhost:5000/api/messenger/history/${selectedChat.id}/${selectedChat.type}`,
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+            }
+          );
+          const data = await response.json();
+          if (data.success) {
+            setCurrentConversationId(data.conversationId);
+            setChatMessages((prev) => ({
+              ...prev,
+              [data.conversationId]: data.messages,
+            }));
+            if (socket) {
+              socket.emit("join_chat", data.conversationId);
+            }
+            console.log('Loaded conversation:', data.conversationId, 'with', data.messages.length, 'messages');
+          }
+        } catch (error) {
+          console.error("Error fetching history:", error);
+          toast.error("Failed to load chat history");
+        }
+      }
+    };
+
+    fetchHistory();
+  }, [selectedChat, socket]);
 
   // Auto-scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatMessages, selectedChat]);
 
+
+  // Handlers
+  const handleSend = async () => {
+    console.log('handleSend called', {
+      message: message.trim(),
+      selectedChat,
+      currentConversationId,
+      currentEmployeeId,
+      socketConnected
+    });
+
+    if (!message.trim() && attachedFiles.length === 0) {
+      console.log('No message or files to send');
+      return;
+    }
+
+    if (!selectedChat) {
+      toast.error('Please select a chat first');
+      return;
+    }
+
+    if (!currentEmployeeId) {
+      toast.error('Employee ID not loaded. Please refresh the page.');
+      return;
+    }
+
+    try {
+      if (editingMessage) {
+        // Edit logic would go here
+        setEditingMessage(null);
+      } else {
+        const newMessage = {
+          conversationId: currentConversationId,
+          sender: { id: currentEmployeeId, type: 'employee' },
+          text: message.trim(),
+          time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          participants: [
+            { id: currentEmployeeId, type: 'employee' },
+            { id: selectedChat.id, type: selectedChat.type }
+          ],
+          messageType: attachedFiles.length > 0 ? 'file' : 'text'
+        };
+
+        console.log('Sending message:', newMessage);
+
+        // Update local state immediately for responsiveness
+        const tempId = Date.now();
+        setChatMessages(prev => ({
+          ...prev,
+          [currentConversationId]: [...(prev[currentConversationId] || []), {
+            ...newMessage,
+            id: tempId,
+            sender_id: currentEmployeeId,
+            sender_type: 'employee',
+            created_at: new Date().toISOString()
+          }]
+        }));
+
+        // Emit via socket for real-time delivery
+        if (socket && socketConnected) {
+          socket.emit("new_message", newMessage);
+          console.log('Message emitted via socket');
+        }
+
+        // Save via REST API
+        try {
+          const formData = new FormData();
+          if (currentConversationId) {
+            formData.append('conversationId', currentConversationId);
+          } else {
+            formData.append('otherId', selectedChat.id);
+            formData.append('otherType', selectedChat.type);
+          }
+          formData.append('text', message.trim());
+          formData.append('messageType', attachedFiles.length > 0 ? 'file' : 'text');
+
+          if (attachedFiles.length > 0) {
+            attachedFiles.forEach(file => formData.append('file', file.file));
+          }
+
+          const response = await fetch('http://localhost:5000/api/messenger/send', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: formData
+          });
+
+          const data = await response.json();
+          console.log('Message saved via API:', data);
+
+          if (!data.success) {
+            toast.error(data.message || 'Failed to send message');
+          } else {
+            toast.success('Message sent!');
+          }
+        } catch (apiError) {
+          console.error('API Error:', apiError);
+          toast.error('Failed to save message');
+        }
+
+        setMessage("");
+        setAttachedFiles([]);
+        setReplyingTo(null);
+      }
+    } catch (error) {
+      console.error('Error in handleSend:', error);
+      toast.error('Failed to send message');
+    }
+  };
   // Close popovers on outside click
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -238,82 +326,8 @@ export default function MessengerPage() {
     };
   }, [isRecording]);
 
-  // Handlers
-  const handleSend = () => {
-    if ((message.trim() || attachedFiles.length > 0) && selectedChat) {
-      if (editingMessage) {
-        // Edit existing message
-        setChatMessages((prev) => ({
-          ...prev,
-          [selectedChat.id]: prev[selectedChat.id].map((msg) =>
-            msg.id === editingMessage.id
-              ? { ...msg, text: message.trim(), edited: true }
-              : msg
-          ),
-        }));
-        setEditingMessage(null);
-      } else {
-        // Send new message
-        const newMessage = {
-          id: Date.now(),
-          sender: "me",
-          text: message.trim() || `Sent ${attachedFiles.length} file(s)`,
-          time: new Date().toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
-          read: false,
-          attachments: attachedFiles.length > 0 ? [...attachedFiles] : null,
-          reactions: {},
-          replyTo: replyingTo,
-          edited: false,
-        };
-
-        setChatMessages((prev) => ({
-          ...prev,
-          [selectedChat.id]: [...(prev[selectedChat.id] || []), newMessage],
-        }));
-
-        // Simulate typing and response
-        setTypingIndicator(selectedChat.id);
-        setTimeout(() => {
-          setTypingIndicator(null);
-          const responseMessage = {
-            id: Date.now() + 1,
-            sender: "them",
-            text: "Thanks for your message! I'll get back to you shortly.",
-            time: new Date().toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            }),
-            read: false,
-            reactions: {},
-            edited: false,
-          };
-
-          setChatMessages((prev) => ({
-            ...prev,
-            [selectedChat.id]: [
-              ...(prev[selectedChat.id] || []),
-              responseMessage,
-            ],
-          }));
-        }, 2000);
-      }
-
-      setMessage("");
-      setAttachedFiles([]);
-      setReplyingTo(null);
-    }
-  };
-
   const handleChatSelect = (contact) => {
     setSelectedChat(contact);
-    setChatMessages((prev) => ({
-      ...prev,
-      [contact.id]:
-        prev[contact.id]?.map((msg) => ({ ...msg, read: true })) || [],
-    }));
     setShowChatInfo(false);
     setChatSearchQuery("");
     setReplyingTo(null);
@@ -328,6 +342,7 @@ export default function MessengerPage() {
       size: (file.size / 1024).toFixed(2) + " KB",
       type: file.type,
       url: URL.createObjectURL(file),
+      file: file
     }));
     setAttachedFiles((prev) => [...prev, ...fileData]);
     setShowAttachmentMenu(false);
@@ -337,52 +352,40 @@ export default function MessengerPage() {
     if (!isRecording) {
       setIsRecording(true);
     } else {
-      const voiceMessage = {
-        id: Date.now(),
-        sender: "me",
-        text: `Voice message (${recordingDuration}s)`,
-        time: new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-        read: false,
-        isVoice: true,
-        duration: recordingDuration,
-        reactions: {},
-        edited: false,
-      };
-
-      setChatMessages((prev) => ({
-        ...prev,
-        [selectedChat.id]: [...(prev[selectedChat.id] || []), voiceMessage],
-      }));
-
       setIsRecording(false);
+      // Voice message sending logic would go here
     }
   };
 
   const handleReaction = (messageId, emoji) => {
-    setChatMessages((prev) => ({
-      ...prev,
-      [selectedChat.id]: prev[selectedChat.id].map((msg) =>
-        msg.id === messageId
-          ? {
-            ...msg,
-            reactions: {
-              ...msg.reactions,
-              [emoji]: (msg.reactions[emoji] || 0) + 1,
-            },
-          }
-          : msg
-      ),
-    }));
+    if (socket && currentConversationId) {
+      socket.emit("reaction", { messageId, emoji, conversationId: currentConversationId });
+    }
+
+    setChatMessages((prev) => {
+      const messages = prev[currentConversationId] || [];
+      return {
+        ...prev,
+        [currentConversationId]: messages.map((msg) =>
+          msg.id === messageId
+            ? {
+              ...msg,
+              reactions: {
+                ...msg.reactions,
+                [emoji]: (msg.reactions?.[emoji] || 0) + 1,
+              },
+            }
+            : msg
+        ),
+      };
+    });
     setShowReactionPicker(null);
   };
 
   const handleDeleteMessage = (messageId) => {
     setChatMessages((prev) => ({
       ...prev,
-      [selectedChat.id]: prev[selectedChat.id].filter(
+      [currentConversationId]: (prev[currentConversationId] || []).filter(
         (msg) => msg.id !== messageId
       ),
     }));
@@ -399,9 +402,9 @@ export default function MessengerPage() {
 
   const handleEditMessage = (msg) => {
     setEditingMessage(msg);
+    setReplyingTo(null);
     setMessage(msg.text);
     setShowMessageMenu(null);
-    setReplyingTo(null);
   };
 
   const handleReply = (msg) => {
@@ -413,6 +416,7 @@ export default function MessengerPage() {
   const handleCopyMessage = (text) => {
     navigator.clipboard.writeText(text);
     setShowMessageMenu(null);
+    toast.success("Message copied to clipboard");
   };
 
   const handleStarMessage = (messageId) => {
@@ -452,10 +456,10 @@ export default function MessengerPage() {
   const filteredContacts = contacts.filter(
     (contact) =>
       contact.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      contact.role.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      contact.lastMessage.toLowerCase().includes(searchQuery.toLowerCase())
+      contact.role.toLowerCase().includes(searchQuery.toLowerCase())
   );
-  const messages = selectedChat ? chatMessages[selectedChat.id] || [] : [];
+
+  const messages = currentConversationId ? chatMessages[currentConversationId] || [] : [];
   const filteredMessages = chatSearchQuery
     ? messages.filter((msg) =>
       msg.text.toLowerCase().includes(chatSearchQuery.toLowerCase())
@@ -526,8 +530,8 @@ export default function MessengerPage() {
                   Team
                 </button>
                 <button
-                  onClick={() => setActiveTab("person")}
-                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all duration-300 ${activeTab === "person"
+                  onClick={() => setActiveTab("clients")}
+                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all duration-300 ${activeTab === "clients"
                     ? "bg-white text-orange-600 shadow-sm"
                     : "text-gray-400 hover:text-gray-600"
                     }`}

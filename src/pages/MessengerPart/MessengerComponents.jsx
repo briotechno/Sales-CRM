@@ -297,7 +297,8 @@ export function ChatMessages({
 
       <div className="space-y-8 pb-4 relative z-10">
         {messages.map((msg, idx) => {
-          const isMe = msg.sender === "me";
+          // Check if message is from current user (support both old and new format)
+          const isMe = msg.sender === "me" || msg.sender_type === 'employee';
           const showTime = idx === 0 || messages[idx - 1].time !== msg.time;
 
           return (
