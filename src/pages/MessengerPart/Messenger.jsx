@@ -367,12 +367,12 @@ export default function MessengerPage() {
       [selectedChat.id]: prev[selectedChat.id].map((msg) =>
         msg.id === messageId
           ? {
-              ...msg,
-              reactions: {
-                ...msg.reactions,
-                [emoji]: (msg.reactions[emoji] || 0) + 1,
-              },
-            }
+            ...msg,
+            reactions: {
+              ...msg.reactions,
+              [emoji]: (msg.reactions[emoji] || 0) + 1,
+            },
+          }
           : msg
       ),
     }));
@@ -458,83 +458,84 @@ export default function MessengerPage() {
   const messages = selectedChat ? chatMessages[selectedChat.id] || [] : [];
   const filteredMessages = chatSearchQuery
     ? messages.filter((msg) =>
-        msg.text.toLowerCase().includes(chatSearchQuery.toLowerCase())
-      )
+      msg.text.toLowerCase().includes(chatSearchQuery.toLowerCase())
+    )
     : messages;
 
   return (
     <DashboardLayout>
-      <div className="h-[calc(100vh-4rem)] ml-5 bg-gradient-to-br from-gray-50 to-gray-100 rounded-sm overflow-hidden shadow-2xl border border-gray-200">
+      <div className="h-[calc(100vh-4rem)] ml-5 bg-white rounded-3xl overflow-hidden shadow-2xl border border-gray-100">
         <div className="flex h-full">
           {/* Sidebar */}
-          <div className="w-80 bg-white border-r border-gray-200 flex flex-col shadow-lg h-full">
+          <div className="w-[380px] bg-gray-50/30 flex flex-col h-full border-r border-gray-100">
             {/* Header */}
-            <div className="p-4 border-b border-gray-200 flex-shrink-0 bg-gradient-to-r from-orange-500 to-orange-600">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
-                  <MessageCircle className="text-white" size={24} />
+            <div className="px-6 pt-8 pb-6 bg-white shrink-0">
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-orange-600 rounded-2xl flex items-center justify-center shadow-lg shadow-orange-100">
+                    <MessageCircle className="text-white" size={24} />
+                  </div>
+                  <div>
+                    <h1 className="text-2xl font-black text-gray-900 tracking-tight">Chats</h1>
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">Messenger Pro</p>
+                  </div>
                 </div>
-                <h1 className="text-xl font-bold text-white">Messenger</h1>
+                <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400 hover:bg-orange-50 hover:text-orange-600 transition-all cursor-pointer group">
+                  <div className="relative">
+                    <Users size={20} className="group-hover:scale-110 transition-transform" />
+                    <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-orange-500 rounded-full border-2 border-white"></div>
+                  </div>
+                </div>
               </div>
 
               {/* Search */}
-              <div className="relative">
+              <div className="relative group">
                 <Search
-                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                  size={16}
+                  className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 group-focus-within:text-orange-500 transition-colors"
+                  size={18}
                 />
                 <input
                   type="text"
-                  placeholder="Search messages..."
+                  placeholder="Search chats, people..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-9 py-2.5 text-sm bg-white border border-orange-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent shadow-sm placeholder-gray-400"
+                  className="w-full pl-12 pr-12 py-3.5 text-sm bg-gray-50 border-2 border-transparent rounded-2xl focus:outline-none focus:bg-white focus:border-orange-100 focus:ring-4 focus:ring-orange-50/50 transition-all placeholder:text-gray-400 font-medium"
                 />
                 {searchQuery && (
                   <button
                     onClick={() => setSearchQuery("")}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-orange-600 bg-white rounded-lg p-1 transition-all"
                   >
-                    <X size={16} />
+                    <X size={14} />
                   </button>
                 )}
               </div>
             </div>
 
-            {/* Tabs */}
-            <div className="flex border-b border-gray-200 flex-shrink-0 bg-white shadow-sm">
-              <button
-                onClick={() => setActiveTab("team")}
-                className={`flex-1 py-3 px-3 text-sm font-semibold transition-all relative ${
-                  activeTab === "team"
-                    ? "text-orange-600 bg-orange-50"
-                    : "text-gray-600 hover:text-gray-800 hover:bg-gray-50"
-                }`}
-              >
-                <div className="flex items-center justify-center gap-2">
-                  <Users size={16} />
-                  Team ({teamMembers.length})
-                </div>
-                {activeTab === "team" && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-orange-500 to-orange-600"></div>
-                )}
-              </button>
-              <button
-                onClick={() => setActiveTab("person")}
-                className={`flex-1 py-3 px-3 text-sm font-semibold transition-all relative ${
-                  activeTab === "person"
-                    ? "text-orange-600 bg-orange-50"
-                    : "text-gray-600 hover:text-gray-800 hover:bg-gray-50"
-                }`}
-              >
-                <div className="flex items-center justify-center gap-2">
-                  <User size={16} />
-                  Clients ({clients.length})
-                </div>
-                {activeTab === "person" && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-orange-500 to-orange-600"></div>
-                )}
-              </button>
+            {/* Navigation Tabs */}
+            <div className="px-6 pb-2 bg-white shrink-0">
+              <div className="flex p-1.5 bg-gray-50 rounded-[20px] gap-1">
+                <button
+                  onClick={() => setActiveTab("team")}
+                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all duration-300 ${activeTab === "team"
+                    ? "bg-white text-orange-600 shadow-sm"
+                    : "text-gray-400 hover:text-gray-600"
+                    }`}
+                >
+                  <Users size={14} />
+                  Team
+                </button>
+                <button
+                  onClick={() => setActiveTab("person")}
+                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all duration-300 ${activeTab === "person"
+                    ? "bg-white text-orange-600 shadow-sm"
+                    : "text-gray-400 hover:text-gray-600"
+                    }`}
+                >
+                  <User size={14} />
+                  Clients
+                </button>
+              </div>
             </div>
 
             {/* Contacts List */}
@@ -564,8 +565,8 @@ export default function MessengerPage() {
                     pinnedMessage={
                       pinnedMessages[selectedChat.id]
                         ? messages.find(
-                            (m) => m.id === pinnedMessages[selectedChat.id]
-                          )
+                          (m) => m.id === pinnedMessages[selectedChat.id]
+                        )
                         : null
                     }
                   />
