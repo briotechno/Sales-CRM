@@ -79,7 +79,7 @@ export default function MessengerPage() {
   useEffect(() => {
     const fetchContacts = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}api/messenger/contacts`, {
+        const response = await fetch(`${API_BASE_URL}messenger/contacts`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
@@ -110,7 +110,7 @@ export default function MessengerPage() {
   useEffect(() => {
     if (socket && currentUser) {
       // Fetch current employee ID
-      fetch(`${API_BASE_URL}api/users/profile`, {
+      fetch(`${API_BASE_URL}users/profile`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
@@ -235,7 +235,7 @@ export default function MessengerPage() {
       if (selectedChat) {
         try {
           const response = await fetch(
-            `${API_BASE_URL}api/messenger/history/${selectedChat.id}/${selectedChat.type}`,
+            `${API_BASE_URL}messenger/history/${selectedChat.id}/${selectedChat.type}`,
             {
               headers: {
                 Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -367,7 +367,7 @@ export default function MessengerPage() {
             attachedFiles.forEach(file => formData.append('file', file.file));
           }
 
-          const response = await fetch(`${API_BASE_URL}api/messenger/send`, {
+          const response = await fetch(`${API_BASE_URL}messenger/send`, {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${localStorage.getItem('token')}`
