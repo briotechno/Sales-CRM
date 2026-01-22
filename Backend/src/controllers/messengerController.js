@@ -70,7 +70,7 @@ const messengerController = {
                     return {
                         ...contact,
                         unread: conv.unread_count || 0,
-                        lastMessage: conv.last_message,
+                        lastMessage: conv.last_message_text,
                         time: conv.last_message_time ? new Date(conv.last_message_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
                         updated_at: conv.last_message_time
                     };

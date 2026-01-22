@@ -60,12 +60,14 @@ const protect = async (req, res, next) => {
             }
 
             // Handle Admin (User)
-            // Default or robust check
-            req.user = await User.findById(decoded.id);
-            if (req.user) {
-                // Ensure role is set
-                if (!req.user.role) req.user.role = 'Admin';
+            const user = await User.findById(decoded.id);
+            if (!user) {
+                return res.status(401).json({ message: 'Not authorized, user not found' });
             }
+
+            req.user = user;
+            // Ensure role is set
+            if (!req.user.role) req.user.role = 'Admin';
 
             next();
         } catch (error) {
