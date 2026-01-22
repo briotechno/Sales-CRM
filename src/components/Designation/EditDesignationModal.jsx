@@ -4,6 +4,8 @@ import { useUpdateDesignationMutation } from "../../store/api/designationApi";
 import { useGetDepartmentsQuery } from "../../store/api/departmentApi";
 import { toast } from "react-hot-toast";
 import Modal from "../common/Modal";
+import PermissionSelector from "../common/PermissionSelector";
+import { permissionCategories } from "../../pages/EmployeePart/permissionsData";
 
 const EditDesignationModal = ({ isOpen, onClose, designation, refetchDashboard }) => {
     const [designationName, setDesignationName] = useState("");
@@ -12,6 +14,8 @@ const EditDesignationModal = ({ isOpen, onClose, designation, refetchDashboard }
     const [status, setStatus] = useState("Active");
     const [designationImage, setDesignationImage] = useState(null);
     const [imagePreview, setImagePreview] = useState(null);
+    const [activeTab, setActiveTab] = useState("general");
+    const [selectedPermissions, setSelectedPermissions] = useState({});
 
     const { data: departmentsData } = useGetDepartmentsQuery({ limit: 100 });
     const [updateDesignation, { isLoading }] = useUpdateDesignationMutation();
@@ -23,6 +27,21 @@ const EditDesignationModal = ({ isOpen, onClose, designation, refetchDashboard }
             setDescription(designation.description || "");
             setStatus(designation.status || "Active");
             setImagePreview(designation.image_url || null);
+
+            // Handle permissions
+            if (designation.permissions) {
+                const perms = typeof designation.permissions === 'string'
+                    ? JSON.parse(designation.permissions)
+                    : designation.permissions;
+
+                const permObj = {};
+                (Array.isArray(perms) ? perms : []).forEach(p => {
+                    permObj[p] = true;
+                });
+                setSelectedPermissions(permObj);
+            } else {
+                setSelectedPermissions({});
+            }
         }
     }, [designation]);
 
@@ -32,6 +51,45 @@ const EditDesignationModal = ({ isOpen, onClose, designation, refetchDashboard }
             setDesignationImage(file);
             setImagePreview(URL.createObjectURL(file));
         }
+    };
+
+    const handleDepartmentChange = (e) => {
+        const deptId = e.target.value;
+        setDepartmentId(deptId);
+
+        if (deptId) {
+            const selectedDept = departmentsData?.departments?.find(d => d.id === parseInt(deptId));
+            if (selectedDept && selectedDept.permissions) {
+                const perms = typeof selectedDept.permissions === 'string'
+                    ? JSON.parse(selectedDept.permissions)
+                    : selectedDept.permissions;
+
+                const permObj = {};
+                (Array.isArray(perms) ? perms : []).forEach(p => {
+                    permObj[p] = true;
+                });
+                setSelectedPermissions(permObj);
+                toast.success(`Loaded default permissions from ${selectedDept.department_name}`);
+            }
+        }
+    };
+
+    const handleTogglePermission = (id) => {
+        setSelectedPermissions(prev => ({
+            ...prev,
+            [id]: !prev[id]
+        }));
+    };
+
+    const handleSelectCategory = (category) => {
+        const permissions = require("../../pages/EmployeePart/permissionsData").permissionCategories[category];
+        const allSelected = permissions.every(p => selectedPermissions[p.id]);
+
+        const newPermissions = { ...selectedPermissions };
+        permissions.forEach(p => {
+            newPermissions[p.id] = !allSelected;
+        });
+        setSelectedPermissions(newPermissions);
     };
 
     const handleUpdate = async () => {
@@ -46,6 +104,10 @@ const EditDesignationModal = ({ isOpen, onClose, designation, refetchDashboard }
             formData.append("department_id", departmentId);
             formData.append("description", description);
             formData.append("status", status);
+
+            const permissionsList = Object.keys(selectedPermissions).filter(id => selectedPermissions[id]);
+            formData.append("permissions", JSON.stringify(permissionsList));
+
             if (designationImage) {
                 formData.append("image", designationImage);
             }
@@ -91,100 +153,137 @@ const EditDesignationModal = ({ isOpen, onClose, designation, refetchDashboard }
             icon={<User size={24} />}
             footer={footer}
         >
-            <div className="space-y-5 text-black">
-                {/* Select Department */}
-                <div className="group">
-                    <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-                        <Briefcase size={16} className="text-[#FF7B1D]" />
-                        Select Department <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                        value={departmentId}
-                        onChange={(e) => setDepartmentId(e.target.value)}
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#FF7B1D] outline-none text-sm bg-white"
-                    >
-                        <option value="">-- Choose Department --</option>
-                        {departmentsData?.departments?.map((dept) => (
-                            <option key={dept.id} value={dept.id}>
-                                {dept.department_name}
-                            </option>
-                        ))}
-                    </select>
-                </div>
+            <div className="flex border-b border-gray-200 mb-6 text-black">
+                <button
+                    onClick={() => setActiveTab("general")}
+                    className={`px-6 py-3 text-sm font-bold uppercase tracking-wider transition-all border-b-2 ${activeTab === "general"
+                        ? "border-orange-500 text-orange-600"
+                        : "border-transparent text-gray-500 hover:text-gray-700"
+                        }`}
+                >
+                    General Info
+                </button>
+                <button
+                    onClick={() => setActiveTab("permissions")}
+                    className={`px-6 py-3 text-sm font-bold uppercase tracking-wider transition-all border-b-2 ${activeTab === "permissions"
+                        ? "border-orange-500 text-orange-600"
+                        : "border-transparent text-gray-500 hover:text-gray-700"
+                        }`}
+                >
+                    Role Permissions
+                </button>
+            </div>
 
-                {/* Designation Name */}
-                <div className="group">
-                    <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-                        <User size={16} className="text-[#FF7B1D]" />
-                        Designation Name <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                        type="text"
-                        value={designationName}
-                        onChange={(e) => setDesignationName(e.target.value)}
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#FF7B1D] outline-none text-sm"
-                    />
-                </div>
+            <div className={activeTab === "general" ? "block" : "hidden"}>
+                <div className="space-y-5 text-black">
+                    {/* Select Department */}
+                    <div className="group">
+                        <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                            <Briefcase size={16} className="text-[#FF7B1D]" />
+                            Select Department <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                            value={departmentId}
+                            onChange={handleDepartmentChange}
+                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#FF7B1D] outline-none text-sm bg-white"
+                        >
+                            <option value="">-- Choose Department --</option>
+                            {departmentsData?.departments?.map((dept) => (
+                                <option key={dept.id} value={dept.id}>
+                                    {dept.department_name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
 
-                {/* Status */}
-                <div className="group">
-                    <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-                        Status
-                    </label>
-                    <select
-                        value={status}
-                        onChange={(e) => setStatus(e.target.value)}
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#FF7B1D] outline-none text-sm bg-white"
-                    >
-                        <option value="Active">Active</option>
-                        <option value="Inactive">Inactive</option>
-                    </select>
-                </div>
+                    {/* Designation Name */}
+                    <div className="group">
+                        <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                            <User size={16} className="text-[#FF7B1D]" />
+                            Designation Name <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            value={designationName}
+                            onChange={(e) => setDesignationName(e.target.value)}
+                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#FF7B1D] outline-none text-sm"
+                        />
+                    </div>
 
-                {/* Designation Image */}
-                <div className="group">
-                    <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-                        <Image size={16} className="text-[#FF7B1D]" />
-                        Designation Image
-                    </label>
-                    <div className="flex items-start gap-4">
-                        <div className="flex-1">
-                            <input
-                                type="file"
-                                accept="image/*"
-                                onChange={handleImageChange}
-                                className="block w-full text-sm text-gray-900 px-4 py-3 border-2 border-gray-200 rounded-lg cursor-pointer focus:border-[#FF7B1D] outline-none bg-white"
-                            />
-                        </div>
-                        {imagePreview && (
-                            <div className="flex-shrink-0">
-                                <div className="w-20 h-20 rounded-lg border overflow-hidden bg-gray-50">
-                                    <img
-                                        src={imagePreview}
-                                        alt="Preview"
-                                        className="w-full h-full object-cover"
-                                    />
-                                </div>
+                    {/* Status */}
+                    <div className="group">
+                        <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                            Status
+                        </label>
+                        <select
+                            value={status}
+                            onChange={(e) => setStatus(e.target.value)}
+                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#FF7B1D] outline-none text-sm bg-white"
+                        >
+                            <option value="Active">Active</option>
+                            <option value="Inactive">Inactive</option>
+                        </select>
+                    </div>
+
+                    {/* Designation Image */}
+                    <div className="group">
+                        <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                            <Image size={16} className="text-[#FF7B1D]" />
+                            Designation Image
+                        </label>
+                        <div className="flex items-start gap-4">
+                            <div className="flex-1">
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleImageChange}
+                                    className="block w-full text-sm text-gray-900 px-4 py-3 border-2 border-gray-200 rounded-lg cursor-pointer focus:border-[#FF7B1D] outline-none bg-white"
+                                />
                             </div>
-                        )}
+                            {imagePreview && (
+                                <div className="flex-shrink-0">
+                                    <div className="w-20 h-20 rounded-lg border overflow-hidden bg-gray-50">
+                                        <img
+                                            src={imagePreview}
+                                            alt="Preview"
+                                            className="w-full h-full object-cover"
+                                        />
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Description */}
+                    <div className="group">
+                        <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                            <FileText size={16} className="text-[#FF7B1D]" />
+                            Description
+                        </label>
+                        <textarea
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
+                            rows="4"
+                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#FF7B1D] outline-none text-sm bg-white"
+                        />
                     </div>
                 </div>
+            </div>
 
-                {/* Description */}
-                <div className="group">
-                    <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-                        <FileText size={16} className="text-[#FF7B1D]" />
-                        Description
-                    </label>
-                    <textarea
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
-                        rows="4"
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#FF7B1D] outline-none text-sm bg-white"
-                    />
+            <div className={activeTab === "permissions" ? "block" : "hidden"}>
+                <div className="bg-orange-50/50 p-4 rounded-lg mb-6 border border-orange-100 italic text-center text-black">
+                    <p className="text-xs text-orange-700 leading-relaxed font-bold">
+                        Note: Updating these permissions will NOT affect existing employees.
+                    </p>
                 </div>
+                <PermissionSelector
+                    selectedPermissions={selectedPermissions}
+                    onTogglePermission={handleTogglePermission}
+                    onSelectCategory={handleSelectCategory}
+                />
             </div>
         </Modal>
+
     );
 };
 

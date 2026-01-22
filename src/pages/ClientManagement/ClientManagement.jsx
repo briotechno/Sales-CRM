@@ -38,6 +38,8 @@ import { toast } from "react-hot-toast";
 import DeleteClientModal from "../../components/Client/DeleteClientModal";
 import ViewClientModal from "../../components/Client/ViewClientModal";
 import { useDebounce } from "../../hooks/useDebounce";
+import { Country, State, City } from "country-state-city";
+import { ChevronDown } from "lucide-react";
 
 export default function AllClientPage() {
   const navigate = useNavigate();
@@ -105,6 +107,24 @@ export default function AllClientPage() {
 
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+  const handlePermanentAddressChange = (e) => {
+    const { name, value } = e.target;
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+
+      // Reset dependent fields
+      ...(name === "permanentCountry" && {
+        permanentState: "",
+        permanentCity: "",
+      }),
+
+      ...(name === "permanentState" && {
+        permanentCity: "",
+      }),
+    }));
   };
 
   const openAddModal = () => {
@@ -451,10 +471,9 @@ export default function AllClientPage() {
                 return (
                   <div
                     key={client.id}
-                    className={`bg-white rounded-2xl border-2 transition-all duration-300 group hover:shadow-xl hover:-translate-y-1 flex flex-col min-h-[400px] ${
-                      isSelected
-                        ? "border-orange-400 shadow-lg bg-gradient-to-br from-orange-50 to-white ring-2 ring-orange-200"
-                        : "border-gray-100 hover:border-orange-300"
+                    className={`bg-white rounded-2xl border-2 transition-all duration-300 group hover:shadow-xl hover:-translate-y-1 flex flex-col min-h-[400px] ${isSelected
+                      ? "border-orange-400 shadow-lg bg-gradient-to-br from-orange-50 to-white ring-2 ring-orange-200"
+                      : "border-gray-100 hover:border-orange-300"
                       }`}
                   >
                     <div className="p-6 flex flex-col flex-1">
@@ -471,10 +490,9 @@ export default function AllClientPage() {
                       {/* Header Section */}
                       <div className="flex items-start gap-4 mb-6">
                         <div
-                          className={`w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg transition-all duration-300 ${
-                            client.type === "person"
-                              ? "bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-blue-200"
-                              : "bg-gradient-to-br from-purple-500 to-purple-600 text-white shadow-purple-200"
+                          className={`w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg transition-all duration-300 ${client.type === "person"
+                            ? "bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-blue-200"
+                            : "bg-gradient-to-br from-purple-500 to-purple-600 text-white shadow-purple-200"
                             }`}
                         >
                           {client.type === "person" ? <User size={32} /> : <Building2 size={32} />}
@@ -985,21 +1003,103 @@ export default function AllClientPage() {
                       </div>
 
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div className="space-y-2">
-                          <label className="text-sm font-semibold text-gray-700">City</label>
-                          <input type="text" name="city" value={formData.city} onChange={handleInputChange} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none" />
-                        </div>
-                        <div className="space-y-2">
-                          <label className="text-sm font-semibold text-gray-700">State</label>
-                          <input type="text" name="state" value={formData.state} onChange={handleInputChange} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none" />
-                        </div>
-                        <div className="space-y-2">
-                          <label className="text-sm font-semibold text-gray-700">Zip Code</label>
-                          <input type="text" name="zipCode" value={formData.zipCode} onChange={handleInputChange} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none" />
-                        </div>
+
+                        {/* Country */}
                         <div className="space-y-2">
                           <label className="text-sm font-semibold text-gray-700">Country</label>
-                          <input type="text" name="country" value={formData.country} onChange={handleInputChange} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none" />
+
+                          <div className="relative">
+                            <select
+                              name="permanentCountry"
+                              value={formData.permanentCountry || ""}
+                              onChange={handlePermanentAddressChange}
+                              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
+                            >
+                              <option value="">Select Country</option>
+
+                              {Country.getAllCountries().map((country) => (
+                                <option key={country.isoCode} value={country.isoCode}>
+                                  {country.name}
+                                </option>
+                              ))}
+                            </select>
+
+                            <ChevronDown
+                              size={18}
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+                            />
+                          </div>
+                        </div>
+
+                        {/* State */}
+                        <div className="space-y-2">
+                          <label className="text-sm font-semibold text-gray-700">State</label>
+
+                          <div className="relative">
+                            <select
+                              name="permanentState"
+                              value={formData.permanentState || ""}
+                              onChange={handlePermanentAddressChange}
+                              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
+                            >
+                              <option value="">Select State</option>
+
+                              {State.getStatesOfCountry(formData.permanentCountry || "")?.map(
+                                (state) => (
+                                  <option key={state.isoCode} value={state.isoCode}>
+                                    {state.name}
+                                  </option>
+                                )
+                              )}
+                            </select>
+
+                            <ChevronDown
+                              size={18}
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+                            />
+                          </div>
+                        </div>
+
+                        {/* City */}
+                        <div className="space-y-2">
+                          <label className="text-sm font-semibold text-gray-700">City</label>
+
+                          <div className="relative">
+                            <select
+                              name="permanentCity"
+                              value={formData.permanentCity || ""}
+                              onChange={handlePermanentAddressChange}
+                              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
+                            >
+                              <option value="">Select City</option>
+
+                              {City.getCitiesOfState(
+                                formData.permanentCountry || "",
+                                formData.permanentState || ""
+                              )?.map((city) => (
+                                <option key={city.name} value={city.name}>
+                                  {city.name}
+                                </option>
+                              ))}
+                            </select>
+
+                            <ChevronDown
+                              size={18}
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Zip Code */}
+                        <div className="space-y-2">
+                          <label className="text-sm font-semibold text-gray-700">Zip Code</label>
+                          <input
+                            type="text"
+                            name="zipCode"
+                            value={formData.zipCode || ""}
+                            onChange={handleInputChange}
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
+                          />
                         </div>
                       </div>
 

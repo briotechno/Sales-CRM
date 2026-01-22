@@ -18,13 +18,14 @@ const Pipeline = {
                 const stageValues = stages.map((stage, index) => [
                     pipelineId,
                     stage.name,
+                    stage.description,
                     stage.probability,
                     stage.is_final ? 1 : 0,
                     index // stage_order
                 ]);
 
                 await connection.query(
-                    'INSERT INTO pipeline_stages (pipeline_id, name, probability, is_final, stage_order) VALUES ?',
+                    'INSERT INTO pipeline_stages (pipeline_id, name, description, probability, is_final, stage_order) VALUES ?',
                     [stageValues]
                 );
             }
@@ -139,13 +140,13 @@ const Pipeline = {
                     const stage = stages[i];
                     if (stage.id) {
                         await connection.query(
-                            'UPDATE pipeline_stages SET name = ?, probability = ?, is_final = ?, stage_order = ? WHERE id = ?',
-                            [stage.name, stage.probability, stage.is_final ? 1 : 0, i, stage.id]
+                            'UPDATE pipeline_stages SET name = ?, description = ?, probability = ?, is_final = ?, stage_order = ? WHERE id = ?',
+                            [stage.name, stage.description, stage.probability, stage.is_final ? 1 : 0, i, stage.id]
                         );
                     } else {
                         await connection.query(
-                            'INSERT INTO pipeline_stages (pipeline_id, name, probability, is_final, stage_order) VALUES (?, ?, ?, ?, ?)',
-                            [id, stage.name, stage.probability, stage.is_final ? 1 : 0, i]
+                            'INSERT INTO pipeline_stages (pipeline_id, name, description, probability, is_final, stage_order) VALUES (?, ?, ?, ?, ?, ?)',
+                            [id, stage.name, stage.description, stage.probability, stage.is_final ? 1 : 0, i]
                         );
                     }
                 }

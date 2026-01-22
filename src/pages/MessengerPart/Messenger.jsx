@@ -1,6 +1,9 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import DashboardLayout from "../../components/DashboardLayout";
 import { MessageCircle, Search, Users, User, X } from "lucide-react";
+import { useSelector } from "react-redux";
+import { io } from "socket.io-client";
+import toast from "react-hot-toast";
 import {
   ChatHeader,
   ChatMessages,
@@ -10,9 +13,17 @@ import {
   EmptyState,
 } from "../../pages/MessengerPart/MessengerComponents";
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const SOCKET_URL = API_BASE_URL;
+
 export default function MessengerPage() {
+  const { user: currentUser } = useSelector((state) => state.auth);
+  const [socket, setSocket] = useState(null);
+  const [socketConnected, setSocketConnected] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState(null);
+  const [currentUserType, setCurrentUserType] = useState('employee');
+
   // State Management
-  const [activeTab, setActiveTab] = useState("team");
   const [selectedChat, setSelectedChat] = useState(null);
   const [message, setMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -20,7 +31,13 @@ export default function MessengerPage() {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
   const [showChatInfo, setShowChatInfo] = useState(false);
-  const [chatMessages, setChatMessages] = useState({});
+
+  const [teamMembers, setTeamMembers] = useState([]);
+  const [clients, setClients] = useState([]);
+  const [recentChats, setRecentChats] = useState([]);
+  const [chatMessages, setChatMessages] = useState({}); // { conversationId: [messages] }
+  const [currentConversationId, setCurrentConversationId] = useState(null);
+
   const [typingIndicator, setTypingIndicator] = useState(null);
   const [attachedFiles, setAttachedFiles] = useState([]);
   const [isRecording, setIsRecording] = useState(false);
@@ -39,164 +56,381 @@ export default function MessengerPage() {
   const emojiPickerRef = useRef(null);
   const attachmentMenuRef = useRef(null);
   const recordingIntervalRef = useRef(null);
+  const selectedChatRef = useRef(null);
+  const textareaRef = useRef(null);
 
-  // Data
-  const teamMembers = [
-    {
-      id: 1,
-      name: "Sarah Johnson",
-      role: "Sales Manager",
-      avatar: "SJ",
-      status: "online",
-      lastMessage: "Can you send me the Q4 report?",
-      time: "2m",
-      unread: 2,
-      email: "sarah.j@company.com",
-      phone: "+91 98765 43210",
-    },
-    {
-      id: 2,
-      name: "Mike Chen",
-      role: "CRM Specialist",
-      avatar: "MC",
-      status: "online",
-      lastMessage: "Meeting at 3 PM confirmed",
-      time: "15m",
-      unread: 0,
-      email: "mike.c@company.com",
-      phone: "+91 98765 43211",
-    },
-    {
-      id: 3,
-      name: "Emily Davis",
-      role: "Sales Rep",
-      avatar: "ED",
-      status: "away",
-      lastMessage: "Thanks for your help!",
-      time: "1h",
-      unread: 0,
-      email: "emily.d@company.com",
-      phone: "+91 98765 43212",
-    },
-    {
-      id: 4,
-      name: "James Wilson",
-      role: "Account Manager",
-      avatar: "JW",
-      status: "offline",
-      lastMessage: "Let me check and get back",
-      time: "3h",
-      unread: 1,
-      email: "james.w@company.com",
-      phone: "+91 98765 43213",
-    },
-    {
-      id: 5,
-      name: "Alex Turner",
-      role: "Business Analyst",
-      avatar: "AT",
-      status: "online",
-      lastMessage: "Data analysis complete",
-      time: "5h",
-      unread: 0,
-      email: "alex.t@company.com",
-      phone: "+91 98765 43214",
-    },
-    {
-      id: 6,
-      name: "Lisa Anderson",
-      role: "Marketing Lead",
-      avatar: "LA",
-      status: "away",
-      lastMessage: "Campaign results are in",
-      time: "6h",
-      unread: 3,
-      email: "lisa.a@company.com",
-      phone: "+91 98765 43215",
-    },
-  ];
-
-  const clients = [
-    {
-      id: 10,
-      name: "Acme Corporation",
-      role: "Enterprise Client",
-      avatar: "AC",
-      status: "online",
-      lastMessage: "When can we schedule a demo?",
-      time: "10m",
-      unread: 3,
-      email: "contact@acme.com",
-      phone: "+91 98765 43220",
-    },
-    {
-      id: 11,
-      name: "Tech Innovators",
-      role: "Premium Client",
-      avatar: "TI",
-      status: "online",
-      lastMessage: "Invoice received, thank you",
-      time: "45m",
-      unread: 0,
-      email: "info@techinnovators.com",
-      phone: "+91 98765 43221",
-    },
-    {
-      id: 12,
-      name: "Global Solutions",
-      role: "Standard Client",
-      avatar: "GS",
-      status: "away",
-      lastMessage: "Need support with integration",
-      time: "2h",
-      unread: 1,
-      email: "support@globalsolutions.com",
-      phone: "+91 98765 43222",
-    },
-  ];
-
-  // Initialize chat messages
+  // Sync ref with state
   useEffect(() => {
-    const initialMessages = {};
-    [...teamMembers, ...clients].forEach((contact) => {
-      initialMessages[contact.id] = [
-        {
-          id: 1,
-          sender: "them",
-          text: "Hello! How are you today?",
-          time: "10:30 AM",
-          read: true,
-          reactions: {},
-          edited: false,
+    selectedChatRef.current = selectedChat;
+  }, [selectedChat]);
+
+  // Sync editor with message state for clearing/resetting
+  useEffect(() => {
+    if (textareaRef.current) {
+      if (message === "" && textareaRef.current.innerText !== "") {
+        textareaRef.current.innerText = "";
+      } else if (editingMessage && message === editingMessage.text && textareaRef.current.innerText === "") {
+        textareaRef.current.innerText = message;
+      }
+    }
+  }, [message, editingMessage]);
+
+  // Data fetching and Socket setup
+  useEffect(() => {
+    const fetchContacts = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/messenger/contacts`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
+        const data = await response.json();
+        if (data.success) {
+          setTeamMembers(data.team);
+          setClients(data.clients);
+          console.log('Loaded contacts:', { team: data.team.length, clients: data.clients.length });
+        } else {
+          console.error('Failed to fetch contacts:', data);
+          toast.error(data.message || "Failed to load contacts");
+        }
+      } catch (error) {
+        console.error("Error fetching contacts:", error);
+        toast.error("Failed to load contacts");
+      }
+    };
+
+    fetchContacts();
+
+    const newSocket = io(SOCKET_URL);
+    setSocket(newSocket);
+
+    return () => newSocket.close();
+  }, [currentUser]);
+
+  useEffect(() => {
+    if (socket && currentUser) {
+      // Fetch current employee ID
+      fetch(`${API_BASE_URL}/api/users/profile`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
-        {
-          id: 2,
-          sender: "me",
-          text: "Hi! I am doing great, thanks for asking!",
-          time: "10:32 AM",
-          read: true,
-          reactions: {},
-          edited: false,
-        },
-        {
-          id: 3,
-          sender: "them",
-          text: contact.lastMessage,
-          time: "10:35 AM",
-          read: false,
-          reactions: {},
-          edited: false,
-        },
-      ];
-    });
-    setChatMessages(initialMessages);
-  }, []);
+      })
+        .then(res => res.json())
+        .then(data => {
+          console.log('Profile API response:', data);
+
+          if (data.id) {
+            const userId = data.id;
+            const type = currentUser.role === 'Admin' ? 'user' : 'employee';
+            setCurrentUserId(userId);
+            setCurrentUserType(type);
+            socket.emit("setup", { id: userId, type: type });
+            console.log('Socket setup with ID:', userId, 'type:', type);
+          } else {
+            console.error('No ID in profile response:', data);
+            toast.error('Failed to load user profile');
+          }
+        })
+        .catch(err => {
+          console.error("Error fetching user profile:", err);
+          toast.error('Failed to load profile. Please refresh.');
+        });
+
+      socket.on("connected", () => {
+        setSocketConnected(true);
+        console.log('Socket connected successfully');
+      });
+
+      socket.on("message_received", (newMessage) => {
+        console.log('Real-time message received:', newMessage);
+        const convId = newMessage.conversationId || newMessage.conversation_id;
+        const senderId = newMessage.sender_id || newMessage.sender?.id;
+        const senderType = newMessage.sender_type || newMessage.sender?.type;
+
+        setChatMessages((prev) => ({
+          ...prev,
+          [convId]: [...(prev[convId] || []), newMessage],
+        }));
+
+        // Update unread count and last message in contact lists
+        const updateList = (list) => {
+          const isFromCurrentChat = selectedChatRef.current &&
+            Number(selectedChatRef.current.id) === Number(senderId) &&
+            selectedChatRef.current.type === senderType;
+
+          return list.map(item => {
+            if (Number(item.id) === Number(senderId) && item.type === senderType) {
+              return {
+                ...item,
+                unread: isFromCurrentChat ? 0 : (item.unread || 0) + 1,
+                lastMessage: newMessage.text,
+                time: 'Just now',
+                lastMessageTime: new Date().toISOString()
+              };
+            }
+            return item;
+          }).sort((a, b) => {
+            const timeA = a.lastMessageTime ? new Date(a.lastMessageTime).getTime() : 0;
+            const timeB = b.lastMessageTime ? new Date(b.lastMessageTime).getTime() : 0;
+            return timeB - timeA;
+          });
+        };
+
+        setTeamMembers(prev => updateList(prev));
+        setClients(prev => updateList(prev));
+
+        if (!(selectedChatRef.current && Number(selectedChatRef.current.id) === Number(senderId))) {
+          toast.success(`New message from ${newMessage.sender_name || 'Team'}`);
+        }
+      });
+
+      socket.on("typing", (room) => setTypingIndicator(room));
+      socket.on("stop_typing", () => setTypingIndicator(null));
+
+      socket.on("reaction_received", ({ messageId, emoji, conversationId }) => {
+        setChatMessages((prev) => {
+          const messages = prev[conversationId] || [];
+          return {
+            ...prev,
+            [conversationId]: messages.map((msg) =>
+              msg.id === messageId
+                ? {
+                  ...msg,
+                  reactions: {
+                    ...msg.reactions,
+                    [emoji]: (msg.reactions?.[emoji] || 0) + 1,
+                  },
+                }
+                : msg
+            ),
+          };
+        });
+      });
+
+      socket.on("message_delivered", ({ messageId, conversationId }) => {
+        setChatMessages(prev => {
+          const msgs = prev[conversationId] || [];
+          return {
+            ...prev,
+            [conversationId]: msgs.map(m => m.id === messageId ? { ...m, is_delivered: true } : m)
+          };
+        });
+      });
+
+      socket.on("messages_read", ({ conversationId, readBy, readByType }) => {
+        setChatMessages(prev => {
+          const msgs = prev[conversationId] || [];
+          return {
+            ...prev,
+            [conversationId]: msgs.map(m => (Number(m.sender_id) !== Number(readBy) || m.sender_type !== readByType) ? { ...m, is_read: true, is_delivered: true } : m)
+          };
+        });
+      });
+    }
+  }, [socket, currentUser]);
+
+  // Fetch history when chat is selected
+  useEffect(() => {
+    const fetchHistory = async () => {
+      if (selectedChat) {
+        try {
+          const response = await fetch(
+            `${API_BASE_URL}/api/messenger/history/${selectedChat.id}/${selectedChat.type}`,
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+            }
+          );
+          const data = await response.json();
+          if (data.success) {
+            setCurrentConversationId(data.conversationId);
+            setChatMessages((prev) => ({
+              ...prev,
+              [data.conversationId]: data.messages,
+            }));
+            if (socket) {
+              socket.emit("join_chat", data.conversationId);
+            }
+            console.log('Loaded conversation:', data.conversationId, 'with', data.messages.length, 'messages');
+          }
+        } catch (error) {
+          console.error("Error fetching history:", error);
+          toast.error("Failed to load chat history");
+        }
+      }
+    };
+
+    fetchHistory();
+  }, [selectedChat, socket]);
+
+  // Mark as read when messages change or chat is selected
+  useEffect(() => {
+    if (socket && socketConnected && selectedChat && currentConversationId) {
+      const messages = chatMessages[currentConversationId] || [];
+      const hasUnread = messages.some(m => !m.is_read && (Number(m.sender_id) === Number(selectedChat.id) && m.sender_type === selectedChat.type));
+
+      if (hasUnread) {
+        socket.emit("mark_as_read", {
+          conversationId: currentConversationId,
+          userId: currentUserId,
+          userType: currentUserType,
+          otherId: selectedChat.id,
+          otherType: selectedChat.type
+        });
+      }
+    }
+  }, [chatMessages, selectedChat, currentConversationId, socket, socketConnected]);
 
   // Auto-scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatMessages, selectedChat]);
 
+
+  // Handlers
+  const handleSend = async () => {
+    console.log('handleSend called', {
+      message: message.trim(),
+      selectedChat,
+      currentConversationId,
+      currentUserId,
+      currentUserType,
+      socketConnected
+    });
+
+    if (!message.trim() && attachedFiles.length === 0) {
+      console.log('No message or files to send');
+      return;
+    }
+
+    if (!selectedChat) {
+      toast.error('Please select a chat first');
+      return;
+    }
+
+    if (!currentUserId) {
+      toast.error('User information not loaded. Please refresh the page.');
+      return;
+    }
+
+    try {
+      if (editingMessage) {
+        // Edit logic would go here
+        setEditingMessage(null);
+      } else {
+        // 1. Prepare temp message for optimistic UI
+        const tempId = Date.now();
+        const tempMessage = {
+          id: tempId,
+          conversation_id: currentConversationId || 'temp',
+          sender_id: currentUserId,
+          sender_type: currentUserType,
+          sender_name: currentUser.role === 'Admin' ? `${currentUser.firstName} ${currentUser.lastName}` : (currentUser.employee_name || currentUser.name),
+          text: message.trim(),
+          time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          participants: [
+            { id: currentUserId, type: currentUserType },
+            { id: selectedChat.id, type: selectedChat.type }
+          ],
+          messageType: attachedFiles.length > 0 ? 'file' : 'text',
+          isTemp: true
+        };
+
+        // Close emoji picker on send
+        setShowEmojiPicker(false);
+        setEditingMessage(null);
+        setReplyingTo(null);
+
+        // Update local state immediately for responsiveness
+        setChatMessages(prev => ({
+          ...prev,
+          [currentConversationId || 'temp']: [...(prev[currentConversationId || 'temp'] || []), tempMessage]
+        }));
+
+        setMessage("");
+        setAttachedFiles([]);
+
+        // 2. Save via REST API
+        try {
+          const formData = new FormData();
+          if (currentConversationId && currentConversationId !== 'temp') {
+            formData.append('conversationId', currentConversationId);
+          } else {
+            formData.append('otherId', selectedChat.id);
+            formData.append('otherType', selectedChat.type);
+          }
+          formData.append('text', tempMessage.text);
+          formData.append('messageType', tempMessage.messageType);
+
+          if (attachedFiles.length > 0) {
+            attachedFiles.forEach(file => formData.append('file', file.file));
+          }
+
+          const response = await fetch(`${API_BASE_URL}/api/messenger/send`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: formData
+          });
+
+          const data = await response.json();
+          console.log('Message saved via API:', data);
+
+          if (data.success && data.message) {
+            const savedMsg = data.message;
+
+            // Update conversation ID if it was a first message
+            if (!currentConversationId || currentConversationId === 'temp') {
+              setCurrentConversationId(savedMsg.conversation_id);
+            }
+
+            // Replace temp message with real one in state
+            setChatMessages(prev => {
+              const convId = savedMsg.conversation_id;
+              const currentMsgs = prev[convId] || prev['temp'] || [];
+              const updatedMsgs = currentMsgs.map(m => m.id === tempId ? savedMsg : m);
+
+              // If we were using 'temp', move messages to the real convId
+              const newState = { ...prev };
+              if (prev['temp']) delete newState['temp'];
+              newState[convId] = updatedMsgs;
+              return newState;
+            });
+
+            // 3. Emit via socket (now WITH real ID and participants)
+            if (socket && socketConnected) {
+              socket.emit("new_message", {
+                ...savedMsg,
+                conversationId: savedMsg.conversation_id,
+                participants: [
+                  { id: currentUserId, type: currentUserType },
+                  { id: selectedChat.id, type: selectedChat.type }
+                ]
+              });
+              console.log('Message emitted via socket with verified ID');
+            }
+          } else {
+            toast.error(data.message || 'Failed to send message');
+            // Remove temp message on failure
+            setChatMessages(prev => ({
+              ...prev,
+              [currentConversationId || 'temp']: (prev[currentConversationId || 'temp'] || []).filter(m => m.id !== tempId)
+            }));
+          }
+        } catch (apiError) {
+          console.error('API Error:', apiError);
+          toast.error('Failed to save message');
+        }
+
+        setReplyingTo(null);
+      }
+    } catch (error) {
+      console.error('Error in handleSend:', error);
+      toast.error('Failed to send message');
+    }
+  };
   // Close popovers on outside click
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -238,82 +472,13 @@ export default function MessengerPage() {
     };
   }, [isRecording]);
 
-  // Handlers
-  const handleSend = () => {
-    if ((message.trim() || attachedFiles.length > 0) && selectedChat) {
-      if (editingMessage) {
-        // Edit existing message
-        setChatMessages((prev) => ({
-          ...prev,
-          [selectedChat.id]: prev[selectedChat.id].map((msg) =>
-            msg.id === editingMessage.id
-              ? { ...msg, text: message.trim(), edited: true }
-              : msg
-          ),
-        }));
-        setEditingMessage(null);
-      } else {
-        // Send new message
-        const newMessage = {
-          id: Date.now(),
-          sender: "me",
-          text: message.trim() || `Sent ${attachedFiles.length} file(s)`,
-          time: new Date().toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
-          read: false,
-          attachments: attachedFiles.length > 0 ? [...attachedFiles] : null,
-          reactions: {},
-          replyTo: replyingTo,
-          edited: false,
-        };
-
-        setChatMessages((prev) => ({
-          ...prev,
-          [selectedChat.id]: [...(prev[selectedChat.id] || []), newMessage],
-        }));
-
-        // Simulate typing and response
-        setTypingIndicator(selectedChat.id);
-        setTimeout(() => {
-          setTypingIndicator(null);
-          const responseMessage = {
-            id: Date.now() + 1,
-            sender: "them",
-            text: "Thanks for your message! I'll get back to you shortly.",
-            time: new Date().toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            }),
-            read: false,
-            reactions: {},
-            edited: false,
-          };
-
-          setChatMessages((prev) => ({
-            ...prev,
-            [selectedChat.id]: [
-              ...(prev[selectedChat.id] || []),
-              responseMessage,
-            ],
-          }));
-        }, 2000);
-      }
-
-      setMessage("");
-      setAttachedFiles([]);
-      setReplyingTo(null);
-    }
-  };
-
   const handleChatSelect = (contact) => {
     setSelectedChat(contact);
-    setChatMessages((prev) => ({
-      ...prev,
-      [contact.id]:
-        prev[contact.id]?.map((msg) => ({ ...msg, read: true })) || [],
-    }));
+    // Reset unread for this contact
+    const resetUnread = (list) => list.map(item => (Number(item.id) === Number(contact.id) && item.type === contact.type) ? { ...item, unread: 0 } : item);
+    setTeamMembers(prev => resetUnread(prev));
+    setClients(prev => resetUnread(prev));
+
     setShowChatInfo(false);
     setChatSearchQuery("");
     setReplyingTo(null);
@@ -328,6 +493,7 @@ export default function MessengerPage() {
       size: (file.size / 1024).toFixed(2) + " KB",
       type: file.type,
       url: URL.createObjectURL(file),
+      file: file
     }));
     setAttachedFiles((prev) => [...prev, ...fileData]);
     setShowAttachmentMenu(false);
@@ -337,52 +503,46 @@ export default function MessengerPage() {
     if (!isRecording) {
       setIsRecording(true);
     } else {
-      const voiceMessage = {
-        id: Date.now(),
-        sender: "me",
-        text: `Voice message (${recordingDuration}s)`,
-        time: new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-        read: false,
-        isVoice: true,
-        duration: recordingDuration,
-        reactions: {},
-        edited: false,
-      };
-
-      setChatMessages((prev) => ({
-        ...prev,
-        [selectedChat.id]: [...(prev[selectedChat.id] || []), voiceMessage],
-      }));
-
       setIsRecording(false);
+      // Voice message sending logic would go here
     }
   };
 
   const handleReaction = (messageId, emoji) => {
-    setChatMessages((prev) => ({
-      ...prev,
-      [selectedChat.id]: prev[selectedChat.id].map((msg) =>
-        msg.id === messageId
-          ? {
+    if (socket && currentConversationId) {
+      socket.emit("reaction", {
+        messageId,
+        emoji,
+        conversationId: currentConversationId,
+        userId: currentUserId,
+        userType: currentUserType
+      });
+    }
+
+    setChatMessages((prev) => {
+      const messages = prev[currentConversationId] || [];
+      return {
+        ...prev,
+        [currentConversationId]: messages.map((msg) =>
+          msg.id === messageId
+            ? {
               ...msg,
               reactions: {
                 ...msg.reactions,
-                [emoji]: (msg.reactions[emoji] || 0) + 1,
+                [emoji]: (msg.reactions?.[emoji] || 0) + 1,
               },
             }
-          : msg
-      ),
-    }));
+            : msg
+        ),
+      };
+    });
     setShowReactionPicker(null);
   };
 
   const handleDeleteMessage = (messageId) => {
     setChatMessages((prev) => ({
       ...prev,
-      [selectedChat.id]: prev[selectedChat.id].filter(
+      [currentConversationId]: (prev[currentConversationId] || []).filter(
         (msg) => msg.id !== messageId
       ),
     }));
@@ -399,9 +559,13 @@ export default function MessengerPage() {
 
   const handleEditMessage = (msg) => {
     setEditingMessage(msg);
-    setMessage(msg.text);
-    setShowMessageMenu(null);
     setReplyingTo(null);
+    setMessage(msg.text);
+    if (textareaRef.current) {
+      textareaRef.current.innerText = msg.text;
+      textareaRef.current.focus();
+    }
+    setShowMessageMenu(null);
   };
 
   const handleReply = (msg) => {
@@ -413,6 +577,7 @@ export default function MessengerPage() {
   const handleCopyMessage = (text) => {
     navigator.clipboard.writeText(text);
     setShowMessageMenu(null);
+    toast.success("Message copied to clipboard");
   };
 
   const handleStarMessage = (messageId) => {
@@ -448,93 +613,72 @@ export default function MessengerPage() {
   };
 
   // Computed values
-  const contacts = activeTab === "team" ? teamMembers : clients;
-  const filteredContacts = contacts.filter(
+  const filteredContacts = teamMembers.filter(
     (contact) =>
       contact.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      contact.role.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      contact.lastMessage.toLowerCase().includes(searchQuery.toLowerCase())
+      contact.role.toLowerCase().includes(searchQuery.toLowerCase())
   );
-  const messages = selectedChat ? chatMessages[selectedChat.id] || [] : [];
+
+  const messages = currentConversationId ? chatMessages[currentConversationId] || [] : [];
   const filteredMessages = chatSearchQuery
     ? messages.filter((msg) =>
-        msg.text.toLowerCase().includes(chatSearchQuery.toLowerCase())
-      )
+      msg.text.toLowerCase().includes(chatSearchQuery.toLowerCase())
+    )
     : messages;
 
   return (
-    <DashboardLayout>
-      <div className="h-[calc(100vh-4rem)] ml-5 bg-gradient-to-br from-gray-50 to-gray-100 rounded-sm overflow-hidden shadow-2xl border border-gray-200">
-        <div className="flex h-full">
+    <DashboardLayout isFullHeight={true}>
+      <div className="flex-1 min-h-0 ml-5 bg-white rounded-3xl overflow-hidden shadow-2xl border border-gray-100 flex flex-col">
+        <div className="flex flex-1 min-h-0">
           {/* Sidebar */}
-          <div className="w-80 bg-white border-r border-gray-200 flex flex-col shadow-lg h-full">
+          <div className="w-[380px] bg-gray-50/30 flex flex-col h-full border-r border-gray-100">
             {/* Header */}
-            <div className="p-4 border-b border-gray-200 flex-shrink-0 bg-gradient-to-r from-orange-500 to-orange-600">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
-                  <MessageCircle className="text-white" size={24} />
+            <div className="px-6 pt-8 pb-6 bg-white shrink-0">
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-orange-600 rounded-2xl flex items-center justify-center shadow-lg shadow-orange-100">
+                    <MessageCircle className="text-white" size={24} />
+                  </div>
+                  <div>
+                    <h1 className="text-2xl font-black text-gray-900 tracking-tight">Chats</h1>
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">Messenger Pro</p>
+                  </div>
                 </div>
-                <h1 className="text-xl font-bold text-white">Messenger</h1>
+                <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400 hover:bg-orange-50 hover:text-orange-600 transition-all cursor-pointer group">
+                  <div className="relative">
+                    <Users size={20} className="group-hover:scale-110 transition-transform" />
+                    <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-orange-500 rounded-full border-2 border-white"></div>
+                  </div>
+                </div>
               </div>
 
               {/* Search */}
-              <div className="relative">
+              <div className="relative group">
                 <Search
-                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                  size={16}
+                  className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 group-focus-within:text-orange-500 transition-colors"
+                  size={18}
                 />
                 <input
                   type="text"
-                  placeholder="Search messages..."
+                  placeholder="Search chats, people..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-9 py-2.5 text-sm bg-white border border-orange-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent shadow-sm placeholder-gray-400"
+                  className="w-full pl-12 pr-12 py-3.5 text-sm bg-gray-50 border-2 border-transparent rounded-2xl focus:outline-none focus:bg-white focus:border-orange-100 focus:ring-4 focus:ring-orange-50/50 transition-all placeholder:text-gray-400 font-medium"
                 />
                 {searchQuery && (
                   <button
                     onClick={() => setSearchQuery("")}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-orange-600 bg-white rounded-lg p-1 transition-all"
                   >
-                    <X size={16} />
+                    <X size={14} />
                   </button>
                 )}
               </div>
             </div>
 
-            {/* Tabs */}
-            <div className="flex border-b border-gray-200 flex-shrink-0 bg-white shadow-sm">
-              <button
-                onClick={() => setActiveTab("team")}
-                className={`flex-1 py-3 px-3 text-sm font-semibold transition-all relative ${
-                  activeTab === "team"
-                    ? "text-orange-600 bg-orange-50"
-                    : "text-gray-600 hover:text-gray-800 hover:bg-gray-50"
-                }`}
-              >
-                <div className="flex items-center justify-center gap-2">
-                  <Users size={16} />
-                  Team ({teamMembers.length})
-                </div>
-                {activeTab === "team" && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-orange-500 to-orange-600"></div>
-                )}
-              </button>
-              <button
-                onClick={() => setActiveTab("person")}
-                className={`flex-1 py-3 px-3 text-sm font-semibold transition-all relative ${
-                  activeTab === "person"
-                    ? "text-orange-600 bg-orange-50"
-                    : "text-gray-600 hover:text-gray-800 hover:bg-gray-50"
-                }`}
-              >
-                <div className="flex items-center justify-center gap-2">
-                  <User size={16} />
-                  Clients ({clients.length})
-                </div>
-                {activeTab === "person" && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-orange-500 to-orange-600"></div>
-                )}
-              </button>
+            {/* Navigation Tabs Removed */}
+            <div className="px-6 pb-2 bg-white shrink-0">
+              <div className="h-4"></div>
             </div>
 
             {/* Contacts List */}
@@ -564,8 +708,8 @@ export default function MessengerPage() {
                     pinnedMessage={
                       pinnedMessages[selectedChat.id]
                         ? messages.find(
-                            (m) => m.id === pinnedMessages[selectedChat.id]
-                          )
+                          (m) => m.id === pinnedMessages[selectedChat.id]
+                        )
                         : null
                     }
                   />
@@ -578,6 +722,8 @@ export default function MessengerPage() {
                       messages={filteredMessages}
                       typingIndicator={typingIndicator}
                       selectedChatId={selectedChat.id}
+                      currentUserId={currentUserId}
+                      currentUserType={currentUserType}
                       messagesEndRef={messagesEndRef}
                       showMessageMenu={showMessageMenu}
                       setShowMessageMenu={setShowMessageMenu}
@@ -621,6 +767,7 @@ export default function MessengerPage() {
                     onFileSelect={handleFileSelect}
                     fileInputRef={fileInputRef}
                     emojiPickerRef={emojiPickerRef}
+                    textareaRef={textareaRef}
                     attachmentMenuRef={attachmentMenuRef}
                     isRecording={isRecording}
                     recordingDuration={recordingDuration}

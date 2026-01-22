@@ -14,6 +14,9 @@ import {
 import { useGetDepartmentsQuery } from "../../store/api/departmentApi";
 import { useGetDesignationsQuery } from "../../store/api/designationApi";
 import { Country, State, City } from "country-state-city";
+import PermissionSelector from "../common/PermissionSelector";
+import { permissionCategories } from "../../pages/EmployeePart/permissionsData";
+import { toast } from "react-hot-toast";
 
 const languagesList = [
   "English",
@@ -180,41 +183,6 @@ const FormSection = ({ formData, handleChange, handleChanges, setFormData, mode 
   const labelStyles =
     "flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2";
 
-  const modules = [
-    "Dashboard",
-    "CRM Dashboard",
-    "HRM Dashboard",
-    "Leads Management",
-    "Champions Management",
-    "Pipeline Management",
-    "Client Management",
-    "Employee Management",
-    "Department Management",
-    "Designation Management",
-    "Attendance Management",
-    "Leave Management",
-    "Salary Management",
-    "Company Policy",
-    "HR Policy",
-    "Job Management",
-    "Team Management",
-    "Quotation",
-    "Invoice",
-    "Expense Management",
-    "Notes",
-    "ToDo",
-    "Announcement",
-    "Notification",
-    "Messenger",
-    "Catelogs",
-    "Business Info",
-    "Subscription",
-    "FAQ",
-    "Terms & Conditions Management",
-  ];
-
-  const actions = ["Create", "Read", "Update", "Delete"];
-
   const handlePermissionChange = (module, action, checked) => {
     const updatedPermissions = { ...formData.permissions };
     if (!updatedPermissions[module]) {
@@ -227,6 +195,69 @@ const FormSection = ({ formData, handleChange, handleChanges, setFormData, mode 
     }
     updatedPermissions[module][action.toLowerCase()] = checked;
     setFormData((prev) => ({ ...prev, permissions: updatedPermissions }));
+  };
+
+  const handleTogglePermission = (id) => {
+    setFormData(prev => ({
+      ...prev,
+      permissions: {
+        ...prev.permissions,
+        [id]: !prev.permissions[id]
+      }
+    }));
+  };
+
+  const handleSelectCategory = (category) => {
+    const permissions = permissionCategories[category];
+    const allSelected = permissions.every(p => formData.permissions[p.id]);
+
+    const newPermissions = { ...formData.permissions };
+    permissions.forEach(p => {
+      newPermissions[p.id] = !allSelected;
+    });
+    setFormData(prev => ({ ...prev, permissions: newPermissions }));
+  };
+
+  const handleDepartmentChange = (e) => {
+    const deptId = e.target.value;
+    handleChange(e);
+
+    if (deptId) {
+      const selectedDept = departments.find(d => d.id === parseInt(deptId));
+      if (selectedDept && selectedDept.permissions) {
+        const perms = typeof selectedDept.permissions === 'string'
+          ? JSON.parse(selectedDept.permissions)
+          : selectedDept.permissions;
+
+        const permObj = {};
+        (Array.isArray(perms) ? perms : []).forEach(p => {
+          permObj[p] = true;
+        });
+        setFormData(prev => ({ ...prev, permissions: permObj }));
+        toast.success(`Loaded default permissions for ${selectedDept.department_name}`);
+      }
+    }
+  };
+
+  const handleDesignationChange = (e) => {
+    const dsgId = e.target.value;
+    handleChange(e);
+
+    if (dsgId) {
+      const selectedDsg = designations.find(d => d.id === parseInt(dsgId));
+      if (selectedDsg && selectedDsg.permissions) {
+        const perms = typeof selectedDsg.permissions === 'string'
+          ? JSON.parse(selectedDsg.permissions)
+          : selectedDsg.permissions;
+
+        const permObj = {};
+        (Array.isArray(perms) ? perms : []).forEach(p => {
+          permObj[p] = true;
+        });
+        setFormData(prev => ({ ...prev, permissions: permObj }));
+        toast.success(`Loaded role-specific permissions for ${selectedDsg.designation_name}`);
+      }
+    }
   };
 
   const handleSelectAllModule = (module, checked) => {
@@ -428,7 +459,7 @@ const FormSection = ({ formData, handleChange, handleChanges, setFormData, mode 
               <select
                 name="department"
                 value={formData.department}
-                onChange={handleChange}
+                onChange={handleDepartmentChange}
                 className={selectStyles}
               >
                 <option value="">Select Department</option>
@@ -455,7 +486,7 @@ const FormSection = ({ formData, handleChange, handleChanges, setFormData, mode 
               <select
                 name="designation"
                 value={formData.designation}
-                onChange={handleChange}
+                onChange={handleDesignationChange}
                 className={selectStyles}
               >
                 <option value="">Select Designation</option>
@@ -1117,68 +1148,24 @@ const FormSection = ({ formData, handleChange, handleChanges, setFormData, mode 
         </div>
       </CollapsibleSection>
 
-      {/* <CollapsibleSection
+      <CollapsibleSection
         id="permissions"
         title="Permissions Control"
         icon={ShieldCheck}
         isCollapsed={collapsedSections.permissions}
         onToggle={() => toggleSection("permissions")}
       >
-        <table className="w-full text-sm text-left">
-          <thead className="bg-gray-50 text-gray-700 uppercase font-bold text-xs">
-            <tr>
-              <th className="px-4 py-3 border-b">Module Name</th>
-              <th className="px-4 py-3 border-b text-center">Select All</th>
-              {actions.map((action) => (
-                <th key={action} className="px-4 py-3 border-b text-center">
-                  {action}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {modules.map((module) => (
-              <tr
-                key={module}
-                className="hover:bg-gray-50 transition-colors group"
-              >
-                <td className="px-4 py-3 font-semibold text-gray-800 group-hover:text-[#FF7B1D]">
-                  {module}
-                </td>
-                <td className="px-4 py-3 text-center">
-                  <input
-                    type="checkbox"
-                    checked={isModuleAllChecked(module) || false}
-                    onChange={(e) =>
-                      handleSelectAllModule(module, e.target.checked)
-                    }
-                    className="h-4 w-4 text-[#FF7B1D] border-gray-300 rounded focus:ring-[#FF7B1D] cursor-pointer"
-                  />
-                </td>
-                {actions.map((action) => (
-                  <td key={action} className="px-4 py-3 text-center">
-                    <input
-                      type="checkbox"
-                      checked={
-                        formData.permissions?.[module]?.[action.toLowerCase()] ||
-                        false
-                      }
-                      onChange={(e) =>
-                        handlePermissionChange(
-                          module,
-                          action,
-                          e.target.checked
-                        )
-                      }
-                      className="h-4 w-4 text-[#FF7B1D] border-gray-300 rounded focus:ring-[#FF7B1D] cursor-pointer"
-                    />
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </CollapsibleSection> */}
+        <div className="bg-orange-50/50 p-4 rounded-lg mb-6 border border-orange-100 italic text-center">
+          <p className="text-xs text-orange-700 leading-relaxed font-bold">
+            Note: These permissions were automatically suggested based on the selected Department & Designation. You can further customize them here.
+          </p>
+        </div>
+        <PermissionSelector
+          selectedPermissions={formData.permissions || {}}
+          onTogglePermission={handleTogglePermission}
+          onSelectCategory={handleSelectCategory}
+        />
+      </CollapsibleSection>
     </>
   );
 };

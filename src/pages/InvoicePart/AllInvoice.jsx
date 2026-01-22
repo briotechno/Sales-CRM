@@ -26,6 +26,7 @@ import {
   useDeleteInvoiceMutation
 } from "../../store/api/invoiceApi";
 import { toast } from "react-hot-toast";
+import DeleteInvoiceModal from "./DeleteInvoiceModal";
 
 export default function AllInvoicePage() {
   const location = useLocation();
@@ -34,6 +35,9 @@ export default function AllInvoicePage() {
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [invoiceToDelete, setInvoiceToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const { data: invoicesResponse, isLoading, refetch } = useGetInvoicesQuery({
     status: filterStatus,
@@ -183,6 +187,23 @@ export default function AllInvoicePage() {
       quotationId: invoice.quotation_id || "",
     });
     setShowModal(true);
+  };
+
+  const confirmDeleteInvoice = async () => {
+    if (!invoiceToDelete) return;
+
+    try {
+      setIsDeleting(true);
+      await deleteInvoice(invoiceToDelete.id).unwrap();
+      toast.success("Invoice deleted successfully");
+      setShowDeleteModal(false);
+      setInvoiceToDelete(null);
+      refetch();
+    } catch (err) {
+      toast.error("Error deleting invoice");
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const handleDelete = async (id) => {
@@ -372,7 +393,10 @@ export default function AllInvoicePage() {
                             <Edit2 size={18} />
                           </button>
                           <button
-                            onClick={() => handleDelete(invoice.id)}
+                            onClick={() => {
+                              setSelectedInvoice(invoice);
+                              setShowDeleteModal(true);
+                            }}
                             className="p-2 text-red-500 hover:bg-red-50 rounded-sm transition-all border-2 border-transparent hover:border-red-200 hover:scale-110"
                             title="Delete Invoice"
                           >
@@ -421,6 +445,12 @@ export default function AllInvoicePage() {
         showModal={showViewModal}
         setShowModal={setShowViewModal}
         invoice={selectedInvoice}
+      />
+      <DeleteInvoiceModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        invoice={selectedInvoice}
+        refetchInvoices={refetch}
       />
     </DashboardLayout>
   );

@@ -2,7 +2,7 @@ const { pool } = require('../config/db');
 
 const Designation = {
     create: async (data, userId) => {
-        const { department_id, designation_name, image, status, description } = data;
+        const { department_id, designation_name, image, status, description, permissions } = data;
 
         // Generate unique designation_id for all users
         const [rows] = await pool.query('SELECT designation_id FROM designations ORDER BY id DESC LIMIT 1');
@@ -15,8 +15,10 @@ const Designation = {
         }
 
         const [result] = await pool.query(
-            'INSERT INTO designations (designation_id, department_id, designation_name, image, status, description, user_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
-            [newId, department_id, designation_name, image, status, description, userId]
+            'INSERT INTO designations (designation_id, department_id, designation_name, image, status, description, permissions, user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            [newId, department_id, designation_name, image, status, description,
+                typeof permissions === 'object' ? JSON.stringify(permissions || []) : (permissions || '[]'),
+                userId]
         );
         return result.insertId;
     },
@@ -81,10 +83,12 @@ const Designation = {
     },
 
     update: async (id, data, userId) => {
-        const { department_id, designation_name, image, status, description } = data;
+        const { department_id, designation_name, image, status, description, permissions } = data;
         await pool.query(
-            'UPDATE designations SET department_id = ?, designation_name = ?, image = ?, status = ?, description = ? WHERE id = ? AND user_id = ?',
-            [department_id, designation_name, image, status, description, id, userId]
+            'UPDATE designations SET department_id = ?, designation_name = ?, image = ?, status = ?, description = ?, permissions = ? WHERE id = ? AND user_id = ?',
+            [department_id, designation_name, image, status, description,
+                typeof permissions === 'object' ? JSON.stringify(permissions || []) : (permissions || '[]'),
+                id, userId]
         );
     },
 

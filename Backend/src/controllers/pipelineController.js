@@ -85,14 +85,14 @@ const deletePipeline = async (req, res) => {
 
 const addPipelineStage = async (req, res) => {
     try {
-        const { pipeline_id, name, probability, is_final } = req.body;
+        const { pipeline_id, name, description, probability, is_final } = req.body;
         // Verify pipeline ownership
         const [pipeline] = await pool.query('SELECT id FROM pipelines WHERE id = ? AND user_id = ?', [pipeline_id, req.user.id]);
         if (pipeline.length === 0) return res.status(404).json({ message: 'Pipeline not found' });
 
         await pool.query(
-            'INSERT INTO pipeline_stages (pipeline_id, name, probability, is_final) VALUES (?, ?, ?, ?)',
-            [pipeline_id, name, probability, is_final ? 1 : 0]
+            'INSERT INTO pipeline_stages (pipeline_id, name, description, probability, is_final) VALUES (?, ?, ?, ?, ?)',
+            [pipeline_id, name, description, probability, is_final ? 1 : 0]
         );
         res.status(201).json({ status: true, message: 'Stage added' });
     } catch (error) {
@@ -103,7 +103,7 @@ const addPipelineStage = async (req, res) => {
 const updatePipelineStage = async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, probability, is_final } = req.body;
+        const { name, description, probability, is_final } = req.body;
 
         // Verify ownership via join
         const [rows] = await pool.query(`
@@ -115,8 +115,8 @@ const updatePipelineStage = async (req, res) => {
         if (rows.length === 0) return res.status(404).json({ message: 'Stage not found' });
 
         await pool.query(
-            'UPDATE pipeline_stages SET name = ?, probability = ?, is_final = ? WHERE id = ?',
-            [name, probability, is_final ? 1 : 0, id]
+            'UPDATE pipeline_stages SET name = ?, description = ?, probability = ?, is_final = ? WHERE id = ?',
+            [name, description, probability, is_final ? 1 : 0, id]
         );
         res.status(200).json({ status: true, message: 'Stage updated' });
     } catch (error) {

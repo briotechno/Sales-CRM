@@ -224,17 +224,24 @@ export default function QuotationPage() {
 
   const handleStatusChange = async (id, newStatus) => {
     try {
-      const quote = quotations.find(q => q.id === id);
+      const quote = quotations.find((q) => q.id === id);
+      if (!quote) return;
+
       const payload = {
-        client_name: quote.client_name,
-        quotation_date: quote.quotation_date,
-        total_amount: quote.total_amount,
-        status: newStatus
+        ...quote,
+        quotation_date: quote.quotation_date
+          ? new Date(quote.quotation_date).toISOString().split("T")[0]
+          : null,
+        valid_until: quote.valid_until
+          ? new Date(quote.valid_until).toISOString().split("T")[0]
+          : null,
+        status: newStatus,
       };
+
       await updateQuotation({ id, data: payload }).unwrap();
       toast.success("Status updated");
     } catch (err) {
-      toast.error("Failed to update status");
+      toast.error(err?.data?.message || "Failed to update status");
     }
   };
 

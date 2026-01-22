@@ -5,6 +5,7 @@ import { departmentApi } from "../store/api/departmentApi";
 import { designationApi } from "../store/api/designationApi";
 import { employeeApi } from "../store/api/employeeApi";
 import { businessApi } from "../store/api/businessApi";
+import { permissionCategories } from "../pages/EmployeePart/permissionsData";
 import {
   LayoutDashboard,
   ChevronDown,
@@ -121,7 +122,6 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         try {
           perms = JSON.parse(perms);
         } catch (e) {
-          console.error("Failed to parse permissions", e);
           return false;
         }
       }
@@ -129,21 +129,40 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       // Safety check
       if (!perms) return false;
 
-      // Handle both object-based module permissions and flat ID-based permissions
+      // 1. NEW Flat Array Structure (Array of strings)
+      if (Array.isArray(perms)) {
+        // Direct match (for specific IDs like 'attendance_view_all')
+        if (perms.includes(key)) return true;
 
-      // 1. Check if the key itself is a granted permission (Flat structure: { "perm_id": true })
+        // Category match using permissionCategories
+        // This is the most accurate way since it checks if any ID in the category is granted
+        const categoryPerms = permissionCategories[key];
+        if (categoryPerms) {
+          return categoryPerms.some(cp => perms.includes(cp.id));
+        }
+
+        // Fallback: Module match (check if any 'view' or 'read' permission exists for this module)
+        const moduleKey = key.toLowerCase().replace(/\s+/g, '_');
+        const fallbackMatch = perms.some(p =>
+          (p.startsWith(moduleKey) || p.includes(moduleKey.split('_')[0])) &&
+          (p.includes('view') || p.includes('read') || p.includes('use'))
+        );
+        if (fallbackMatch) return true;
+
+        return false;
+      }
+
+      // 2. OLD Object Structure (Backward Compatibility)
+      // Check if the key itself is a granted permission (Flat object: { "perm_id": true })
       if (perms[key] === true) return true;
 
-      // 2. Check if it's a module object (Module structure: { "Module Name": { "read": true } })
+      // Check if it's a module object (Module structure: { "Module Name": { "read": true } })
       const modulePerms = perms[key];
       if (modulePerms && typeof modulePerms === 'object') {
         if (modulePerms.read === true || modulePerms.view === true || modulePerms.view_all === true) {
           return true;
         }
       }
-
-      // 3. Fallback for specific IDs if key looks like one
-      // If we use IDs like 'attendance_view_all' in the permission field, step 1 handles it.
 
       return false;
     }
@@ -160,7 +179,6 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           name: "Dashboard",
           icon: <LayoutDashboard size={22} />,
           path: "/dashboard",
-          permission: "Dashboard" // Matches JSON key
         },
       ],
     },
@@ -239,7 +257,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           name: "campaign",
           icon: <Users size={16} />,
           path: "/crm/champions",
-          permission: "Champions Management",
+          permission: "Champions",
           children: [
             { name: "Lead", path: "/crm/champions/lead" },
             { name: "Dialer ", path: "/crm/champions/dialer" },
@@ -351,28 +369,28 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           name: "Terms & Conditions",
           icon: <FileSignature size={22} />,
           path: "/hrm/terms",
-          permission: "Terms & Conditions Management"
+          permission: "Policy & Compliance"
         },
         {
-          name: "Salary", icon: <Wallet size={22} />, path: "/hrm/salary", permission: "Salary Management"
+          name: "Salary", icon: <Wallet size={22} />, path: "/hrm/salary", permission: "Financial Management"
         },
         {
           name: "Company Policy",
           icon: <FileText size={22} />,
           path: "/hrm/company-policy",
-          permission: "Company Policy"
+          permission: "Policy & Compliance"
         },
         {
           name: "HR Policy",
           icon: <FileText size={22} />,
           path: "/hrm/hr-policy",
-          permission: "HR Policy"
+          permission: "Policy & Compliance"
         },
         {
           name: "Job Management",
           icon: <Briefcase size={22} />,
           path: "/hrm/job-management",
-          permission: "Job Management"
+          permission: "Recruitment"
         },
       ],
     },
@@ -383,7 +401,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           name: "Catelogs",
           icon: <BarChart3 size={22} />,
           path: "/additional/catelogs",
-          permission: "Catelogs",
+          permission: "Communication Tools",
           children: [
             { name: "All Catelogs", path: "/additional/catelogs" },
             { name: "Categories", path: "/additional/catalog-categories" },
@@ -393,49 +411,49 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           name: "Messenger",
           icon: <MessageSquare size={22} />,
           path: "/additional/messenger",
-          permission: "Messenger"
+          permission: "Communication Tools"
         },
         {
           name: "Notes",
           icon: <StickyNote size={22} />,
           path: "/additional/notes",
-          permission: "Notes"
+          permission: "Communication Tools"
         },
         {
           name: "To-Do",
           icon: <CheckSquare size={22} />,
           path: "/additional/todo",
-          permission: "ToDo"
+          permission: "Task Management"
         },
         {
           name: "Quotation",
           icon: <FileSignature size={22} />,
           path: "/additional/quotation",
-          permission: "Quotation"
+          permission: "Financial Documents"
         },
         {
           name: "Invoice",
           icon: <FileSpreadsheet size={22} />,
           path: "/additional/invoice",
-          permission: "Invoice"
+          permission: "Financial Documents"
         },
         {
           name: "My Expenses",
           icon: <Wallet size={22} />,
           path: "/additional/expenses",
-          permission: "Expense Management"
+          permission: "Financial Management"
         },
         {
           name: "Notification",
           icon: <Bell size={22} />,
           path: "/additional/notification",
-          permission: "Notification"
+          permission: "Communication Tools"
         },
         {
           name: "Announcement",
           icon: <Megaphone size={22} />,
           path: "/additional/announcement",
-          permission: "Announcement",
+          permission: "Communication Tools",
           children: [
             { name: "All Announcement", path: "/additional/announcement" },
             { name: "Categories", path: "/additional/announcement/category" },
@@ -450,20 +468,20 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           name: "Business Info",
           icon: <Settings size={22} />,
           path: "/settings/business-info",
-          permission: "Business Info"
+          permission: "System Administration"
         },
         {
           name: "Manage Subscription",
           icon: <BarChart3 size={22} />,
           path: "/settings/subscription",
-          permission: "Subscription"
+          permission: "System Administration"
         },
 
         {
           name: "FAQ",
           icon: <HelpCircle size={22} />,
           path: "/settings/faq",
-          permission: "FAQ"
+          permission: "System Administration"
         },
         { name: "Logout", icon: <LogOut size={22} />, path: "/logout" },
       ],
@@ -482,22 +500,40 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       const filteredItems = section.items
         .filter((item) => {
           if (item.name === "Logout") return true;
-          if (!item.permission) return true;
-          return checkPermission(item.permission);
+
+          // If item has children, we'll check them first in the next map step
+          // For now, if it has a direct permission, check it
+          if (item.permission) {
+            return checkPermission(item.permission);
+          }
+
+          // If it has no permission and no children, show it (common items)
+          if (!item.children) return true;
+
+          // If it has children but no permission, we'll decide based on children visibility
+          return true;
         })
         .map((item) => {
           if (item.children) {
             const filteredChildren = item.children.filter((child) => {
+              if (child.name === "Logout") return true;
               if (!child.permission) return true;
               return checkPermission(child.permission);
             });
+
+            // If no children are visible and item itself has no path/permission, filter it out
+            if (filteredChildren.length === 0 && !item.path && !item.permission) {
+              return null;
+            }
+
             return {
               ...item,
               children: filteredChildren.length > 0 ? filteredChildren : undefined,
             };
           }
           return item;
-        });
+        })
+        .filter(Boolean); // Remove null items
       return { ...section, items: filteredItems };
     })
     .filter((section) => section.items.length > 0);

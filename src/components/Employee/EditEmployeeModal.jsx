@@ -124,7 +124,18 @@ const EditEmployeeModal = ({ isOpen, onClose, employee }) => {
                 username: employee.username || "",
                 password: "", // Keep password empty for security
                 status: employee.status || "Active",
-                permissions: Array.isArray(employee.permissions) ? {} : (typeof employee.permissions === 'string' ? JSON.parse(employee.permissions || '{}') : (employee.permissions || {}))
+                permissions: (() => {
+                    let perms = employee.permissions;
+                    if (typeof perms === 'string') {
+                        try { perms = JSON.parse(perms); } catch (e) { perms = []; }
+                    }
+                    if (Array.isArray(perms)) {
+                        const obj = {};
+                        perms.forEach(p => obj[p] = true);
+                        return obj;
+                    }
+                    return perms || {};
+                })()
             });
         }
     }, [employee]);
@@ -277,7 +288,9 @@ const EditEmployeeModal = ({ isOpen, onClose, employee }) => {
             } else if (Array.isArray(formData[key])) {
                 data.append(backendKey, JSON.stringify(formData[key]));
             } else if (key === 'permissions') {
-                data.append(backendKey, JSON.stringify(formData[key]));
+                const permsObj = formData[key] || {};
+                const permsList = Object.keys(permsObj).filter(id => permsObj[id]);
+                data.append(backendKey, JSON.stringify(permsList));
             } else if (formData[key] !== null && formData[key] !== undefined) {
                 data.append(backendKey, formData[key]);
             }
