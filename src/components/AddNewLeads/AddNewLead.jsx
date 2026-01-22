@@ -66,7 +66,7 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
     org_state: "",
     org_pincode: "",
     primary_contact_name: "",
-    primary_dob: "",
+    primary_dob: null,
     designation: "",
     primary_mobile: "",
     primary_email: "",
