@@ -164,7 +164,7 @@ const Header = () => {
 
         {/* Chat - Responsive */}
         <button
-          onClick={() => go("/chat")}
+          onClick={() => go("/additional/messenger")}
           className="relative text-white text-base sm:text-lg p-1.5 sm:p-2 hover:bg-[#414b57] rounded transition-colors"
         >
           <FiMessageCircle />

@@ -78,8 +78,7 @@ export default function TaskReminderPopup() {
         const timer = setTimeout(() => {
             setIsVisible(true);
             playNotificationSound(hasHighToday);
-        }, 60000);
-
+        }, 6000);
 
         return () => clearTimeout(timer);
     }, [pendingTasks]);
