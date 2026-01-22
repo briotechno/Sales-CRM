@@ -45,7 +45,7 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
     // Person Details
     full_name: "",
     gender: "",
-    dob: "",
+    dob: null,
     mobile_number: "",
     alt_mobile_number: "",
     email: "",
@@ -98,7 +98,7 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
         visibility: leadToEdit.visibility || "Public",
         full_name: leadToEdit.full_name || "",
         gender: leadToEdit.gender || "",
-        dob: leadToEdit.dob ? leadToEdit.dob.split('T')[0] : "",
+        dob: leadToEdit.dob ? leadToEdit.dob.split('T')[0] : null,
         mobile_number: leadToEdit.mobile_number || "",
         alt_mobile_number: leadToEdit.alt_mobile_number || "",
         email: leadToEdit.email || "",
@@ -353,19 +353,7 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
                     <option value="Other">Other</option>
                   </select>
                 </div>
-                <div className="group">
-                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-                    <FileText size={14} className="text-[#FF7B1D]" />
-                    Date of Birth
-                  </label>
-                  <input
-                    type="date"
-                    name="dob"
-                    className={inputStyles}
-                    value={formData.dob}
-                    onChange={handleChange}
-                  />
-                </div>
+
                 <div className="group">
                   <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
                     <Phone size={14} className="text-[#FF7B1D]" />
