@@ -242,18 +242,55 @@ const messengerController = {
                 finalConversationId = conversation.id;
             }
 
-            const messageId = await Messenger.saveMessage({
-                conversation_id: finalConversationId,
-                sender_id: currentSubId,
-                sender_type: currentType,
-                text,
-                message_type: messageType || 'text',
-                file_url: req.file ? req.file.path : (req.body.file_url || null),
-                file_name: req.file ? req.file.originalname : (req.body.file_name || null),
-                file_size: req.file ? `${(req.file.size / 1024).toFixed(2)} KB` : (req.body.file_size || null),
-                reply_to_id: replyToId,
-                is_forwarded: req.body.is_forwarded || false
-            });
+            const files = req.files || (req.file ? [req.file] : []);
+            let messageId;
+            let attachments = null;
+
+            if (files.length > 0) {
+                const attachmentsData = files.map(file => ({
+                    file_url: file.path,
+                    file_name: file.originalname,
+                    file_size: `${(file.size / 1024).toFixed(2)} KB`,
+                    message_type: file.mimetype.startsWith('image/') ? 'image' :
+                        file.mimetype.startsWith('video/') ? 'video' : 'document'
+                }));
+                attachments = JSON.stringify(attachmentsData);
+
+                // Determine primary message type from first file
+                const firstFile = files[0];
+                let primaryType = 'document';
+                if (firstFile.mimetype.startsWith('image/')) primaryType = 'image';
+                else if (firstFile.mimetype.startsWith('video/')) primaryType = 'video';
+
+                messageId = await Messenger.saveMessage({
+                    conversation_id: finalConversationId,
+                    sender_id: currentSubId,
+                    sender_type: currentType,
+                    text: text || null,
+                    message_type: primaryType,
+                    file_url: firstFile.path,
+                    file_name: firstFile.originalname,
+                    file_size: `${(firstFile.size / 1024).toFixed(2)} KB`,
+                    attachments: attachments,
+                    reply_to_id: replyToId,
+                    is_forwarded: req.body.is_forwarded || false
+                });
+            } else {
+                // Text only message
+                messageId = await Messenger.saveMessage({
+                    conversation_id: finalConversationId,
+                    sender_id: currentSubId,
+                    sender_type: currentType,
+                    text: text,
+                    message_type: messageType || 'text',
+                    file_url: null,
+                    file_name: null,
+                    file_size: null,
+                    attachments: null,
+                    reply_to_id: replyToId,
+                    is_forwarded: req.body.is_forwarded || false
+                });
+            }
 
             // Get the saved message with sender info and formatted time
             const [savedMsg] = await pool.query(`
@@ -266,27 +303,36 @@ const messengerController = {
                 WHERE m.id = ?
             `, [messageId]);
 
-            // Add reply info if any
+            const msgData = savedMsg[0];
+
+            // Parse attachments for the response
+            if (msgData.attachments) {
+                try {
+                    msgData.attachments = JSON.parse(msgData.attachments);
+                } catch (e) { }
+            }
+
             if (replyToId) {
                 const [repliedMsg] = await pool.query(
                     `SELECT m.text, COALESCE(e.employee_name, CONCAT(u.firstName, ' ', u.lastName)) as sender_name
-                     FROM messenger_messages m
-                     LEFT JOIN employees e ON m.sender_id = e.id AND m.sender_type = 'employee'
-                     LEFT JOIN users u ON m.sender_id = u.id AND m.sender_type = 'user'
-                     WHERE m.id = ?`,
+                        FROM messenger_messages m
+                        LEFT JOIN employees e ON m.sender_id = e.id AND m.sender_type = 'employee'
+                        LEFT JOIN users u ON m.sender_id = u.id AND m.sender_type = 'user'
+                        WHERE m.id = ?`,
                     [replyToId]
                 );
                 if (repliedMsg[0]) {
-                    savedMsg[0].replyTo = {
+                    msgData.replyTo = {
                         text: repliedMsg[0].text,
                         sender: repliedMsg[0].sender_name
                     };
                 }
             }
 
-            res.status(201).json({
+            res.status(200).json({
                 success: true,
-                message: savedMsg[0]
+                message: msgData,
+                messages: [msgData]
             });
         } catch (error) {
             console.error('Error sending message:', error);

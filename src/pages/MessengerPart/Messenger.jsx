@@ -170,10 +170,16 @@ export default function MessengerPage() {
         const senderId = newMessage.sender_id || newMessage.sender?.id;
         const senderType = newMessage.sender_type || newMessage.sender?.type;
 
-        setChatMessages((prev) => ({
-          ...prev,
-          [convId]: [...(prev[convId] || []), newMessage],
-        }));
+        setChatMessages((prev) => {
+          const messages = prev[convId] || [];
+          // Deduplicate: Don't add if message ID already exists (prevents sender double-messages)
+          if (messages.find(m => m.id === newMessage.id)) return prev;
+
+          return {
+            ...prev,
+            [convId]: [...messages, newMessage],
+          };
+        });
 
         // Update unread count and last message in contact lists
         const updateList = (list) => {
@@ -413,35 +419,57 @@ export default function MessengerPage() {
       } else {
         // 1. Prepare temp message for optimistic UI
         const tempId = Date.now();
+        const curMsgs = [];
+
+        let attachments = null;
+        if (attachedFiles.length > 0) {
+          attachments = attachedFiles.map((file, idx) => ({
+            id: tempId + idx + 1,
+            file_url: file.url,
+            file_name: file.name,
+            file_size: file.size,
+            message_type: file.type?.startsWith('image/') ? 'image' :
+              file.type?.startsWith('video/') ? 'video' : 'document'
+          }));
+        }
+
         const tempMessage = {
           id: tempId,
           conversation_id: currentConversationId || 'temp',
           sender_id: currentUserId,
           sender_type: currentUserType,
           sender_name: currentUser.role === 'Admin' ? `${currentUser.firstName} ${currentUser.lastName}` : (currentUser.employee_name || currentUser.name),
-          text: message.trim(),
+          text: message.trim() || null,
           time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
           participants: [
             { id: currentUserId, type: currentUserType },
             { id: selectedChat.id, type: selectedChat.type }
           ],
-          messageType: attachedFiles.length > 0 ? 'file' : 'text',
+          message_type: attachments ? attachments[0].message_type : 'text',
+          file_url: attachments ? attachments[0].file_url : null,
+          file_name: attachments ? attachments[0].file_name : null,
+          file_size: attachments ? attachments[0].file_size : null,
+          attachments: attachments,
           reply_to_id: replyingTo ? replyingTo.id : null,
           replyTo: replyingTo ? { text: replyingTo.text, sender_name: replyingTo.sender_name } : null,
           isTemp: true
         };
 
-        // Close emoji picker on send
+        curMsgs.push(tempMessage);
+
+        // Close UI elements
         setShowEmojiPicker(false);
         setEditingMessage(null);
         setReplyingTo(null);
 
-        // Update local state immediately for responsiveness
+        // Update local state immediately
         setChatMessages(prev => ({
           ...prev,
-          [currentConversationId || 'temp']: [...(prev[currentConversationId || 'temp'] || []), tempMessage]
+          [currentConversationId || 'temp']: [...(prev[currentConversationId || 'temp'] || []), ...curMsgs]
         }));
 
+        const originalFiles = [...attachedFiles];
+        const originalMessage = message;
         setMessage("");
         if (textareaRef.current) textareaRef.current.innerText = "";
         setAttachedFiles([]);
@@ -455,14 +483,13 @@ export default function MessengerPage() {
             formData.append('otherId', selectedChat.id);
             formData.append('otherType', selectedChat.type);
           }
-          formData.append('text', tempMessage.text);
-          formData.append('messageType', tempMessage.messageType);
+          formData.append('text', originalMessage.trim());
           if (replyingTo) {
             formData.append('replyToId', replyingTo.id);
           }
 
-          if (attachedFiles.length > 0) {
-            attachedFiles.forEach(file => formData.append('file', file.file));
+          if (originalFiles.length > 0) {
+            originalFiles.forEach(file => formData.append('file', file.file));
           }
 
           const response = await fetch(`${API_BASE_URL}messenger/send`, {
@@ -474,30 +501,59 @@ export default function MessengerPage() {
           });
 
           const data = await response.json();
-          console.log('Message saved via API:', data);
 
-          if (data.success && data.message) {
-            const savedMsg = data.message;
+          if (data.success && data.messages) {
+            const savedMsgs = data.messages;
+            const targetConvId = savedMsgs[0].conversation_id;
 
             // Update conversation ID if it was a first message
             if (!currentConversationId || currentConversationId === 'temp') {
-              setCurrentConversationId(savedMsg.conversation_id);
+              setCurrentConversationId(targetConvId);
             }
 
-            // Replace temp message with real one in state
+            // Replace temp messages with real ones
+            setChatMessages(prev => {
+              const currentList = prev[targetConvId] || prev['temp'] || [];
+              const tempIds = curMsgs.map(m => m.id);
+
+              // Filter out temp messages and add real ones
+              const filteredList = currentList.filter(m => !tempIds.includes(m.id));
+              const newList = [...filteredList, ...savedMsgs];
+
+              const newState = { ...prev };
+              if (prev['temp']) delete newState['temp'];
+              newState[targetConvId] = newList;
+              return newState;
+            });
+
+            // 3. Emit via socket
+            if (socket && socketConnected) {
+              savedMsgs.forEach(savedMsg => {
+                socket.emit("new_message", {
+                  ...savedMsg,
+                  conversationId: savedMsg.conversation_id,
+                  participants: [
+                    { id: currentUserId, type: currentUserType },
+                    { id: selectedChat.id, type: selectedChat.type }
+                  ]
+                });
+              });
+            }
+          } else if (data.success && data.message) {
+            // Support for single message return
+            const savedMsg = data.message;
+            if (!currentConversationId || currentConversationId === 'temp') {
+              setCurrentConversationId(savedMsg.conversation_id);
+            }
             setChatMessages(prev => {
               const convId = savedMsg.conversation_id;
               const currentMsgs = prev[convId] || prev['temp'] || [];
-              const updatedMsgs = currentMsgs.map(m => m.id === tempId ? savedMsg : m);
-
-              // If we were using 'temp', move messages to the real convId
+              const updatedMsgs = currentMsgs.map(m => m.id === curMsgs[0].id ? savedMsg : m);
               const newState = { ...prev };
               if (prev['temp']) delete newState['temp'];
               newState[convId] = updatedMsgs;
               return newState;
             });
-
-            // 3. Emit via socket (now WITH real ID and participants)
             if (socket && socketConnected) {
               socket.emit("new_message", {
                 ...savedMsg,
@@ -507,26 +563,29 @@ export default function MessengerPage() {
                   { id: selectedChat.id, type: selectedChat.type }
                 ]
               });
-              console.log('Message emitted via socket with verified ID');
             }
           } else {
             toast.error(data.message || 'Failed to send message');
-            // Remove temp message on failure
+            // Remove temp messages on failure
             setChatMessages(prev => ({
               ...prev,
-              [currentConversationId || 'temp']: (prev[currentConversationId || 'temp'] || []).filter(m => m.id !== tempId)
+              [currentConversationId || 'temp']: (prev[currentConversationId || 'temp'] || []).filter(m => !curMsgs.some(tm => tm.id === m.id))
             }));
           }
         } catch (apiError) {
           console.error('API Error:', apiError);
           toast.error('Failed to save message');
+          setChatMessages(prev => ({
+            ...prev,
+            [currentConversationId || 'temp']: (prev[currentConversationId || 'temp'] || []).filter(m => !curMsgs.some(tm => tm.id === m.id))
+          }));
         }
-
-        setReplyingTo(null);
       }
     } catch (error) {
       console.error('Error in handleSend:', error);
       toast.error('Failed to send message');
+    } finally {
+      setReplyingTo(null);
     }
   };
   // Close popovers on outside click
@@ -594,6 +653,7 @@ export default function MessengerPage() {
       file: file
     }));
     setAttachedFiles((prev) => [...prev, ...fileData]);
+    e.target.value = null;
     setShowAttachmentMenu(false);
   };
 

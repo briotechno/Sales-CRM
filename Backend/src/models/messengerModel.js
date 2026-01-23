@@ -46,20 +46,28 @@ const Messenger = {
     saveMessage: async (msgData) => {
         const {
             conversation_id, sender_id, sender_type, text,
-            message_type, file_url, file_name, file_size, duration, reply_to_id
+            message_type, file_url, file_name, file_size, duration, reply_to_id, attachments
         } = msgData;
 
         const [result] = await pool.query(
             `INSERT INTO messenger_messages 
-             (conversation_id, sender_id, sender_type, text, message_type, file_url, file_name, file_size, duration, reply_to_id, is_delivered, is_forwarded) 
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [conversation_id, sender_id, sender_type, text, message_type || 'text', file_url, file_name, file_size, duration, reply_to_id, msgData.is_delivered || false, msgData.is_forwarded || false]
+             (conversation_id, sender_id, sender_type, text, message_type, file_url, file_name, file_size, duration, reply_to_id, is_delivered, is_forwarded, attachments) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [conversation_id, sender_id, sender_type, text, message_type || 'text', file_url, file_name, file_size, duration, reply_to_id, msgData.is_delivered || false, msgData.is_forwarded || false, attachments]
         );
 
         // Update conversation's last message
+        let lastText = text;
+        if (!lastText || lastText.trim() === '') {
+            if (message_type === 'image') lastText = '📷 Photo';
+            else if (message_type === 'video') lastText = '🎥 Video';
+            else if (message_type === 'document') lastText = '📄 Document';
+            else lastText = '📎 Attachment';
+        }
+
         await pool.query(
             `UPDATE messenger_conversations SET last_message_text = ?, last_message_time = CURRENT_TIMESTAMP WHERE id = ?`,
-            [text || (message_type === 'image' ? '[Image]' : '[Attachment]'), conversation_id]
+            [lastText, conversation_id]
         );
 
         return result.insertId;
@@ -72,7 +80,8 @@ const Messenger = {
              COALESCE(e.employee_name, CONCAT(u.firstName, ' ', u.lastName)) as sender_name,
              DATE_FORMAT(m.created_at, '%h:%i %p') as time,
              (SELECT COUNT(*) FROM messenger_starred_messages WHERE message_id = m.id AND user_id = ? AND user_type = ?) > 0 as is_starred,
-             (SELECT COUNT(*) FROM messenger_pinned_messages WHERE message_id = m.id) > 0 as is_pinned
+             (SELECT COUNT(*) FROM messenger_pinned_messages WHERE message_id = m.id) > 0 as is_pinned,
+             m.attachments
              FROM messenger_messages m
              LEFT JOIN employees e ON m.sender_id = e.id AND m.sender_type = 'employee'
              LEFT JOIN users u ON m.sender_id = u.id AND m.sender_type = 'user'
@@ -82,8 +91,15 @@ const Messenger = {
             [userId, userType, conversationId, limit, offset]
         );
 
-        // Fetch reactions separately for each message
+        // Fetch reactions and parse attachments for each message
         for (let msg of rows) {
+            if (msg.attachments) {
+                try {
+                    msg.attachments = typeof msg.attachments === 'string' ? JSON.parse(msg.attachments) : msg.attachments;
+                } catch (e) {
+                    msg.attachments = [];
+                }
+            }
             const [reactions] = await pool.query(
                 `SELECT emoji, COUNT(*) as count 
                  FROM messenger_message_reactions 

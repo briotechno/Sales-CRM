@@ -36,7 +36,29 @@ import {
   MapPin,
   MessageSquare,
   Square,
+  Plus,
 } from "lucide-react";
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
+
+const handleDownload = async (url, fileName) => {
+  try {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    const blobUrl = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    link.download = fileName || 'download';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(blobUrl);
+  } catch (error) {
+    console.error('Download failed:', error);
+    // Fallback to basic open if fetch fails
+    window.open(url, '_blank');
+  }
+};
 
 // Contacts List Component
 export function ContactsList({ contacts, selectedChat, onChatSelect }) {
@@ -374,55 +396,149 @@ export function ChatMessages({
                       </div>
                     )}
 
-                    {/* File Attachments */}
-                    {!!(msg.attachments && msg.attachments.length > 0) && (
-                      <div className="mb-3 flex flex-wrap gap-2">
-                        {msg.attachments.map((file, index) => (
-                          <div key={index} className="w-full">
-                            {file.type?.startsWith("image/") ? (
-                              <div className="relative group/img overflow-hidden rounded-2xl shadow-md cursor-pointer aspect-video md:aspect-auto">
-                                <img
-                                  src={file.url}
-                                  alt={file.name}
-                                  className="w-full max-h-[300px] object-cover transition-all duration-700 group-hover/img:scale-110 group-hover/img:rotate-1"
-                                />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover/img:opacity-100 transition-opacity flex items-end p-4">
-                                  <div className="flex items-center justify-between w-full">
-                                    <span className="text-white text-[10px] font-bold truncate pr-4">{file.name}</span>
-                                    <button className="p-2 bg-white/20 backdrop-blur-md rounded-xl hover:bg-white/40 transition-colors">
-                                      <Download size={14} className="text-white" />
+                    {/* File Attachments (Single or Multiple) */}
+                    {(msg.file_url || (msg.attachments && msg.attachments.length > 0)) && (
+                      <div className="mb-3 space-y-3">
+                        {/* If we have a consolidated attachments array, render it specifically */}
+                        {msg.attachments && msg.attachments.length > 0 ? (
+                          <div className={`grid gap-2 ${msg.attachments.filter(f => f.message_type === 'image').length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                            {msg.attachments.map((file, index) => {
+                              const isImg = file.message_type === 'image' || file.file_url.match(/\.(jpeg|jpg|gif|png|webp|svg)$/i);
+                              const isVid = file.message_type === 'video' || file.file_url.match(/\.(mp4|webm|ogg)$/i);
+                              const fUrl = file.file_url.startsWith('http') || file.file_url.startsWith('blob:') || file.file_url.startsWith('data:') ? file.file_url : `${API_BASE_URL.replace(/\/api\/?$/, '')}/${file.file_url}`;
+
+                              if (isImg) {
+                                return (
+                                  <div key={index} className="relative group/img overflow-hidden rounded-2xl shadow-sm cursor-pointer ring-1 ring-black/5 bg-gray-50">
+                                    <img
+                                      src={fUrl}
+                                      alt={file.file_name}
+                                      className="w-full h-48 object-cover transition-all duration-700 group-hover/img:scale-105"
+                                      onClick={() => window.open(fUrl, '_blank')}
+                                    />
+                                    <div className="absolute top-2 right-2 opacity-0 group-hover/img:opacity-100 transition-opacity">
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleDownload(fUrl, file.file_name || 'image.png');
+                                        }}
+                                        className="p-2 bg-black/50 backdrop-blur-md rounded-full text-white hover:bg-black/70 shadow-lg"
+                                      >
+                                        <Download size={14} />
+                                      </button>
+                                    </div>
+                                  </div>
+                                );
+                              } else if (isVid) {
+                                return (
+                                  <div key={index} className="relative group/vid overflow-hidden rounded-2xl shadow-sm bg-black/10 ring-1 ring-black/5">
+                                    <video src={fUrl} className="w-full max-h-[300px] object-cover" controls />
+                                  </div>
+                                );
+                              } else {
+                                return (
+                                  <div
+                                    key={index}
+                                    className={`flex items-center gap-3 p-3 rounded-2xl border transition-all hover:shadow-md cursor-pointer ${isMe ? "bg-white/10 border-white/20" : "bg-gray-50 border-gray-100"}`}
+                                    onClick={() => window.open(fUrl, '_blank')}
+                                  >
+                                    <div className={`w-12 h-12 flex-shrink-0 rounded-xl flex items-center justify-center shadow-inner ${isMe ? "bg-white/20 text-white" : "bg-[#f8f9fa] text-[#FF7B1D]"}`}>
+                                      <FileText size={24} />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <p className={`text-sm font-bold truncate mb-0.5 ${isMe ? "text-white" : "text-gray-900"}`}>{file.file_name || 'Document'}</p>
+                                      <p className={`text-[9px] uppercase font-black tracking-widest opacity-60 ${isMe ? "text-white/80" : "text-gray-500"}`}>
+                                        {file.file_size || '0 KB'}
+                                      </p>
+                                    </div>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDownload(fUrl, file.file_name);
+                                      }}
+                                      className={`p-2 rounded-full transition-all ${isMe ? "hover:bg-white/20 text-white" : "hover:bg-gray-200 text-gray-500"}`}
+                                    >
+                                      <Download size={18} />
                                     </button>
                                   </div>
+                                );
+                              }
+                            })}
+                          </div>
+                        ) : msg.file_url && (
+                          /* Fallback for single file stored in legacy columns */
+                          <div className="w-full">
+                            {msg.message_type === 'image' || msg.file_url.match(/\.(jpeg|jpg|gif|png|webp|svg)$/i) ? (
+                              <div className="relative group/img overflow-hidden rounded-2xl shadow-sm cursor-pointer ring-1 ring-black/5 bg-gray-50 max-w-sm">
+                                <img
+                                  src={msg.file_url.startsWith('http') || msg.file_url.startsWith('blob:') || msg.file_url.startsWith('data:') ? msg.file_url : `${API_BASE_URL.replace(/\/api\/?$/, '')}/${msg.file_url}`}
+                                  alt={msg.file_name}
+                                  className="w-full h-auto max-h-[400px] object-cover transition-all duration-700 group-hover/img:scale-105"
+                                  onClick={() => window.open(msg.file_url.startsWith('http') || msg.file_url.startsWith('blob:') || msg.file_url.startsWith('data:') ? msg.file_url : `${API_BASE_URL.replace(/\/api\/?$/, '')}/${msg.file_url}`, '_blank')}
+                                />
+                                <div className="absolute top-3 right-3 opacity-0 group-hover/img:opacity-100 transition-opacity">
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDownload(
+                                        msg.file_url.startsWith('http') || msg.file_url.startsWith('blob:') || msg.file_url.startsWith('data:') ? msg.file_url : `${API_BASE_URL.replace(/\/api\/?$/, '')}/${msg.file_url}`,
+                                        msg.file_name || 'image.png'
+                                      );
+                                    }}
+                                    className="p-2.5 bg-black/50 backdrop-blur-md rounded-full text-white hover:bg-black/70 transition-all block shadow-lg"
+                                  >
+                                    <Download size={16} />
+                                  </button>
                                 </div>
                               </div>
+                            ) : msg.message_type === 'video' || msg.file_url.match(/\.(mp4|webm|ogg)$/i) ? (
+                              <div className="relative group/vid overflow-hidden rounded-2xl shadow-sm bg-black/10 ring-1 ring-black/5 max-w-sm">
+                                <video
+                                  src={msg.file_url.startsWith('http') || msg.file_url.startsWith('blob:') || msg.file_url.startsWith('data:') ? msg.file_url : `${API_BASE_URL.replace(/\/api\/?$/, '')}/${msg.file_url}`}
+                                  className="w-full max-h-[400px] object-cover"
+                                  controls
+                                />
+                              </div>
                             ) : (
-                              <div className={`flex items-center gap-4 p-4 rounded-2xl transition-all hover:scale-[1.02] ${isMe ? "bg-white/10" : "bg-gray-50 border border-gray-100"
-                                }`}>
-                                <div className={`p-3 rounded-xl ${isMe ? "bg-white/20" : "bg-orange-50"}`}>
-                                  <FileText size={20} className={isMe ? "text-white" : "text-orange-500"} />
+                              <div
+                                className={`flex items-center gap-4 p-4 rounded-3xl border transition-all hover:shadow-md cursor-pointer ${isMe ? "bg-white/10 border-white/20" : "bg-gray-50 border-gray-100"
+                                  }`}
+                                onClick={() => window.open(msg.file_url.startsWith('http') || msg.file_url.startsWith('blob:') || msg.file_url.startsWith('data:') ? msg.file_url : `${API_BASE_URL.replace(/\/api\/?$/, '')}/${msg.file_url}`, '_blank')}
+                              >
+                                <div className={`w-14 h-14 flex-shrink-0 rounded-[20px] flex items-center justify-center shadow-inner ${isMe ? "bg-white/20 text-white" : "bg-[#f8f9fa] text-[#FF7B1D]"
+                                  }`}>
+                                  <FileText size={28} />
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                  <p className="font-black text-sm truncate uppercase tracking-tight">
-                                    {file.name}
-                                  </p>
-                                  <p className="text-[10px] font-bold opacity-60">
-                                    {file.size} • DOCUMENT
+                                  <p className={`text-sm font-bold truncate mb-0.5 ${isMe ? "text-white" : "text-gray-900"}`}>{msg.file_name || 'Document'}</p>
+                                  <p className={`text-[10px] uppercase font-black tracking-widest opacity-60 ${isMe ? "text-white/80" : "text-gray-500"}`}>
+                                    {msg.file_size || '0 KB'} • {msg.file_name?.split('.').pop().toUpperCase() || 'FILE'}
                                   </p>
                                 </div>
-                                <button className="p-2 hover:bg-black/5 rounded-lg transition-transform hover:rotate-12">
-                                  <Download size={16} />
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDownload(
+                                      msg.file_url.startsWith('http') || msg.file_url.startsWith('blob:') || msg.file_url.startsWith('data:') ? msg.file_url : `${API_BASE_URL.replace(/\/api\/?$/, '')}/${msg.file_url}`,
+                                      msg.file_name
+                                    );
+                                  }}
+                                  className={`p-2.5 rounded-full transition-all ${isMe ? "hover:bg-white/20 text-white" : "hover:bg-gray-200 text-gray-500"}`}
+                                >
+                                  <Download size={20} />
                                 </button>
                               </div>
                             )}
                           </div>
-                        ))}
+                        )}
                       </div>
                     )}
 
-                    {/* Message Text */}
-                    <p className={`leading-[1.6] font-medium selection:bg-white/30 selection:text-white ${isMe ? "drop-shadow-sm" : ""} ${/^(\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff])+$/.test(msg.text.trim()) && msg.text.trim().length <= 8 ? "text-4xl py-2" : "text-[15px]"}`}>
-                      {msg.text}
-                    </p>
+                    {msg.text && (
+                      <p className={`leading-[1.6] font-medium selection:bg-white/30 selection:text-white ${isMe ? "drop-shadow-sm" : ""} ${/^(\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff])+$/.test(msg.text.trim()) && msg.text.trim().length <= 8 ? "text-4xl py-2" : "text-[15px]"}`}>
+                        {msg.text}
+                      </p>
+                    )}
 
                     {/* Message Footer */}
                     {!!(msg.is_edited || msg.edited || isMe) && (
@@ -832,8 +948,13 @@ export function ChatInput({
   };
 
   const handleAttachmentClick = (type) => {
-    if (type === "file" || type === "image" || type === "document") {
-      fileInputRef.current?.click();
+    if (fileInputRef.current) {
+      if (type === "image") fileInputRef.current.accept = "image/*";
+      else if (type === "video") fileInputRef.current.accept = "video/*";
+      else if (type === "document") fileInputRef.current.accept = ".pdf,.doc,.docx,.txt,.xls,.xlsx,.ppt,.pptx";
+      else fileInputRef.current.accept = "*/*";
+
+      fileInputRef.current.click();
     }
     setShowAttachmentMenu(false);
   };
@@ -872,33 +993,80 @@ export function ChatInput({
       )}
 
       {/* Attached Files Preview - Floating Style */}
+      {/* Attached Files Preview - WhatsApp Style Modern Media Tray */}
       {attachedFiles.length > 0 && (
-        <div className="absolute bottom-full left-0 right-0 px-4 py-3 bg-white/50 backdrop-blur-sm border-t border-gray-100 overflow-x-auto no-scrollbar">
-          <div className="flex gap-3 max-w-7xl mx-auto">
-            {attachedFiles.map((file, index) => (
-              <div
-                key={index}
-                className="flex items-center gap-3 bg-white border-2 border-orange-50 rounded-2xl p-2 min-w-[180px] shadow-sm hover:shadow-lg transition-all group relative animate-scaleUp"
+        <div className="absolute bottom-full left-0 right-0 py-6 px-10 bg-[#f8f9fa] backdrop-blur-xl border-t border-gray-100 animate-slideUp z-30 shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em]">Ready to send • {attachedFiles.length} item{attachedFiles.length > 1 ? 's' : ''}</span>
+              <button
+                onClick={() => setAttachedFiles([])}
+                className="text-[10px] font-bold text-red-500 hover:text-red-600 transition-colors uppercase tracking-widest"
               >
-                {file.type?.startsWith("image/") ? (
-                  <img src={file.url} alt="" className="w-10 h-10 object-cover rounded-xl" />
-                ) : (
-                  <div className="w-10 h-10 bg-orange-50 rounded-xl flex items-center justify-center text-orange-500">
-                    <File size={16} />
+                Clear All
+              </button>
+            </div>
+
+            <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar scroll-smooth">
+              {attachedFiles.map((file, index) => {
+                const isImage = file.type?.startsWith("image/");
+                const isVideo = file.type?.startsWith("video/");
+                const extension = file.name.split('.').pop().toUpperCase();
+
+                return (
+                  <div
+                    key={index}
+                    className="flex-shrink-0 w-36 h-48 bg-white border border-gray-100 rounded-[24px] shadow-sm hover:shadow-xl transition-all duration-300 group relative overflow-hidden"
+                  >
+                    {/* Media Content */}
+                    <div className="h-28 w-full bg-gray-50 flex items-center justify-center relative overflow-hidden border-b border-gray-50">
+                      {isImage ? (
+                        <img src={file.url} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                      ) : isVideo ? (
+                        <div className="w-full h-full bg-gray-900 flex items-center justify-center relative">
+                          <div className="z-10 bg-white/20 backdrop-blur-md rounded-full p-2 group-hover:scale-110 transition-transform">
+                            <VideoIcon size={20} className="text-white" />
+                          </div>
+                          <video src={file.url} className="absolute inset-0 w-full h-full object-cover opacity-50" />
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center gap-1 group-hover:scale-110 transition-transform duration-300">
+                          <div className="w-12 h-12 bg-orange-50 rounded-[18px] flex items-center justify-center text-orange-500 shadow-inner">
+                            <FileText size={24} />
+                          </div>
+                          <span className="text-[9px] font-black text-orange-600/60">{extension}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Meta Data */}
+                    <div className="p-3">
+                      <p className="text-[10px] font-bold text-gray-800 truncate mb-1">{file.name}</p>
+                      <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">{file.size}</p>
+                    </div>
+
+                    {/* Delete Action */}
+                    <button
+                      onClick={() => setAttachedFiles(attachedFiles.filter((_, i) => i !== index))}
+                      className="absolute top-2 right-2 w-7 h-7 bg-black/60 backdrop-blur-md text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500 shadow-lg scale-90 group-hover:scale-100"
+                    >
+                      <X size={14} />
+                    </button>
                   </div>
-                )}
-                <div className="flex-1 min-w-0">
-                  <p className="text-[10px] font-black text-gray-800 truncate">{file.name}</p>
-                  <p className="text-[9px] font-bold text-gray-400 uppercase">{file.size}</p>
+                );
+              })}
+
+              {/* Add More Trigger */}
+              <button
+                onClick={() => setShowAttachmentMenu(true)}
+                className="flex-shrink-0 w-36 h-48 bg-white border-2 border-dashed border-gray-100 rounded-[24px] flex flex-col items-center justify-center gap-3 text-gray-300 hover:text-orange-500 hover:border-orange-100 hover:bg-orange-50/10 transition-all group"
+              >
+                <div className="p-3 bg-gray-50 rounded-2xl group-hover:bg-orange-50 transition-colors">
+                  <Plus size={24} />
                 </div>
-                <button
-                  onClick={() => setAttachedFiles(attachedFiles.filter((_, i) => i !== index))}
-                  className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
-                >
-                  <X size={10} />
-                </button>
-              </div>
-            ))}
+                <span className="text-[9px] font-black uppercase tracking-widest">Add Files</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -909,32 +1077,31 @@ export function ChatInput({
         <div className="relative" ref={attachmentMenuRef}>
           <button
             onClick={() => setShowAttachmentMenu(!showAttachmentMenu)}
-            className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 group ${showAttachmentMenu ? "bg-orange-500 text-white shadow-lg shadow-orange-200" : "bg-gray-100/80 text-gray-400 hover:bg-gray-200"
-              }`}
+            className="w-12 h-12 bg-[#FF7B1D] text-white rounded-full flex items-center justify-center shadow-lg shadow-orange-100 hover:scale-110 active:scale-95 transition-all duration-300 group z-50 relative"
           >
-            <Paperclip size={20} className={showAttachmentMenu ? "" : "group-hover:rotate-12 transition-transform shadow-sm"} />
+            <Paperclip size={20} className={`transition-transform duration-300 ${showAttachmentMenu ? "rotate-45" : "group-hover:rotate-12"}`} />
           </button>
 
           {showAttachmentMenu && (
-            <div className="absolute bottom-full mb-4 left-0 bg-white border border-gray-100 rounded-3xl shadow-2xl p-3 min-w-[240px] animate-scaleUp z-50">
-              <div className="grid grid-cols-2 gap-2">
+            <div className="absolute bottom-full mb-6 left-0 bg-white rounded-[36px] shadow-[0_25px_70px_rgba(0,0,0,0.18)] p-6 min-w-[320px] animate-scaleUp z-[60] border border-gray-100/50">
+              <div className="grid grid-cols-3 gap-6">
                 {[
-                  { icon: ImageIcon, label: "Photos", color: "bg-blue-50 text-blue-600", onClick: () => handleAttachmentClick("image") },
-                  { icon: FileText, label: "Docs", color: "bg-green-50 text-green-600", onClick: () => handleAttachmentClick("document") },
-                  { icon: Camera, label: "Camera", color: "bg-purple-50 text-purple-600", onClick: () => handleAttachmentClick("camera") },
-                  { icon: VideoIcon, label: "Video", color: "bg-red-50 text-red-600", onClick: () => handleAttachmentClick("video") },
-                  { icon: UserIcon, label: "Contact", color: "bg-yellow-50 text-yellow-600", onClick: () => handleAttachmentClick("contact") },
-                  { icon: MapPin, label: "Location", color: "bg-pink-50 text-pink-600", onClick: () => handleAttachmentClick("location") },
+                  { icon: ImageIcon, label: "Photos", color: "bg-[#E7F0FF] text-[#007AFF]", type: "image" },
+                  { icon: FileText, label: "Docs", color: "bg-[#E7F8F0] text-[#24B47E]", type: "document" },
+                  { icon: VideoIcon, label: "Video", color: "bg-[#FFE7E7] text-[#FF3B30]", type: "video" },
+                  { icon: Camera, label: "Camera", color: "bg-[#F3E7FF] text-[#AF52DE]", type: "camera" },
+                  { icon: UserIcon, label: "Contact", color: "bg-[#FFF9E7] text-[#FFCC00]", type: "contact" },
+                  { icon: MapPin, label: "Location", color: "bg-[#FFE7F5] text-[#FF2D55]", type: "location" },
                 ].map((item, i) => (
                   <button
                     key={i}
-                    onClick={item.onClick}
-                    className="flex flex-col items-center gap-2 p-4 hover:bg-gray-50 rounded-2xl transition-all group"
+                    onClick={() => handleAttachmentClick(item.type)}
+                    className="flex flex-col items-center gap-2 group outline-none"
                   >
-                    <div className={`w-12 h-12 ${item.color} rounded-2xl flex items-center justify-center shadow-sm group-hover:scale-110 group-hover:rotate-6 transition-all`}>
-                      <item.icon size={22} />
+                    <div className={`w-14 h-14 ${item.color} rounded-full flex items-center justify-center shadow-sm group-hover:scale-110 group-active:scale-95 transition-all duration-300 ring-4 ring-transparent group-hover:ring-black/5`}>
+                      <item.icon size={26} strokeWidth={2.5} />
                     </div>
-                    <span className="text-[10px] font-black text-gray-900 uppercase tracking-widest">{item.label}</span>
+                    <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest transition-colors group-hover:text-gray-900">{item.label}</span>
                   </button>
                 ))}
               </div>
