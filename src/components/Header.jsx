@@ -21,6 +21,7 @@ const Header = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [appsOpen, setAppsOpen] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [notificationOpen, setNotificationOpen] = useState(false);
 
   const dropdownRef = useRef(null);
   const appsRef = useRef(null);
@@ -152,7 +153,7 @@ const Header = () => {
                 </button>
 
                 <button
-                  onClick={() => go("/invoices")}
+                  onClick={() => go("/additional/invoice")}
                   className="flex items-center gap-3 px-3 py-2 text-sm rounded hover:bg-gray-100"
                 >
                   <FiDollarSign className="text-gray-600" /> Invoices
@@ -164,7 +165,7 @@ const Header = () => {
 
         {/* Chat - Responsive */}
         <button
-          onClick={() => go("/chat")}
+          onClick={() => go("/additional/messenger")}
           className="relative text-white text-base sm:text-lg p-1.5 sm:p-2 hover:bg-[#414b57] rounded transition-colors"
         >
           <FiMessageCircle />
@@ -184,14 +185,69 @@ const Header = () => {
           </span>
         </button>
 
-        {/* Notifications - Responsive */}
-        <button
-          onClick={() => go("/notifications")}
-          className="relative text-white text-base sm:text-lg p-1.5 sm:p-2 hover:bg-[#414b57] rounded transition-colors"
-        >
-          <FiBell />
-          <span className="absolute -top-0.5 -right-0.5 sm:-top-1 sm:-right-1 bg-red-500 text-white text-xs w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full" />
-        </button>
+        <div className="relative">
+          <button
+            onClick={() => setNotificationOpen(!notificationOpen)}
+            className="relative text-white text-base sm:text-lg p-1.5 sm:p-2 hover:bg-[#414b57] rounded transition-colors"
+          >
+            <FiBell />
+
+            {/* Unread dot */}
+            <span className="absolute -top-0.5 -right-0.5 sm:-top-1 sm:-right-1 bg-red-500 w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full" />
+          </button>
+
+          {notificationOpen && (
+            <div className="absolute right-0 mt-2 w-64 bg-white rounded-sm shadow-lg p-3 z-50">
+              <h3 className="text-sm font-semibold px-2 mb-2">
+                Notifications
+              </h3>
+
+              <div className="flex flex-col gap-1">
+                <button
+                  onClick={() => {
+                    go("/notifications");
+                    setNotificationOpen(false);
+                  }}
+                  className="flex flex-col px-3 py-2 text-sm rounded hover:bg-gray-100 text-left"
+                >
+                  <span className="font-medium text-gray-800">
+                    New Lead Assigned
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    A new lead has been assigned to you
+                  </span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    go("/notifications");
+                    setNotificationOpen(false);
+                  }}
+                  className="flex flex-col px-3 py-2 text-sm rounded hover:bg-gray-100 text-left"
+                >
+                  <span className="font-medium text-gray-800">
+                    Invoice Overdue
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    Invoice #3478 is overdue
+                  </span>
+                </button>
+              </div>
+
+              {/* Footer */}
+              <button
+                onClick={() => {
+                  go("/notifications");
+                  setNotificationOpen(false);
+                }}
+                className="w-full mt-2 text-sm text-orange-500 hover:bg-gray-100 py-2 rounded"
+              >
+                View all notifications
+              </button>
+            </div>
+          )}
+        </div>
+
 
         {/* USER MENU - Responsive */}
         <div className="relative" ref={dropdownRef}>

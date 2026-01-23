@@ -11,6 +11,7 @@ import {
   ChatInfoSidebar,
   ContactsList,
   EmptyState,
+  ForwardModal,
 } from "../../pages/MessengerPart/MessengerComponents";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
@@ -49,6 +50,7 @@ export default function MessengerPage() {
   const [replyingTo, setReplyingTo] = useState(null);
   const [editingMessage, setEditingMessage] = useState(null);
   const [starredMessages, setStarredMessages] = useState(new Set());
+  const [forwardingMessage, setForwardingMessage] = useState(null);
 
   // Refs
   const messagesEndRef = useRef(null);
@@ -74,6 +76,27 @@ export default function MessengerPage() {
       }
     }
   }, [message, editingMessage]);
+
+  // Handle click outside to close menus robustly
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      // Close message menu if click is outside the menu container
+      if (showMessageMenu && !event.target.closest('.message-menu-container')) {
+        setShowMessageMenu(null);
+      }
+      // Close reaction picker if click is outside the picker container
+      if (showReactionPicker && !event.target.closest('.reaction-picker-container')) {
+        setShowReactionPicker(null);
+      }
+      // Close emoji picker if click is outside
+      if (showEmojiPicker && emojiPickerRef.current && !emojiPickerRef.current.contains(event.target)) {
+        setShowEmojiPicker(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showMessageMenu, showReactionPicker, showEmojiPicker]);
 
   // Data fetching and Socket setup
   useEffect(() => {
@@ -147,10 +170,16 @@ export default function MessengerPage() {
         const senderId = newMessage.sender_id || newMessage.sender?.id;
         const senderType = newMessage.sender_type || newMessage.sender?.type;
 
-        setChatMessages((prev) => ({
-          ...prev,
-          [convId]: [...(prev[convId] || []), newMessage],
-        }));
+        setChatMessages((prev) => {
+          const messages = prev[convId] || [];
+          // Deduplicate: Don't add if message ID already exists (prevents sender double-messages)
+          if (messages.find(m => m.id === newMessage.id)) return prev;
+
+          return {
+            ...prev,
+            [convId]: [...messages, newMessage],
+          };
+        });
 
         // Update unread count and last message in contact lists
         const updateList = (list) => {
@@ -226,6 +255,25 @@ export default function MessengerPage() {
           };
         });
       });
+
+      socket.on("message_deleted", ({ messageId, conversationId }) => {
+        setChatMessages((prev) => ({
+          ...prev,
+          [conversationId]: (prev[conversationId] || []).filter((msg) => msg.id !== messageId),
+        }));
+      });
+
+      socket.on("message_edited", ({ messageId, text, conversationId }) => {
+        setChatMessages((prev) => {
+          const messages = prev[conversationId] || [];
+          return {
+            ...prev,
+            [conversationId]: messages.map((msg) =>
+              msg.id === messageId ? { ...msg, text, is_edited: true } : msg
+            ),
+          };
+        });
+      });
     }
   }, [socket, currentUser]);
 
@@ -249,6 +297,21 @@ export default function MessengerPage() {
               ...prev,
               [data.conversationId]: data.messages,
             }));
+
+            // Sync starred messages state
+            const starredIds = new Set();
+            data.messages.forEach(m => {
+              if (m.is_starred) starredIds.add(m.id);
+            });
+            setStarredMessages(starredIds);
+
+            // Sync pinned message state
+            const pinnedMsg = data.messages.find(m => m.is_pinned);
+            setPinnedMessages(prev => ({
+              ...prev,
+              [selectedChat.id]: pinnedMsg ? pinnedMsg.id : null
+            }));
+
             if (socket) {
               socket.emit("join_chat", data.conversationId);
             }
@@ -316,39 +379,99 @@ export default function MessengerPage() {
 
     try {
       if (editingMessage) {
-        // Edit logic would go here
-        setEditingMessage(null);
+        // Edit logic
+        const response = await fetch(`${API_BASE_URL}messenger/edit/${editingMessage.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: JSON.stringify({ text: message.trim() })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          // Update local state
+          setChatMessages(prev => {
+            const msgs = prev[currentConversationId] || [];
+            return {
+              ...prev,
+              [currentConversationId]: msgs.map(m => m.id === editingMessage.id ? { ...m, text: message.trim(), is_edited: true, edited: true } : m)
+            };
+          });
+
+          // Emit via socket
+          if (socket && socketConnected) {
+            socket.emit("message_edited", {
+              messageId: editingMessage.id,
+              text: message.trim(),
+              conversationId: currentConversationId
+            });
+          }
+
+          toast.success("Message updated");
+          setEditingMessage(null);
+          setMessage("");
+          if (textareaRef.current) textareaRef.current.innerText = "";
+        } else {
+          toast.error(data.message || "Failed to update message");
+        }
       } else {
         // 1. Prepare temp message for optimistic UI
         const tempId = Date.now();
+        const curMsgs = [];
+
+        let attachments = null;
+        if (attachedFiles.length > 0) {
+          attachments = attachedFiles.map((file, idx) => ({
+            id: tempId + idx + 1,
+            file_url: file.url,
+            file_name: file.name,
+            file_size: file.size,
+            message_type: file.type?.startsWith('image/') ? 'image' :
+              file.type?.startsWith('video/') ? 'video' : 'document'
+          }));
+        }
+
         const tempMessage = {
           id: tempId,
           conversation_id: currentConversationId || 'temp',
           sender_id: currentUserId,
           sender_type: currentUserType,
           sender_name: currentUser.role === 'Admin' ? `${currentUser.firstName} ${currentUser.lastName}` : (currentUser.employee_name || currentUser.name),
-          text: message.trim(),
+          text: message.trim() || null,
           time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
           participants: [
             { id: currentUserId, type: currentUserType },
             { id: selectedChat.id, type: selectedChat.type }
           ],
-          messageType: attachedFiles.length > 0 ? 'file' : 'text',
+          message_type: attachments ? attachments[0].message_type : 'text',
+          file_url: attachments ? attachments[0].file_url : null,
+          file_name: attachments ? attachments[0].file_name : null,
+          file_size: attachments ? attachments[0].file_size : null,
+          attachments: attachments,
+          reply_to_id: replyingTo ? replyingTo.id : null,
+          replyTo: replyingTo ? { text: replyingTo.text, sender_name: replyingTo.sender_name } : null,
           isTemp: true
         };
 
-        // Close emoji picker on send
+        curMsgs.push(tempMessage);
+
+        // Close UI elements
         setShowEmojiPicker(false);
         setEditingMessage(null);
         setReplyingTo(null);
 
-        // Update local state immediately for responsiveness
+        // Update local state immediately
         setChatMessages(prev => ({
           ...prev,
-          [currentConversationId || 'temp']: [...(prev[currentConversationId || 'temp'] || []), tempMessage]
+          [currentConversationId || 'temp']: [...(prev[currentConversationId || 'temp'] || []), ...curMsgs]
         }));
 
+        const originalFiles = [...attachedFiles];
+        const originalMessage = message;
         setMessage("");
+        if (textareaRef.current) textareaRef.current.innerText = "";
         setAttachedFiles([]);
 
         // 2. Save via REST API
@@ -360,11 +483,13 @@ export default function MessengerPage() {
             formData.append('otherId', selectedChat.id);
             formData.append('otherType', selectedChat.type);
           }
-          formData.append('text', tempMessage.text);
-          formData.append('messageType', tempMessage.messageType);
+          formData.append('text', originalMessage.trim());
+          if (replyingTo) {
+            formData.append('replyToId', replyingTo.id);
+          }
 
-          if (attachedFiles.length > 0) {
-            attachedFiles.forEach(file => formData.append('file', file.file));
+          if (originalFiles.length > 0) {
+            originalFiles.forEach(file => formData.append('file', file.file));
           }
 
           const response = await fetch(`${API_BASE_URL}messenger/send`, {
@@ -376,30 +501,59 @@ export default function MessengerPage() {
           });
 
           const data = await response.json();
-          console.log('Message saved via API:', data);
 
-          if (data.success && data.message) {
-            const savedMsg = data.message;
+          if (data.success && data.messages) {
+            const savedMsgs = data.messages;
+            const targetConvId = savedMsgs[0].conversation_id;
 
             // Update conversation ID if it was a first message
             if (!currentConversationId || currentConversationId === 'temp') {
-              setCurrentConversationId(savedMsg.conversation_id);
+              setCurrentConversationId(targetConvId);
             }
 
-            // Replace temp message with real one in state
+            // Replace temp messages with real ones
+            setChatMessages(prev => {
+              const currentList = prev[targetConvId] || prev['temp'] || [];
+              const tempIds = curMsgs.map(m => m.id);
+
+              // Filter out temp messages and add real ones
+              const filteredList = currentList.filter(m => !tempIds.includes(m.id));
+              const newList = [...filteredList, ...savedMsgs];
+
+              const newState = { ...prev };
+              if (prev['temp']) delete newState['temp'];
+              newState[targetConvId] = newList;
+              return newState;
+            });
+
+            // 3. Emit via socket
+            if (socket && socketConnected) {
+              savedMsgs.forEach(savedMsg => {
+                socket.emit("new_message", {
+                  ...savedMsg,
+                  conversationId: savedMsg.conversation_id,
+                  participants: [
+                    { id: currentUserId, type: currentUserType },
+                    { id: selectedChat.id, type: selectedChat.type }
+                  ]
+                });
+              });
+            }
+          } else if (data.success && data.message) {
+            // Support for single message return
+            const savedMsg = data.message;
+            if (!currentConversationId || currentConversationId === 'temp') {
+              setCurrentConversationId(savedMsg.conversation_id);
+            }
             setChatMessages(prev => {
               const convId = savedMsg.conversation_id;
               const currentMsgs = prev[convId] || prev['temp'] || [];
-              const updatedMsgs = currentMsgs.map(m => m.id === tempId ? savedMsg : m);
-
-              // If we were using 'temp', move messages to the real convId
+              const updatedMsgs = currentMsgs.map(m => m.id === curMsgs[0].id ? savedMsg : m);
               const newState = { ...prev };
               if (prev['temp']) delete newState['temp'];
               newState[convId] = updatedMsgs;
               return newState;
             });
-
-            // 3. Emit via socket (now WITH real ID and participants)
             if (socket && socketConnected) {
               socket.emit("new_message", {
                 ...savedMsg,
@@ -409,26 +563,29 @@ export default function MessengerPage() {
                   { id: selectedChat.id, type: selectedChat.type }
                 ]
               });
-              console.log('Message emitted via socket with verified ID');
             }
           } else {
             toast.error(data.message || 'Failed to send message');
-            // Remove temp message on failure
+            // Remove temp messages on failure
             setChatMessages(prev => ({
               ...prev,
-              [currentConversationId || 'temp']: (prev[currentConversationId || 'temp'] || []).filter(m => m.id !== tempId)
+              [currentConversationId || 'temp']: (prev[currentConversationId || 'temp'] || []).filter(m => !curMsgs.some(tm => tm.id === m.id))
             }));
           }
         } catch (apiError) {
           console.error('API Error:', apiError);
           toast.error('Failed to save message');
+          setChatMessages(prev => ({
+            ...prev,
+            [currentConversationId || 'temp']: (prev[currentConversationId || 'temp'] || []).filter(m => !curMsgs.some(tm => tm.id === m.id))
+          }));
         }
-
-        setReplyingTo(null);
       }
     } catch (error) {
       console.error('Error in handleSend:', error);
       toast.error('Failed to send message');
+    } finally {
+      setReplyingTo(null);
     }
   };
   // Close popovers on outside click
@@ -496,6 +653,7 @@ export default function MessengerPage() {
       file: file
     }));
     setAttachedFiles((prev) => [...prev, ...fileData]);
+    e.target.value = null;
     setShowAttachmentMenu(false);
   };
 
@@ -539,21 +697,56 @@ export default function MessengerPage() {
     setShowReactionPicker(null);
   };
 
-  const handleDeleteMessage = (messageId) => {
-    setChatMessages((prev) => ({
-      ...prev,
-      [currentConversationId]: (prev[currentConversationId] || []).filter(
-        (msg) => msg.id !== messageId
-      ),
-    }));
+  const handleDeleteMessage = async (messageId) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}messenger/delete/${messageId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      const data = await response.json();
+      if (data.success) {
+        setChatMessages((prev) => ({
+          ...prev,
+          [currentConversationId]: (prev[currentConversationId] || []).filter(
+            (msg) => msg.id !== messageId
+          ),
+        }));
+        if (socket && socketConnected) {
+          socket.emit("delete_message", { messageId, conversationId: currentConversationId });
+        }
+        toast.success("Message deleted");
+      }
+    } catch (error) {
+      console.error("Error deleting message:", error);
+      toast.error("Failed to delete message");
+    }
     setShowMessageMenu(null);
   };
 
-  const handlePinMessage = (messageId) => {
-    setPinnedMessages((prev) => ({
-      ...prev,
-      [selectedChat.id]: messageId,
-    }));
+  const handlePinMessage = async (messageId) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}messenger/pin/${messageId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ conversationId: currentConversationId })
+      });
+      const data = await response.json();
+      if (data.success) {
+        setPinnedMessages((prev) => ({
+          ...prev,
+          [selectedChat.id]: data.isPinned ? messageId : null,
+        }));
+        toast.success(data.isPinned ? "Message pinned" : "Message unpinned");
+      }
+    } catch (error) {
+      console.error("Error pinning message:", error);
+      toast.error("Failed to pin message");
+    }
     setShowMessageMenu(null);
   };
 
@@ -580,22 +773,82 @@ export default function MessengerPage() {
     toast.success("Message copied to clipboard");
   };
 
-  const handleStarMessage = (messageId) => {
-    setStarredMessages((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(messageId)) {
-        newSet.delete(messageId);
-      } else {
-        newSet.add(messageId);
+  const handleStarMessage = async (messageId) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}messenger/star/${messageId}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      const data = await response.json();
+      if (data.success) {
+        setStarredMessages((prev) => {
+          const newSet = new Set(prev);
+          if (data.isStarred) {
+            newSet.add(messageId);
+          } else {
+            newSet.delete(messageId);
+          }
+          return newSet;
+        });
+        toast.success(data.isStarred ? "Message starred" : "Message unstarred");
       }
-      return newSet;
-    });
+    } catch (error) {
+      console.error("Error starring message:", error);
+      toast.error("Failed to star message");
+    }
     setShowMessageMenu(null);
   };
 
   const handleForwardMessage = (msg) => {
-    console.log("Forward message:", msg);
+    setForwardingMessage(msg);
     setShowMessageMenu(null);
+  };
+
+  const handleConfirmForward = async (contacts) => {
+    if (!forwardingMessage) return;
+
+    try {
+      for (const contact of contacts) {
+        const payload = {
+          otherId: contact.id,
+          otherType: contact.type,
+          text: forwardingMessage.text,
+          messageType: forwardingMessage.message_type || 'text',
+          file_url: forwardingMessage.file_url,
+          file_name: forwardingMessage.file_name,
+          file_size: forwardingMessage.file_size,
+          is_forwarded: true
+        };
+
+        const response = await fetch(`${API_BASE_URL}messenger/send`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+        if (data.success && socket && socketConnected) {
+          socket.emit("new_message", {
+            ...data.message,
+            conversationId: data.message.conversation_id,
+            participants: [
+              { id: currentUserId, type: currentUserType },
+              { id: contact.id, type: contact.type }
+            ]
+          });
+        }
+      }
+      toast.success(`Message forwarded to ${contacts.length} contact(s)`);
+      setForwardingMessage(null);
+    } catch (error) {
+      console.error("Error forwarding message:", error);
+      toast.error("Failed to forward message");
+    }
   };
 
   const cancelRecording = () => {
@@ -786,6 +1039,14 @@ export default function MessengerPage() {
           </div>
         </div>
       </div>
+
+      {forwardingMessage && (
+        <ForwardModal
+          contacts={{ team: teamMembers, clients: clients }}
+          onClose={() => setForwardingMessage(null)}
+          onForward={handleConfirmForward}
+        />
+      )}
 
       <style jsx>{`
         .custom-scrollbar {

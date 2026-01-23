@@ -62,6 +62,7 @@ const initializeSocket = (server) => {
                         sender_type: senderType,
                         text: newMessage.text,
                         message_type: newMessage.messageType || 'text',
+                        attachments: newMessage.attachments ? JSON.stringify(newMessage.attachments) : null,
                         reply_to_id: newMessage.replyToId
                     });
                     newMessage.id = messageId;
@@ -128,6 +129,16 @@ const initializeSocket = (server) => {
             } catch (err) {
                 console.error('Error handling reaction:', err);
             }
+        });
+
+        socket.on('delete_message', (data) => {
+            const { messageId, conversationId } = data;
+            io.to(conversationId).emit('message_deleted', { messageId, conversationId });
+        });
+
+        socket.on('message_edited', (data) => {
+            const { messageId, text, conversationId } = data;
+            io.to(conversationId).emit('message_edited', { messageId, text, conversationId });
         });
 
         socket.on('disconnect', () => {
