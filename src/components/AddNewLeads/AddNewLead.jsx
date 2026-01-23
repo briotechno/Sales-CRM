@@ -29,7 +29,7 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
 
   const employees = employeesData?.employees || [];
 
-
+  console.log(employees);
 
   const [leadType, setLeadType] = useState("Person");
   const [visibility, setVisibility] = useState("Public");
@@ -570,7 +570,8 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
               >
                 <option value="">Select Owner</option>
                 {employees.map(emp => (
-                  <option key={emp.id} value={emp.user_id || emp.id}>{emp.first_name} {emp.last_name}</option>
+                  <option key={emp.id} value={emp.user_id || emp.id}>{emp.employee_name} 
+                  </option>
                 ))}
               </select>
             </div>
