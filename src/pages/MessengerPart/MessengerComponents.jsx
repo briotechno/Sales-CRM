@@ -581,13 +581,7 @@ export function ChatMessages({
 
                   {/* Bubble Actions - Pill Style */}
                   <div
-                    className={`absolute bottom-full mb-2 ${isMe ? "right-0" : "left-0"} opacity-0 group-hover/msg:opacity-100 transition-all duration-300 z-50 message-menu-container`}
-                    onMouseLeave={() => {
-                      // Slight delay to allow for accidental slips
-                      setTimeout(() => {
-                        setShowMessageMenu(null);
-                      }, 300);
-                    }}
+                    className={`absolute bottom-full mb-2 ${isMe ? "right-0" : "left-0"} ${showMessageMenu === msg.id ? "opacity-100 visible" : "opacity-0 invisible group-hover/msg:opacity-100 group-hover/msg:visible"} transition-all duration-300 z-50 message-menu-container`}
                   >
                     <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/95 backdrop-blur-md rounded-full shadow-[0_4px_20px_rgb(0,0,0,0.1)] border border-gray-100/50 hover:scale-105 transition-transform relative">
                       {[
