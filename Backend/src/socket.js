@@ -130,6 +130,16 @@ const initializeSocket = (server) => {
             }
         });
 
+        socket.on('delete_message', (data) => {
+            const { messageId, conversationId } = data;
+            io.to(conversationId).emit('message_deleted', { messageId, conversationId });
+        });
+
+        socket.on('message_edited', (data) => {
+            const { messageId, text, conversationId } = data;
+            io.to(conversationId).emit('message_edited', { messageId, text, conversationId });
+        });
+
         socket.on('disconnect', () => {
             console.log('User disconnected:', socket.id);
             // Cleanup onlineUsers map (requires iterating or a reverse map)

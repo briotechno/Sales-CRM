@@ -126,7 +126,7 @@ const messengerController = {
                 parseInt(otherId), otherType
             );
 
-            const messages = await Messenger.getMessages(conversation.id);
+            const messages = await Messenger.getMessages(conversation.id, currentSubId, currentType);
 
             // Mark as read
             await Messenger.markAsRead(conversation.id, currentSubId, currentType);
@@ -142,10 +142,92 @@ const messengerController = {
         }
     },
 
+    // Edit message
+    editMessage: async (req, res) => {
+        try {
+            const { messageId } = req.params;
+            const { text } = req.body;
+            const currentUserRole = req.user.role;
+            const currentSubId = currentUserRole === 'Employee' ? req.user._id : req.user.id;
+            const currentType = currentUserRole === 'Employee' ? 'employee' : 'user';
+
+            // Check if user is the sender
+            const [msg] = await pool.query('SELECT * FROM messenger_messages WHERE id = ?', [messageId]);
+            if (!msg[0]) return res.status(404).json({ success: false, message: 'Message not found' });
+
+            if (Number(msg[0].sender_id) !== Number(currentSubId) || msg[0].sender_type !== currentType) {
+                return res.status(403).json({ success: false, message: 'Unauthorized' });
+            }
+
+            await Messenger.updateMessage(messageId, text);
+            res.status(200).json({ success: true, message: 'Message updated' });
+        } catch (error) {
+            console.error('Error editing message:', error);
+            res.status(500).json({ success: false, message: 'Server error' });
+        }
+    },
+
+    // Delete message
+    deleteMessage: async (req, res) => {
+        try {
+            const { messageId } = req.params;
+            const currentUserRole = req.user.role;
+            const currentSubId = currentUserRole === 'Employee' ? req.user._id : req.user.id;
+            const currentType = currentUserRole === 'Employee' ? 'employee' : 'user';
+
+            // Check if user is the sender
+            const [msg] = await pool.query('SELECT * FROM messenger_messages WHERE id = ?', [messageId]);
+            if (!msg[0]) return res.status(404).json({ success: false, message: 'Message not found' });
+
+            if (Number(msg[0].sender_id) !== Number(currentSubId) || msg[0].sender_type !== currentType) {
+                return res.status(403).json({ success: false, message: 'Unauthorized' });
+            }
+
+            await Messenger.deleteMessage(messageId);
+            res.status(200).json({ success: true, message: 'Message deleted' });
+        } catch (error) {
+            console.error('Error deleting message:', error);
+            res.status(500).json({ success: false, message: 'Server error' });
+        }
+    },
+
+    // Toggle star
+    toggleStar: async (req, res) => {
+        try {
+            const { messageId } = req.params;
+            const currentUserRole = req.user.role;
+            const currentSubId = currentUserRole === 'Employee' ? req.user._id : req.user.id;
+            const currentType = currentUserRole === 'Employee' ? 'employee' : 'user';
+
+            const isStarred = await Messenger.toggleStar(messageId, currentSubId, currentType);
+            res.status(200).json({ success: true, isStarred });
+        } catch (error) {
+            console.error('Error toggling star:', error);
+            res.status(500).json({ success: false, message: 'Server error' });
+        }
+    },
+
+    // Toggle pin
+    togglePin: async (req, res) => {
+        try {
+            const { messageId } = req.params;
+            const { conversationId } = req.body;
+            const currentUserRole = req.user.role;
+            const currentSubId = currentUserRole === 'Employee' ? req.user._id : req.user.id;
+            const currentType = currentUserRole === 'Employee' ? 'employee' : 'user';
+
+            const isPinned = await Messenger.togglePin(messageId, conversationId, currentSubId, currentType);
+            res.status(200).json({ success: true, isPinned });
+        } catch (error) {
+            console.error('Error toggling pin:', error);
+            res.status(500).json({ success: false, message: 'Server error' });
+        }
+    },
+
     // Send a message via REST (for attachments or if socket fails)
     sendMessage: async (req, res) => {
         try {
-            const { conversationId, text, messageType, otherId, otherType } = req.body;
+            const { conversationId, text, messageType, otherId, otherType, replyToId } = req.body;
             const currentUserRole = req.user.role;
             const currentSubId = currentUserRole === 'Employee' ? req.user._id : req.user.id;
             const currentType = currentUserRole === 'Employee' ? 'employee' : 'user';
@@ -166,9 +248,11 @@ const messengerController = {
                 sender_type: currentType,
                 text,
                 message_type: messageType || 'text',
-                file_url: req.file ? req.file.path : null,
-                file_name: req.file ? req.file.originalname : null,
-                file_size: req.file ? `${(req.file.size / 1024).toFixed(2)} KB` : null
+                file_url: req.file ? req.file.path : (req.body.file_url || null),
+                file_name: req.file ? req.file.originalname : (req.body.file_name || null),
+                file_size: req.file ? `${(req.file.size / 1024).toFixed(2)} KB` : (req.body.file_size || null),
+                reply_to_id: replyToId,
+                is_forwarded: req.body.is_forwarded || false
             });
 
             // Get the saved message with sender info and formatted time
@@ -181,6 +265,24 @@ const messengerController = {
                 LEFT JOIN users u ON m.sender_id = u.id AND m.sender_type = 'user'
                 WHERE m.id = ?
             `, [messageId]);
+
+            // Add reply info if any
+            if (replyToId) {
+                const [repliedMsg] = await pool.query(
+                    `SELECT m.text, COALESCE(e.employee_name, CONCAT(u.firstName, ' ', u.lastName)) as sender_name
+                     FROM messenger_messages m
+                     LEFT JOIN employees e ON m.sender_id = e.id AND m.sender_type = 'employee'
+                     LEFT JOIN users u ON m.sender_id = u.id AND m.sender_type = 'user'
+                     WHERE m.id = ?`,
+                    [replyToId]
+                );
+                if (repliedMsg[0]) {
+                    savedMsg[0].replyTo = {
+                        text: repliedMsg[0].text,
+                        sender: repliedMsg[0].sender_name
+                    };
+                }
+            }
 
             res.status(201).json({
                 success: true,

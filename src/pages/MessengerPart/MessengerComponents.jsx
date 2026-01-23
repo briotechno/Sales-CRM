@@ -279,6 +279,12 @@ export function ChatMessages({
   showReactionPicker,
   setShowReactionPicker,
   onReaction,
+  onReply,
+  onEdit,
+  onDelete,
+  onCopy,
+  onStar,
+  onPin,
   onForward,
   starredMessages,
   currentUserId,
@@ -287,15 +293,15 @@ export function ChatMessages({
   const reactions = ["👍", "❤️", "😂", "😮", "😢", "🔥"];
 
   return (
-    <div className="flex-1 px-4 py-8 md:px-8 bg-white relative">
-      {/* Decorative Grid Pattern */}
-      <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#FF7B1D 0.5px, transparent 0.5px)', backgroundSize: '24px 24px' }}></div>
+    <div className="flex-1 px-4 py-6 md:px-8 bg-white relative">
 
-      <div className="space-y-8 pb-4 relative z-10">
+      <div className="space-y-8 pb-20 relative z-10">
+        {/* Decorative Grid Pattern - Moved inside to avoid layout shift */}
+        <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#FF7B1D 0.5px, transparent 0.5px)', backgroundSize: '24px 24px' }}></div>
         {messages.map((msg, idx) => {
           // Check if message is from current user
-          const isMe = (Number(msg.sender_id) === Number(currentUserId) && msg.sender_type === currentUserType) || msg.sender === "me";
-          const showTime = idx === 0 || messages[idx - 1].time !== msg.time;
+          const isMe = !!((Number(msg.sender_id) === Number(currentUserId) && msg.sender_type === currentUserType) || msg.sender === "me");
+          const showTime = !!(idx === 0 || (messages[idx - 1] && messages[idx - 1].time !== msg.time));
 
           const getInitials = () => {
             if (msg.sender_name) return msg.sender_name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
@@ -314,7 +320,7 @@ export function ChatMessages({
               )}
 
               {/* Reply Preview */}
-              {msg.replyTo && (
+              {!!(msg.replyTo && (msg.replyTo.text || msg.replyTo.sender_name || msg.replyTo.sender)) && (
                 <div className={`mb-1 px-4 py-3 rounded-2xl text-xs flex max-w-[80%] border-2 transition-all group-hover:scale-[1.02] ${isMe
                   ? "bg-orange-50/50 border-orange-100 text-orange-900 italic mr-2"
                   : "bg-gray-50 border-gray-100 text-gray-600 ml-2"
@@ -323,7 +329,7 @@ export function ChatMessages({
                     <Reply size={12} className="text-orange-500 mt-0.5 flex-shrink-0" />
                     <div className="flex flex-col">
                       <span className="font-black text-[10px] uppercase tracking-wider mb-1 opacity-70">
-                        {msg.replyTo.sender === "me" ? "Me" : "Contact"}
+                        {msg.replyTo.sender_name || msg.replyTo.sender}
                       </span>
                       <p className="truncate line-clamp-2">{msg.replyTo.text}</p>
                     </div>
@@ -340,13 +346,21 @@ export function ChatMessages({
 
                 <div className="relative group/bubble max-w-[80%] md:max-w-[70%] lg:max-w-[60%]">
                   <div
-                    className={`px-5 py-3.5 rounded-3xl shadow-sm transition-all duration-300 relative group-hover/msg:shadow-xl ${isMe
+                    className={`px-5 py-3.5 rounded-3xl shadow-sm transition-all duration-300 relative group-hover/msg:shadow-xl min-w-[120px] ${isMe
                       ? "bg-gradient-to-br from-orange-500 to-orange-600 text-white rounded-br-none hover:rotate-[-0.5deg]"
                       : "bg-white border-2 border-gray-100 text-gray-800 rounded-bl-none hover:rotate-[0.5deg]"
                       }`}
                   >
+                    {/* Forwarded Badge */}
+                    {!!(msg.is_forwarded === true || msg.is_forwarded === 1 || msg.is_forwarded === "1") && (
+                      <div className={`flex items-center gap-1.5 mb-2 opacity-80 ${isMe ? "text-orange-100" : "text-gray-400"}`}>
+                        <Forward size={12} className="italic" />
+                        <span className="text-[10px] font-black uppercase tracking-[0.1em] italic">Forwarded</span>
+                      </div>
+                    )}
+
                     {/* Voice Message */}
-                    {msg.isVoice && (
+                    {!!msg.isVoice && msg.duration > 0 && (
                       <div className="flex items-center gap-3 mb-2 p-2 bg-black/5 rounded-xl">
                         <button className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center hover:scale-110 active:scale-95 transition-all">
                           <Mic size={16} />
@@ -361,7 +375,7 @@ export function ChatMessages({
                     )}
 
                     {/* File Attachments */}
-                    {msg.attachments && (
+                    {!!(msg.attachments && msg.attachments.length > 0) && (
                       <div className="mb-3 flex flex-wrap gap-2">
                         {msg.attachments.map((file, index) => (
                           <div key={index} className="w-full">
@@ -411,25 +425,27 @@ export function ChatMessages({
                     </p>
 
                     {/* Message Footer */}
-                    <div className="flex items-center justify-end gap-2 mt-3 pt-2 border-t border-black/5">
-                      {msg.edited && (
-                        <span className={`text-[9px] font-black uppercase tracking-widest italic opacity-50`}>
-                          Edited
-                        </span>
-                      )}
+                    {!!(msg.is_edited || msg.edited || isMe) && (
+                      <div className="flex items-center justify-end gap-2 mt-3 pt-2 border-t border-black/5">
+                        {!!(msg.is_edited === true || msg.is_edited === 1 || msg.edited === true || msg.edited === 1) && (
+                          <span className={`text-[9px] font-black uppercase tracking-widest italic opacity-50`}>
+                            Edited
+                          </span>
+                        )}
 
-                      {(msg.sender === "me" || (Number(msg.sender_id) === Number(currentUserId) && msg.sender_type === currentUserType)) && (
-                        <div className="flex items-center gap-0.5">
-                          {msg.is_read || msg.read ? (
-                            <CheckCheck size={14} className="text-blue-300 drop-shadow-[0_0_4px_rgba(59,130,246,0.6)]" />
-                          ) : msg.is_delivered ? (
-                            <CheckCheck size={14} className="text-white/70" />
-                          ) : (
-                            <Check size={14} className="text-white/50" />
-                          )}
-                        </div>
-                      )}
-                    </div>
+                        {isMe && (
+                          <div className="flex items-center gap-0.5">
+                            {msg.is_read || msg.read ? (
+                              <CheckCheck size={14} className="text-blue-300 drop-shadow-[0_0_4px_rgba(59,130,246,0.6)]" />
+                            ) : msg.is_delivered ? (
+                              <CheckCheck size={14} className="text-white/70" />
+                            ) : (
+                              <Check size={14} className="text-white/50" />
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
 
                     {/* Reactions - Floating Style */}
                     {Object.keys(msg.reactions || {}).length > 0 && (
@@ -447,40 +463,102 @@ export function ChatMessages({
                     )}
                   </div>
 
-                  {/* Bubble Actions - Hidden until hover */}
-                  <div className={`absolute top-1/2 -translate-y-1/2 ${isMe ? "-left-40" : "-right-40"} opacity-0 group-hover/msg:opacity-100 transition-all duration-300 flex items-center gap-2 px-3 py-2 bg-white/80 backdrop-blur-md rounded-2xl shadow-xl border border-gray-100 z-20`}>
-                    {[
-                      { icon: Smile, onClick: () => setShowReactionPicker(msg.id), title: "React" },
-                      { icon: Reply, onClick: () => onReply(msg), title: "Reply" },
-                      { icon: Star, onClick: () => onStar(msg.id), title: "Star", color: starredMessages.has(msg.id) ? "fill-yellow-400 text-yellow-400" : "" },
-                      { icon: MoreVertical, onClick: () => setShowMessageMenu(msg.id), title: "More" }
-                    ].map((act, i) => (
-                      <button
-                        key={i}
-                        onClick={act.onClick}
-                        className={`p-2 transition-all hover:scale-125 active:scale-90 rounded-xl group/btn ${act.color ? act.color : "hover:bg-orange-50 hover:text-orange-500 text-gray-500"}`}
-                        title={act.title}
-                      >
-                        <act.icon size={16} className={`${act.color ? "" : "group-hover/btn:rotate-12 transition-transform"}`} />
-                      </button>
-                    ))}
+                  {/* Bubble Actions - Pill Style */}
+                  <div
+                    className={`absolute bottom-full mb-2 ${isMe ? "right-0" : "left-0"} opacity-0 group-hover/msg:opacity-100 transition-all duration-300 z-50 message-menu-container`}
+                    onMouseLeave={() => {
+                      // Slight delay to allow for accidental slips
+                      setTimeout(() => {
+                        setShowMessageMenu(null);
+                      }, 300);
+                    }}
+                  >
+                    <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/95 backdrop-blur-md rounded-full shadow-[0_4px_20px_rgb(0,0,0,0.1)] border border-gray-100/50 hover:scale-105 transition-transform relative">
+                      {[
+                        { icon: Smile, onClick: () => setShowReactionPicker(msg.id), title: "React" },
+                        { icon: Reply, onClick: () => onReply(msg), title: "Reply" },
+                        { icon: Star, onClick: () => onStar(msg.id), title: "Star", color: starredMessages.has(msg.id) ? "fill-yellow-400 text-yellow-400" : "text-gray-400" },
+                        { icon: MoreVertical, onClick: () => setShowMessageMenu(msg.id), title: "More" }
+                      ].map((act, i) => (
+                        <button
+                          key={i}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            act.onClick();
+                          }}
+                          className={`p-1 transition-all hover:scale-125 active:scale-90 rounded-full group/btn ${act.color ? act.color : "hover:bg-orange-50 hover:text-orange-500 text-gray-500"}`}
+                          title={act.title}
+                        >
+                          <act.icon size={16} className={`${act.color && act.color.includes('fill') ? "" : "group-hover/btn:rotate-12 transition-transform"}`} />
+                        </button>
+                      ))}
+
+                      {/* Context Menu - Compact & Shadow Focused */}
+                      {showMessageMenu === msg.id && (
+                        <div
+                          className={`absolute ${idx < 4 ? "top-full mt-2" : "bottom-full mb-2"} ${isMe ? "right-0" : "left-0"} bg-white rounded-[20px] shadow-[0_10px_40px_rgba(0,0,0,0.25)] p-1.5 min-w-[170px] z-[110] animate-scaleUp border border-gray-100/80 overflow-hidden`}
+                        >
+                          <div className="space-y-0.5">
+                            {[
+                              { icon: Reply, label: "Reply", onClick: () => onReply(msg) },
+                              { icon: Forward, label: "Forward", onClick: () => onForward(msg) },
+                              { icon: Copy, label: "Copy Text", onClick: () => onCopy(msg.text) },
+                              { icon: Star, label: starredMessages.has(msg.id) ? "Unstar" : "Star", onClick: () => onStar(msg.id), color: starredMessages.has(msg.id) ? "text-yellow-600 fill-yellow-400" : "" },
+                              { icon: Pin, label: "Pin to Chat", onClick: () => onPin(msg.id) },
+                            ].map((item, i) => (
+                              <button
+                                key={i}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  item.onClick();
+                                  setShowMessageMenu(null);
+                                }}
+                                className={`w-full flex items-center justify-between px-3 py-2 text-xs hover:bg-orange-50 rounded-xl transition-all group ${item.color || "text-gray-700 hover:text-orange-600"}`}
+                              >
+                                <span className="font-bold">{item.label}</span>
+                                <item.icon size={14} className="opacity-40 group-hover:opacity-100" />
+                              </button>
+                            ))}
+
+                            {isMe && (
+                              <div className="pt-1 mt-1 border-t border-gray-50">
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); onEdit(msg); setShowMessageMenu(null); }}
+                                  className="w-full flex items-center justify-between px-3 py-2 text-xs hover:bg-orange-50 text-gray-700 rounded-xl transition-all group"
+                                >
+                                  <span className="font-bold">Edit Message</span>
+                                  <Edit3 size={14} className="opacity-40 group-hover:opacity-100" />
+                                </button>
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); onDelete(msg.id); setShowMessageMenu(null); }}
+                                  className="w-full flex items-center justify-between px-3 py-2 text-xs hover:bg-red-50 text-red-600 rounded-xl transition-all group"
+                                >
+                                  <span className="font-bold">Delete</span>
+                                  <Trash2 size={14} className="opacity-40 group-hover:opacity-100" />
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   {/* Starred Indicator */}
                   {starredMessages.has(msg.id) && (
-                    <div className={`absolute -top-2 ${isMe ? "-right-2" : "-left-2"} bg-white rounded-full p-1 shadow-lg ring-1 ring-orange-100`}>
+                    <div className={`absolute -top-2 ${isMe ? "-right-2" : "-left-2"} bg-white rounded-full p-1.5 shadow-lg ring-1 ring-orange-100 z-10`}>
                       <Star size={12} className="fill-yellow-400 text-yellow-400" />
                     </div>
                   )}
 
                   {/* Reaction Picker Popover */}
                   {showReactionPicker === msg.id && (
-                    <div className={`absolute bottom-full ${isMe ? "right-0" : "left-0"} mb-4 bg-white/90 backdrop-blur-xl rounded-full shadow-2xl p-2 flex gap-1 z-30 animate-scaleUp border border-orange-50 ring-4 ring-black/5`}>
+                    <div className={`absolute bottom-full ${isMe ? "right-0" : "left-0"} mb-6 bg-white/95 backdrop-blur-xl rounded-full shadow-2xl p-2.5 flex gap-1.5 z-40 animate-scaleUp border border-orange-50 ring-4 ring-black/5 reaction-picker-container`}>
                       {reactions.map((emoji) => (
                         <button
                           key={emoji}
                           onClick={() => onReaction(msg.id, emoji)}
-                          className="text-2xl hover:bg-orange-100 rounded-full w-10 h-10 flex items-center justify-center transition-all hover:scale-150 active:scale-95 duration-300"
+                          className="text-2xl hover:bg-orange-100 rounded-full w-12 h-12 flex items-center justify-center transition-all hover:scale-150 active:scale-95 duration-300"
                         >
                           {emoji}
                         </button>
@@ -488,52 +566,7 @@ export function ChatMessages({
                     </div>
                   )}
 
-                  {/* Context Menu */}
-                  {showMessageMenu === msg.id && (
-                    <div className={`absolute bottom-full mb-4 ${isMe ? "right-0" : "left-0"} bg-white rounded-2xl shadow-2xl p-2 min-w-[200px] z-30 animate-slideUp border border-gray-100 overflow-hidden`}>
-                      <div className="px-3 py-2 border-b border-gray-50 mb-1">
-                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Message Actions</p>
-                      </div>
-                      <div className="space-y-0.5">
-                        {[
-                          { icon: Reply, label: "Reply", onClick: () => onReply(msg) },
-                          { icon: Forward, label: "Forward", onClick: () => onForward(msg) },
-                          { icon: Copy, label: "Copy Text", onClick: () => onCopy(msg.text) },
-                          { icon: Star, label: starredMessages.has(msg.id) ? "Unstar" : "Star", onClick: () => onStar(msg.id), color: starredMessages.has(msg.id) ? "text-yellow-600 fill-yellow-400" : "" },
-                          { icon: Pin, label: "Pin to Chat", onClick: () => onPin(msg.id) },
-                        ].map((item, i) => (
-                          <button
-                            key={i}
-                            onClick={item.onClick}
-                            className={`w-full flex items-center justify-between px-4 py-2.5 text-sm hover:bg-orange-50 rounded-xl transition-all group ${item.color || "text-gray-700 hover:text-orange-600"}`}
-                          >
-                            <span className="font-bold">{item.label}</span>
-                            <item.icon size={14} className="opacity-50 group-hover:opacity-100 transition-opacity" />
-                          </button>
-                        ))}
 
-                        {isMe && (
-                          <>
-                            <div className="h-[1px] bg-gray-50 my-1 mx-2"></div>
-                            <button
-                              onClick={() => onEdit(msg)}
-                              className="w-full flex items-center justify-between px-4 py-2.5 text-sm hover:bg-blue-50 text-blue-600 rounded-xl transition-all group"
-                            >
-                              <span className="font-black">Edit</span>
-                              <Edit3 size={14} className="opacity-70 group-hover:rotate-12 transition-transform" />
-                            </button>
-                            <button
-                              onClick={() => onDelete(msg.id)}
-                              className="w-full flex items-center justify-between px-4 py-2.5 text-sm hover:bg-red-50 text-red-600 rounded-xl transition-all group"
-                            >
-                              <span className="font-black">Delete</span>
-                              <Trash2 size={14} className="opacity-70 group-hover:scale-110 transition-transform" />
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
@@ -822,7 +855,7 @@ export function ChatInput({
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-[10px] font-black text-orange-900 uppercase tracking-widest mb-0.5">
-                {editingMessage ? "Modifying message" : `Replying to ${replyingTo.sender === "me" ? "yourself" : "contact"}`}
+                {editingMessage ? "Modifying message" : `Replying to ${replyingTo.sender_name || 'contact'}`}
               </p>
               <p className="text-sm text-orange-800 truncate font-semibold">
                 {editingMessage ? editingMessage.text : replyingTo?.text}
@@ -1065,6 +1098,81 @@ export function EmptyState() {
           <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest border-l border-gray-200 pl-6">
             Team members currently active
           </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+// Forward Modal Component
+export function ForwardModal({ contacts, onClose, onForward }) {
+  const [selectedContacts, setSelectedContacts] = React.useState([]);
+
+  const toggleContact = (contact) => {
+    setSelectedContacts((prev) =>
+      prev.find((c) => c.id === contact.id && c.type === contact.type)
+        ? prev.filter((c) => !(c.id === contact.id && c.type === contact.type))
+        : [...prev, contact]
+    );
+  };
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+      <div className="bg-white rounded-[32px] shadow-2xl w-full max-w-md overflow-hidden animate-scaleUp border border-gray-100">
+        <div className="p-6 border-b border-gray-50 flex items-center justify-between">
+          <div>
+            <h3 className="text-xl font-black text-gray-900">Forward Message</h3>
+            <p className="text-sm text-gray-400 font-bold uppercase tracking-wider mt-1">Select recipients</p>
+          </div>
+          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+            <X size={20} className="text-gray-400" />
+          </button>
+        </div>
+
+        <div className="max-h-[400px] overflow-y-auto p-4 custom-scrollbar">
+          <div className="space-y-2">
+            {[...contacts.team, ...contacts.clients].map((contact) => (
+              <button
+                key={`${contact.id}_${contact.type}`}
+                onClick={() => toggleContact(contact)}
+                className={`w-full flex items-center gap-4 p-3 rounded-2xl transition-all ${selectedContacts.find((c) => c.id === contact.id && c.type === contact.type)
+                  ? "bg-orange-50 border-2 border-orange-200"
+                  : "hover:bg-gray-50 border-2 border-transparent"
+                  }`}
+              >
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-100 to-orange-200 flex items-center justify-center text-[10px] font-black text-orange-700 uppercase">
+                  {(contact.avatar || contact.name).substring(0, 2).toUpperCase()}
+                </div>
+                <div className="flex-1 text-left">
+                  <p className="font-bold text-gray-900">{contact.name}</p>
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{contact.role}</p>
+                </div>
+                {selectedContacts.find((c) => c.id === contact.id && c.type === contact.type) && (
+                  <div className="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center text-white">
+                    <Check size={14} />
+                  </div>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="p-6 border-t border-gray-50 flex gap-4">
+          <button
+            onClick={onClose}
+            className="flex-1 px-4 py-3 bg-gray-100 text-gray-600 font-black uppercase tracking-widest rounded-2xl hover:bg-gray-200 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => onForward(selectedContacts)}
+            disabled={selectedContacts.length === 0}
+            className={`flex-1 px-4 py-3 font-black uppercase tracking-widest rounded-2xl transition-all ${selectedContacts.length > 0
+              ? "bg-orange-500 text-white shadow-lg shadow-orange-200 hover:scale-[1.02] active:scale-[0.98]"
+              : "bg-gray-200 text-gray-400 cursor-not-allowed"
+              }`}
+          >
+            Forward ({selectedContacts.length})
+          </button>
         </div>
       </div>
     </div>
