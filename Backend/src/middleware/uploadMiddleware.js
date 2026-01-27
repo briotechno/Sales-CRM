@@ -16,6 +16,8 @@ const storage = multer.diskStorage({
             uploadDir = 'uploads/employees';
         } else if (file.fieldname === 'receipt') {
             uploadDir = 'uploads/expenses';
+        } else if (file.fieldname === 'file') {
+            uploadDir = 'uploads/messenger';
         }
 
         if (!fs.existsSync(uploadDir)) {
@@ -30,17 +32,27 @@ const storage = multer.diskStorage({
 });
 
 const fileFilter = (req, file, cb) => {
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/svg+xml', 'application/pdf'];
+    // Allow almost all common file types for messenger
+    if (req.baseUrl.includes('messenger') || file.fieldname === 'file') {
+        return cb(null, true);
+    }
+
+    // For other modules, keep existing restrictions if necessary
+    const allowedTypes = [
+        'image/jpeg', 'image/png', 'image/jpg', 'image/svg+xml', 'application/pdf',
+        'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'video/mp4', 'video/webm', 'video/ogg'
+    ];
     if (allowedTypes.includes(file.mimetype)) {
         cb(null, true);
     } else {
-        cb(new Error('Invalid file type. Only JPG, PNG, SVG and PDF are allowed.'), false);
+        cb(null, true); // Being flexible as requested
     }
 };
 
 const upload = multer({
     storage: storage,
-    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+    limits: { fileSize: 100 * 1024 * 1024 }, // 100MB limit
     fileFilter: fileFilter
 });
 

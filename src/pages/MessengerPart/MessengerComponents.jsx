@@ -36,7 +36,29 @@ import {
   MapPin,
   MessageSquare,
   Square,
+  Plus,
 } from "lucide-react";
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
+
+const handleDownload = async (url, fileName) => {
+  try {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    const blobUrl = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    link.download = fileName || 'download';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(blobUrl);
+  } catch (error) {
+    console.error('Download failed:', error);
+    // Fallback to basic open if fetch fails
+    window.open(url, '_blank');
+  }
+};
 
 // Contacts List Component
 export function ContactsList({ contacts, selectedChat, onChatSelect }) {
@@ -279,6 +301,12 @@ export function ChatMessages({
   showReactionPicker,
   setShowReactionPicker,
   onReaction,
+  onReply,
+  onEdit,
+  onDelete,
+  onCopy,
+  onStar,
+  onPin,
   onForward,
   starredMessages,
   currentUserId,
@@ -287,15 +315,15 @@ export function ChatMessages({
   const reactions = ["👍", "❤️", "😂", "😮", "😢", "🔥"];
 
   return (
-    <div className="flex-1 px-4 py-8 md:px-8 bg-white relative">
-      {/* Decorative Grid Pattern */}
-      <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#FF7B1D 0.5px, transparent 0.5px)', backgroundSize: '24px 24px' }}></div>
+    <div className="flex-1 px-4 py-6 md:px-8 bg-white relative">
 
-      <div className="space-y-8 pb-4 relative z-10">
+      <div className="space-y-8 pb-20 relative z-10">
+        {/* Decorative Grid Pattern - Moved inside to avoid layout shift */}
+        <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#FF7B1D 0.5px, transparent 0.5px)', backgroundSize: '24px 24px' }}></div>
         {messages.map((msg, idx) => {
           // Check if message is from current user
-          const isMe = (Number(msg.sender_id) === Number(currentUserId) && msg.sender_type === currentUserType) || msg.sender === "me";
-          const showTime = idx === 0 || messages[idx - 1].time !== msg.time;
+          const isMe = !!((Number(msg.sender_id) === Number(currentUserId) && msg.sender_type === currentUserType) || msg.sender === "me");
+          const showTime = !!(idx === 0 || (messages[idx - 1] && messages[idx - 1].time !== msg.time));
 
           const getInitials = () => {
             if (msg.sender_name) return msg.sender_name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
@@ -314,7 +342,7 @@ export function ChatMessages({
               )}
 
               {/* Reply Preview */}
-              {msg.replyTo && (
+              {!!(msg.replyTo && (msg.replyTo.text || msg.replyTo.sender_name || msg.replyTo.sender)) && (
                 <div className={`mb-1 px-4 py-3 rounded-2xl text-xs flex max-w-[80%] border-2 transition-all group-hover:scale-[1.02] ${isMe
                   ? "bg-orange-50/50 border-orange-100 text-orange-900 italic mr-2"
                   : "bg-gray-50 border-gray-100 text-gray-600 ml-2"
@@ -323,7 +351,7 @@ export function ChatMessages({
                     <Reply size={12} className="text-orange-500 mt-0.5 flex-shrink-0" />
                     <div className="flex flex-col">
                       <span className="font-black text-[10px] uppercase tracking-wider mb-1 opacity-70">
-                        {msg.replyTo.sender === "me" ? "Me" : "Contact"}
+                        {msg.replyTo.sender_name || msg.replyTo.sender}
                       </span>
                       <p className="truncate line-clamp-2">{msg.replyTo.text}</p>
                     </div>
@@ -340,13 +368,21 @@ export function ChatMessages({
 
                 <div className="relative group/bubble max-w-[80%] md:max-w-[70%] lg:max-w-[60%]">
                   <div
-                    className={`px-5 py-3.5 rounded-3xl shadow-sm transition-all duration-300 relative group-hover/msg:shadow-xl ${isMe
+                    className={`px-5 py-3.5 rounded-3xl shadow-sm transition-all duration-300 relative group-hover/msg:shadow-xl min-w-[120px] ${isMe
                       ? "bg-gradient-to-br from-orange-500 to-orange-600 text-white rounded-br-none hover:rotate-[-0.5deg]"
                       : "bg-white border-2 border-gray-100 text-gray-800 rounded-bl-none hover:rotate-[0.5deg]"
                       }`}
                   >
+                    {/* Forwarded Badge */}
+                    {!!(msg.is_forwarded === true || msg.is_forwarded === 1 || msg.is_forwarded === "1") && (
+                      <div className={`flex items-center gap-1.5 mb-2 opacity-80 ${isMe ? "text-orange-100" : "text-gray-400"}`}>
+                        <Forward size={12} className="italic" />
+                        <span className="text-[10px] font-black uppercase tracking-[0.1em] italic">Forwarded</span>
+                      </div>
+                    )}
+
                     {/* Voice Message */}
-                    {msg.isVoice && (
+                    {!!msg.isVoice && msg.duration > 0 && (
                       <div className="flex items-center gap-3 mb-2 p-2 bg-black/5 rounded-xl">
                         <button className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center hover:scale-110 active:scale-95 transition-all">
                           <Mic size={16} />
@@ -360,76 +396,172 @@ export function ChatMessages({
                       </div>
                     )}
 
-                    {/* File Attachments */}
-                    {msg.attachments && (
-                      <div className="mb-3 flex flex-wrap gap-2">
-                        {msg.attachments.map((file, index) => (
-                          <div key={index} className="w-full">
-                            {file.type?.startsWith("image/") ? (
-                              <div className="relative group/img overflow-hidden rounded-2xl shadow-md cursor-pointer aspect-video md:aspect-auto">
-                                <img
-                                  src={file.url}
-                                  alt={file.name}
-                                  className="w-full max-h-[300px] object-cover transition-all duration-700 group-hover/img:scale-110 group-hover/img:rotate-1"
-                                />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover/img:opacity-100 transition-opacity flex items-end p-4">
-                                  <div className="flex items-center justify-between w-full">
-                                    <span className="text-white text-[10px] font-bold truncate pr-4">{file.name}</span>
-                                    <button className="p-2 bg-white/20 backdrop-blur-md rounded-xl hover:bg-white/40 transition-colors">
-                                      <Download size={14} className="text-white" />
+                    {/* File Attachments (Single or Multiple) */}
+                    {(msg.file_url || (msg.attachments && msg.attachments.length > 0)) && (
+                      <div className="mb-3 space-y-3">
+                        {/* If we have a consolidated attachments array, render it specifically */}
+                        {msg.attachments && msg.attachments.length > 0 ? (
+                          <div className={`grid gap-2 ${msg.attachments.filter(f => f.message_type === 'image').length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                            {msg.attachments.map((file, index) => {
+                              const isImg = file.message_type === 'image' || file.file_url.match(/\.(jpeg|jpg|gif|png|webp|svg)$/i);
+                              const isVid = file.message_type === 'video' || file.file_url.match(/\.(mp4|webm|ogg)$/i);
+                              const fUrl = file.file_url.startsWith('http') || file.file_url.startsWith('blob:') || file.file_url.startsWith('data:') ? file.file_url : `${API_BASE_URL.replace(/\/api\/?$/, '')}/${file.file_url}`;
+
+                              if (isImg) {
+                                return (
+                                  <div key={index} className="relative group/img overflow-hidden rounded-2xl shadow-sm cursor-pointer ring-1 ring-black/5 bg-gray-50">
+                                    <img
+                                      src={fUrl}
+                                      alt={file.file_name}
+                                      className="w-full h-48 object-cover transition-all duration-700 group-hover/img:scale-105"
+                                      onClick={() => window.open(fUrl, '_blank')}
+                                    />
+                                    <div className="absolute top-2 right-2 opacity-0 group-hover/img:opacity-100 transition-opacity">
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleDownload(fUrl, file.file_name || 'image.png');
+                                        }}
+                                        className="p-2 bg-black/50 backdrop-blur-md rounded-full text-white hover:bg-black/70 shadow-lg"
+                                      >
+                                        <Download size={14} />
+                                      </button>
+                                    </div>
+                                  </div>
+                                );
+                              } else if (isVid) {
+                                return (
+                                  <div key={index} className="relative group/vid overflow-hidden rounded-2xl shadow-sm bg-black/10 ring-1 ring-black/5">
+                                    <video src={fUrl} className="w-full max-h-[300px] object-cover" controls />
+                                  </div>
+                                );
+                              } else {
+                                return (
+                                  <div
+                                    key={index}
+                                    className={`flex items-center gap-3 p-3 rounded-2xl border transition-all hover:shadow-md cursor-pointer ${isMe ? "bg-white/10 border-white/20" : "bg-gray-50 border-gray-100"}`}
+                                    onClick={() => window.open(fUrl, '_blank')}
+                                  >
+                                    <div className={`w-12 h-12 flex-shrink-0 rounded-xl flex items-center justify-center shadow-inner ${isMe ? "bg-white/20 text-white" : "bg-[#f8f9fa] text-[#FF7B1D]"}`}>
+                                      <FileText size={24} />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <p className={`text-sm font-bold truncate mb-0.5 ${isMe ? "text-white" : "text-gray-900"}`}>{file.file_name || 'Document'}</p>
+                                      <p className={`text-[9px] uppercase font-black tracking-widest opacity-60 ${isMe ? "text-white/80" : "text-gray-500"}`}>
+                                        {file.file_size || '0 KB'}
+                                      </p>
+                                    </div>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDownload(fUrl, file.file_name);
+                                      }}
+                                      className={`p-2 rounded-full transition-all ${isMe ? "hover:bg-white/20 text-white" : "hover:bg-gray-200 text-gray-500"}`}
+                                    >
+                                      <Download size={18} />
                                     </button>
                                   </div>
+                                );
+                              }
+                            })}
+                          </div>
+                        ) : msg.file_url && (
+                          /* Fallback for single file stored in legacy columns */
+                          <div className="w-full">
+                            {msg.message_type === 'image' || msg.file_url.match(/\.(jpeg|jpg|gif|png|webp|svg)$/i) ? (
+                              <div className="relative group/img overflow-hidden rounded-2xl shadow-sm cursor-pointer ring-1 ring-black/5 bg-gray-50 max-w-sm">
+                                <img
+                                  src={msg.file_url.startsWith('http') || msg.file_url.startsWith('blob:') || msg.file_url.startsWith('data:') ? msg.file_url : `${API_BASE_URL.replace(/\/api\/?$/, '')}/${msg.file_url}`}
+                                  alt={msg.file_name}
+                                  className="w-full h-auto max-h-[400px] object-cover transition-all duration-700 group-hover/img:scale-105"
+                                  onClick={() => window.open(msg.file_url.startsWith('http') || msg.file_url.startsWith('blob:') || msg.file_url.startsWith('data:') ? msg.file_url : `${API_BASE_URL.replace(/\/api\/?$/, '')}/${msg.file_url}`, '_blank')}
+                                />
+                                <div className="absolute top-3 right-3 opacity-0 group-hover/img:opacity-100 transition-opacity">
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDownload(
+                                        msg.file_url.startsWith('http') || msg.file_url.startsWith('blob:') || msg.file_url.startsWith('data:') ? msg.file_url : `${API_BASE_URL.replace(/\/api\/?$/, '')}/${msg.file_url}`,
+                                        msg.file_name || 'image.png'
+                                      );
+                                    }}
+                                    className="p-2.5 bg-black/50 backdrop-blur-md rounded-full text-white hover:bg-black/70 transition-all block shadow-lg"
+                                  >
+                                    <Download size={16} />
+                                  </button>
                                 </div>
                               </div>
+                            ) : msg.message_type === 'video' || msg.file_url.match(/\.(mp4|webm|ogg)$/i) ? (
+                              <div className="relative group/vid overflow-hidden rounded-2xl shadow-sm bg-black/10 ring-1 ring-black/5 max-w-sm">
+                                <video
+                                  src={msg.file_url.startsWith('http') || msg.file_url.startsWith('blob:') || msg.file_url.startsWith('data:') ? msg.file_url : `${API_BASE_URL.replace(/\/api\/?$/, '')}/${msg.file_url}`}
+                                  className="w-full max-h-[400px] object-cover"
+                                  controls
+                                />
+                              </div>
                             ) : (
-                              <div className={`flex items-center gap-4 p-4 rounded-2xl transition-all hover:scale-[1.02] ${isMe ? "bg-white/10" : "bg-gray-50 border border-gray-100"
-                                }`}>
-                                <div className={`p-3 rounded-xl ${isMe ? "bg-white/20" : "bg-orange-50"}`}>
-                                  <FileText size={20} className={isMe ? "text-white" : "text-orange-500"} />
+                              <div
+                                className={`flex items-center gap-4 p-4 rounded-3xl border transition-all hover:shadow-md cursor-pointer ${isMe ? "bg-white/10 border-white/20" : "bg-gray-50 border-gray-100"
+                                  }`}
+                                onClick={() => window.open(msg.file_url.startsWith('http') || msg.file_url.startsWith('blob:') || msg.file_url.startsWith('data:') ? msg.file_url : `${API_BASE_URL.replace(/\/api\/?$/, '')}/${msg.file_url}`, '_blank')}
+                              >
+                                <div className={`w-14 h-14 flex-shrink-0 rounded-[20px] flex items-center justify-center shadow-inner ${isMe ? "bg-white/20 text-white" : "bg-[#f8f9fa] text-[#FF7B1D]"
+                                  }`}>
+                                  <FileText size={28} />
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                  <p className="font-black text-sm truncate uppercase tracking-tight">
-                                    {file.name}
-                                  </p>
-                                  <p className="text-[10px] font-bold opacity-60">
-                                    {file.size} • DOCUMENT
+                                  <p className={`text-sm font-bold truncate mb-0.5 ${isMe ? "text-white" : "text-gray-900"}`}>{msg.file_name || 'Document'}</p>
+                                  <p className={`text-[10px] uppercase font-black tracking-widest opacity-60 ${isMe ? "text-white/80" : "text-gray-500"}`}>
+                                    {msg.file_size || '0 KB'} • {msg.file_name?.split('.').pop().toUpperCase() || 'FILE'}
                                   </p>
                                 </div>
-                                <button className="p-2 hover:bg-black/5 rounded-lg transition-transform hover:rotate-12">
-                                  <Download size={16} />
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDownload(
+                                      msg.file_url.startsWith('http') || msg.file_url.startsWith('blob:') || msg.file_url.startsWith('data:') ? msg.file_url : `${API_BASE_URL.replace(/\/api\/?$/, '')}/${msg.file_url}`,
+                                      msg.file_name
+                                    );
+                                  }}
+                                  className={`p-2.5 rounded-full transition-all ${isMe ? "hover:bg-white/20 text-white" : "hover:bg-gray-200 text-gray-500"}`}
+                                >
+                                  <Download size={20} />
                                 </button>
                               </div>
                             )}
                           </div>
-                        ))}
+                        )}
                       </div>
                     )}
 
-                    {/* Message Text */}
-                    <p className={`leading-[1.6] font-medium selection:bg-white/30 selection:text-white ${isMe ? "drop-shadow-sm" : ""} ${/^(\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff])+$/.test(msg.text.trim()) && msg.text.trim().length <= 8 ? "text-4xl py-2" : "text-[15px]"}`}>
-                      {msg.text}
-                    </p>
+                    {msg.text && (
+                      <p className={`leading-[1.6] font-medium selection:bg-white/30 selection:text-white ${isMe ? "drop-shadow-sm" : ""} ${/^(\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff])+$/.test(msg.text.trim()) && msg.text.trim().length <= 8 ? "text-4xl py-2" : "text-[15px]"}`}>
+                        {msg.text}
+                      </p>
+                    )}
 
                     {/* Message Footer */}
-                    <div className="flex items-center justify-end gap-2 mt-3 pt-2 border-t border-black/5">
-                      {msg.edited && (
-                        <span className={`text-[9px] font-black uppercase tracking-widest italic opacity-50`}>
-                          Edited
-                        </span>
-                      )}
+                    {!!(msg.is_edited || msg.edited || isMe) && (
+                      <div className="flex items-center justify-end gap-2 mt-3 pt-2 border-t border-black/5">
+                        {!!(msg.is_edited === true || msg.is_edited === 1 || msg.edited === true || msg.edited === 1) && (
+                          <span className={`text-[9px] font-black uppercase tracking-widest italic opacity-50`}>
+                            Edited
+                          </span>
+                        )}
 
-                      {(msg.sender === "me" || (Number(msg.sender_id) === Number(currentUserId) && msg.sender_type === currentUserType)) && (
-                        <div className="flex items-center gap-0.5">
-                          {msg.is_read || msg.read ? (
-                            <CheckCheck size={14} className="text-blue-300 drop-shadow-[0_0_4px_rgba(59,130,246,0.6)]" />
-                          ) : msg.is_delivered ? (
-                            <CheckCheck size={14} className="text-white/70" />
-                          ) : (
-                            <Check size={14} className="text-white/50" />
-                          )}
-                        </div>
-                      )}
-                    </div>
+                        {isMe && (
+                          <div className="flex items-center gap-0.5">
+                            {msg.is_read || msg.read ? (
+                              <CheckCheck size={14} className="text-blue-300 drop-shadow-[0_0_4px_rgba(59,130,246,0.6)]" />
+                            ) : msg.is_delivered ? (
+                              <CheckCheck size={14} className="text-white/70" />
+                            ) : (
+                              <Check size={14} className="text-white/50" />
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
 
                     {/* Reactions - Floating Style */}
                     {Object.keys(msg.reactions || {}).length > 0 && (
@@ -447,40 +579,96 @@ export function ChatMessages({
                     )}
                   </div>
 
-                  {/* Bubble Actions - Hidden until hover */}
-                  <div className={`absolute top-1/2 -translate-y-1/2 ${isMe ? "-left-40" : "-right-40"} opacity-0 group-hover/msg:opacity-100 transition-all duration-300 flex items-center gap-2 px-3 py-2 bg-white/80 backdrop-blur-md rounded-2xl shadow-xl border border-gray-100 z-20`}>
-                    {[
-                      { icon: Smile, onClick: () => setShowReactionPicker(msg.id), title: "React" },
-                      { icon: Reply, onClick: () => onReply(msg), title: "Reply" },
-                      { icon: Star, onClick: () => onStar(msg.id), title: "Star", color: starredMessages.has(msg.id) ? "fill-yellow-400 text-yellow-400" : "" },
-                      { icon: MoreVertical, onClick: () => setShowMessageMenu(msg.id), title: "More" }
-                    ].map((act, i) => (
-                      <button
-                        key={i}
-                        onClick={act.onClick}
-                        className={`p-2 transition-all hover:scale-125 active:scale-90 rounded-xl group/btn ${act.color ? act.color : "hover:bg-orange-50 hover:text-orange-500 text-gray-500"}`}
-                        title={act.title}
-                      >
-                        <act.icon size={16} className={`${act.color ? "" : "group-hover/btn:rotate-12 transition-transform"}`} />
-                      </button>
-                    ))}
+                  {/* Bubble Actions - Pill Style */}
+                  <div
+                    className={`absolute bottom-full mb-2 ${isMe ? "right-0" : "left-0"} ${showMessageMenu === msg.id ? "opacity-100 visible" : "opacity-0 invisible group-hover/msg:opacity-100 group-hover/msg:visible"} transition-all duration-300 z-50 message-menu-container`}
+                  >
+                    <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/95 backdrop-blur-md rounded-full shadow-[0_4px_20px_rgb(0,0,0,0.1)] border border-gray-100/50 hover:scale-105 transition-transform relative">
+                      {[
+                        { icon: Smile, onClick: () => setShowReactionPicker(msg.id), title: "React" },
+                        { icon: Reply, onClick: () => onReply(msg), title: "Reply" },
+                        { icon: Star, onClick: () => onStar(msg.id), title: "Star", color: starredMessages.has(msg.id) ? "fill-yellow-400 text-yellow-400" : "text-gray-400" },
+                        { icon: MoreVertical, onClick: () => setShowMessageMenu(msg.id), title: "More" }
+                      ].map((act, i) => (
+                        <button
+                          key={i}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            act.onClick();
+                          }}
+                          className={`p-1 transition-all hover:scale-125 active:scale-90 rounded-full group/btn ${act.color ? act.color : "hover:bg-orange-50 hover:text-orange-500 text-gray-500"}`}
+                          title={act.title}
+                        >
+                          <act.icon size={16} className={`${act.color && act.color.includes('fill') ? "" : "group-hover/btn:rotate-12 transition-transform"}`} />
+                        </button>
+                      ))}
+
+                      {/* Context Menu - Compact & Shadow Focused */}
+                      {showMessageMenu === msg.id && (
+                        <div
+                          className={`absolute ${idx < 4 ? "top-full mt-2" : "bottom-full mb-2"} ${isMe ? "right-0" : "left-0"} bg-white rounded-[20px] shadow-[0_10px_40px_rgba(0,0,0,0.25)] p-1.5 min-w-[170px] z-[110] animate-scaleUp border border-gray-100/80 overflow-hidden`}
+                        >
+                          <div className="space-y-0.5">
+                            {[
+                              { icon: Reply, label: "Reply", onClick: () => onReply(msg) },
+                              { icon: Forward, label: "Forward", onClick: () => onForward(msg) },
+                              { icon: Copy, label: "Copy Text", onClick: () => onCopy(msg.text) },
+                              { icon: Star, label: starredMessages.has(msg.id) ? "Unstar" : "Star", onClick: () => onStar(msg.id), color: starredMessages.has(msg.id) ? "text-yellow-600 fill-yellow-400" : "" },
+                              { icon: Pin, label: "Pin to Chat", onClick: () => onPin(msg.id) },
+                            ].map((item, i) => (
+                              <button
+                                key={i}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  item.onClick();
+                                  setShowMessageMenu(null);
+                                }}
+                                className={`w-full flex items-center justify-between px-3 py-2 text-xs hover:bg-orange-50 rounded-xl transition-all group ${item.color || "text-gray-700 hover:text-orange-600"}`}
+                              >
+                                <span className="font-bold">{item.label}</span>
+                                <item.icon size={14} className="opacity-40 group-hover:opacity-100" />
+                              </button>
+                            ))}
+
+                            {isMe && (
+                              <div className="pt-1 mt-1 border-t border-gray-50">
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); onEdit(msg); setShowMessageMenu(null); }}
+                                  className="w-full flex items-center justify-between px-3 py-2 text-xs hover:bg-orange-50 text-gray-700 rounded-xl transition-all group"
+                                >
+                                  <span className="font-bold">Edit Message</span>
+                                  <Edit3 size={14} className="opacity-40 group-hover:opacity-100" />
+                                </button>
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); onDelete(msg.id); setShowMessageMenu(null); }}
+                                  className="w-full flex items-center justify-between px-3 py-2 text-xs hover:bg-red-50 text-red-600 rounded-xl transition-all group"
+                                >
+                                  <span className="font-bold">Delete</span>
+                                  <Trash2 size={14} className="opacity-40 group-hover:opacity-100" />
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   {/* Starred Indicator */}
                   {starredMessages.has(msg.id) && (
-                    <div className={`absolute -top-2 ${isMe ? "-right-2" : "-left-2"} bg-white rounded-full p-1 shadow-lg ring-1 ring-orange-100`}>
+                    <div className={`absolute -top-2 ${isMe ? "-right-2" : "-left-2"} bg-white rounded-full p-1.5 shadow-lg ring-1 ring-orange-100 z-10`}>
                       <Star size={12} className="fill-yellow-400 text-yellow-400" />
                     </div>
                   )}
 
                   {/* Reaction Picker Popover */}
                   {showReactionPicker === msg.id && (
-                    <div className={`absolute bottom-full ${isMe ? "right-0" : "left-0"} mb-4 bg-white/90 backdrop-blur-xl rounded-full shadow-2xl p-2 flex gap-1 z-30 animate-scaleUp border border-orange-50 ring-4 ring-black/5`}>
+                    <div className={`absolute bottom-full ${isMe ? "right-0" : "left-0"} mb-6 bg-white/95 backdrop-blur-xl rounded-full shadow-2xl p-2.5 flex gap-1.5 z-40 animate-scaleUp border border-orange-50 ring-4 ring-black/5 reaction-picker-container`}>
                       {reactions.map((emoji) => (
                         <button
                           key={emoji}
                           onClick={() => onReaction(msg.id, emoji)}
-                          className="text-2xl hover:bg-orange-100 rounded-full w-10 h-10 flex items-center justify-center transition-all hover:scale-150 active:scale-95 duration-300"
+                          className="text-2xl hover:bg-orange-100 rounded-full w-12 h-12 flex items-center justify-center transition-all hover:scale-150 active:scale-95 duration-300"
                         >
                           {emoji}
                         </button>
@@ -488,52 +676,7 @@ export function ChatMessages({
                     </div>
                   )}
 
-                  {/* Context Menu */}
-                  {showMessageMenu === msg.id && (
-                    <div className={`absolute bottom-full mb-4 ${isMe ? "right-0" : "left-0"} bg-white rounded-2xl shadow-2xl p-2 min-w-[200px] z-30 animate-slideUp border border-gray-100 overflow-hidden`}>
-                      <div className="px-3 py-2 border-b border-gray-50 mb-1">
-                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Message Actions</p>
-                      </div>
-                      <div className="space-y-0.5">
-                        {[
-                          { icon: Reply, label: "Reply", onClick: () => onReply(msg) },
-                          { icon: Forward, label: "Forward", onClick: () => onForward(msg) },
-                          { icon: Copy, label: "Copy Text", onClick: () => onCopy(msg.text) },
-                          { icon: Star, label: starredMessages.has(msg.id) ? "Unstar" : "Star", onClick: () => onStar(msg.id), color: starredMessages.has(msg.id) ? "text-yellow-600 fill-yellow-400" : "" },
-                          { icon: Pin, label: "Pin to Chat", onClick: () => onPin(msg.id) },
-                        ].map((item, i) => (
-                          <button
-                            key={i}
-                            onClick={item.onClick}
-                            className={`w-full flex items-center justify-between px-4 py-2.5 text-sm hover:bg-orange-50 rounded-xl transition-all group ${item.color || "text-gray-700 hover:text-orange-600"}`}
-                          >
-                            <span className="font-bold">{item.label}</span>
-                            <item.icon size={14} className="opacity-50 group-hover:opacity-100 transition-opacity" />
-                          </button>
-                        ))}
 
-                        {isMe && (
-                          <>
-                            <div className="h-[1px] bg-gray-50 my-1 mx-2"></div>
-                            <button
-                              onClick={() => onEdit(msg)}
-                              className="w-full flex items-center justify-between px-4 py-2.5 text-sm hover:bg-blue-50 text-blue-600 rounded-xl transition-all group"
-                            >
-                              <span className="font-black">Edit</span>
-                              <Edit3 size={14} className="opacity-70 group-hover:rotate-12 transition-transform" />
-                            </button>
-                            <button
-                              onClick={() => onDelete(msg.id)}
-                              className="w-full flex items-center justify-between px-4 py-2.5 text-sm hover:bg-red-50 text-red-600 rounded-xl transition-all group"
-                            >
-                              <span className="font-black">Delete</span>
-                              <Trash2 size={14} className="opacity-70 group-hover:scale-110 transition-transform" />
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
@@ -799,8 +942,13 @@ export function ChatInput({
   };
 
   const handleAttachmentClick = (type) => {
-    if (type === "file" || type === "image" || type === "document") {
-      fileInputRef.current?.click();
+    if (fileInputRef.current) {
+      if (type === "image") fileInputRef.current.accept = "image/*";
+      else if (type === "video") fileInputRef.current.accept = "video/*";
+      else if (type === "document") fileInputRef.current.accept = ".pdf,.doc,.docx,.txt,.xls,.xlsx,.ppt,.pptx";
+      else fileInputRef.current.accept = "*/*";
+
+      fileInputRef.current.click();
     }
     setShowAttachmentMenu(false);
   };
@@ -822,7 +970,7 @@ export function ChatInput({
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-[10px] font-black text-orange-900 uppercase tracking-widest mb-0.5">
-                {editingMessage ? "Modifying message" : `Replying to ${replyingTo.sender === "me" ? "yourself" : "contact"}`}
+                {editingMessage ? "Modifying message" : `Replying to ${replyingTo.sender_name || 'contact'}`}
               </p>
               <p className="text-sm text-orange-800 truncate font-semibold">
                 {editingMessage ? editingMessage.text : replyingTo?.text}
@@ -839,33 +987,80 @@ export function ChatInput({
       )}
 
       {/* Attached Files Preview - Floating Style */}
+      {/* Attached Files Preview - WhatsApp Style Modern Media Tray */}
       {attachedFiles.length > 0 && (
-        <div className="absolute bottom-full left-0 right-0 px-4 py-3 bg-white/50 backdrop-blur-sm border-t border-gray-100 overflow-x-auto no-scrollbar">
-          <div className="flex gap-3 max-w-7xl mx-auto">
-            {attachedFiles.map((file, index) => (
-              <div
-                key={index}
-                className="flex items-center gap-3 bg-white border-2 border-orange-50 rounded-2xl p-2 min-w-[180px] shadow-sm hover:shadow-lg transition-all group relative animate-scaleUp"
+        <div className="absolute bottom-full left-0 right-0 py-6 px-10 bg-[#f8f9fa] backdrop-blur-xl border-t border-gray-100 animate-slideUp z-30 shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em]">Ready to send • {attachedFiles.length} item{attachedFiles.length > 1 ? 's' : ''}</span>
+              <button
+                onClick={() => setAttachedFiles([])}
+                className="text-[10px] font-bold text-red-500 hover:text-red-600 transition-colors uppercase tracking-widest"
               >
-                {file.type?.startsWith("image/") ? (
-                  <img src={file.url} alt="" className="w-10 h-10 object-cover rounded-xl" />
-                ) : (
-                  <div className="w-10 h-10 bg-orange-50 rounded-xl flex items-center justify-center text-orange-500">
-                    <File size={16} />
+                Clear All
+              </button>
+            </div>
+
+            <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar scroll-smooth">
+              {attachedFiles.map((file, index) => {
+                const isImage = file.type?.startsWith("image/");
+                const isVideo = file.type?.startsWith("video/");
+                const extension = file.name.split('.').pop().toUpperCase();
+
+                return (
+                  <div
+                    key={index}
+                    className="flex-shrink-0 w-36 h-48 bg-white border border-gray-100 rounded-[24px] shadow-sm hover:shadow-xl transition-all duration-300 group relative overflow-hidden"
+                  >
+                    {/* Media Content */}
+                    <div className="h-28 w-full bg-gray-50 flex items-center justify-center relative overflow-hidden border-b border-gray-50">
+                      {isImage ? (
+                        <img src={file.url} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                      ) : isVideo ? (
+                        <div className="w-full h-full bg-gray-900 flex items-center justify-center relative">
+                          <div className="z-10 bg-white/20 backdrop-blur-md rounded-full p-2 group-hover:scale-110 transition-transform">
+                            <VideoIcon size={20} className="text-white" />
+                          </div>
+                          <video src={file.url} className="absolute inset-0 w-full h-full object-cover opacity-50" />
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center gap-1 group-hover:scale-110 transition-transform duration-300">
+                          <div className="w-12 h-12 bg-orange-50 rounded-[18px] flex items-center justify-center text-orange-500 shadow-inner">
+                            <FileText size={24} />
+                          </div>
+                          <span className="text-[9px] font-black text-orange-600/60">{extension}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Meta Data */}
+                    <div className="p-3">
+                      <p className="text-[10px] font-bold text-gray-800 truncate mb-1">{file.name}</p>
+                      <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">{file.size}</p>
+                    </div>
+
+                    {/* Delete Action */}
+                    <button
+                      onClick={() => setAttachedFiles(attachedFiles.filter((_, i) => i !== index))}
+                      className="absolute top-2 right-2 w-7 h-7 bg-black/60 backdrop-blur-md text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500 shadow-lg scale-90 group-hover:scale-100"
+                    >
+                      <X size={14} />
+                    </button>
                   </div>
-                )}
-                <div className="flex-1 min-w-0">
-                  <p className="text-[10px] font-black text-gray-800 truncate">{file.name}</p>
-                  <p className="text-[9px] font-bold text-gray-400 uppercase">{file.size}</p>
+                );
+              })}
+
+              {/* Add More Trigger */}
+              <button
+                onClick={() => setShowAttachmentMenu(true)}
+                className="flex-shrink-0 w-36 h-48 bg-white border-2 border-dashed border-gray-100 rounded-[24px] flex flex-col items-center justify-center gap-3 text-gray-300 hover:text-orange-500 hover:border-orange-100 hover:bg-orange-50/10 transition-all group"
+              >
+                <div className="p-3 bg-gray-50 rounded-2xl group-hover:bg-orange-50 transition-colors">
+                  <Plus size={24} />
                 </div>
-                <button
-                  onClick={() => setAttachedFiles(attachedFiles.filter((_, i) => i !== index))}
-                  className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
-                >
-                  <X size={10} />
-                </button>
-              </div>
-            ))}
+                <span className="text-[9px] font-black uppercase tracking-widest">Add Files</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -876,32 +1071,31 @@ export function ChatInput({
         <div className="relative" ref={attachmentMenuRef}>
           <button
             onClick={() => setShowAttachmentMenu(!showAttachmentMenu)}
-            className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 group ${showAttachmentMenu ? "bg-orange-500 text-white shadow-lg shadow-orange-200" : "bg-gray-100/80 text-gray-400 hover:bg-gray-200"
-              }`}
+            className="w-12 h-12 bg-[#FF7B1D] text-white rounded-full flex items-center justify-center shadow-lg shadow-orange-100 hover:scale-110 active:scale-95 transition-all duration-300 group z-50 relative"
           >
-            <Paperclip size={20} className={showAttachmentMenu ? "" : "group-hover:rotate-12 transition-transform shadow-sm"} />
+            <Paperclip size={20} className={`transition-transform duration-300 ${showAttachmentMenu ? "rotate-45" : "group-hover:rotate-12"}`} />
           </button>
 
           {showAttachmentMenu && (
-            <div className="absolute bottom-full mb-4 left-0 bg-white border border-gray-100 rounded-3xl shadow-2xl p-3 min-w-[240px] animate-scaleUp z-50">
-              <div className="grid grid-cols-2 gap-2">
+            <div className="absolute bottom-full mb-6 left-0 bg-white rounded-[36px] shadow-[0_25px_70px_rgba(0,0,0,0.18)] p-6 min-w-[320px] animate-scaleUp z-[60] border border-gray-100/50">
+              <div className="grid grid-cols-3 gap-6">
                 {[
-                  { icon: ImageIcon, label: "Photos", color: "bg-blue-50 text-blue-600", onClick: () => handleAttachmentClick("image") },
-                  { icon: FileText, label: "Docs", color: "bg-green-50 text-green-600", onClick: () => handleAttachmentClick("document") },
-                  { icon: Camera, label: "Camera", color: "bg-purple-50 text-purple-600", onClick: () => handleAttachmentClick("camera") },
-                  { icon: VideoIcon, label: "Video", color: "bg-red-50 text-red-600", onClick: () => handleAttachmentClick("video") },
-                  { icon: UserIcon, label: "Contact", color: "bg-yellow-50 text-yellow-600", onClick: () => handleAttachmentClick("contact") },
-                  { icon: MapPin, label: "Location", color: "bg-pink-50 text-pink-600", onClick: () => handleAttachmentClick("location") },
+                  { icon: ImageIcon, label: "Photos", color: "bg-[#E7F0FF] text-[#007AFF]", type: "image" },
+                  { icon: FileText, label: "Docs", color: "bg-[#E7F8F0] text-[#24B47E]", type: "document" },
+                  { icon: VideoIcon, label: "Video", color: "bg-[#FFE7E7] text-[#FF3B30]", type: "video" },
+                  { icon: Camera, label: "Camera", color: "bg-[#F3E7FF] text-[#AF52DE]", type: "camera" },
+                  { icon: UserIcon, label: "Contact", color: "bg-[#FFF9E7] text-[#FFCC00]", type: "contact" },
+                  { icon: MapPin, label: "Location", color: "bg-[#FFE7F5] text-[#FF2D55]", type: "location" },
                 ].map((item, i) => (
                   <button
                     key={i}
-                    onClick={item.onClick}
-                    className="flex flex-col items-center gap-2 p-4 hover:bg-gray-50 rounded-2xl transition-all group"
+                    onClick={() => handleAttachmentClick(item.type)}
+                    className="flex flex-col items-center gap-2 group outline-none"
                   >
-                    <div className={`w-12 h-12 ${item.color} rounded-2xl flex items-center justify-center shadow-sm group-hover:scale-110 group-hover:rotate-6 transition-all`}>
-                      <item.icon size={22} />
+                    <div className={`w-14 h-14 ${item.color} rounded-full flex items-center justify-center shadow-sm group-hover:scale-110 group-active:scale-95 transition-all duration-300 ring-4 ring-transparent group-hover:ring-black/5`}>
+                      <item.icon size={26} strokeWidth={2.5} />
                     </div>
-                    <span className="text-[10px] font-black text-gray-900 uppercase tracking-widest">{item.label}</span>
+                    <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest transition-colors group-hover:text-gray-900">{item.label}</span>
                   </button>
                 ))}
               </div>
@@ -1065,6 +1259,81 @@ export function EmptyState() {
           <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest border-l border-gray-200 pl-6">
             Team members currently active
           </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+// Forward Modal Component
+export function ForwardModal({ contacts, onClose, onForward }) {
+  const [selectedContacts, setSelectedContacts] = React.useState([]);
+
+  const toggleContact = (contact) => {
+    setSelectedContacts((prev) =>
+      prev.find((c) => c.id === contact.id && c.type === contact.type)
+        ? prev.filter((c) => !(c.id === contact.id && c.type === contact.type))
+        : [...prev, contact]
+    );
+  };
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+      <div className="bg-white rounded-[32px] shadow-2xl w-full max-w-md overflow-hidden animate-scaleUp border border-gray-100">
+        <div className="p-6 border-b border-gray-50 flex items-center justify-between">
+          <div>
+            <h3 className="text-xl font-black text-gray-900">Forward Message</h3>
+            <p className="text-sm text-gray-400 font-bold uppercase tracking-wider mt-1">Select recipients</p>
+          </div>
+          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+            <X size={20} className="text-gray-400" />
+          </button>
+        </div>
+
+        <div className="max-h-[400px] overflow-y-auto p-4 custom-scrollbar">
+          <div className="space-y-2">
+            {[...contacts.team, ...contacts.clients].map((contact) => (
+              <button
+                key={`${contact.id}_${contact.type}`}
+                onClick={() => toggleContact(contact)}
+                className={`w-full flex items-center gap-4 p-3 rounded-2xl transition-all ${selectedContacts.find((c) => c.id === contact.id && c.type === contact.type)
+                  ? "bg-orange-50 border-2 border-orange-200"
+                  : "hover:bg-gray-50 border-2 border-transparent"
+                  }`}
+              >
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-100 to-orange-200 flex items-center justify-center text-[10px] font-black text-orange-700 uppercase">
+                  {(contact.avatar || contact.name).substring(0, 2).toUpperCase()}
+                </div>
+                <div className="flex-1 text-left">
+                  <p className="font-bold text-gray-900">{contact.name}</p>
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{contact.role}</p>
+                </div>
+                {selectedContacts.find((c) => c.id === contact.id && c.type === contact.type) && (
+                  <div className="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center text-white">
+                    <Check size={14} />
+                  </div>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="p-6 border-t border-gray-50 flex gap-4">
+          <button
+            onClick={onClose}
+            className="flex-1 px-4 py-3 bg-gray-100 text-gray-600 font-black uppercase tracking-widest rounded-2xl hover:bg-gray-200 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => onForward(selectedContacts)}
+            disabled={selectedContacts.length === 0}
+            className={`flex-1 px-4 py-3 font-black uppercase tracking-widest rounded-2xl transition-all ${selectedContacts.length > 0
+              ? "bg-orange-500 text-white shadow-lg shadow-orange-200 hover:scale-[1.02] active:scale-[0.98]"
+              : "bg-gray-200 text-gray-400 cursor-not-allowed"
+              }`}
+          >
+            Forward ({selectedContacts.length})
+          </button>
         </div>
       </div>
     </div>

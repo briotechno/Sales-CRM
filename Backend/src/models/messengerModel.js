@@ -46,42 +46,60 @@ const Messenger = {
     saveMessage: async (msgData) => {
         const {
             conversation_id, sender_id, sender_type, text,
-            message_type, file_url, file_name, file_size, duration, reply_to_id
+            message_type, file_url, file_name, file_size, duration, reply_to_id, attachments
         } = msgData;
 
         const [result] = await pool.query(
             `INSERT INTO messenger_messages 
-             (conversation_id, sender_id, sender_type, text, message_type, file_url, file_name, file_size, duration, reply_to_id, is_delivered) 
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [conversation_id, sender_id, sender_type, text, message_type || 'text', file_url, file_name, file_size, duration, reply_to_id, msgData.is_delivered || false]
+             (conversation_id, sender_id, sender_type, text, message_type, file_url, file_name, file_size, duration, reply_to_id, is_delivered, is_forwarded, attachments) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [conversation_id, sender_id, sender_type, text, message_type || 'text', file_url, file_name, file_size, duration, reply_to_id, msgData.is_delivered || false, msgData.is_forwarded || false, attachments]
         );
 
         // Update conversation's last message
+        let lastText = text;
+        if (!lastText || lastText.trim() === '') {
+            if (message_type === 'image') lastText = '📷 Photo';
+            else if (message_type === 'video') lastText = '🎥 Video';
+            else if (message_type === 'document') lastText = '📄 Document';
+            else lastText = '📎 Attachment';
+        }
+
         await pool.query(
             `UPDATE messenger_conversations SET last_message_text = ?, last_message_time = CURRENT_TIMESTAMP WHERE id = ?`,
-            [text || (message_type === 'image' ? '[Image]' : '[Attachment]'), conversation_id]
+            [lastText, conversation_id]
         );
 
         return result.insertId;
     },
 
     // Get messages for a conversation
-    getMessages: async (conversationId, limit = 50, offset = 0) => {
+    getMessages: async (conversationId, userId, userType, limit = 50, offset = 0) => {
         const [rows] = await pool.query(
             `SELECT m.*, 
              COALESCE(e.employee_name, CONCAT(u.firstName, ' ', u.lastName)) as sender_name,
-             DATE_FORMAT(m.created_at, '%h:%i %p') as time
+             DATE_FORMAT(m.created_at, '%h:%i %p') as time,
+             (SELECT COUNT(*) FROM messenger_starred_messages WHERE message_id = m.id AND user_id = ? AND user_type = ?) > 0 as is_starred,
+             (SELECT COUNT(*) FROM messenger_pinned_messages WHERE message_id = m.id) > 0 as is_pinned,
+             m.attachments
              FROM messenger_messages m
              LEFT JOIN employees e ON m.sender_id = e.id AND m.sender_type = 'employee'
              LEFT JOIN users u ON m.sender_id = u.id AND m.sender_type = 'user'
              WHERE m.conversation_id = ? 
              ORDER BY m.created_at ASC 
              LIMIT ? OFFSET ?`,
-            [conversationId, limit, offset]
+            [userId, userType, conversationId, limit, offset]
         );
 
-        // Fetch reactions separately for each message
+        // Fetch reactions and parse attachments for each message
         for (let msg of rows) {
+            if (msg.attachments) {
+                try {
+                    msg.attachments = typeof msg.attachments === 'string' ? JSON.parse(msg.attachments) : msg.attachments;
+                } catch (e) {
+                    msg.attachments = [];
+                }
+            }
             const [reactions] = await pool.query(
                 `SELECT emoji, COUNT(*) as count 
                  FROM messenger_message_reactions 
@@ -93,9 +111,89 @@ const Messenger = {
                 acc[r.emoji] = r.count;
                 return acc;
             }, {});
+
+            // If it's a reply, fetch the replied message text
+            if (msg.reply_to_id) {
+                const [repliedMsg] = await pool.query(
+                    `SELECT m.text, COALESCE(e.employee_name, CONCAT(u.firstName, ' ', u.lastName)) as sender_name
+                     FROM messenger_messages m
+                     LEFT JOIN employees e ON m.sender_id = e.id AND m.sender_type = 'employee'
+                     LEFT JOIN users u ON m.sender_id = u.id AND m.sender_type = 'user'
+                     WHERE m.id = ?`,
+                    [msg.reply_to_id]
+                );
+                if (repliedMsg[0]) {
+                    msg.replyTo = {
+                        text: repliedMsg[0].text,
+                        sender: repliedMsg[0].sender_name
+                    };
+                }
+            }
         }
 
         return rows;
+    },
+
+    // Update message text
+    updateMessage: async (messageId, text) => {
+        await pool.query(
+            `UPDATE messenger_messages SET text = ?, is_edited = TRUE WHERE id = ?`,
+            [text, messageId]
+        );
+    },
+
+    // Delete message
+    deleteMessage: async (messageId) => {
+        await pool.query(`DELETE FROM messenger_messages WHERE id = ?`, [messageId]);
+    },
+
+    // Toggle star status
+    toggleStar: async (messageId, userId, userType) => {
+        const [existing] = await pool.query(
+            `SELECT * FROM messenger_starred_messages WHERE message_id = ? AND user_id = ? AND user_type = ?`,
+            [messageId, userId, userType]
+        );
+
+        if (existing.length > 0) {
+            await pool.query(
+                `DELETE FROM messenger_starred_messages WHERE message_id = ? AND user_id = ? AND user_type = ?`,
+                [messageId, userId, userType]
+            );
+            return false; // Not starred anymore
+        } else {
+            await pool.query(
+                `INSERT INTO messenger_starred_messages (message_id, user_id, user_type) VALUES (?, ?, ?)`,
+                [messageId, userId, userType]
+            );
+            return true; // Starred
+        }
+    },
+
+    // Pin/Unpin message
+    togglePin: async (messageId, conversationId, userId, userType) => {
+        const [existing] = await pool.query(
+            `SELECT * FROM messenger_pinned_messages WHERE message_id = ? AND conversation_id = ?`,
+            [messageId, conversationId]
+        );
+
+        if (existing.length > 0) {
+            await pool.query(
+                `DELETE FROM messenger_pinned_messages WHERE message_id = ? AND conversation_id = ?`,
+                [messageId, conversationId]
+            );
+            return false; // Unpinned
+        } else {
+            // Usually we only allow one pinned message per conversation, OR multiple. 
+            // In the UI it seems like a banner, so maybe just one?
+            // Let's allow multiple for now as table structure allows it, but clear others if we want "only one"
+            // await pool.query(`DELETE FROM messenger_pinned_messages WHERE conversation_id = ?`, [conversationId]);
+
+            await pool.query(
+                `INSERT INTO messenger_pinned_messages (message_id, conversation_id, pinned_by_id, pinned_by_type) VALUES (?, ?, ?, ?)`,
+                [messageId, conversationId, userId, userType]
+            );
+            return true; // Pinned
+        }
     },
 
     // Get recent conversations for a user
@@ -119,6 +217,19 @@ const Messenger = {
              OR (participant_two_id = ? AND participant_two_type = ?)
              ORDER BY last_message_time DESC`,
             [userId, userType, userId, userType, userId, userType, userId, userType, userId, userType]
+        );
+        return rows;
+    },
+
+    // Get starred messages for a user
+    getStarredMessages: async (userId, userType) => {
+        const [rows] = await pool.query(
+            `SELECT m.*, s.created_at as starred_at
+             FROM messenger_starred_messages s
+             JOIN messenger_messages m ON s.message_id = m.id
+             WHERE s.user_id = ? AND s.user_type = ?
+             ORDER BY s.created_at DESC`,
+            [userId, userType]
         );
         return rows;
     },
