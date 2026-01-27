@@ -402,62 +402,63 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           icon: <BarChart3 size={22} />,
           path: "/additional/catelogs",
           permission: "Communication Tools",
-          children: [
-            { name: "All Catelogs", path: "/additional/catelogs" },
-            { name: "Categories", path: "/additional/catalog-categories" },
-          ],
+          // children: [
+          //   { name: "All Catelogs", path: "/additional/catelogs" },
+          //   { name: "Categories", path: "/additional/catalog-categories" },
+          // ],
         },
-        {
-          name: "Messenger",
-          icon: <MessageSquare size={22} />,
-          path: "/additional/messenger",
-          permission: "Communication Tools"
-        },
-        {
-          name: "Notes",
-          icon: <StickyNote size={22} />,
-          path: "/additional/notes",
-          permission: "Communication Tools"
-        },
-        {
-          name: "To-Do",
-          icon: <CheckSquare size={22} />,
-          path: "/additional/todo",
-          permission: "Task Management"
-        },
-        {
-          name: "Quotation",
-          icon: <FileSignature size={22} />,
-          path: "/additional/quotation",
-          permission: "Financial Documents"
-        },
-        {
-          name: "Invoice",
-          icon: <FileSpreadsheet size={22} />,
-          path: "/additional/invoice",
-          permission: "Financial Documents"
-        },
-        {
-          name: "My Expenses",
-          icon: <Wallet size={22} />,
-          path: "/additional/expenses",
-          permission: "Financial Management"
-        },
-        {
-          name: "Notification",
-          icon: <Bell size={22} />,
-          path: "/additional/notification",
-          permission: "Communication Tools"
-        },
+        // {
+        //   name: "Messenger",
+        //   icon: <MessageSquare size={22} />,
+        //   path: "/additional/messenger",
+        //   permission: "Communication Tools"
+        // },
+        // {
+        //   name: "Notes",
+        //   icon: <StickyNote size={22} />,
+        //   path: "/additional/notes",
+        //   permission: "Communication Tools"
+        // },
+        // {
+        //   name: "To-Do",
+        //   icon: <CheckSquare size={22} />,
+        //   path: "/additional/todo",
+        //   permission: "Task Management"
+        // },
+        // {
+        //   name: "Quotation",
+        //   icon: <FileSignature size={22} />,
+        //   path: "/additional/quotation",
+        //   permission: "Financial Documents"
+        // },
+        // {
+        //   name: "Invoice",
+        //   icon: <FileSpreadsheet size={22} />,
+        //   path: "/additional/invoice",
+        //   permission: "Financial Documents"
+        // },
+        // {
+        //   name: "My Expenses",
+        //   icon: <Wallet size={22} />,
+        //   path: "/additional/expenses",
+        //   permission: "Financial Management"
+        // },
+        // {
+        //   name: "Notification",
+        //   icon: <Bell size={22} />,
+        //   path: "/additional/notification",
+        //   permission: "Communication Tools"
+        // },
+
         {
           name: "Announcement",
           icon: <Megaphone size={22} />,
           path: "/additional/announcement",
           permission: "Communication Tools",
-          children: [
-            { name: "All Announcement", path: "/additional/announcement" },
-            { name: "Categories", path: "/additional/announcement/category" },
-          ],
+          // children: [
+          //   { name: "All Announcement", path: "/additional/announcement" },
+          //   { name: "Categories", path: "/additional/announcement/category" },
+          // ],
         },
       ],
     },

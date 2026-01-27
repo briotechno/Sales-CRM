@@ -10,6 +10,9 @@ import {
   Search,
   Filter,
   Pencil,
+  ThumbsUp,
+  ThumbsDown,
+  Package,
 } from "lucide-react";
 import NumberCard from "../../components/NumberCard";
 import { useGetAnnouncementsQuery } from "../../store/api/announcementApi";
@@ -26,9 +29,13 @@ export default function AnnouncementPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedAnnouncement, setSelectedAnnouncement] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterCategory, setFilterCategory] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 6;
+  const [categoryFilter, setCategoryFilter] = useState("All");
+  const itemsPerPage = 8;
+
+  // Mock stats state for frontend demonstration
+  const [mockStats, setMockStats] = useState({});
+
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const filterDropdownRef = useRef(null);
 
@@ -48,7 +55,7 @@ export default function AnnouncementPage() {
   const { data, isLoading } = useGetAnnouncementsQuery({
     page: currentPage,
     limit: itemsPerPage,
-    category: filterCategory,
+    category: categoryFilter,
     search: searchTerm,
   });
 
@@ -81,6 +88,41 @@ export default function AnnouncementPage() {
   const handleView = (announcement) => {
     setSelectedAnnouncement(announcement);
     setShowViewModal(true);
+
+    // Mock view increment
+    setMockStats(prev => ({
+      ...prev,
+      [announcement.id]: {
+        ...prev[announcement.id],
+        views: (prev[announcement.id]?.views || 0) + 1
+      }
+    }));
+  };
+
+  const handleLike = (id) => {
+    setMockStats(prev => ({
+      ...prev,
+      [id]: {
+        ...prev[id],
+        likes: (prev[id]?.likes || 0) + (prev[id]?.userLiked ? -1 : 1),
+        userLiked: !prev[id]?.userLiked,
+        userDisliked: false,
+        dislikes: prev[id]?.userDisliked ? (prev[id]?.dislikes || 0) - 1 : (prev[id]?.dislikes || 0)
+      }
+    }));
+  };
+
+  const handleDislike = (id) => {
+    setMockStats(prev => ({
+      ...prev,
+      [id]: {
+        ...prev[id],
+        dislikes: (prev[id]?.dislikes || 0) + (prev[id]?.userDisliked ? -1 : 1),
+        userDisliked: !prev[id]?.userDisliked,
+        userLiked: false,
+        likes: prev[id]?.userLiked ? (prev[id]?.likes || 0) - 1 : (prev[id]?.likes || 0)
+      }
+    }));
   };
 
   const stats = {
@@ -121,7 +163,7 @@ export default function AnnouncementPage() {
                 <div className="relative" ref={filterDropdownRef}>
                   <button
                     onClick={() => setIsFilterOpen(!isFilterOpen)}
-                    className={`p-3 rounded-sm border transition-all shadow-sm ${isFilterOpen || filterCategory !== "All"
+                    className={`p-3 rounded-sm border transition-all shadow-sm ${isFilterOpen || categoryFilter !== "All"
                       ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
                       : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
                       }`}
@@ -134,11 +176,11 @@ export default function AnnouncementPage() {
                       <div className="py-1 max-h-64 overflow-y-auto custom-scrollbar">
                         <button
                           onClick={() => {
-                            setFilterCategory("All");
+                            setCategoryFilter("All");
                             setIsFilterOpen(false);
                             setCurrentPage(1);
                           }}
-                          className={`block w-full text-left px-4 py-2.5 text-sm transition-colors ${filterCategory === "All"
+                          className={`block w-full text-left px-4 py-2.5 text-sm transition-colors ${categoryFilter === "All"
                             ? "bg-orange-50 text-orange-600 font-bold"
                             : "text-gray-700 hover:bg-gray-50"
                             }`}
@@ -149,11 +191,11 @@ export default function AnnouncementPage() {
                           <button
                             key={cat.id}
                             onClick={() => {
-                              setFilterCategory(cat.name);
+                              setCategoryFilter(cat.name);
                               setIsFilterOpen(false);
                               setCurrentPage(1);
                             }}
-                            className={`block w-full text-left px-4 py-2.5 text-sm transition-colors ${filterCategory === cat.name
+                            className={`block w-full text-left px-4 py-2.5 text-sm transition-colors ${categoryFilter === cat.name
                               ? "bg-orange-50 text-orange-600 font-bold"
                               : "text-gray-700 hover:bg-gray-50"
                               }`}
@@ -233,15 +275,15 @@ export default function AnnouncementPage() {
                   No announcements found
                 </h3>
                 <p className="text-gray-500 max-w-sm mx-auto mb-6">
-                  {searchTerm || filterCategory !== "All"
+                  {searchTerm || categoryFilter !== "All"
                     ? "Try adjusting your search or filters to find what you're looking for."
                     : "Create your first announcement to share updates with the team."}
                 </p>
-                {(searchTerm || filterCategory !== "All") && (
+                {(searchTerm || categoryFilter !== "All") && (
                   <button
                     onClick={() => {
                       setSearchTerm("");
-                      setFilterCategory("All");
+                      setCategoryFilter("All");
                     }}
                     className="px-6 py-2 border-2 border-[#FF7B1D] text-[#FF7B1D] font-bold rounded-sm hover:bg-orange-50 transition-all text-xs uppercase tracking-wider"
                   >
@@ -262,9 +304,8 @@ export default function AnnouncementPage() {
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center gap-2">
                         <span
-                          className={`px-2.5 py-1 rounded-sm text-[10px] font-bold uppercase tracking-wider border ${getCategoryColor(
-                            announcement.category
-                          )}`}
+                          className={`px-2.5 py-1 rounded-sm text-[10px] font-bold uppercase tracking-wider border ${getCategoryColor(announcement.category)
+                            }`}
                         >
                           {announcement.category}
                         </span>
@@ -291,7 +332,8 @@ export default function AnnouncementPage() {
 
                   {/* Footer: Author & Actions */}
                   <div className="px-6 py-4 bg-gray-50/50 border-t border-gray-100 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-wrap items-center gap-4">
+                      {/* Author */}
                       <div className="flex items-center gap-2">
                         <div className="w-6 h-6 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center text-white font-bold text-[10px]">
                           {announcement.author ? announcement.author.charAt(0) : "A"}
@@ -299,6 +341,34 @@ export default function AnnouncementPage() {
                         <span className="text-xs font-bold text-gray-700 leading-none">
                           {(announcement.author || "System").split("-")[0].trim()}
                         </span>
+                      </div>
+
+                      {/* Social Interactions */}
+                      <div className="flex items-center gap-3 border-l border-gray-200">
+                        <button
+                          onClick={() => handleLike(announcement.id)}
+                          className={`flex items-center gap-1.5 transition-all ${mockStats[announcement.id]?.userLiked ? 'text-green-600' : 'text-gray-500 hover:text-green-600'}`}
+                          title="Like"
+                        >
+                          <ThumbsUp size={14} className={mockStats[announcement.id]?.userLiked ? 'fill-current' : ''} />
+                          <span className="text-[10px] font-bold">{(announcement.likes || 0) + (mockStats[announcement.id]?.likes || 0)}</span>
+                        </button>
+
+                        <button
+                          onClick={() => handleDislike(announcement.id)}
+                          className={`flex items-center gap-1.5 transition-all ${mockStats[announcement.id]?.userDisliked ? 'text-red-600' : 'text-gray-500 hover:text-red-600'}`}
+                          title="Dislike"
+                        >
+                          <ThumbsDown size={14} className={mockStats[announcement.id]?.userDisliked ? 'fill-current' : ''} />
+                          <span className="text-[10px] font-bold">{(announcement.dislikes || 0) + (mockStats[announcement.id]?.dislikes || 0)}</span>
+                        </button>
+
+                        <div className="flex items-center gap-1.5 text-gray-400" title="Views">
+                          <Eye size={14} />
+                          <span className="text-[10px] font-bold">
+                            {(announcement.views || 0) + (mockStats[announcement.id]?.views || 0)}
+                          </span>
+                        </div>
                       </div>
                     </div>
 

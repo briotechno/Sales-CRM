@@ -210,7 +210,7 @@ const AllDepartment = () => {
                     <td className="py-3 px-4 text-orange-600 font-medium">{dept.department_id}</td>
                     <td className="py-3 px-4 text-gray-800 font-medium">{dept.department_name}</td>
                     <td className="py-3 px-4 text-gray-600 text-left max-w-xs transition-all duration-300">
-                      <div className="truncate hover:whitespace-normal hover:overflow-visible hover:relative hover:z-10 hover:bg-white hover:p-1 hover:shadow-lg rounded-sm cursor-help" title={dept.description}>
+                      <div className="truncate hover:whitespace-normal hover:overflow-visible hover:relative hover:z-10 rounded-sm cursor-pointer" title={dept.description}>
                         {dept.description || "---"}
                       </div>
                     </td>
