@@ -24,6 +24,9 @@ import {
   Copy,
   LayoutGrid,
   AlertCircle,
+  Tag,
+  Check,
+  ChevronDown,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import NumberCard from "../../components/NumberCard";
@@ -35,7 +38,11 @@ import {
   useDeleteCatalogMutation,
 } from "../../store/api/catalogApi";
 import { useGetHRMDashboardDataQuery } from "../../store/api/hrmDashboardApi";
-import { useGetCategoriesQuery } from "../../store/api/catalogCategoryApi";
+import {
+  useGetCategoriesQuery,
+  useCreateCategoryMutation,
+  useDeleteCategoryMutation,
+} from "../../store/api/catalogCategoryApi";
 import usePermission from "../../hooks/usePermission";
 
 export default function CatalogsPage() {
@@ -49,8 +56,14 @@ export default function CatalogsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState("All");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [sortConfig, setSortConfig] = useState({ key: "id", direction: "desc" });
+  const [deliveryValue, setDeliveryValue] = useState("");
+  const [deliveryUnit, setDeliveryUnit] = useState("Days");
+  const [isAddingCategory, setIsAddingCategory] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
+
   const dropdownRef = React.useRef(null);
+  const categoryDropdownRef = React.useRef(null);
   const { create, read, update, delete: canDelete } = usePermission("Catalog");
   const itemsPerPage = 8;
 
@@ -61,13 +74,16 @@ export default function CatalogsPage() {
     search: searchTerm,
   });
 
-  const { data: categoriesData } = useGetCategoriesQuery({ status: 'Active', limit: 1000 });
+  const { data: categoriesData, refetch: refetchCategories } = useGetCategoriesQuery({ status: 'Active', limit: 1000 });
   const dbCategories = categoriesData?.categories || [];
 
   const { data: dashboardData } = useGetHRMDashboardDataQuery();
   const [createCatalog] = useCreateCatalogMutation();
   const [updateCatalog] = useUpdateCatalogMutation();
   const [deleteCatalog] = useDeleteCatalogMutation();
+
+  const [createCategory, { isLoading: isCreatingCategory }] = useCreateCategoryMutation();
+  const [deleteCategory] = useDeleteCategoryMutation();
 
   const catalogs = data?.catalogs || [];
   const pagination = data?.pagination || {};
@@ -199,6 +215,11 @@ export default function CatalogsPage() {
       specifications: [{ key: "", value: "" }],
     });
     setImagePreview(null);
+    setDeliveryValue("");
+    setDeliveryUnit("Days");
+    setIsAddingCategory(false);
+    setNewCategoryName("");
+    setIsCategoryDropdownOpen(false);
   };
 
   const handleSort = (key) => {
@@ -234,6 +255,26 @@ export default function CatalogsPage() {
       specifications: specArray.length > 0 ? specArray : [{ key: "", value: "" }]
     });
     setImagePreview(catalog.image);
+
+    // Split delivery time into value and unit
+    if (catalog.deliveryTime) {
+      const parts = catalog.deliveryTime.split(" ");
+      if (parts.length >= 2) {
+        setDeliveryUnit(parts[parts.length - 1]);
+        setDeliveryValue(parts.slice(0, -1).join(" "));
+      } else {
+        setDeliveryValue(catalog.deliveryTime);
+        setDeliveryUnit("Days");
+      }
+    } else {
+      setDeliveryValue("");
+      setDeliveryUnit("Days");
+    }
+
+    setIsAddingCategory(false);
+    setNewCategoryName("");
+    setIsCategoryDropdownOpen(false);
+
     setShowAddModal(true);
   };
 
@@ -270,6 +311,48 @@ export default function CatalogsPage() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    const handleClickOutsideCategory = (event) => {
+      if (categoryDropdownRef.current && !categoryDropdownRef.current.contains(event.target)) {
+        setIsCategoryDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutsideCategory);
+    return () => document.removeEventListener("mousedown", handleClickOutsideCategory);
+  }, []);
+
+  const handleAddNewCategory = async () => {
+    if (!newCategoryName.trim()) {
+      toast.error("Category name cannot be empty");
+      return;
+    }
+
+    try {
+      await createCategory({ name: newCategoryName, status: "Active" }).unwrap();
+      toast.success("Category added successfully!");
+      setFormData({ ...formData, category: newCategoryName });
+      setNewCategoryName("");
+      setIsAddingCategory(false);
+      refetchCategories(); // Refetch the categories list
+    } catch (err) {
+      toast.error("Error adding category: " + (err?.data?.message || err.message));
+    }
+  };
+
+  const handleDeleteCategory = async (e, catId, catName) => {
+    e.stopPropagation();
+    try {
+      await deleteCategory(catId).unwrap();
+      toast.success("Category deleted successfully!");
+      if (formData.category === catName) {
+        setFormData({ ...formData, category: "" });
+      }
+      refetchCategories();
+    } catch (err) {
+      toast.error("Error deleting category: " + (err?.data?.message || err.message));
+    }
+  };
 
   const indexOfFirstItem = (currentPage - 1) * itemsPerPage;
   const indexOfLastItem = Math.min(currentPage * itemsPerPage, pagination.total || 0);
@@ -640,23 +723,114 @@ export default function CatalogsPage() {
                   </div>
 
                   {/* Category & Vendor */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Category *
-                      </label>
-                      <select
-                        name="category"
-                        value={formData.category}
-                        onChange={handleInputChange}
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300"
-                        required
-                      >
-                        <option value="">Select Category</option>
-                        {dbCategories.map(cat => (
-                          <option key={cat.id} value={cat.name}>{cat.name}</option>
-                        ))}
-                      </select>
+                  <div className="grid grid-cols-1 gap-4">
+                    <div className="group">
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                          <Tag size={16} className="text-[#FF7B1D]" />
+                          Category *
+                        </label>
+                        <div className="flex items-center gap-3">
+                          {!isAddingCategory && (
+                            <button
+                              type="button"
+                              onClick={() => setIsAddingCategory(true)}
+                              className="text-xs font-bold text-orange-600 hover:text-orange-700 flex items-center gap-1 transition-colors"
+                            >
+                              <Plus size={14} />
+                              Add New Category
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {isAddingCategory ? (
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={newCategoryName}
+                            onChange={(e) => setNewCategoryName(e.target.value)}
+                            className="flex-1 px-4 py-3 border-2 border-[#FF7B1D] rounded-sm focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white"
+                            placeholder="Enter new category name"
+                            autoFocus
+                          />
+                          <button
+                            type="button"
+                            onClick={handleAddNewCategory}
+                            disabled={isCreatingCategory}
+                            className="p-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm hover:from-orange-600 hover:to-orange-700 transition-colors disabled:opacity-50 shadow-sm"
+                            title="Add Category"
+                          >
+                            {isCreatingCategory ? (
+                              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            ) : (
+                              <Check size={20} />
+                            )}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsAddingCategory(false);
+                              setNewCategoryName("");
+                            }}
+                            className="p-3 bg-gray-100 text-gray-500 rounded-sm hover:bg-gray-200 transition-colors shadow-sm"
+                            title="Cancel"
+                          >
+                            <X size={20} />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="relative" ref={categoryDropdownRef}>
+                          <button
+                            type="button"
+                            onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
+                            className="w-full flex items-center justify-between px-4 py-3 border-2 border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 cursor-pointer text-left"
+                          >
+                            <span className={formData.category === "" ? "text-gray-400" : "text-gray-900 font-medium"}>
+                              {formData.category || "Select Category"}
+                            </span>
+                            <ChevronDown
+                              size={18}
+                              className={`text-gray-400 transition-transform ${isCategoryDropdownOpen ? "rotate-180" : ""}`}
+                            />
+                          </button>
+
+                          {isCategoryDropdownOpen && (
+                            <div className="absolute top-full left-0 right-0 mt-1 bg-white border-2 border-gray-100 rounded-sm shadow-xl z-50 max-h-60 overflow-y-auto overflow-x-hidden animate-fadeIn">
+                              <div className="py-1">
+                                <div
+                                  onClick={() => {
+                                    setFormData({ ...formData, category: "" });
+                                    setIsCategoryDropdownOpen(false);
+                                  }}
+                                  className={`px-4 py-2 text-sm cursor-pointer transition-colors flex items-center justify-between ${formData.category === "" ? "bg-orange-50 text-[#FF7B1D] font-bold" : "text-gray-700 hover:bg-gray-50"}`}
+                                >
+                                  Select Category
+                                </div>
+                                {dbCategories.map((cat) => (
+                                  <div
+                                    key={cat.id}
+                                    onClick={() => {
+                                      setFormData({ ...formData, category: cat.name });
+                                      setIsCategoryDropdownOpen(false);
+                                    }}
+                                    className={`px-4 py-2 text-sm cursor-pointer transition-colors flex items-center justify-between group/item ${formData.category === cat.name ? "bg-orange-50 text-[#FF7B1D] font-bold" : "text-gray-700 hover:bg-gray-50"}`}
+                                  >
+                                    <span className="truncate mr-2">{cat.name}</span>
+                                    <button
+                                      onClick={(e) => handleDeleteCategory(e, cat.id, cat.name)}
+                                      className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-all sm:opacity-0 group-hover/item:opacity-100"
+                                      title="Delete Category"
+                                    >
+                                      <Trash2 size={14} />
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -772,22 +946,54 @@ export default function CatalogsPage() {
                   </div>
 
                   {/* Basic Info Bottom Row */}
-                  <div className="grid grid-cols-1 gap-4">
+                  <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Delivery Time
+                        Working {deliveryUnit}
                       </label>
-                      <input
-                        type="text"
-                        name="deliveryTime"
-                        value={formData.deliveryTime}
-                        onChange={handleInputChange}
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300"
-                        placeholder="e.g., 2-3 Days"
-                      />
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={deliveryValue}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setDeliveryValue(val);
+                            setFormData((prev) => ({
+                              ...prev,
+                              deliveryTime: val ? `${val} ${deliveryUnit}` : "",
+                            }));
+                          }}
+                          className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300"
+                          placeholder={`e.g., 2-3 ${deliveryUnit}`}
+                          title={`Enter the number of working ${deliveryUnit.toLowerCase()}`}
+                        />
+                      </div>
+                    </div>
+                    <div className="">
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Select Unit
+                      </label>
+                      <div className="flex gap-2">
+                        <select
+                          value={deliveryUnit}
+                          title="Select the time unit"
+                          onChange={(e) => {
+                            const unit = e.target.value;
+                            setDeliveryUnit(unit);
+                            setFormData((prev) => ({
+                              ...prev,
+                              deliveryTime: deliveryValue ? `${deliveryValue} ${unit}` : "",
+                            }));
+                          }}
+                          className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 cursor-pointer"
+                        >
+                          <option value="Hours">Hours</option>
+                          <option value="Days">Days</option>
+                          <option value="Week">Week</option>
+                        </select>
+                      </div>
                     </div>
                   </div>
-
                   {/* Key Features */}
                   <div className="pt-4 border-t">
                     <label className="block text-sm font-semibold text-gray-700 mb-3 items-center justify-between">

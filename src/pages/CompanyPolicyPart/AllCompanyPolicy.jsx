@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useSelector } from "react-redux";
 import { FiHome } from "react-icons/fi";
 import DashboardLayout from "../../components/DashboardLayout";
 import {
@@ -92,6 +93,7 @@ export default function CompanyPolicy() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
 
+  const { user } = useSelector((state) => state.auth);
   const { create, read, update, delete: remove } = usePermission("Company Policy");
 
 
@@ -105,6 +107,15 @@ export default function CompanyPolicy() {
     author: "",
     status: "Active",
   });
+
+  useEffect(() => {
+    if (user && !formData.author) {
+      setFormData((prev) => ({
+        ...prev,
+        author: user.firstName ? `${user.firstName} ${user.lastName}` : user.email,
+      }));
+    }
+  }, [user]);
 
   // API Queries and Mutations
   const {
@@ -123,10 +134,26 @@ export default function CompanyPolicy() {
 
   const categories = [
     "General",
+    "Corporate Governance",
     "Work Arrangements",
+    "Remote / Hybrid Work",
+    "Office Rules & Facilities",
     "Security",
+    "IT & Data Security",
+    "Information Security",
     "Finance",
+    "Financial Controls",
+    "Expense & Reimbursement",
+    "Procurement Policy",
     "HR",
+    "Employee Conduct",
+    "Ethics & Compliance",
+    "Legal & Regulatory",
+    "Risk Management",
+    "Business Continuity",
+    "Confidentiality & NDA",
+    "Health, Safety & Environment (HSE)",
+    "Equal Opportunity & Diversity"
   ];
 
   const statuses = ["Active", "Under Review", "Archived"];
@@ -161,7 +188,7 @@ export default function CompanyPolicy() {
       review_date: "",
       version: "1.0",
       description: "",
-      author: "",
+      author: user ? (user.firstName ? `${user.firstName} ${user.lastName}` : user.email) : "",
       status: "Active",
     });
   };

@@ -70,6 +70,11 @@ export default function BusinessInfoPage() {
     linkedin_link: "",
     instagram_link: "",
     youtube_link: "",
+    twitter_link: "",
+    contact_person: "",
+    designation: "",
+    alternate_phone: "",
+    google_maps_link: "",
     logo: null,
   });
 
@@ -146,6 +151,10 @@ export default function BusinessInfoPage() {
 
   const shareOnYouTube = () => {
     if (formData.youtube_link) window.open(formData.youtube_link, "_blank");
+  };
+
+  const shareOnTwitter = () => {
+    if (formData.twitter_link) window.open(formData.twitter_link, "_blank");
   };
 
   // Calculate dynamic metrics
@@ -667,6 +676,20 @@ export default function BusinessInfoPage() {
                       <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
                     </svg>
                   </button>
+
+                  {/* Twitter */}
+                  <button
+                    onClick={shareOnTwitter}
+                    className="w-20 h-20 bg-gradient-to-br from-gray-800 via-gray-900 to-black text-white rounded-2xl shadow-xl hover:shadow-2xl transform transition-all duration-300 active:scale-95 flex items-center justify-center group hover:from-black hover:via-gray-800 hover:to-gray-900"
+                  >
+                    <svg
+                      className="w-10 h-10"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                    >
+                      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.045 4.126H5.078z" />
+                    </svg>
+                  </button>
                 </div>
               )}
               {/* END ICON HIDE */}
@@ -757,6 +780,22 @@ export default function BusinessInfoPage() {
                         placeholder="https://youtube.com/..."
                       />
                     </div>
+
+                    {/* Twitter */}
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Twitter (X) URL
+                      </label>
+                      <input
+                        type="text"
+                        className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        value={formData.twitter_link}
+                        onChange={(e) =>
+                          setFormData({ ...formData, twitter_link: e.target.value })
+                        }
+                        placeholder="https://twitter.com/..."
+                      />
+                    </div>
                   </div>
                 )}
               </div>
@@ -827,6 +866,66 @@ export default function BusinessInfoPage() {
                     ) : (
                       <p className="text-gray-800 font-medium">
                         {formData.phone}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="d-block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                      <Phone size={16} className="text-orange-500" />
+                      Alternate Phone
+                    </label>
+                    {isEditing ? (
+                      <input
+                        type="tel"
+                        name="alternate_phone"
+                        value={formData.alternate_phone}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                      />
+                    ) : (
+                      <p className="text-gray-800 font-medium">
+                        {formData.alternate_phone}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="d-block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                      <Users size={16} className="text-orange-500" />
+                      Contact Person
+                    </label>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        name="contact_person"
+                        value={formData.contact_person}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                      />
+                    ) : (
+                      <p className="text-gray-800 font-medium">
+                        {formData.contact_person}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="d-block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                      <Award size={16} className="text-orange-500" />
+                      Designation
+                    </label>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        name="designation"
+                        value={formData.designation}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                      />
+                    ) : (
+                      <p className="text-gray-800 font-medium">
+                        {formData.designation}
                       </p>
                     )}
                   </div>
@@ -935,6 +1034,32 @@ export default function BusinessInfoPage() {
                         </p>
                       )}
                     </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Google Maps Link
+                    </label>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        name="google_maps_link"
+                        value={formData.google_maps_link}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        placeholder="https://goo.gl/maps/..."
+                      />
+                    ) : (
+                      <a
+                        href={formData.google_maps_link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-orange-600 hover:underline text-sm font-medium flex items-center gap-1"
+                      >
+                        <Globe size={14} />
+                        View on Google Maps
+                      </a>
+                    )}
                   </div>
                 </div>
               </div>

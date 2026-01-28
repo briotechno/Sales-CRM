@@ -130,6 +130,16 @@ const TermsAndCondition = () => {
     setSearchTerm("");
   };
 
+  const formatDate = (dateString) => {
+    if (!dateString) return "-";
+
+    return new Date(dateString).toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+  };
+
   /* ================= UI ================= */
   return (
     <DashboardLayout>
@@ -327,9 +337,21 @@ const TermsAndCondition = () => {
                     <td className="py-3 px-1 text-orange-600 font-medium">{term.department}</td>
                     <td className="py-3 px-1 text-orange-600 font-medium">{term.designation}</td>
                     <td>{term.title}</td>
-                    <td>{term.description}</td>
-                    <td className="py-3 px-1 whitespace-nowrap">{term.created_at}</td>
-                    <td className="py-3 px-1 whitespace-nowrap">{term.updated_at}</td>
+
+                    <td className="py-3 px-4 text-gray-600 text-left max-w-xs transition-all duration-300">
+                      <div className="truncate hover:whitespace-normal hover:overflow-visible hover:relative hover:z-10 rounded-sm cursor-pointer" title={term.description}>
+                        {term.description || "---"}
+                      </div>
+                    </td>
+
+                    <td className="py-3 px-1 whitespace-nowrap text-gray-700">
+                      {formatDate(term.created_at)}
+                    </td>
+
+                    <td className="py-3 px-1 whitespace-nowrap text-gray-700">
+                      {formatDate(term.updated_at)}
+                    </td>
+
                     <td className="py-3 px-1">
                       <div className="flex justify-center gap-2">
                         <div className="flex justify-center gap-2">

@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useSelector } from "react-redux";
 import { FiHome } from "react-icons/fi";
 import DashboardLayout from "../../components/DashboardLayout";
 import {
@@ -112,8 +113,20 @@ export default function HRPolicy() {
     department: "",
     applicable_to: "all",
     status: "Active",
+    author: "",
     documents: [],
   });
+
+  const { user } = useSelector((state) => state.auth);
+
+  useEffect(() => {
+    if (user && !formData.author) {
+      setFormData((prev) => ({
+        ...prev,
+        author: user.firstName ? `${user.firstName} ${user.lastName}` : user.email,
+      }));
+    }
+  }, [user]);
 
   // API Queries and Mutations
   const {
@@ -132,12 +145,27 @@ export default function HRPolicy() {
   const [deletePolicy] = useDeleteHRPolicyMutation();
 
   const categories = [
-    "Leave",
-    "Attendance",
-    "Compensation",
-    "Benefits",
-    "Performance",
+    "Leave & Holidays",
+    "Attendance & Work Hours",
+    "Compensation & Payroll",
+    "Benefits & Perks",
+    "Performance Management",
     "Code of Conduct",
+    "Workplace Ethics",
+    "Disciplinary Action",
+    "Grievance & Complaint Handling",
+    "Health, Safety & Wellness",
+    "Remote Work / Work From Home",
+    "Overtime & Shift Policy",
+    "Travel & Expense Reimbursement",
+    "Employee Onboarding",
+    "Training & Development",
+    "Promotion & Career Growth",
+    "Exit & Termination",
+    "IT & Data Security",
+    "Confidentiality & NDA",
+    "Anti-Harassment & POSH",
+    "Equal Opportunity & Diversity"
   ];
 
   const statuses = ["Active", "Under Review", "Archived"];
@@ -176,7 +204,7 @@ export default function HRPolicy() {
       version: "1.0",
       department: "",
       applicable_to: "all",
-      status: "Active",
+      author: user ? (user.firstName ? `${user.firstName} ${user.lastName}` : user.email) : "",
       documents: [],
     });
   };
@@ -853,6 +881,16 @@ export default function HRPolicy() {
                       />
                     </div>
                     <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Author</label>
+                      <input
+                        type="text"
+                        value={formData.author}
+                        onChange={(e) => setFormData({ ...formData, author: e.target.value })}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        placeholder="Department or author name"
+                      />
+                    </div>
+                    <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2">Applicable To</label>
                       <select
                         value={formData.applicable_to}
@@ -1051,6 +1089,16 @@ export default function HRPolicy() {
                           </option>
                         ))}
                       </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Author</label>
+                      <input
+                        type="text"
+                        value={formData.author}
+                        onChange={(e) => setFormData({ ...formData, author: e.target.value })}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        placeholder="Department or author name"
+                      />
                     </div>
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2">Applicable To</label>

@@ -34,6 +34,8 @@ import {
   CreditCard,
   KeyRound,
   Package,
+  Shield,
+  Search,
 } from "lucide-react";
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
@@ -169,6 +171,34 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
 
     return false;
   };
+
+  // Module Configuration
+  const modules = [
+    { id: "dashboard", name: "Dashboard", icon: <LayoutDashboard size={20} />, section: "Dashboard" },
+    { id: "crm", name: "CRM", icon: <Users size={20} />, section: "CRM" },
+    { id: "hrm", name: "HRM", icon: <Briefcase size={20} />, section: "HRM" },
+    { id: "additional", name: "Additional", icon: <Package size={20} />, section: "Additional" },
+    { id: "settings", name: "Settings", icon: <Settings size={20} />, section: "Settings" },
+  ];
+
+  // Add Super Admin module if user is Super Admin
+  const availableModules = user?.role === "Super Admin"
+    ? [{ id: "superadmin", name: "Admin", icon: <Shield size={20} />, section: "Super Admin" }, ...modules]
+    : modules;
+
+  const [activeModule, setActiveModule] = useState("dashboard");
+
+  // Detect active module from URL
+  useEffect(() => {
+    const path = location.pathname;
+    if (path.startsWith("/superadmin")) setActiveModule("superadmin");
+    else if (path.startsWith("/crm")) setActiveModule("crm");
+    else if (path.startsWith("/hrm")) setActiveModule("hrm");
+    else if (path.startsWith("/additional")) setActiveModule("additional");
+    else if (path.startsWith("/settings") || path === "/logout") setActiveModule("settings");
+    else if (path === "/dashboard" || path === "/") setActiveModule("dashboard");
+  }, [location.pathname]);
+
 
 
   const menuItems = [
@@ -392,6 +422,12 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           path: "/hrm/job-management",
           permission: "Recruitment"
         },
+        {
+          name: "Offer Letter",
+          icon: <FileSignature size={22} />,
+          path: "/hrm/offer-letters",
+          permission: "Recruitment"
+        },
       ],
     },
     {
@@ -402,62 +438,63 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           icon: <BarChart3 size={22} />,
           path: "/additional/catelogs",
           permission: "Communication Tools",
-          children: [
-            { name: "All Catelogs", path: "/additional/catelogs" },
-            { name: "Categories", path: "/additional/catalog-categories" },
-          ],
+          // children: [
+          //   { name: "All Catelogs", path: "/additional/catelogs" },
+          //   { name: "Categories", path: "/additional/catalog-categories" },
+          // ],
         },
-        {
-          name: "Messenger",
-          icon: <MessageSquare size={22} />,
-          path: "/additional/messenger",
-          permission: "Communication Tools"
-        },
-        {
-          name: "Notes",
-          icon: <StickyNote size={22} />,
-          path: "/additional/notes",
-          permission: "Communication Tools"
-        },
-        {
-          name: "To-Do",
-          icon: <CheckSquare size={22} />,
-          path: "/additional/todo",
-          permission: "Task Management"
-        },
-        {
-          name: "Quotation",
-          icon: <FileSignature size={22} />,
-          path: "/additional/quotation",
-          permission: "Financial Documents"
-        },
-        {
-          name: "Invoice",
-          icon: <FileSpreadsheet size={22} />,
-          path: "/additional/invoice",
-          permission: "Financial Documents"
-        },
-        {
-          name: "My Expenses",
-          icon: <Wallet size={22} />,
-          path: "/additional/expenses",
-          permission: "Financial Management"
-        },
-        {
-          name: "Notification",
-          icon: <Bell size={22} />,
-          path: "/additional/notification",
-          permission: "Communication Tools"
-        },
+        // {
+        //   name: "Messenger",
+        //   icon: <MessageSquare size={22} />,
+        //   path: "/additional/messenger",
+        //   permission: "Communication Tools"
+        // },
+        // {
+        //   name: "Notes",
+        //   icon: <StickyNote size={22} />,
+        //   path: "/additional/notes",
+        //   permission: "Communication Tools"
+        // },
+        // {
+        //   name: "To-Do",
+        //   icon: <CheckSquare size={22} />,
+        //   path: "/additional/todo",
+        //   permission: "Task Management"
+        // },
+        // {
+        //   name: "Quotation",
+        //   icon: <FileSignature size={22} />,
+        //   path: "/additional/quotation",
+        //   permission: "Financial Documents"
+        // },
+        // {
+        //   name: "Invoice",
+        //   icon: <FileSpreadsheet size={22} />,
+        //   path: "/additional/invoice",
+        //   permission: "Financial Documents"
+        // },
+        // {
+        //   name: "My Expenses",
+        //   icon: <Wallet size={22} />,
+        //   path: "/additional/expenses",
+        //   permission: "Financial Management"
+        // },
+        // {
+        //   name: "Notification",
+        //   icon: <Bell size={22} />,
+        //   path: "/additional/notification",
+        //   permission: "Communication Tools"
+        // },
+
         {
           name: "Announcement",
           icon: <Megaphone size={22} />,
           path: "/additional/announcement",
           permission: "Communication Tools",
-          children: [
-            { name: "All Announcement", path: "/additional/announcement" },
-            { name: "Categories", path: "/additional/announcement/category" },
-          ],
+          // children: [
+          //   { name: "All Announcement", path: "/additional/announcement" },
+          //   { name: "Categories", path: "/additional/announcement/category" },
+          // ],
         },
       ],
     },
@@ -491,26 +528,24 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
   /* Filtering */
   const filteredMenuItems = menuItems
     .filter((section) => {
-      if (section.section === "Super Admin") {
-        return user?.role === "Super Admin";
+      // Role-based filtering
+      if (section.section === "Super Admin" && user?.role !== "Super Admin") {
+        return false;
       }
-      return true;
+
+      // Module-wise filtering
+      const currentModule = availableModules.find(m => m.id === activeModule);
+      return currentModule?.section === section.section;
     })
     .map((section) => {
       const filteredItems = section.items
         .filter((item) => {
           if (item.name === "Logout") return true;
 
-          // If item has children, we'll check them first in the next map step
-          // For now, if it has a direct permission, check it
           if (item.permission) {
             return checkPermission(item.permission);
           }
-
-          // If it has no permission and no children, show it (common items)
           if (!item.children) return true;
-
-          // If it has children but no permission, we'll decide based on children visibility
           return true;
         })
         .map((item) => {
@@ -521,7 +556,6 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
               return checkPermission(child.permission);
             });
 
-            // If no children are visible and item itself has no path/permission, filter it out
             if (filteredChildren.length === 0 && !item.path && !item.permission) {
               return null;
             }
@@ -549,122 +583,136 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         {isOpen ? <X strokeWidth={8} /> : <Menu strokeWidth={3} />}
       </button>
 
-      {/* Sidebar */}
+      {/* Sidebar Container */}
       <aside
-        className={`fixed top-0 left-0 h-screen bg-white text-black shadow-lg flex flex-col p-2 transition-all duration-300 z-40 ${isOpen ? "translate-x-0" : "-translate-x-full"
-          } md:translate-x-0 w-64`}
+        className={`fixed top-0 left-0 h-screen bg-white shadow-xl flex transition-all duration-300 z-40 ${isOpen ? "translate-x-0" : "-translate-x-full"
+          } md:translate-x-0 w-72`}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between px-2 py-3 mb-2">
-          <h2 className="text-xl font-bold text-gray-800">
-            Sales+
-            <span className="text-[#FF7B1D]">CRM</span>
-          </h2>
+        {/* Module Rail - Left */}
+        <div className="w-[68px] bg-[#f8f9fa] border-r border-[#eee] flex flex-col items-center py-4 gap-4 z-10 no-scrollbar overflow-y-auto">
+          <div className="mb-4">
+            <div className="w-10 h-10 bg-[#FF7B1D] rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-orange-200">
+              {user?.name?.charAt(0).toUpperCase()}
+            </div>
+          </div>
+
+          <div className="flex-1 flex flex-col gap-3 w-full items-center">
+            {availableModules.map((module) => {
+              const isActive = activeModule === module.id;
+              return (
+                <div key={module.id} className="relative group w-full flex justify-center">
+                  {/* Active Indicator Bar */}
+                  {isActive && (
+                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-6 bg-[#FF7B1D] rounded-r-full" />
+                  )}
+
+                  <button
+                    onClick={() => setActiveModule(module.id)}
+                    className={`relative p-3 rounded-2xl transition-all duration-300 ${isActive
+                      ? "bg-white text-[#FF7B1D] shadow-md scale-110"
+                      : "text-gray-400 hover:bg-white hover:text-gray-600 hover:shadow-sm"
+                      }`}
+                    title={module.name}
+                  >
+                    {module.icon}
+                  </button>
+
+                  {/* Tooltip */}
+                  <div className="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 whitespace-nowrap z-50 font-medium">
+                    {module.name}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Bottom Rail Action */}
+          <div className="mt-auto pb-4">
+            <button title="Help Center" className="p-3 text-gray-400 hover:text-gray-600">
+              <HelpCircle size={20} />
+            </button>
+          </div>
         </div>
 
-        {/* Menu */}
-        <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
-          {filteredMenuItems.map((section, index) => (
-            <React.Fragment key={index}>
-              {index === 0 ? (
-                <>
-                  {/* Dashboard Item */}
-                  {section.items.map((item) => {
-                    const isActive = activeItem === item.path;
-                    return (
-                      <div key={item.name} className="mb-2">
-                        <Link
-                          to={item.path}
-                          className={`flex items-center gap-2 px-4 py-2 rounded-sm font-semibold transition-all duration-200 ${isActive
-                            ? "bg-[#FF7B1D] text-white"
-                            : "hover:bg-gray-100 text-black"
-                            }`}
-                          onClick={() => {
-                            handleItemClick(item.path);
-                          }}
-                        >
-                          {item.icon}
-                          <span>{item.name}</span>
-                        </Link>
-                      </div>
-                    );
-                  })}
+        {/* Navigation Panel - Right */}
+        <div className="flex-1 flex flex-col min-w-0 bg-white">
+          {/* Header */}
+          <div className="px-5 py-6">
+            <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+              {availableModules.find(m => m.id === activeModule)?.name}
+            </h2>
+            <p className="text-[10px] text-gray-400 mt-0.5 font-medium uppercase tracking-wider">
+              {activeModule === 'superadmin' ? 'Management System' : 'CRM Sales Dashboard'}
+            </p>
+          </div>
 
-                  {/* Main Menu Label */}
-                  {/* Show tag only if following sections exist */}
-                  {filteredMenuItems.length > 1 && (
-                    <p className="mt-4 mb-2 text-[11px] font-semibold tracking-wide text-gray-500 px-2">
-                      MAIN MENU
-                    </p>
-                  )}
-                </>
-              ) : (
-                <>
-                  {/* Section Heading */}
-                  <p className="mt-3 mb-2 text-[11px] font-semibold tracking-wide text-gray-500 px-2">
-                    {section.section.toUpperCase()}
-                  </p>
+          {/* Menu Items */}
+          <div className="flex-1 overflow-y-auto px-3 pb-4 custom-scrollbar">
+            {filteredMenuItems.map((section, idx) => (
+              <div key={idx} className="mb-6">
+                <h3 className="px-3 mb-3 text-[10px] font-bold text-gray-400 uppercase tracking-[0.1em]">
+                  {section.section}
+                </h3>
 
+                <div className="space-y-[2px]">
                   {section.items.map((item) => {
-                    const hasChildren =
-                      item.children && item.children.length > 0;
+                    const hasChildren = item.children && item.children.length > 0;
                     const parentActive = isParentActive(item);
                     const isOpenThis = openMenu === item.name;
 
                     return (
-                      <div key={item.name} className="mb-[2px]">
+                      <div key={item.name}>
                         {!hasChildren ? (
                           <Link
                             to={item.path}
                             ref={parentActive ? activeItemRef : null}
-                            className={`flex items-center gap-2 px-2 py-1.5 rounded-sm font-semibold transition-all duration-200 text-[15px] ${parentActive
-                              ? "bg-[#FF7B1D] text-white shadow-sm"
-                              : "hover:bg-gray-100 text-black"
+                            className={`flex items-center gap-3 px-3 py-2.5 rounded-xl font-semibold transition-all duration-300 text-[14px] ${parentActive
+                              ? "bg-[#FF7B1D] text-white shadow-[#FF7B1D]/20 shadow-lg scale-[1.02]"
+                              : "hover:bg-gray-50 text-[#444] hover:text-black"
                               }`}
-                            onClick={() => {
-                              handleItemClick(item.path);
-                            }}
+                            onClick={() => handleItemClick(item.path)}
                           >
-                            {item.icon}
+                            <span className={parentActive ? "text-white" : "text-gray-400"}>
+                              {item.icon && React.cloneElement(item.icon, { size: 18 })}
+                            </span>
                             <span>{item.name}</span>
                           </Link>
                         ) : (
                           <>
                             <div
-                              className={`flex items-center justify-between gap-2 px-2 py-1.5 rounded-sm cursor-pointer transition-colors duration-200 font-semibold text-[15px] ${parentActive
-                                ? "text-[#FF7B1D]"
-                                : "text-black hover:bg-gray-100"
+                              className={`flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all duration-300 font-semibold text-[14px] ${parentActive
+                                ? "text-[#FF7B1D] bg-orange-50/50"
+                                : "text-[#444] hover:bg-gray-50 hover:text-black"
                                 }`}
                               onClick={() => toggleMenu(item.name)}
                             >
-                              <div className="flex items-center gap-2">
-                                {item.icon}
+                              <div className="flex items-center gap-3">
+                                <span className={parentActive ? "text-[#FF7B1D]" : "text-gray-400"}>
+                                  {item.icon && React.cloneElement(item.icon, { size: 18 })}
+                                </span>
                                 <span>{item.name}</span>
                               </div>
                               <ChevronDown
-                                size={12}
-                                className={`transition-transform duration-300 ${isOpenThis ? "rotate-180" : ""
-                                  }`}
+                                size={14}
+                                className={`transition-transform duration-300 ${isOpenThis ? "rotate-180" : ""}`}
                               />
                             </div>
 
                             {/* Submenu */}
-                            <ul
-                              className={`ml-4 border-l pl-3 mt-1 overflow-hidden transition-all duration-300 ease-in-out ${isOpenThis
-                                ? "max-h-64 opacity-100"
-                                : "max-h-0 opacity-0"
-                                }`}
+                            <div
+                              className={`ml-9 overflow-hidden transition-all duration-300 ease-in-out ${isOpenThis ? "max-h-[500px] mt-1 opacity-100" : "max-h-0 opacity-0"}`}
                             >
-                              {item.children.map((sub) => {
-                                const subActive = activeItem === sub.path;
-                                return (
-                                  <li key={sub.name} className="relative">
+                              <div className="border-l-2 border-orange-100 pl-3 py-1 space-y-1">
+                                {item.children.map((sub) => {
+                                  const subActive = activeItem === sub.path;
+                                  return (
                                     <Link
+                                      key={sub.name}
                                       to={sub.path}
                                       ref={subActive ? activeItemRef : null}
-                                      className={`block px-2 py-1 rounded-sm transition-colors duration-200 text-[13px] ${subActive
-                                        ? "text-[#FF7B1D] font-semibold before:content-[''] before:absolute before:left-[-8px] before:top-0 before:h-full before:w-[2px] before:bg-[#FF7B1D]"
-                                        : "text-black hover:text-[#FF7B1D]"
+                                      className={`block px-3 py-1.5 rounded-lg transition-all duration-200 text-[13px] font-medium ${subActive
+                                        ? "text-[#FF7B1D] bg-orange-50"
+                                        : "text-gray-500 hover:text-[#FF7B1D] hover:bg-gray-50"
                                         }`}
                                       onClick={() => {
                                         handleItemClick(sub.path);
@@ -673,19 +721,19 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                                     >
                                       {sub.name}
                                     </Link>
-                                  </li>
-                                );
-                              })}
-                            </ul>
+                                  );
+                                })}
+                              </div>
+                            </div>
                           </>
                         )}
                       </div>
                     );
                   })}
-                </>
-              )}
-            </React.Fragment>
-          ))}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </aside>
 
@@ -714,6 +762,14 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
           background: #E66A0D;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        .no-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
         }
       `}</style>
     </>

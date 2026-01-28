@@ -18,14 +18,16 @@ class Salary {
         const query = `
       INSERT INTO salaries (
         user_id, employee_id, designation, department, basic_salary, 
-        allowances, deductions, net_salary, status, pay_date
+        allowances, deductions, net_salary, status, pay_date,
+        start_date, end_date, working_days, present_days
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
         const [result] = await pool.execute(query, [
             user_id, employee_id, designation, department, basic_salary,
-            allowances, deductions, net_salary, status, pay_date
+            allowances, deductions, net_salary, status, pay_date,
+            salaryData.start_date, salaryData.end_date, salaryData.working_days, salaryData.present_days
         ]);
 
         return result.insertId;
@@ -105,6 +107,10 @@ class Salary {
         if (net_salary !== undefined) { fields.push('net_salary = ?'); params.push(net_salary); }
         if (status !== undefined) { fields.push('status = ?'); params.push(status); }
         if (pay_date !== undefined) { fields.push('pay_date = ?'); params.push(pay_date); }
+        if (salaryData.start_date !== undefined) { fields.push('start_date = ?'); params.push(salaryData.start_date); }
+        if (salaryData.end_date !== undefined) { fields.push('end_date = ?'); params.push(salaryData.end_date); }
+        if (salaryData.working_days !== undefined) { fields.push('working_days = ?'); params.push(salaryData.working_days); }
+        if (salaryData.present_days !== undefined) { fields.push('present_days = ?'); params.push(salaryData.present_days); }
 
         if (fields.length === 0) return false;
 

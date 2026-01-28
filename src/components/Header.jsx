@@ -15,6 +15,7 @@ import {
 } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
+import { FileSignature, Wallet } from "lucide-react";
 
 const Header = () => {
   const { user } = useSelector((state) => state.auth);
@@ -67,7 +68,7 @@ const Header = () => {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 sm:left-64 h-[56px] flex items-center pl-14 pr-3 sm:px-4 lg:px-6 shadow-md z-50 bg-[#343d46]">
+    <header className="fixed top-0 left-0 right-0 sm:left-[18rem] h-[56px] flex items-center pl-14 pr-3 sm:px-4 lg:px-6 shadow-md z-50 bg-[#343d46]">
       {/* Digital Clock - Hidden on mobile, visible on md+ */}
       <div
         className="hidden md:flex items-center gap-2 mr-3 lg:mr-4 px-2 lg:px-3 py-0 rounded-sm"
@@ -142,21 +143,35 @@ const Header = () => {
                   onClick={() => go("/additional/todo")}
                   className="flex items-center gap-3 px-3 py-2 text-sm rounded hover:bg-gray-100"
                 >
-                  <FiCheckSquare className="text-gray-600" /> To Do
+                  <FiCheckSquare size={16} className="text-gray-600" /> To Do
                 </button>
 
                 <button
                   onClick={() => go("/additional/notes")}
                   className="flex items-center gap-3 px-3 py-2 text-sm rounded hover:bg-gray-100"
                 >
-                  <FiFileText className="text-gray-600" /> Notes
+                  <FiFileText size={16} className="text-gray-600" /> Notes
                 </button>
 
                 <button
                   onClick={() => go("/additional/invoice")}
                   className="flex items-center gap-3 px-3 py-2 text-sm rounded hover:bg-gray-100"
                 >
-                  <FiDollarSign className="text-gray-600" /> Invoices
+                  <FiDollarSign size={16} className="text-gray-600" /> Invoices
+                </button>
+
+                <button
+                  onClick={() => go("/additional/quotation")}
+                  className="flex items-center gap-3 px-3 py-2 text-sm rounded hover:bg-gray-100"
+                >
+                  <FileSignature size={16} className="text-gray-600" /> Quotation
+                </button>
+
+                <button
+                  onClick={() => go("/additional/expenses")}
+                  className="flex items-center gap-3 px-3 py-2 text-sm rounded hover:bg-gray-100"
+                >
+                  <Wallet size={16} className="text-gray-600" /> My Expenses
                 </button>
               </div>
             </div>
@@ -205,7 +220,7 @@ const Header = () => {
               <div className="flex flex-col gap-1">
                 <button
                   onClick={() => {
-                    go("/notifications");
+                    go("/additional/notification");
                     setNotificationOpen(false);
                   }}
                   className="flex flex-col px-3 py-2 text-sm rounded hover:bg-gray-100 text-left"
@@ -220,7 +235,7 @@ const Header = () => {
 
                 <button
                   onClick={() => {
-                    go("/notifications");
+                    go("/additional/notification");
                     setNotificationOpen(false);
                   }}
                   className="flex flex-col px-3 py-2 text-sm rounded hover:bg-gray-100 text-left"
@@ -237,7 +252,7 @@ const Header = () => {
               {/* Footer */}
               <button
                 onClick={() => {
-                  go("/notifications");
+                  go("/additional/notification");
                   setNotificationOpen(false);
                 }}
                 className="w-full mt-2 text-sm text-orange-500 hover:bg-gray-100 py-2 rounded"
