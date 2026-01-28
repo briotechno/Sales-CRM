@@ -68,7 +68,7 @@ const Header = () => {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 sm:left-64 h-[56px] flex items-center pl-14 pr-3 sm:px-4 lg:px-6 shadow-md z-50 bg-[#343d46]">
+    <header className="fixed top-0 left-0 right-0 sm:left-[18rem] h-[56px] flex items-center pl-14 pr-3 sm:px-4 lg:px-6 shadow-md z-50 bg-[#343d46]">
       {/* Digital Clock - Hidden on mobile, visible on md+ */}
       <div
         className="hidden md:flex items-center gap-2 mr-3 lg:mr-4 px-2 lg:px-3 py-0 rounded-sm"
