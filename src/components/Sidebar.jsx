@@ -422,6 +422,12 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           path: "/hrm/job-management",
           permission: "Recruitment"
         },
+        {
+          name: "Offer Letter",
+          icon: <FileSignature size={22} />,
+          path: "/hrm/offer-letters",
+          permission: "Recruitment"
+        },
       ],
     },
     {

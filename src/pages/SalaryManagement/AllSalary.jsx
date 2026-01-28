@@ -401,7 +401,14 @@ export default function SalaryManagement() {
                         <div className="w-8 h-8 rounded bg-orange-100 flex items-center justify-center">
                           <Calculator size={16} className="text-orange-600" />
                         </div>
-                        <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">Net Payable</p>
+                        <div>
+                          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-none">Net Payable</p>
+                          {salary.present_days !== undefined && (
+                            <p className="text-[9px] text-orange-400 font-bold italic leading-none mt-1">
+                              * Adjusted for {salary.present_days} present days
+                            </p>
+                          )}
+                        </div>
                       </div>
                       <div className="text-right">
                         <p className="text-2xl font-black text-[#1a222c] tracking-tighter">
@@ -412,11 +419,18 @@ export default function SalaryManagement() {
                   </div>
 
                   {/* Timeline */}
-                  <div className="flex items-center gap-2 mb-6 px-1">
-                    <Calendar className="w-4 h-4 text-orange-500" />
-                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                      Pay Date: <span className="text-slate-800">{formatDate(salary.pay_date)}</span>
-                    </span>
+                  <div className="flex flex-col gap-1 mb-6 px-1">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-4 h-4 text-orange-500" />
+                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                        Pay Date: <span className="text-slate-800">{formatDate(salary.pay_date)}</span>
+                      </span>
+                    </div>
+                    {salary.start_date && salary.end_date && (
+                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest ml-6">
+                        Period: {formatDate(salary.start_date)} - {formatDate(salary.end_date)}
+                      </span>
+                    )}
                   </div>
 
                   {/* Actions */}
@@ -491,7 +505,7 @@ export default function SalaryManagement() {
           </div>
         )}
 
-        {/* Add Salary Modal */}
+        {/* Modals */}
         <AddSalaryModal
           isOpen={showAddModal}
           onClose={() => setShowAddModal(false)}
@@ -532,97 +546,6 @@ export default function SalaryManagement() {
           }}
           salary={selectedSalary}
         />
-
-        {/* {showAddModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-sm shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-              <div className="sticky top-0 bg-gradient-to-r from-orange-500 to-orange-600 p-6 rounded-t-lg flex justify-between items-center">
-                <h2 className="text-2xl font-bold text-white">Add Salary Record</h2>
-                <button
-                  onClick={() => setShowAddModal(false)}
-                  className="text-white hover:bg-white hover:bg-opacity-20 p-2 rounded-sm transition"
-                >
-                  <X className="w-6 h-6" />
-                </button>
-              </div>
-
-              <div className="p-6 grid grid-cols-2 gap-4">
-                <input
-                  type="text"
-                  placeholder="Employee Name"
-                  value={formData.employee}
-                  onChange={(e) =>
-                    setFormData({ ...formData, employee: e.target.value })
-                  }
-                  className="border p-2"
-                />
-                <input
-                  type="text"
-                  placeholder="Designation"
-                  value={formData.designation}
-                  onChange={(e) =>
-                    setFormData({ ...formData, designation: e.target.value })
-                  }
-                  className="border p-2"
-                />
-                <input
-                  type="text"
-                  placeholder="Department"
-                  value={formData.department}
-                  onChange={(e) =>
-                    setFormData({ ...formData, department: e.target.value })
-                  }
-                  className="border p-2"
-                />
-                <input
-                  type="date"
-                  value={formData.date}
-                  onChange={(e) =>
-                    setFormData({ ...formData, date: e.target.value })
-                  }
-                  className="border p-2"
-                />
-                <input
-                  type="number"
-                  placeholder="Basic Salary"
-                  value={formData.basicSalary}
-                  onChange={(e) =>
-                    setFormData({ ...formData, basicSalary: e.target.value })
-                  }
-                  className="border p-2"
-                />
-                <input
-                  type="number"
-                  placeholder="Allowances"
-                  value={formData.allowances}
-                  onChange={(e) =>
-                    setFormData({ ...formData, allowances: e.target.value })
-                  }
-                  className="border p-2"
-                />
-                <input
-                  type="number"
-                  placeholder="Deductions"
-                  value={formData.deductions}
-                  onChange={(e) =>
-                    setFormData({ ...formData, deductions: e.target.value })
-                  }
-                  className="border p-2"
-                />
-              </div>
-
-              <p className="mt-4 font-bold">Net Salary: ₹{calculateNetSalary()}</p>
-
-              <button
-                onClick={handleSubmitSalary}
-                disabled={creating}
-                className="mt-4 bg-orange-500 text-white px-4 py-2 w-full"
-              >
-                {creating ? "Saving..." : "Add Salary"}
-              </button>
-            </div>
-          </div>
-        )} */}
       </div>
     </DashboardLayout>
   );

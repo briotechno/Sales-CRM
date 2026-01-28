@@ -12,11 +12,20 @@ const createSalary = async (req, res) => {
             deductions,
             net_salary,
             status,
-            pay_date
+            pay_date,
+            start_date,
+            end_date,
+            working_days,
+            present_days
         } = req.body;
 
-        // Calculate net salary
-        const calculatedNetSalary = (parseFloat(basic_salary) || 0) + (parseFloat(allowances) || 0) - (parseFloat(deductions) || 0);
+        // Calculate net salary (pro-rata if present_days is provided)
+        const working = parseInt(working_days) || 30;
+        const present = (present_days === undefined || present_days === null || present_days === "") ? working : parseInt(present_days);
+        const basic = parseFloat(basic_salary) || 0;
+        const adjustedBasic = (basic / working) * present;
+
+        const calculatedNetSalary = adjustedBasic + (parseFloat(allowances) || 0) - (parseFloat(deductions) || 0);
 
         const salaryId = await Salary.create({
             user_id: req.user.id,
@@ -29,7 +38,11 @@ const createSalary = async (req, res) => {
             deductions,
             net_salary: calculatedNetSalary,
             status: status || 'pending',
-            pay_date
+            pay_date,
+            start_date,
+            end_date,
+            working_days: working,
+            present_days: present
         });
 
         res.status(201).json({
@@ -87,9 +100,13 @@ const updateSalary = async (req, res) => {
         const basicSalary = req.body.basic_salary !== undefined ? parseFloat(req.body.basic_salary) : parseFloat(currentSalary.basic_salary || 0);
         const allowances = req.body.allowances !== undefined ? parseFloat(req.body.allowances) : parseFloat(currentSalary.allowances || 0);
         const deductions = req.body.deductions !== undefined ? parseFloat(req.body.deductions) : parseFloat(currentSalary.deductions || 0);
+        const workingDays = req.body.working_days !== undefined ? parseInt(req.body.working_days) : parseInt(currentSalary.working_days || 30);
+        const presentDays = req.body.present_days !== undefined ? parseInt(req.body.present_days) :
+            (currentSalary.present_days !== undefined && currentSalary.present_days !== null ? parseInt(currentSalary.present_days) : workingDays);
 
         // Calculate new net salary
-        const netSalary = basicSalary + allowances - deductions;
+        const adjustedBasic = (basicSalary / workingDays) * presentDays;
+        const netSalary = adjustedBasic + allowances - deductions;
 
         // Prepare update data
         const updateData = {

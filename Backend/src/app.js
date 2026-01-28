@@ -63,6 +63,7 @@ app.use('/api/plans', require('./routes/planRoutes'));
 app.use('/api/crm-dashboard', require('./routes/crmDashboardRoutes'));
 app.use('/api/main-dashboard', require('./routes/mainDashboardRoutes'));
 app.use('/api/messenger', require('./routes/messengerRoutes'));
+app.use('/api/offer-letters', require('./routes/offerLetterRoutes'));
 
 
 
