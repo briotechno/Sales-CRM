@@ -1,6 +1,24 @@
 import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { FiHome } from "react-icons/fi";
+const incrementVersion = (version) => {
+  if (!version) return "1.0";
+  const strVersion = version.toString();
+  const parts = strVersion.split('.');
+  if (parts.length >= 2) {
+    const lastPart = parts[parts.length - 1];
+    if (!isNaN(parseInt(lastPart))) {
+      const incremented = parseInt(lastPart) + 1;
+      parts[parts.length - 1] = incremented.toString();
+      return parts.join('.');
+    }
+  } else {
+    if (!isNaN(parseInt(strVersion))) {
+      return strVersion + ".1";
+    }
+  }
+  return strVersion + ".1";
+};
 import DashboardLayout from "../../components/DashboardLayout";
 import {
   FileText,
@@ -97,6 +115,17 @@ export default function HRPolicy() {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
+
+  const [isUpdatingExisting, setIsUpdatingExisting] = useState(false);
+  const [existingId, setExistingId] = useState(null);
+
+  const { data: allPoliciesDataForCheck } = useGetHRPoliciesQuery({
+    category: "All",
+    status: "All",
+    search: "",
+    department: "All",
+  });
+  const allPolicies = allPoliciesDataForCheck || [];
 
   const { data: departmentData } = useGetDepartmentsQuery({ status: "Active" });
   const departments = departmentData?.departments || [];
@@ -207,6 +236,8 @@ export default function HRPolicy() {
       author: user ? (user.firstName ? `${user.firstName} ${user.lastName}` : user.email) : "",
       documents: [],
     });
+    setIsUpdatingExisting(false);
+    setExistingId(null);
   };
 
   const handleFileChange = (e) => {
@@ -224,6 +255,52 @@ export default function HRPolicy() {
     }));
   };
 
+  const handleCategoryChange = (e) => {
+    const selectedCat = e.target.value;
+    if (!showAddModal) {
+      setFormData({ ...formData, category: selectedCat });
+      return;
+    }
+
+    const existing = allPolicies.find((p) => p.category === selectedCat);
+
+    if (existing) {
+      setFormData({
+        ...formData,
+        title: existing.title,
+        category: selectedCat,
+        description: existing.description || "",
+        effective_date: existing.effective_date ? new Date(existing.effective_date).toISOString().split('T')[0] : "",
+        review_date: existing.review_date ? new Date(existing.review_date).toISOString().split('T')[0] : "",
+        version: incrementVersion(existing.version),
+        department: existing.department || "",
+        applicable_to: existing.applicable_to || "all",
+        status: existing.status || "Active",
+        documents: [],
+        existingDocuments: existing.documents || [],
+      });
+      setIsUpdatingExisting(true);
+      setExistingId(existing.id);
+      toast.success(`Previous version found for ${selectedCat}. Data auto-filled and version updated.`);
+    } else {
+      setFormData({
+        ...formData,
+        title: "",
+        category: selectedCat,
+        description: "",
+        effective_date: "",
+        review_date: "",
+        version: "1.0",
+        department: "",
+        applicable_to: "all",
+        status: "Active",
+        documents: [],
+      });
+      setIsUpdatingExisting(false);
+      setExistingId(null);
+    }
+  };
+
   const handleAddPolicy = async () => {
     if (!formData.title || !formData.effective_date || !formData.review_date || !formData.description) {
       toast.error("Please fill in all required fields");
@@ -238,7 +315,7 @@ export default function HRPolicy() {
     try {
       const fData = new FormData();
       Object.keys(formData).forEach(key => {
-        if (key !== 'documents') {
+        if (key !== 'documents' && key !== 'existingDocuments') {
           fData.append(key, formData[key]);
         }
       });
@@ -247,12 +324,17 @@ export default function HRPolicy() {
         fData.append('documents', file);
       });
 
-      await createPolicy(fData).unwrap();
-      toast.success("HR Policy created successfully");
+      if (isUpdatingExisting && existingId) {
+        await updatePolicy({ id: existingId, formData: fData }).unwrap();
+        toast.success("HR Policy updated with new version successfully");
+      } else {
+        await createPolicy(fData).unwrap();
+        toast.success("HR Policy created successfully");
+      }
       setShowAddModal(false);
       resetForm();
     } catch (error) {
-      toast.error(error?.data?.message || "Failed to create HR policy");
+      toast.error(error?.data?.message || "Failed to process HR policy");
     }
   };
 
@@ -632,6 +714,9 @@ export default function HRPolicy() {
                   Department
                 </th>
                 <th className="py-4 text-left text-sm font-semibold uppercase whitespace-nowrap">
+                  Version
+                </th>
+                <th className="py-4 text-left text-sm font-semibold uppercase whitespace-nowrap">
                   Status
                 </th>
                 <th className="py-4 text-left text-sm font-semibold uppercase whitespace-nowrap">
@@ -660,6 +745,9 @@ export default function HRPolicy() {
                       <div className="h-4 bg-gray-200 rounded w-24"></div>
                     </td>
                     <td className="px-6 py-4">
+                      <div className="h-4 bg-gray-200 rounded w-16"></div>
+                    </td>
+                    <td className="px-6 py-4">
                       <div className="h-6 bg-gray-200 rounded w-20"></div>
                     </td>
                     <td className="px-6 py-4">
@@ -669,7 +757,7 @@ export default function HRPolicy() {
                 ))
               ) : isError ? (
                 <tr>
-                  <td colSpan="7" className="px-6 py-12 text-center text-red-500">
+                  <td colSpan="8" className="px-6 py-12 text-center text-red-500">
                     Error loading HR policies
                   </td>
                 </tr>
@@ -696,6 +784,7 @@ export default function HRPolicy() {
                       {new Date(policy.review_date).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 text-gray-700">{policy.department || "All Departments"}</td>
+                    <td className="px-6 py-4 text-gray-700">{policy.version}</td>
                     <td className="px-6 py-4">
                       <span
                         className={`inline-block px-4 py-1 rounded-full text-sm font-medium ${policy.status === "Active"
@@ -743,7 +832,7 @@ export default function HRPolicy() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="7" className="px-6 py-12 text-center text-gray-500">
+                  <td colSpan="8" className="px-6 py-12 text-center text-gray-500">
                     No HR policies found matching the current filters
                   </td>
                 </tr>
@@ -807,7 +896,9 @@ export default function HRPolicy() {
                       <div className="bg-white bg-opacity-20 p-2 rounded-sm">
                         <Plus className="text-white" size={24} />
                       </div>
-                      <h2 className="text-2xl font-bold text-white">Add New HR Policy</h2>
+                      <h2 className="text-2xl font-bold text-white">
+                        {isUpdatingExisting ? "Update HR Policy (New Version)" : "Add New HR Policy"}
+                      </h2>
                     </div>
                     <button
                       onClick={() => setShowAddModal(false)}
@@ -838,7 +929,7 @@ export default function HRPolicy() {
                       </label>
                       <select
                         value={formData.category}
-                        onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                        onChange={handleCategoryChange}
                         className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                       >
                         {categories.map((cat) => (
@@ -977,7 +1068,7 @@ export default function HRPolicy() {
                       onClick={handleAddPolicy}
                       className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-6 py-3 rounded-lg font-semibold transition-all shadow-lg hover:shadow-xl"
                     >
-                      Add Policy
+                      {isUpdatingExisting ? "Update Existing Policy" : "Add Policy"}
                     </button>
                     <button
                       onClick={() => setShowAddModal(false)}

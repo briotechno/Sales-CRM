@@ -1,55 +1,95 @@
-import React, { useState } from "react";
-import { Users, X, Filter } from "lucide-react";
+import React, { useState, useMemo } from "react";
+import { Users, X, Filter, Plus, Trash2, ArrowDown } from "lucide-react";
 import { useGetEmployeesQuery } from "../../store/api/employeeApi";
 import { useGetDepartmentsQuery } from "../../store/api/departmentApi";
 import { useGetDesignationsQuery } from "../../store/api/designationApi";
+import { useGetTeamsQuery } from "../../store/api/teamApi";
 
 const AddTeamModal = ({ isOpen, onClose, onSubmit, isLoading }) => {
     const [formData, setFormData] = useState({
         teamName: "",
         description: "",
-        selectedEmployees: [],
-        status: "Active"
+        selectedEmployees: [], // for compatibility if needed, but we'll use levels
+        status: "Active",
+        levels: [{ id: Date.now(), departmentId: "All", designationId: "All", employeeId: "" }]
     });
-
-    const [selectedDepartment, setSelectedDepartment] = useState("All");
-    const [selectedDesignation, setSelectedDesignation] = useState("All");
 
     // Fetch employees with a large limit to allow selection
     const { data: employeesData } = useGetEmployeesQuery({ limit: 1000, status: 'Active' });
     const { data: departmentsData } = useGetDepartmentsQuery({ limit: 1000 });
     const { data: designationsData } = useGetDesignationsQuery({ limit: 1000 });
+    const { data: teamsData } = useGetTeamsQuery({ limit: 1000 }, { skip: !isOpen });
 
     const employees = employeesData?.employees || [];
     const departments = departmentsData?.departments || [];
     const designations = designationsData?.designations || [];
+    const teams = teamsData?.teams || [];
 
-    const handleEmployeeToggle = (employeeId) => {
-        setFormData((prev) => ({
+    // Create a map of employee ID to Team Name for assignment check
+    const employeeTeamMap = useMemo(() => {
+        const map = {};
+        teams.forEach(team => {
+            if (team.members) {
+                team.members.forEach(member => {
+                    map[member.id] = team.team_name;
+                });
+            }
+        });
+        return map;
+    }, [teams]);
+
+    const addLevel = () => {
+        setFormData(prev => ({
             ...prev,
-            selectedEmployees: prev.selectedEmployees.includes(employeeId)
-                ? prev.selectedEmployees.filter((id) => id !== employeeId)
-                : [...prev.selectedEmployees, employeeId],
+            levels: [...prev.levels, { id: Date.now(), departmentId: "All", designationId: "All", employeeId: "" }]
         }));
     };
 
-    const filteredEmployees = employees.filter((emp) => {
-        const matchesDepartment =
-            selectedDepartment === "All" || emp.department_id === parseInt(selectedDepartment);
-        const matchesDesignation =
-            selectedDesignation === "All" || emp.designation_id === parseInt(selectedDesignation);
-        return matchesDepartment && matchesDesignation;
-    });
+    const removeLevel = (id) => {
+        if (formData.levels.length === 1) return;
+        setFormData(prev => ({
+            ...prev,
+            levels: prev.levels.filter(l => l.id !== id)
+        }));
+    };
+
+    const updateLevel = (id, field, value) => {
+        setFormData(prev => ({
+            ...prev,
+            levels: prev.levels.map(l => {
+                if (l.id === id) {
+                    const updated = { ...l, [field]: value };
+                    if (field === 'departmentId' || field === 'designationId') {
+                        updated.employeeId = "";
+                    }
+                    return updated;
+                }
+                return l;
+            })
+        }));
+    };
+
+    const getFilteredEmployeesForLevel = (level) => {
+        return employees.filter((emp) => {
+            const matchesDepartment =
+                level.departmentId === "All" || emp.department_id === parseInt(level.departmentId);
+            const matchesDesignation =
+                level.designationId === "All" || emp.designation_id === parseInt(level.designationId);
+            return matchesDepartment && matchesDesignation;
+        });
+    };
+
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (!formData.teamName || formData.selectedEmployees.length === 0) return;
+        const employeeIds = formData.levels.map(l => l.employeeId).filter(id => id !== "");
+        if (!formData.teamName || employeeIds.length === 0) return;
 
         onSubmit({
             team_name: formData.teamName,
             description: formData.description,
             status: formData.status,
-            employee_ids: formData.selectedEmployees
+            employee_ids: employeeIds
         });
     };
 
@@ -59,7 +99,7 @@ const AddTeamModal = ({ isOpen, onClose, onSubmit, isLoading }) => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2">
             <div className="bg-white w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl custom-scrollbar rounded-sm">
                 {/* Modal Header */}
-                <div className="sticky top-0 bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-4 flex items-center justify-between z-10">
+                <div className="sticky top-0 bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-4 flex items-center justify-between z-50 rounded-t-sm shadow-md">
                     <h2 className="text-2xl font-bold text-white flex items-center gap-2">
                         <Users size={24} />
                         Create New Team
@@ -73,7 +113,7 @@ const AddTeamModal = ({ isOpen, onClose, onSubmit, isLoading }) => {
                 </div>
 
                 {/* Modal Body */}
-                <form onSubmit={handleSubmit} className="p-6 space-y-5">
+                <form onSubmit={handleSubmit} className="p-6 space-y-5 text-left">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -123,166 +163,172 @@ const AddTeamModal = ({ isOpen, onClose, onSubmit, isLoading }) => {
                         />
                     </div>
 
-                    <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-3">
-                            Select Employees <span className="text-red-500">*</span> (Selected: {formData.selectedEmployees.length})
-                        </label>
-
-                        <div className="flex flex-col md:flex-row gap-3 mb-4">
-                            <div className="flex-1">
-                                <label className="block text-xs font-medium text-gray-600 mb-1">
-                                    Filter by Department
-                                </label>
-                                <select
-                                    value={selectedDepartment}
-                                    onChange={(e) => setSelectedDepartment(e.target.value)}
-                                    className="w-full px-3 py-2 border-2 border-gray-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none transition-all text-sm rounded-sm"
-                                >
-                                    <option value="All">All Departments</option>
-                                    {departments.map((dept) => (
-                                        <option key={dept.id} value={dept.id}>
-                                            {dept.department_name}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            <div className="flex-1">
-                                <label className="block text-xs font-medium text-gray-600 mb-1">
-                                    Filter by Designation
-                                </label>
-                                <select
-                                    value={selectedDesignation}
-                                    onChange={(e) => setSelectedDesignation(e.target.value)}
-                                    className="w-full px-3 py-2 border-2 border-gray-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none transition-all text-sm rounded-sm"
-                                >
-                                    <option value="All">All Designations</option>
-                                    {designations.map((desig) => (
-                                        <option key={desig.id} value={desig.id}>
-                                            {desig.designation_name}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between border-b pb-2">
+                            <label className="block text-sm font-semibold text-gray-700">
+                                Team Structure (Levels) <span className="text-red-500">*</span>
+                            </label>
+                            <button
+                                type="button"
+                                onClick={addLevel}
+                                className="flex items-center gap-2 px-3 py-1.5 bg-orange-50 text-orange-600 border border-orange-200 rounded-sm font-bold text-[10px] uppercase tracking-wider hover:bg-orange-100 transition-all shadow-sm"
+                            >
+                                <Plus size={14} />
+                                Add New Level
+                            </button>
                         </div>
 
-                        <div className="space-y-6 max-h-96 overflow-y-auto p-4 border-2 border-gray-100 custom-scrollbar rounded-sm bg-gray-50/30">
-                            {Object.entries(
-                                filteredEmployees.reduce((acc, emp) => {
-                                    const dept = emp.department_name || "Unassigned Department";
-                                    if (!acc[dept]) acc[dept] = [];
-                                    acc[dept].push(emp);
-                                    return acc;
-                                }, {})
-                            ).map(([department, deptEmployees]) => (
-                                <div key={department} className="space-y-3">
-                                    <div className="flex items-center gap-2 pb-2 border-b border-orange-100">
-                                        <div className="w-2 h-5 bg-orange-500 rounded-sm"></div>
-                                        <h3 className="text-sm font-black text-gray-800 uppercase tracking-wider">
-                                            {department}
-                                        </h3>
-                                        <span className="text-[10px] bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full font-bold">
-                                            {deptEmployees.length} Members
-                                        </span>
-                                    </div>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                        {deptEmployees.map((employee) => {
-                                            const isSelected = formData.selectedEmployees.includes(employee.id);
-                                            return (
-                                                <label
-                                                    key={employee.id}
-                                                    className={`flex items-center justify-between p-3 border-2 cursor-pointer transition-all rounded-lg ${isSelected
-                                                        ? "border-orange-500 bg-orange-50 shadow-sm"
-                                                        : "border-gray-200 hover:border-orange-300 bg-white"
-                                                        }`}
-                                                >
-                                                    <div className="flex items-center gap-3 flex-1">
-                                                        <div className="relative">
-                                                            <input
-                                                                type="checkbox"
-                                                                checked={isSelected}
-                                                                onChange={() => handleEmployeeToggle(employee.id)}
-                                                                className="w-5 h-5 text-orange-600 border-2 border-gray-300 rounded focus:ring-orange-500 transition-all cursor-pointer"
-                                                            />
-                                                        </div>
-                                                        <div className="flex-1">
-                                                            <p className="text-sm font-bold text-gray-800">
-                                                                {employee.employee_name}
-                                                            </p>
-                                                            <div className="flex items-center gap-2 mt-0.5">
-                                                                <span className="text-[10px] font-bold text-orange-600 uppercase tracking-tighter">
-                                                                    {employee.employee_id}
-                                                                </span>
-                                                                <span className="text-[10px] text-gray-400 font-medium">•</span>
-                                                                <span className="text-[10px] text-gray-500 font-bold uppercase">
-                                                                    {employee.designation_name}
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </label>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                            ))}
-                            {filteredEmployees.length === 0 && (
-                                <div className="text-center py-12 text-gray-400 bg-white rounded-lg border-2 border-dashed border-gray-100">
-                                    <Filter size={48} className="mx-auto mb-3 opacity-20" />
-                                    <p className="text-sm font-bold uppercase tracking-widest">No matching employees</p>
-                                    <p className="text-xs mt-1">Try adjusting your department or designation filters</p>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Hierarchy Preview */}
-                    {formData.selectedEmployees.length > 0 && (
-                        <div className="bg-slate-50 rounded-xl p-6 border-2 border-slate-100 mt-4">
-                            <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest mb-6 flex items-center gap-2">
-                                <Users size={18} className="text-orange-500" />
-                                Hierarchy Preview
-                            </h3>
+                        <div className="space-y-6 px-1 pt-2">
                             <div className="space-y-6">
-                                {Object.entries(
-                                    employees
-                                        .filter(e => formData.selectedEmployees.includes(e.id))
-                                        .reduce((acc, emp) => {
-                                            const dept = emp.department_name || "General";
-                                            if (!acc[dept]) acc[dept] = {};
-                                            const desig = emp.designation_name || "Member";
-                                            if (!acc[dept][desig]) acc[dept][desig] = [];
-                                            acc[dept][desig].push(emp);
-                                            return acc;
-                                        }, {})
-                                ).map(([dept, designations]) => (
-                                    <div key={dept} className="relative pl-4 border-l-2 border-orange-200 py-1">
-                                        <div className="absolute -left-[5px] top-2 w-2 h-2 rounded-full bg-orange-500"></div>
-                                        <p className="text-[10px] font-black text-orange-600 uppercase mb-3">{dept}</p>
-                                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                                            {Object.entries(designations).map(([desig, members]) => (
-                                                <div key={desig} className="bg-white p-2 border border-slate-200 rounded-sm shadow-sm">
-                                                    <p className="text-[8px] font-bold text-blue-600 uppercase mb-1 truncate">{desig}</p>
-                                                    <div className="flex flex-wrap gap-1">
-                                                        {members.map(m => (
-                                                            <div key={m.id} className="text-[10px] font-bold bg-slate-100 px-1.5 py-0.5 rounded-sm truncate max-w-full">
-                                                                {m.employee_name}
-                                                            </div>
-                                                        ))}
+                                {formData.levels.map((level, index) => {
+                                    const levelEmployees = getFilteredEmployeesForLevel(level);
+                                    return (
+                                        <div key={level.id} className="relative">
+                                            {index > 0 && (
+                                                <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-0">
+                                                    <div className="h-4 w-0.5 bg-orange-200"></div>
+                                                    <ArrowDown size={12} className="text-orange-400 -mt-1" />
+                                                </div>
+                                            )}
+                                            <div className="bg-white border-2 border-gray-100 p-4 rounded-sm shadow-sm relative z-10 hover:border-orange-200 transition-all">
+                                                <div className="flex items-center justify-between mb-4">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="w-6 h-6 rounded-full bg-orange-500 text-white text-[10px] font-bold flex items-center justify-center">
+                                                            {index + 1}
+                                                        </span>
+                                                        <span className="text-xs font-black text-gray-800 uppercase tracking-widest">
+                                                            Level {index + 1}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex gap-2">
+                                                        {formData.levels.length > 1 && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => removeLevel(level.id)}
+                                                                className="p-1.5 text-red-500 hover:bg-red-50 rounded-sm transition-all"
+                                                                title="Remove level"
+                                                            >
+                                                                <Trash2 size={16} />
+                                                            </button>
+                                                        )}
                                                     </div>
                                                 </div>
-                                            ))}
+
+                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                                    <div>
+                                                        <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Department</label>
+                                                        <select
+                                                            value={level.departmentId}
+                                                            onChange={(e) => updateLevel(level.id, 'departmentId', e.target.value)}
+                                                            className="w-full px-3 py-2 border border-gray-200 focus:border-orange-500 outline-none text-xs rounded-sm bg-gray-50"
+                                                        >
+                                                            <option value="All">All Departments</option>
+                                                            {departments.map((dept) => (
+                                                                <option key={dept.id} value={dept.id}>
+                                                                    {dept.department_name}
+                                                                </option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Designation</label>
+                                                        <select
+                                                            value={level.designationId}
+                                                            onChange={(e) => updateLevel(level.id, 'designationId', e.target.value)}
+                                                            className="w-full px-3 py-2 border border-gray-200 focus:border-orange-500 outline-none text-xs rounded-sm bg-gray-50"
+                                                        >
+                                                            <option value="All">All Designations</option>
+                                                            {designations.map((desig) => (
+                                                                <option key={desig.id} value={desig.id}>
+                                                                    {desig.designation_name}
+                                                                </option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Select Employee</label>
+                                                        <select
+                                                            required={index === 0}
+                                                            value={level.employeeId}
+                                                            onChange={(e) => updateLevel(level.id, 'employeeId', e.target.value)}
+                                                            className={`w-full px-3 py-2 border text-xs rounded-sm outline-none transition-all ${level.employeeId
+                                                                ? 'border-orange-500 bg-orange-50/30'
+                                                                : 'border-gray-200 bg-white'
+                                                                }`}
+                                                        >
+                                                            <option value="">Select Employee...</option>
+                                                            {levelEmployees.map((emp) => {
+                                                                const assignedTeam = employeeTeamMap[emp.id];
+                                                                return (
+                                                                    <option key={emp.id} value={emp.id}>
+                                                                        {emp.employee_name} ({emp.employee_id}) {assignedTeam ? `[Already in Team: ${assignedTeam}]` : ""}
+                                                                    </option>
+                                                                );
+                                                            })}
+                                                        </select>
+                                                        {level.employeeId && (
+                                                            <div className="mt-1 space-y-1">
+                                                                <div className="flex items-center gap-1.5">
+                                                                    <span className="text-[9px] font-bold text-orange-600 bg-orange-100 px-1 rounded-sm uppercase">
+                                                                        {levelEmployees.find(e => e.id == level.employeeId)?.designation_name}
+                                                                    </span>
+                                                                </div>
+                                                                {employeeTeamMap[level.employeeId] && (
+                                                                    <p className="text-[9px] font-bold text-red-500 flex items-center gap-1">
+                                                                        <Users size={10} />
+                                                                        Already assigned to: <span className="underline">{employeeTeamMap[level.employeeId]}</span>
+                                                                    </p>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         </div>
-                    )}
 
+                        {/* Hierarchy Preview */}
+                        {formData.levels.some(l => l.employeeId) && (
+                            <div className="bg-white rounded-sm p-6 border-2 border-slate-100 mt-6 shadow-sm">
+                                <h3 className="text-xs font-black text-slate-800 uppercase tracking-widest mb-8 flex items-center gap-2 border-b pb-4">
+                                    <Users size={16} className="text-orange-500" />
+                                    Team Hierarchy Preview
+                                </h3>
+                                <div className="flex flex-col items-center space-y-0">
+                                    {formData.levels.filter(l => l.employeeId).map((level, idx, filteredLevels) => {
+                                        const emp = employees.find(e => e.id == level.employeeId);
+                                        return (
+                                            <React.Fragment key={level.id}>
+                                                <div className="w-full max-w-md bg-white border border-slate-200 p-4 rounded-sm shadow-sm flex items-center gap-4 relative">
+                                                    <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-bold text-sm border-2 border-orange-200 flex-shrink-0 z-10">
+                                                        {idx + 1}
+                                                    </div>
+                                                    <div className="flex-1 text-left">
+                                                        <p className="text-base font-bold text-slate-800 tracking-tight">{emp?.employee_name}</p>
+                                                        <p className="text-[11px] text-slate-500 font-bold uppercase tracking-wider">{emp?.designation_name}</p>
+                                                    </div>
+                                                </div>
+                                                {idx < filteredLevels.length - 1 && (
+                                                    <div className="flex flex-col items-center">
+                                                        <div className="w-0.5 h-8 bg-orange-200"></div>
+                                                    </div>
+                                                )}
+                                            </React.Fragment>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Action Buttons */}
                     <div className="flex gap-3 pt-4 border-t-2 border-gray-100">
                         <button
                             type="submit"
-                            disabled={isLoading || formData.selectedEmployees.length === 0}
+                            disabled={isLoading || !formData.levels.some(l => l.employeeId)}
                             className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-6 py-3 font-semibold shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 rounded-sm"
                         >
                             {isLoading ? "Creating..." : "Create Team"}

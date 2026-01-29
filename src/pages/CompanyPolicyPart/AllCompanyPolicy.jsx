@@ -1,6 +1,24 @@
 import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { FiHome } from "react-icons/fi";
+const incrementVersion = (version) => {
+  if (!version) return "1.0";
+  const strVersion = version.toString();
+  const parts = strVersion.split('.');
+  if (parts.length >= 2) {
+    const lastPart = parts[parts.length - 1];
+    if (!isNaN(parseInt(lastPart))) {
+      const incremented = parseInt(lastPart) + 1;
+      parts[parts.length - 1] = incremented.toString();
+      return parts.join('.');
+    }
+  } else {
+    if (!isNaN(parseInt(strVersion))) {
+      return strVersion + ".1";
+    }
+  }
+  return strVersion + ".1";
+};
 import DashboardLayout from "../../components/DashboardLayout";
 import {
   FileText,
@@ -92,6 +110,16 @@ export default function CompanyPolicy() {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
+
+  const [isUpdatingExisting, setIsUpdatingExisting] = useState(false);
+  const [existingId, setExistingId] = useState(null);
+
+  const { data: allPoliciesDataForCheck } = useGetCompanyPoliciesQuery({
+    category: "All",
+    status: "All",
+    search: "",
+  });
+  const allPolicies = allPoliciesDataForCheck || [];
 
   const { user } = useSelector((state) => state.auth);
   const { create, read, update, delete: remove } = usePermission("Company Policy");
@@ -191,6 +219,49 @@ export default function CompanyPolicy() {
       author: user ? (user.firstName ? `${user.firstName} ${user.lastName}` : user.email) : "",
       status: "Active",
     });
+    setIsUpdatingExisting(false);
+    setExistingId(null);
+  };
+
+  const handleCategoryChange = (e) => {
+    const selectedCat = e.target.value;
+    if (!showAddModal) {
+      setFormData({ ...formData, category: selectedCat });
+      return;
+    }
+
+    const existing = allPolicies.find((p) => p.category === selectedCat);
+
+    if (existing) {
+      setFormData({
+        ...formData,
+        title: existing.title,
+        category: selectedCat,
+        description: existing.description || "",
+        effective_date: existing.effective_date ? new Date(existing.effective_date).toISOString().split('T')[0] : (existing.effective_date || ""),
+        review_date: existing.review_date ? new Date(existing.review_date).toISOString().split('T')[0] : (existing.review_date || ""),
+        version: incrementVersion(existing.version),
+        author: existing.author || (user ? (user.firstName ? `${user.firstName} ${user.lastName}` : user.email) : ""),
+        status: existing.status || "Active",
+      });
+      setIsUpdatingExisting(true);
+      setExistingId(existing.id);
+      toast.success(`Previous version found for ${selectedCat}. Data auto-filled and version updated.`);
+    } else {
+      setFormData({
+        ...formData,
+        title: "",
+        category: selectedCat,
+        description: "",
+        effective_date: "",
+        review_date: "",
+        version: "1.0",
+        author: user ? (user.firstName ? `${user.firstName} ${user.lastName}` : user.email) : "",
+        status: "Active",
+      });
+      setIsUpdatingExisting(false);
+      setExistingId(null);
+    }
   };
 
   const handleAddPolicy = async () => {
@@ -200,12 +271,17 @@ export default function CompanyPolicy() {
     }
 
     try {
-      await createPolicy(formData).unwrap();
-      toast.success("Policy created successfully");
+      if (isUpdatingExisting && existingId) {
+        await updatePolicy({ id: existingId, ...formData }).unwrap();
+        toast.success("Policy updated with new version successfully");
+      } else {
+        await createPolicy(formData).unwrap();
+        toast.success("Policy created successfully");
+      }
       setShowAddModal(false);
       resetForm();
     } catch (error) {
-      toast.error("Failed to create policy");
+      toast.error("Failed to process policy");
     }
   };
 
@@ -684,7 +760,9 @@ export default function CompanyPolicy() {
                     <div className="bg-white bg-opacity-20 p-2 rounded-sm">
                       <Plus className="text-white" size={24} />
                     </div>
-                    <h2 className="text-2xl font-bold text-white">Add New Policy</h2>
+                    <h2 className="text-2xl font-bold text-white">
+                      {isUpdatingExisting ? "Update Policy (New Version)" : "Add New Policy"}
+                    </h2>
                   </div>
                   <button
                     onClick={() => setShowAddModal(false)}
@@ -715,7 +793,7 @@ export default function CompanyPolicy() {
                     </label>
                     <select
                       value={formData.category}
-                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                      onChange={handleCategoryChange}
                       className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                     >
                       {categories.map((cat) => (
@@ -786,7 +864,7 @@ export default function CompanyPolicy() {
                     onClick={handleAddPolicy}
                     className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-6 py-3 rounded-lg font-semibold transition-all shadow-lg hover:shadow-xl"
                   >
-                    Add Policy
+                    {isUpdatingExisting ? "Update Existing Policy" : "Add Policy"}
                   </button>
                   <button
                     onClick={() => setShowAddModal(false)}
