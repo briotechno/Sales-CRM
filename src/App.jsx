@@ -132,7 +132,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/packages" element={<Packages />} />
-        <Route path="/business/:id" element={<CompanyProfile />} />
+        <Route path="/business/:id/:slug?" element={<CompanyProfile />} />
         <Route path="/catalog/view/:id" element={<CatalogView />} />
 
         {/* Protected Routes */}

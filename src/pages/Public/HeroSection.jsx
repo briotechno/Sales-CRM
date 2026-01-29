@@ -56,35 +56,47 @@ const HeroSection = ({ business, logoUrl }) => {
 
                         {/* Tags */}
                         <div className="flex flex-wrap gap-3">
-                            <span className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-semibold text-gray-700 shadow-sm hover:shadow-md transition-shadow">
-                                <Globe2 size={16} className="text-[#FF7B1D]" />
-                                {business.industry}
-                            </span>
-                            <span className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-semibold text-gray-700 shadow-sm hover:shadow-md transition-shadow">
-                                <Calendar size={16} className="text-[#FF7B1D]" />
-                                Est. {business.founded_year}
-                            </span>
-                            <span className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-semibold text-gray-700 shadow-sm hover:shadow-md transition-shadow">
-                                <Briefcase size={16} className="text-[#FF7B1D]" />
-                                {business.business_type}
-                            </span>
+                            {business.industry && (
+                                <span className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-semibold text-gray-700 shadow-sm hover:shadow-md transition-shadow">
+                                    <Globe2 size={16} className="text-[#FF7B1D]" />
+                                    {business.industry}
+                                </span>
+                            )}
+                            {business.founded_year && (
+                                <span className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-semibold text-gray-700 shadow-sm hover:shadow-md transition-shadow">
+                                    <Calendar size={16} className="text-[#FF7B1D]" />
+                                    Est. {business.founded_year}
+                                </span>
+                            )}
+                            {business.business_type && (
+                                <span className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-semibold text-gray-700 shadow-sm hover:shadow-md transition-shadow">
+                                    <Briefcase size={16} className="text-[#FF7B1D]" />
+                                    {business.business_type}
+                                </span>
+                            )}
                         </div>
 
                         {/* Description */}
-                        <p className="text-base sm:text-lg lg:text-xl text-gray-600 leading-relaxed max-w-xl">
-                            {business.company_description || "A leading organization committed to excellence, innovation, and delivering exceptional value to our clients and partners worldwide."}
-                        </p>
+                        {business.company_description && (
+                            <p className="text-base sm:text-lg lg:text-xl text-gray-600 leading-relaxed max-w-xl break-words">
+                                {business.company_description}
+                            </p>
+                        )}
 
                         {/* CTA Buttons */}
                         <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 pt-4">
-                            <a href={`mailto:${business.email}`} className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-[#FF7B1D] to-orange-600 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-semibold hover:shadow-xl hover:scale-105 transition-all shadow-lg">
-                                <Mail size={20} />
-                                Get in Touch
-                            </a>
-                            <a href={business.website} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 bg-white border-2 border-gray-200 text-gray-900 px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-semibold hover:border-[#FF7B1D] hover:text-[#FF7B1D] transition-all shadow-sm">
-                                <ExternalLink size={20} />
-                                Visit Website
-                            </a>
+                            {business.email && (
+                                <a href={`mailto:${business.email}`} className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-[#FF7B1D] to-orange-600 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-semibold hover:shadow-xl hover:scale-105 transition-all shadow-lg">
+                                    <Mail size={20} />
+                                    Get in Touch
+                                </a>
+                            )}
+                            {business.website && (
+                                <a href={business.website.startsWith('http') ? business.website : `https://${business.website}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 bg-white border-2 border-gray-200 text-gray-900 px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-semibold hover:border-[#FF7B1D] hover:text-[#FF7B1D] transition-all shadow-sm">
+                                    <ExternalLink size={20} />
+                                    Visit Website
+                                </a>
+                            )}
                         </div>
                     </div>
 
@@ -101,31 +113,33 @@ const HeroSection = ({ business, logoUrl }) => {
                         </div>
 
                         {/* Floating Card */}
-                        <div className="absolute bottom-4 left-4 right-4 sm:bottom-8 sm:left-8 sm:right-8 bg-white/95 backdrop-blur-xl p-4 sm:p-6 rounded-2xl border border-gray-200 shadow-2xl">
-                            <div className="flex items-center gap-3 sm:gap-4 mb-3 sm:mb-4">
-                                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-[#FF7B1D] to-orange-600 rounded-xl flex items-center justify-center shadow-lg shrink-0">
-                                    <ShieldCheck size={20} className="text-white sm:w-6 sm:h-6" />
+                        {business.registration_number && (
+                            <div className="absolute bottom-4 left-4 right-4 sm:bottom-8 sm:left-8 sm:right-8 bg-white/95 backdrop-blur-xl p-4 sm:p-6 rounded-2xl border border-gray-200 shadow-2xl">
+                                <div className="flex items-center gap-3 sm:gap-4 mb-3 sm:mb-4">
+                                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-[#FF7B1D] to-orange-600 rounded-xl flex items-center justify-center shadow-lg shrink-0">
+                                        <ShieldCheck size={20} className="text-white sm:w-6 sm:h-6" />
+                                    </div>
+                                    <div>
+                                        <p className="text-gray-900 font-bold text-base sm:text-lg">Certified & Trusted</p>
+                                        <p className="text-gray-600 text-xs sm:text-sm">Reg. #{business.registration_number}</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p className="text-gray-900 font-bold text-base sm:text-lg">Certified & Trusted</p>
-                                    <p className="text-gray-600 text-xs sm:text-sm">Reg. #{business.registration_number}</p>
+                                <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
+                                    <div className="flex-1 bg-orange-50 border border-orange-100 rounded-lg p-2 sm:p-3 text-center">
+                                        <CheckCircle2 size={18} className="text-[#FF7B1D] mx-auto mb-1 sm:w-5 sm:h-5" />
+                                        <p className="text-[10px] sm:text-xs text-gray-700 font-semibold">Verified</p>
+                                    </div>
+                                    <div className="flex-1 bg-orange-50 border border-orange-100 rounded-lg p-2 sm:p-3 text-center">
+                                        <Award size={18} className="text-[#FF7B1D] mx-auto mb-1 sm:w-5 sm:h-5" />
+                                        <p className="text-[10px] sm:text-xs text-gray-700 font-semibold">Certified</p>
+                                    </div>
+                                    <div className="flex-1 bg-orange-50 border border-orange-100 rounded-lg p-2 sm:p-3 text-center">
+                                        <Target size={18} className="text-[#FF7B1D] mx-auto mb-1 sm:w-5 sm:h-5" />
+                                        <p className="text-[10px] sm:text-xs text-gray-700 font-semibold">Trusted</p>
+                                    </div>
                                 </div>
                             </div>
-                            <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
-                                <div className="flex-1 bg-orange-50 border border-orange-100 rounded-lg p-2 sm:p-3 text-center">
-                                    <CheckCircle2 size={18} className="text-[#FF7B1D] mx-auto mb-1 sm:w-5 sm:h-5" />
-                                    <p className="text-[10px] sm:text-xs text-gray-700 font-semibold">Verified</p>
-                                </div>
-                                <div className="flex-1 bg-orange-50 border border-orange-100 rounded-lg p-2 sm:p-3 text-center">
-                                    <Award size={18} className="text-[#FF7B1D] mx-auto mb-1 sm:w-5 sm:h-5" />
-                                    <p className="text-[10px] sm:text-xs text-gray-700 font-semibold">Certified</p>
-                                </div>
-                                <div className="flex-1 bg-orange-50 border border-orange-100 rounded-lg p-2 sm:p-3 text-center">
-                                    <Target size={18} className="text-[#FF7B1D] mx-auto mb-1 sm:w-5 sm:h-5" />
-                                    <p className="text-[10px] sm:text-xs text-gray-700 font-semibold">Trusted</p>
-                                </div>
-                            </div>
-                        </div>
+                        )}
 
                         {/* Decorative Elements */}
                         <div className="absolute -top-4 -right-4 w-24 h-24 bg-orange-200 rounded-full opacity-50 blur-2xl"></div>

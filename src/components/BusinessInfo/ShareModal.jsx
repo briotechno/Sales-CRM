@@ -6,7 +6,7 @@ const ShareModal = ({ isOpen, onClose, companyName, businessId }) => {
 
     if (!isOpen) return null;
 
-    const profileLink = `${window.location.origin}/business/${businessId}`;
+    const profileLink = `${window.location.origin}/business/${businessId}/${(companyName || "").toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')}`;
 
     const handleCopy = () => {
         navigator.clipboard.writeText(profileLink);
@@ -49,8 +49,8 @@ const ShareModal = ({ isOpen, onClose, companyName, businessId }) => {
                             <button
                                 onClick={handleCopy}
                                 className={`px-4 py-3 rounded-sm flex items-center gap-2 transition-all font-bold ${copied
-                                        ? "bg-green-500 text-white shadow-lg shadow-green-100"
-                                        : "bg-[#FF7B1D] text-white hover:bg-orange-600 shadow-lg shadow-orange-100"
+                                    ? "bg-green-500 text-white shadow-lg shadow-green-100"
+                                    : "bg-[#FF7B1D] text-white hover:bg-orange-600 shadow-lg shadow-orange-100"
                                     }`}
                             >
                                 {copied ? <Check size={18} /> : <Copy size={18} />}

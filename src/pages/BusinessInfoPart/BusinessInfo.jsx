@@ -12,14 +12,18 @@ import {
   Users,
   Calendar,
   DollarSign,
-  FileText,
-  Award,
   Target,
   TrendingUp,
   CheckCircle,
   Upload,
   X,
   Share2,
+  Plus,
+  Facebook,
+  Linkedin,
+  Instagram,
+  FileText,
+  Award,
 } from "lucide-react";
 import { useGetBusinessInfoQuery, useUpdateBusinessInfoMutation } from "../../store/api/businessApi";
 import { useGetEmployeesQuery } from "../../store/api/employeeApi";
@@ -76,6 +80,7 @@ export default function BusinessInfoPage() {
     alternate_phone: "",
     google_maps_link: "",
     logo: null,
+    social_links: [],
   });
 
   // Sync with fetched data
@@ -88,6 +93,24 @@ export default function BusinessInfoPage() {
             newData[key] = businessInfo[key];
           }
         });
+
+        // Handle social_links specifically if it's already an object/array from API
+        if (businessInfo.social_links) {
+          newData.social_links = Array.isArray(businessInfo.social_links)
+            ? businessInfo.social_links
+            : [];
+        } else {
+          // Backward compatibility: if social_links is empty, try to populate from individual fields
+          const legacyLinks = [];
+          if (businessInfo.whatsapp_link) legacyLinks.push({ platform: 'WhatsApp', url: businessInfo.whatsapp_link });
+          if (businessInfo.facebook_link) legacyLinks.push({ platform: 'Facebook', url: businessInfo.facebook_link });
+          if (businessInfo.linkedin_link) legacyLinks.push({ platform: 'LinkedIn', url: businessInfo.linkedin_link });
+          if (businessInfo.instagram_link) legacyLinks.push({ platform: 'Instagram', url: businessInfo.instagram_link });
+          if (businessInfo.youtube_link) legacyLinks.push({ platform: 'YouTube', url: businessInfo.youtube_link });
+          if (businessInfo.twitter_link) legacyLinks.push({ platform: 'Twitter', url: businessInfo.twitter_link });
+          newData.social_links = legacyLinks;
+        }
+
         return { ...newData, logo: null };
       });
     }
@@ -101,8 +124,77 @@ export default function BusinessInfoPage() {
   };
 
   const handleSave = async () => {
+    // Prepare trimmed data safely
+    const trimmedSocialLinks = (formData.social_links || []).map(link => ({
+      ...link,
+      url: (link.url || "").trim()
+    }));
+
+    // Basic validation for social links
+    if (trimmedSocialLinks.length > 0) {
+      for (const link of trimmedSocialLinks) {
+        const platformName = link.platform || "Platform";
+        const url = link.url;
+
+        if (!url) {
+          toast.error(`Please provide a URL or username for ${platformName}`);
+          return;
+        }
+
+        const platform = platformName.toLowerCase();
+
+        if (platform === 'whatsapp') {
+          // WhatsApp: Must be a number (8-15 digits) or a valid wa.me link
+          const isPhone = /^\+?[\d\s-]{8,15}$/.test(url.replace(/\s/g, ''));
+          const isUrl = url.toLowerCase().includes('wa.me') || url.toLowerCase().includes('whatsapp.com');
+          if (!isPhone && !isUrl) {
+            toast.error(`Invalid format for WhatsApp. Please enter a phone number or a wa.me link.`);
+            return;
+          }
+        } else if (platform === 'website') {
+          // Website: Must contain a dot and look like a URL
+          if (!url.includes('.') || (!url.toLowerCase().startsWith('http') && !url.toLowerCase().startsWith('www'))) {
+            toast.error("Please enter a valid Website URL (e.g. https://www.example.com)");
+            return;
+          }
+        } else if (platform !== 'other') {
+          // General platforms (Facebook, Instagram, LinkedIn, etc.)
+          const isUrl = url.toLowerCase().startsWith('http');
+          const platformKey = platform.replace(/\s+/g, '');
+
+          if (isUrl) {
+            // If it's a full URL, it MUST match the platform
+            if (!url.toLowerCase().includes(platformKey)) {
+              toast.error(`This doesn't look like a valid ${platformName} link. Please check the URL.`);
+              return;
+            }
+          } else {
+            // If it's a username, it shouldn't contain spaces and should have some length
+            if (url.includes(' ') || url.length < 2) {
+              toast.error(`Please enter a valid ${platformName} username or full profile link.`);
+              return;
+            }
+
+            // For YouTube/LinkedIn etc., if they just put "sssss", we might want to warn or error
+            // but many users use just handles. However, if it's clearly garbage:
+            if (/^[a-zA-Z0-9_.-]+$/.test(url)) {
+              // This is a valid handle format
+            } else {
+              toast.error(`Invalid characters in ${platformName} username.`);
+              return;
+            }
+          }
+        }
+      }
+    }
+
+    const dataToSave = {
+      ...formData,
+      social_links: trimmedSocialLinks
+    };
+
     try {
-      await updateBusinessInfo(formData).unwrap();
+      await updateBusinessInfo(dataToSave).unwrap();
       toast.success("Business information updated successfully!");
       setIsEditing(false);
     } catch (err) {
@@ -309,6 +401,8 @@ export default function BusinessInfoPage() {
             </div>
           </div>
 
+
+
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Left Column - Main Info */}
             <div className="lg:col-span-2 space-y-6">
@@ -330,6 +424,7 @@ export default function BusinessInfoPage() {
                           name="company_name"
                           value={formData.company_name}
                           onChange={handleInputChange}
+                          placeholder="e.g. Acme Corporation"
                           className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                         />
                       ) : (
@@ -348,6 +443,7 @@ export default function BusinessInfoPage() {
                           name="legal_name"
                           value={formData.legal_name}
                           onChange={handleInputChange}
+                          placeholder="e.g. Acme Corp Pvt Ltd"
                           className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                         />
                       ) : (
@@ -370,6 +466,7 @@ export default function BusinessInfoPage() {
                           onChange={handleInputChange}
                           className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                         >
+                          <option value="">Choose Industry...</option>
                           <option>Information Technology</option>
                           <option>Manufacturing</option>
                           <option>Consulting</option>
@@ -395,6 +492,7 @@ export default function BusinessInfoPage() {
                           onChange={handleInputChange}
                           className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                         >
+                          <option value="">Choose Business Type...</option>
                           <option>Private Limited Company</option>
                           <option>Public Limited Company</option>
                           <option>Partnership</option>
@@ -419,6 +517,7 @@ export default function BusinessInfoPage() {
                         value={formData.company_description}
                         onChange={handleInputChange}
                         rows="4"
+                        placeholder="Tell us about your company..."
                         className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                       ></textarea>
                     ) : (
@@ -448,6 +547,7 @@ export default function BusinessInfoPage() {
                           name="founded_year"
                           value={formData.founded_year}
                           onChange={handleInputChange}
+                          placeholder="e.g. 2020"
                           className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                         />
                       ) : (
@@ -466,6 +566,7 @@ export default function BusinessInfoPage() {
                           name="registration_number"
                           value={formData.registration_number}
                           onChange={handleInputChange}
+                          placeholder="e.g. U12345MH2020PTC123456"
                           className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                         />
                       ) : (
@@ -487,6 +588,7 @@ export default function BusinessInfoPage() {
                           name="gst_number"
                           value={formData.gst_number}
                           onChange={handleInputChange}
+                          placeholder="e.g. 27AAAAA0000A1Z5"
                           className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                         />
                       ) : (
@@ -505,6 +607,7 @@ export default function BusinessInfoPage() {
                           name="pan_number"
                           value={formData.pan_number}
                           onChange={handleInputChange}
+                          placeholder="e.g. ABCDE1234F"
                           className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                         />
                       ) : (
@@ -535,6 +638,7 @@ export default function BusinessInfoPage() {
                           name="bank_name"
                           value={formData.bank_name}
                           onChange={handleInputChange}
+                          placeholder="e.g. HDFC Bank"
                           className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                         />
                       ) : (
@@ -553,6 +657,7 @@ export default function BusinessInfoPage() {
                           name="branch_name"
                           value={formData.branch_name}
                           onChange={handleInputChange}
+                          placeholder="e.g. Mumbai Main Branch"
                           className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                         />
                       ) : (
@@ -574,6 +679,7 @@ export default function BusinessInfoPage() {
                           name="account_number"
                           value={formData.account_number}
                           onChange={handleInputChange}
+                          placeholder="e.g. 50100012345678"
                           className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                         />
                       ) : (
@@ -592,6 +698,7 @@ export default function BusinessInfoPage() {
                           name="ifsc_code"
                           value={formData.ifsc_code}
                           onChange={handleInputChange}
+                          placeholder="e.g. HDFC0000001"
                           className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                         />
                       ) : (
@@ -604,198 +711,207 @@ export default function BusinessInfoPage() {
                 </div>
               </div>
 
-              {/* SOCIAL ICONS — HIDE WHEN EDITING */}
+              {/* Social Presence View Mode - Dynamic (Now below Banking Information) */}
               {!isEditing && (
-                <div className="flex flex-wrap justify-start gap-5 p-0 w-full">
-                  {/* WhatsApp */}
-                  <button
-                    onClick={shareOnWhatsApp}
-                    className="w-20 h-20 bg-gradient-to-br from-orange-400 via-orange-500 to-red-500 text-white rounded-2xl shadow-xl hover:shadow-2xl  transform transition-all duration-300 active:scale-95 flex items-center justify-center group hover:from-orange-500 hover:via-orange-600 hover:to-red-600"
-                  >
-                    <svg
-                      className="w-12 h-12"
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                    >
-                      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-                    </svg>
-                  </button>
+                <div className="bg-white rounded-sm shadow-md p-6">
+                  <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <Share2 className="text-orange-500" size={24} />
+                    Social Presence
+                  </h2>
+                  {formData.social_links?.length > 0 ? (
+                    <div className="flex flex-wrap gap-4">
+                      {formData.social_links.map((link, index) => {
+                        const getIcon = (platform) => {
+                          switch (platform.toLowerCase()) {
+                            case "whatsapp":
+                              return (
+                                <svg
+                                  className="w-6 h-6"
+                                  viewBox="0 0 24 24"
+                                  fill="currentColor"
+                                >
+                                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                                </svg>
+                              );
+                            case "facebook":
+                              return <Facebook size={24} />;
+                            case "linkedin":
+                              return <Linkedin size={24} />;
+                            case "instagram":
+                              return <Instagram size={24} />;
+                            case "youtube":
+                              return (
+                                <svg
+                                  className="w-6 h-6"
+                                  viewBox="0 0 24 24"
+                                  fill="currentColor"
+                                >
+                                  <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+                                </svg>
+                              );
+                            case "twitter":
+                            case "x":
+                              return (
+                                <svg
+                                  className="w-6 h-6"
+                                  viewBox="0 0 24 24"
+                                  fill="currentColor"
+                                >
+                                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.045 4.126H5.078z" />
+                                </svg>
+                              );
+                            default:
+                              return <Globe size={24} />;
+                          }
+                        };
 
-                  {/* Facebook */}
-                  <button
-                    onClick={shareOnFacebook}
-                    className="w-20 h-20 bg-gradient-to-br from-orange-500 via-orange-600 to-amber-600 text-white rounded-2xl shadow-xl hover:shadow-2xl transform transition-all duration-300 active:scale-95 flex items-center justify-center group hover:from-orange-600 hover:via-orange-700 hover:to-amber-700"
-                  >
-                    <svg
-                      className="w-11 h-11"
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                    >
-                      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-                    </svg>
-                  </button>
+                        const getBgColor = (platform) => {
+                          switch (platform.toLowerCase()) {
+                            case "whatsapp":
+                              return "hover:bg-green-500 hover:text-white text-green-600 bg-green-50 border-green-100";
+                            case "facebook":
+                              return "hover:bg-blue-600 hover:text-white text-blue-700 bg-blue-50 border-blue-100";
+                            case "linkedin":
+                              return "hover:bg-blue-700 hover:text-white text-blue-800 bg-blue-50 border-blue-100";
+                            case "instagram":
+                              return "hover:bg-pink-600 hover:text-white text-pink-600 bg-pink-50 border-pink-100";
+                            case "youtube":
+                              return "hover:bg-red-600 hover:text-white text-red-600 bg-red-50 border-red-100";
+                            case "twitter":
+                            case "x":
+                              return "hover:bg-black hover:text-white text-gray-800 bg-gray-50 border-gray-200";
+                            default:
+                              return "hover:bg-orange-600 hover:text-white text-orange-600 bg-orange-50 border-orange-100";
+                          }
+                        };
 
-                  {/* LinkedIn */}
-                  <button
-                    onClick={shareOnLinkedIn}
-                    className="w-20 h-20 bg-gradient-to-br from-orange-600 via-red-500 to-pink-500 text-white rounded-2xl shadow-xl hover:shadow-2xl  transform transition-all duration-300 active:scale-95 flex items-center justify-center group hover:from-orange-700 hover:via-red-600 hover:to-pink-600"
-                  >
-                    <svg
-                      className="w-11 h-11"
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                    >
-                      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
-                    </svg>
-                  </button>
-
-                  {/* Instagram */}
-                  <button
-                    onClick={shareOnInstagram}
-                    className="w-20 h-20 bg-gradient-to-br from-amber-500 via-orange-500 to-red-600 text-white rounded-2xl shadow-xl hover:shadow-2xl  transform transition-all duration-300 active:scale-95 flex items-center justify-center group hover:from-amber-600 hover:via-orange-600 hover:to-red-700"
-                  >
-                    <svg
-                      className="w-11 h-11"
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                    >
-                      <path d="M12 0C8.74 0 8.333.015 7.053.072 5.775.132 4.905.333 4.14.63c-.789.306-1.459.717-2.126 1.384S.935 3.35.63 4.14C.333 4.905.131 5.775.072 7.053.012 8.333 0 8.74 0 12s.015 3.667.072 4.947c.06 1.277.261 2.148.558 2.913.306.788.717 1.459 1.384 2.126.667.666 1.336 1.079 2.126 1.384.766.296 1.636.499 2.913.558C8.333 23.988 8.74 24 12 24s3.667-.015 4.947-.072c1.277-.06 2.148-.262 2.913-.558.788-.306 1.459-.718 2.126-1.384.666-.667 1.079-1.335 1.384-2.126.296-.765.499-1.636.558-2.913.06-1.28.072-1.687.072-4.947s-.015-3.667-.072-4.947c-.06-1.277-.262-2.149-.558-2.913-.306-.789-.718-1.459-1.384-2.126C21.319 1.347 20.651.935 19.86.63c-.765-.297-1.636-.499-2.913-.558C15.667.012 15.26 0 12 0zm0 2.16c3.203 0 3.585.016 4.85.071 1.17.055 1.805.249 2.227.415.562.217.96.477 1.382.896.419.42.679.819.896 1.381.164.422.36 1.057.413 2.227.057 1.266.07 1.646.07 4.85s-.015 3.585-.074 4.85c-.061 1.17-.256 1.805-.421 2.227-.224.562-.479.96-.899 1.382-.419.419-.824.679-1.38.896-.42.164-1.065.36-2.235.413-1.274.057-1.649.07-4.859.07-3.211 0-3.586-.015-4.859-.074-1.171-.061-1.816-.256-2.236-.421-.569-.224-.96-.479-1.379-.899-.421-.419-.69-.824-.9-1.38-.165-.42-.359-1.065-.42-2.235-.045-1.26-.061-1.649-.061-4.844 0-3.196.016-3.586.061-4.861.061-1.17.255-1.814.42-2.234.21-.57.479-.96.9-1.381.419-.419.81-.689 1.379-.898.42-.166 1.051-.361 2.221-.421 1.275-.045 1.65-.06 4.859-.06l.045.03zm0 3.678c-3.405 0-6.162 2.76-6.162 6.162 0 3.405 2.76 6.162 6.162 6.162 3.405 0 6.162-2.76 6.162-6.162 0-3.405-2.76-6.162-6.162-6.162zM12 16c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm7.846-10.405c0 .795-.646 1.44-1.44 1.44-.795 0-1.44-.646-1.44-1.44 0-.794.646-1.439 1.44-1.439.793-.001 1.44.645 1.44 1.439z" />
-                    </svg>
-                  </button>
-
-                  {/* YouTube */}
-                  <button
-                    onClick={shareOnYouTube}
-                    className="w-20 h-20 bg-gradient-to-br from-red-500 via-orange-600 to-yellow-500 text-white rounded-2xl shadow-xl hover:shadow-2xl  transform transition-all duration-300 active:scale-95 flex items-center justify-center group hover:from-red-600 hover:via-orange-700 hover:to-yellow-600"
-                  >
-                    <svg
-                      className="w-12 h-12"
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                    >
-                      <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
-                    </svg>
-                  </button>
-
-                  {/* Twitter */}
-                  <button
-                    onClick={shareOnTwitter}
-                    className="w-20 h-20 bg-gradient-to-br from-gray-800 via-gray-900 to-black text-white rounded-2xl shadow-xl hover:shadow-2xl transform transition-all duration-300 active:scale-95 flex items-center justify-center group hover:from-black hover:via-gray-800 hover:to-gray-900"
-                  >
-                    <svg
-                      className="w-10 h-10"
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                    >
-                      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.045 4.126H5.078z" />
-                    </svg>
-                  </button>
+                        return (
+                          <a
+                            key={index}
+                            href={
+                              link.url.startsWith("http") ||
+                                link.platform.toLowerCase() !== "whatsapp"
+                                ? link.url
+                                : `https://wa.me/${link.url}`
+                            }
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={`w-12 h-12 rounded-xl border flex items-center justify-center transition-all duration-300 hover:scale-110 shadow-sm ${getBgColor(
+                              link.platform
+                            )}`}
+                            title={`${link.platform}: ${link.url}`}
+                          >
+                            {getIcon(link.platform)}
+                          </a>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center py-8 px-4 border-2 border-dashed border-gray-100 rounded-sm bg-gray-50/50 group hover:border-orange-100 transition-colors">
+                      <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm mb-4 group-hover:scale-110 transition-transform duration-500">
+                        <Share2
+                          className="text-gray-300 group-hover:text-orange-300 transition-colors"
+                          size={32}
+                        />
+                      </div>
+                      <h3 className="text-lg font-bold text-gray-700 mb-1">
+                        Expand Your Reach
+                      </h3>
+                      <p className="text-gray-500 text-sm text-center mb-6 max-w-sm">
+                        Connect your social media profiles and websites to build
+                        trust and strengthen your online presence.
+                      </p>
+                      <button
+                        onClick={() => setIsEditing(true)}
+                        className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all font-bold shadow-md hover:shadow-lg active:scale-95"
+                      >
+                        <Plus size={20} />
+                        Add Social Presence
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
-              {/* END ICON HIDE */}
 
               {/* EDIT FIELDS */}
               <div className="bg-white rounded-sm shadow-md p-6">
                 {isEditing && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
-                    {/* WhatsApp */}
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        WhatsApp (Number or Link)
-                      </label>
-                      <input
-                        type="text"
-                        className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-                        value={formData.whatsapp_link}
-                        onChange={(e) =>
-                          setFormData({ ...formData, whatsapp_link: e.target.value })
-                        }
-                        placeholder="e.g. 919876543210 or https://wa.me/..."
-                      />
+                  <div className="space-y-6 mt-8">
+                    <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                      <Share2 className="text-orange-500" size={20} />
+                      Dynamic Social Links
+                    </h3>
+
+                    <div className="space-y-4">
+                      {formData.social_links.map((link, index) => (
+                        <div key={index} className="flex gap-3 items-end bg-gray-50 p-4 rounded-sm border border-gray-100 relative group">
+                          <div className="flex-1">
+                            <label className="block text-xs font-bold text-gray-500 mb-1 uppercase tracking-wider">
+                              Platform
+                            </label>
+                            <select
+                              className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white"
+                              value={link.platform}
+                              onChange={(e) => {
+                                const newLinks = [...formData.social_links];
+                                newLinks[index] = { ...newLinks[index], platform: e.target.value };
+                                setFormData({ ...formData, social_links: newLinks });
+                              }}
+                            >
+                              <option>WhatsApp</option>
+                              <option>Facebook</option>
+                              <option>LinkedIn</option>
+                              <option>Instagram</option>
+                              <option>YouTube</option>
+                              <option>Twitter</option>
+                              <option>Threads</option>
+                              <option>TikTok</option>
+                              <option>Website</option>
+                              <option>Other</option>
+                            </select>
+                          </div>
+                          <div className="flex-[2]">
+                            <label className="block text-xs font-bold text-gray-500 mb-1 uppercase tracking-wider">
+                              URL or Username
+                            </label>
+                            <input
+                              type="text"
+                              className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white"
+                              value={link.url}
+                              onChange={(e) => {
+                                const newLinks = [...formData.social_links];
+                                newLinks[index] = { ...newLinks[index], url: e.target.value };
+                                setFormData({ ...formData, social_links: newLinks });
+                              }}
+                              placeholder={link.platform === 'WhatsApp' ? 'e.g. 919876543210' : 'https://...'}
+                            />
+                          </div>
+                          <button
+                            onClick={() => {
+                              const newLinks = formData.social_links.filter((_, i) => i !== index);
+                              setFormData({ ...formData, social_links: newLinks });
+                            }}
+                            className="p-2.5 text-red-500 hover:bg-red-50 rounded-sm transition-colors border border-transparent hover:border-red-100"
+                            title="Remove Link"
+                          >
+                            <X size={20} />
+                          </button>
+                        </div>
+                      ))}
                     </div>
 
-                    {/* Facebook */}
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Facebook URL
-                      </label>
-                      <input
-                        type="text"
-                        className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-                        value={formData.facebook_link}
-                        onChange={(e) =>
-                          setFormData({ ...formData, facebook_link: e.target.value })
-                        }
-                        placeholder="https://facebook.com/..."
-                      />
-                    </div>
-
-                    {/* Instagram */}
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Instagram URL
-                      </label>
-                      <input
-                        type="text"
-                        className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-                        value={formData.instagram_link}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            instagram_link: e.target.value,
-                          })
-                        }
-                        placeholder="https://instagram.com/..."
-                      />
-                    </div>
-
-                    {/* LinkedIn */}
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        LinkedIn URL
-                      </label>
-                      <input
-                        type="text"
-                        className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-                        value={formData.linkedin_link}
-                        onChange={(e) =>
-                          setFormData({ ...formData, linkedin_link: e.target.value })
-                        }
-                        placeholder="https://linkedin.com/..."
-                      />
-                    </div>
-
-                    {/* YouTube */}
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        YouTube URL
-                      </label>
-                      <input
-                        type="text"
-                        className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-                        value={formData.youtube_link}
-                        onChange={(e) =>
-                          setFormData({ ...formData, youtube_link: e.target.value })
-                        }
-                        placeholder="https://youtube.com/..."
-                      />
-                    </div>
-
-                    {/* Twitter */}
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Twitter (X) URL
-                      </label>
-                      <input
-                        type="text"
-                        className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-                        value={formData.twitter_link}
-                        onChange={(e) =>
-                          setFormData({ ...formData, twitter_link: e.target.value })
-                        }
-                        placeholder="https://twitter.com/..."
-                      />
-                    </div>
+                    <button
+                      onClick={() => {
+                        setFormData({
+                          ...formData,
+                          social_links: [...formData.social_links, { platform: 'LinkedIn', url: '' }]
+                        });
+                      }}
+                      className="w-full py-3 border-2 border-dashed border-gray-200 text-gray-500 rounded-sm hover:border-orange-300 hover:text-orange-600 hover:bg-orange-50 transition-all font-semibold flex items-center justify-center gap-2"
+                    >
+                      <Share2 size={20} />
+                      Add Social Link
+                    </button>
                   </div>
                 )}
               </div>
@@ -821,6 +937,7 @@ export default function BusinessInfoPage() {
                         name="website"
                         value={formData.website}
                         onChange={handleInputChange}
+                        placeholder="e.g. https://www.acme.com"
                         className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                       />
                     ) : (
@@ -841,6 +958,7 @@ export default function BusinessInfoPage() {
                         name="email"
                         value={formData.email}
                         onChange={handleInputChange}
+                        placeholder="e.g. info@acme.com"
                         className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                       />
                     ) : (
@@ -861,6 +979,7 @@ export default function BusinessInfoPage() {
                         name="phone"
                         value={formData.phone}
                         onChange={handleInputChange}
+                        placeholder="e.g. +91 98765 43210"
                         className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                       />
                     ) : (
@@ -881,6 +1000,7 @@ export default function BusinessInfoPage() {
                         name="alternate_phone"
                         value={formData.alternate_phone}
                         onChange={handleInputChange}
+                        placeholder="e.g. +91 98765 43211"
                         className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                       />
                     ) : (
@@ -901,6 +1021,7 @@ export default function BusinessInfoPage() {
                         name="contact_person"
                         value={formData.contact_person}
                         onChange={handleInputChange}
+                        placeholder="e.g. John Doe"
                         className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                       />
                     ) : (
@@ -921,6 +1042,7 @@ export default function BusinessInfoPage() {
                         name="designation"
                         value={formData.designation}
                         onChange={handleInputChange}
+                        placeholder="e.g. Managing Director"
                         className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                       />
                     ) : (
@@ -949,6 +1071,7 @@ export default function BusinessInfoPage() {
                         name="street_address"
                         value={formData.street_address}
                         onChange={handleInputChange}
+                        placeholder="e.g. 123 Business Hub, MG Road"
                         className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                       />
                     ) : (
@@ -969,6 +1092,7 @@ export default function BusinessInfoPage() {
                           name="city"
                           value={formData.city}
                           onChange={handleInputChange}
+                          placeholder="e.g. Mumbai"
                           className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                         />
                       ) : (
@@ -987,6 +1111,7 @@ export default function BusinessInfoPage() {
                           name="state"
                           value={formData.state}
                           onChange={handleInputChange}
+                          placeholder="e.g. Maharashtra"
                           className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                         />
                       ) : (
@@ -1008,6 +1133,7 @@ export default function BusinessInfoPage() {
                           name="pincode"
                           value={formData.pincode}
                           onChange={handleInputChange}
+                          placeholder="e.g. 400001"
                           className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                         />
                       ) : (
@@ -1026,6 +1152,7 @@ export default function BusinessInfoPage() {
                           name="country"
                           value={formData.country}
                           onChange={handleInputChange}
+                          placeholder="e.g. India"
                           className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                         />
                       ) : (
@@ -1081,10 +1208,11 @@ export default function BusinessInfoPage() {
                         value={formData.vision}
                         onChange={handleInputChange}
                         rows="2"
+                        placeholder="Your company's long-term vision..."
                         className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                       ></textarea>
                     ) : (
-                      <p className="text-gray-800 italic leading-relaxed text-sm">
+                      <p className="text-gray-800 italic leading-relaxed text-sm break-words">
                         "{formData.vision}"
                       </p>
                     )}
@@ -1100,10 +1228,11 @@ export default function BusinessInfoPage() {
                         value={formData.mission}
                         onChange={handleInputChange}
                         rows="2"
+                        placeholder="Your company's immediate mission..."
                         className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                       ></textarea>
                     ) : (
-                      <p className="text-gray-800 italic leading-relaxed text-sm">
+                      <p className="text-gray-800 italic leading-relaxed text-sm break-words">
                         "{formData.mission}"
                       </p>
                     )}
