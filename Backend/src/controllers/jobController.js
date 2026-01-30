@@ -12,7 +12,9 @@ const createJob = async (req, res) => {
             responsibilities,
             requirements,
             status,
-            posted_date
+            posted_date,
+            interview_rounds,
+            application_fields
         } = req.body;
 
         const jobId = await Job.create({
@@ -26,7 +28,9 @@ const createJob = async (req, res) => {
             responsibilities,
             requirements,
             status: status || 'Active',
-            posted_date: posted_date || new Date()
+            posted_date: posted_date || new Date(),
+            interview_rounds,
+            application_fields
         });
 
         res.status(201).json({

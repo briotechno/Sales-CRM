@@ -147,42 +147,43 @@ const TermsAndCondition = () => {
         {/* HEADER */}
         <div className="bg-white rounded-sm p-3 mb-4 border-b">
           <div className="flex justify-between items-center">
+            {/* LEFT TITLE */}
             <div>
-              <h1 className="text-2xl font-bold">Terms & Conditions</h1>
-              <p className="text-sm text-gray-500 mt-1 flex gap-2">
-                <FiHome />
-                <span>HRM /</span>
-                <span className="text-orange-500 font-semibold">
-                  Terms & Conditions
-                </span>
+              <h1 className="text-2xl font-bold text-gray-800">
+                Terms & Conditions
+              </h1>
+              <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
+                <FiHome className="text-gray-700 text-sm" />
+                <span className="text-gray-400">HRM /</span>
+                <span className="text-[#FF7B1D] font-medium">Terms & Conditions</span>
               </p>
             </div>
 
-            <div className="flex gap-3">
+            {/* RIGHT SIDE BUTTONS (Filter + Add Terms) */}
+            <div className="flex items-center gap-4">
+              {/* Filter Button */}
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className={`px-4 py-2 rounded-lg border flex items-center gap-2 transition-all shadow-sm ${showFilters || filterDept || filterDesig || searchTerm
-                  ? "bg-orange-50 border-orange-200 text-orange-600"
-                  : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
+                className={`p-2 rounded-sm border transition shadow-sm ${showFilters || filterDept || filterDesig || searchTerm
+                    ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
+                    : "bg-white text-black border-gray-300 hover:bg-gray-100"
                   }`}
+                title={filterDept || filterDesig || searchTerm ? "Filters Active" : "Filter"}
               >
-                <Filter size={18} className={filterDept || filterDesig || searchTerm ? "fill-orange-500" : ""} />
-                <span className="font-semibold text-sm">Filters</span>
-                {(filterDept || filterDesig || searchTerm) && (
-                  <span className="flex h-2 w-2 rounded-full bg-orange-500"></span>
-                )}
+                <Filter size={20} />
               </button>
 
+              {/* Add Terms Button */}
               <button
                 onClick={() => setIsModalOpen(true)}
                 disabled={!create}
-                className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-all shadow-md ${create
-                  ? "bg-orange-500 text-white hover:bg-orange-600 shadow-orange-500/20"
-                  : "bg-gray-300 text-gray-500 cursor-not-allowed shadow-none"
+                className={`flex items-center gap-2 px-4 py-2 rounded-sm font-semibold transition ml-2 ${create
+                    ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 hover:opacity-90"
+                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
                   }`}
               >
                 <Plus size={18} />
-                <span className="font-semibold text-sm">Add Terms</span>
+                Add Terms
               </button>
             </div>
           </div>
@@ -338,9 +339,11 @@ const TermsAndCondition = () => {
                     <td className="py-3 px-1 text-orange-600 font-medium">{term.designation}</td>
                     <td>{term.title}</td>
 
-                    <td className="py-3 px-4 text-gray-600 text-left max-w-xs transition-all duration-300">
-                      <div className="truncate hover:whitespace-normal hover:overflow-visible hover:relative hover:z-10 rounded-sm cursor-pointer" title={term.description}>
-                        {term.description || "---"}
+                    <td className="py-3 px-4 text-gray-600 text-left max-w-xs overflow-hidden">
+                      <div className="truncate cursor-pointer" title={term.description}>
+                        {term.description && term.description.length > 60
+                          ? term.description.substring(0, 60) + "..."
+                          : term.description || "---"}
                       </div>
                     </td>
 

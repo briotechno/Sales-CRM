@@ -2,7 +2,11 @@ import React, { useState, useEffect } from "react";
 import { X, UserPlus, Save, Loader2 } from "lucide-react";
 import FormSection from "./FormSection";
 import { useCreateEmployeeMutation } from "../../store/api/employeeApi";
+import { useGetOfferLettersQuery } from "../../store/api/offerLetterApi";
+import { useGetDepartmentsQuery } from "../../store/api/departmentApi";
+import { useGetDesignationsQuery } from "../../store/api/designationApi";
 import { toast } from "react-hot-toast";
+import { FileSignature } from "lucide-react";
 
 const AddEmployeeModal = ({ isOpen, onClose }) => {
   const [formData, setFormData] = useState({
@@ -54,10 +58,50 @@ const AddEmployeeModal = ({ isOpen, onClose }) => {
     username: "",
     password: "",
     status: "Active",
-    permissions: {}
+    permissions: {},
+    education: []
   });
 
   const [createEmployee, { isLoading }] = useCreateEmployeeMutation();
+  const { data: offerLetterData } = useGetOfferLettersQuery({ limit: 1000 });
+  const { data: deptData } = useGetDepartmentsQuery({ limit: 100 });
+  const { data: dsgData } = useGetDesignationsQuery({ limit: 100 });
+
+  const offerLetters = offerLetterData?.offerLetters || [];
+  const departments = deptData?.departments || [];
+  const designations = dsgData?.designations || [];
+
+  const handleOfferLetterChange = (e) => {
+    const offerId = e.target.value;
+    if (!offerId) return;
+
+    const offer = offerLetters.find((o) => o.id == offerId);
+    if (!offer) return;
+
+    // Split candidate name into first and last name
+    const nameParts = offer.candidate_name.trim().split(" ");
+    const firstName = nameParts[0] || "";
+    const lastName = nameParts.slice(1).join(" ") || "";
+
+    // Find matching department and designation IDs
+    const matchedDept = departments.find(d => d.department_name === offer.department);
+    const matchedDsg = designations.find(d => d.designation_name === offer.designation);
+
+    setFormData((prev) => ({
+      ...prev,
+      firstName,
+      lastName,
+      employeeName: offer.candidate_name,
+      email: offer.email,
+      mobile: offer.phone,
+      department: matchedDept ? matchedDept.id : prev.department,
+      designation: matchedDsg ? matchedDsg.id : prev.designation,
+      joiningDate: offer.joining_date ? offer.joining_date.split('T')[0] : prev.joiningDate,
+      permanentAddressLine1: offer.address || prev.permanentAddressLine1,
+    }));
+
+    toast.success(`Form auto-filled from ${offer.candidate_name}'s offer letter`);
+  };
 
   const calculateAge = (dob) => {
     if (!dob) return "";
@@ -183,7 +227,8 @@ const AddEmployeeModal = ({ isOpen, onClose }) => {
       cancelCheque: 'cancelled_cheque',
       username: 'username',
       password: 'password',
-      status: 'status'
+      status: 'status',
+      education: 'education'
     };
 
     Object.keys(formData).forEach(key => {
@@ -238,6 +283,31 @@ const AddEmployeeModal = ({ isOpen, onClose }) => {
 
         {/* Form Body */}
         <div className="p-6 space-y-6 overflow-y-auto flex-1">
+          {/* Offer Letter Auto-fill Section */}
+          <div className="bg-orange-50 p-4 rounded-sm border border-orange-100 mb-2">
+            <label className="text-xs font-bold text-orange-700 uppercase tracking-widest mb-2 flex items-center gap-2">
+              <FileSignature size={14} />
+              Auto-fill from Offer Letter (Optional)
+            </label>
+            <select
+              onChange={handleOfferLetterChange}
+              className="w-full border-2 border-orange-100 p-2.5 rounded-sm focus:border-orange-500 outline-none transition-all text-sm font-medium bg-white"
+            >
+              <option value="">-- Select Offer Letter to Auto-fill --</option>
+              {offerLetters.filter(o => o.status === 'Accepted').map((offer) => (
+                <option key={offer.id} value={offer.id}>
+                  {offer.candidate_name} - {offer.designation} (Accepted)
+                </option>
+              ))}
+              <option disabled>──────────</option>
+              {offerLetters.filter(o => o.status !== 'Accepted').map((offer) => (
+                <option key={offer.id} value={offer.id}>
+                  {offer.candidate_name} - {offer.designation} ({offer.status})
+                </option>
+              ))}
+            </select>
+          </div>
+
           <FormSection
             formData={formData}
             handleChange={handleChange}

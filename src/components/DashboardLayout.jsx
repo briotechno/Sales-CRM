@@ -16,9 +16,9 @@ const DashboardLayout = ({ children, isFullHeight = false }) => {
 
       {/* Main Content */}
       <main
-        className={`mt-[56px] p-4 bg-white transition-all duration-300
-        ${sidebarOpen ? "ml-64" : "ml-0"} 
-        md:ml-64 ${isFullHeight ? "h-[calc(100vh-56px)] flex flex-col overflow-hidden" : "min-h-screen"}`}
+        className={`mt-[64px] p-4 bg-white transition-all duration-300
+        ${sidebarOpen ? "ml-[280px]" : "ml-0"} 
+        md:ml-[280px] ${isFullHeight ? "h-[calc(100vh-64px)] flex flex-col overflow-hidden" : "min-h-screen"}`}
       >
         <ProfileCompletionBanner />
         {isFullHeight ? (

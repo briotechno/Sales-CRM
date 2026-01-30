@@ -1,4 +1,5 @@
 const { pool } = require('../config/db');
+const { v4: uuidv4 } = require('uuid');
 
 class Job {
     static async create(jobData) {
@@ -13,15 +14,20 @@ class Job {
             responsibilities,
             requirements,
             status,
-            posted_date
+            posted_date,
+            interview_rounds,
+            application_fields
         } = jobData;
+
+        const application_link = uuidv4();
 
         const query = `
       INSERT INTO jobs (
         user_id, title, department, location, type, 
-        positions, description, responsibilities, requirements, status, posted_date
+        positions, description, responsibilities, requirements, status, posted_date,
+        application_link, interview_rounds, application_fields
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
         const [result] = await pool.execute(query, [
@@ -29,7 +35,10 @@ class Job {
             positions, description,
             JSON.stringify(responsibilities || []),
             JSON.stringify(requirements || []),
-            status, posted_date
+            status, posted_date,
+            application_link,
+            JSON.stringify(interview_rounds || []),
+            JSON.stringify(application_fields || [])
         ]);
 
         return result.insertId;
@@ -62,8 +71,17 @@ class Job {
 
         const [rows] = await pool.execute(query, params);
 
+        // Parse JSON fields
+        const parsedRows = rows.map(job => ({
+            ...job,
+            responsibilities: typeof job.responsibilities === 'string' ? JSON.parse(job.responsibilities) : (job.responsibilities || []),
+            requirements: typeof job.requirements === 'string' ? JSON.parse(job.requirements) : (job.requirements || []),
+            interview_rounds: typeof job.interview_rounds === 'string' ? JSON.parse(job.interview_rounds) : (job.interview_rounds || []),
+            application_fields: typeof job.application_fields === 'string' ? JSON.parse(job.application_fields) : (job.application_fields || [])
+        }));
+
         return {
-            jobs: rows,
+            jobs: parsedRows,
             pagination: {
                 page: Number(page),
                 limit: Number(limit),
@@ -74,9 +92,41 @@ class Job {
     }
 
     static async findById(id, userId) {
-        const query = `SELECT * FROM jobs WHERE id = ? AND user_id = ?`;
-        const [rows] = await pool.execute(query, [id, userId]);
-        return rows[0];
+        let query;
+        let params;
+        if (userId) {
+            query = `SELECT * FROM jobs WHERE id = ? AND user_id = ?`;
+            params = [id, userId];
+        } else {
+            query = `SELECT * FROM jobs WHERE id = ?`;
+            params = [id];
+        }
+        const [rows] = await pool.execute(query, params);
+        if (!rows[0]) return null;
+
+        const job = rows[0];
+        return {
+            ...job,
+            responsibilities: typeof job.responsibilities === 'string' ? JSON.parse(job.responsibilities) : (job.responsibilities || []),
+            requirements: typeof job.requirements === 'string' ? JSON.parse(job.requirements) : (job.requirements || []),
+            interview_rounds: typeof job.interview_rounds === 'string' ? JSON.parse(job.interview_rounds) : (job.interview_rounds || []),
+            application_fields: typeof job.application_fields === 'string' ? JSON.parse(job.application_fields) : (job.application_fields || [])
+        };
+    }
+
+    static async findByLink(link) {
+        const query = `SELECT * FROM jobs WHERE application_link = ?`;
+        const [rows] = await pool.execute(query, [link]);
+        if (!rows[0]) return null;
+
+        const job = rows[0];
+        return {
+            ...job,
+            responsibilities: typeof job.responsibilities === 'string' ? JSON.parse(job.responsibilities) : (job.responsibilities || []),
+            requirements: typeof job.requirements === 'string' ? JSON.parse(job.requirements) : (job.requirements || []),
+            interview_rounds: typeof job.interview_rounds === 'string' ? JSON.parse(job.interview_rounds) : (job.interview_rounds || []),
+            application_fields: typeof job.application_fields === 'string' ? JSON.parse(job.application_fields) : (job.application_fields || [])
+        };
     }
 
     static async update(id, userId, jobData) {
@@ -89,7 +139,9 @@ class Job {
             description,
             responsibilities,
             requirements,
-            status
+            status,
+            interview_rounds,
+            application_fields
         } = jobData;
 
         // Build dynamic update query
@@ -105,6 +157,8 @@ class Job {
         if (responsibilities !== undefined) { fields.push('responsibilities = ?'); params.push(JSON.stringify(responsibilities)); }
         if (requirements !== undefined) { fields.push('requirements = ?'); params.push(JSON.stringify(requirements)); }
         if (status !== undefined) { fields.push('status = ?'); params.push(status); }
+        if (interview_rounds !== undefined) { fields.push('interview_rounds = ?'); params.push(JSON.stringify(interview_rounds)); }
+        if (application_fields !== undefined) { fields.push('application_fields = ?'); params.push(JSON.stringify(application_fields)); }
 
         if (fields.length === 0) return false;
 
@@ -127,13 +181,14 @@ class Job {
         COUNT(*) as total_jobs,
         SUM(CASE WHEN status = 'Active' THEN 1 ELSE 0 END) as active_jobs,
         SUM(positions) as total_positions,
-        SUM(applicants) as total_applicants
+        (SELECT COUNT(*) FROM applicants a JOIN jobs j ON a.job_id = j.id WHERE j.user_id = ?) as total_applicants
       FROM jobs
       WHERE user_id = ?
     `;
-        const [rows] = await pool.execute(query, [userId]);
+        const [rows] = await pool.execute(query, [userId, userId]);
         return rows[0];
     }
 }
 
 module.exports = Job;
+

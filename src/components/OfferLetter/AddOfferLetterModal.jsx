@@ -2,12 +2,10 @@ import React, { useState, useEffect } from "react";
 import { FileSignature, Save, User as UserIcon, Mail, Phone, Building2, Briefcase, DollarSign, Calendar } from "lucide-react";
 import Modal from "../common/Modal";
 import { toast } from "react-hot-toast";
-import { useGetEmployeesQuery } from "../../store/api/employeeApi";
 import { useGetDepartmentsQuery } from "../../store/api/departmentApi";
 import { useGetDesignationsQuery } from "../../store/api/designationApi";
-import { useGetAllSalariesQuery } from "../../store/api/salaryApi";
 
-const AddOfferLetterModal = ({ isOpen, onClose, onSubmit, loading }) => {
+const AddOfferLetterModal = ({ isOpen, onClose, onSubmit, loading, initialData }) => {
     const [formData, setFormData] = useState({
         employee_id: "",
         candidate_name: "",
@@ -24,40 +22,21 @@ const AddOfferLetterModal = ({ isOpen, onClose, onSubmit, loading }) => {
         status: "Draft",
     });
 
-    const { data: employeeData, isLoading: loadingEmployees } = useGetEmployeesQuery({ limit: 1000 });
+    useEffect(() => {
+        if (initialData && isOpen) {
+            setFormData(prev => ({
+                ...prev,
+                ...initialData,
+                // Ensure allowances and deductions stay as arrays if not provided
+                allowances: initialData.allowances || prev.allowances,
+                deductions: initialData.deductions || prev.deductions,
+            }));
+        }
+    }, [initialData, isOpen]);
+
     const { data: departmentData } = useGetDepartmentsQuery({ limit: 100 });
     const { data: designationData } = useGetDesignationsQuery({ limit: 100 });
-    const { data: salaryData } = useGetAllSalariesQuery();
 
-    const salaries = salaryData?.salaries || [];
-
-    const handleEmployeeChange = (e) => {
-        const empId = e.target.value;
-        setFormData(prev => ({ ...prev, employee_id: empId }));
-
-        if (empId) {
-            const selectedEmployee = employeeData?.employees?.find(emp => emp.id == empId);
-            if (selectedEmployee) {
-                // Find latest salary for this employee
-                const empSalary = salaries.find(s => s.employee_id == empId);
-
-                setFormData(prev => ({
-                    ...prev,
-                    candidate_name: selectedEmployee.employee_name || "",
-                    email: selectedEmployee.email || "",
-                    phone: selectedEmployee.mobile_number || "",
-                    department: selectedEmployee.department_name || "",
-                    designation: selectedEmployee.designation_name || "",
-                    address: selectedEmployee.permanent_address || "",
-                    basic_salary: empSalary ? empSalary.basic_salary : prev.basic_salary,
-                    // If empSalary has JSON allowances/deductions, parse them. 
-                    // Based on salaryModel.js, they might be single numbers in the current implementation.
-                    allowances: empSalary && empSalary.allowances ? [{ label: "Base Allowances", amount: empSalary.allowances }] : prev.allowances,
-                    deductions: empSalary && empSalary.deductions ? [{ label: "Base Deductions", amount: empSalary.deductions }] : prev.deductions,
-                }));
-            }
-        }
-    };
 
     const handleAddField = (type) => {
         setFormData(prev => ({
@@ -149,19 +128,6 @@ const AddOfferLetterModal = ({ isOpen, onClose, onSubmit, loading }) => {
             <div className="space-y-6 max-h-[70vh] overflow-y-auto px-1 custom-scrollbar">
                 {/* Selection & Personal Info */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 p-4 rounded-sm border border-gray-100">
-                    <div className="col-span-2">
-                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 block">Select Existing Employee (Optional - Auto-fills details)</label>
-                        <select
-                            value={formData.employee_id}
-                            onChange={handleEmployeeChange}
-                            className="w-full border-2 border-gray-200 p-3 rounded-sm focus:border-orange-500 outline-none transition-all font-medium"
-                        >
-                            <option value="">New Candidate</option>
-                            {employeeData?.employees?.map((emp) => (
-                                <option key={emp.id} value={emp.id}>{emp.employee_name} ({emp.employee_id})</option>
-                            ))}
-                        </select>
-                    </div>
 
                     <div>
                         <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 block">Candidate Name *</label>

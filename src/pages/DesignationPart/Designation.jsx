@@ -230,9 +230,11 @@ const AllDesignation = () => {
                     </td>
                     <td className="py-3 px-4 text-orange-600 font-medium">{dsg.designation_id}</td>
                     <td className="py-3 px-4 text-gray-800 font-medium">{dsg.designation_name}</td>
-                    <td className="py-3 px-4 text-gray-600 text-left max-w-xs transition-all duration-300">
-                      <div className="truncate hover:whitespace-normal hover:overflow-visible hover:relative hover:z-10 rounded-sm cursor-pointer" title={dsg.description}>
-                        {dsg.description || "---"}
+                    <td className="py-3 px-4 text-gray-600 text-left max-w-xs overflow-hidden">
+                      <div className="truncate cursor-pointer" title={dsg.description}>
+                        {dsg.description && dsg.description.length > 60
+                          ? dsg.description.substring(0, 60) + "..."
+                          : dsg.description || "---"}
                       </div>
                     </td>
                     <td className="py-3 px-4 text-gray-600">{dsg.department_name}</td>
