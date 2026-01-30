@@ -12,10 +12,11 @@ import {
   FiCheckSquare,
   FiFileText,
   FiDollarSign,
+  FiSearch,
 } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { FileSignature, Wallet } from "lucide-react";
+import { FileSignature, Wallet, Shield } from "lucide-react";
 
 const Header = () => {
   const { user } = useSelector((state) => state.auth);
@@ -23,9 +24,12 @@ const Header = () => {
   const [appsOpen, setAppsOpen] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [notificationOpen, setNotificationOpen] = useState(false);
+  const [searchValue, setSearchValue] = useState("");
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
 
   const dropdownRef = useRef(null);
   const appsRef = useRef(null);
+  const searchInputRef = useRef(null);
 
   const navigate = useNavigate();
 
@@ -35,6 +39,18 @@ const Header = () => {
       setCurrentTime(new Date());
     }, 1000);
     return () => clearInterval(timer);
+  }, []);
+
+  // Keyboard shortcut for search
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "/") {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
   // Close dropdowns on outside click
@@ -51,14 +67,13 @@ const Header = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Navigate + close dropdowns
   const go = (path) => {
     navigate(path);
     setIsDropdownOpen(false);
     setAppsOpen(false);
+    setSearchValue("");
   };
 
-  // Fullscreen toggle function
   const toggleFullScreen = () => {
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen();
@@ -67,255 +82,237 @@ const Header = () => {
     }
   };
 
+  const allPages = [
+    { name: "Main Dashboard", path: "/dashboard", category: "Dashboards" },
+    { name: "HRM Dashboard", path: "/hrm/dashboard", category: "Dashboards" },
+    { name: "CRM Dashboard", path: "/crm/dashboard", category: "Dashboards" },
+    { name: "Employee List", path: "/hrm/employee/all", category: "HRM" },
+    { name: "All Leads", path: "/crm/leads/all", category: "CRM" },
+    { name: "New Leads", path: "/crm/leads/new", category: "CRM" },
+    { name: "Manage Teams", path: "/hrm/teams", category: "HRM" },
+    { name: "Attendance Management", path: "/hrm/attendance", category: "HRM" },
+    { name: "Leave Management", path: "/hrm/leave/all", category: "HRM" },
+    { name: "Department Management", path: "/hrm/department", category: "HRM" },
+    { name: "Designation Management", path: "/hrm/designation", category: "HRM" },
+    { name: "Salary Management", path: "/hrm/salary", category: "HRM" },
+    { name: "Company Policies", path: "/hrm/company-policy", category: "HRM" },
+    { name: "HR Policies", path: "/hrm/hr-policy", category: "HRM" },
+    { name: "Job Management", path: "/hrm/job-management", category: "Recruitment" },
+    { name: "Invoices", path: "/additional/invoice", category: "Financial" },
+    { name: "Business Info", path: "/settings/business-info", category: "Settings" },
+  ];
+
+  const searchResults = searchValue.length > 0
+    ? allPages.filter(page => {
+      const q = searchValue.toLowerCase();
+      const name = page.name.toLowerCase();
+      const cat = page.category.toLowerCase();
+      // Forgiving match for "dashboard"
+      const isDashboardTypo = q.includes("dash") && (q.includes("bi") || q.includes("bo"));
+      return name.includes(q) || cat.includes(q) || (isDashboardTypo && name.includes("dashboard"));
+    }).reduce((acc, curr) => {
+      const cat = acc.find(c => c.category === curr.category);
+      if (cat) cat.items.push(curr);
+      else acc.push({ category: curr.category, items: [curr] });
+      return acc;
+    }, [])
+    : [];
+
   return (
-    <header className="fixed top-0 left-0 right-0 sm:left-[18rem] h-[56px] flex items-center pl-14 pr-3 sm:px-4 lg:px-6 shadow-md z-50 bg-[#343d46]">
-      {/* Digital Clock - Hidden on mobile, visible on md+ */}
-      <div
-        className="hidden md:flex items-center gap-2 mr-3 lg:mr-4 px-2 lg:px-3 py-0 rounded-sm"
-        style={{ width: "140px", minWidth: "140px" }}
-      >
-        <div className="flex flex-col items-center w-full text-center">
-          <span
-            className="text-white text-base lg:text-lg font-semibold tracking-wide leading-tight"
-            style={{ fontVariantNumeric: "tabular-nums" }}
-          >
-            {currentTime.toLocaleTimeString("en-US", {
-              hour: "2-digit",
-              minute: "2-digit",
-              second: "2-digit",
-              hour12: true,
-            })}
-          </span>
+    <header className="fixed top-0 left-0 right-0 md:left-[280px] h-[64px] flex items-center px-4 lg:px-8 z-40 bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm transition-all duration-300">
+      {/* Search - Centered properly */}
+      <div className="flex-1 flex justify-center max-w-full relative">
+        <div
+          className={`relative w-full max-w-md transition-all duration-300 ${isSearchFocused ? 'max-w-lg scale-[1.02]' : 'max-w-md'}`}
+        >
+          <div className="relative group">
+            <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#FF7B1D] transition-colors" size={18} />
+            <input
+              ref={searchInputRef}
+              type="text"
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
+              onFocus={() => setIsSearchFocused(true)}
+              onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
+              placeholder="Search leads, employees, or dashboards..."
+              className="w-full h-11 pl-10 pr-20 rounded-2xl bg-gray-50/50 border border-gray-100 focus:bg-white focus:border-[#FF7B1D] focus:ring-4 focus:ring-[#FF7B1D]/10 placeholder-gray-400 text-sm focus:outline-none transition-all shadow-inner"
+            />
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-60">
+              <span className="text-[10px] font-bold text-gray-500 bg-gray-200/50 px-1.5 py-0.5 rounded-md border border-gray-300">CTRL</span>
+              <span className="text-[10px] font-bold text-gray-500 bg-gray-200/50 px-1.5 py-0.5 rounded-md border border-gray-300">/</span>
+            </div>
+          </div>
 
-          <span className="text-white text-xs font-medium">
-            {currentTime.toLocaleDateString("en-US", {
-              weekday: "short",
-              month: "short",
-              day: "numeric",
-            })}
-          </span>
-        </div>
-      </div>
-
-      {/* Search - Responsive width - Small and properly spaced on mobile */}
-      <div className="flex-1 flex justify-start max-w-full sm:max-w-[240px] md:max-w-[280px] lg:max-w-md relative">
-        <div className="w-full max-w-[140px] sm:max-w-full relative">
-          <input
-            type="text"
-            placeholder="Search..."
-            className="w-full h-8 sm:h-9 pl-2.5 sm:pl-3 pr-2 sm:pr-20 rounded bg-gray-800 text-white 
-      placeholder-gray-400 text-xs sm:text-sm focus:outline-none"
-          />
-          <span
-            className="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 
-    text-gray-400 text-xs bg-[#2c323a] px-1 rounded hidden sm:block"
-          >
-            CTRL + /
-          </span>
+          {/* Search Results Dropdown */}
+          {searchValue && isSearchFocused && (
+            <div className="absolute top-full left-0 right-0 mt-3 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-y-auto max-h-[70vh] animate-fadeIn py-2 z-50 custom-scrollbar">
+              {searchResults.length > 0 ? (
+                searchResults.map((cat, idx) => (
+                  <div key={idx} className="mb-2 last:mb-0">
+                    <div className="px-4 py-1 flex items-center justify-between">
+                      <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{cat.category}</h3>
+                      <div className="h-px flex-1 ml-4 bg-gray-50" />
+                    </div>
+                    {cat.items.map((item, i) => (
+                      <button
+                        key={i}
+                        onClick={() => go(item.path)}
+                        className="w-full px-4 py-2.5 flex items-center justify-between group hover:bg-[#FF7B1D]/5 transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-gray-400 group-hover:text-[#FF7B1D] group-hover:bg-white transition-all border border-transparent group-hover:border-orange-100">
+                            <FiFileText size={14} />
+                          </div>
+                          <span className="text-sm font-medium text-gray-700 group-hover:text-[#FF7B1D]">{item.name}</span>
+                        </div>
+                        <FiGrid size={12} className="text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </button>
+                    ))}
+                  </div>
+                ))
+              ) : (
+                <div className="p-8 text-center bg-gray-50/30">
+                  <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm border border-gray-100">
+                    <FiSearch size={20} className="text-gray-300" />
+                  </div>
+                  <p className="text-sm text-gray-600 font-medium">No matches for <span className="text-[#FF7B1D]">"{searchValue}"</span></p>
+                  <p className="text-[11px] text-gray-400 mt-1">Try searching for HRM, Dashboard, or Leads</p>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
       {/* Right Icons */}
-      <div className="flex items-center gap-1 sm:gap-2 md:gap-3 ml-auto">
-        {/* Fullscreen Toggle Button - Hidden on mobile */}
-        <button
-          onClick={toggleFullScreen}
-          className="hidden md:block text-white text-lg p-2 hover:bg-[#414b57] rounded transition-colors"
-        >
-          <FiMaximize />
-        </button>
-
-        {/* Apps Dropdown - Hidden on mobile */}
-        <div className="relative" ref={appsRef}>
-          <button
-            onClick={() => setAppsOpen(!appsOpen)}
-            className="hidden md:block text-white text-lg p-2 hover:bg-[#414b57] rounded transition-colors"
-          >
-            <FiGrid />
-          </button>
-
-          {appsOpen && (
-            <div className="absolute right-0 mt-2 w-56 bg-white rounded-sm shadow-lg p-3 z-50">
-              <h3 className="text-sm font-semibold px-2 mb-2">Applications</h3>
-
-              <div className="flex flex-col gap-1">
-                <button
-                  onClick={() => go("/additional/todo")}
-                  className="flex items-center gap-3 px-3 py-2 text-sm rounded hover:bg-gray-100"
-                >
-                  <FiCheckSquare size={16} className="text-gray-600" /> To Do
-                </button>
-
-                <button
-                  onClick={() => go("/additional/notes")}
-                  className="flex items-center gap-3 px-3 py-2 text-sm rounded hover:bg-gray-100"
-                >
-                  <FiFileText size={16} className="text-gray-600" /> Notes
-                </button>
-
-                <button
-                  onClick={() => go("/additional/invoice")}
-                  className="flex items-center gap-3 px-3 py-2 text-sm rounded hover:bg-gray-100"
-                >
-                  <FiDollarSign size={16} className="text-gray-600" /> Invoices
-                </button>
-
-                <button
-                  onClick={() => go("/additional/quotation")}
-                  className="flex items-center gap-3 px-3 py-2 text-sm rounded hover:bg-gray-100"
-                >
-                  <FileSignature size={16} className="text-gray-600" /> Quotation
-                </button>
-
-                <button
-                  onClick={() => go("/additional/expenses")}
-                  className="flex items-center gap-3 px-3 py-2 text-sm rounded hover:bg-gray-100"
-                >
-                  <Wallet size={16} className="text-gray-600" /> My Expenses
-                </button>
-              </div>
-            </div>
-          )}
+      <div className="flex items-center gap-3 ml-6">
+        {/* Digital Clock - Premium Redesign */}
+        <div className="hidden lg:flex flex-col items-end mr-6 border-r pr-6 border-gray-100">
+          <span className="text-[15px] font-black text-gray-900 tracking-tighter leading-none font-mono">
+            {currentTime.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true })}
+          </span>
+          <div className="flex items-center gap-1.5 mt-1.5">
+            <div className="w-1 h-1 rounded-full bg-green-500 animate-pulse" />
+            <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest whitespace-nowrap">
+              {currentTime.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
+            </span>
+          </div>
         </div>
 
-        {/* Chat - Responsive */}
-        <button
-          onClick={() => go("/additional/messenger")}
-          className="relative text-white text-base sm:text-lg p-1.5 sm:p-2 hover:bg-[#414b57] rounded transition-colors"
-        >
-          <FiMessageCircle />
-          <span className="absolute -top-0.5 -right-0.5 sm:-top-1 sm:-right-1 bg-blue-500 text-white text-[10px] sm:text-xs w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full flex items-center justify-center font-semibold">
-            5
-          </span>
-        </button>
+        {/* Action Icons */}
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={toggleFullScreen}
+            className="p-2.5 text-gray-500 hover:bg-gray-100 hover:text-orange-500 rounded-xl transition-all"
+            title="Fullscreen"
+          >
+            <FiMaximize size={20} />
+          </button>
 
-        {/* Mail - Responsive */}
-        <button
-          onClick={() => go("/mail")}
-          className="relative text-white text-base sm:text-lg p-1.5 sm:p-2 hover:bg-[#414b57] rounded transition-colors"
-        >
-          <FiMail />
-          <span className="absolute -top-0.5 -right-0.5 sm:-top-1 sm:-right-1 bg-blue-500 text-white text-[10px] sm:text-xs w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full flex items-center justify-center font-semibold">
-            5
-          </span>
-        </button>
+          <div className="relative" ref={appsRef}>
+            <button
+              onClick={() => setAppsOpen(!appsOpen)}
+              className={`p-2.5 rounded-xl transition-all ${appsOpen ? "bg-orange-50 text-orange-500" : "text-gray-500 hover:bg-gray-100"}`}
+              title="Apps"
+            >
+              <FiGrid size={20} />
+            </button>
+            {appsOpen && (
+              <div className="absolute right-0 mt-3 w-64 bg-white rounded-2xl shadow-2xl border border-gray-100 p-3 z-50 animate-fadeIn">
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { name: "To Do", icon: <FiCheckSquare />, path: "/additional/todo", color: "text-blue-500" },
+                    { name: "Notes", icon: <FiFileText />, path: "/additional/notes", color: "text-purple-500" },
+                    { name: "Invoices", icon: <FiDollarSign />, path: "/additional/invoice", color: "text-green-500" },
+                    { name: "Expenses", icon: <Wallet />, path: "/additional/expenses", color: "text-orange-500" },
+                  ].map((app, i) => (
+                    <button
+                      key={i}
+                      onClick={() => go(app.path)}
+                      className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-gray-50 transition-all border border-transparent hover:border-gray-100"
+                    >
+                      <div className={`p-2 rounded-lg bg-gray-50 ${app.color}`}>{app.icon}</div>
+                      <span className="text-xs font-semibold text-gray-600">{app.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
 
-        <div className="relative">
+          <button
+            onClick={() => go("/additional/messenger")}
+            className="relative p-2.5 text-gray-500 hover:bg-gray-100 rounded-xl transition-all"
+          >
+            <FiMessageCircle size={20} />
+            <span className="absolute top-2 right-2 flex h-3 w-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-orange-500 text-[8px] text-white items-center justify-center font-bold">5</span>
+            </span>
+          </button>
+
           <button
             onClick={() => setNotificationOpen(!notificationOpen)}
-            className="relative text-white text-base sm:text-lg p-1.5 sm:p-2 hover:bg-[#414b57] rounded transition-colors"
+            className={`relative p-2.5 rounded-xl transition-all ${notificationOpen ? "bg-orange-50 text-orange-500" : "text-gray-500 hover:bg-gray-100"}`}
           >
-            <FiBell />
-
-            {/* Unread dot */}
-            <span className="absolute -top-0.5 -right-0.5 sm:-top-1 sm:-right-1 bg-red-500 w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full" />
+            <FiBell size={20} />
+            <span className="absolute top-2.5 right-2.5 h-2 w-2 bg-red-500 rounded-full border-2 border-white" />
           </button>
-
-          {notificationOpen && (
-            <div className="absolute right-0 mt-2 w-64 bg-white rounded-sm shadow-lg p-3 z-50">
-              <h3 className="text-sm font-semibold px-2 mb-2">
-                Notifications
-              </h3>
-
-              <div className="flex flex-col gap-1">
-                <button
-                  onClick={() => {
-                    go("/additional/notification");
-                    setNotificationOpen(false);
-                  }}
-                  className="flex flex-col px-3 py-2 text-sm rounded hover:bg-gray-100 text-left"
-                >
-                  <span className="font-medium text-gray-800">
-                    New Lead Assigned
-                  </span>
-                  <span className="text-xs text-gray-500">
-                    A new lead has been assigned to you
-                  </span>
-                </button>
-
-                <button
-                  onClick={() => {
-                    go("/additional/notification");
-                    setNotificationOpen(false);
-                  }}
-                  className="flex flex-col px-3 py-2 text-sm rounded hover:bg-gray-100 text-left"
-                >
-                  <span className="font-medium text-gray-800">
-                    Invoice Overdue
-                  </span>
-                  <span className="text-xs text-gray-500">
-                    Invoice #3478 is overdue
-                  </span>
-                </button>
-              </div>
-
-              {/* Footer */}
-              <button
-                onClick={() => {
-                  go("/additional/notification");
-                  setNotificationOpen(false);
-                }}
-                className="w-full mt-2 text-sm text-orange-500 hover:bg-gray-100 py-2 rounded"
-              >
-                View all notifications
-              </button>
-            </div>
-          )}
         </div>
 
-
-        {/* USER MENU - Responsive */}
-        <div className="relative" ref={dropdownRef}>
+        {/* User Profile - Premium Pill */}
+        <div className="relative ml-3" ref={dropdownRef}>
           <button
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            className="focus:outline-none ml-1"
+            className="group flex items-center gap-2.5 p-1.5 pr-4 rounded-2xl hover:bg-white hover:shadow-lg hover:shadow-orange-100/50 transition-all duration-300 border border-transparent hover:border-orange-50"
           >
-            <img
-              src="https://i.pravatar.cc/32"
-              alt="User Avatar"
-              className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-600 cursor-pointer"
-            />
-            <span className="absolute bottom-0 right-0 w-2 h-2 bg-green-500 border-2 border-[#343d46] rounded-full" />
+            <div className="relative">
+              <div className="absolute inset-0 bg-[#FF7B1D] rounded-full blur-sm opacity-0 group-hover:opacity-20 transition-opacity" />
+              <img
+                src={`https://ui-avatars.com/api/?name=${user?.firstName}+${user?.lastName}&background=FF7B1D&color=fff&bold=true`}
+                alt="Profile"
+                className="w-9 h-9 rounded-xl object-cover relative ring-2 ring-white"
+              />
+              <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full shadow-sm animate-pulse"></div>
+            </div>
+            <div className="hidden sm:block text-left">
+              <p className="text-[13px] font-bold text-gray-900 leading-tight group-hover:text-[#FF7B1D] transition-colors">{user?.firstName || "User"}</p>
+              <p className="text-[9px] font-black text-gray-400 mt-0.5 uppercase tracking-widest flex items-center gap-1">
+                <Shield size={8} /> {user?.role || "Member"}
+              </p>
+            </div>
           </button>
 
           {isDropdownOpen && (
-            <div className="absolute right-0 mt-2 w-48 sm:w-56 bg-white rounded-lg shadow-lg overflow-hidden">
-              <div className="px-3 sm:px-4 py-2 sm:py-3 border-b">
-                <p className="text-xs sm:text-sm font-semibold">{user?.firstName} {user?.lastName}</p>
-                <p className="text-[10px] sm:text-xs text-gray-500 truncate">
-                  {user?.email}
-                </p>
+            <div className="absolute right-0 mt-3 w-64 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50 animate-fadeIn">
+              <div className="px-5 py-4 bg-gray-50/50 border-b border-gray-100">
+                <p className="text-sm font-bold text-gray-800">{user?.firstName} {user?.lastName}</p>
+                <p className="text-xs text-gray-500 mt-0.5 truncate">{user?.email}</p>
               </div>
-
-              <div className="py-1 sm:py-2">
+              <div className="p-2">
+                {[
+                  { name: "My Profile", icon: <FiUser />, path: "/profile" },
+                  { name: "Account Settings", icon: <FiSettings />, path: "/settings" },
+                  { name: "Payment Details", icon: <FiCreditCard />, path: "/billing" },
+                ].map((item, i) => (
+                  <button
+                    key={i}
+                    onClick={() => go(item.path)}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-xl transition-all"
+                  >
+                    <span className="text-gray-400">{item.icon}</span>
+                    {item.name}
+                  </button>
+                ))}
+              </div>
+              <div className="p-2 border-t border-gray-100">
                 <button
-                  onClick={() => go("/profile")}
-                  className="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm flex items-center gap-2 sm:gap-3 hover:bg-gray-100 transition-colors"
+                  onClick={() => go("/logout")}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-bold text-red-500 hover:bg-red-50 rounded-xl transition-all"
                 >
-                  <FiUser /> My Profile
-                </button>
-
-                <button
-                  onClick={() => go("/settings")}
-                  className="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm flex items-center gap-2 sm:gap-3 hover:bg-gray-100 transition-colors"
-                >
-                  <FiSettings /> Settings
-                </button>
-
-                <button
-                  onClick={() => go("/billing")}
-                  className="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm flex items-center gap-2 sm:gap-3 hover:bg-gray-100 transition-colors"
-                >
-                  <FiCreditCard /> Billing
+                  <FiLogOut /> Log Out
                 </button>
               </div>
-
-              <button
-                onClick={() => go("/logout")}
-                className="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm flex items-center gap-2 sm:gap-3 hover:bg-gray-100 border-t transition-colors"
-              >
-                <FiLogOut /> Logout
-              </button>
             </div>
           )}
         </div>

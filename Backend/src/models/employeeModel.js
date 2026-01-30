@@ -13,7 +13,7 @@ const Employee = {
             permanent_city, permanent_state, permanent_country, permanent_pincode,
             correspondence_city,
             emergency_contact_person, emergency_contact_number,
-            blood_group, languages, aadhar_number, pan_number,
+            blood_group, languages, education, aadhar_number, pan_number,
             aadhar_front, aadhar_back, pan_card,
             ifsc_code, account_number, account_holder_name, branch_name,
             cancelled_cheque, username, password, status, permissions
@@ -41,11 +41,11 @@ const Employee = {
                 permanent_city, permanent_state, permanent_country, permanent_pincode,
                 correspondence_city,
                 emergency_contact_person, emergency_contact_number,
-                blood_group, languages, aadhar_number, pan_number,
+                blood_group, languages, education, aadhar_number, pan_number,
                 aadhar_front, aadhar_back, pan_card,
                 ifsc_code, account_number, account_holder_name, branch_name,
                 cancelled_cheque, username, password, status, user_id, permissions
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 newId, employee_name, profile_picture, date_of_birth, age, gender,
                 father_name, mother_name, marital_status, joining_date,
@@ -57,7 +57,7 @@ const Employee = {
                 permanent_city, permanent_state, permanent_country, permanent_pincode,
                 correspondence_city,
                 emergency_contact_person, emergency_contact_number,
-                blood_group, languages, aadhar_number, pan_number,
+                blood_group, languages, (typeof education === 'object' ? JSON.stringify(education || []) : (education || '[]')), aadhar_number, pan_number,
                 aadhar_front, aadhar_back, pan_card,
                 ifsc_code, account_number, account_holder_name, branch_name,
                 cancelled_cheque, username, password, status, userId, (typeof permissions === 'object' ? JSON.stringify(permissions || []) : (permissions || '[]'))

@@ -43,6 +43,10 @@ export const jobApi = createApi({
             }),
             invalidatesTags: ['Job'],
         }),
+        getJobById: builder.query({
+            query: (id) => `jobs/${id}`,
+            providesTags: (result, error, id) => [{ type: 'Job', id }],
+        }),
         deleteJob: builder.mutation({
             query: (id) => ({
                 url: `jobs/${id}`,
@@ -55,6 +59,8 @@ export const jobApi = createApi({
 
 export const {
     useGetJobsQuery,
+    useGetJobByIdQuery,
+    useLazyGetJobByIdQuery,
     useGetJobStatsQuery,
     useCreateJobMutation,
     useUpdateJobMutation,

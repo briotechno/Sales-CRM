@@ -56,6 +56,8 @@ import AllHRPolicy from "./pages/HrPolicyPage/AllHRPolicy";
 
 // Jobs management
 import Job from "./pages/JobManagement/Job";
+import ApplicantList from "./pages/JobManagement/ApplicantList";
+import PublicJobForm from "./pages/JobManagement/PublicJobForm";
 import OfferLetterList from "./pages/OfferLetterPart/OfferLetterList";
 // Notes  Part
 import AllNotes from "./pages/NotesPart/AllNotes";
@@ -132,8 +134,9 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/packages" element={<Packages />} />
-        <Route path="/business/:id" element={<CompanyProfile />} />
+        <Route path="/business/:id/:slug?" element={<CompanyProfile />} />
         <Route path="/catalog/view/:id" element={<CatalogView />} />
+        <Route path="/apply/:link" element={<PublicJobForm />} />
 
         {/* Protected Routes */}
         <Route element={<ProtectedRoute />}>
@@ -178,6 +181,7 @@ function App() {
           <Route path="/hrm/company-policy" element={<AllCompanyPolicy />} />
           <Route path="/hrm/hr-policy" element={<AllHRPolicy />} />
           <Route path="/hrm/job-management" element={<Job />} />
+          <Route path="/hrm/applicants" element={<ApplicantList />} />
           <Route path="/hrm/offer-letters" element={<OfferLetterList />} />
           <Route path="/additional/notes" element={<AllNotes />} />
           <Route path="/additional/todo" element={<AllToDo />} />

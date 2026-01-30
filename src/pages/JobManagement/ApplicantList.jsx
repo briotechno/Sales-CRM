@@ -1,0 +1,736 @@
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import DashboardLayout from "../../components/DashboardLayout";
+import {
+    Users,
+    Search,
+    Filter,
+    Eye,
+    Trash2,
+    Briefcase,
+    Calendar,
+    Mail,
+    Phone,
+    Download,
+    CheckCircle,
+    XCircle,
+    Clock,
+    ArrowRight,
+    Activity,
+    Edit,
+    Plus,
+    X
+} from "lucide-react";
+import { FiHome } from "react-icons/fi";
+import NumberCard from "../../components/NumberCard";
+import {
+    useGetApplicantsQuery,
+    useUpdateApplicantStatusMutation,
+    useDeleteApplicantMutation,
+    useGetApplicantStatsQuery
+} from "../../store/api/applicantApi";
+import { useLazyGetJobByIdQuery } from "../../store/api/jobApi";
+import toast from 'react-hot-toast';
+import Modal from "../../components/common/Modal";
+
+const ApplicantList = () => {
+    const navigate = useNavigate();
+    const [currentPage, setCurrentPage] = useState(1);
+    const [search, setSearch] = useState("");
+    const [selectedStatus, setSelectedStatus] = useState("All");
+    const [showViewModal, setShowViewModal] = useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [selectedApplicant, setSelectedApplicant] = useState(null);
+    const [editFormData, setEditFormData] = useState({
+        name: "",
+        email: "",
+        phone: "",
+        status: "",
+        current_round_index: 0,
+        interview_rounds: [],
+        job_id: "",
+        job_title: ""
+    });
+
+    const itemsPerPage = 10;
+
+    const { data: applicantsData, isLoading, isError } = useGetApplicantsQuery({
+        page: currentPage,
+        limit: itemsPerPage,
+        search,
+        status: selectedStatus
+    });
+
+    const { data: statsData } = useGetApplicantStatsQuery();
+    const [updateStatus] = useUpdateApplicantStatusMutation();
+    const [deleteApplicant] = useDeleteApplicantMutation();
+
+    const safeParse = (data, fallback = []) => {
+        if (!data) return fallback;
+        if (typeof data !== 'string') return data;
+        try {
+            const firstParse = JSON.parse(data);
+            if (typeof firstParse === 'string') {
+                try {
+                    return JSON.parse(firstParse);
+                } catch (e) {
+                    return firstParse;
+                }
+            }
+            return firstParse;
+        } catch (e) {
+            console.error("Error parsing JSON:", e);
+            return fallback;
+        }
+    };
+
+    const handleViewApplicant = async (applicant) => {
+        let rounds = safeParse(applicant.interview_rounds, []);
+
+        if (rounds.length === 0 && applicant.job_id) {
+            try {
+                const jobData = await triggerGetJob(applicant.job_id).unwrap();
+                rounds = safeParse(jobData.interview_rounds, []);
+            } catch (error) {
+                console.error("Failed to fetch job rounds:", error);
+            }
+        }
+
+        setSelectedApplicant({
+            ...applicant,
+            interview_rounds: rounds
+        });
+        setShowViewModal(true);
+    };
+
+    const [triggerGetJob] = useLazyGetJobByIdQuery();
+
+    const handleEditApplicant = async (applicant) => {
+        setSelectedApplicant(applicant);
+        let rounds = safeParse(applicant.interview_rounds, []);
+
+        // If rounds are empty, try to fetch them from the job record
+        if (rounds.length === 0 && applicant.job_id) {
+            try {
+                const jobData = await triggerGetJob(applicant.job_id).unwrap();
+                rounds = safeParse(jobData.interview_rounds, []);
+            } catch (error) {
+                console.error("Failed to fetch job rounds:", error);
+            }
+        }
+
+        setEditFormData({
+            name: applicant.name,
+            email: applicant.email,
+            phone: applicant.phone || "",
+            status: applicant.status,
+            current_round_index: applicant.current_round_index,
+            interview_rounds: rounds,
+            job_id: applicant.job_id,
+            job_title: applicant.job_title
+        });
+        setShowEditModal(true);
+    };
+
+    const [updatingFeedback, setUpdatingFeedback] = useState("");
+    const [isUpdating, setIsUpdating] = useState(false);
+
+    const handleUpdateStatus = async (id, newStatus, currentRoundIdx = 0) => {
+        setIsUpdating(true);
+        try {
+            await updateStatus({
+                id,
+                status: newStatus,
+                current_round_index: currentRoundIdx,
+                interview_feedback: updatingFeedback
+            }).unwrap();
+            toast.success(`Status updated to ${newStatus}`);
+            setUpdatingFeedback("");
+            setShowViewModal(false);
+        } catch (error) {
+            toast.error("Failed to update status");
+        } finally {
+            setIsUpdating(false);
+        }
+    };
+
+    const handleSaveEdit = async () => {
+        setIsUpdating(true);
+        try {
+            await updateStatus({
+                id: selectedApplicant.id,
+                ...editFormData
+            }).unwrap();
+            toast.success("Applicant details updated successfully");
+            setShowEditModal(false);
+        } catch (error) {
+            toast.error("Failed to update applicant");
+        } finally {
+            setIsUpdating(false);
+        }
+    };
+
+    const handleDelete = async (id) => {
+        if (window.confirm("Are you sure you want to delete this applicant?")) {
+            try {
+                await deleteApplicant(id).unwrap();
+                toast.success("Applicant deleted successfully");
+            } catch (error) {
+                toast.error("Failed to delete applicant");
+            }
+        }
+    };
+
+    const getStatusStyle = (status) => {
+        switch (status) {
+            case 'Applied': return 'bg-blue-100 text-blue-700';
+            case 'Screening': return 'bg-purple-100 text-purple-700';
+            case 'Technical': return 'bg-indigo-100 text-indigo-700';
+            case 'HR': return 'bg-pink-100 text-pink-700';
+            case 'Final': return 'bg-orange-100 text-orange-700';
+            case 'Selected': return 'bg-green-100 text-green-700';
+            case 'Rejected': return 'bg-red-100 text-red-700';
+            case 'Offer Sent': return 'bg-emerald-100 text-emerald-700';
+            default: return 'bg-gray-100 text-gray-700';
+        }
+    };
+
+    return (
+        <DashboardLayout>
+            <div className="min-h-screen bg-gray-50/50 p-0 ml-6">
+                <div className="max-w-8xl mx-auto">
+                    {/* Header */}
+                    <div className="bg-white rounded-sm p-4 mb-6 border-b shadow-sm">
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                            <div>
+                                <h1 className="text-2xl font-bold text-gray-900">Applicant Management</h1>
+                                <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
+                                    <FiHome className="text-gray-400" />
+                                    <span>HRM / Recruitment / </span>
+                                    <span className="text-orange-500 font-medium">Applicants</span>
+                                </p>
+                            </div>
+                            <div className="flex items-center gap-3 w-full md:w-auto">
+                                <div className="relative flex-1 md:w-64">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                                    <input
+                                        type="text"
+                                        placeholder="Search applicants..."
+                                        value={search}
+                                        onChange={(e) => setSearch(e.target.value)}
+                                        className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 outline-none transition-all bg-white"
+                                    />
+                                </div>
+                                <select
+                                    value={selectedStatus}
+                                    onChange={(e) => setSelectedStatus(e.target.value)}
+                                    className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 outline-none bg-white font-medium text-gray-700"
+                                >
+                                    <option value="All">All Status</option>
+                                    <option value="Applied">Applied</option>
+                                    <option value="Screening">Screening</option>
+                                    <option value="Technical">Technical</option>
+                                    <option value="HR">HR</option>
+                                    <option value="Final">Final</option>
+                                    <option value="Selected">Selected</option>
+                                    <option value="Rejected">Rejected</option>
+                                    <option value="Offer Sent">Offer Sent</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Stats */}
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6 px-4">
+                        <NumberCard
+                            title="Total Applicants"
+                            number={statsData?.total_applicants || 0}
+                            icon={<Users className="text-blue-600" size={24} />}
+                            iconBgColor="bg-blue-100"
+                            lineBorderClass="border-blue-500"
+                        />
+                        <NumberCard
+                            title="In Process"
+                            number={statsData?.in_process || 0}
+                            icon={<Clock className="text-orange-600" size={24} />}
+                            iconBgColor="bg-orange-100"
+                            lineBorderClass="border-orange-500"
+                        />
+                        <NumberCard
+                            title="Selected"
+                            number={statsData?.selected || 0}
+                            icon={<CheckCircle className="text-green-600" size={24} />}
+                            iconBgColor="bg-green-100"
+                            lineBorderClass="border-green-500"
+                        />
+                        <NumberCard
+                            title="Rejected"
+                            number={statsData?.rejected || 0}
+                            icon={<XCircle className="text-red-600" size={24} />}
+                            iconBgColor="bg-red-100"
+                            lineBorderClass="border-red-500"
+                        />
+                    </div>
+
+                    {/* Table */}
+                    <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 mx-4">
+                        <div className="overflow-x-auto">
+                            <table className="w-full">
+                                <thead className="bg-gray-50 border-b border-gray-100">
+                                    <tr>
+                                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Applicant</th>
+                                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Job Role</th>
+                                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Applied Date</th>
+                                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
+                                        <th className="px-6 py-4 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100 bg-white">
+                                    {isLoading ? (
+                                        [...Array(5)].map((_, i) => (
+                                            <tr key={i} className="animate-pulse">
+                                                <td className="px-6 py-4"><div className="h-4 bg-gray-100 rounded w-32"></div></td>
+                                                <td className="px-6 py-4"><div className="h-4 bg-gray-100 rounded w-24"></div></td>
+                                                <td className="px-6 py-4"><div className="h-4 bg-gray-100 rounded w-20"></div></td>
+                                                <td className="px-6 py-4"><div className="h-6 bg-gray-100 rounded w-16"></div></td>
+                                                <td className="px-6 py-4"><div className="h-8 bg-gray-100 rounded w-24 mx-auto"></div></td>
+                                            </tr>
+                                        ))
+                                    ) : applicantsData?.applicants?.map((applicant) => (
+                                        <tr key={applicant.id} className="hover:bg-gray-50/50 transition-colors">
+                                            <td className="px-6 py-4">
+                                                <div className="flex flex-col">
+                                                    <span className="font-semibold text-gray-900">{applicant.name}</span>
+                                                    <span className="text-xs text-gray-500">{applicant.email}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-2">
+                                                    <Briefcase size={14} className="text-gray-400" />
+                                                    <span className="text-sm font-medium text-gray-700">{applicant.job_title}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 text-sm text-gray-600">
+                                                {new Date(applicant.created_at).toLocaleDateString()}
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <span className={`px-3 py-1 rounded-full text-xs font-bold ${getStatusStyle(applicant.status)}`}>
+                                                    {applicant.status}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center justify-center gap-2">
+                                                    <button
+                                                        onClick={() => handleViewApplicant(applicant)}
+                                                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                        title="View Details"
+                                                    >
+                                                        <Eye size={18} />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleEditApplicant(applicant)}
+                                                        className="p-2 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
+                                                        title="Edit Applicant"
+                                                    >
+                                                        <Edit size={18} />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDelete(applicant.id)}
+                                                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                        title="Delete"
+                                                    >
+                                                        <Trash2 size={18} />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* View Applicant Details Modal */}
+            <Modal
+                isOpen={showViewModal}
+                onClose={() => {
+                    setShowViewModal(false);
+                    setUpdatingFeedback("");
+                }}
+                title="Applicant Details"
+                maxWidth="max-w-5xl"
+            >
+                {selectedApplicant && (
+                    <div className="p-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            {/* Basic Info */}
+                            <div className="space-y-6">
+                                <div className="border-b pb-4">
+                                    <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                        <Users className="text-orange-500" size={20} />
+                                        Personal Information
+                                    </h3>
+                                    <div className="space-y-3">
+                                        <div className="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
+                                            <span className="text-sm font-medium text-gray-500 flex items-center gap-2">
+                                                <Users size={16} /> Name
+                                            </span>
+                                            <span className="text-sm font-bold text-gray-900">{selectedApplicant.name}</span>
+                                        </div>
+                                        <div className="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
+                                            <span className="text-sm font-medium text-gray-500 flex items-center gap-2">
+                                                <Mail size={16} /> Email
+                                            </span>
+                                            <span className="text-sm font-bold text-gray-900">{selectedApplicant.email}</span>
+                                        </div>
+                                        <div className="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
+                                            <span className="text-sm font-medium text-gray-500 flex items-center gap-2">
+                                                <Phone size={16} /> Phone
+                                            </span>
+                                            <span className="text-sm font-bold text-gray-900">{selectedApplicant.phone || 'N/A'}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                        <Briefcase className="text-orange-500" size={20} />
+                                        Job Details
+                                    </h3>
+                                    <div className="space-y-3">
+                                        <div className="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
+                                            <span className="text-sm font-medium text-gray-500">Position</span>
+                                            <span className="text-sm font-bold text-gray-900">{selectedApplicant.job_title}</span>
+                                        </div>
+                                        <div className="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
+                                            <span className="text-sm font-medium text-gray-500">Department</span>
+                                            <span className="text-sm font-bold text-gray-900">{selectedApplicant.department}</span>
+                                        </div>
+                                        {selectedApplicant.resume && (
+                                            <a
+                                                href={`${import.meta.env.VITE_API_BASE_URL}/${selectedApplicant.resume}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex items-center justify-center gap-2 w-full py-3 bg-orange-500 text-white rounded-lg font-bold hover:bg-orange-600 transition-colors mt-4"
+                                            >
+                                                <Download size={18} /> Download Resume
+                                            </a>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Dynamic Fields Data */}
+                                {selectedApplicant.application_data && Object.keys(safeParse(selectedApplicant.application_data, {})).length > 0 && (
+                                    <div className="mt-4 pt-4 border-t border-gray-100">
+                                        <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                            <Activity className="text-orange-500" size={20} />
+                                            Additional Information
+                                        </h3>
+                                        <div className="grid grid-cols-1 gap-3">
+                                            {Object.entries(safeParse(selectedApplicant.application_data, {})).map(([key, value]) => (
+                                                <div key={key} className="flex flex-col bg-gray-50 p-3 rounded-lg border border-gray-100">
+                                                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{key.replace(/_/g, ' ')}</span>
+                                                    <span className="text-sm font-bold text-gray-800 mt-1">{value || 'N/A'}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Interview Process */}
+                            <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100">
+                                <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+                                    <Calendar className="text-orange-500" size={20} />
+                                    Recruitment Process
+                                </h3>
+
+                                <div className="space-y-8 relative before:absolute before:left-4 before:top-2 before:bottom-2 before:w-0.5 before:bg-gray-200">
+                                    {/* Entry point: Applied */}
+                                    <div className="relative pl-10">
+                                        <div className={`absolute left-0 w-8 h-8 rounded-full border-4 flex items-center justify-center z-10 bg-green-500 border-green-100 text-white`}>
+                                            <CheckCircle size={14} />
+                                        </div>
+                                        <div>
+                                            <h4 className="font-bold text-gray-900">Application Received</h4>
+                                            <p className="text-[10px] font-bold text-green-600 uppercase mt-1">Completed</p>
+                                        </div>
+                                    </div>
+
+                                    {/* Rounds defined by HR during Job Creation */}
+                                    {safeParse(selectedApplicant.interview_rounds, []).length > 0 ? (
+                                        safeParse(selectedApplicant.interview_rounds, []).map((round, index) => {
+                                            const interviewRounds = safeParse(selectedApplicant.interview_rounds, []);
+                                            const isCurrent = selectedApplicant.current_round_index === index && selectedApplicant.status !== 'Selected' && selectedApplicant.status !== 'Rejected';
+                                            const isCompleted = selectedApplicant.current_round_index > index || selectedApplicant.status === 'Selected';
+                                            const isPending = selectedApplicant.current_round_index < index && selectedApplicant.status !== 'Selected';
+
+                                            return (
+                                                <div key={index} className="relative pl-10">
+                                                    <div className={`absolute left-0 w-8 h-8 rounded-full border-4 flex items-center justify-center z-10 
+                                                        ${isCompleted ? 'bg-green-500 border-green-100 text-white' :
+                                                            isCurrent ? 'bg-orange-500 border-orange-100 text-white animate-pulse' :
+                                                                'bg-white border-gray-200 text-gray-400'}`}>
+                                                        {isCompleted ? <CheckCircle size={14} /> : index + 1}
+                                                    </div>
+                                                    <div className={`${isPending ? 'opacity-50' : ''}`}>
+                                                        <h4 className={`font-bold transition-all ${isCurrent ? 'text-orange-600' : 'text-gray-900'}`}>{round}</h4>
+
+                                                        {isCurrent && (
+                                                            <div className="mt-4 space-y-4 bg-white p-4 rounded-xl border border-orange-100 shadow-sm">
+                                                                <div>
+                                                                    <label className="text-[10px] font-bold text-gray-400 uppercase mb-2 block tracking-widest">Internal Feedback / Notes</label>
+                                                                    <textarea
+                                                                        value={updatingFeedback}
+                                                                        onChange={(e) => setUpdatingFeedback(e.target.value)}
+                                                                        placeholder="Add assessment notes or reasons for passing/failing..."
+                                                                        className="w-full p-3 text-sm bg-gray-50 border-2 border-gray-100 rounded-lg focus:border-orange-500 outline-none transition-all h-20"
+                                                                    />
+                                                                </div>
+                                                                <div className="flex gap-2">
+                                                                    <button
+                                                                        disabled={isUpdating}
+                                                                        onClick={() => handleUpdateStatus(selectedApplicant.id, index === interviewRounds.length - 1 ? 'Selected' : interviewRounds[index + 1], index + 1)}
+                                                                        className="flex-1 py-2 bg-green-600 text-white text-xs font-black uppercase tracking-widest rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                                                                    >
+                                                                        {isUpdating ? 'Updating...' : <>Pass Round <ArrowRight size={14} /></>}
+                                                                    </button>
+                                                                    <button
+                                                                        disabled={isUpdating}
+                                                                        onClick={() => handleUpdateStatus(selectedApplicant.id, 'Rejected')}
+                                                                        className="px-4 py-2 bg-rose-100 text-rose-600 text-xs font-black uppercase tracking-widest rounded-lg hover:bg-rose-200 transition-colors flex items-center gap-2 disabled:opacity-50"
+                                                                    >
+                                                                        <XCircle size={14} /> Fail
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        )}
+
+                                                        {isCompleted && (
+                                                            <p className="text-[10px] font-bold text-green-600 uppercase mt-1">Cleared</p>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })
+                                    ) : (
+                                        <div className="bg-white p-6 rounded-xl border border-dashed border-gray-200 text-center">
+                                            <p className="text-sm font-bold text-gray-400 uppercase tracking-widest">No Interview Rounds Defined</p>
+                                            <p className="text-xs text-gray-500 mt-2">Edit the job posting to add recruitment steps.</p>
+                                        </div>
+                                    )}
+
+                                    {/* Final Steps */}
+                                    {selectedApplicant.status === 'Selected' && (
+                                        <div className="relative pl-10 mt-6 pt-6 border-t border-gray-200">
+                                            <div className="absolute left-0 w-8 h-8 rounded-full bg-green-100 border-green-500 border-2 flex items-center justify-center text-green-600">
+                                                <CheckCircle size={18} />
+                                            </div>
+                                            <div>
+                                                <h4 className="font-bold text-green-700">Selection Confirmed</h4>
+                                                <p className="text-xs text-gray-500 mt-1">Ready for Offer Letter generation</p>
+                                                <button
+                                                    onClick={() => navigate('/hrm/offer-letters', {
+                                                        state: {
+                                                            applicant: {
+                                                                candidate_name: selectedApplicant.name,
+                                                                email: selectedApplicant.email,
+                                                                phone: selectedApplicant.phone,
+                                                                designation: selectedApplicant.job_title,
+                                                                department: selectedApplicant.department
+                                                            }
+                                                        }
+                                                    })}
+                                                    className="mt-3 px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm font-bold rounded-lg shadow-md hover:opacity-90 transition-all flex items-center gap-2"
+                                                >
+                                                    Generate Offer Letter
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </Modal>
+
+            {/* Edit Applicant Modal */}
+            <Modal
+                isOpen={showEditModal}
+                onClose={() => setShowEditModal(false)}
+                title="Edit Applicant & Rounds"
+                maxWidth="max-w-4xl"
+            >
+                {selectedApplicant && (
+                    <div className="p-8 space-y-8">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div>
+                                <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Name</label>
+                                <input
+                                    type="text"
+                                    value={editFormData.name}
+                                    onChange={(e) => setEditFormData(prev => ({ ...prev, name: e.target.value }))}
+                                    className="w-full p-3 bg-gray-50 border-2 border-gray-100 rounded-xl focus:border-orange-500 outline-none transition-all text-sm font-bold"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Email</label>
+                                <input
+                                    type="email"
+                                    value={editFormData.email}
+                                    onChange={(e) => setEditFormData(prev => ({ ...prev, email: e.target.value }))}
+                                    className="w-full p-3 bg-gray-50 border-2 border-gray-100 rounded-xl focus:border-orange-500 outline-none transition-all text-sm font-bold"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Phone</label>
+                                <input
+                                    type="text"
+                                    value={editFormData.phone}
+                                    onChange={(e) => setEditFormData(prev => ({ ...prev, phone: e.target.value }))}
+                                    className="w-full p-3 bg-gray-50 border-2 border-gray-100 rounded-xl focus:border-orange-500 outline-none transition-all text-sm font-bold"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50/50 p-4 rounded-2xl border border-gray-100">
+                            <div>
+                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Applying For (Job ID)</label>
+                                <div className="text-sm font-bold text-gray-700 flex items-center gap-2">
+                                    <span className="bg-orange-100 text-orange-600 px-2 py-0.5 rounded text-[10px]">ID: {editFormData.job_id}</span>
+                                    <span className="truncate">{editFormData.job_title}</span>
+                                </div>
+                            </div>
+                            <div className="flex flex-col justify-center">
+                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Application Date</label>
+                                <div className="text-sm font-bold text-gray-600">
+                                    {selectedApplicant.created_at ? new Date(selectedApplicant.created_at).toLocaleDateString(undefined, { dateStyle: 'long' }) : 'N/A'}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-6 border-t border-gray-100">
+                            <div className="space-y-6">
+                                <div>
+                                    <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Interview Rounds</label>
+                                    <div className="space-y-3 mb-4 max-h-[400px] overflow-y-auto pr-2">
+                                        {editFormData.interview_rounds.length > 0 ? (
+                                            editFormData.interview_rounds.map((round, index) => {
+                                                const isCompleted = editFormData.current_round_index > index || editFormData.status === 'Selected';
+                                                return (
+                                                    <div key={index} className={`flex items-center gap-4 p-4 rounded-2xl border-2 transition-all ${isCompleted ? 'bg-orange-50 border-orange-500 shadow-sm' : 'bg-white border-gray-100 hover:border-orange-200'}`}>
+                                                        <div className="flex-shrink-0">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={isCompleted}
+                                                                onChange={(e) => {
+                                                                    const checked = e.target.checked;
+                                                                    let newIdx = editFormData.current_round_index;
+                                                                    let newStatus = editFormData.status;
+
+                                                                    if (checked) {
+                                                                        newIdx = index + 1;
+                                                                        if (newIdx === editFormData.interview_rounds.length) {
+                                                                            newStatus = 'Selected';
+                                                                        } else {
+                                                                            newStatus = editFormData.interview_rounds[newIdx];
+                                                                        }
+                                                                    } else {
+                                                                        newIdx = index;
+                                                                        newStatus = index === 0 ? 'Applied' : editFormData.interview_rounds[index];
+                                                                    }
+
+                                                                    setEditFormData(prev => ({
+                                                                        ...prev,
+                                                                        current_round_index: newIdx,
+                                                                        status: newStatus
+                                                                    }));
+                                                                }}
+                                                                className="w-5 h-5 rounded border-2 border-orange-300 text-orange-600 focus:ring-orange-500 cursor-pointer"
+                                                            />
+                                                        </div>
+                                                        <div className="flex-1">
+                                                            <input
+                                                                type="text"
+                                                                readOnly
+                                                                value={round}
+                                                                className={`w-full bg-transparent border-none outline-none text-sm font-black uppercase tracking-widest ${isCompleted ? 'text-orange-900' : 'text-gray-400'}`}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })
+                                        ) : (
+                                            <div className="py-8 text-center bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
+                                                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">No rounds defined for this applicant</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="space-y-6">
+                                <div>
+                                    <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Process Management</label>
+                                    <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100 space-y-6">
+                                        <div>
+                                            <label className="block text-[10px] font-black text-gray-400 uppercase mb-2">Current Active Round</label>
+                                            <select
+                                                value={editFormData.current_round_index}
+                                                onChange={(e) => setEditFormData(prev => ({ ...prev, current_round_index: Number(e.target.value) }))}
+                                                className="w-full p-3 bg-white border-2 border-gray-100 rounded-xl focus:border-orange-500 outline-none text-sm font-bold"
+                                            >
+                                                <option value={-1}>Pre-Interview (Applied)</option>
+                                                {editFormData.interview_rounds.map((r, i) => (
+                                                    <option key={i} value={i}>Round {i + 1}: {r}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="block text-[10px] font-black text-gray-400 uppercase mb-2">Overall Status</label>
+                                            <select
+                                                value={editFormData.status}
+                                                onChange={(e) => setEditFormData(prev => ({ ...prev, status: e.target.value }))}
+                                                className="w-full p-3 bg-white border-2 border-gray-100 rounded-xl focus:border-orange-500 outline-none text-sm font-bold"
+                                            >
+                                                <option value="Applied">Applied</option>
+                                                <option value="In Process">In Process</option>
+                                                {editFormData.interview_rounds.map(r => (
+                                                    <option key={r} value={r}>{r}</option>
+                                                ))}
+                                                <option value="Selected">Selected</option>
+                                                <option value="Rejected">Rejected</option>
+                                                <option value="Offer Sent">Offer Sent</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex gap-4 pt-8 border-t border-gray-100">
+                            <button
+                                onClick={() => setShowEditModal(false)}
+                                className="flex-1 py-4 bg-gray-100 text-gray-600 font-black uppercase tracking-widest text-xs rounded-xl hover:bg-gray-200 transition-all"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                disabled={isUpdating}
+                                onClick={handleSaveEdit}
+                                className="flex-[2] py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-black uppercase tracking-widest text-xs rounded-xl shadow-lg shadow-orange-100 hover:opacity-90 transition-all disabled:opacity-50"
+                            >
+                                {isUpdating ? 'Saving...' : 'Save Changes'}
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </Modal>
+        </DashboardLayout>
+    );
+};
+
+export default ApplicantList;

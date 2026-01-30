@@ -2,6 +2,15 @@ import React from "react";
 import { Globe, ShieldCheck, Briefcase, Globe2 } from "lucide-react";
 
 const CompanyInfoSection = ({ business }) => {
+    const infoItems = [
+        { icon: Globe, label: 'Legal Name', value: business.legal_name, color: 'blue' },
+        { icon: ShieldCheck, label: 'Registration Number', value: business.registration_number, color: 'green' },
+        { icon: Briefcase, label: 'Business Type', value: business.business_type, color: 'purple' },
+        { icon: Globe2, label: 'Website', value: business.website, isLink: true, color: 'orange' },
+    ].filter(item => item.value && item.value !== "");
+
+    if (infoItems.length === 0) return null;
+
     return (
         <section className="py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-orange-50 via-orange-50/50 to-white relative overflow-hidden">
             {/* Subtle Pattern Overlay */}
@@ -24,13 +33,8 @@ const CompanyInfoSection = ({ business }) => {
                     </p>
                 </div>
 
-                <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {[
-                        { icon: Globe, label: 'Legal Name', value: business.legal_name, color: 'blue' },
-                        { icon: ShieldCheck, label: 'Registration Number', value: business.registration_number, color: 'green' },
-                        { icon: Briefcase, label: 'Business Type', value: business.business_type, color: 'purple' },
-                        { icon: Globe2, label: 'Website', value: business.website, isLink: true, color: 'orange' },
-                    ].map((item, index) => (
+                <div className={`grid sm:grid-cols-2 lg:grid-cols-${Math.min(infoItems.length, 4)} gap-6`}>
+                    {infoItems.map((item, index) => (
                         <div key={index} className="relative group">
                             <div className="absolute -inset-0.5 bg-gradient-to-r from-[#FF7B1D] to-orange-600 rounded-2xl opacity-0 group-hover:opacity-100 blur transition-all duration-300"></div>
                             <div className="relative bg-white p-8 rounded-2xl shadow-md border border-orange-100 h-full hover:shadow-2xl transition-all">
@@ -43,7 +47,7 @@ const CompanyInfoSection = ({ business }) => {
                                         {item.value}
                                     </a>
                                 ) : (
-                                    <p className="text-base font-bold text-gray-900 break-words">{item.value || 'N/A'}</p>
+                                    <p className="text-base font-bold text-gray-900 break-words">{item.value}</p>
                                 )}
                             </div>
                         </div>

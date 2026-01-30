@@ -159,34 +159,136 @@ export default function SalaryManagement() {
   }, []);
 
   /* ================= EXPORT FUNCTION ================= */
-  const handleExport = () => {
+  const handleExport = async () => {
     if (!salaries.length) return alert("No salaries to export");
 
-    const csvRows = [
-      ["Employee", "Designation", "Department", "Basic", "Allowances", "Deductions", "Net", "Status", "Payment Date"],
-      ...salaries.map((s) => [
-        s.employee_name || "",
-        s.designation || "",
-        s.department || "",
-        s.basic_salary || 0,
-        s.allowances || 0,
-        s.deductions || 0,
-        s.net_salary || 0,
-        s.status || "",
-        s.payment_date || "",
-      ]),
-    ];
+    try {
+      // Dynamic import of jsPDF and autoTable
+      const { default: jsPDF } = await import('jspdf');
+      const autoTable = (await import('jspdf-autotable')).default;
 
-    const csvContent = csvRows.map((row) => row.join(",")).join("\n");
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
+      const doc = new jsPDF('l', 'mm', 'a4'); // Landscape orientation for better table fit
 
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", "salaries.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+      // Add company header with orange accent
+      doc.setFillColor(255, 123, 29);
+      doc.rect(0, 0, 297, 15, 'F');
+
+      doc.setFontSize(20);
+      doc.setTextColor(255, 255, 255);
+      doc.setFont(undefined, 'bold');
+      doc.text("SALARY MANAGEMENT REPORT", 148.5, 10, { align: 'center' });
+
+      // Report details
+      doc.setFontSize(9);
+      doc.setTextColor(80, 80, 80);
+      doc.setFont(undefined, 'normal');
+
+      const reportDate = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+      doc.text(`Generated on: ${reportDate}`, 14, 27);
+      doc.text(`Total Records: ${salaries.length}`, 14, 32);
+
+      // Calculate summary
+      const totalPayroll = salaries.reduce((sum, s) => sum + (Number(s.net_salary) || 0), 0);
+      const totalPaid = salaries.filter(s => s.status === "paid").reduce((sum, s) => sum + (Number(s.net_salary) || 0), 0);
+      const totalPending = salaries.filter(s => s.status !== "paid").reduce((sum, s) => sum + (Number(s.net_salary) || 0), 0);
+
+      doc.text(`Total Payroll: Rs.${totalPayroll.toLocaleString('en-IN')}`, 90, 27);
+      doc.text(`Paid: Rs.${totalPaid.toLocaleString('en-IN')}`, 90, 32);
+
+      doc.text(`Pending: Rs.${totalPending.toLocaleString('en-IN')}`, 160, 27);
+      doc.text(`Filter: ${selectedDepartment === 'all' ? 'All Departments' : selectedDepartment}`, 160, 32);
+
+      // Prepare table data - clean formatting without rupee symbols in cells
+      const tableData = salaries.map((s, index) => {
+        const basicSalary = Number(s.basic_salary) || 0;
+        const allowances = Number(s.allowances) || 0;
+        const deductions = Number(s.deductions) || 0;
+        const netSalary = Number(s.net_salary) || 0;
+
+        return [
+          (index + 1).toString(),
+          s.employee_name || "-",
+          s.designation || "-",
+          s.department || "-",
+          basicSalary.toLocaleString('en-IN'),
+          allowances.toLocaleString('en-IN'),
+          deductions.toLocaleString('en-IN'),
+          netSalary.toLocaleString('en-IN'),
+          (s.status || "pending").toUpperCase(),
+          s.pay_date ? new Date(s.pay_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : "-",
+        ];
+      });
+
+      // Generate table using autoTable
+      autoTable(doc, {
+        head: [["#", "Employee Name", "Designation", "Department", "Basic Salary", "Allowances", "Deductions", "Net Salary", "Status", "Pay Date"]],
+        body: tableData,
+        startY: 38,
+        theme: 'grid',
+        headStyles: {
+          fillColor: [255, 123, 29],
+          textColor: [255, 255, 255],
+          fontSize: 9,
+          fontStyle: 'bold',
+          halign: 'center',
+          valign: 'middle',
+          cellPadding: 4,
+        },
+        styles: {
+          fontSize: 8,
+          cellPadding: { top: 3, right: 4, bottom: 3, left: 4 },
+          lineColor: [200, 200, 200],
+          lineWidth: 0.1,
+        },
+        columnStyles: {
+          0: { halign: 'center', cellWidth: 10, fontStyle: 'bold' },
+          1: { halign: 'left', cellWidth: 38 },
+          2: { halign: 'left', cellWidth: 32 },
+          3: { halign: 'left', cellWidth: 30 },
+          4: { halign: 'right', cellWidth: 28 },
+          5: { halign: 'right', cellWidth: 25 },
+          6: { halign: 'right', cellWidth: 25 },
+          7: { halign: 'right', cellWidth: 30, fontStyle: 'bold', textColor: [255, 123, 29] },
+          8: { halign: 'center', cellWidth: 22 },
+          9: { halign: 'center', cellWidth: 26 },
+        },
+        alternateRowStyles: {
+          fillColor: [252, 252, 252],
+        },
+        didParseCell: function (data) {
+          // Color code status column
+          if (data.column.index === 8 && data.section === 'body') {
+            const status = data.cell.raw;
+            if (status === 'PAID') {
+              data.cell.styles.textColor = [34, 197, 94];
+              data.cell.styles.fontStyle = 'bold';
+              data.cell.styles.fillColor = [240, 253, 244];
+            } else {
+              data.cell.styles.textColor = [255, 123, 29];
+              data.cell.styles.fontStyle = 'bold';
+              data.cell.styles.fillColor = [255, 247, 237];
+            }
+          }
+        },
+      });
+
+      // Add footer
+      const pageCount = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setTextColor(150, 150, 150);
+        doc.text(`Page ${i} of ${pageCount}`, 148.5, 205, { align: 'center' });
+        doc.text('© Sales CRM - Salary Management System', 148.5, 209, { align: 'center' });
+      }
+
+      // Save PDF
+      const fileName = `Salary_Report_${selectedDepartment === 'all' ? 'All' : selectedDepartment}_${new Date().toISOString().split('T')[0]}.pdf`;
+      doc.save(fileName);
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      alert("Failed to generate PDF. Please try again.");
+    }
   };
 
   const handleMarkAsPaid = async (salaryId) => {
@@ -318,182 +420,124 @@ export default function SalaryManagement() {
           ))}
         </div>
 
-        {/* Salary Cards Grid */}
+        {/* Salary Table */}
         {salariesLoading ? (
           <div className="text-center py-10">Loading...</div>
         ) : salaries.length ? (
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-            {salaries.map((salary) => (
-              <div
-                key={salary.id}
-                className="group relative bg-white border border-slate-200 rounded-lg shadow-sm hover:shadow-md transition-all duration-300"
-              >
-                {/* Status Badge */}
-                <div className="absolute top-4 right-4 z-10">
-                  <span
-                    className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-sm ${salary.status === "paid"
-                      ? "bg-[#22c55e] text-white"
-                      : "bg-orange-500 text-white animate-pulse"
-                      }`}
-                  >
-                    {salary.status || "pending"}
-                  </span>
-                </div>
-
-                {/* Top Border */}
-                <div className="h-1.5 w-full bg-[#FF7B1D] rounded-t-lg"></div>
-
-                <div className="p-6">
-                  {/* Header: Profile & Identity */}
-                  <div className="flex items-center gap-4 mb-6">
-                    <div className="relative">
-                      <div className="w-16 h-16 rounded-2xl bg-[#1a222c] flex items-center justify-center text-white font-bold text-xl shadow-lg transition-transform group-hover:scale-105">
-                        {(salary.employee_name || "Name")
-                          .split(" ")
-                          .map((n) => n[0])
-                          .join("")}
-                      </div>
-                      <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-md">
-                        <DollarSign size={12} className="text-orange-500" />
-                      </div>
-                    </div>
-
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-xl font-bold text-[#1a222c] truncate uppercase tracking-tight">
-                        {salary.employee_name || "Name"}
-                      </h3>
-                      <div className="flex flex-wrap items-center gap-2 mt-1">
-                        <span className="px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-[10px] font-bold uppercase tracking-wider border border-blue-100">
-                          {salary.designation}
-                        </span>
-                        <span className="px-2 py-0.5 bg-slate-50 text-slate-500 rounded text-[10px] font-bold uppercase tracking-wider border border-slate-100">
-                          {salary.department}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Salary Detail HUD */}
-                  <div className="bg-slate-50/50 border border-slate-100 rounded-xl p-4 mb-4">
-                    <div className="grid grid-cols-3 gap-2 text-center border-b border-slate-200 pb-4 mb-4">
-                      <div className="border-r border-slate-200">
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Basic</p>
-                        <p className="text-sm font-bold text-slate-700">
-                          ₹{(salary.basic_salary || 0).toLocaleString()}
-                        </p>
-                      </div>
-                      <div className="border-r border-slate-200">
-                        <p className="text-[10px] font-bold text-[#22c55e] uppercase tracking-widest mb-1">Allowances</p>
-                        <p className="text-sm font-bold text-[#22c55e]">
-                          +₹{(salary.allowances || 0).toLocaleString()}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-[10px] font-bold text-rose-500 uppercase tracking-widest mb-1">Deductions</p>
-                        <p className="text-sm font-bold text-rose-500">
-                          -₹{(salary.deductions || 0).toLocaleString()}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded bg-orange-100 flex items-center justify-center">
-                          <Calculator size={16} className="text-orange-600" />
+          <div className="bg-white rounded-sm shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-[#FF7B1D] text-white">
+                    <th className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wider">S.N</th>
+                    <th className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wider">Employee</th>
+                    <th className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wider">Designation</th>
+                    <th className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wider">Department</th>
+                    <th className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wider">Basic</th>
+                    <th className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wider">Allowances</th>
+                    <th className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wider">Deductions</th>
+                    <th className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wider">Net Salary</th>
+                    <th className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wider">Status</th>
+                    <th className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wider">Pay Date</th>
+                    <th className="px-4 py-3 text-center text-sm font-bold uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {salaries.map((salary, index) => (
+                    <tr key={salary.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-4 py-3 text-sm text-gray-700">{index + 1}</td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-[#1a222c] flex items-center justify-center text-white font-bold text-sm">
+                            {(salary.employee_name || "N")
+                              .split(" ")
+                              .map((n) => n[0])
+                              .join("")}
+                          </div>
+                          <span className="text-sm font-semibold text-gray-800">{salary.employee_name || "N/A"}</span>
                         </div>
-                        <div>
-                          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-none">Net Payable</p>
-                          {salary.present_days !== undefined && (
-                            <p className="text-[9px] text-orange-400 font-bold italic leading-none mt-1">
-                              * Adjusted for {salary.present_days} present days
-                            </p>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-700">{salary.designation || "-"}</td>
+                      <td className="px-4 py-3 text-sm text-gray-700">{salary.department || "-"}</td>
+                      <td className="px-4 py-3 text-sm font-semibold text-gray-800">₹{(salary.basic_salary || 0).toLocaleString()}</td>
+                      <td className="px-4 py-3 text-sm font-semibold text-green-600">+₹{(salary.allowances || 0).toLocaleString()}</td>
+                      <td className="px-4 py-3 text-sm font-semibold text-red-600">-₹{(salary.deductions || 0).toLocaleString()}</td>
+                      <td className="px-4 py-3 text-sm font-bold text-[#FF7B1D]">₹{(salary.net_salary || 0).toLocaleString()}</td>
+                      <td className="px-4 py-3">
+                        <span
+                          className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${salary.status === "paid"
+                            ? "bg-green-100 text-green-700"
+                            : "bg-orange-100 text-orange-700"
+                            }`}
+                        >
+                          {salary.status || "pending"}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-700">{formatDate(salary.pay_date)}</td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center justify-center gap-2">
+                          {salary.status === "pending" && update && (
+                            <button
+                              onClick={() => handleMarkAsPaid(salary.id)}
+                              className="p-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors"
+                              title="Mark as Paid"
+                            >
+                              <DollarSign size={16} />
+                            </button>
+                          )}
+                          <button
+                            onClick={() => {
+                              setSelectedSalary(salary);
+                              setGenerateModalOpen(true);
+                            }}
+                            className="p-2 bg-orange-50 text-orange-600 rounded-lg hover:bg-orange-100 transition-colors"
+                            title="Pay Slip"
+                          >
+                            <Calculator size={16} />
+                          </button>
+                          {read && (
+                            <button
+                              onClick={() => {
+                                setSelectedSalary(salary);
+                                setViewModalOpen(true);
+                              }}
+                              className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
+                              title="View"
+                            >
+                              <Eye size={16} />
+                            </button>
+                          )}
+                          {update && (
+                            <button
+                              onClick={() => {
+                                setSelectedSalary(salary);
+                                setEditModalOpen(true);
+                              }}
+                              className="p-2 bg-orange-50 text-orange-600 rounded-lg hover:bg-orange-100 transition-colors"
+                              title="Edit"
+                            >
+                              <Pencil size={16} />
+                            </button>
+                          )}
+                          {remove && (
+                            <button
+                              onClick={() => {
+                                setSelectedSalaryId(salary.id);
+                                setOpenDelete(true);
+                              }}
+                              className="p-2 bg-rose-50 text-rose-600 rounded-lg hover:bg-rose-100 transition-colors"
+                              title="Delete"
+                            >
+                              <Trash2 size={16} />
+                            </button>
                           )}
                         </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-2xl font-black text-[#1a222c] tracking-tighter">
-                          ₹{(salary.net_salary || 0).toLocaleString()}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Timeline */}
-                  <div className="flex flex-col gap-1 mb-6 px-1">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4 text-orange-500" />
-                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                        Pay Date: <span className="text-slate-800">{formatDate(salary.pay_date)}</span>
-                      </span>
-                    </div>
-                    {salary.start_date && salary.end_date && (
-                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest ml-6">
-                        Period: {formatDate(salary.start_date)} - {formatDate(salary.end_date)}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex items-center gap-2">
-                    {salary.status === "pending" && update && (
-                      <button
-                        onClick={() => handleMarkAsPaid(salary.id)}
-                        className="flex-1 h-11 flex items-center justify-center gap-2 bg-[#22c55e] text-white rounded-lg text-xs font-bold uppercase tracking-widest shadow-lg shadow-green-100 hover:bg-[#16a34a] transition-all"
-                      >
-                        <DollarSign size={14} />
-                        Mark Paid
-                      </button>
-                    )}
-                    <button
-                      onClick={() => {
-                        setSelectedSalary(salary);
-                        setGenerateModalOpen(true);
-                      }}
-                      className={`h-11 flex items-center justify-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg text-xs font-bold uppercase tracking-widest hover:from-orange-600 hover:to-orange-700 transform transition-all shadow-lg shadow-orange-100 ${salary.status === "paid" ? "flex-1" : "px-6"}`}
-                    >
-                      <Calculator size={14} className="text-white" />
-                      Pay Slip
-                    </button>
-
-                    <div className="flex items-center gap-1.5 ml-auto">
-                      {read && (
-                        <button
-                          onClick={() => {
-                            setSelectedSalary(salary);
-                            setViewModalOpen(true);
-                          }}
-                          className="w-10 h-10 flex items-center justify-center bg-blue-50 text-blue-600 rounded-lg border border-blue-100 hover:bg-blue-100 transition-colors"
-                        >
-                          <Eye size={18} />
-                        </button>
-                      )}
-                      {update && (
-                        <button
-                          onClick={() => {
-                            setSelectedSalary(salary);
-                            setEditModalOpen(true);
-                          }}
-                          className="w-10 h-10 flex items-center justify-center bg-orange-50 text-orange-600 rounded-lg border border-orange-100 hover:bg-orange-100 transition-colors"
-                        >
-                          <Pencil size={18} />
-                        </button>
-                      )}
-                      {remove && (
-                        <button
-                          onClick={() => {
-                            setSelectedSalaryId(salary.id);
-                            setOpenDelete(true);
-                          }}
-                          className="w-10 h-10 flex items-center justify-center bg-rose-50 text-rose-600 rounded-lg border border-rose-100 hover:bg-rose-100 transition-colors"
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         ) : (
           <div className="bg-white rounded-sm shadow-sm p-12 text-center">

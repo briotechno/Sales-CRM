@@ -57,7 +57,8 @@ const EditEmployeeModal = ({ isOpen, onClose, employee }) => {
         username: "",
         password: "",
         status: "Active",
-        permissions: {}
+        permissions: {},
+        education: []
     });
 
     const [updateEmployee, { isLoading }] = useUpdateEmployeeMutation();
@@ -135,7 +136,8 @@ const EditEmployeeModal = ({ isOpen, onClose, employee }) => {
                         return obj;
                     }
                     return perms || {};
-                })()
+                })(),
+                education: Array.isArray(employee.education) ? employee.education : (typeof employee.education === 'string' ? JSON.parse(employee.education || '[]') : []),
             });
         }
     }, [employee]);
@@ -265,7 +267,8 @@ const EditEmployeeModal = ({ isOpen, onClose, employee }) => {
             cancelCheque: 'cancelled_cheque',
             username: 'username',
             password: 'password',
-            status: 'status'
+            status: 'status',
+            education: 'education'
         };
 
         const excludedFields = [

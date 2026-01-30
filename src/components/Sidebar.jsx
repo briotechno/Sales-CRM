@@ -210,6 +210,18 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           icon: <LayoutDashboard size={22} />,
           path: "/dashboard",
         },
+        {
+          name: "HRM Dashboard",
+          icon: <LayoutDashboard size={22} />,
+          path: "/hrm/dashboard",
+          permission: "HRM Dashboard"
+        },
+        {
+          name: "CRM Dashboard",
+          icon: <LayoutDashboard size={22} />,
+          path: "/crm/dashboard",
+          permission: "CRM Dashboard"
+        },
       ],
     },
     {
@@ -261,12 +273,6 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
     {
       section: "CRM",
       items: [
-        {
-          name: "CRM Dashboard",
-          icon: <LayoutDashboard size={22} />,
-          path: "/crm/dashboard",
-          permission: "CRM Dashboard"
-        },
         {
           name: "Leads Management",
           icon: <Users size={22} />,
@@ -331,12 +337,6 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
     {
       section: "HRM",
       items: [
-        {
-          name: "HRM Dashboard",
-          icon: <LayoutDashboard size={22} />,
-          path: "/hrm/dashboard",
-          permission: "HRM Dashboard"
-        },
         {
           name: "Team Management",
           icon: <Users size={22} />,
@@ -419,14 +419,12 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         {
           name: "Job Management",
           icon: <Briefcase size={22} />,
-          path: "/hrm/job-management",
-          permission: "Recruitment"
-        },
-        {
-          name: "Offer Letter",
-          icon: <FileSignature size={22} />,
-          path: "/hrm/offer-letters",
-          permission: "Recruitment"
+          permission: "Recruitment",
+          children: [
+            { name: "Job List", path: "/hrm/job-management", permission: "Recruitment" },
+            { name: "Applicant List", path: "/hrm/applicants", permission: "Recruitment" },
+            { name: "Offer Letter", path: "/hrm/offer-letters", permission: "Recruitment" },
+          ],
         },
       ],
     },
@@ -438,63 +436,36 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           icon: <BarChart3 size={22} />,
           path: "/additional/catelogs",
           permission: "Communication Tools",
-          // children: [
-          //   { name: "All Catelogs", path: "/additional/catelogs" },
-          //   { name: "Categories", path: "/additional/catalog-categories" },
-          // ],
         },
-        // {
-        //   name: "Messenger",
-        //   icon: <MessageSquare size={22} />,
-        //   path: "/additional/messenger",
-        //   permission: "Communication Tools"
-        // },
-        // {
-        //   name: "Notes",
-        //   icon: <StickyNote size={22} />,
-        //   path: "/additional/notes",
-        //   permission: "Communication Tools"
-        // },
-        // {
-        //   name: "To-Do",
-        //   icon: <CheckSquare size={22} />,
-        //   path: "/additional/todo",
-        //   permission: "Task Management"
-        // },
-        // {
-        //   name: "Quotation",
-        //   icon: <FileSignature size={22} />,
-        //   path: "/additional/quotation",
-        //   permission: "Financial Documents"
-        // },
-        // {
-        //   name: "Invoice",
-        //   icon: <FileSpreadsheet size={22} />,
-        //   path: "/additional/invoice",
-        //   permission: "Financial Documents"
-        // },
-        // {
-        //   name: "My Expenses",
-        //   icon: <Wallet size={22} />,
-        //   path: "/additional/expenses",
-        //   permission: "Financial Management"
-        // },
-        // {
-        //   name: "Notification",
-        //   icon: <Bell size={22} />,
-        //   path: "/additional/notification",
-        //   permission: "Communication Tools"
-        // },
-
+        {
+          name: "Notes",
+          icon: <StickyNote size={22} />,
+          path: "/additional/notes",
+          permission: "Communication Tools"
+        },
+        {
+          name: "To-Do",
+          icon: <CheckSquare size={22} />,
+          path: "/additional/todo",
+          permission: "Task Management"
+        },
+        {
+          name: "Invoice",
+          icon: <FileSpreadsheet size={22} />,
+          path: "/additional/invoice",
+          permission: "Financial Documents"
+        },
+        {
+          name: "My Expenses",
+          icon: <Wallet size={22} />,
+          path: "/additional/expenses",
+          permission: "Financial Management"
+        },
         {
           name: "Announcement",
           icon: <Megaphone size={22} />,
           path: "/additional/announcement",
           permission: "Communication Tools",
-          // children: [
-          //   { name: "All Announcement", path: "/additional/announcement" },
-          //   { name: "Categories", path: "/additional/announcement/category" },
-          // ],
         },
       ],
     },
@@ -586,7 +557,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       {/* Sidebar Container */}
       <aside
         className={`fixed top-0 left-0 h-screen bg-white shadow-xl flex transition-all duration-300 z-40 ${isOpen ? "translate-x-0" : "-translate-x-full"
-          } md:translate-x-0 w-72`}
+          } md:translate-x-0 w-[280px]`}
       >
         {/* Module Rail - Left */}
         <div className="w-[68px] bg-[#f8f9fa] border-r border-[#eee] flex flex-col items-center py-4 gap-4 z-10 no-scrollbar overflow-y-auto">
@@ -635,24 +606,29 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         </div>
 
         {/* Navigation Panel - Right */}
-        <div className="flex-1 flex flex-col min-w-0 bg-white">
-          {/* Header */}
-          <div className="px-5 py-6">
-            <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+        <div className="flex-1 flex flex-col min-w-0 bg-white shadow-[-10px_0_15px_-3px_rgba(0,0,0,0.02)]">
+          <div className="px-6 py-6 border-b border-gray-50 mb-2 bg-gradient-to-r from-white to-gray-50/30">
+            <h2 className="text-xl font-extrabold text-gray-900 flex items-center gap-2 tracking-tight">
               {availableModules.find(m => m.id === activeModule)?.name}
             </h2>
-            <p className="text-[10px] text-gray-400 mt-0.5 font-medium uppercase tracking-wider">
-              {activeModule === 'superadmin' ? 'Management System' : 'CRM Sales Dashboard'}
-            </p>
+            <div className="flex items-center gap-2 mt-1">
+              <div className="w-1.5 h-1.5 rounded-full bg-[#FF7B1D] animate-pulse" />
+              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-[0.15em]">
+                CRM SALES SYSTEM
+              </p>
+            </div>
           </div>
 
           {/* Menu Items */}
           <div className="flex-1 overflow-y-auto px-3 pb-4 custom-scrollbar">
             {filteredMenuItems.map((section, idx) => (
-              <div key={idx} className="mb-6">
-                <h3 className="px-3 mb-3 text-[10px] font-bold text-gray-400 uppercase tracking-[0.1em]">
-                  {section.section}
-                </h3>
+              <div key={idx} className="mb-8 last:mb-0">
+                <div className="flex items-center gap-3 px-3 mb-4">
+                  <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
+                    {section.section}
+                  </h3>
+                  <div className="h-px flex-1 bg-gray-100 opacity-50" />
+                </div>
 
                 <div className="space-y-[2px]">
                   {section.items.map((item) => {
@@ -666,35 +642,35 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                           <Link
                             to={item.path}
                             ref={parentActive ? activeItemRef : null}
-                            className={`flex items-center gap-3 px-3 py-2.5 rounded-xl font-semibold transition-all duration-300 text-[14px] ${parentActive
-                              ? "bg-[#FF7B1D] text-white shadow-[#FF7B1D]/20 shadow-lg scale-[1.02]"
-                              : "hover:bg-gray-50 text-[#444] hover:text-black"
+                            className={`group flex items-center gap-3 px-4 py-3 rounded-2xl font-bold transition-all duration-300 text-[13.5px] whitespace-nowrap ${parentActive
+                              ? "bg-[#FF7B1D] text-white shadow-[#FF7B1D]/30 shadow-xl scale-[1.02] -translate-y-0.5"
+                              : "hover:bg-gray-50 text-gray-600 hover:text-[#FF7B1D] hover:pl-5"
                               }`}
                             onClick={() => handleItemClick(item.path)}
                           >
-                            <span className={parentActive ? "text-white" : "text-gray-400"}>
+                            <span className={`transition-colors duration-300 ${parentActive ? "text-white" : "text-gray-400 group-hover:text-[#FF7B1D]"}`}>
                               {item.icon && React.cloneElement(item.icon, { size: 18 })}
                             </span>
-                            <span>{item.name}</span>
+                            <span className="truncate">{item.name}</span>
                           </Link>
                         ) : (
                           <>
                             <div
-                              className={`flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all duration-300 font-semibold text-[14px] ${parentActive
+                              className={`flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all duration-300 font-semibold text-[14px] whitespace-nowrap ${parentActive
                                 ? "text-[#FF7B1D] bg-orange-50/50"
                                 : "text-[#444] hover:bg-gray-50 hover:text-black"
                                 }`}
                               onClick={() => toggleMenu(item.name)}
                             >
-                              <div className="flex items-center gap-3">
+                              <div className="flex items-center gap-3 overflow-hidden">
                                 <span className={parentActive ? "text-[#FF7B1D]" : "text-gray-400"}>
                                   {item.icon && React.cloneElement(item.icon, { size: 18 })}
                                 </span>
-                                <span>{item.name}</span>
+                                <span className="truncate">{item.name}</span>
                               </div>
                               <ChevronDown
                                 size={14}
-                                className={`transition-transform duration-300 ${isOpenThis ? "rotate-180" : ""}`}
+                                className={`transition-transform duration-300 flex-shrink-0 ${isOpenThis ? "rotate-180" : ""}`}
                               />
                             </div>
 
@@ -710,7 +686,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                                       key={sub.name}
                                       to={sub.path}
                                       ref={subActive ? activeItemRef : null}
-                                      className={`block px-3 py-1.5 rounded-lg transition-all duration-200 text-[13px] font-medium ${subActive
+                                      className={`block px-3 py-1.5 rounded-lg transition-all duration-200 text-[13px] font-medium whitespace-nowrap truncate ${subActive
                                         ? "text-[#FF7B1D] bg-orange-50"
                                         : "text-gray-500 hover:text-[#FF7B1D] hover:bg-gray-50"
                                         }`}

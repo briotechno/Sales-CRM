@@ -2,19 +2,23 @@ import { useState, useEffect, useRef } from "react";
 import DashboardLayout from "../../components/DashboardLayout";
 import JobViewModal from "../../pages/JobManagement/ViewPage";
 import {
-  Briefcase,
-  Plus,
-  Filter,
-  Edit,
-  Trash2,
-  Eye,
-  Users,
   Activity,
-  X,
+  AlertTriangle,
+  Briefcase,
   CheckCircle,
-  AlertTriangle
+  ChevronDown,
+  Copy,
+  Edit,
+  Eye,
+  Filter,
+  Link as LinkIcon,
+  Plus,
+  Trash2,
+  Users,
+  X
 } from "lucide-react";
 import { FiHome } from "react-icons/fi";
+import { useNavigate } from "react-router-dom";
 import NumberCard from "../../components/NumberCard";
 import {
   useGetJobsQuery,
@@ -89,7 +93,10 @@ export default function JobManagement() {
   const [showViewModal, setShowViewModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [isNavOpen, setIsNavOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const navRef = useRef(null);
+  const navigate = useNavigate();
   const [selectedJob, setSelectedJob] = useState(null);
   const [jobToDelete, setJobToDelete] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -99,6 +106,8 @@ export default function JobManagement() {
   // Input states for dynamic arrays
   const [responsibilityInput, setResponsibilityInput] = useState("");
   const [requirementInput, setRequirementInput] = useState("");
+  const [roundInput, setRoundInput] = useState("");
+  const [fieldInput, setFieldInput] = useState({ label: "", type: "text", required: false });
 
   const { create, read, update, delete: remove } = usePermission("Job Management");
 
@@ -111,7 +120,13 @@ export default function JobManagement() {
     positions: 1,
     description: "",
     responsibilities: [],
-    requirements: []
+    requirements: [],
+    interview_rounds: ["Screening", "Technical", "HR", "Final"],
+    application_fields: [
+      { name: "name", label: "Full Name", type: "text", required: true },
+      { name: "email", label: "Email Address", type: "email", required: true },
+      { name: "phone", label: "Phone Number", type: "tel", required: false }
+    ]
   });
 
   // Queries and Mutations
@@ -134,13 +149,7 @@ export default function JobManagement() {
 
   // Handlers
   const handleViewJob = (job) => {
-    // Ensure responsibilities and requirements are parsed if they come as strings
-    const safeJob = {
-      ...job,
-      responsibilities: typeof job.responsibilities === 'string' ? JSON.parse(job.responsibilities) : (job.responsibilities || []),
-      requirements: typeof job.requirements === 'string' ? JSON.parse(job.requirements) : (job.requirements || [])
-    };
-    setSelectedJob(safeJob);
+    setSelectedJob(job);
     setShowViewModal(true);
   };
 
@@ -153,7 +162,13 @@ export default function JobManagement() {
       positions: 1,
       description: "",
       responsibilities: [],
-      requirements: []
+      requirements: [],
+      interview_rounds: ["Screening", "Technical", "HR", "Final"],
+      application_fields: [
+        { name: "name", label: "Full Name", type: "text", required: true },
+        { name: "email", label: "Email Address", type: "email", required: true },
+        { name: "phone", label: "Phone Number", type: "tel", required: false }
+      ]
     });
     setEditingJobId(null);
     setResponsibilityInput("");
@@ -161,15 +176,6 @@ export default function JobManagement() {
   };
 
   const handleEditJob = (job) => {
-    // Parse JSON fields if necessary
-    const responsibilities = typeof job.responsibilities === 'string'
-      ? JSON.parse(job.responsibilities)
-      : (job.responsibilities || []);
-
-    const requirements = typeof job.requirements === 'string'
-      ? JSON.parse(job.requirements)
-      : (job.requirements || []);
-
     setFormData({
       title: job.title,
       department: job.department,
@@ -177,8 +183,10 @@ export default function JobManagement() {
       type: job.type,
       positions: job.positions,
       description: job.description,
-      responsibilities,
-      requirements,
+      responsibilities: job.responsibilities || [],
+      requirements: job.requirements || [],
+      interview_rounds: job.interview_rounds || ["Screening", "Technical", "HR", "Final"],
+      application_fields: job.application_fields || [],
       status: job.status
     });
     setEditingJobId(job.id);
@@ -212,6 +220,9 @@ export default function JobManagement() {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsFilterOpen(false);
+      }
+      if (navRef.current && !navRef.current.contains(event.target)) {
+        setIsNavOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -267,6 +278,41 @@ export default function JobManagement() {
     setFormData(prev => ({
       ...prev,
       requirements: prev.requirements.filter((_, i) => i !== index)
+    }));
+  };
+
+  const addRound = () => {
+    if (roundInput.trim()) {
+      setFormData(prev => ({
+        ...prev,
+        interview_rounds: [...prev.interview_rounds, roundInput.trim()]
+      }));
+      setRoundInput("");
+    }
+  };
+
+  const removeRound = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      interview_rounds: prev.interview_rounds.filter((_, i) => i !== index)
+    }));
+  };
+
+  const addField = () => {
+    if (fieldInput.label.trim()) {
+      const name = fieldInput.label.toLowerCase().replace(/\s+/g, '_');
+      setFormData(prev => ({
+        ...prev,
+        application_fields: [...prev.application_fields, { ...fieldInput, name }]
+      }));
+      setFieldInput({ label: "", type: "text", required: false });
+    }
+  };
+
+  const removeField = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      application_fields: prev.application_fields.filter((_, i) => i !== index)
     }));
   };
 
@@ -528,6 +574,17 @@ export default function JobManagement() {
 
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center justify-center gap-2">
+                            <button
+                              onClick={() => {
+                                const link = `${window.location.origin}/apply/${job.application_link}`;
+                                navigator.clipboard.writeText(link);
+                                toast.success("Application link copied!");
+                              }}
+                              className="p-2 hover:bg-orange-100 rounded-sm transition-all"
+                              title="Copy Application Link"
+                            >
+                              <LinkIcon size={18} className="text-orange-600" />
+                            </button>
                             {read && (
                               <button
                                 onClick={() => handleViewJob(job)}
@@ -800,6 +857,117 @@ export default function JobManagement() {
                     </div>
                   </div>
 
+                  {/* Interview Rounds - Dynamic List */}
+                  <div className="pt-6 border-t border-gray-100">
+                    <label className="block text-sm font-bold text-gray-700 mb-2">
+                      Interview Rounds (Pre-defined sequence)
+                    </label>
+                    <div className="space-y-3">
+                      {formData.interview_rounds.map((round, index) => (
+                        <div key={index} className="flex items-center gap-2 bg-orange-50 p-3 rounded-xl border border-orange-100">
+                          <span className="flex items-center justify-center w-6 h-6 bg-orange-500 text-white text-xs font-bold rounded-full">{index + 1}</span>
+                          <span className="flex-1 text-sm font-bold text-gray-700 uppercase tracking-wider">{round}</span>
+                          <button
+                            onClick={() => removeRound(index)}
+                            className="text-red-500 hover:text-red-700 p-1">
+                            <X size={16} />
+                          </button>
+                        </div>
+                      ))}
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={roundInput}
+                          onChange={(e) => setRoundInput(e.target.value)}
+                          onKeyPress={(e) => e.key === 'Enter' && addRound()}
+                          placeholder="Add a round (e.g., Technical Assessment)..."
+                          className="flex-1 px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-orange-500 transition-all outline-none text-sm"
+                        />
+                        <button
+                          onClick={addRound}
+                          className="bg-orange-500 text-white px-4 py-3 rounded-xl font-bold hover:bg-orange-600 transition-colors flex items-center gap-2">
+                          <Plus size={20} /> Add Round
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Application Form Fields - Dynamic List */}
+                  <div className="pt-6 border-t border-gray-100">
+                    <label className="block text-sm font-bold text-gray-700 mb-2">
+                      Custom Application Form Fields
+                    </label>
+                    <div className="space-y-4">
+                      {formData.application_fields.map((field, index) => (
+                        <div key={index} className="flex flex-wrap items-center gap-4 bg-gray-50 p-4 rounded-xl border border-gray-200">
+                          <div className="flex-1 min-w-[150px]">
+                            <p className="text-xs font-bold text-gray-400 uppercase">Label</p>
+                            <p className="text-sm font-bold text-gray-800">{field.label}</p>
+                          </div>
+                          <div className="w-24">
+                            <p className="text-xs font-bold text-gray-400 uppercase">Type</p>
+                            <p className="text-sm font-medium text-gray-600">{field.type}</p>
+                          </div>
+                          <div className="w-20">
+                            <p className="text-xs font-bold text-gray-400 uppercase">Required</p>
+                            <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${field.required ? 'bg-red-100 text-red-600' : 'bg-gray-200 text-gray-500'}`}>
+                              {field.required ? 'YES' : 'NO'}
+                            </span>
+                          </div>
+                          <button
+                            onClick={() => removeField(index)}
+                            className="text-red-500 hover:text-red-700 p-2 bg-white rounded-lg shadow-sm border border-gray-100">
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      ))}
+
+                      {/* Add Field Inputs */}
+                      <div className="bg-orange-50/50 p-6 rounded-2xl border-2 border-dashed border-orange-200 space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div>
+                            <label className="text-xs font-bold text-orange-600 uppercase mb-1 block">Field Label</label>
+                            <input
+                              type="text"
+                              value={fieldInput.label}
+                              onChange={(e) => setFieldInput({ ...fieldInput, label: e.target.value })}
+                              placeholder="e.g., Portfolio Link"
+                              className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:border-orange-500 outline-none text-sm"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-xs font-bold text-orange-600 uppercase mb-1 block">Field Type</label>
+                            <select
+                              value={fieldInput.type}
+                              onChange={(e) => setFieldInput({ ...fieldInput, type: e.target.value })}
+                              className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:border-orange-500 outline-none text-sm"
+                            >
+                              <option value="text">Text Input</option>
+                              <option value="textarea">Multi-line Text</option>
+                              <option value="number">Number</option>
+                              <option value="date">Date Picker</option>
+                            </select>
+                          </div>
+                          <div className="flex items-end">
+                            <label className="flex items-center gap-2 cursor-pointer p-2.5">
+                              <input
+                                type="checkbox"
+                                checked={fieldInput.required}
+                                onChange={(e) => setFieldInput({ ...fieldInput, required: e.target.checked })}
+                                className="w-4 h-4 accent-orange-500"
+                              />
+                              <span className="text-sm font-bold text-gray-700">Mandatory</span>
+                            </label>
+                          </div>
+                        </div>
+                        <button
+                          onClick={addField}
+                          className="w-full bg-white border-2 border-orange-500 text-orange-600 px-4 py-2.5 rounded-xl font-black uppercase tracking-widest text-xs hover:bg-orange-500 hover:text-white transition-all">
+                          Add Custom Field
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
                 <div className="p-6 bg-gray-50 border-t border-gray-200 flex justify-end gap-4">
                   <button
@@ -811,7 +979,7 @@ export default function JobManagement() {
                   <button
                     onClick={handleSubmit}
                     className="px-8 py-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-sm transition-all font-semibold shadow-lg">
-                    {editingJobId ? "Update Job Posting" : "Create Job Posting"}
+                    {editingJobId ? "Update Job Posting" : "Publish Job Posting"}
                   </button>
                 </div>
               </div>

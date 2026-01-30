@@ -33,18 +33,24 @@ const Navbar = ({ business, logoUrl }) => {
                             About
                             <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-[#FF7B1D] group-hover:w-full transition-all"></span>
                         </a>
-                        <a href="#vision" className="text-sm font-semibold text-gray-700 hover:text-[#FF7B1D] transition-colors relative group">
-                            Vision
-                            <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-[#FF7B1D] group-hover:w-full transition-all"></span>
-                        </a>
-                        <a href="#contact" className="text-sm font-semibold text-gray-700 hover:text-[#FF7B1D] transition-colors relative group">
-                            Contact
-                            <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-[#FF7B1D] group-hover:w-full transition-all"></span>
-                        </a>
-                        <a href={`mailto:${business.email}`} className="bg-gradient-to-r from-[#FF7B1D] to-orange-600 text-white px-6 py-2.5 rounded-lg text-sm font-bold hover:shadow-lg hover:scale-105 transition-all flex items-center gap-2">
-                            <Mail size={16} />
-                            Get in Touch
-                        </a>
+                        {(business.vision || business.mission) && (
+                            <a href="#vision" className="text-sm font-semibold text-gray-700 hover:text-[#FF7B1D] transition-colors relative group">
+                                Vision
+                                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-[#FF7B1D] group-hover:w-full transition-all"></span>
+                            </a>
+                        )}
+                        {(business.email || business.phone) && (
+                            <a href="#contact" className="text-sm font-semibold text-gray-700 hover:text-[#FF7B1D] transition-colors relative group">
+                                Contact
+                                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-[#FF7B1D] group-hover:w-full transition-all"></span>
+                            </a>
+                        )}
+                        {business.email && (
+                            <a href={`mailto:${business.email}`} className="bg-gradient-to-r from-[#FF7B1D] to-orange-600 text-white px-6 py-2.5 rounded-lg text-sm font-bold hover:shadow-lg hover:scale-105 transition-all flex items-center gap-2">
+                                <Mail size={16} />
+                                Get in Touch
+                            </a>
+                        )}
                     </div>
 
                     {/* Mobile Menu Button */}
@@ -63,7 +69,7 @@ const Navbar = ({ business, logoUrl }) => {
 
                 {/* Mobile Menu */}
                 {mobileMenuOpen && (
-                    <div className="lg:hidden py-4 border-t border-gray-200 animate-fadeIn">
+                    <div className="lg:hidden py-4 border-t border-gray-200 animate-fadeIn text-center">
                         <div className="flex flex-col space-y-4">
                             <a
                                 href="#about"
@@ -72,27 +78,33 @@ const Navbar = ({ business, logoUrl }) => {
                             >
                                 About
                             </a>
-                            <a
-                                href="#vision"
-                                onClick={() => setMobileMenuOpen(false)}
-                                className="text-sm font-semibold text-gray-700 hover:text-[#FF7B1D] transition-colors py-2"
-                            >
-                                Vision
-                            </a>
-                            <a
-                                href="#contact"
-                                onClick={() => setMobileMenuOpen(false)}
-                                className="text-sm font-semibold text-gray-700 hover:text-[#FF7B1D] transition-colors py-2"
-                            >
-                                Contact
-                            </a>
-                            <a
-                                href={`mailto:${business.email}`}
-                                className="bg-gradient-to-r from-[#FF7B1D] to-orange-600 text-white px-6 py-3 rounded-lg text-sm font-bold hover:shadow-lg transition-all flex items-center justify-center gap-2"
-                            >
-                                <Mail size={16} />
-                                Get in Touch
-                            </a>
+                            {(business.vision || business.mission) && (
+                                <a
+                                    href="#vision"
+                                    onClick={() => setMobileMenuOpen(false)}
+                                    className="text-sm font-semibold text-gray-700 hover:text-[#FF7B1D] transition-colors py-2"
+                                >
+                                    Vision
+                                </a>
+                            )}
+                            {(business.email || business.phone) && (
+                                <a
+                                    href="#contact"
+                                    onClick={() => setMobileMenuOpen(false)}
+                                    className="text-sm font-semibold text-gray-700 hover:text-[#FF7B1D] transition-colors py-2"
+                                >
+                                    Contact
+                                </a>
+                            )}
+                            {business.email && (
+                                <a
+                                    href={`mailto:${business.email}`}
+                                    className="bg-gradient-to-r from-[#FF7B1D] to-orange-600 text-white px-6 py-3 rounded-lg text-sm font-bold hover:shadow-lg transition-all flex items-center justify-center gap-2"
+                                >
+                                    <Mail size={16} />
+                                    Get in Touch
+                                </a>
+                            )}
                         </div>
                     </div>
                 )}

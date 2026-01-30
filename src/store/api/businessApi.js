@@ -25,7 +25,12 @@ export const businessApi = createApi({
                     if (key === 'logo' && data[key] instanceof File) {
                         formData.append('logo', data[key]);
                     } else if (data[key] !== undefined && data[key] !== null) {
-                        formData.append(key, data[key]);
+                        // Stringify arrays and objects for FormData
+                        if (Array.isArray(data[key]) || (typeof data[key] === 'object' && !(data[key] instanceof File))) {
+                            formData.append(key, JSON.stringify(data[key]));
+                        } else {
+                            formData.append(key, data[key]);
+                        }
                     }
                 });
                 return {

@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { FiHome } from "react-icons/fi";
 import DashboardLayout from "../../components/DashboardLayout";
 import {
@@ -41,6 +42,14 @@ export default function OfferLetterList() {
     const [selectedOffer, setSelectedOffer] = useState(null);
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const dropdownRef = useRef(null);
+    const location = useLocation();
+
+    useEffect(() => {
+        if (location.state?.applicant) {
+            setSelectedOffer(location.state.applicant);
+            setShowAddModal(true);
+        }
+    }, [location.state]);
 
     const { data, isLoading } = useGetOfferLettersQuery({
         page,
@@ -143,110 +152,122 @@ export default function OfferLetterList() {
                     </div>
                 </div>
 
-                {/* Main Content Area */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {isLoading ? (
-                        [1, 2, 3].map(i => (
-                            <div key={i} className="bg-white h-64 rounded-sm animate-pulse border border-gray-100"></div>
-                        ))
-                    ) : offerLetters.length > 0 ? (
-                        offerLetters.map((offer) => (
-                            <div key={offer.id} className="bg-white border border-gray-200 rounded-sm shadow-sm hover:shadow-md transition-all relative group overflow-hidden">
-                                {/* Top Banner/Status */}
-                                <div className={`h-1.5 w-full ${offer.status === 'Accepted' ? 'bg-green-500' : offer.status === 'Sent' ? 'bg-blue-500' : 'bg-[#FF7B1D]'}`}></div>
-
-                                <div className="p-5">
-                                    <div className="flex justify-between items-start mb-4">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 font-bold text-lg">
-                                                {offer.candidate_name.charAt(0)}
-                                            </div>
-                                            <div>
-                                                <h3 className="font-bold text-gray-800 text-lg leading-tight uppercase tracking-tight">{offer.candidate_name}</h3>
-                                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest border mt-1 ${getStatusStyles(offer.status)}`}>
+                {/* Main Content Area - Table Format */}
+                <div className="bg-white rounded-sm shadow-md overflow-hidden border border-gray-200">
+                    <div className="overflow-x-auto">
+                        <table className="w-full table-fixed">
+                            <thead className="bg-gradient-to-r from-orange-500 to-orange-600">
+                                <tr>
+                                    <th className="px-6 py-4 text-left text-sm font-bold text-white whitespace-nowrap w-48">Candidate Name</th>
+                                    <th className="px-6 py-4 text-left text-sm font-bold text-white whitespace-nowrap w-56">Email</th>
+                                    <th className="px-6 py-4 text-left text-sm font-bold text-white whitespace-nowrap w-40">Job Position</th>
+                                    <th className="px-6 py-4 text-left text-sm font-bold text-white whitespace-nowrap w-32">Salary</th>
+                                    <th className="px-6 py-4 text-left text-sm font-bold text-white whitespace-nowrap w-32">Joining Date</th>
+                                    <th className="px-6 py-4 text-center text-sm font-bold text-white whitespace-nowrap w-32">Status</th>
+                                    <th className="px-6 py-4 text-center text-sm font-bold text-white whitespace-nowrap w-48">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-200">
+                                {isLoading ? (
+                                    Array.from({ length: 5 }).map((_, index) => (
+                                        <tr key={index} className="animate-pulse bg-white">
+                                            <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-full"></div></td>
+                                            <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-full"></div></td>
+                                            <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-full"></div></td>
+                                            <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-full"></div></td>
+                                            <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-full"></div></td>
+                                            <td className="px-6 py-4 text-center"><div className="h-6 bg-gray-200 rounded w-20 mx-auto"></div></td>
+                                            <td className="px-6 py-4 text-center"><div className="h-8 bg-gray-200 rounded w-32 mx-auto"></div></td>
+                                        </tr>
+                                    ))
+                                ) : offerLetters.length > 0 ? (
+                                    offerLetters.map((offer, index) => (
+                                        <tr key={offer.id} className={`hover:bg-orange-50 transition-colors ${index % 2 === 0 ? "bg-white" : "bg-gray-50"}`}>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center text-orange-600 font-bold text-xs">
+                                                        {offer.candidate_name.charAt(0)}
+                                                    </div>
+                                                    <span className="font-semibold text-gray-800 uppercase tracking-tight truncate">{offer.candidate_name}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 text-gray-600 text-sm truncate">{offer.email}</td>
+                                            <td className="px-6 py-4 text-gray-700 text-sm whitespace-nowrap">
+                                                <div className="font-medium">{offer.designation}</div>
+                                                <div className="text-[10px] text-gray-400 font-bold uppercase">{offer.department}</div>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <span className="font-bold text-orange-600 text-sm">₹{(offer.net_salary || 0).toLocaleString()}</span>
+                                            </td>
+                                            <td className="px-6 py-4 text-gray-600 text-sm whitespace-nowrap">
+                                                {offer.joining_date ? new Date(offer.joining_date).toLocaleDateString() : 'TBD'}
+                                            </td>
+                                            <td className="px-6 py-4 text-center whitespace-nowrap">
+                                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm text-[10px] font-black uppercase tracking-widest border ${getStatusStyles(offer.status)}`}>
                                                     {getStatusIcon(offer.status)}
                                                     {offer.status}
                                                 </span>
-                                            </div>
-                                        </div>
-                                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <button onClick={() => handleDelete(offer.id)} className="p-2 text-rose-500 hover:bg-rose-50 rounded-sm"><Trash2 size={16} /></button>
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-2.5 mb-5 px-1">
-                                        <div className="flex items-center gap-3 text-sm text-gray-600">
-                                            <Mail size={14} className="text-gray-400" />
-                                            <span className="truncate">{offer.email}</span>
-                                        </div>
-                                        <div className="flex items-center gap-3 text-sm text-gray-600">
-                                            <Briefcase size={14} className="text-gray-400" />
-                                            <span>{offer.designation} <span className="text-gray-300">•</span> {offer.department}</span>
-                                        </div>
-                                        <div className="flex items-center gap-3 text-sm text-gray-600">
-                                            <Calendar size={14} className="text-gray-400" />
-                                            <span>Joined: {offer.joining_date ? new Date(offer.joining_date).toLocaleDateString() : 'TBD'}</span>
-                                        </div>
-                                        <div className="flex items-center gap-3 text-sm font-bold text-orange-600 py-2 bg-orange-50/50 px-2 rounded-sm border border-orange-100 transition-colors">
-                                            <DollarSign size={16} />
-                                            <span>₹{(offer.net_salary || 0).toLocaleString()} <span className="text-[10px] text-orange-400 font-normal ml-1">OFFERED SALARY</span></span>
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-2 pt-2 border-t">
-                                        {offer.status === 'Draft' ? (
-                                            <button
-                                                onClick={() => updateStatus(offer.id, 'Sent')}
-                                                className="col-span-2 py-2.5 bg-gray-900 text-white rounded-sm text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-black transition-colors"
-                                            >
-                                                <Send size={14} /> Send Offer
-                                            </button>
-                                        ) : offer.status === 'Sent' ? (
-                                            <>
-                                                <button
-                                                    onClick={() => updateStatus(offer.id, 'Accepted')}
-                                                    className="py-2 bg-green-600 text-white rounded-sm text-[10px] font-bold uppercase tracking-widest hover:bg-green-700 transition"
-                                                >
-                                                    Accept
-                                                </button>
-                                                <button
-                                                    onClick={() => updateStatus(offer.id, 'Rejected')}
-                                                    className="py-2 bg-red-600 text-white rounded-sm text-[10px] font-bold uppercase tracking-widest hover:bg-red-700 transition"
-                                                >
-                                                    Reject
-                                                </button>
-                                            </>
-                                        ) : offer.status === 'Accepted' ? (
-                                            <button
-                                                onClick={() => updateStatus(offer.id, 'Joined')}
-                                                className="col-span-2 py-2.5 bg-[#FF7B1D] text-white rounded-sm text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-orange-600 transition"
-                                            >
-                                                Mark as Joined
-                                            </button>
-                                        ) : (
-                                            <div className="col-span-2 py-2.5 text-center text-[10px] font-bold text-gray-400 uppercase tracking-widest bg-gray-50 rounded-sm">
-                                                No actions available
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                        ))
-                    ) : (
-                        <div className="col-span-full bg-white p-20 text-center border-2 border-dashed border-gray-100 rounded-sm">
-                            <FileSignature size={64} className="text-gray-200 mx-auto mb-4" />
-                            <h3 className="text-xl font-bold text-gray-400 uppercase tracking-wider">No Offer Letters Found</h3>
-                            <p className="text-gray-400 mt-2">Start by creating a new offer letter for your candidates.</p>
-                        </div>
-                    )}
+                                            </td>
+                                            <td className="px-6 py-4 text-center whitespace-nowrap">
+                                                <div className="flex justify-center gap-2">
+                                                    {offer.status === 'Sent' || offer.status === 'Draft' ? (
+                                                        <>
+                                                            <button
+                                                                onClick={() => updateStatus(offer.id, 'Accepted')}
+                                                                className="px-3 py-1.5 bg-green-600 text-white rounded-sm text-[10px] font-bold uppercase tracking-widest hover:bg-green-700 transition shadow-sm"
+                                                            >
+                                                                Accept
+                                                            </button>
+                                                            <button
+                                                                onClick={() => updateStatus(offer.id, 'Rejected')}
+                                                                className="px-3 py-1.5 bg-red-600 text-white rounded-sm text-[10px] font-bold uppercase tracking-widest hover:bg-red-700 transition shadow-sm"
+                                                            >
+                                                                Reject
+                                                            </button>
+                                                        </>
+                                                    ) : offer.status === 'Accepted' ? (
+                                                        <button
+                                                            onClick={() => updateStatus(offer.id, 'Joined')}
+                                                            className="px-4 py-1.5 bg-[#FF7B1D] text-white rounded-sm text-[10px] font-bold uppercase tracking-widest hover:bg-orange-600 transition shadow-sm"
+                                                        >
+                                                            Mark Joined
+                                                        </button>
+                                                    ) : (
+                                                        <button
+                                                            onClick={() => handleDelete(offer.id)}
+                                                            className="p-2 text-gray-400 hover:text-rose-500 hover:bg-rose-50 rounded-sm transition-colors"
+                                                            title="Delete Offer"
+                                                        >
+                                                            <Trash2 size={16} />
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan="7" className="py-20 text-center">
+                                            <FileSignature size={48} className="text-gray-100 mx-auto mb-4" />
+                                            <h3 className="text-lg font-bold text-gray-400 uppercase tracking-wider">No Offer Letters Found</h3>
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
                 {/* Modals */}
                 <AddOfferLetterModal
                     isOpen={showAddModal}
-                    onClose={() => setShowAddModal(false)}
+                    onClose={() => {
+                        setShowAddModal(false);
+                        setSelectedOffer(null);
+                    }}
                     onSubmit={handleCreateOffer}
                     loading={creating}
+                    initialData={selectedOffer}
                 />
             </div>
         </DashboardLayout>

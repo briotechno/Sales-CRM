@@ -10,6 +10,9 @@ import {
   ChevronDown,
   ChevronUp,
   X,
+  GraduationCap,
+  Plus,
+  Trash2,
 } from "lucide-react";
 import { useGetDepartmentsQuery } from "../../store/api/departmentApi";
 import { useGetDesignationsQuery } from "../../store/api/designationApi";
@@ -101,6 +104,7 @@ const FormSection = ({ formData, handleChange, handleChanges, setFormData, mode 
     bank: true,
     login: true,
     permissions: true,
+    education: true,
   });
 
   const [isSameAddress, setIsSameAddress] = useState(false);
@@ -553,6 +557,109 @@ const FormSection = ({ formData, handleChange, handleChanges, setFormData, mode 
               </div>
             </div>
           </div>
+        </div>
+      </CollapsibleSection>
+
+      <CollapsibleSection
+        id="education"
+        title="Education Details"
+        icon={GraduationCap}
+        isCollapsed={collapsedSections.education}
+        onToggle={() => toggleSection("education")}
+      >
+        <div className="space-y-4">
+          {(formData.education || []).map((edu, index) => (
+            <div key={index} className="p-4 border-2 border-gray-100 rounded-sm bg-gray-50/50 relative group">
+              <button
+                type="button"
+                onClick={() => {
+                  const newEdu = [...formData.education];
+                  newEdu.splice(index, 1);
+                  setFormData(prev => ({ ...prev, education: newEdu }));
+                }}
+                className="absolute top-2 right-2 p-1.5 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all font-bold"
+              >
+                <Trash2 size={16} />
+              </button>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div>
+                  <label className="text-sm font-semibold text-gray-700 mb-1.5 block">Level</label>
+                  <select
+                    value={edu.level || ""}
+                    onChange={(e) => {
+                      const newEdu = [...formData.education];
+                      newEdu[index] = { ...newEdu[index], level: e.target.value };
+                      setFormData(prev => ({ ...prev, education: newEdu }));
+                    }}
+                    className="w-full border-2 border-gray-200 p-2.5 rounded-sm focus:border-[#FF7B1D] outline-none transition-all text-sm font-medium bg-white"
+                  >
+                    <option value="">Select Level</option>
+                    <option>10th</option>
+                    <option>12th</option>
+                    <option>Graduation</option>
+                    <option>Post Graduation</option>
+                    <option>Diploma</option>
+                    <option>Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-sm font-semibold text-gray-700 mb-1.5 block">Institute / University</label>
+                  <input
+                    type="text"
+                    value={edu.institute || ""}
+                    onChange={(e) => {
+                      const newEdu = [...formData.education];
+                      newEdu[index] = { ...newEdu[index], institute: e.target.value };
+                      setFormData(prev => ({ ...prev, education: newEdu }));
+                    }}
+                    placeholder="Enter institute"
+                    className="w-full border-2 border-gray-200 p-2.5 rounded-sm focus:border-[#FF7B1D] outline-none transition-all text-sm font-medium bg-white"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-semibold text-gray-700 mb-1.5 block">Year of Passing</label>
+                  <input
+                    type="number"
+                    value={edu.year || ""}
+                    onChange={(e) => {
+                      const newEdu = [...formData.education];
+                      newEdu[index] = { ...newEdu[index], year: e.target.value };
+                      setFormData(prev => ({ ...prev, education: newEdu }));
+                    }}
+                    placeholder="YYYY"
+                    className="w-full border-2 border-gray-200 p-2.5 rounded-sm focus:border-[#FF7B1D] outline-none transition-all text-sm font-medium bg-white"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-semibold text-gray-700 mb-1.5 block">Percentage / GPA</label>
+                  <input
+                    type="text"
+                    value={edu.grade || ""}
+                    onChange={(e) => {
+                      const newEdu = [...formData.education];
+                      newEdu[index] = { ...newEdu[index], grade: e.target.value };
+                      setFormData(prev => ({ ...prev, education: newEdu }));
+                    }}
+                    placeholder="Grade"
+                    className="w-full border-2 border-gray-200 p-2.5 rounded-sm focus:border-[#FF7B1D] outline-none transition-all text-sm font-medium bg-white"
+                  />
+                </div>
+              </div>
+            </div>
+          ))}
+
+          <button
+            type="button"
+            onClick={() => {
+              setFormData(prev => ({
+                ...prev,
+                education: [...(prev.education || []), { level: "", institute: "", year: "", grade: "" }]
+              }));
+            }}
+            className="w-full py-3 border-2 border-dashed border-gray-200 rounded-sm text-gray-500 hover:text-orange-500 hover:border-orange-500 transition-all flex items-center justify-center gap-2 font-bold text-sm"
+          >
+            <Plus size={18} /> Add Education Entry
+          </button>
         </div>
       </CollapsibleSection>
 

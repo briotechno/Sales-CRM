@@ -15,6 +15,7 @@ const salaryRoutes = require('./routes/salaryRoutes');
 const jobRoutes = require('./routes/jobRoutes');
 const hrmDashboardRoutes = require('./routes/hrmDashboardRoutes');
 const expenseRoutes = require('./routes/expenseRoutes');
+const applicantRoutes = require('./routes/applicantRoutes');
 const path = require('path');
 
 dotenv.config();
@@ -40,6 +41,7 @@ app.use('/api/company-policies', companyPolicyRoutes);
 app.use('/api/hr-policies', hrPolicyRoutes);
 app.use('/api/salaries', salaryRoutes);
 app.use('/api/jobs', jobRoutes);
+app.use('/api/applicants', applicantRoutes);
 app.use('/api/hrm-dashboard', hrmDashboardRoutes);
 app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/catalogs', require('./routes/catalogRoutes'));
