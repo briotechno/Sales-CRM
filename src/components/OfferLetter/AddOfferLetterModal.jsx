@@ -7,7 +7,7 @@ import { useGetDesignationsQuery } from "../../store/api/designationApi";
 
 const AddOfferLetterModal = ({ isOpen, onClose, onSubmit, loading, initialData }) => {
     const [formData, setFormData] = useState({
-        employee_id: "",
+        employee_id: null,
         candidate_name: "",
         email: "",
         phone: "",
@@ -79,7 +79,7 @@ const AddOfferLetterModal = ({ isOpen, onClose, onSubmit, loading, initialData }
             toast.success("Offer Letter created successfully");
             onClose();
             setFormData({
-                employee_id: "",
+                employee_id: null,
                 candidate_name: "",
                 email: "",
                 phone: "",

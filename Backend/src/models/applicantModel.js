@@ -112,17 +112,22 @@ class Applicant {
         let fields = [];
         let params = [];
 
-        if (status !== undefined) { fields.push('status = ?'); params.push(status); }
-        if (current_round_index !== undefined) { fields.push('current_round_index = ?'); params.push(current_round_index); }
-        if (name !== undefined) { fields.push('name = ?'); params.push(name); }
-        if (email !== undefined) { fields.push('email = ?'); params.push(email); }
-        if (phone !== undefined) { fields.push('phone = ?'); params.push(phone); }
+        if (status !== undefined) { fields.push('a.status = ?'); params.push(status); }
+        if (current_round_index !== undefined) { fields.push('a.current_round_index = ?'); params.push(current_round_index); }
+        if (name !== undefined) { fields.push('a.name = ?'); params.push(name); }
+        if (email !== undefined) { fields.push('a.email = ?'); params.push(email); }
+        if (phone !== undefined) { fields.push('a.phone = ?'); params.push(phone); }
         if (interview_feedback !== undefined) {
-            fields.push('interview_feedback = ?');
-            params.push(typeof interview_feedback === 'string' ? interview_feedback : JSON.stringify(interview_feedback));
+            fields.push('a.interview_feedback = ?');
+            // Handle empty strings - convert to null for JSON column
+            if (interview_feedback === '' || interview_feedback === null) {
+                params.push(null);
+            } else {
+                params.push(typeof interview_feedback === 'string' ? interview_feedback : JSON.stringify(interview_feedback));
+            }
         }
         if (interview_rounds !== undefined) {
-            fields.push('interview_rounds = ?');
+            fields.push('a.interview_rounds = ?');
             params.push(typeof interview_rounds === 'string' ? interview_rounds : JSON.stringify(interview_rounds));
         }
 
@@ -131,7 +136,7 @@ class Applicant {
         const query = `
             UPDATE applicants a
             JOIN jobs j ON a.job_id = j.id
-            SET ${fields.map(f => `a.${f}`).join(', ')}
+            SET ${fields.join(', ')}
             WHERE a.id = ? AND j.user_id = ?
         `;
         params.push(id, userId);
