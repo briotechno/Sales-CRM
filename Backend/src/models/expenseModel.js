@@ -17,41 +17,36 @@ const Expense = {
         const { page = 1, limit = 10 } = pagination;
         const offset = (page - 1) * limit;
 
-        let query = 'SELECT * FROM expenses WHERE user_id = ?';
-        let countQuery = 'SELECT COUNT(*) as total FROM expenses WHERE user_id = ?';
+        let whereClause = 'WHERE user_id = ?';
         let queryParams = [userId];
 
         if (search) {
-            query += ' AND title LIKE ?';
-            countQuery += ' AND title LIKE ?';
-            queryParams.push(`%${search}%`, `%${search}%`);
+            whereClause += ' AND title LIKE ?';
+            queryParams.push(`%${search}%`);
         }
 
         if (category && category !== 'All') {
-            query += ' AND category = ?';
-            countQuery += ' AND category = ?';
+            whereClause += ' AND category = ?';
             queryParams.push(category);
         }
 
         if (status && status !== 'All') {
-            query += ' AND status = ?';
-            countQuery += ' AND status = ?';
+            whereClause += ' AND status = ?';
             queryParams.push(status);
         }
 
         if (dateFrom && dateTo) {
-            query += ' AND date BETWEEN ? AND ?';
-            countQuery += ' AND date BETWEEN ? AND ?';
+            whereClause += ' AND date BETWEEN ? AND ?';
             queryParams.push(dateFrom, dateTo);
         }
 
-        query += ' ORDER BY date DESC, id DESC LIMIT ? OFFSET ?';
-
+        // 1. Get total count for pagination
+        const countQuery = `SELECT COUNT(*) as total FROM expenses ${whereClause}`;
         const [countResult] = await pool.query(countQuery, queryParams);
         const total = countResult[0].total;
 
-        // Summary queries
-        const [summaryResult] = await pool.query(`
+        // 2. Get summary stats for matrix cards (Apply the same filters here!)
+        const summaryQuery = `
             SELECT 
                 SUM(amount) as totalAmount,
                 SUM(CASE WHEN status = 'approved' THEN amount ELSE 0 END) as approvedAmount,
@@ -60,8 +55,9 @@ const Expense = {
                 SUM(CASE WHEN receipt_url IS NOT NULL AND receipt_url != '' THEN 1 ELSE 0 END) as receiptCount,
                 SUM(CASE WHEN receipt_url IS NULL OR receipt_url = '' THEN 1 ELSE 0 END) as noReceiptCount
             FROM expenses 
-            WHERE user_id = ?
-        `, [userId]);
+            ${whereClause}
+        `;
+        const [summaryResult] = await pool.query(summaryQuery, queryParams);
 
         const summary = {
             totalAmount: summaryResult[0].totalAmount || 0,
@@ -72,7 +68,9 @@ const Expense = {
             noReceiptCount: summaryResult[0].noReceiptCount || 0
         };
 
-        const [rows] = await pool.query(query, [...queryParams, parseInt(limit), parseInt(offset)]);
+        // 3. Get paginated results
+        const listQuery = `SELECT * FROM expenses ${whereClause} ORDER BY date DESC, id DESC LIMIT ? OFFSET ?`;
+        const [rows] = await pool.query(listQuery, [...queryParams, parseInt(limit), parseInt(offset)]);
 
         return {
             expenses: rows,

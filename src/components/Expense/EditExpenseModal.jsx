@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, FileText, DollarSign, Calendar, Upload } from 'lucide-react';
+import { X, FileText, DollarSign, Calendar, Upload, Edit } from 'lucide-react';
 import { useUpdateExpenseMutation } from '../../store/api/expenseApi';
 import { toast } from 'react-hot-toast';
 import Modal from '../common/Modal';
@@ -60,16 +60,42 @@ const EditExpenseModal = ({ isOpen, onClose, expense }) => {
         }
     };
 
-    const categories = ["Meals", "Travel", "Supplies", "Training", "Software", "Other"];
+    const footer = (
+        <>
+            <button
+                onClick={onClose}
+                className="px-8 py-2.5 rounded-sm border border-gray-300 text-gray-700 font-bold hover:bg-gray-50 transition-all text-sm"
+            >
+                Cancel
+            </button>
+            <button
+                onClick={handleSubmit}
+                disabled={isLoading}
+                className="flex items-center justify-center gap-2 px-8 py-2.5 rounded-sm bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold hover:shadow-lg transform transition-all active:scale-95 disabled:opacity-50 text-sm"
+            >
+                {isLoading ? (
+                    'Updating...'
+                ) : (
+                    <>
+                        <Edit size={18} />
+                        Update Expense
+                    </>
+                )}
+            </button>
+        </>
+    );
 
     return (
         <Modal
             isOpen={isOpen}
             onClose={onClose}
             title="Edit Expense"
+            subtitle="Modify your existing expense details"
+            icon={<Edit size={24} />}
+            footer={footer}
             maxWidth="max-w-2xl"
         >
-            <div className="space-y-5 max-h-[70vh] overflow-y-auto px-1">
+            <div className="space-y-5 px-1 pb-2">
                 {/* Description Input */}
                 <div className="group">
                     <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
@@ -113,7 +139,7 @@ const EditExpenseModal = ({ isOpen, onClose, expense }) => {
                             onChange={handleChange}
                             className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300"
                         >
-                            {categories.map((cat) => (
+                            {["Meals", "Travel", "Supplies", "Training", "Software", "Other"].map((cat) => (
                                 <option key={cat} value={cat}>{cat}</option>
                             ))}
                         </select>
@@ -190,22 +216,6 @@ const EditExpenseModal = ({ isOpen, onClose, expense }) => {
                             )}
                         </div>
                     )}
-                </div>
-
-                <div className="flex justify-end gap-3 pt-4 border-t">
-                    <button
-                        onClick={onClose}
-                        className="px-6 py-2.5 rounded-sm border-2 border-gray-300 text-gray-700 font-semibold hover:bg-gray-100 transition-all"
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        onClick={handleSubmit}
-                        disabled={isLoading}
-                        className="px-6 py-2.5 rounded-sm bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold hover:shadow-lg transform transition-all disabled:opacity-50"
-                    >
-                        {isLoading ? 'Updating...' : 'Update Expense'}
-                    </button>
                 </div>
             </div>
         </Modal>
