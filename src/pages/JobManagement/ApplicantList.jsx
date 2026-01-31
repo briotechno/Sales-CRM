@@ -273,48 +273,53 @@ const ApplicantList = () => {
                     </div>
 
                     {/* Table */}
-                    <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 mx-4">
+                    <div className="bg-white rounded-sm shadow-md overflow-hidden mx-4">
                         <div className="overflow-x-auto">
                             <table className="w-full">
-                                <thead className="bg-gray-50 border-b border-gray-100">
+                                <thead className="bg-gradient-to-r from-orange-500 to-orange-600">
                                     <tr>
-                                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Applicant</th>
-                                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Job Role</th>
-                                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Applied Date</th>
-                                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
-                                        <th className="px-6 py-4 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">Actions</th>
+                                        <th className="px-6 py-4 text-left text-sm font-bold text-white whitespace-nowrap">Applicant</th>
+                                        <th className="px-6 py-4 text-left text-sm font-bold text-white whitespace-nowrap">Job Role</th>
+                                        <th className="px-6 py-4 text-left text-sm font-bold text-white whitespace-nowrap">Applied Date</th>
+                                        <th className="px-6 py-4 text-left text-sm font-bold text-white whitespace-nowrap">Status</th>
+                                        <th className="px-6 py-4 text-center text-sm font-bold text-white whitespace-nowrap">Actions</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-gray-100 bg-white">
+                                <tbody className="divide-y divide-gray-200">
                                     {isLoading ? (
                                         [...Array(5)].map((_, i) => (
-                                            <tr key={i} className="animate-pulse">
-                                                <td className="px-6 py-4"><div className="h-4 bg-gray-100 rounded w-32"></div></td>
-                                                <td className="px-6 py-4"><div className="h-4 bg-gray-100 rounded w-24"></div></td>
-                                                <td className="px-6 py-4"><div className="h-4 bg-gray-100 rounded w-20"></div></td>
-                                                <td className="px-6 py-4"><div className="h-6 bg-gray-100 rounded w-16"></div></td>
-                                                <td className="px-6 py-4"><div className="h-8 bg-gray-100 rounded w-24 mx-auto"></div></td>
+                                            <tr key={i} className="animate-pulse bg-white">
+                                                <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-32"></div></td>
+                                                <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-24"></div></td>
+                                                <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-20"></div></td>
+                                                <td className="px-6 py-4"><div className="h-6 bg-gray-200 rounded w-16"></div></td>
+                                                <td className="px-6 py-4"><div className="h-8 bg-gray-200 rounded w-24 mx-auto"></div></td>
                                             </tr>
                                         ))
-                                    ) : applicantsData?.applicants?.map((applicant) => (
-                                        <tr key={applicant.id} className="hover:bg-gray-50/50 transition-colors">
+                                    ) : applicantsData?.applicants?.map((applicant, index) => (
+                                        <tr key={applicant.id} className={`hover:bg-orange-50 transition-colors ${index % 2 === 0 ? "bg-white" : "bg-gray-50"}`}>
                                             <td className="px-6 py-4">
-                                                <div className="flex flex-col">
-                                                    <span className="font-semibold text-gray-900">{applicant.name}</span>
-                                                    <span className="text-xs text-gray-500">{applicant.email}</span>
+                                                <div className="flex items-center gap-3">
+                                                    <div className="bg-gradient-to-br from-orange-400 to-orange-600 p-2 rounded-sm">
+                                                        <Users className="text-white" size={18} />
+                                                    </div>
+                                                    <div className="flex flex-col">
+                                                        <span className="font-semibold text-gray-800">{applicant.name}</span>
+                                                        <span className="text-xs text-gray-500">{applicant.email}</span>
+                                                    </div>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-2">
-                                                    <Briefcase size={14} className="text-gray-400" />
+                                                    <Briefcase size={14} className="text-orange-500" />
                                                     <span className="text-sm font-medium text-gray-700">{applicant.job_title}</span>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4 text-sm text-gray-600">
+                                            <td className="px-6 py-4 text-sm text-gray-700">
                                                 {new Date(applicant.created_at).toLocaleDateString()}
                                             </td>
                                             <td className="px-6 py-4">
-                                                <span className={`px-3 py-1 rounded-full text-xs font-bold ${getStatusStyle(applicant.status)}`}>
+                                                <span className={`px-3 py-1 rounded-sm text-xs font-semibold ${getStatusStyle(applicant.status)}`}>
                                                     {applicant.status}
                                                 </span>
                                             </td>
@@ -322,24 +327,24 @@ const ApplicantList = () => {
                                                 <div className="flex items-center justify-center gap-2">
                                                     <button
                                                         onClick={() => handleViewApplicant(applicant)}
-                                                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                        className="p-2 hover:bg-blue-100 rounded-sm transition-all"
                                                         title="View Details"
                                                     >
-                                                        <Eye size={18} />
+                                                        <Eye size={18} className="text-blue-600" />
                                                     </button>
                                                     <button
                                                         onClick={() => handleEditApplicant(applicant)}
-                                                        className="p-2 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
+                                                        className="p-2 hover:bg-orange-100 rounded-sm transition-all"
                                                         title="Edit Applicant"
                                                     >
-                                                        <Edit size={18} />
+                                                        <Edit size={18} className="text-orange-600" />
                                                     </button>
                                                     <button
                                                         onClick={() => handleDelete(applicant.id)}
-                                                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                        className="p-2 hover:bg-red-100 rounded-sm transition-all"
                                                         title="Delete"
                                                     >
-                                                        <Trash2 size={18} />
+                                                        <Trash2 size={18} className="text-red-600" />
                                                     </button>
                                                 </div>
                                             </td>
