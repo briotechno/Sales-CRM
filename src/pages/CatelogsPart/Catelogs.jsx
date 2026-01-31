@@ -374,21 +374,15 @@ export default function CatalogsPage() {
 
   return (
     <DashboardLayout>
-      <div className=" ml-6 min-h-screen">
+      <div className="min-h-screen bg-white">
         {/* Header Section */}
-        <div className="bg-white border-b my-3">
-          <div className="max-w-8xl mx-auto">
-            <div className="flex items-center justify-between py-3">
+        <div className="bg-white border-b sticky top-0 z-30">
+          <div className="max-w-8xl mx-auto px-4 py-2">
+            <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-2xl font-bold text-gray-800">
-                  Catalog Module
-                </h1>
-                <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
-                  <FiHome className="text-gray-700 text-sm" />
-                  <span className="text-gray-400"></span> CRM /{" "}
-                  <span className="text-[#FF7B1D] font-medium">
-                    All Catalogs
-                  </span>
+                <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Catalog Module</h1>
+                <p className="text-[10px] text-gray-500 mt-0.5 flex items-center gap-1.5">
+                  <FiHome className="text-gray-400" size={14} /> CRM / <span className="text-[#FF7B1D] font-medium">All Catalogs</span>
                 </p>
               </div>
 
@@ -397,19 +391,16 @@ export default function CatalogsPage() {
                 <div className="relative" ref={dropdownRef}>
                   <button
                     onClick={() => setIsFilterOpen(!isFilterOpen)}
-                    className={`p-3 rounded-sm border transition-all shadow-sm ${isFilterOpen
+                    className={`p-2 rounded-sm border transition shadow-sm ${isFilterOpen || statusFilter !== "All"
                       ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
-                      : "bg-white text-gray-700 border-gray-300 hover:bg-orange-500 hover:text-white hover:border-[#FF7B1D]"
+                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
                       }`}
                   >
-                    <Filter size={20} />
+                    <Filter size={18} />
                   </button>
 
                   {isFilterOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-sm shadow-xl z-50 animate-fadeIn">
-                      <div className="p-2 border-b bg-gray-50">
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Filter by Category</p>
-                      </div>
+                    <div className="absolute right-0 mt-2 w-32 bg-white border border-gray-200 rounded-sm shadow-xl z-50 animate-fadeIn">
                       <div className="py-1">
                         {["All", "Active", "Inactive"].map((status) => (
                           <button
@@ -419,7 +410,7 @@ export default function CatalogsPage() {
                               setIsFilterOpen(false);
                               setCurrentPage(1);
                             }}
-                            className={`block w-full text-left px-4 py-2.5 text-sm transition-colors ${statusFilter === status
+                            className={`block w-full text-left px-4 py-2 text-sm transition-colors ${statusFilter === status
                               ? "bg-orange-50 text-orange-600 font-bold"
                               : "text-gray-700 hover:bg-gray-50"
                               }`}
@@ -431,7 +422,7 @@ export default function CatalogsPage() {
                     </div>
                   )}
                 </div>
-                {/*  */}
+
                 <div className="relative">
                   <input
                     type="text"
@@ -441,17 +432,14 @@ export default function CatalogsPage() {
                       setSearchTerm(e.target.value);
                       setCurrentPage(1);
                     }}
-                    className="pl-10 pr-4 py-3 border border-gray-200 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#FF7B1D] text-sm w-64"
+                    className="pl-10 pr-4 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-orange-500 text-sm w-64 shadow-sm"
                   />
-                  <Search
-                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                    size={16}
-                  />
+                  <Search className="absolute left-3 top-2.5 text-gray-400" size={16} />
                 </div>
 
-                <button className="px-5 py-3 border border-gray-200 rounded-sm flex items-center gap-2 hover:bg-gray-100 transition-colors shadow-sm">
+                <button className="bg-white border border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-sm flex items-center gap-2 transition text-sm font-semibold shadow-sm active:scale-95 text-gray-700">
                   <FileDown size={18} />
-                  <span className="text-sm font-semibold">Export</span>
+                  EXPORT
                 </button>
 
                 <button
@@ -460,243 +448,245 @@ export default function CatalogsPage() {
                     setShowAddModal(true);
                   }}
                   disabled={!create}
-                  className={`px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm hover:shadow-lg transition-all flex items-center gap-2 font-bold shadow-md ${create
-                    ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white"
+                  className={`flex items-center gap-2 px-4 py-2 rounded-sm font-bold transition shadow-md text-sm active:scale-95 ${create
+                    ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
                     : "bg-gray-300 text-gray-500 cursor-not-allowed"
                     }`}
                 >
-                  <Plus size={20} />
-                  Add Catalog
+                  <Plus size={18} />
+                  ADD CATALOG
                 </button>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Statement Card */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <NumberCard
-            title="Total Employee"
-            number={dashboardData?.data?.summary?.totalEmployees?.value || "0"}
-            icon={<Users className="text-blue-600" size={24} />}
-            iconBgColor="bg-blue-100"
-            lineBorderClass="border-blue-500"
-          />
-          <NumberCard
-            title="Total Catalogs"
-            number={pagination.total || "0"}
-            icon={<LayoutGrid className="text-green-600" size={24} />}
-            iconBgColor="bg-green-100"
-            lineBorderClass="border-green-500"
-          />
-          <NumberCard
-            title="Total Leads"
-            number={dashboardData?.data?.summary?.totalLeads?.value || "0"}
-            icon={<Handshake className="text-orange-600" size={24} />}
-            iconBgColor="bg-orange-100"
-            lineBorderClass="border-orange-500"
-          />
-          <NumberCard
-            title="Total Active"
-            number={catalogs.filter(c => c.status === 'Active').length || "0"}
-            icon={<Target className="text-purple-600" size={24} />}
-            iconBgColor="bg-purple-100"
-            lineBorderClass="border-purple-500"
-          />
-        </div>
+        <div className="max-w-8xl mx-auto p-4 mt-0">
+          {/* Statement Card */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-3">
+            <NumberCard
+              title="Total Employee"
+              number={dashboardData?.data?.summary?.totalEmployees?.value || "0"}
+              icon={<Users className="text-blue-600" size={24} />}
+              iconBgColor="bg-blue-100"
+              lineBorderClass="border-blue-500"
+            />
+            <NumberCard
+              title="Total Catalogs"
+              number={pagination.total || "0"}
+              icon={<LayoutGrid className="text-green-600" size={24} />}
+              iconBgColor="bg-green-100"
+              lineBorderClass="border-green-500"
+            />
+            <NumberCard
+              title="Total Leads"
+              number={dashboardData?.data?.summary?.totalLeads?.value || "0"}
+              icon={<Handshake className="text-orange-600" size={24} />}
+              iconBgColor="bg-orange-100"
+              lineBorderClass="border-orange-500"
+            />
+            <NumberCard
+              title="Total Active"
+              number={catalogs.filter(c => c.status === 'Active').length || "0"}
+              icon={<Target className="text-purple-600" size={24} />}
+              iconBgColor="bg-purple-100"
+              lineBorderClass="border-purple-500"
+            />
+          </div>
 
-        {/* Table */}
-        <div className="overflow-x-auto mt-4 border border-gray-200 rounded-sm shadow-sm">
-          <table className="w-full border-collapse text-center">
-            <thead>
-              <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm">
-                <th className="py-3 px-4 font-semibold">S.N</th>
-                <th className="py-3 px-4 font-semibold">Image</th>
-                <th
-                  className="py-3 px-4 font-semibold cursor-pointer hover:text-gray-200"
-                  onClick={() => handleSort("id")}
-                >
-                  ID
-                </th>
-                <th
-                  className="py-3 px-4 font-semibold cursor-pointer hover:text-gray-200"
-                  onClick={() => handleSort("name")}
-                >
-                  Name
-                </th>
-                <th
-                  className="py-3 px-4 font-semibold cursor-pointer hover:text-gray-200"
-                  onClick={() => handleSort("minPrice")}
-                >
-                  Min Price
-                </th>
-                <th
-                  className="py-3 px-4 font-semibold cursor-pointer hover:text-gray-200"
-                  onClick={() => handleSort("maxPrice")}
-                >
-                  Max Price
-                </th>
-                <th
-                  className="py-3 px-4 font-semibold cursor-pointer hover:text-gray-200"
-                  onClick={() => handleSort("createdDate")}
-                >
-                  Created Date
-                </th>
-                <th
-                  className="py-3 px-4 font-semibold cursor-pointer hover:text-gray-200"
-                  onClick={() => handleSort("status")}
-                >
-                  Status
-                </th>
-                <th className="py-3 px-4 font-semibold">Action</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {isLoading ? (
-                <tr>
-                  <td colSpan="9" className="py-20">
-                    <div className="flex justify-center flex-col items-center gap-4">
-                      <div className="w-12 h-12 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin"></div>
-                      <p className="text-gray-500 font-semibold animate-pulse">Loading catalogs...</p>
-                    </div>
-                  </td>
-                </tr>
-              ) : currentCatalogs.length > 0 ? (
-                currentCatalogs.map((catalog, index) => (
-                  <tr
-                    key={catalog.id}
-                    className="border-t hover:bg-gray-50 transition-colors"
+          {/* Table */}
+          <div className="overflow-x-auto mt-4 border border-gray-200 rounded-sm shadow-sm">
+            <table className="w-full border-collapse text-center">
+              <thead>
+                <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm">
+                  <th className="py-3 px-4 font-semibold">S.N</th>
+                  <th className="py-3 px-4 font-semibold">Image</th>
+                  <th
+                    className="py-3 px-4 font-semibold cursor-pointer hover:text-gray-200"
+                    onClick={() => handleSort("id")}
                   >
-                    <td className="py-3 px-4">
-                      {(currentPage - 1) * itemsPerPage + index + 1}
-                    </td>
-                    <td className="py-3 px-4">
-                      <img
-                        src={catalog.image}
-                        alt={catalog.name}
-                        className="w-12 h-12 rounded-md border object-cover mx-auto shadow-sm"
-                      />
-                    </td>
-                    <td className="py-3 px-4 font-medium text-orange-600">{catalog.catalog_id}</td>
-                    <td className="py-3 px-4 font-semibold text-gray-800">
-                      {catalog.name}
-                    </td>
-                    <td className="py-3 px-4 font-medium">
-                      ₹{catalog.minPrice?.toLocaleString() || 0}
-                    </td>
-                    <td className="py-3 px-4 font-medium">
-                      ₹{catalog.maxPrice?.toLocaleString() || 0}
-                    </td>
-                    <td className="py-3 px-4 text-gray-600 text-sm">{new Date(catalog.created_at).toLocaleDateString()}</td>
-                    <td className="py-3 px-4">
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs font-bold ${catalog.status === "Active"
-                          ? "bg-green-100 text-green-700"
-                          : "bg-red-100 text-red-600"
-                          }`}
-                      >
-                        {catalog.status}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4">
-                      <div className="flex justify-center gap-2">
-                        <button
-                          onClick={() => handleView(catalog.catalog_id)}
-                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-sm transition-all"
-                          title="View"
-                        >
-                          <Eye size={18} />
-                        </button>
-                        <button
-                          onClick={() => handleEdit(catalog)}
-                          disabled={!update}
-                          className={`p-2 rounded-sm transition-all ${update ? "text-orange-500 hover:bg-orange-50" : "text-gray-300 cursor-not-allowed"
-                            }`}
-                          title="Edit"
-                        >
-                          <Edit2 size={18} />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(catalog)}
-                          disabled={!canDelete}
-                          className={`p-2 rounded-sm transition-all ${canDelete ? "text-red-600 hover:bg-red-50" : "text-gray-300 cursor-not-allowed"
-                            }`}
-                          title="Delete"
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                        <button
-                          onClick={() => handleShare(catalog)}
-                          className="p-2 text-purple-600 hover:bg-purple-50 rounded-sm transition-all"
-                          title="Share"
-                        >
-                          <Share2 size={18} />
-                        </button>
+                    ID
+                  </th>
+                  <th
+                    className="py-3 px-4 font-semibold cursor-pointer hover:text-gray-200"
+                    onClick={() => handleSort("name")}
+                  >
+                    Name
+                  </th>
+                  <th
+                    className="py-3 px-4 font-semibold cursor-pointer hover:text-gray-200"
+                    onClick={() => handleSort("minPrice")}
+                  >
+                    Min Price
+                  </th>
+                  <th
+                    className="py-3 px-4 font-semibold cursor-pointer hover:text-gray-200"
+                    onClick={() => handleSort("maxPrice")}
+                  >
+                    Max Price
+                  </th>
+                  <th
+                    className="py-3 px-4 font-semibold cursor-pointer hover:text-gray-200"
+                    onClick={() => handleSort("createdDate")}
+                  >
+                    Created Date
+                  </th>
+                  <th
+                    className="py-3 px-4 font-semibold cursor-pointer hover:text-gray-200"
+                    onClick={() => handleSort("status")}
+                  >
+                    Status
+                  </th>
+                  <th className="py-3 px-4 font-semibold">Action</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {isLoading ? (
+                  <tr>
+                    <td colSpan="9" className="py-20">
+                      <div className="flex justify-center flex-col items-center gap-4">
+                        <div className="w-12 h-12 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin"></div>
+                        <p className="text-gray-500 font-semibold animate-pulse">Loading catalogs...</p>
                       </div>
                     </td>
                   </tr>
-                ))
-              ) : (
-                <tr>
-                  <td
-                    colSpan="9"
-                    className="py-12 text-gray-500 font-medium text-sm"
+                ) : currentCatalogs.length > 0 ? (
+                  currentCatalogs.map((catalog, index) => (
+                    <tr
+                      key={catalog.id}
+                      className="border-t hover:bg-gray-50 transition-colors"
+                    >
+                      <td className="py-3 px-4">
+                        {(currentPage - 1) * itemsPerPage + index + 1}
+                      </td>
+                      <td className="py-3 px-4">
+                        <img
+                          src={catalog.image}
+                          alt={catalog.name}
+                          className="w-12 h-12 rounded-md border object-cover mx-auto shadow-sm"
+                        />
+                      </td>
+                      <td className="py-3 px-4 font-medium text-orange-600">{catalog.catalog_id}</td>
+                      <td className="py-3 px-4 font-semibold text-gray-800">
+                        {catalog.name}
+                      </td>
+                      <td className="py-3 px-4 font-medium">
+                        ₹{catalog.minPrice?.toLocaleString() || 0}
+                      </td>
+                      <td className="py-3 px-4 font-medium">
+                        ₹{catalog.maxPrice?.toLocaleString() || 0}
+                      </td>
+                      <td className="py-3 px-4 text-gray-600 text-sm">{new Date(catalog.created_at).toLocaleDateString()}</td>
+                      <td className="py-3 px-4">
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-bold ${catalog.status === "Active"
+                            ? "bg-green-100 text-green-700"
+                            : "bg-red-100 text-red-600"
+                            }`}
+                        >
+                          {catalog.status}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="flex justify-center gap-2">
+                          <button
+                            onClick={() => handleView(catalog.catalog_id)}
+                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-sm transition-all"
+                            title="View"
+                          >
+                            <Eye size={18} />
+                          </button>
+                          <button
+                            onClick={() => handleEdit(catalog)}
+                            disabled={!update}
+                            className={`p-2 rounded-sm transition-all ${update ? "text-orange-500 hover:bg-orange-50" : "text-gray-300 cursor-not-allowed"
+                              }`}
+                            title="Edit"
+                          >
+                            <Edit2 size={18} />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(catalog)}
+                            disabled={!canDelete}
+                            className={`p-2 rounded-sm transition-all ${canDelete ? "text-red-600 hover:bg-red-50" : "text-gray-300 cursor-not-allowed"
+                              }`}
+                            title="Delete"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                          <button
+                            onClick={() => handleShare(catalog)}
+                            className="p-2 text-purple-600 hover:bg-purple-50 rounded-sm transition-all"
+                            title="Share"
+                          >
+                            <Share2 size={18} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td
+                      colSpan="9"
+                      className="py-12 text-gray-500 font-medium text-sm"
+                    >
+                      <div className="flex flex-col items-center gap-3">
+                        <Package size={48} className="text-gray-200" />
+                        <p>No catalogs found matches your criteria.</p>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* 🔹 Pagination Section */}
+          <div className="flex flex-col md:flex-row justify-between items-center mt-6 gap-4 bg-gray-50 p-4 rounded-sm border border-gray-200">
+            <p className="text-sm font-semibold text-gray-700">
+              Showing <span className="text-orange-600">{indexOfFirstItem + 1}</span> to <span className="text-orange-600">{indexOfLastItem}</span> of <span className="text-orange-600">{pagination.total || 0}</span> Catalogs
+            </p>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handlePrev}
+                disabled={currentPage === 1}
+                className={`px-4 py-2 rounded-sm font-bold transition flex items-center gap-1 ${currentPage === 1
+                  ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                  : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"
+                  }`}
+              >
+                Previous
+              </button>
+
+              <div className="flex items-center gap-1">
+                {Array.from({ length: totalPages }, (_, i) => (
+                  <button
+                    key={i + 1}
+                    onClick={() => handlePageChange(i + 1)}
+                    className={`w-10 h-10 rounded-sm font-bold transition ${currentPage === i + 1
+                      ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md"
+                      : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+                      }`}
                   >
-                    <div className="flex flex-col items-center gap-3">
-                      <Package size={48} className="text-gray-200" />
-                      <p>No catalogs found matches your criteria.</p>
-                    </div>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+                    {i + 1}
+                  </button>
+                ))}
+              </div>
 
-        {/* 🔹 Pagination Section */}
-        <div className="flex flex-col md:flex-row justify-between items-center mt-6 gap-4 bg-gray-50 p-4 rounded-sm border border-gray-200">
-          <p className="text-sm font-semibold text-gray-700">
-            Showing <span className="text-orange-600">{indexOfFirstItem + 1}</span> to <span className="text-orange-600">{indexOfLastItem}</span> of <span className="text-orange-600">{pagination.total || 0}</span> Catalogs
-          </p>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handlePrev}
-              disabled={currentPage === 1}
-              className={`px-4 py-2 rounded-sm font-bold transition flex items-center gap-1 ${currentPage === 1
-                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"
-                }`}
-            >
-              Previous
-            </button>
-
-            <div className="flex items-center gap-1">
-              {Array.from({ length: totalPages }, (_, i) => (
-                <button
-                  key={i + 1}
-                  onClick={() => handlePageChange(i + 1)}
-                  className={`w-10 h-10 rounded-sm font-bold transition ${currentPage === i + 1
-                    ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md"
-                    : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
-                    }`}
-                >
-                  {i + 1}
-                </button>
-              ))}
+              <button
+                onClick={handleNext}
+                disabled={currentPage === totalPages}
+                className={`px-4 py-2 rounded-sm font-bold transition flex items-center gap-1 ${currentPage === totalPages
+                  ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                  : "bg-[#22C55E] text-white hover:opacity-90 shadow-md"
+                  }`}
+              >
+                Next
+              </button>
             </div>
-
-            <button
-              onClick={handleNext}
-              disabled={currentPage === totalPages}
-              className={`px-4 py-2 rounded-sm font-bold transition flex items-center gap-1 ${currentPage === totalPages
-                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                : "bg-[#22C55E] text-white hover:opacity-90 shadow-md"
-                }`}
-            >
-              Next
-            </button>
           </div>
         </div>
 

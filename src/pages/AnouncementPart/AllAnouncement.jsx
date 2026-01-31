@@ -139,40 +139,37 @@ export default function AnnouncementPage() {
 
   return (
     <DashboardLayout>
-      <div className=" ml-6 min-h-screen">
-        {/* Header */}
+      <div className="min-h-screen bg-white">
+        {/* Header Section */}
         <div className="bg-white border-b sticky top-0 z-30">
-          <div className="max-w-8xl mx-auto py-4">
+          <div className="max-w-8xl mx-auto px-4 py-2">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
-                <h1 className="text-2xl font-bold text-gray-800">
+                <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
                   Announcements
                 </h1>
-                <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
-                  <FiHome className="text-gray-400 text-sm" />
-                  Additional /{" "}
-                  <span className="text-[#FF7B1D] font-medium">
-                    All Announcement
-                  </span>
+                <p className="text-[10px] text-gray-500 mt-0.5 flex items-center gap-1.5">
+                  <FiHome className="text-gray-400" size={14} />
+                  Additional / <span className="text-[#FF7B1D] font-medium">All Announcement</span>
                 </p>
               </div>
 
               {/* Right Side: Filter + New Button */}
-              <div className="flex flex-wrap items-center gap-3">
+              <div className="flex flex-wrap items-center gap-2">
                 {/* Filter */}
                 <div className="relative" ref={filterDropdownRef}>
                   <button
                     onClick={() => setIsFilterOpen(!isFilterOpen)}
-                    className={`p-3 rounded-sm border transition-all shadow-sm ${isFilterOpen || categoryFilter !== "All"
+                    className={`p-2 rounded-sm border transition shadow-sm ${isFilterOpen || categoryFilter !== "All"
                       ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
                       : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
                       }`}
                   >
-                    <Filter size={20} />
+                    <Filter size={18} />
                   </button>
 
                   {isFilterOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-sm shadow-xl z-50">
+                    <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-sm shadow-xl z-50">
                       <div className="py-1 max-h-64 overflow-y-auto custom-scrollbar">
                         <button
                           onClick={() => {
@@ -180,7 +177,7 @@ export default function AnnouncementPage() {
                             setIsFilterOpen(false);
                             setCurrentPage(1);
                           }}
-                          className={`block w-full text-left px-4 py-2.5 text-sm transition-colors ${categoryFilter === "All"
+                          className={`block w-full text-left px-4 py-2 text-sm transition-colors ${categoryFilter === "All"
                             ? "bg-orange-50 text-orange-600 font-bold"
                             : "text-gray-700 hover:bg-gray-50"
                             }`}
@@ -195,7 +192,7 @@ export default function AnnouncementPage() {
                               setIsFilterOpen(false);
                               setCurrentPage(1);
                             }}
-                            className={`block w-full text-left px-4 py-2.5 text-sm transition-colors ${categoryFilter === cat.name
+                            className={`block w-full text-left px-4 py-2 text-sm transition-colors ${categoryFilter === cat.name
                               ? "bg-orange-50 text-orange-600 font-bold"
                               : "text-gray-700 hover:bg-gray-50"
                               }`}
@@ -217,12 +214,9 @@ export default function AnnouncementPage() {
                       setSearchTerm(e.target.value);
                       setCurrentPage(1);
                     }}
-                    className="pl-10 pr-4 py-3 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-[#FF7B1D]/20 focus:border-[#FF7B1D] text-sm w-full md:w-64 transition-all"
+                    className="pl-10 pr-4 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-orange-500 text-sm w-64 shadow-sm"
                   />
-                  <Search
-                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                    size={18}
-                  />
+                  <Search className="absolute left-3 top-2.5 text-gray-400" size={16} />
                 </div>
 
                 {/* New Announcement */}
@@ -231,19 +225,18 @@ export default function AnnouncementPage() {
                     setSelectedAnnouncement(null);
                     setShowAddModal(true);
                   }}
-                  className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm hover:shadow-lg transition-all flex items-center gap-2 font-bold shadow-md"
+                  className="flex items-center gap-2 px-4 py-2 rounded-sm font-bold transition shadow-md text-sm active:scale-95 bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
                 >
-                  <Plus size={20} />
-                  New Announcement
+                  <Plus size={18} />
+                  NEW ANNOUNCEMENT
                 </button>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Stats Cards */}
-        <div className="max-w-8xl mx-auto px-0 py-0 mt-2">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div className="max-w-8xl mx-auto p-4 mt-0">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
             <NumberCard
               title={"Total Announcements"}
               number={pagination.total}
@@ -472,7 +465,6 @@ export default function AnnouncementPage() {
             setShowDeleteModal(false);
             setSelectedAnnouncement(null);
           }}
-          announcementId={selectedAnnouncement?.id}
         />
       </div>
     </DashboardLayout>

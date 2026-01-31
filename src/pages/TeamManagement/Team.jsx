@@ -118,46 +118,49 @@ export default function TeamManagement() {
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen p-0 ml-6">
+      <div className="min-h-screen bg-white">
         <style>{scrollbarStyles}</style>
-        <div className="max-w-8xl mx-auto">
-          {/* Header */}
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-4 bg-white border-b py-3 px-1">
-            <div className="mb-4 md:mb-0">
-              <h1 className="text-3xl font-bold text-gray-800">Team Management</h1>
-              <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
-                <Home className="text-gray-700" size={14} />
-                <span className="text-gray-400">HRM / </span>
-                <span className="text-orange-500 font-medium">All Team</span>
-              </p>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-              {/* SearchBar */}
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Search teams..."
-                  value={searchQuery}
-                  onChange={(e) => {
-                    setSearchQuery(e.target.value);
-                    setCurrentPage(1);
-                  }}
-                  className="w-full sm:w-64 px-4 py-2 border-2 border-orange-100 focus:border-orange-500 outline-none rounded-sm bg-orange-50/30"
-                />
+        {/* Header Section */}
+        <div className="bg-white border-b sticky top-0 z-30">
+          <div className="max-w-8xl mx-auto px-4 py-2">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Team Management</h1>
+                <p className="text-[10px] text-gray-500 mt-0.5 flex items-center gap-1.5">
+                  <Home className="text-gray-400" size={14} /> HRM / <span className="text-orange-500 font-medium">All Team</span>
+                </p>
               </div>
-              <button
-                onClick={() => setShowAddModal(true)}
-                disabled={!create}
-                className={`flex items-center justify-center gap-2 px-6 py-2 rounded-sm font-semibold transition shadow-md ${create
-                  ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
-                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                  }`}
-              >
-                <Plus size={18} />
-                Create Team
-              </button>
+
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Search teams..."
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    className="pl-4 pr-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-1 focus:ring-orange-500 text-sm w-64 shadow-sm"
+                  />
+                </div>
+                <button
+                  onClick={() => setShowAddModal(true)}
+                  disabled={!create}
+                  className={`flex items-center justify-center gap-2 px-6 py-2 rounded-sm font-bold transition shadow-md text-sm active:scale-95 ${create
+                    ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
+                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    }`}
+                >
+                  <Plus size={18} />
+                  CREATE TEAM
+                </button>
+              </div>
             </div>
           </div>
+        </div>
+
+        <div className="max-w-8xl mx-auto p-4 mt-0">
 
           {/* Statement Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">

@@ -148,37 +148,34 @@ export default function NotesPage() {
 
   return (
     <DashboardLayout>
-      <div className="ml-6 min-h-screen bg-gray-50/50">
+      <div className="min-h-screen bg-white">
         {/* Header Section */}
         <div className="bg-white border-b sticky top-0 z-30">
-          <div className="max-w-8xl mx-auto">
-            <div className="flex flex-col md:flex-row md:items-center justify-between py-4 gap-4">
+          <div className="max-w-8xl mx-auto px-4 py-2">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
-                <h1 className="text-2xl font-bold text-gray-800">My Notes</h1>
-                <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
-                  <FiHome className="text-gray-400 text-sm" />
+                <h1 className="text-2xl font-bold text-gray-900 tracking-tight">My Notes</h1>
+                <p className="text-[10px] text-gray-500 mt-0.5 flex items-center gap-1.5">
+                  <FiHome className="text-gray-400" size={14} />
                   Additional / <span className="text-[#FF7B1D] font-medium">Notes</span>
                 </p>
               </div>
 
-              <div className="flex flex-wrap items-center gap-3">
+              <div className="flex flex-wrap items-center gap-2">
                 {/* Filter Dropdown */}
                 <div className="relative" ref={dropdownRef}>
                   <button
                     onClick={() => setIsFilterOpen(!isFilterOpen)}
-                    className={`p-3 rounded-sm border transition-all shadow-sm ${isFilterOpen
+                    className={`p-2 rounded-sm border transition shadow-sm ${isFilterOpen || selectedCategory !== "All"
                       ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
-                      : "bg-white text-gray-700 border-gray-300 hover:bg-orange-500 hover:text-white hover:border-[#FF7B1D]"
+                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
                       }`}
                   >
-                    <Filter size={20} />
+                    <Filter size={18} />
                   </button>
 
                   {isFilterOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-sm shadow-xl z-50 animate-fadeIn">
-                      <div className="p-2 border-b bg-gray-50">
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Filter by Notes</p>
-                      </div>
+                    <div className="absolute right-0 mt-2 w-32 bg-white border border-gray-200 rounded-sm shadow-xl z-50 animate-fadeIn">
                       <div className="py-1">
                         {categories.map((cat) => (
                           <button
@@ -187,7 +184,7 @@ export default function NotesPage() {
                               setSelectedCategory(cat);
                               setIsFilterOpen(false);
                             }}
-                            className={`block w-full text-left px-4 py-2.5 text-sm transition-colors ${selectedCategory === cat
+                            className={`block w-full text-left px-4 py-2 text-sm transition-colors ${selectedCategory === cat
                               ? "bg-orange-50 text-orange-600 font-bold"
                               : "text-gray-700 hover:bg-gray-50"
                               }`}
@@ -207,12 +204,9 @@ export default function NotesPage() {
                     placeholder="Search notes..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 pr-4 py-3 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-[#FF7B1D]/20 focus:border-[#FF7B1D] text-sm md:w-64 transition-all"
+                    className="pl-10 pr-4 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-orange-500 text-sm w-64 shadow-sm"
                   />
-                  <Search
-                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                    size={18}
-                  />
+                  <Search className="absolute left-3 top-2.5 text-gray-400" size={16} />
                 </div>
 
                 <button
@@ -220,19 +214,19 @@ export default function NotesPage() {
                     resetForm();
                     setIsAdding(true);
                   }}
-                  className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm hover:shadow-lg transition-all flex items-center gap-2 font-bold shadow-md"
+                  className="flex items-center gap-2 px-4 py-2 rounded-sm font-bold transition shadow-md text-sm active:scale-95 bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
                 >
-                  <Plus size={20} />
-                  New Note
+                  <Plus size={18} />
+                  NEW NOTE
                 </button>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="max-w-8xl mx-auto py-6 font-primary">
+        <div className="max-w-8xl mx-auto p-4 mt-0 font-primary">
           {/* Summary Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-3">
             <NumberCard
               title="Total Notes"
               number={data?.pagination?.total || 0}

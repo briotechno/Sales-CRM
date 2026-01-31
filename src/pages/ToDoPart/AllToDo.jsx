@@ -174,30 +174,30 @@ export default function TodoPage() {
 
   return (
     <DashboardLayout>
-      <div className="ml-6 min-h-screen bg-gray-50/50 flex flex-col font-primary">
+      <div className="min-h-screen bg-white">
         {/* Header Section */}
         <div className="bg-white border-b sticky top-0 z-30">
-          <div className="max-w-8xl mx-auto">
-            <div className="flex flex-col md:flex-row md:items-center justify-between py-4 gap-4">
+          <div className="max-w-8xl mx-auto px-4 py-2">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
-                <h1 className="text-2xl font-bold text-gray-800">My Tasks</h1>
-                <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
-                  <FiHome className="text-gray-400 text-sm" />
+                <h1 className="text-2xl font-bold text-gray-900 tracking-tight">My Tasks</h1>
+                <p className="text-[10px] text-gray-500 mt-0.5 flex items-center gap-1.5">
+                  <FiHome className="text-gray-400" size={14} />
                   Additional / <span className="text-[#FF7B1D] font-medium">To-Do</span>
                 </p>
               </div>
 
-              <div className="flex flex-wrap items-center gap-3">
+              <div className="flex flex-wrap items-center gap-2">
                 {/* Priority Filter */}
                 <div className="relative" ref={dropdownRef}>
                   <button
                     onClick={() => setIsFilterOpen(!isFilterOpen)}
-                    className={`p-3 rounded-sm border transition-all shadow-sm ${isFilterOpen || filterPriority !== "all" || filterType !== "All"
+                    className={`p-2 rounded-sm border transition shadow-sm ${isFilterOpen || filterPriority !== "all" || filterType !== "All"
                       ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
                       : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
                       }`}
                   >
-                    <Filter size={20} />
+                    <Filter size={18} />
                   </button>
 
                   {isFilterOpen && (
@@ -253,27 +253,24 @@ export default function TodoPage() {
                     placeholder="Search tasks..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 pr-4 py-3 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-[#FF7B1D]/20 focus:border-[#FF7B1D] text-sm md:w-64 transition-all"
+                    className="pl-10 pr-4 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-orange-500 text-sm w-64 shadow-sm"
                   />
-                  <Search
-                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                    size={18}
-                  />
+                  <Search className="absolute left-3 top-2.5 text-gray-400" size={16} />
                 </div>
 
                 <button
                   onClick={() => setIsAddModalOpen(true)}
-                  className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm hover:shadow-lg transition-all flex items-center gap-2 font-bold shadow-md"
+                  className="flex items-center gap-2 px-4 py-2 rounded-sm font-bold transition shadow-md text-sm active:scale-95 bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
                 >
-                  <Plus size={20} />
-                  New Task
+                  <Plus size={18} />
+                  NEW TASK
                 </button>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="max-w-8xl mx-auto py-6 font-primary w-full flex-1">
+        <div className="max-w-8xl mx-auto p-4 mt-0 font-primary w-full flex-1">
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-32 space-y-4">
               <Loader2 className="w-12 h-12 text-orange-500 animate-spin" />
@@ -282,7 +279,7 @@ export default function TodoPage() {
           ) : (
             <>
               {/* Summary Cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-3">
                 <NumberCard
                   title="Total Tasks"
                   number={tasks.length}

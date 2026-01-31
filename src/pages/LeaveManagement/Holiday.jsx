@@ -378,232 +378,232 @@ export default function HolidaysManagement() {
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen bg-gray-50 ml-6 p-6">
-        {/* Header */}
-        <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">
-              Holidays Management
-            </h1>
-            <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
-              <FiHome className="text-gray-400" />
-              <span>HRM /</span>
-              <span className="text-[#FF7B1D] font-medium">
-                All Holidays
-              </span>
-            </p>
-          </div>
-          <div className="flex gap-3">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <input
-                type="text"
-                placeholder="Search holidays..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#FF7B1D] w-64"
-              />
+      <div className="min-h-screen bg-white">
+        {/* Header Section */}
+        <div className="bg-white border-b sticky top-0 z-30">
+          <div className="max-w-8xl mx-auto px-4 py-2">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Holidays Management</h1>
+                <p className="text-[10px] text-gray-500 mt-0.5 flex items-center gap-1.5">
+                  <FiHome className="text-gray-400" size={14} /> HRM / <span className="text-orange-500 font-medium">All Holidays</span>
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Search holidays..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 pr-4 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-orange-500 text-sm w-64 shadow-sm"
+                  />
+                  <Search className="absolute left-3 top-2.5 text-gray-400" size={16} />
+                </div>
+
+                <button
+                  onClick={() => setIsModalOpen(true)}
+                  className="flex items-center gap-2 px-4 py-2 rounded-sm font-bold transition shadow-md text-sm active:scale-95 bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
+                >
+                  <Plus size={18} /> ADD HOLIDAY
+                </button>
+              </div>
             </div>
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="flex items-center gap-2 bg-[#FF7B1D] hover:bg-[#e06915] text-white px-4 py-2 rounded-lg transition-colors shadow-sm font-medium"
-            >
-              <Plus className="w-4 h-4" />
-              Add Holiday
-            </button>
           </div>
         </div>
 
+        <div className="max-w-8xl mx-auto p-4 mt-0">
 
 
-        {/* Holidays Table */}
-        <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
-                <tr>
-                  <th className="px-6 py-4 text-left font-semibold tracking-wider">
-                    Holiday Name
-                  </th>
-                  <th className="px-6 py-4 text-center font-semibold tracking-wider">
-                    Start Date
-                  </th>
-                  <th className="px-6 py-4 text-center font-semibold tracking-wider">
-                    End Date
-                  </th>
-                  <th className="px-6 py-4 text-center font-semibold tracking-wider">
-                    Days
-                  </th>
-                  <th className="px-6 py-4 text-center font-semibold tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-4 text-center font-semibold tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
 
-              <tbody className="divide-y divide-gray-200">
-                {isLoading ? (
-                  Array.from({ length: 5 }).map((_, index) => (
-                    <tr key={index} className="border-b">
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-gray-200 animate-pulse"></div>
-                          <div className="h-4 bg-gray-200 rounded animate-pulse w-32"></div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-center"><div className="h-4 bg-gray-200 rounded animate-pulse w-24 mx-auto"></div></td>
-                      <td className="px-6 py-4 text-center"><div className="h-4 bg-gray-200 rounded animate-pulse w-24 mx-auto"></div></td>
-                      <td className="px-6 py-4 text-center"><div className="h-5 bg-gray-200 rounded-full animate-pulse w-16 mx-auto"></div></td>
-                      <td className="px-6 py-4 text-center"><div className="h-5 bg-gray-200 rounded-full animate-pulse w-20 mx-auto"></div></td>
-                      <td className="px-6 py-4"><div className="flex justify-end gap-2"><div className="h-8 w-16 bg-gray-200 rounded animate-pulse"></div></div></td>
-                    </tr>
-                  ))
-                ) : isError ? (
-                  <tr><td colSpan="6" className="text-center py-8 text-red-500">Error loading data</td></tr>
-                ) : holidaysData?.holidays?.length === 0 ? (
+          {/* Holidays Table */}
+          <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
                   <tr>
-                    <td
-                      colSpan="6"
-                      className="px-6 py-12 text-center text-gray-500"
-                    >
-                      <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                      <p className="font-medium">No holidays found</p>
-                      <p className="text-sm mt-1">
-                        {searchTerm
-                          ? "Try adjusting your search"
-                          : 'Click "Add Holiday" to create one'}
-                      </p>
-                    </td>
+                    <th className="px-6 py-4 text-left font-semibold tracking-wider">
+                      Holiday Name
+                    </th>
+                    <th className="px-6 py-4 text-center font-semibold tracking-wider">
+                      Start Date
+                    </th>
+                    <th className="px-6 py-4 text-center font-semibold tracking-wider">
+                      End Date
+                    </th>
+                    <th className="px-6 py-4 text-center font-semibold tracking-wider">
+                      Days
+                    </th>
+                    <th className="px-6 py-4 text-center font-semibold tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-6 py-4 text-center font-semibold tracking-wider">
+                      Actions
+                    </th>
                   </tr>
-                ) : (
-                  holidaysData?.holidays.map((holiday) => (
-                    <tr
-                      key={holiday.id}
-                      className="hover:bg-gray-50 transition-colors"
-                    >
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
-                            <Calendar className="w-4 h-4 text-[#FF7B1D]" />
+                </thead>
+
+                <tbody className="divide-y divide-gray-200">
+                  {isLoading ? (
+                    Array.from({ length: 5 }).map((_, index) => (
+                      <tr key={index} className="border-b">
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-gray-200 animate-pulse"></div>
+                            <div className="h-4 bg-gray-200 rounded animate-pulse w-32"></div>
                           </div>
-                          <span className="font-medium text-gray-900">
-                            {holiday.name}
-                          </span>
-                        </div>
-                      </td>
-
-                      <td className="px-6 py-4 text-center text-gray-500 text-sm">
-                        {formatDate(holiday.start_date)}
-                      </td>
-
-                      <td className="px-6 py-4 text-center text-gray-500 text-sm">
-                        {formatDate(holiday.end_date)}
-                      </td>
-
-                      <td className="px-6 py-4 text-center">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
-                          {holiday.days} {holiday.days === 1 ? "Day" : "Days"}
-                        </span>
-                      </td>
-
-                      <td className="px-6 py-4 text-center">
-                        {getStatusBadge(getHolidayStatus(holiday))}
-                      </td>
-
-                      <td className="px-6 py-4">
-                        <div className="flex justify-center gap-2">
-                          <button
-                            onClick={() => handleEdit(holiday)}
-                            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition"
-                            title="Edit"
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </button>
-
-                          <button
-                            onClick={() => handleDeleteClick(holiday)}
-                            className="p-1.5 text-red-600 hover:bg-red-50 rounded transition"
-                            title="Delete"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-
-                        </div>
+                        </td>
+                        <td className="px-6 py-4 text-center"><div className="h-4 bg-gray-200 rounded animate-pulse w-24 mx-auto"></div></td>
+                        <td className="px-6 py-4 text-center"><div className="h-4 bg-gray-200 rounded animate-pulse w-24 mx-auto"></div></td>
+                        <td className="px-6 py-4 text-center"><div className="h-5 bg-gray-200 rounded-full animate-pulse w-16 mx-auto"></div></td>
+                        <td className="px-6 py-4 text-center"><div className="h-5 bg-gray-200 rounded-full animate-pulse w-20 mx-auto"></div></td>
+                        <td className="px-6 py-4"><div className="flex justify-end gap-2"><div className="h-8 w-16 bg-gray-200 rounded animate-pulse"></div></div></td>
+                      </tr>
+                    ))
+                  ) : isError ? (
+                    <tr><td colSpan="6" className="text-center py-8 text-red-500">Error loading data</td></tr>
+                  ) : holidaysData?.holidays?.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan="6"
+                        className="px-6 py-12 text-center text-gray-500"
+                      >
+                        <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                        <p className="font-medium">No holidays found</p>
+                        <p className="text-sm mt-1">
+                          {searchTerm
+                            ? "Try adjusting your search"
+                            : 'Click "Add Holiday" to create one'}
+                        </p>
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                  ) : (
+                    holidaysData?.holidays.map((holiday) => (
+                      <tr
+                        key={holiday.id}
+                        className="hover:bg-gray-50 transition-colors"
+                      >
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+                              <Calendar className="w-4 h-4 text-[#FF7B1D]" />
+                            </div>
+                            <span className="font-medium text-gray-900">
+                              {holiday.name}
+                            </span>
+                          </div>
+                        </td>
 
-          {/* Pagination */}
-          <div className="flex justify-between items-center mt-6 bg-gray-50 p-4 rounded-sm border-t border-gray-200">
-            <p className="text-sm text-gray-600">
-              Showing <span className="font-bold">{((currentPage - 1) * itemsPerPage) + 1}</span> to <span className="font-bold">{Math.min(currentPage * itemsPerPage, totalHolidays)}</span> of <span className="font-bold">{totalHolidays}</span> results
-            </p>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-                className="px-4 py-2 border rounded-sm text-sm font-bold disabled:opacity-50 bg-white hover:bg-gray-50 transition-colors"
-              >
-                Previous
-              </button>
+                        <td className="px-6 py-4 text-center text-gray-500 text-sm">
+                          {formatDate(holiday.start_date)}
+                        </td>
 
-              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                let p = i + 1;
-                if (totalPages > 5 && currentPage > 3) p = currentPage - 2 + i;
-                if (p > totalPages) return null;
-                return (
-                  <button
-                    key={p}
-                    onClick={() => handlePageChange(p)}
-                    className={`w-9 h-9 border rounded-sm text-sm font-bold flex items-center justify-center transition-colors ${currentPage === p
-                      ? 'bg-orange-500 text-white border-orange-500'
-                      : 'bg-white text-gray-700 hover:bg-gray-50'
-                      }`}
-                  >
-                    {p}
-                  </button>
-                );
-              })}
+                        <td className="px-6 py-4 text-center text-gray-500 text-sm">
+                          {formatDate(holiday.end_date)}
+                        </td>
 
-              <button
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                className="px-4 py-2 border rounded-sm text-sm font-bold disabled:opacity-50 bg-white hover:bg-gray-50 transition-colors"
-              >
-                Next
-              </button>
+                        <td className="px-6 py-4 text-center">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
+                            {holiday.days} {holiday.days === 1 ? "Day" : "Days"}
+                          </span>
+                        </td>
+
+                        <td className="px-6 py-4 text-center">
+                          {getStatusBadge(getHolidayStatus(holiday))}
+                        </td>
+
+                        <td className="px-6 py-4">
+                          <div className="flex justify-center gap-2">
+                            <button
+                              onClick={() => handleEdit(holiday)}
+                              className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition"
+                              title="Edit"
+                            >
+                              <Edit2 className="w-4 h-4" />
+                            </button>
+
+                            <button
+                              onClick={() => handleDeleteClick(holiday)}
+                              className="p-1.5 text-red-600 hover:bg-red-50 rounded transition"
+                              title="Delete"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination */}
+            <div className="flex justify-between items-center mt-6 bg-gray-50 p-4 rounded-sm border-t border-gray-200">
+              <p className="text-sm text-gray-600">
+                Showing <span className="font-bold">{((currentPage - 1) * itemsPerPage) + 1}</span> to <span className="font-bold">{Math.min(currentPage * itemsPerPage, totalHolidays)}</span> of <span className="font-bold">{totalHolidays}</span> results
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 border rounded-sm text-sm font-bold disabled:opacity-50 bg-white hover:bg-gray-50 transition-colors"
+                >
+                  Previous
+                </button>
+
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let p = i + 1;
+                  if (totalPages > 5 && currentPage > 3) p = currentPage - 2 + i;
+                  if (p > totalPages) return null;
+                  return (
+                    <button
+                      key={p}
+                      onClick={() => handlePageChange(p)}
+                      className={`w-9 h-9 border rounded-sm text-sm font-bold flex items-center justify-center transition-colors ${currentPage === p
+                        ? 'bg-orange-500 text-white border-orange-500'
+                        : 'bg-white text-gray-700 hover:bg-gray-50'
+                        }`}
+                    >
+                      {p}
+                    </button>
+                  );
+                })}
+
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="px-4 py-2 border rounded-sm text-sm font-bold disabled:opacity-50 bg-white hover:bg-gray-50 transition-colors"
+                >
+                  Next
+                </button>
+              </div>
             </div>
           </div>
         </div>
+
+        {/* Add/Edit Holiday Modal */}
+        <AddHolidayModal
+          isOpen={isModalOpen}
+          onClose={handleCancel}
+          formData={formData}
+          setFormData={setFormData}
+          onSubmit={handleSubmit}
+          editingId={editingId}
+        />
+        <DeleteHolidayModal
+          isOpen={showDeleteModal}
+          onClose={() => {
+            setShowDeleteModal(false);
+            setSelectedHoliday(null);
+          }}
+          onConfirm={handleConfirmDelete}
+          isLoading={isDeleting}
+          holidayName={selectedHoliday?.name}
+        />
       </div>
-
-      {/* Add/Edit Holiday Modal */}
-      <AddHolidayModal
-        isOpen={isModalOpen}
-        onClose={handleCancel}
-        formData={formData}
-        setFormData={setFormData}
-        onSubmit={handleSubmit}
-        editingId={editingId}
-      />
-      <DeleteHolidayModal
-        isOpen={showDeleteModal}
-        onClose={() => {
-          setShowDeleteModal(false);
-          setSelectedHoliday(null);
-        }}
-        onConfirm={handleConfirmDelete}
-        isLoading={isDeleting}
-        holidayName={selectedHoliday?.name}
-      />
-
-
-    </DashboardLayout >
+    </DashboardLayout>
   );
 }

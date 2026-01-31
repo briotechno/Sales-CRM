@@ -599,21 +599,18 @@ export default function QuotationPage() {
 
   return (
     <DashboardLayout>
-      <div className="ml-6 min-h-screen">
+      <div className="min-h-screen bg-white">
         {/* Header Section */}
-        <div className="bg-white border-b my-3">
-          <div className="max-w-8xl mx-auto">
-            <div className="flex items-center justify-between py-3">
+        <div className="bg-white border-b sticky top-0 z-30">
+          <div className="max-w-8xl mx-auto px-4 py-2">
+            <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-2xl font-bold text-gray-800">
+                <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
                   Quotation Management
                 </h1>
-                <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
-                  <Home className="text-gray-700 text-sm" />
-                  <span className="text-gray-400"></span> CRM /{" "}
-                  <span className="text-[#FF7B1D] font-medium">
-                    All Quotations
-                  </span>
+                <p className="text-[10px] text-gray-500 mt-0.5 flex items-center gap-1.5">
+                  <Home className="text-gray-400" size={14} />
+                  CRM / <span className="text-[#FF7B1D] font-medium">All Quotations</span>
                 </p>
               </div>
 
@@ -622,19 +619,19 @@ export default function QuotationPage() {
                 <div className="relative" ref={statusDropdownRef}>
                   <button
                     onClick={() => setIsStatusFilterOpen(!isStatusFilterOpen)}
-                    className={`flex items-center gap-2 px-4 py-3 rounded-sm border transition shadow-sm ${isStatusFilterOpen || filterStatus !== "All"
+                    className={`p-2 rounded-sm border transition shadow-sm ${isStatusFilterOpen || filterStatus !== "All"
                       ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
                       : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
                       }`}
                   >
-                    <Filter size={20} />
+                    <Filter size={18} />
                   </button>
 
                   {isStatusFilterOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-sm shadow-xl z-50 animate-fadeIn">
+                    <div className="absolute right-0 mt-2 w-32 bg-white border border-gray-200 rounded-sm shadow-xl z-50 animate-fadeIn">
                       <div className="py-1">
                         {[
-                          { label: "All Status", value: "All" },
+                          { label: "All", value: "All" },
                           { label: "Draft", value: "Draft" },
                           { label: "Pending", value: "Pending" },
                           { label: "Approved", value: "Approved" },
@@ -647,7 +644,7 @@ export default function QuotationPage() {
                               setIsStatusFilterOpen(false);
                               setCurrentPage(1);
                             }}
-                            className={`block w-full text-left px-4 py-2.5 text-sm transition-colors ${filterStatus === option.value
+                            className={`block w-full text-left px-4 py-2 text-sm transition-colors ${filterStatus === option.value
                               ? "bg-orange-50 text-orange-600 font-bold"
                               : "text-gray-700 hover:bg-gray-50"
                               }`}
@@ -670,20 +667,17 @@ export default function QuotationPage() {
                       setSearchTerm(e.target.value);
                       setCurrentPage(1);
                     }}
-                    className="pl-10 pr-4 py-3 border border-gray-200 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#FF7B1D] text-sm w-64 shadow-sm"
+                    className="pl-10 pr-4 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-orange-500 text-sm w-64 shadow-sm"
                   />
-                  <Search
-                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                    size={16}
-                  />
+                  <Search className="absolute left-3 top-2.5 text-gray-400" size={16} />
                 </div>
 
                 <button
                   onClick={handleExport}
-                  className="px-6 py-3 bg-orange-50 text-orange-600 rounded-sm hover:bg-orange-100 flex items-center gap-2 font-bold shadow-sm"
+                  className="bg-white border border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-sm flex items-center gap-2 transition text-sm font-semibold shadow-sm active:scale-95 text-gray-700"
                 >
-                  <Download size={20} />
-                  Export CSV
+                  <Download size={18} />
+                  EXPORT
                 </button>
 
                 <button
@@ -691,223 +685,224 @@ export default function QuotationPage() {
                     resetForm();
                     setShowModal(true);
                   }}
-                  className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm hover:shadow-lg transition-all flex items-center gap-2 font-bold shadow-md"
+                  className="flex items-center gap-2 px-4 py-2 rounded-sm font-bold transition shadow-md text-sm active:scale-95 bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
                 >
-                  <Plus size={20} />
-                  New Quotation
+                  <Plus size={18} />
+                  NEW QUOTATION
                 </button>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Stats Section */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <NumberCard
-            title="Total Quotations"
-            number={summary.total || "0"}
-            icon={<FileText className="text-blue-600" size={24} />}
-            iconBgColor="bg-blue-100"
-            lineBorderClass="border-blue-500"
-          />
-          <NumberCard
-            title="Total Value"
-            number={`₹${((summary.totalValue || 0) / 100000).toFixed(1)}L`}
-            icon={<DollarSign className="text-green-600" size={24} />}
-            iconBgColor="bg-green-100"
-            lineBorderClass="border-green-500"
-          />
-          <NumberCard
-            title="Pending"
-            number={summary.pending || "0"}
-            icon={<AlertCircle className="text-orange-600" size={24} />}
-            iconBgColor="bg-orange-100"
-            lineBorderClass="border-orange-500"
-          />
-          <NumberCard
-            title="Approved"
-            number={summary.approved || "0"}
-            icon={<CheckCircle className="text-purple-600" size={24} />}
-            iconBgColor="bg-purple-100"
-            lineBorderClass="border-purple-500"
-          />
-        </div>
+        <div className="max-w-8xl mx-auto p-4 mt-0">
+          {/* Stats Section */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-3">
+            <NumberCard
+              title="Total Quotations"
+              number={summary.total || "0"}
+              icon={<FileText className="text-blue-600" size={24} />}
+              iconBgColor="bg-blue-100"
+              lineBorderClass="border-blue-500"
+            />
+            <NumberCard
+              title="Total Value"
+              number={`₹${((summary.totalValue || 0) / 100000).toFixed(1)}L`}
+              icon={<DollarSign className="text-green-600" size={24} />}
+              iconBgColor="bg-green-100"
+              lineBorderClass="border-green-500"
+            />
+            <NumberCard
+              title="Pending"
+              number={summary.pending || "0"}
+              icon={<AlertCircle className="text-orange-600" size={24} />}
+              iconBgColor="bg-orange-100"
+              lineBorderClass="border-orange-500"
+            />
+            <NumberCard
+              title="Approved"
+              number={summary.approved || "0"}
+              icon={<CheckCircle className="text-purple-600" size={24} />}
+              iconBgColor="bg-purple-100"
+              lineBorderClass="border-purple-500"
+            />
+          </div>
 
-        {/* Table Section */}
-        <div className="overflow-x-auto border border-gray-200 rounded-sm shadow-sm bg-white">
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm">
-                <th className="py-4 px-6 font-semibold text-left">ID</th>
-                <th className="py-4 px-6 font-semibold text-left">Client Name</th>
-                <th className="py-4 px-6 font-semibold text-left">Date</th>
-                <th className="py-4 px-6 font-semibold text-right">Amount</th>
-                <th className="py-4 px-6 font-semibold text-left">Status</th>
-                <th className="py-4 px-6 font-semibold text-center">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {isLoading ? (
-                <tr>
-                  <td colSpan="6" className="py-20 text-center">
-                    <div className="flex justify-center flex-col items-center gap-4">
-                      <div className="w-12 h-12 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin"></div>
-                      <p className="text-gray-500 font-semibold animate-pulse">Fetching quotations...</p>
-                    </div>
-                  </td>
+          {/* Table Section */}
+          <div className="overflow-x-auto border border-gray-200 rounded-sm shadow-sm bg-white">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm">
+                  <th className="py-4 px-6 font-semibold text-left">ID</th>
+                  <th className="py-4 px-6 font-semibold text-left">Client Name</th>
+                  <th className="py-4 px-6 font-semibold text-left">Date</th>
+                  <th className="py-4 px-6 font-semibold text-right">Amount</th>
+                  <th className="py-4 px-6 font-semibold text-left">Status</th>
+                  <th className="py-4 px-6 font-semibold text-center">Actions</th>
                 </tr>
-              ) : error ? (
-                <tr>
-                  <td colSpan="6" className="py-16 text-center text-red-500 font-medium">
-                    Error loading quotations. Please try again.
-                  </td>
-                </tr>
-              ) : quotations.length > 0 ? (
-                quotations.map((quote) => (
-                  <tr key={quote.id} className="hover:bg-gray-50 transition-colors group">
-                    <td className="py-4 px-6 font-bold text-orange-600">{quote.quotation_id}</td>
-                    <td className="py-4 px-6 font-medium text-gray-800">{quote.client_name}</td>
-                    <td className="py-4 px-6 text-gray-600 text-sm">{new Date(quote.quotation_date).toLocaleDateString()}</td>
-                    <td className="py-4 px-6 text-right font-bold text-gray-900">
-                      {quote.currency === "INR" ? "₹" : "$"} {quote.total_amount.toLocaleString()}
-                    </td>
-                    <td className="py-4 px-6">
-                      <select
-                        value={quote.status}
-                        onChange={(e) => handleStatusChange(quote.id, e.target.value)}
-                        className={`px-3 py-1 rounded-full text-xs font-bold border-0 cursor-pointer shadow-sm ${getStatusColor(quote.status)}`}
-                      >
-                        <option value="Draft">Draft</option>
-                        <option value="Pending">Pending</option>
-                        <option value="Approved">Approved</option>
-                        <option value="Rejected">Rejected</option>
-                      </select>
-                    </td>
-                    <td className="py-4 px-6">
-                      <div className="flex justify-center gap-2">
-                        <button
-                          onClick={() => handleView(quote)}
-                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-sm transition-all"
-                          title="View"
-                        >
-                          <Eye size={18} />
-                        </button>
-                        <button
-                          onClick={() => handleEdit(quote)}
-                          className="p-2 text-orange-500 hover:bg-orange-50 rounded-sm transition-all"
-                          title="Edit"
-                        >
-                          <Edit2 size={18} />
-                        </button>
-                        <button
-                          onClick={() => handleDownload(quote)}
-                          className="p-2 text-green-600 hover:bg-green-50 rounded-sm transition-all"
-                          title="Download PDF"
-                        >
-                          <Download size={18} />
-                        </button>
-                        <button
-                          onClick={() => {
-                            setSelectedQuotationId(quote.id);
-                            setIsDeleteModalOpen(true);
-                          }}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-sm transition-all shadow-sm"
-                          title="Delete"
-                        >
-                          <Trash2 size={18} />
-                        </button>
-
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {isLoading ? (
+                  <tr>
+                    <td colSpan="6" className="py-20 text-center">
+                      <div className="flex justify-center flex-col items-center gap-4">
+                        <div className="w-12 h-12 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin"></div>
+                        <p className="text-gray-500 font-semibold animate-pulse">Fetching quotations...</p>
                       </div>
                     </td>
                   </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="6" className="py-16 text-center text-gray-500">
-                    <div className="flex flex-col items-center gap-3">
-                      <FileText size={48} className="text-gray-200" />
-                      <p className="font-medium">No quotations found.</p>
-                      <button
-                        onClick={() => { resetForm(); setShowModal(true); }}
-                        className="text-orange-600 underline font-semibold mt-2"
-                      >
-                        Create your first quotation
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+                ) : error ? (
+                  <tr>
+                    <td colSpan="6" className="py-16 text-center text-red-500 font-medium">
+                      Error loading quotations. Please try again.
+                    </td>
+                  </tr>
+                ) : quotations.length > 0 ? (
+                  quotations.map((quote) => (
+                    <tr key={quote.id} className="hover:bg-gray-50 transition-colors group">
+                      <td className="py-4 px-6 font-bold text-orange-600">{quote.quotation_id}</td>
+                      <td className="py-4 px-6 font-medium text-gray-800">{quote.client_name}</td>
+                      <td className="py-4 px-6 text-gray-600 text-sm">{new Date(quote.quotation_date).toLocaleDateString()}</td>
+                      <td className="py-4 px-6 text-right font-bold text-gray-900">
+                        {quote.currency === "INR" ? "₹" : "$"} {quote.total_amount.toLocaleString()}
+                      </td>
+                      <td className="py-4 px-6">
+                        <select
+                          value={quote.status}
+                          onChange={(e) => handleStatusChange(quote.id, e.target.value)}
+                          className={`px-3 py-1 rounded-full text-xs font-bold border-0 cursor-pointer shadow-sm ${getStatusColor(quote.status)}`}
+                        >
+                          <option value="Draft">Draft</option>
+                          <option value="Pending">Pending</option>
+                          <option value="Approved">Approved</option>
+                          <option value="Rejected">Rejected</option>
+                        </select>
+                      </td>
+                      <td className="py-4 px-6">
+                        <div className="flex justify-center gap-2">
+                          <button
+                            onClick={() => handleView(quote)}
+                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-sm transition-all"
+                            title="View"
+                          >
+                            <Eye size={18} />
+                          </button>
+                          <button
+                            onClick={() => handleEdit(quote)}
+                            className="p-2 text-orange-500 hover:bg-orange-50 rounded-sm transition-all"
+                            title="Edit"
+                          >
+                            <Edit2 size={18} />
+                          </button>
+                          <button
+                            onClick={() => handleDownload(quote)}
+                            className="p-2 text-green-600 hover:bg-green-50 rounded-sm transition-all"
+                            title="Download PDF"
+                          >
+                            <Download size={18} />
+                          </button>
+                          <button
+                            onClick={() => {
+                              setSelectedQuotationId(quote.id);
+                              setIsDeleteModalOpen(true);
+                            }}
+                            className="p-2 text-red-600 hover:bg-red-50 rounded-sm transition-all shadow-sm"
+                            title="Delete"
+                          >
+                            <Trash2 size={18} />
+                          </button>
 
-        {/* Pagination Section */}
-        <div className="flex flex-col md:flex-row justify-between items-center mt-6 gap-4 bg-gray-50 p-4 rounded-sm border border-gray-200 mb-6 shadow-sm">
-          <p className="text-sm font-semibold text-gray-700">
-            Showing <span className="text-orange-600">{indexOfFirstItem + 1}</span> to <span className="text-orange-600">{indexOfLastItem}</span> of <span className="text-orange-600">{pagination.total || 0}</span> Quotations
-          </p>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handlePrev}
-              disabled={currentPage === 1}
-              className={`px-4 py-2 rounded-sm font-bold transition flex items-center gap-1 ${currentPage === 1 ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"
-                }`}
-            >
-              Previous
-            </button>
-
-            <div className="flex items-center gap-1">
-              {Array.from({ length: pagination.totalPages }, (_, i) => (
-                <button
-                  key={i + 1}
-                  onClick={() => handlePageChange(i + 1)}
-                  className={`w-10 h-10 rounded-sm font-bold transition ${currentPage === i + 1 ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md border-orange-500" : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
-                    }`}
-                >
-                  {i + 1}
-                </button>
-              ))}
-            </div>
-
-            <button
-              onClick={handleNext}
-              disabled={currentPage === pagination.totalPages || pagination.totalPages === 0}
-              className={`px-4 py-2 rounded-sm font-bold transition flex items-center gap-1 ${currentPage === pagination.totalPages || pagination.totalPages === 0 ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-green-600 text-white hover:opacity-90 shadow-md"
-                }`}
-            >
-              Next
-            </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="6" className="py-16 text-center text-gray-500">
+                      <div className="flex flex-col items-center gap-3">
+                        <FileText size={48} className="text-gray-200" />
+                        <p className="font-medium">No quotations found.</p>
+                        <button
+                          onClick={() => { resetForm(); setShowModal(true); }}
+                          className="text-orange-600 underline font-semibold mt-2"
+                        >
+                          Create your first quotation
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
+
+          {/* Pagination Section */}
+          <div className="flex flex-col md:flex-row justify-between items-center mt-6 gap-4 bg-gray-50 p-4 rounded-sm border border-gray-200 mb-6 shadow-sm">
+            <p className="text-sm font-semibold text-gray-700">
+              Showing <span className="text-orange-600">{indexOfFirstItem + 1}</span> to <span className="text-orange-600">{indexOfLastItem}</span> of <span className="text-orange-600">{pagination.total || 0}</span> Quotations
+            </p>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handlePrev}
+                disabled={currentPage === 1}
+                className={`px-4 py-2 rounded-sm font-bold transition flex items-center gap-1 ${currentPage === 1 ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"
+                  }`}
+              >
+                Previous
+              </button>
+
+              <div className="flex items-center gap-1">
+                {Array.from({ length: pagination.totalPages }, (_, i) => (
+                  <button
+                    key={i + 1}
+                    onClick={() => handlePageChange(i + 1)}
+                    className={`w-10 h-10 rounded-sm font-bold transition ${currentPage === i + 1 ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md border-orange-500" : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+                      }`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+              </div>
+
+              <button
+                onClick={handleNext}
+                disabled={currentPage === pagination.totalPages || pagination.totalPages === 0}
+                className={`px-4 py-2 rounded-sm font-bold transition flex items-center gap-1 ${currentPage === pagination.totalPages || pagination.totalPages === 0 ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-green-600 text-white hover:opacity-90 shadow-md"
+                  }`}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+
+          {/* Modals */}
+          <CreateQuotationModal
+            showModal={showModal}
+            setShowModal={(val) => { setShowModal(val); if (!val) resetForm(); }}
+            formData={formData}
+            handleInputChange={handleInputChange}
+            handleCreateQuotation={handleCreateQuotation}
+            setFormData={setFormData}
+          />
+
+          <ViewQuotationModal
+            showViewModal={showViewModal}
+            setShowViewModal={setShowViewModal}
+            selectedQuote={selectedQuote}
+            getStatusColor={getStatusColor}
+          />
+
+          <DeleteQuotationModal
+            isOpen={isDeleteModalOpen}
+            onClose={() => {
+              setIsDeleteModalOpen(false);
+              setSelectedQuotationId(null);
+            }}
+            quotationId={selectedQuotationId}
+            refetch={refetch}
+          />
         </div>
-
-        {/* Modals */}
-        <CreateQuotationModal
-          showModal={showModal}
-          setShowModal={(val) => { setShowModal(val); if (!val) resetForm(); }}
-          formData={formData}
-          handleInputChange={handleInputChange}
-          handleCreateQuotation={handleCreateQuotation}
-          setFormData={setFormData}
-        />
-
-        <ViewQuotationModal
-          showViewModal={showViewModal}
-          setShowViewModal={setShowViewModal}
-          selectedQuote={selectedQuote}
-          getStatusColor={getStatusColor}
-        />
-
-        <DeleteQuotationModal
-          isOpen={isDeleteModalOpen}
-          onClose={() => {
-            setIsDeleteModalOpen(false);
-            setSelectedQuotationId(null);
-          }}
-          quotationId={selectedQuotationId}
-          refetch={refetch}
-        />
-
       </div>
     </DashboardLayout>
   );

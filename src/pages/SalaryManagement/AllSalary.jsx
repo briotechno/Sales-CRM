@@ -305,291 +305,284 @@ export default function SalaryManagement() {
   /* ================= UI ================= */
   return (
     <DashboardLayout>
-      <div className="ml-6 min-h-screen">
-        {/* Header */}
-        <div className="bg-white rounded-sm p-3 mb-4 border-b">
-          <div className="flex justify-between items-center">
-            {/* LEFT TITLE */}
-            <div>
-              <h1 className="text-2xl font-bold text-gray-800">
-                Salary Management
-              </h1>
-              <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
-                <FiHome className="text-gray-700 text-sm" />
-                <span className="text-gray-400">HRM /</span>
-                <span className="text-[#FF7B1D] font-medium">All Salary</span>
-              </p>
-            </div>
+      <div className="min-h-screen bg-white">
+        {/* Header Section */}
+        <div className="bg-white border-b sticky top-0 z-30">
+          <div className="max-w-8xl mx-auto px-4 py-2">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Salary Management</h1>
+                <p className="text-[10px] text-gray-500 mt-0.5 flex items-center gap-1.5">
+                  <FiHome className="text-gray-400" size={14} /> HRM / <span className="text-orange-500 font-medium">All Salary</span>
+                </p>
+              </div>
 
-            {/* RIGHT SIDE BUTTONS (Filter + Export + Add Salary) */}
-            <div className="flex items-center gap-4">
-              {/* Filter Dropdown */}
-              <div className="relative" ref={dropdownRef}>
-                <button
-                  onClick={() => setIsFilterOpen(!isFilterOpen)}
-                  className={`p-2 rounded-sm border transition shadow-sm ${isFilterOpen || selectedDepartment !== "all"
-                    ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
-                    : "bg-white text-black border-gray-300 hover:bg-gray-100"
-                    }`}
-                  title={selectedDepartment === "all" ? "Filter" : `Filter: ${selectedDepartment}`}
-                >
-                  <Filter size={20} />
-                </button>
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="relative" ref={dropdownRef}>
+                  <button
+                    onClick={() => setIsFilterOpen(!isFilterOpen)}
+                    className={`p-2 rounded-sm border transition shadow-sm ${isFilterOpen || selectedDepartment !== "all"
+                      ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
+                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
+                      }`}
+                  >
+                    <Filter size={18} />
+                  </button>
 
-                {isFilterOpen && (
-                  <div className="absolute left-0 mt-2 w-48 bg-white border border-gray-200 rounded-sm shadow-xl z-50 animate-fadeIn">
-                    <div className="py-1 max-h-60 overflow-y-auto">
-                      <button
-                        onClick={() => {
-                          setSelectedDepartment("all");
-                          setIsFilterOpen(false);
-                        }}
-                        className={`block w-full text-left px-4 py-2.5 text-sm transition-colors ${selectedDepartment === "all"
-                          ? "bg-orange-50 text-orange-600 font-bold"
-                          : "text-gray-700 hover:bg-gray-50"
-                          }`}
-                      >
-                        All Departments
-                      </button>
-                      {departments.map((dept) => (
+                  {isFilterOpen && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-sm shadow-xl z-50 animate-fadeIn">
+                      <div className="py-1 max-h-60 overflow-y-auto">
                         <button
-                          key={dept.id}
                           onClick={() => {
-                            setSelectedDepartment(dept.department_name);
+                            setSelectedDepartment("all");
                             setIsFilterOpen(false);
                           }}
-                          className={`block w-full text-left px-4 py-2.5 text-sm transition-colors ${selectedDepartment === dept.department_name
+                          className={`block w-full text-left px-4 py-2 text-sm transition-colors ${selectedDepartment === "all"
                             ? "bg-orange-50 text-orange-600 font-bold"
                             : "text-gray-700 hover:bg-gray-50"
                             }`}
                         >
-                          {dept.department_name}
+                          All Departments
                         </button>
-                      ))}
+                        {departments.map((dept) => (
+                          <button
+                            key={dept.id}
+                            onClick={() => {
+                              setSelectedDepartment(dept.department_name);
+                              setIsFilterOpen(false);
+                            }}
+                            className={`block w-full text-left px-4 py-2 text-sm transition-colors ${selectedDepartment === dept.department_name
+                              ? "bg-orange-50 text-orange-600 font-bold"
+                              : "text-gray-700 hover:bg-gray-50"
+                              }`}
+                          >
+                            {dept.department_name}
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
+
+                <button
+                  onClick={handleExport}
+                  className="bg-white border border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-sm flex items-center gap-2 transition text-sm font-semibold shadow-sm active:scale-95"
+                >
+                  <Download className="w-4 h-4" /> EXPORT
+                </button>
+
+                <button
+                  onClick={() => setShowAddModal(true)}
+                  disabled={!create}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-sm font-bold transition shadow-md text-sm active:scale-95 ${create
+                    ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
+                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    }`}
+                >
+                  <Plus size={18} /> ADD SALARY
+                </button>
               </div>
-
-              {/* Export Button */}
-              <button
-                onClick={handleExport}
-                className="border border-gray-300 hover:bg-gray-50 px-4 py-2.5 rounded-sm flex items-center gap-2 transition"
-              >
-                <Download className="w-4 h-4" />
-                Export
-              </button>
-
-              {/* Add Salary Button */}
-              <button
-                onClick={() => setShowAddModal(true)}
-                disabled={!create}
-                className={`flex items-center gap-2 px-4 py-2 rounded-sm font-semibold transition ml-2 ${create
-                  ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 hover:opacity-90"
-                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                  }`}
-              >
-                <Plus size={18} />
-                Add Salary
-              </button>
             </div>
           </div>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-          {salaryStats.map((stat, index) => (
-            <div
-              key={index}
-              className={`rounded-sm shadow-sm hover:shadow-md transition p-6 border-t-4 ${stat.borderColor}`}
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-500 text-sm font-medium">
-                    {stat.label}
-                  </p>
-                  <p className={`text-3xl font-bold text-gray-800 mt-1`}>
-                    {stat.value}
-                  </p>
-                </div>
-                <div className={`${stat.iconBg} p-3 rounded-lg`}>
-                  <stat.icon className={stat.iconColor} size={24} />
+        <div className="max-w-8xl mx-auto p-4 mt-0">
+
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+            {salaryStats.map((stat, index) => (
+              <div
+                key={index}
+                className={`rounded-sm shadow-sm hover:shadow-md transition p-6 border-t-4 ${stat.borderColor}`}
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-gray-500 text-sm font-medium">
+                      {stat.label}
+                    </p>
+                    <p className={`text-3xl font-bold text-gray-800 mt-1`}>
+                      {stat.value}
+                    </p>
+                  </div>
+                  <div className={`${stat.iconBg} p-3 rounded-lg`}>
+                    <stat.icon className={stat.iconColor} size={24} />
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
 
-        {/* Salary Table */}
-        {salariesLoading ? (
-          <div className="text-center py-10">Loading...</div>
-        ) : salaries.length ? (
-          <div className="bg-white rounded-sm shadow-sm overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="bg-[#FF7B1D] text-white">
-                    <th className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wider">S.N</th>
-                    <th className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wider">Employee</th>
-                    <th className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wider">Designation</th>
-                    <th className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wider">Department</th>
-                    <th className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wider">Basic</th>
-                    <th className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wider">Allowances</th>
-                    <th className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wider">Deductions</th>
-                    <th className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wider">Net Salary</th>
-                    <th className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wider">Status</th>
-                    <th className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wider">Pay Date</th>
-                    <th className="px-4 py-3 text-center text-sm font-bold uppercase tracking-wider">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {salaries.map((salary, index) => (
-                    <tr key={salary.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-4 py-3 text-sm text-gray-700">{index + 1}</td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-lg bg-[#1a222c] flex items-center justify-center text-white font-bold text-sm">
-                            {(salary.employee_name || "N")
-                              .split(" ")
-                              .map((n) => n[0])
-                              .join("")}
+          {/* Salary Table */}
+          {salariesLoading ? (
+            <div className="text-center py-10">Loading...</div>
+          ) : salaries.length ? (
+            <div className="bg-white rounded-sm shadow-sm overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="bg-[#FF7B1D] text-white">
+                      <th className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wider">S.N</th>
+                      <th className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wider">Employee</th>
+                      <th className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wider">Designation</th>
+                      <th className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wider">Department</th>
+                      <th className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wider">Basic</th>
+                      <th className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wider">Allowances</th>
+                      <th className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wider">Deductions</th>
+                      <th className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wider">Net Salary</th>
+                      <th className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wider">Status</th>
+                      <th className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wider">Pay Date</th>
+                      <th className="px-4 py-3 text-center text-sm font-bold uppercase tracking-wider">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {salaries.map((salary, index) => (
+                      <tr key={salary.id} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-4 py-3 text-sm text-gray-700">{index + 1}</td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-lg bg-[#1a222c] flex items-center justify-center text-white font-bold text-sm">
+                              {(salary.employee_name || "N")
+                                .split(" ")
+                                .map((n) => n[0])
+                                .join("")}
+                            </div>
+                            <span className="text-sm font-semibold text-gray-800">{salary.employee_name || "N/A"}</span>
                           </div>
-                          <span className="text-sm font-semibold text-gray-800">{salary.employee_name || "N/A"}</span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-700">{salary.designation || "-"}</td>
-                      <td className="px-4 py-3 text-sm text-gray-700">{salary.department || "-"}</td>
-                      <td className="px-4 py-3 text-sm font-semibold text-gray-800">₹{(salary.basic_salary || 0).toLocaleString()}</td>
-                      <td className="px-4 py-3 text-sm font-semibold text-green-600">+₹{(salary.allowances || 0).toLocaleString()}</td>
-                      <td className="px-4 py-3 text-sm font-semibold text-red-600">-₹{(salary.deductions || 0).toLocaleString()}</td>
-                      <td className="px-4 py-3 text-sm font-bold text-[#FF7B1D]">₹{(salary.net_salary || 0).toLocaleString()}</td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${salary.status === "paid"
-                            ? "bg-green-100 text-green-700"
-                            : "bg-orange-100 text-orange-700"
-                            }`}
-                        >
-                          {salary.status || "pending"}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-700">{formatDate(salary.pay_date)}</td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center justify-center gap-2">
-                          {salary.status === "pending" && update && (
-                            <button
-                              onClick={() => handleMarkAsPaid(salary.id)}
-                              className="p-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors"
-                              title="Mark as Paid"
-                            >
-                              <DollarSign size={16} />
-                            </button>
-                          )}
-                          <button
-                            onClick={() => {
-                              setSelectedSalary(salary);
-                              setGenerateModalOpen(true);
-                            }}
-                            className="p-2 bg-orange-50 text-orange-600 rounded-lg hover:bg-orange-100 transition-colors"
-                            title="Pay Slip"
+                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-700">{salary.designation || "-"}</td>
+                        <td className="px-4 py-3 text-sm text-gray-700">{salary.department || "-"}</td>
+                        <td className="px-4 py-3 text-sm font-semibold text-gray-800">₹{(salary.basic_salary || 0).toLocaleString()}</td>
+                        <td className="px-4 py-3 text-sm font-semibold text-green-600">+₹{(salary.allowances || 0).toLocaleString()}</td>
+                        <td className="px-4 py-3 text-sm font-semibold text-red-600">-₹{(salary.deductions || 0).toLocaleString()}</td>
+                        <td className="px-4 py-3 text-sm font-bold text-[#FF7B1D]">₹{(salary.net_salary || 0).toLocaleString()}</td>
+                        <td className="px-4 py-3">
+                          <span
+                            className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${salary.status === "paid"
+                              ? "bg-green-100 text-green-700"
+                              : "bg-orange-100 text-orange-700"
+                              }`}
                           >
-                            <Calculator size={16} />
-                          </button>
-                          {read && (
+                            {salary.status || "pending"}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-700">{formatDate(salary.pay_date)}</td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center justify-center gap-2">
+                            {salary.status === "pending" && update && (
+                              <button
+                                onClick={() => handleMarkAsPaid(salary.id)}
+                                className="p-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors"
+                                title="Mark as Paid"
+                              >
+                                <DollarSign size={16} />
+                              </button>
+                            )}
                             <button
                               onClick={() => {
                                 setSelectedSalary(salary);
-                                setViewModalOpen(true);
-                              }}
-                              className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
-                              title="View"
-                            >
-                              <Eye size={16} />
-                            </button>
-                          )}
-                          {update && (
-                            <button
-                              onClick={() => {
-                                setSelectedSalary(salary);
-                                setEditModalOpen(true);
+                                setGenerateModalOpen(true);
                               }}
                               className="p-2 bg-orange-50 text-orange-600 rounded-lg hover:bg-orange-100 transition-colors"
-                              title="Edit"
+                              title="Pay Slip"
                             >
-                              <Pencil size={16} />
+                              <Calculator size={16} />
                             </button>
-                          )}
-                          {remove && (
-                            <button
-                              onClick={() => {
-                                setSelectedSalaryId(salary.id);
-                                setOpenDelete(true);
-                              }}
-                              className="p-2 bg-rose-50 text-rose-600 rounded-lg hover:bg-rose-100 transition-colors"
-                              title="Delete"
-                            >
-                              <Trash2 size={16} />
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                            {read && (
+                              <button
+                                onClick={() => {
+                                  setSelectedSalary(salary);
+                                  setViewModalOpen(true);
+                                }}
+                                className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
+                                title="View"
+                              >
+                                <Eye size={16} />
+                              </button>
+                            )}
+                            {update && (
+                              <button
+                                onClick={() => {
+                                  setSelectedSalary(salary);
+                                  setEditModalOpen(true);
+                                }}
+                                className="p-2 bg-orange-50 text-orange-600 rounded-lg hover:bg-orange-100 transition-colors"
+                                title="Edit"
+                              >
+                                <Pencil size={16} />
+                              </button>
+                            )}
+                            {remove && (
+                              <button
+                                onClick={() => {
+                                  setSelectedSalaryId(salary.id);
+                                  setOpenDelete(true);
+                                }}
+                                className="p-2 bg-rose-50 text-rose-600 rounded-lg hover:bg-rose-100 transition-colors"
+                                title="Delete"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
-        ) : (
-          <div className="bg-white rounded-sm shadow-sm p-12 text-center">
-            <DollarSign className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-600 mb-2">
-              No salary records found
-            </h3>
-            <p className="text-gray-500">Try adjusting your search or filters</p>
-          </div>
-        )}
+          ) : (
+            <div className="bg-white rounded-sm shadow-sm p-12 text-center">
+              <DollarSign className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-gray-600 mb-2">
+                No salary records found
+              </h3>
+              <p className="text-gray-500">Try adjusting your search or filters</p>
+            </div>
+          )}
 
-        {/* Modals */}
-        <AddSalaryModal
-          isOpen={showAddModal}
-          onClose={() => setShowAddModal(false)}
-          onSubmit={handleSubmitSalary}
-          loading={creating}
-        />
-        <ViewSalaryModal
-          isOpen={ViewModalOpen}
-          onClose={() => {
-            setViewModalOpen(false);
-            setSelectedSalary(null);
-          }}
-          salary={selectedSalary}
-        />
-        <EditSalaryModal
-          isOpen={editModalOpen}
-          onClose={() => {
-            setEditModalOpen(false);
-            setSelectedSalary(null);
-          }}
-          salary={selectedSalary}
-          onSubmit={handleUpdateSalary}
-          loading={updating}
-        />
-        <DeleteSalaryModal
-          isOpen={openDelete}
-          onClose={() => {
-            setOpenDelete(false);
-            setSelectedSalaryId(null);
-          }}
-          salaryId={selectedSalaryId}
-        />
-        <GenerateSalaryModal
-          isOpen={generateModalOpen}
-          onClose={() => {
-            setGenerateModalOpen(false);
-            setSelectedSalary(null);
-          }}
-          salary={selectedSalary}
-        />
+          {/* Modals */}
+          <AddSalaryModal
+            isOpen={showAddModal}
+            onClose={() => setShowAddModal(false)}
+            onSubmit={handleSubmitSalary}
+            loading={creating}
+          />
+          <ViewSalaryModal
+            isOpen={ViewModalOpen}
+            onClose={() => {
+              setViewModalOpen(false);
+              setSelectedSalary(null);
+            }}
+            salary={selectedSalary}
+          />
+          <EditSalaryModal
+            isOpen={editModalOpen}
+            onClose={() => {
+              setEditModalOpen(false);
+              setSelectedSalary(null);
+            }}
+            salary={selectedSalary}
+            onSubmit={handleUpdateSalary}
+            loading={updating}
+          />
+          <DeleteSalaryModal
+            isOpen={openDelete}
+            onClose={() => {
+              setOpenDelete(false);
+              setSelectedSalaryId(null);
+            }}
+            salaryId={selectedSalaryId}
+          />
+          <GenerateSalaryModal
+            isOpen={generateModalOpen}
+            onClose={() => {
+              setGenerateModalOpen(false);
+              setSelectedSalary(null);
+            }}
+            salary={selectedSalary}
+          />
+        </div>
       </div>
     </DashboardLayout>
   );

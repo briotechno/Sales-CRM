@@ -234,56 +234,58 @@ export default function AllInvoicePage() {
 
   return (
     <DashboardLayout>
-      <div className="ml-6 min-h-screen bg-white text-black">
+      <div className="min-h-screen bg-white">
         {/* Header Section */}
-        <div className="bg-white border-b sticky top-0 z-10 p-6">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-              <h1 className="text-2xl font-black text-gray-900 tracking-tight">Invoice Management</h1>
-              <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
-                <Home size={14} /> CRM / <span className="text-[#FF7B1D] font-bold">Invoices</span>
-              </p>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                <input
-                  type="text"
-                  placeholder="Search invoice or client..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 pr-4 py-2.5 border-2 border-gray-100 rounded-sm focus:border-[#FF7B1D] outline-none text-sm w-64 transition-all"
-                />
+        <div className="bg-white border-b sticky top-0 z-30">
+          <div className="max-w-8xl mx-auto px-4 py-2">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Invoice Management</h1>
+                <p className="text-[10px] text-gray-500 mt-0.5 flex items-center gap-1.5">
+                  <Home size={14} className="text-gray-400" /> CRM / <span className="text-[#FF7B1D] font-medium">Invoices</span>
+                </p>
               </div>
 
-              <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                className="px-4 py-2.5 border-2 border-gray-100 rounded-sm focus:border-[#FF7B1D] outline-none text-sm font-bold bg-white"
-              >
-                <option value="all">All Status</option>
-                <option value="Paid">Paid</option>
-                <option value="Partial">Partial</option>
-                <option value="Unpaid">Unpaid</option>
-              </select>
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Search invoice or client..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 pr-4 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-orange-500 text-sm w-64 shadow-sm"
+                  />
+                  <Search className="absolute left-3 top-2.5 text-gray-400" size={16} />
+                </div>
 
-              <button
-                onClick={() => {
-                  setFormData(initialFormState);
-                  setShowModal(true);
-                }}
-                className="flex items-center gap-2 bg-[#FF7B1D] text-white px-6 py-2.5 rounded-sm hover:bg-[#E66A0D] transition-all font-black text-sm shadow-lg active:scale-95"
-              >
-                <Plus size={18} /> NEW INVOICE
-              </button>
+                <select
+                  value={filterStatus}
+                  onChange={(e) => setFilterStatus(e.target.value)}
+                  className="px-4 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-orange-500 text-sm font-semibold bg-white shadow-sm"
+                >
+                  <option value="all">All Status</option>
+                  <option value="Paid">Paid</option>
+                  <option value="Partial">Partial</option>
+                  <option value="Unpaid">Unpaid</option>
+                </select>
+
+                <button
+                  onClick={() => {
+                    setFormData(initialFormState);
+                    setShowModal(true);
+                  }}
+                  className="flex items-center gap-2 px-4 py-2 rounded-sm font-bold transition shadow-md text-sm active:scale-95 bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
+                >
+                  <Plus size={18} /> NEW INVOICE
+                </button>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="p-6">
+        <div className="max-w-8xl mx-auto p-4 mt-0">
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-3">
             <NumberCard
               title="Total Invoices"
               number={totalInvoices}

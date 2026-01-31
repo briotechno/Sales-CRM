@@ -115,45 +115,39 @@ export default function ExpensePage() {
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen ml-0 bg-gradient-to-br from-orange-0 via-white to-orange-100">
+      <div className="min-h-screen bg-gradient-to-br from-orange-0 via-white to-orange-100">
         {/* Header */}
-        <div className="bg-white border-b ml-4">
-          <div className="max-w-8xl mx-auto px-0 ml-6 py-4">
-            <div className="flex items-center justify-between">
+        <div className="bg-white border-b sticky top-0 z-30">
+          <div className="max-w-8xl mx-auto px-4 py-2">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               {/* Left Side */}
               <div>
-                <h1 className="text-2xl font-bold text-gray-800">
+                <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
                   My Expenses
                 </h1>
-                <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
-                  <FiHome className="text-gray-700 text-sm" />
-                  <span className="text-gray-400"></span> Additional /{" "}
-                  <span className="text-[#FF7B1D] font-medium">
-                    All Expenses
-                  </span>
+                <p className="text-[10px] text-gray-500 mt-0.5 flex items-center gap-1.5">
+                  <FiHome className="text-gray-400" size={14} />
+                  Additional / <span className="text-[#FF7B1D] font-medium">All Expenses</span>
                 </p>
               </div>
 
               {/* Right Side */}
-              <div className="flex flex-wrap items-center gap-2 ml-auto">
+              <div className="flex flex-wrap items-center gap-2">
 
                 {/* Custom Date Filter Dropdown */}
                 <div className="relative" ref={dateDropdownRef}>
                   <button
                     onClick={() => setIsDateFilterOpen(!isDateFilterOpen)}
-                    className={`flex items-center gap-2 p-3 rounded-sm border transition-all shadow-sm ${isDateFilterOpen || filterType !== "Today"
-                      ? "bg-white text-gray-700 border-gray-300 hover:bg-orange-500 hover:text-white hover:border-[#FF7B1D]"
-                      : "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
+                    className={`p-2 rounded-sm border transition shadow-sm ${isDateFilterOpen || filterType !== "Today"
+                      ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
+                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
                       }`}
                   >
-                    <Filter size={20} />
+                    <Filter size={18} />
                   </button>
 
                   {isDateFilterOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-sm shadow-xl z-50 animate-fadeIn">
-                      <div className="p-2 border-b bg-gray-50">
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Filter by Expanses</p>
-                      </div>
+                    <div className="absolute right-0 mt-2 w-36 bg-white border border-gray-200 rounded-sm shadow-xl z-50 animate-fadeIn">
                       <div className="py-1">
                         {["Today", "Yesterday", "Last 7 Days", "This Month", "Custom"].map((option) => (
                           <button
@@ -163,7 +157,7 @@ export default function ExpensePage() {
                               setIsDateFilterOpen(false);
                               setCurrentPage(1);
                             }}
-                            className={`block w-full text-left px-4 py-2.5 text-sm transition-colors ${filterType === option
+                            className={`block w-full text-left px-4 py-2 text-sm transition-colors ${filterType === option
                               ? "bg-orange-50 text-orange-600 font-bold"
                               : "text-gray-700 hover:bg-gray-50"
                               }`}
@@ -205,25 +199,25 @@ export default function ExpensePage() {
                       setSearchTerm(e.target.value);
                       setCurrentPage(1);
                     }}
-                    className="pl-10 pr-4 py-3 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm w-48 lg:w-64"
+                    className="pl-10 pr-4 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-orange-500 text-sm w-64 shadow-sm"
                   />
-                  <Search className="absolute left-3 top-3.5 text-gray-400" size={16} />
+                  <Search className="absolute left-3 top-2.5 text-gray-400" size={16} />
                 </div>
 
                 {/* Add Expense Button */}
                 <button
                   onClick={() => setIsAddModalOpen(true)}
-                  className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm hover:shadow-lg transition-all flex items-center gap-2 font-bold shadow-md"
+                  className="flex items-center gap-2 px-4 py-2 rounded-sm font-bold transition shadow-md text-sm active:scale-95 bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
                 >
                   <Plus size={18} />
-                  Add Expense
+                  ADD EXPENSE
                 </button>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="max-w-8xl mx-auto ml-6 mt-4 p-0">
+        <div className="max-w-8xl mx-auto p-4 mt-0">
           {/* Stats Cards (Dynamic) */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
             <NumberCard
