@@ -26,28 +26,74 @@ const Invoice = {
         return result.insertId;
     },
 
-    findAll: async (userId, filters = {}) => {
-        let query = 'SELECT * FROM invoices WHERE user_id = ?';
-        const params = [userId];
+    findAll: async (userId, filters = {}, pagination = {}) => {
+        const { status, search, dateFrom, dateTo } = filters;
+        const { page = 1, limit = 10 } = pagination;
+        const offset = (page - 1) * limit;
 
-        if (filters.status && filters.status !== 'all') {
-            query += ' AND status = ?';
-            params.push(filters.status);
+        let whereClause = 'WHERE user_id = ?';
+        let queryParams = [userId];
+
+        if (status && status !== 'all') {
+            whereClause += ' AND status = ?';
+            queryParams.push(status);
         }
 
-        if (filters.search) {
-            query += ' AND (invoice_number LIKE ? OR client_name LIKE ? OR client_email LIKE ?)';
-            const term = `%${filters.search}%`;
-            params.push(term, term, term);
+        if (search) {
+            whereClause += ' AND (invoice_number LIKE ? OR client_name LIKE ? OR client_email LIKE ?)';
+            const term = `%${search}%`;
+            queryParams.push(term, term, term);
         }
 
-        query += ' ORDER BY created_at DESC';
+        if (dateFrom) {
+            whereClause += ' AND invoice_date >= ?';
+            queryParams.push(dateFrom);
+        }
 
-        const [rows] = await pool.query(query, params);
-        return rows.map(row => ({
-            ...row,
-            items: typeof row.items === 'string' ? JSON.parse(row.items) : row.items
-        }));
+        if (dateTo) {
+            whereClause += ' AND invoice_date <= ?';
+            queryParams.push(dateTo);
+        }
+
+        // 1. Get summary stats for matrix cards
+        const summaryQuery = `
+            SELECT 
+                COUNT(*) as totalCount,
+                SUM(CASE WHEN status = 'Paid' THEN 1 ELSE 0 END) as paidCount,
+                SUM(COALESCE(total_amount, 0)) as totalAmount,
+                SUM(COALESCE(balance_amount, 0)) as totalBalance
+            FROM invoices 
+            ${whereClause}
+        `;
+        const [summaryResult] = await pool.query(summaryQuery, queryParams);
+
+        // 2. Get paginated invoices
+        const dataQuery = `
+            SELECT * FROM invoices 
+            ${whereClause} 
+            ORDER BY created_at DESC 
+            LIMIT ? OFFSET ?
+        `;
+        const [rows] = await pool.query(dataQuery, [...queryParams, parseInt(limit), parseInt(offset)]);
+
+        return {
+            invoices: rows.map(row => ({
+                ...row,
+                items: typeof row.items === 'string' ? JSON.parse(row.items) : row.items
+            })),
+            summary: {
+                totalInvoices: summaryResult[0].totalCount || 0,
+                paidInvoices: summaryResult[0].paidCount || 0,
+                totalValue: summaryResult[0].totalAmount || 0,
+                pendingBalance: summaryResult[0].totalBalance || 0
+            },
+            pagination: {
+                total: summaryResult[0].totalCount || 0,
+                page: parseInt(page),
+                limit: parseInt(limit),
+                totalPages: Math.ceil((summaryResult[0].totalCount || 0) / limit)
+            }
+        };
     },
 
     findById: async (id, userId) => {
