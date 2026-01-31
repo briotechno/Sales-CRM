@@ -109,6 +109,21 @@ export default function CatalogsPage() {
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      // Validation: Less than 1MB
+      if (file.size > 1024 * 1024) {
+        toast.error("File size must be less than 1MB");
+        e.target.value = null;
+        return;
+      }
+
+      // Validation: Allowed formats
+      const allowedTypes = ["image/jpeg", "image/png", "image/svg+xml"];
+      if (!allowedTypes.includes(file.type)) {
+        toast.error("Only PNG, JPG, or SVG files are allowed");
+        e.target.value = null;
+        return;
+      }
+
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result);
@@ -890,6 +905,9 @@ export default function CatalogsPage() {
                             />
                             <p className="text-sm font-semibold text-gray-600">
                               Click to upload image
+                            </p>
+                            <p className="text-[10px] text-gray-400 font-medium mt-1 uppercase">
+                              Max 1MB: PNG, JPG, SVG
                             </p>
                           </div>
                         )}

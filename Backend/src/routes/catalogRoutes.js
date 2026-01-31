@@ -4,6 +4,8 @@ const catalogController = require('../controllers/catalogController');
 const { protect } = require('../middleware/authMiddleware');
 const upload = require('../middleware/uploadMiddleware');
 
+router.get('/public/:userId', catalogController.getPublicCatalogs);
+
 router.use(protect);
 
 router.post('/', upload.single('image'), catalogController.createCatalog);

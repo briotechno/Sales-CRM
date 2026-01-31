@@ -53,6 +53,18 @@ export const catalogApi = createApi({
             }),
             invalidatesTags: ['Catalog'],
         }),
+        getPublicCatalogs: builder.query({
+            query: ({ userId, params }) => ({
+                url: `/public/${userId}`,
+                params: {
+                    page: params?.page || 1,
+                    limit: params?.limit || 100,
+                    status: params?.status || 'Active',
+                    search: params?.search,
+                }
+            }),
+            providesTags: ['Catalog'],
+        }),
     }),
 });
 
@@ -62,4 +74,5 @@ export const {
     useCreateCatalogMutation,
     useUpdateCatalogMutation,
     useDeleteCatalogMutation,
+    useGetPublicCatalogsQuery,
 } = catalogApi;
