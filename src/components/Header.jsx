@@ -107,7 +107,6 @@ const Header = () => {
       const q = searchValue.toLowerCase();
       const name = page.name.toLowerCase();
       const cat = page.category.toLowerCase();
-      // Forgiving match for "dashboard"
       const isDashboardTypo = q.includes("dash") && (q.includes("bi") || q.includes("bo"));
       return name.includes(q) || cat.includes(q) || (isDashboardTypo && name.includes("dashboard"));
     }).reduce((acc, curr) => {
@@ -119,84 +118,88 @@ const Header = () => {
     : [];
 
   return (
-    <header className="fixed top-0 left-0 right-0 md:left-[280px] h-[64px] flex items-center px-4 lg:px-8 z-40 bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm transition-all duration-300">
-      {/* Search - Centered properly */}
-      <div className="flex-1 flex justify-center max-w-full relative">
-        <div
-          className={`relative w-full max-w-md transition-all duration-300 ${isSearchFocused ? 'max-w-lg scale-[1.02]' : 'max-w-md'}`}
-        >
-          <div className="relative group">
-            <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#FF7B1D] transition-colors" size={18} />
-            <input
-              ref={searchInputRef}
-              type="text"
-              value={searchValue}
-              onChange={(e) => setSearchValue(e.target.value)}
-              onFocus={() => setIsSearchFocused(true)}
-              onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
-              placeholder="Search leads, employees, or dashboards..."
-              className="w-full h-11 pl-10 pr-20 rounded-2xl bg-gray-50/50 border border-gray-100 focus:bg-white focus:border-[#FF7B1D] focus:ring-4 focus:ring-[#FF7B1D]/10 placeholder-gray-400 text-sm focus:outline-none transition-all shadow-inner"
-            />
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-60">
-              <span className="text-[10px] font-bold text-gray-500 bg-gray-200/50 px-1.5 py-0.5 rounded-md border border-gray-300">CTRL</span>
-              <span className="text-[10px] font-bold text-gray-500 bg-gray-200/50 px-1.5 py-0.5 rounded-md border border-gray-300">/</span>
-            </div>
+    <header className="fixed top-0 left-0 right-0 md:left-[280px] h-[64px] flex items-center px-4 lg:px-8 z-40 bg-white border-b border-gray-100 transition-all duration-300">
+      {/* Search Bar */}
+      <div className="flex-1 flex justify-center px-4">
+        <div className="relative w-full max-w-md group">
+          <FiSearch
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#FF7B1D] transition-colors"
+            size={16}
+          />
+          <input
+            ref={searchInputRef}
+            type="text"
+            value={searchValue}
+            onChange={(e) => setSearchValue(e.target.value)}
+            onFocus={() => setIsSearchFocused(true)}
+            onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
+            placeholder="Search leads, employees, or dashboards..."
+            className="w-full h-10 pl-10 pr-16 rounded-full bg-gray-100 border-none focus:bg-white focus:ring-2 focus:ring-orange-500/20 placeholder-gray-400 text-sm outline-none transition-all"
+          />
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
+            <span className="text-[10px] font-medium text-gray-400 bg-gray-200 px-1.5 py-0.5 rounded uppercase tracking-tighter">CTRL</span>
+            <span className="text-[10px] font-medium text-gray-400 bg-gray-200 px-1.5 py-0.5 rounded">/</span>
           </div>
-
-          {/* Search Results Dropdown */}
-          {searchValue && isSearchFocused && (
-            <div className="absolute top-full left-0 right-0 mt-3 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-y-auto max-h-[70vh] animate-fadeIn py-2 z-50 custom-scrollbar">
-              {searchResults.length > 0 ? (
-                searchResults.map((cat, idx) => (
-                  <div key={idx} className="mb-2 last:mb-0">
-                    <div className="px-4 py-1 flex items-center justify-between">
-                      <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{cat.category}</h3>
-                      <div className="h-px flex-1 ml-4 bg-gray-50" />
-                    </div>
-                    {cat.items.map((item, i) => (
-                      <button
-                        key={i}
-                        onClick={() => go(item.path)}
-                        className="w-full px-4 py-2.5 flex items-center justify-between group hover:bg-[#FF7B1D]/5 transition-colors"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-gray-400 group-hover:text-[#FF7B1D] group-hover:bg-white transition-all border border-transparent group-hover:border-orange-100">
-                            <FiFileText size={14} />
-                          </div>
-                          <span className="text-sm font-medium text-gray-700 group-hover:text-[#FF7B1D]">{item.name}</span>
-                        </div>
-                        <FiGrid size={12} className="text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity" />
-                      </button>
-                    ))}
-                  </div>
-                ))
-              ) : (
-                <div className="p-8 text-center bg-gray-50/30">
-                  <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm border border-gray-100">
-                    <FiSearch size={20} className="text-gray-300" />
-                  </div>
-                  <p className="text-sm text-gray-600 font-medium">No matches for <span className="text-[#FF7B1D]">"{searchValue}"</span></p>
-                  <p className="text-[11px] text-gray-400 mt-1">Try searching for HRM, Dashboard, or Leads</p>
-                </div>
-              )}
-            </div>
-          )}
         </div>
+
+        {/* Search Results Dropdown */}
+        {searchValue && isSearchFocused && (
+          <div className="absolute top-full left-0 right-0 mt-3 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-y-auto max-h-[70vh] animate-fadeIn py-2 z-50 custom-scrollbar">
+            {searchResults.length > 0 ? (
+              searchResults.map((cat, idx) => (
+                <div key={idx} className="mb-2 last:mb-0">
+                  <div className="px-4 py-1 flex items-center justify-between">
+                    <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{cat.category}</h3>
+                    <div className="h-px flex-1 ml-4 bg-gray-50" />
+                  </div>
+                  {cat.items.map((item, i) => (
+                    <button
+                      key={i}
+                      onClick={() => go(item.path)}
+                      className="w-full px-4 py-2.5 flex items-center justify-between group hover:bg-[#FF7B1D]/5 transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-gray-400 group-hover:text-[#FF7B1D] group-hover:bg-white transition-all border border-transparent group-hover:border-orange-100">
+                          <FiFileText size={14} />
+                        </div>
+                        <span className="text-sm font-medium text-gray-700 group-hover:text-[#FF7B1D]">{item.name}</span>
+                      </div>
+                      <FiGrid size={12} className="text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </button>
+                  ))}
+                </div>
+              ))
+            ) : (
+              <div className="p-8 text-center bg-gray-50/30">
+                <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm border border-gray-100">
+                  <FiSearch size={20} className="text-gray-300" />
+                </div>
+                <p className="text-sm text-gray-600 font-medium">No matches for <span className="text-[#FF7B1D]">"{searchValue}"</span></p>
+                <p className="text-[11px] text-gray-400 mt-1">Try searching for HRM, Dashboard, or Leads</p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Right Icons */}
       <div className="flex items-center gap-3 ml-6">
-        {/* Digital Clock - Premium Redesign */}
-        <div className="hidden lg:flex flex-col items-end mr-6 border-r pr-6 border-gray-100">
-          <span className="text-[15px] font-black text-gray-900 tracking-tighter leading-none font-mono">
-            {currentTime.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true })}
+        {/* Digital Clock */}
+        <div className="hidden lg:flex flex-col items-center mr-4">
+          <span className="text-sm font-bold text-black leading-none uppercase">
+            {currentTime.toLocaleTimeString("en-US", {
+              hour: "2-digit",
+              minute: "2-digit",
+              hour12: true,
+            })}
           </span>
-          <div className="flex items-center gap-1.5 mt-1.5">
-            <div className="w-1 h-1 rounded-full bg-green-500 animate-pulse" />
-            <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest whitespace-nowrap">
-              {currentTime.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
-            </span>
-          </div>
+          <span className="text-[10px] font-semibold text-gray-400 mt-1 uppercase tracking-wider">
+            {currentTime.toLocaleDateString("en-US", {
+              weekday: "short",
+              month: "short",
+              day: "numeric",
+            })}
+          </span>
         </div>
 
         {/* Action Icons */}
@@ -260,25 +263,22 @@ const Header = () => {
           </button>
         </div>
 
-        {/* User Profile - Premium Pill */}
-        <div className="relative ml-3" ref={dropdownRef}>
+        {/* User Profile */}
+        <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            className="group flex items-center gap-2.5 p-1.5 pr-4 rounded-2xl hover:bg-white hover:shadow-lg hover:shadow-orange-100/50 transition-all duration-300 border border-transparent hover:border-orange-50"
+            className="flex items-center gap-2 hover:bg-gray-50 p-1 rounded-lg transition-colors"
           >
-            <div className="relative">
-              <div className="absolute inset-0 bg-[#FF7B1D] rounded-full blur-sm opacity-0 group-hover:opacity-20 transition-opacity" />
-              <img
-                src={`https://ui-avatars.com/api/?name=${user?.firstName}+${user?.lastName}&background=FF7B1D&color=fff&bold=true`}
-                alt="Profile"
-                className="w-9 h-9 rounded-xl object-cover relative ring-2 ring-white"
-              />
-              <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full shadow-sm animate-pulse"></div>
+            <div className="w-9 h-9 rounded-lg bg-orange-500 flex items-center justify-center text-white font-bold text-sm">
+              {user?.firstName?.charAt(0).toUpperCase()}
+              {user?.lastName?.charAt(0).toUpperCase()}
             </div>
-            <div className="hidden sm:block text-left">
-              <p className="text-[13px] font-bold text-gray-900 leading-tight group-hover:text-[#FF7B1D] transition-colors">{user?.firstName || "User"}</p>
-              <p className="text-[9px] font-black text-gray-400 mt-0.5 uppercase tracking-widest flex items-center gap-1">
-                <Shield size={8} /> {user?.role || "Member"}
+            <div className="hidden sm:block text-left ml-1">
+              <p className="text-[13px] font-bold text-gray-800 leading-tight">
+                {user?.firstName?.toLowerCase() || "user"}
+              </p>
+              <p className="text-[10px] font-semibold text-gray-400 mt-0.5 uppercase tracking-wide flex items-center gap-1">
+                {user?.role || "Member"}
               </p>
             </div>
           </button>
