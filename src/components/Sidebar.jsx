@@ -450,6 +450,12 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           permission: "Task Management"
         },
         {
+          name: "Quotation",
+          icon: <FileSignature size={22} />,
+          path: "/additional/quotation",
+          permission: "Financial Documents"
+        },
+        {
           name: "Invoice",
           icon: <FileSpreadsheet size={22} />,
           path: "/additional/invoice",
