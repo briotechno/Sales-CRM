@@ -37,8 +37,13 @@ export default function NotesPage() {
   const [noteToDelete, setNoteToDelete] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [dateFilter, setDateFilter] = useState("All");
+  const [isDateFilterOpen, setIsDateFilterOpen] = useState(false);
+  const [customStart, setCustomStart] = useState("");
+  const [customEnd, setCustomEnd] = useState("");
   const [page, setPage] = useState(1);
   const dropdownRef = useRef(null);
+  const dateDropdownRef = useRef(null);
   const observer = useRef();
 
   const [formData, setFormData] = useState({
@@ -49,11 +54,47 @@ export default function NotesPage() {
 
   const categories = ["All", "Meeting", "Tasks", "Ideas", "General"];
 
+  // Date Filter Logic
+  const getDateRange = () => {
+    const today = new Date();
+    const formatDate = (date) => date.toISOString().split('T')[0];
+
+    let dateFrom = "";
+    let dateTo = "";
+
+    if (dateFilter === "Today") {
+      dateFrom = formatDate(today);
+      dateTo = formatDate(today);
+    } else if (dateFilter === "Yesterday") {
+      const yesterday = new Date(today);
+      yesterday.setDate(today.getDate() - 1);
+      dateFrom = formatDate(yesterday);
+      dateTo = formatDate(yesterday);
+    } else if (dateFilter === "Last 7 Days") {
+      const last7 = new Date(today);
+      last7.setDate(today.getDate() - 7);
+      dateFrom = formatDate(last7);
+      dateTo = formatDate(today);
+    } else if (dateFilter === "This Month") {
+      const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+      dateFrom = formatDate(firstDay);
+      dateTo = formatDate(today);
+    } else if (dateFilter === "Custom") {
+      dateFrom = customStart;
+      dateTo = customEnd;
+    }
+    return { dateFrom, dateTo };
+  };
+
+  const { dateFrom, dateTo } = getDateRange();
+
   const { data, isLoading, isFetching, refetch } = useGetNotesQuery({
     page,
     limit: 12,
     category: selectedCategory,
     search: searchTerm,
+    dateFrom,
+    dateTo,
   });
 
   const [createNote] = useCreateNoteMutation();
@@ -77,7 +118,7 @@ export default function NotesPage() {
   // Reset page when filters change
   useEffect(() => {
     setPage(1);
-  }, [searchTerm, selectedCategory]);
+  }, [searchTerm, selectedCategory, dateFilter, customStart, customEnd]);
 
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -141,10 +182,24 @@ export default function NotesPage() {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsFilterOpen(false);
       }
+      if (dateDropdownRef.current && !dateDropdownRef.current.contains(event.target)) {
+        setIsDateFilterOpen(false);
+      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  const clearAllFilters = () => {
+    setSearchTerm("");
+    setSelectedCategory("All");
+    setDateFilter("All");
+    setCustomStart("");
+    setCustomEnd("");
+  };
+
+  const hasActiveFilters =
+    searchTerm || selectedCategory !== "All" || dateFilter !== "All";
 
   return (
     <DashboardLayout>
@@ -197,6 +252,60 @@ export default function NotesPage() {
                   )}
                 </div>
 
+                {/* Date Filter */}
+                <div className="relative" ref={dateDropdownRef}>
+                  <button
+                    onClick={() => setIsDateFilterOpen(!isDateFilterOpen)}
+                    className={`p-2 rounded-sm border transition shadow-sm ${isDateFilterOpen || dateFilter !== "All"
+                      ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
+                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
+                      }`}
+                  >
+                    <Calendar size={18} />
+                  </button>
+
+                  {isDateFilterOpen && (
+                    <div className="absolute right-0 mt-2 w-36 bg-white border border-gray-200 rounded-sm shadow-xl z-50 animate-fadeIn">
+                      <div className="py-1">
+                        {["All", "Today", "Yesterday", "Last 7 Days", "This Month", "Custom"].map((option) => (
+                          <button
+                            key={option}
+                            onClick={() => {
+                              setDateFilter(option);
+                              setIsDateFilterOpen(false);
+                            }}
+                            className={`block w-full text-left px-4 py-2 text-sm transition-colors ${dateFilter === option
+                              ? "bg-orange-50 text-orange-600 font-bold"
+                              : "text-gray-700 hover:bg-gray-50"
+                              }`}
+                          >
+                            {option}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Show Custom Date Range Only When Selected */}
+                {dateFilter === "Custom" && (
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="date"
+                      value={customStart}
+                      onChange={(e) => setCustomStart(e.target.value)}
+                      className="px-2 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-orange-500 text-sm shadow-sm"
+                    />
+                    <span className="text-gray-400 text-xs font-bold">to</span>
+                    <input
+                      type="date"
+                      value={customEnd}
+                      onChange={(e) => setCustomEnd(e.target.value)}
+                      className="px-2 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-orange-500 text-sm shadow-sm"
+                    />
+                  </div>
+                )}
+
                 {/* Search Bar */}
                 <div className="relative">
                   <input
@@ -225,6 +334,29 @@ export default function NotesPage() {
         </div>
 
         <div className="max-w-8xl mx-auto p-4 mt-0 font-primary">
+          {hasActiveFilters && (
+            <div className="mb-4 flex flex-wrap items-center justify-between bg-orange-50 border border-orange-200 rounded-sm p-3 gap-3 animate-fadeIn">
+              <div className="flex flex-wrap items-center gap-2">
+                <Filter className="text-orange-600" size={16} />
+                <span className="text-sm font-bold text-orange-800 uppercase tracking-wider">
+                  ACTIVE FILTERS:
+                </span>
+                {searchTerm && <span className="text-xs bg-white px-3 py-1 rounded-sm border border-orange-200 text-orange-700 shadow-sm font-bold">Search: "{searchTerm}"</span>}
+                {selectedCategory !== "All" && <span className="text-xs bg-white px-3 py-1 rounded-sm border border-orange-200 text-orange-700 shadow-sm font-bold">Category: {selectedCategory}</span>}
+                {dateFilter !== "All" && dateFilter !== "Custom" && <span className="text-xs bg-white px-3 py-1 rounded-sm border border-orange-200 text-orange-700 shadow-sm font-bold">Period: {dateFilter}</span>}
+                {dateFilter === "Custom" && customStart && <span className="text-xs bg-white px-3 py-1 rounded-sm border border-orange-200 text-orange-700 shadow-sm font-bold">From: {customStart}</span>}
+                {dateFilter === "Custom" && customEnd && <span className="text-xs bg-white px-3 py-1 rounded-sm border border-orange-200 text-orange-700 shadow-sm font-bold">To: {customEnd}</span>}
+              </div>
+              <button
+                onClick={clearAllFilters}
+                className="flex items-center gap-2 px-3 py-1.5 bg-white border border-orange-300 text-orange-600 rounded-sm hover:bg-orange-100 transition shadow-sm text-xs font-bold active:scale-95 uppercase"
+              >
+                <X size={14} />
+                Clear All
+              </button>
+            </div>
+          )}
+
           {/* Summary Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-3">
             <NumberCard
@@ -259,60 +391,47 @@ export default function NotesPage() {
           </div>
 
           {/* Notes Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {notes.map((note, index) => (
               <div
                 key={note.id}
                 ref={index === notes.length - 1 ? lastNoteRef : null}
-                className="group bg-white rounded-sm shadow-sm hover:shadow-md transition-all border border-gray-100 hover:border-orange-200 overflow-hidden relative flex flex-col min-h-[220px]"
+                className="group bg-white rounded-lg shadow-sm hover:shadow-md transition-all border border-gray-200 hover:border-orange-300 overflow-hidden flex flex-col"
               >
-                <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-orange-400 to-orange-600 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-
-                <div className="p-3 flex-1">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2">
-                      <div className={`p-1.5 rounded-sm ${note.category === 'Meeting' ? 'bg-blue-100 text-blue-600' :
-                        note.category === 'Tasks' ? 'bg-green-100 text-green-600' :
-                          note.category === 'Ideas' ? 'bg-purple-100 text-purple-600' :
-                            'bg-gray-100 text-gray-600'
-                        }`}>
-                        <Tag size={14} />
-                      </div>
-                      <span className={`text-[10px] font-bold uppercase tracking-wider ${note.category === 'Meeting' ? 'text-blue-600' :
-                        note.category === 'Tasks' ? 'text-green-600' :
-                          note.category === 'Ideas' ? 'text-purple-600' :
-                            'text-gray-600'
-                        }`}>
-                        {note.category}
-                      </span>
-                    </div>
+                <div className="p-4 flex-1">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${note.category === 'Meeting' ? 'bg-orange-100 text-orange-700' :
+                      note.category === 'Tasks' ? 'bg-green-100 text-green-700' :
+                        note.category === 'Ideas' ? 'bg-purple-100 text-purple-700' :
+                          'bg-gray-100 text-gray-700'
+                      }`}>
+                      {note.category}
+                    </span>
                     <div className="flex items-center gap-1 text-gray-400">
                       <Clock size={12} />
-                      <span className="text-[11px] font-medium">{new Date(note.created_at).toLocaleDateString()}</span>
+                      <span className="text-[10px] font-medium">{new Date(note.created_at).toLocaleDateString()}</span>
                     </div>
                   </div>
 
-                  <h3 className="text-lg font-bold text-gray-800 mb-2 leading-tight group-hover:text-orange-600 transition-colors">
+                  <h3 className="text-base font-bold text-gray-900 mb-2 leading-tight line-clamp-2">
                     {note.title}
                   </h3>
-                  <p className="text-gray-600 text-sm leading-relaxed line-clamp-4 italic">
-                    "{note.content}"
+                  <p className="text-gray-600 text-sm font-normal leading-relaxed line-clamp-3">
+                    {note.content}
                   </p>
                 </div>
 
-                {/* ----------------------------- */}
-
-                <div className="flex items-center flex-1">
+                <div className="flex items-center gap-1 px-4 py-2 border-t border-gray-100 bg-gray-50">
                   <button
                     onClick={() => handleView(note)}
-                    className="p-2 text-blue-600 hover:bg-blue-50 rounded-sm transition-colors"
-                    title="Read Details"
+                    className="p-2 text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                    title="View"
                   >
                     <Eye size={16} />
                   </button>
                   <button
                     onClick={() => handleEdit(note)}
-                    className="p-2 text-orange-600 hover:bg-orange-50 rounded-sm transition-colors"
+                    className="p-2 text-orange-600 hover:bg-orange-50 rounded transition-colors"
                     title="Edit"
                   >
                     <Pencil size={16} />
@@ -322,14 +441,12 @@ export default function NotesPage() {
                       setNoteToDelete(note);
                       setShowDeleteModal(true);
                     }}
-                    className="p-2 text-red-600 hover:bg-red-50 rounded-sm transition-colors"
+                    className="p-2 text-red-600 hover:bg-red-50 rounded transition-colors"
                     title="Delete"
                   >
                     <Trash2 size={16} />
                   </button>
                 </div>
-                {/* ----------------------------- */}
-
               </div>
             ))}
           </div>
