@@ -14,8 +14,11 @@ import {
   CheckCircle,
   DollarSign,
   Edit2,
-  Filter
+  Filter,
+  Calendar,
+  X
 } from "lucide-react";
+import * as XLSX from "xlsx";
 
 import CreateQuotationModal from "../../pages/QuotationPart/CreateQuotationModal";
 import ViewQuotationModal from "../../pages/QuotationPart/ViewQuotationModal";
@@ -42,14 +45,54 @@ export default function QuotationPage() {
   const [filterStatus, setFilterStatus] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
   const [isStatusFilterOpen, setIsStatusFilterOpen] = useState(false);
+  const [dateFilter, setDateFilter] = useState("All");
+  const [isDateFilterOpen, setIsDateFilterOpen] = useState(false);
+  const [customStart, setCustomStart] = useState("");
+  const [customEnd, setCustomEnd] = useState("");
+  const dateDropdownRef = useRef(null);
   const statusDropdownRef = useRef(null);
   const itemsPerPage = 8;
+
+  const getDateRange = () => {
+    const today = new Date();
+    const formatDate = (date) => date.toISOString().split('T')[0];
+
+    let dateFrom = "";
+    let dateTo = "";
+
+    if (dateFilter === "Today") {
+      dateFrom = formatDate(today);
+      dateTo = formatDate(today);
+    } else if (dateFilter === "Yesterday") {
+      const yesterday = new Date(today);
+      yesterday.setDate(today.getDate() - 1);
+      dateFrom = formatDate(yesterday);
+      dateTo = formatDate(yesterday);
+    } else if (dateFilter === "Last 7 Days") {
+      const last7 = new Date(today);
+      last7.setDate(today.getDate() - 7);
+      dateFrom = formatDate(last7);
+      dateTo = formatDate(today);
+    } else if (dateFilter === "This Month") {
+      const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+      dateFrom = formatDate(firstDay);
+      dateTo = formatDate(today);
+    } else if (dateFilter === "Custom") {
+      dateFrom = customStart;
+      dateTo = customEnd;
+    }
+    return { dateFrom, dateTo };
+  };
+
+  const { dateFrom, dateTo } = getDateRange();
 
   const { data, isLoading, error, refetch } = useGetQuotationsQuery({
     page: currentPage,
     limit: itemsPerPage,
     status: filterStatus,
     search: searchTerm,
+    dateFrom,
+    dateTo
   });
 
   const { data: businessInfo } = useGetBusinessInfoQuery();
@@ -63,9 +106,19 @@ export default function QuotationPage() {
   const pagination = data?.pagination || { total: 0, totalPages: 1 };
   const summary = data?.summary || { total: 0, approved: 0, pending: 0, totalValue: 0 };
 
+  const hasActiveFilters = searchTerm || filterStatus !== "All" || dateFilter !== "All";
+
+  const clearAllFilters = () => {
+    setSearchTerm("");
+    setFilterStatus("All");
+    setDateFilter("All");
+    setCustomStart("");
+    setCustomEnd("");
+    setCurrentPage(1);
+  };
+
   const [formData, setFormData] = useState({
     quotationNo: `QT-${new Date().getFullYear()}-0000`,
-    clientName: "",
     companyName: "",
     email: "",
     phone: "",
@@ -77,8 +130,7 @@ export default function QuotationPage() {
     tax: 0,
     discount: 0,
     totalAmount: 0,
-    paymentTerms: "",
-    notes: "",
+    terms_and_conditions: "",
     status: "Draft",
   });
 
@@ -108,7 +160,6 @@ export default function QuotationPage() {
   const resetForm = () => {
     setFormData({
       quotationNo: `QT-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
-      clientName: "",
       companyName: "",
       email: "",
       phone: "",
@@ -120,14 +171,13 @@ export default function QuotationPage() {
       tax: 0,
       discount: 0,
       totalAmount: 0,
-      paymentTerms: "",
-      notes: "",
+      terms_and_conditions: "",
       status: "Draft",
     });
   };
 
   const handleCreateQuotation = async () => {
-    if (!formData.clientName || !formData.quotationDate || !formData.totalAmount) {
+    if (!formData.companyName || !formData.quotationDate || !formData.totalAmount) {
       toast.error("Please fill in all required fields");
       return;
     }
@@ -135,7 +185,6 @@ export default function QuotationPage() {
     try {
       const payload = {
         quotation_id: formData.quotationNo,
-        client_name: formData.clientName,
         company_name: formData.companyName,
         email: formData.email,
         phone: formData.phone,
@@ -147,8 +196,7 @@ export default function QuotationPage() {
         tax: formData.tax,
         discount: formData.discount,
         total_amount: formData.totalAmount,
-        payment_terms: formData.paymentTerms,
-        notes: formData.notes,
+        terms_and_conditions: formData.terms_and_conditions,
         status: formData.status,
       };
 
@@ -185,7 +233,6 @@ export default function QuotationPage() {
       setFormData({
         id: q.id,
         quotationNo: q.quotation_id,
-        clientName: q.client_name,
         companyName: q.company_name,
         email: q.email,
         phone: q.phone,
@@ -197,8 +244,7 @@ export default function QuotationPage() {
         tax: q.tax || 0,
         discount: q.discount || 0,
         totalAmount: q.total_amount || 0,
-        paymentTerms: q.payment_terms || "",
-        notes: q.notes || "",
+        terms_and_conditions: q.terms_and_conditions || "",
         status: q.status || "Draft",
       });
 
@@ -245,15 +291,70 @@ export default function QuotationPage() {
     }
   };
 
+  const handleExportExcel = () => {
+    try {
+      if (!quotations || quotations.length === 0) {
+        toast.error("No data available to export");
+        return;
+      }
+
+      // Format data for Excel with professional headers
+      const exportData = quotations.map(q => ({
+        "Quotation ID": q.quotation_id,
+        "Date": new Date(q.quotation_date).toLocaleDateString(),
+        "Valid Until": q.valid_until ? new Date(q.valid_until).toLocaleDateString() : 'N/A',
+        "Company": q.company_name || 'N/A',
+        "Email": q.email || "N/A",
+        "Phone": q.phone || "N/A",
+        "Subtotal (INR)": q.subtotal,
+        "Tax (%)": q.tax || 0,
+        "Discount (INR)": q.discount || 0,
+        "Total Amount (INR)": q.total_amount,
+        "Status": q.status.toUpperCase(),
+        "Payment Terms": q.payment_terms || "",
+        "Notes": q.notes || ""
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(exportData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Quotations Report");
+
+      // Professional Column Widths
+      const wscols = [
+        { wch: 20 }, // Quotation ID
+        { wch: 15 }, // Date
+        { wch: 15 }, // Valid Until
+        { wch: 25 }, // Client Name
+        { wch: 25 }, // Company
+        { wch: 30 }, // Email
+        { wch: 15 }, // Phone
+        { wch: 15 }, // Subtotal
+        { wch: 12 }, // Tax
+        { wch: 15 }, // Discount
+        { wch: 18 }, // Total Amount
+        { wch: 12 }, // Status
+        { wch: 30 }, // Payment Terms
+        { wch: 30 }  // Notes
+      ];
+      worksheet['!cols'] = wscols;
+
+      XLSX.writeFile(workbook, `Quotations_${dateFilter}_${new Date().toLocaleDateString().replace(/\//g, '-')}.xlsx`);
+      toast.success("Exported to Excel successfully!");
+    } catch (error) {
+      console.error("Excel Export Error:", error);
+      toast.error("Error generating Excel report");
+    }
+  };
+
   const handleExport = () => {
     if (quotations.length === 0) {
       toast.error("No data to export");
       return;
     }
-    const headers = ["Quotation ID", "Client Name", "Date", "Amount", "Status", "Valid Until"];
+    const headers = ["Quotation ID", "Company", "Date", "Amount", "Status", "Valid Until"];
     const csvData = quotations.map(q => [
       q.quotation_id,
-      q.client_name,
+      q.company_name,
       new Date(q.quotation_date).toLocaleDateString(),
       q.total_amount,
       q.status,
@@ -293,7 +394,7 @@ export default function QuotationPage() {
       id: qData.quotation_id || qData.id,
       date: qData.quotation_date ? new Date(qData.quotation_date).toLocaleDateString() : qData.date,
       validUntil: qData.valid_until ? new Date(qData.valid_until).toLocaleDateString() : (qData.validUntil || "Not Set"),
-      client: qData.client_name || qData.client || "Client Name",
+      client: qData.company_name || qData.companyName || "Client Name",
       companyName: qData.company_name || qData.companyName,
       email: qData.email,
       phone: qData.phone,
@@ -588,6 +689,12 @@ export default function QuotationPage() {
       ) {
         setIsStatusFilterOpen(false);
       }
+      if (
+        dateDropdownRef.current &&
+        !dateDropdownRef.current.contains(event.target)
+      ) {
+        setIsDateFilterOpen(false);
+      }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
@@ -657,6 +764,59 @@ export default function QuotationPage() {
                   )}
                 </div>
 
+                <div className="relative" ref={dateDropdownRef}>
+                  <button
+                    onClick={() => setIsDateFilterOpen(!isDateFilterOpen)}
+                    className={`p-2 rounded-sm border transition shadow-sm ${isDateFilterOpen || dateFilter !== "All"
+                      ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
+                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
+                      }`}
+                  >
+                    <Calendar size={18} />
+                  </button>
+
+                  {isDateFilterOpen && (
+                    <div className="absolute right-0 mt-2 w-44 bg-white border border-gray-200 rounded-sm shadow-xl z-50 animate-fadeIn">
+                      <div className="py-1">
+                        {["All", "Today", "Yesterday", "Last 7 Days", "This Month", "Custom"].map((option) => (
+                          <button
+                            key={option}
+                            onClick={() => {
+                              setDateFilter(option);
+                              setIsDateFilterOpen(false);
+                              setCurrentPage(1);
+                            }}
+                            className={`block w-full text-left px-4 py-2 text-[11px] transition-colors uppercase ${dateFilter === option
+                              ? "bg-orange-50 text-orange-600 font-bold"
+                              : "text-gray-700 hover:bg-gray-50 font-medium"
+                              }`}
+                          >
+                            {option}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {dateFilter === "Custom" && (
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="date"
+                      value={customStart}
+                      onChange={(e) => setCustomStart(e.target.value)}
+                      className="px-2 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-orange-500 text-xs shadow-sm"
+                    />
+                    <span className="text-gray-400 text-[10px] font-bold uppercase">to</span>
+                    <input
+                      type="date"
+                      value={customEnd}
+                      onChange={(e) => setCustomEnd(e.target.value)}
+                      className="px-2 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-orange-500 text-xs shadow-sm"
+                    />
+                  </div>
+                )}
+
 
                 <div className="relative">
                   <input
@@ -673,10 +833,11 @@ export default function QuotationPage() {
                 </div>
 
                 <button
-                  onClick={handleExport}
-                  className="bg-white border border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-sm flex items-center gap-2 transition text-sm font-semibold shadow-sm active:scale-95 text-gray-700"
+                  onClick={handleExportExcel}
+                  className="bg-white border border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-sm flex items-center gap-2 transition text-sm font-semibold shadow-sm active:scale-95 text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed group"
+                  disabled={quotations.length === 0}
                 >
-                  <Download size={18} />
+                  <Download size={18} className="text-gray-700 transition-transform group-hover:scale-110" />
                   EXPORT
                 </button>
 
@@ -728,13 +889,34 @@ export default function QuotationPage() {
             />
           </div>
 
+          {hasActiveFilters && (
+            <div className="mb-4 flex flex-wrap items-center justify-between bg-orange-50 border border-orange-200 rounded-sm p-3 gap-3 animate-fadeIn">
+              <div className="flex flex-wrap items-center gap-2">
+                <Filter className="text-orange-600" size={16} />
+                <span className="text-sm font-bold text-orange-800 uppercase">
+                  ACTIVE FILTERS:
+                </span>
+                {searchTerm && <span className="text-xs bg-white px-2 py-1 rounded-sm border border-orange-200 text-orange-700 shadow-sm font-bold">Search: "{searchTerm}"</span>}
+                {filterStatus !== "All" && <span className="text-xs bg-white px-2 py-1 rounded-sm border border-orange-200 text-orange-700 shadow-sm font-bold">Status: {filterStatus}</span>}
+                {dateFilter !== "All" && <span className="text-xs bg-white px-2 py-1 rounded-sm border border-orange-200 text-orange-700 shadow-sm font-bold">Date: {dateFilter}</span>}
+              </div>
+              <button
+                onClick={clearAllFilters}
+                className="flex items-center gap-2 px-3 py-1.5 bg-white border border-orange-300 text-orange-600 rounded-sm hover:bg-orange-100 transition shadow-sm text-xs font-bold active:scale-95 uppercase"
+              >
+                <X size={14} />
+                Clear All
+              </button>
+            </div>
+          )}
+
           {/* Table Section */}
           <div className="overflow-x-auto border border-gray-200 rounded-sm shadow-sm bg-white">
             <table className="w-full border-collapse">
               <thead>
                 <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm">
                   <th className="py-4 px-6 font-semibold text-left">ID</th>
-                  <th className="py-4 px-6 font-semibold text-left">Client Name</th>
+                  <th className="py-4 px-6 font-semibold text-left">Company</th>
                   <th className="py-4 px-6 font-semibold text-left">Date</th>
                   <th className="py-4 px-6 font-semibold text-right">Amount</th>
                   <th className="py-4 px-6 font-semibold text-left">Status</th>
@@ -761,7 +943,7 @@ export default function QuotationPage() {
                   quotations.map((quote) => (
                     <tr key={quote.id} className="hover:bg-gray-50 transition-colors group">
                       <td className="py-4 px-6 font-bold text-orange-600">{quote.quotation_id}</td>
-                      <td className="py-4 px-6 font-medium text-gray-800">{quote.client_name}</td>
+                      <td className="py-4 px-6 font-medium text-gray-800">{quote.company_name}</td>
                       <td className="py-4 px-6 text-gray-600 text-sm">{new Date(quote.quotation_date).toLocaleDateString()}</td>
                       <td className="py-4 px-6 text-right font-bold text-gray-900">
                         {quote.currency === "INR" ? "₹" : "$"} {quote.total_amount.toLocaleString()}

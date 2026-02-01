@@ -3,9 +3,9 @@ const { pool } = require('../config/db');
 const Quotation = {
     create: async (data, userId) => {
         const {
-            client_name, company_name, email, phone, quotation_date,
+            company_name, email, phone, quotation_date,
             valid_until, currency, line_items, subtotal, tax,
-            discount, total_amount, payment_terms, notes, status
+            discount, total_amount, terms_and_conditions, status
         } = data;
 
         // Generate unique quotation_id if not provided
@@ -37,11 +37,7 @@ const Quotation = {
                 // Client exists, use existing client_id
                 client_id = existingClients[0].id;
             } else {
-                // Create new client
-                const names = (client_name || '').split(' ');
-                const first_name = names[0] || '';
-                const last_name = names.slice(1).join(' ') || '';
-
+                // Create new client based on company name
                 const [clientResult] = await pool.query(
                     `INSERT INTO clients (
                         user_id, type, first_name, last_name, email, phone,
@@ -49,9 +45,9 @@ const Quotation = {
                     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
                     [
                         userId,
-                        company_name ? 'organization' : 'person',
-                        first_name,
-                        last_name,
+                        'organization',
+                        company_name || 'Customer',
+                        '',
                         email,
                         phone,
                         company_name,
@@ -64,64 +60,81 @@ const Quotation = {
 
         const [result] = await pool.query(
             `INSERT INTO quotations (
-                quotation_id, client_id, client_name, company_name, email, phone, 
+                quotation_id, client_id, company_name, email, phone, 
                 quotation_date, valid_until, currency, line_items, subtotal, 
-                tax, discount, total_amount, payment_terms, notes, 
+                tax, discount, total_amount, payment_terms, 
                 status, user_id
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
-                q_id, client_id, client_name, company_name, email, phone,
+                q_id, client_id, company_name, email, phone,
                 quotation_date, valid_until, currency || 'INR',
                 JSON.stringify(line_items || []), subtotal,
-                tax, discount, total_amount, payment_terms, notes,
+                tax, discount, total_amount, terms_and_conditions,
                 status || 'Draft', userId
             ]
         );
         return result.insertId;
     },
 
-    findAll: async (userId, page = 1, limit = 10, status = null, search = '') => {
+    findAll: async (userId, page = 1, limit = 10, status = null, search = '', dateFrom = null, dateTo = null) => {
         const offset = (page - 1) * limit;
-        let query = 'SELECT * FROM quotations WHERE user_id = ?';
-        let countQuery = 'SELECT COUNT(*) as total FROM quotations WHERE user_id = ?';
+        let whereClause = 'WHERE user_id = ?';
         let queryParams = [userId];
-        let countParams = [userId];
 
         if (status && status !== 'All') {
-            query += ' AND status = ?';
-            countQuery += ' AND status = ?';
+            whereClause += ' AND status = ?';
             queryParams.push(status);
-            countParams.push(status);
         }
 
         if (search) {
             const searchPattern = `%${search}%`;
-            query += ' AND (client_name LIKE ? OR quotation_id LIKE ?)';
-            countQuery += ' AND (client_name LIKE ? OR quotation_id LIKE ?)';
+            whereClause += ' AND (company_name LIKE ? OR quotation_id LIKE ?)';
             queryParams.push(searchPattern, searchPattern);
-            countParams.push(searchPattern, searchPattern);
         }
 
-        query += ' ORDER BY id DESC LIMIT ? OFFSET ?';
-        queryParams.push(parseInt(limit), parseInt(offset));
+        if (dateFrom) {
+            whereClause += ' AND quotation_date >= ?';
+            queryParams.push(dateFrom);
+        }
 
-        const [totalRows] = await pool.query(countQuery, countParams);
-        const total = totalRows[0].total;
+        if (dateTo) {
+            whereClause += ' AND quotation_date <= ?';
+            queryParams.push(dateTo);
+        }
 
-        const [rows] = await pool.query(query, queryParams);
+        const statsQuery = `
+            SELECT 
+                COUNT(*) as total,
+                SUM(CASE WHEN status = 'Approved' THEN 1 ELSE 0 END) as approved,
+                SUM(CASE WHEN status = 'Pending' THEN 1 ELSE 0 END) as pending,
+                SUM(COALESCE(total_amount, 0)) as totalValue
+            FROM quotations 
+            ${whereClause}
+        `;
+        const [statsRows] = await pool.query(statsQuery, queryParams);
+        const summary = statsRows[0];
+
+        const query = `
+            SELECT * FROM quotations 
+            ${whereClause} 
+            ORDER BY id DESC LIMIT ? OFFSET ?
+        `;
+        const [rows] = await pool.query(query, [...queryParams, parseInt(limit), parseInt(offset)]);
 
         const quotations = rows.map(row => ({
             ...row,
-            line_items: typeof row.line_items === 'string' ? JSON.parse(row.line_items) : (row.line_items || [])
+            line_items: typeof row.line_items === 'string' ? JSON.parse(row.line_items) : (row.line_items || []),
+            terms_and_conditions: row.payment_terms || ""
         }));
 
         return {
             quotations,
+            summary,
             pagination: {
-                total,
+                total: summary.total || 0,
                 page: parseInt(page),
                 limit: parseInt(limit),
-                totalPages: Math.ceil(total / limit)
+                totalPages: Math.ceil((summary.total || 0) / limit)
             }
         };
     },
@@ -133,15 +146,16 @@ const Quotation = {
         const row = rows[0];
         return {
             ...row,
-            line_items: typeof row.line_items === 'string' ? JSON.parse(row.line_items) : (row.line_items || [])
+            line_items: typeof row.line_items === 'string' ? JSON.parse(row.line_items) : (row.line_items || []),
+            terms_and_conditions: row.payment_terms || ""
         };
     },
 
     update: async (id, data, userId) => {
         const {
-            client_name, company_name, email, phone, quotation_date,
+            company_name, email, phone, quotation_date,
             valid_until, currency, line_items, subtotal, tax,
-            discount, total_amount, payment_terms, notes, status
+            discount, total_amount, terms_and_conditions, status
         } = data;
 
         // Update or find client_id if email is provided
@@ -159,16 +173,16 @@ const Quotation = {
 
         const [result] = await pool.query(
             `UPDATE quotations SET 
-                client_id = ?, client_name = ?, company_name = ?, email = ?, phone = ?, 
+                client_id = ?, company_name = ?, email = ?, phone = ?, 
                 quotation_date = ?, valid_until = ?, currency = ?, line_items = ?, 
                 subtotal = ?, tax = ?, discount = ?, total_amount = ?, 
-                payment_terms = ?, notes = ?, status = ?
+                payment_terms = ?, status = ?
             WHERE id = ? AND user_id = ?`,
             [
-                client_id, client_name, company_name, email, phone,
+                client_id, company_name, email, phone,
                 quotation_date, valid_until, currency, JSON.stringify(line_items),
                 subtotal, tax, discount, total_amount,
-                payment_terms, notes, status, id, userId
+                terms_and_conditions, status, id, userId
             ]
         );
         return result.affectedRows > 0;

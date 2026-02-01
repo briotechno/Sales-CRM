@@ -63,7 +63,7 @@ const DeleteQuotationModal = ({
                 </h2>
 
                 <p className="text-gray-600 mb-2 leading-relaxed">
-                    Are you sure you want to delete the designation{" "}
+                    Are you sure you want to delete the quotation{" "}
                     <span className="font-bold text-gray-800">"{quotationId}"</span>?
                 </p>
 
