@@ -708,25 +708,28 @@ export default function QuotationPage() {
     <DashboardLayout>
       <div className="min-h-screen bg-white">
         {/* Header Section */}
-        <div className="bg-white border-b sticky top-0 z-30">
-          <div className="max-w-8xl mx-auto px-4 py-2">
+        <div className="bg-white sticky top-0 z-30">
+          <div className="max-w-8xl mx-auto px-4 py-4 border-b">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
+                <h1 className="text-2xl font-bold text-gray-800">
                   Quotation Management
                 </h1>
-                <p className="text-[10px] text-gray-500 mt-0.5 flex items-center gap-1.5">
-                  <Home className="text-gray-400" size={14} />
-                  CRM / <span className="text-[#FF7B1D] font-medium">All Quotations</span>
+                <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
+                  <Home className="text-gray-700" size={14} />
+                  <span className="text-gray-400"></span> CRM /{" "}
+                  <span className="text-[#FF7B1D] font-medium">
+                    All Quotations
+                  </span>
                 </p>
               </div>
 
               {/* Action Buttons */}
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex flex-wrap items-center gap-3">
                 <div className="relative" ref={statusDropdownRef}>
                   <button
                     onClick={() => setIsStatusFilterOpen(!isStatusFilterOpen)}
-                    className={`p-2 rounded-sm border transition shadow-sm ${isStatusFilterOpen || filterStatus !== "All"
+                    className={`px-3 py-3 rounded-sm border transition shadow-sm ${isStatusFilterOpen || filterStatus !== "All"
                       ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
                       : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
                       }`}
@@ -767,7 +770,7 @@ export default function QuotationPage() {
                 <div className="relative" ref={dateDropdownRef}>
                   <button
                     onClick={() => setIsDateFilterOpen(!isDateFilterOpen)}
-                    className={`p-2 rounded-sm border transition shadow-sm ${isDateFilterOpen || dateFilter !== "All"
+                    className={`px-3 py-3 rounded-sm border transition shadow-sm ${isDateFilterOpen || dateFilter !== "All"
                       ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
                       : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
                       }`}
@@ -805,40 +808,27 @@ export default function QuotationPage() {
                       type="date"
                       value={customStart}
                       onChange={(e) => setCustomStart(e.target.value)}
-                      className="px-2 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-orange-500 text-xs shadow-sm"
+                      className="px-3 py-3 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-orange-500 text-xs shadow-sm"
                     />
                     <span className="text-gray-400 text-[10px] font-bold uppercase">to</span>
                     <input
                       type="date"
                       value={customEnd}
                       onChange={(e) => setCustomEnd(e.target.value)}
-                      className="px-2 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-orange-500 text-xs shadow-sm"
+                      className="px-3 py-3 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-orange-500 text-xs shadow-sm"
                     />
                   </div>
                 )}
 
 
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="Search client or ID..."
-                    value={searchTerm}
-                    onChange={(e) => {
-                      setSearchTerm(e.target.value);
-                      setCurrentPage(1);
-                    }}
-                    className="pl-10 pr-4 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-orange-500 text-sm w-64 shadow-sm"
-                  />
-                  <Search className="absolute left-3 top-2.5 text-gray-400" size={16} />
-                </div>
 
                 <button
                   onClick={handleExportExcel}
-                  className="bg-white border border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-sm flex items-center gap-2 transition text-sm font-semibold shadow-sm active:scale-95 text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed group"
+                  className="bg-white border border-gray-300 hover:bg-gray-50 px-5 py-3 rounded-sm flex items-center gap-2 transition font-semibold shadow-sm text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed group"
                   disabled={quotations.length === 0}
                 >
                   <Download size={18} className="text-gray-700 transition-transform group-hover:scale-110" />
-                  EXPORT
+                  Export
                 </button>
 
                 <button
@@ -846,10 +836,10 @@ export default function QuotationPage() {
                     resetForm();
                     setShowModal(true);
                   }}
-                  className="flex items-center gap-2 px-4 py-2 rounded-sm font-bold transition shadow-md text-sm active:scale-95 bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
+                  className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-2 font-semibold"
                 >
-                  <Plus size={18} />
-                  NEW QUOTATION
+                  <Plus size={20} />
+                  Add Quotation
                 </button>
               </div>
             </div>
@@ -915,12 +905,12 @@ export default function QuotationPage() {
             <table className="w-full border-collapse">
               <thead>
                 <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm">
-                  <th className="py-4 px-6 font-semibold text-left">ID</th>
-                  <th className="py-4 px-6 font-semibold text-left">Company</th>
-                  <th className="py-4 px-6 font-semibold text-left">Date</th>
-                  <th className="py-4 px-6 font-semibold text-right">Amount</th>
-                  <th className="py-4 px-6 font-semibold text-left">Status</th>
-                  <th className="py-4 px-6 font-semibold text-center">Actions</th>
+                  <th className="py-3 px-4 font-semibold text-left">ID</th>
+                  <th className="py-3 px-4 font-semibold text-left">Company</th>
+                  <th className="py-3 px-4 font-semibold text-left">Date</th>
+                  <th className="py-3 px-4 pr-12 font-semibold text-right">Amount</th>
+                  <th className="py-3 px-4 font-semibold text-left">Status</th>
+                  <th className="py-3 px-4 font-semibold text-center">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -942,17 +932,21 @@ export default function QuotationPage() {
                 ) : quotations.length > 0 ? (
                   quotations.map((quote) => (
                     <tr key={quote.id} className="hover:bg-gray-50 transition-colors group">
-                      <td className="py-4 px-6 font-bold text-orange-600">{quote.quotation_id}</td>
-                      <td className="py-4 px-6 font-medium text-gray-800">{quote.company_name}</td>
-                      <td className="py-4 px-6 text-gray-600 text-sm">{new Date(quote.quotation_date).toLocaleDateString()}</td>
-                      <td className="py-4 px-6 text-right font-bold text-gray-900">
+                      <td className="py-3 px-4 font-bold text-orange-600">{quote.quotation_id}</td>
+                      <td className="py-3 px-4 font-medium text-gray-800">{quote.company_name}</td>
+                      <td className="py-3 px-4 text-gray-600 text-sm">{new Date(quote.quotation_date).toLocaleDateString()}</td>
+                      <td className="py-3 px-4 pr-12 text-right font-bold text-gray-900">
                         {quote.currency === "INR" ? "₹" : "$"} {quote.total_amount.toLocaleString()}
                       </td>
-                      <td className="py-4 px-6">
+                      <td className="py-3 px-4">
                         <select
                           value={quote.status}
                           onChange={(e) => handleStatusChange(quote.id, e.target.value)}
-                          className={`px-3 py-1 rounded-full text-xs font-bold border-0 cursor-pointer shadow-sm ${getStatusColor(quote.status)}`}
+                          className={`px-3 py-1 rounded-sm text-[10px] font-bold border uppercase tracking-wider cursor-pointer shadow-sm outline-none transition-all ${quote.status === "Approved" ? "bg-green-50 text-green-700 border-green-200" :
+                            quote.status === "Pending" ? "bg-orange-50 text-orange-700 border-orange-200" :
+                              quote.status === "Rejected" ? "bg-red-50 text-red-700 border-red-200" :
+                                "bg-gray-50 text-gray-700 border-gray-200"
+                            }`}
                         >
                           <option value="Draft">Draft</option>
                           <option value="Pending">Pending</option>
@@ -960,7 +954,7 @@ export default function QuotationPage() {
                           <option value="Rejected">Rejected</option>
                         </select>
                       </td>
-                      <td className="py-4 px-6">
+                      <td className="py-3 px-4">
                         <div className="flex justify-center gap-2">
                           <button
                             onClick={() => handleView(quote)}

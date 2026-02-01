@@ -473,6 +473,18 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           path: "/additional/announcement",
           permission: "Communication Tools",
         },
+        {
+          name: "Messenger",
+          icon: <MessageSquare size={22} />,
+          path: "/additional/messenger",
+          permission: "Communication Tools",
+        },
+        {
+          name: "Notification",
+          icon: <Bell size={22} />,
+          path: "/additional/notification",
+          permission: "Communication Tools",
+        },
       ],
     },
     {

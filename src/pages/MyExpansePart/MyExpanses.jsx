@@ -135,28 +135,31 @@ export default function ExpensePage() {
     <DashboardLayout>
       <div className="min-h-screen bg-gradient-to-br from-orange-0 via-white to-orange-100">
         {/* Header */}
-        <div className="bg-white border-b sticky top-0 z-30">
-          <div className="max-w-8xl mx-auto px-4 py-2">
+        <div className="bg-white sticky top-0 z-30">
+          <div className="max-w-8xl mx-auto px-4 py-4 border-b">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               {/* Left Side */}
               <div>
-                <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
+                <h1 className="text-2xl font-bold text-gray-800">
                   My Expenses
                 </h1>
-                <p className="text-[10px] text-gray-500 mt-0.5 flex items-center gap-1.5">
-                  <FiHome className="text-gray-400" size={14} />
-                  Additional / <span className="text-[#FF7B1D] font-medium">All Expenses</span>
+                <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
+                  <FiHome className="text-gray-700" size={14} />
+                  <span className="text-gray-400"></span> Additional /{" "}
+                  <span className="text-[#FF7B1D] font-medium">
+                    All Expenses
+                  </span>
                 </p>
               </div>
 
               {/* Right Side */}
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex flex-wrap items-center gap-3">
 
                 {/* Category Filter Dropdown */}
                 <div className="relative" ref={categoryDropdownRef}>
                   <button
                     onClick={() => setIsCategoryFilterOpen(!isCategoryFilterOpen)}
-                    className={`p-2 rounded-sm border transition shadow-sm ${isCategoryFilterOpen || categoryFilter !== "All"
+                    className={`px-3 py-3 rounded-sm border transition shadow-sm ${isCategoryFilterOpen || categoryFilter !== "All"
                       ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
                       : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
                       }`}
@@ -192,7 +195,7 @@ export default function ExpensePage() {
                 <div className="relative" ref={dateDropdownRef}>
                   <button
                     onClick={() => setIsDateFilterOpen(!isDateFilterOpen)}
-                    className={`p-2 rounded-sm border transition shadow-sm ${isDateFilterOpen || dateFilter !== "All"
+                    className={`px-3 py-3 rounded-sm border transition shadow-sm ${isDateFilterOpen || dateFilter !== "All"
                       ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
                       : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
                       }`}
@@ -231,40 +234,26 @@ export default function ExpensePage() {
                       type="date"
                       value={customStart}
                       onChange={(e) => setCustomStart(e.target.value)}
-                      className="px-2 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-orange-500 text-sm shadow-sm"
+                      className="px-3 py-3 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-orange-500 text-sm shadow-sm"
                     />
                     <span className="text-gray-400 text-xs font-bold">to</span>
                     <input
                       type="date"
                       value={customEnd}
                       onChange={(e) => setCustomEnd(e.target.value)}
-                      className="px-2 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-orange-500 text-sm shadow-sm"
+                      className="px-3 py-3 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-orange-500 text-sm shadow-sm"
                     />
                   </div>
                 )}
 
-                {/* Search Bar */}
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="Search expenses..."
-                    value={searchTerm}
-                    onChange={(e) => {
-                      setSearchTerm(e.target.value);
-                      setCurrentPage(1);
-                    }}
-                    className="pl-10 pr-4 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-orange-500 text-sm w-64 shadow-sm"
-                  />
-                  <Search className="absolute left-3 top-2.5 text-gray-400" size={16} />
-                </div>
 
                 {/* Add Expense Button */}
                 <button
                   onClick={() => setIsAddModalOpen(true)}
-                  className="flex items-center gap-2 px-4 py-2 rounded-sm font-bold transition shadow-md text-sm active:scale-95 bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
+                  className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-2 font-semibold"
                 >
-                  <Plus size={18} />
-                  ADD EXPENSE
+                  <Plus size={20} />
+                  Add Expense
                 </button>
               </div>
             </div>
@@ -309,16 +298,16 @@ export default function ExpensePage() {
             <div className="mb-4 flex flex-wrap items-center justify-between bg-orange-50 border border-orange-200 rounded-sm p-3 gap-3 animate-fadeIn">
               <div className="flex flex-wrap items-center gap-2">
                 <Filter className="text-orange-600" size={16} />
-                <span className="text-sm font-semibold text-orange-800">
-                  {(searchTerm ? 1 : 0) + (dateFilter !== "All" ? 1 : 0) + (categoryFilter !== "All" ? 1 : 0)} filter(s) active
+                <span className="text-sm font-bold text-orange-800 uppercase">
+                  ACTIVE FILTERS:
                 </span>
-                {searchTerm && <span className="text-xs bg-white px-2 py-1 rounded border border-orange-200 text-orange-700 shadow-sm font-medium">Search: "{searchTerm}"</span>}
-                {dateFilter !== "All" && <span className="text-xs bg-white px-2 py-1 rounded border border-orange-200 text-orange-700 shadow-sm font-medium">Date: {dateFilter}</span>}
-                {categoryFilter !== "All" && <span className="text-xs bg-white px-2 py-1 rounded border border-orange-200 text-orange-700 shadow-sm font-medium">Category: {categoryFilter}</span>}
+                {searchTerm && <span className="text-xs bg-white px-2 py-1 rounded-sm border border-orange-200 text-orange-700 shadow-sm font-bold">Search: "{searchTerm}"</span>}
+                {dateFilter !== "All" && <span className="text-xs bg-white px-2 py-1 rounded-sm border border-orange-200 text-orange-700 shadow-sm font-bold">Date: {dateFilter}</span>}
+                {categoryFilter !== "All" && <span className="text-xs bg-white px-2 py-1 rounded-sm border border-orange-200 text-orange-700 shadow-sm font-bold">Category: {categoryFilter}</span>}
               </div>
               <button
                 onClick={clearAllFilters}
-                className="flex items-center gap-2 px-3 py-1.5 bg-white border border-orange-300 text-orange-600 rounded-sm hover:bg-orange-100 transition shadow-sm text-sm font-semibold active:scale-95"
+                className="flex items-center gap-2 px-3 py-1.5 bg-white border border-orange-300 text-orange-600 rounded-sm hover:bg-orange-100 transition shadow-sm text-xs font-bold active:scale-95 uppercase"
               >
                 <X size={14} />
                 Clear All
@@ -327,17 +316,17 @@ export default function ExpensePage() {
           )}
 
           {/* Expenses Table */}
-          <div className="bg-white rounded-sm shadow-lg overflow-hidden">
+          <div className="bg-white rounded-sm shadow-sm overflow-hidden border border-gray-200">
             <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
-                  <tr>
-                    <th className="px-4 py-3 text-left font-semibold text-sm">Date</th>
-                    <th className="px-4 py-3 text-left font-semibold text-sm">Description</th>
-                    <th className="px-4 py-3 text-left font-semibold text-sm">Category</th>
-                    <th className="px-4 py-3 text-left font-semibold text-sm">Amount</th>
-                    <th className="px-4 py-3 text-left font-semibold text-sm">Receipt</th>
-                    <th className="px-4 py-3 text-right font-semibold text-sm">Actions</th>
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm">
+                    <th className="py-3 px-4 font-semibold text-left">Date</th>
+                    <th className="py-3 px-4 font-semibold text-left">Description</th>
+                    <th className="py-3 px-4 font-semibold text-left">Category</th>
+                    <th className="py-3 px-4 font-semibold text-right">Amount</th>
+                    <th className="py-3 px-4 font-semibold text-center">Receipt</th>
+                    <th className="py-3 px-4 font-semibold text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -366,7 +355,7 @@ export default function ExpensePage() {
                         <td className="px-4 py-3 text-gray-600 text-sm">
                           {expense.category}
                         </td>
-                        <td className="px-4 py-3 font-bold text-gray-800 text-sm">
+                        <td className="px-4 py-3 font-bold text-gray-800 text-sm text-right">
                           ₹{expense.amount.toLocaleString("en-IN")}
                         </td>
                         <td className="px-4 py-3 text-center">
@@ -386,21 +375,24 @@ export default function ExpensePage() {
                           <div className="flex items-center justify-end gap-4">
                             <button
                               onClick={() => handleView(expense)}
-                              className="text-blue-500 hover:opacity-80"
+                              className="p-2 text-blue-600 hover:bg-blue-50 rounded-sm transition-all"
+                              title="View Expense"
                             >
                               <Eye size={18} />
                             </button>
                             <button
                               onClick={() => handleEdit(expense)}
-                              className="text-[#FF7B1D] hover:opacity-80"
+                              className="p-2 text-orange-500 hover:bg-orange-50 rounded-sm transition-all"
+                              title="Edit Expense"
                             >
                               <Edit2 size={18} />
                             </button>
                             <button
                               onClick={() => handleDelete(expense)}
-                              className="text-red-600 hover:bg-red-50 p-1.5 rounded-lg transition-colors"
+                              className="p-2 text-red-600 hover:bg-red-50 rounded-sm transition-all shadow-sm"
+                              title="Delete Expense"
                             >
-                              <Trash2 size={16} />
+                              <Trash2 size={18} />
                             </button>
                           </div>
                         </td>

@@ -15,8 +15,9 @@ import {
   CheckCircle,
   AlertCircle,
   Loader2,
-  Pencil,
   Eye,
+  LayoutGrid,
+  List,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import NumberCard from "../../components/NumberCard";
@@ -36,15 +37,16 @@ export default function NotesPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [noteToDelete, setNoteToDelete] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [viewMode, setViewMode] = useState("table");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [dateFilter, setDateFilter] = useState("All");
   const [isDateFilterOpen, setIsDateFilterOpen] = useState(false);
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
   const [page, setPage] = useState(1);
+  const itemsPerPage = 8;
   const dropdownRef = useRef(null);
   const dateDropdownRef = useRef(null);
-  const observer = useRef();
 
   const [formData, setFormData] = useState({
     title: "",
@@ -102,18 +104,11 @@ export default function NotesPage() {
   const [deleteNote] = useDeleteNoteMutation();
 
   const notes = data?.notes || [];
-  const hasMore = data?.pagination?.page < data?.pagination?.totalPages;
+  const pagination = data?.pagination || { totalPages: 1, total: 0 };
 
-  const lastNoteRef = useCallback(node => {
-    if (isLoading || isFetching) return;
-    if (observer.current) observer.current.disconnect();
-    observer.current = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting && hasMore) {
-        setPage(prevPage => prevPage + 1);
-      }
-    });
-    if (node) observer.current.observe(node);
-  }, [isLoading, isFetching, hasMore]);
+  const handlePageChange = (newPage) => {
+    setPage(newPage);
+  };
 
   // Reset page when filters change
   useEffect(() => {
@@ -205,23 +200,26 @@ export default function NotesPage() {
     <DashboardLayout>
       <div className="min-h-screen bg-white">
         {/* Header Section */}
-        <div className="bg-white border-b sticky top-0 z-30">
-          <div className="max-w-8xl mx-auto px-4 py-2">
+        <div className="bg-white sticky top-0 z-30">
+          <div className="max-w-8xl mx-auto px-4 py-4 border-b">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900 tracking-tight">My Notes</h1>
-                <p className="text-[10px] text-gray-500 mt-0.5 flex items-center gap-1.5">
-                  <FiHome className="text-gray-400" size={14} />
-                  Additional / <span className="text-[#FF7B1D] font-medium">Notes</span>
+                <h1 className="text-2xl font-bold text-gray-800">My Notes</h1>
+                <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
+                  <FiHome className="text-gray-700" size={14} />
+                  <span className="text-gray-400"></span> Additional /{" "}
+                  <span className="text-[#FF7B1D] font-medium">
+                    Notes
+                  </span>
                 </p>
               </div>
 
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex flex-wrap items-center gap-3">
                 {/* Filter Dropdown */}
                 <div className="relative" ref={dropdownRef}>
                   <button
                     onClick={() => setIsFilterOpen(!isFilterOpen)}
-                    className={`p-2 rounded-sm border transition shadow-sm ${isFilterOpen || selectedCategory !== "All"
+                    className={`px-3 py-3 rounded-sm border transition shadow-sm ${isFilterOpen || selectedCategory !== "All"
                       ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
                       : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
                       }`}
@@ -256,7 +254,7 @@ export default function NotesPage() {
                 <div className="relative" ref={dateDropdownRef}>
                   <button
                     onClick={() => setIsDateFilterOpen(!isDateFilterOpen)}
-                    className={`p-2 rounded-sm border transition shadow-sm ${isDateFilterOpen || dateFilter !== "All"
+                    className={`px-3 py-3 rounded-sm border transition shadow-sm ${isDateFilterOpen || dateFilter !== "All"
                       ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
                       : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
                       }`}
@@ -294,28 +292,39 @@ export default function NotesPage() {
                       type="date"
                       value={customStart}
                       onChange={(e) => setCustomStart(e.target.value)}
-                      className="px-2 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-orange-500 text-sm shadow-sm"
+                      className="px-3 py-3 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-orange-500 text-sm shadow-sm"
                     />
                     <span className="text-gray-400 text-xs font-bold">to</span>
                     <input
                       type="date"
                       value={customEnd}
                       onChange={(e) => setCustomEnd(e.target.value)}
-                      className="px-2 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-orange-500 text-sm shadow-sm"
+                      className="px-3 py-3 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-orange-500 text-sm shadow-sm"
                     />
                   </div>
                 )}
 
-                {/* Search Bar */}
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="Search notes..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 pr-4 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-orange-500 text-sm w-64 shadow-sm"
-                  />
-                  <Search className="absolute left-3 top-2.5 text-gray-400" size={16} />
+
+                {/* View Mode Toggle */}
+                <div className="flex items-center bg-gray-100 p-1 rounded-sm border border-gray-200 shadow-inner">
+                  <button
+                    onClick={() => setViewMode("grid")}
+                    className={`p-2 rounded-sm transition-all duration-200 ${viewMode === "grid"
+                      ? "bg-white text-orange-600 shadow-sm border border-gray-100"
+                      : "text-gray-400 hover:text-gray-600"
+                      }`}
+                  >
+                    <LayoutGrid size={18} />
+                  </button>
+                  <button
+                    onClick={() => setViewMode("table")}
+                    className={`p-2 rounded-sm transition-all duration-200 ${viewMode === "table"
+                      ? "bg-white text-orange-600 shadow-sm border border-gray-100"
+                      : "text-gray-400 hover:text-gray-600"
+                      }`}
+                  >
+                    <List size={18} />
+                  </button>
                 </div>
 
                 <button
@@ -323,10 +332,10 @@ export default function NotesPage() {
                     resetForm();
                     setIsAdding(true);
                   }}
-                  className="flex items-center gap-2 px-4 py-2 rounded-sm font-bold transition shadow-md text-sm active:scale-95 bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
+                  className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-2 font-semibold"
                 >
-                  <Plus size={18} />
-                  NEW NOTE
+                  <Plus size={20} />
+                  Add Note
                 </button>
               </div>
             </div>
@@ -338,7 +347,7 @@ export default function NotesPage() {
             <div className="mb-4 flex flex-wrap items-center justify-between bg-orange-50 border border-orange-200 rounded-sm p-3 gap-3 animate-fadeIn">
               <div className="flex flex-wrap items-center gap-2">
                 <Filter className="text-orange-600" size={16} />
-                <span className="text-sm font-bold text-orange-800 uppercase tracking-wider">
+                <span className="text-sm font-bold text-orange-800 uppercase">
                   ACTIVE FILTERS:
                 </span>
                 {searchTerm && <span className="text-xs bg-white px-3 py-1 rounded-sm border border-orange-200 text-orange-700 shadow-sm font-bold">Search: "{searchTerm}"</span>}
@@ -390,73 +399,180 @@ export default function NotesPage() {
             />
           </div>
 
-          {/* Notes Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {notes.map((note, index) => (
-              <div
-                key={note.id}
-                ref={index === notes.length - 1 ? lastNoteRef : null}
-                className="group bg-white rounded-lg shadow-sm hover:shadow-md transition-all border border-gray-200 hover:border-orange-300 overflow-hidden flex flex-col"
-              >
-                <div className="p-4 flex-1">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${note.category === 'Meeting' ? 'bg-orange-100 text-orange-700' :
-                      note.category === 'Tasks' ? 'bg-green-100 text-green-700' :
-                        note.category === 'Ideas' ? 'bg-purple-100 text-purple-700' :
-                          'bg-gray-100 text-gray-700'
-                      }`}>
-                      {note.category}
-                    </span>
-                    <div className="flex items-center gap-1 text-gray-400">
-                      <Clock size={12} />
-                      <span className="text-[10px] font-medium">{new Date(note.created_at).toLocaleDateString()}</span>
+          {/* Notes Content */}
+          {notes.length > 0 && viewMode === "grid" && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {notes.map((note, index) => (
+                <div
+                  key={note.id}
+                  className="group bg-white rounded-lg shadow-sm hover:shadow-md transition-all border border-gray-200 hover:border-orange-300 overflow-hidden flex flex-col"
+                >
+                  <div className="p-4 flex-1">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${note.category === 'Meeting' ? 'bg-orange-100 text-orange-700' :
+                        note.category === 'Tasks' ? 'bg-green-100 text-green-700' :
+                          note.category === 'Ideas' ? 'bg-purple-100 text-purple-700' :
+                            'bg-gray-100 text-gray-700'
+                        }`}>
+                        {note.category}
+                      </span>
+                      <div className="flex items-center gap-1 text-gray-400">
+                        <Clock size={12} />
+                        <span className="text-[10px] font-medium">{new Date(note.created_at).toLocaleDateString()}</span>
+                      </div>
                     </div>
+
+                    <h3 className="text-base font-bold text-gray-900 mb-2 leading-tight line-clamp-2">
+                      {note.title}
+                    </h3>
+                    <p className="text-gray-600 text-sm font-normal leading-relaxed line-clamp-3">
+                      {note.content}
+                    </p>
                   </div>
 
-                  <h3 className="text-base font-bold text-gray-900 mb-2 leading-tight line-clamp-2">
-                    {note.title}
-                  </h3>
-                  <p className="text-gray-600 text-sm font-normal leading-relaxed line-clamp-3">
-                    {note.content}
-                  </p>
+                  <div className="flex items-center justify-end gap-3 px-4 py-3 border-t border-gray-100 bg-gray-50/50">
+                    <button
+                      onClick={() => handleView(note)}
+                      className="text-blue-500 hover:opacity-80 transition-colors"
+                      title="View"
+                    >
+                      <Eye size={18} />
+                    </button>
+                    <button
+                      onClick={() => handleEdit(note)}
+                      className="text-[#FF7B1D] hover:opacity-80 transition-colors"
+                      title="Edit"
+                    >
+                      <Edit2 size={18} />
+                    </button>
+                    <button
+                      onClick={() => {
+                        setNoteToDelete(note);
+                        setShowDeleteModal(true);
+                      }}
+                      className="text-red-500 hover:bg-red-50 p-1 rounded-sm transition-colors"
+                      title="Delete"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
                 </div>
-
-                <div className="flex items-center gap-1 px-4 py-2 border-t border-gray-100 bg-gray-50">
-                  <button
-                    onClick={() => handleView(note)}
-                    className="p-2 text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                    title="View"
-                  >
-                    <Eye size={16} />
-                  </button>
-                  <button
-                    onClick={() => handleEdit(note)}
-                    className="p-2 text-orange-600 hover:bg-orange-50 rounded transition-colors"
-                    title="Edit"
-                  >
-                    <Pencil size={16} />
-                  </button>
-                  <button
-                    onClick={() => {
-                      setNoteToDelete(note);
-                      setShowDeleteModal(true);
-                    }}
-                    className="p-2 text-red-600 hover:bg-red-50 rounded transition-colors"
-                    title="Delete"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {isFetching && (
-            <div className="flex justify-center py-8">
-              <Loader2 className="w-8 h-8 text-[#FF7B1D] animate-spin" />
+              ))}
             </div>
           )}
 
+          {notes.length > 0 && viewMode === "table" && (
+            <div className="bg-white rounded-sm shadow-sm overflow-hidden border border-gray-200">
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm">
+                      <th className="py-3 px-4 font-semibold text-left">Date</th>
+                      <th className="py-3 px-4 font-semibold text-left">Category</th>
+                      <th className="py-3 px-4 font-semibold text-left">Title</th>
+                      <th className="py-3 px-4 font-semibold text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {notes.map((note, idx) => (
+                      <tr key={note.id} className={`${idx % 2 === 0 ? "bg-white" : "bg-gray-50/30"} hover:bg-orange-50/50 transition-colors group`}>
+                        <td className="py-3 px-4 whitespace-nowrap">
+                          <div className="flex items-center gap-2 text-sm text-gray-600 font-medium">
+                            <Clock size={14} className="text-orange-500" />
+                            {new Date(note.created_at).toLocaleDateString()}
+                          </div>
+                        </td>
+                        <td className="py-3 px-4 whitespace-nowrap">
+                          <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${note.category === 'Meeting' ? 'bg-orange-100 text-orange-700' :
+                            note.category === 'Tasks' ? 'bg-green-100 text-green-700' :
+                              note.category === 'Ideas' ? 'bg-purple-100 text-purple-700' :
+                                'bg-gray-100 text-gray-700'
+                            }`}>
+                            {note.category}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="text-sm font-bold text-gray-900 truncate max-w-xs">{note.title}</div>
+                          <div className="text-xs text-gray-400 mt-1 truncate max-w-sm">{note.content}</div>
+                        </td>
+                        <td className="py-3 px-4 text-right">
+                          <div className="flex items-center justify-end gap-3 text-gray-400">
+                            <button
+                              onClick={() => handleView(note)}
+                              className="p-2 text-blue-600 hover:bg-blue-50 rounded-sm transition-all"
+                              title="View Note"
+                            >
+                              <Eye size={18} />
+                            </button>
+                            <button
+                              onClick={() => handleEdit(note)}
+                              className="p-2 text-orange-500 hover:bg-orange-50 rounded-sm transition-all"
+                              title="Edit Note"
+                            >
+                              <Edit2 size={18} />
+                            </button>
+                            <button
+                              onClick={() => {
+                                setNoteToDelete(note);
+                                setShowDeleteModal(true);
+                              }}
+                              className="p-2 text-red-600 hover:bg-red-50 rounded-sm transition-all"
+                              title="Delete Note"
+                            >
+                              <Trash2 size={18} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+
+            </div>
+          )}
+          {/* Pagination Section */}
+          {notes.length > 0 && (
+            <div className="flex flex-col md:flex-row justify-between items-center mt-6 gap-4 bg-gray-50 p-4 rounded-sm border border-gray-200 mb-6 shadow-sm">
+              <p className="text-sm font-semibold text-gray-700">
+                Showing <span className="text-orange-600">{(page - 1) * itemsPerPage + 1}</span> to <span className="text-orange-600">{Math.min(page * itemsPerPage, pagination.total)}</span> of <span className="text-orange-600">{pagination.total || 0}</span> Notes
+              </p>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handlePageChange(page > 1 ? page - 1 : 1)}
+                  disabled={page === 1}
+                  className={`px-4 py-2 rounded-sm font-bold transition flex items-center gap-1 ${page === 1 ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"
+                    }`}
+                >
+                  Previous
+                </button>
+
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: pagination.totalPages }, (_, i) => (
+                    <button
+                      key={i + 1}
+                      onClick={() => handlePageChange(i + 1)}
+                      className={`w-10 h-10 rounded-sm font-bold transition ${page === i + 1 ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md border-orange-500" : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+                        }`}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  onClick={() => handlePageChange(page < pagination.totalPages ? page + 1 : page)}
+                  disabled={page === pagination.totalPages || pagination.totalPages === 0}
+                  className={`px-4 py-2 rounded-sm font-bold transition flex items-center gap-1 ${page === pagination.totalPages || pagination.totalPages === 0 ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"
+                    }`}
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
           {!isLoading && notes.length === 0 && (
             <div className="text-center py-24 bg-white rounded-sm border-2 border-dashed border-gray-100 mt-6">
               <div className="bg-gray-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">

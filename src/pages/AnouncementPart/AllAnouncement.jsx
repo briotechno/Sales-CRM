@@ -9,12 +9,15 @@ import {
   Calendar,
   Search,
   Filter,
-  Pencil,
+  Edit2,
   ThumbsUp,
   ThumbsDown,
   Package,
   X,
   TrendingUp,
+  LayoutGrid,
+  List,
+  Loader2,
 } from "lucide-react";
 import NumberCard from "../../components/NumberCard";
 import { useGetAnnouncementsQuery } from "../../store/api/announcementApi";
@@ -36,6 +39,7 @@ export default function AnnouncementPage() {
   const [dateFilter, setDateFilter] = useState("All");
   const [customStartDate, setCustomStartDate] = useState("");
   const [customEndDate, setCustomEndDate] = useState("");
+  const [viewMode, setViewMode] = useState("table");
   const itemsPerPage = 8;
 
   // Mock stats state for frontend demonstration
@@ -196,33 +200,35 @@ export default function AnnouncementPage() {
 
   const hasActiveFilters = searchTerm || categoryFilter !== "All" || dateFilter !== "All";
 
-  const handlePrev = () => setCurrentPage((prev) => (prev > 1 ? prev - 1 : prev));
-  const handleNext = () => setCurrentPage((prev) => (prev < pagination.totalPages ? prev + 1 : prev));
+
 
   return (
     <DashboardLayout>
       <div className="min-h-screen bg-white">
         {/* Header Section */}
-        <div className="bg-white border-b sticky top-0 z-30">
-          <div className="max-w-8xl mx-auto px-4 py-2">
+        <div className="bg-white sticky top-0 z-30">
+          <div className="max-w-8xl mx-auto px-4 py-4 border-b">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
+                <h1 className="text-2xl font-bold text-gray-800">
                   Announcements
                 </h1>
-                <p className="text-[10px] text-gray-500 mt-0.5 flex items-center gap-1.5">
-                  <FiHome className="text-gray-400" size={14} />
-                  Additional / <span className="text-[#FF7B1D] font-medium">All Announcement</span>
+                <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
+                  <FiHome className="text-gray-700" size={14} />
+                  <span className="text-gray-400"></span> Additional /{" "}
+                  <span className="text-[#FF7B1D] font-medium">
+                    All Announcement
+                  </span>
                 </p>
               </div>
 
               {/* Right Side: Filter + New Button */}
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex flex-wrap items-center gap-3">
                 {/* Filter */}
                 <div className="relative" ref={filterDropdownRef}>
                   <button
                     onClick={() => setIsFilterOpen(!isFilterOpen)}
-                    className={`p-2 rounded-sm border transition shadow-sm ${isFilterOpen || categoryFilter !== "All"
+                    className={`px-3 py-3 rounded-sm border transition shadow-sm ${isFilterOpen || categoryFilter !== "All"
                       ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
                       : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
                       }`}
@@ -271,7 +277,7 @@ export default function AnnouncementPage() {
                 <div className="relative" ref={dateFilterDropdownRef}>
                   <button
                     onClick={() => setIsDateFilterOpen(!isDateFilterOpen)}
-                    className={`p-2 rounded-sm border transition shadow-sm ${isDateFilterOpen || dateFilter !== "All"
+                    className={`px-3 py-3 rounded-sm border transition shadow-sm ${isDateFilterOpen || dateFilter !== "All"
                       ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
                       : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
                       }`}
@@ -310,31 +316,39 @@ export default function AnnouncementPage() {
                       type="date"
                       value={customStartDate}
                       onChange={(e) => setCustomStartDate(e.target.value)}
-                      className="px-2 py-1.5 border border-gray-300 rounded-sm text-sm focus:outline-none focus:ring-1 focus:ring-orange-500"
+                      className="px-3 py-3 border border-gray-300 rounded-sm text-sm focus:outline-none focus:ring-1 focus:ring-orange-500"
                     />
                     <span className="text-gray-500 text-xs">to</span>
                     <input
                       type="date"
                       value={customEndDate}
                       onChange={(e) => setCustomEndDate(e.target.value)}
-                      className="px-2 py-1.5 border border-gray-300 rounded-sm text-sm focus:outline-none focus:ring-1 focus:ring-orange-500"
+                      className="px-3 py-3 border border-gray-300 rounded-sm text-sm focus:outline-none focus:ring-1 focus:ring-orange-500"
                     />
                   </div>
                 )}
 
-                {/* Search */}
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="Search..."
-                    value={searchTerm}
-                    onChange={(e) => {
-                      setSearchTerm(e.target.value);
-                      setCurrentPage(1);
-                    }}
-                    className="pl-10 pr-4 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-orange-500 text-sm w-64 shadow-sm"
-                  />
-                  <Search className="absolute left-3 top-2.5 text-gray-400" size={16} />
+
+                {/* View Mode Toggle */}
+                <div className="flex items-center bg-gray-100 p-1 rounded-sm border border-gray-200 shadow-inner">
+                  <button
+                    onClick={() => setViewMode("grid")}
+                    className={`p-2 rounded-sm transition-all duration-200 ${viewMode === "grid"
+                      ? "bg-white text-orange-600 shadow-sm border border-gray-100"
+                      : "text-gray-400 hover:text-gray-600"
+                      }`}
+                  >
+                    <LayoutGrid size={18} />
+                  </button>
+                  <button
+                    onClick={() => setViewMode("table")}
+                    className={`p-2 rounded-sm transition-all duration-200 ${viewMode === "table"
+                      ? "bg-white text-orange-600 shadow-sm border border-gray-100"
+                      : "text-gray-400 hover:text-gray-600"
+                      }`}
+                  >
+                    <List size={18} />
+                  </button>
                 </div>
 
                 {/* New Announcement */}
@@ -343,10 +357,10 @@ export default function AnnouncementPage() {
                     setSelectedAnnouncement(null);
                     setShowAddModal(true);
                   }}
-                  className="flex items-center gap-2 px-4 py-2 rounded-sm font-bold transition shadow-md text-sm active:scale-95 bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
+                  className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-2 font-semibold"
                 >
-                  <Plus size={18} />
-                  NEW ANNOUNCEMENT
+                  <Plus size={20} />
+                  Add Announcement
                 </button>
               </div>
             </div>
@@ -373,19 +387,19 @@ export default function AnnouncementPage() {
 
           {/* Clear Filters Banner */}
           {hasActiveFilters && (
-            <div className="mb-4 flex flex-wrap items-center justify-between bg-orange-50 border border-orange-200 rounded-sm p-3 gap-3">
+            <div className="mb-4 flex flex-wrap items-center justify-between bg-orange-50 border border-orange-200 rounded-sm p-3 gap-3 animate-fadeIn">
               <div className="flex flex-wrap items-center gap-2">
                 <Filter className="text-orange-600" size={16} />
-                <span className="text-sm font-semibold text-orange-800">
-                  {(searchTerm ? 1 : 0) + (categoryFilter !== "All" ? 1 : 0) + (dateFilter !== "All" ? 1 : 0)} filter(s) active
+                <span className="text-sm font-bold text-orange-800 uppercase">
+                  ACTIVE FILTERS:
                 </span>
-                {searchTerm && <span className="text-xs bg-white px-2 py-1 rounded border border-orange-200 text-orange-700">Search: "{searchTerm}"</span>}
-                {categoryFilter !== "All" && <span className="text-xs bg-white px-2 py-1 rounded border border-orange-200 text-orange-700">Category: {categoryFilter}</span>}
-                {dateFilter !== "All" && <span className="text-xs bg-white px-2 py-1 rounded border border-orange-200 text-orange-700">Date: {dateFilter}</span>}
+                {searchTerm && <span className="text-xs bg-white px-2 py-1 rounded-sm border border-orange-200 text-orange-700 shadow-sm font-bold">Search: "{searchTerm}"</span>}
+                {categoryFilter !== "All" && <span className="text-xs bg-white px-2 py-1 rounded-sm border border-orange-200 text-orange-700 shadow-sm font-bold">Category: {categoryFilter}</span>}
+                {dateFilter !== "All" && <span className="text-xs bg-white px-2 py-1 rounded-sm border border-orange-200 text-orange-700 shadow-sm font-bold">Date: {dateFilter}</span>}
               </div>
               <button
                 onClick={clearAllFilters}
-                className="flex items-center gap-2 px-3 py-1.5 bg-white border border-orange-300 text-orange-600 rounded-sm hover:bg-orange-100 transition text-sm font-semibold"
+                className="flex items-center gap-2 px-3 py-1.5 bg-white border border-orange-300 text-orange-600 rounded-sm hover:bg-orange-100 transition shadow-sm text-xs font-bold active:scale-95 uppercase"
               >
                 <X size={14} />
                 Clear All
@@ -393,11 +407,12 @@ export default function AnnouncementPage() {
             </div>
           )}
 
-          {/* Announcements Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Announcements Content */}
+          <div className="mt-4">
             {isLoading ? (
               <div className="col-span-full py-20 text-center text-gray-500 font-medium">
-                Loading announcements...
+                <Loader2 className="w-12 h-12 text-orange-500 animate-spin mx-auto mb-4" />
+                <p>Loading announcements...</p>
               </div>
             ) : filteredAnnouncements.length === 0 ? (
               <div className="col-span-full bg-white rounded-sm border-2 border-dashed border-gray-100 p-12 text-center">
@@ -421,188 +436,262 @@ export default function AnnouncementPage() {
                   </button>
                 )}
               </div>
-            ) : (
-              filteredAnnouncements.map((announcement) => (
-                <div
-                  key={announcement.id}
-                  className="group bg-white rounded-lg shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-orange-300 overflow-hidden relative flex flex-col h-full"
-                >
-                  {/* Theme Accent Bar */}
-                  <div className="h-1 w-full bg-gradient-to-r from-orange-400 to-orange-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            ) : viewMode === "grid" ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {filteredAnnouncements.map((announcement) => (
+                  <div
+                    key={announcement.id}
+                    className="group bg-white rounded-lg shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-orange-300 overflow-hidden relative flex flex-col h-full"
+                  >
+                    {/* Theme Accent Bar */}
+                    <div className="h-1 w-full bg-gradient-to-r from-orange-400 to-orange-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 
-                  <div className="p-6 flex-1 flex flex-col">
-                    {/* Header: Category & Date */}
-                    <div className="flex items-center justify-between mb-4">
-                      <span
-                        className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border shadow-sm ${getCategoryColor(announcement.category)}`}
-                      >
-                        {announcement.category}
-                      </span>
-                      <span className="text-[11px] font-medium text-gray-400 flex items-center gap-1.5 bg-gray-50 px-2.5 py-1 rounded-full">
-                        <Calendar size={12} className="text-orange-500" />
-                        {new Date(announcement.date).toLocaleDateString("en-IN", {
-                          month: "short",
-                          day: "numeric",
-                        })}
-                      </span>
-                    </div>
-
-                    {/* Title */}
-                    <h3 className="text-lg font-bold text-gray-800 mb-3 leading-tight group-hover:text-orange-600 transition-colors line-clamp-2">
-                      {announcement.title}
-                    </h3>
-
-                    {/* Content Preview */}
-                    <p className="text-gray-600 text-sm leading-relaxed line-clamp-3 mb-6 flex-1">
-                      {announcement.content}
-                    </p>
-                  </div>
-
-                  {/* Footer: Author & Social & Actions */}
-                  <div className="px-5 py-4 bg-gray-50/50 border-t border-gray-100 mt-auto">
-                    <div className="flex items-center justify-between mb-4">
-                      {/* Author Chip */}
-                      <div className="flex items-center gap-2 bg-white px-2 py-1 rounded-full shadow-sm border border-gray-100">
-                        <div className="w-6 h-6 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full flex items-center justify-center text-white font-bold text-[10px] shadow-sm">
-                          {announcement.author ? announcement.author.charAt(0) : "A"}
-                        </div>
-                        <span className="text-[11px] font-bold text-gray-700 truncate max-w-[100px]">
-                          {(announcement.author || "System").split("-")[0].trim()}
+                    <div className="p-6 flex-1 flex flex-col">
+                      {/* Header: Category & Date */}
+                      <div className="flex items-center justify-between mb-4">
+                        <span
+                          className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border shadow-sm ${getCategoryColor(announcement.category)}`}
+                        >
+                          {announcement.category}
+                        </span>
+                        <span className="text-[11px] font-medium text-gray-400 flex items-center gap-1.5 bg-gray-50 px-2.5 py-1 rounded-full">
+                          <Calendar size={12} className="text-orange-500" />
+                          {new Date(announcement.date).toLocaleDateString("en-IN", {
+                            month: "short",
+                            day: "numeric",
+                          })}
                         </span>
                       </div>
 
-                      {/* Social Interactions */}
-                      <div className="flex items-center gap-3 px-3 py-1 rounded-full bg-white shadow-sm border border-gray-100">
-                        <button
-                          onClick={() => handleLike(announcement.id)}
-                          className={`flex items-center gap-1 transition-all ${mockStats[announcement.id]?.userLiked ? 'text-green-600' : 'text-gray-400 hover:text-green-600'}`}
-                          title="Like"
-                        >
-                          <ThumbsUp size={14} className={mockStats[announcement.id]?.userLiked ? 'fill-current' : ''} />
-                          <span className="text-[10px] font-bold">{(announcement.likes || 0) + (mockStats[announcement.id]?.likes || 0)}</span>
-                        </button>
+                      {/* Title */}
+                      <h3 className="text-lg font-bold text-gray-800 mb-3 leading-tight group-hover:text-orange-600 transition-colors line-clamp-2">
+                        {announcement.title}
+                      </h3>
 
-                        <button
-                          onClick={() => handleDislike(announcement.id)}
-                          className={`flex items-center gap-1 transition-all ${mockStats[announcement.id]?.userDisliked ? 'text-red-600' : 'text-gray-400 hover:text-red-600'}`}
-                          title="Dislike"
-                        >
-                          <ThumbsDown size={14} className={mockStats[announcement.id]?.userDisliked ? 'fill-current' : ''} />
-                          <span className="text-[10px] font-bold">{(announcement.dislikes || 0) + (mockStats[announcement.id]?.dislikes || 0)}</span>
-                        </button>
+                      {/* Content Preview */}
+                      <p className="text-gray-600 text-sm leading-relaxed line-clamp-3 mb-6 flex-1">
+                        {announcement.content}
+                      </p>
+                    </div>
 
-                        <div className="flex items-center gap-1 text-gray-400" title="Views">
-                          <Eye size={14} />
-                          <span className="text-[10px] font-bold">
-                            {(announcement.views || 0) + (mockStats[announcement.id]?.views || 0)}
+                    {/* Footer: Author & Social & Actions */}
+                    <div className="px-5 py-4 bg-gray-50/50 border-t border-gray-100 mt-auto">
+                      <div className="flex items-center justify-between mb-4">
+                        {/* Author Chip */}
+                        <div className="flex items-center gap-2 bg-white px-2 py-1 rounded-full shadow-sm border border-gray-100">
+                          <div className="w-6 h-6 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full flex items-center justify-center text-white font-bold text-[10px] shadow-sm">
+                            {announcement.author ? announcement.author.charAt(0) : "A"}
+                          </div>
+                          <span className="text-[11px] font-bold text-gray-700 truncate max-w-[100px]">
+                            {(announcement.author || "System").split("-")[0].trim()}
                           </span>
                         </div>
+
+                        {/* Social Interactions */}
+                        <div className="flex items-center gap-3 px-3 py-1 rounded-full bg-white shadow-sm border border-gray-100">
+                          <button
+                            onClick={() => handleLike(announcement.id)}
+                            className={`flex items-center gap-1 transition-all ${mockStats[announcement.id]?.userLiked ? 'text-green-600' : 'text-gray-400 hover:text-green-600'}`}
+                            title="Like"
+                          >
+                            <ThumbsUp size={14} className={mockStats[announcement.id]?.userLiked ? 'fill-current' : ''} />
+                            <span className="text-[10px] font-bold">{(announcement.likes || 0) + (mockStats[announcement.id]?.likes || 0)}</span>
+                          </button>
+
+                          <button
+                            onClick={() => handleDislike(announcement.id)}
+                            className={`flex items-center gap-1 transition-all ${mockStats[announcement.id]?.userDisliked ? 'text-red-600' : 'text-gray-400 hover:text-red-600'}`}
+                            title="Dislike"
+                          >
+                            <ThumbsDown size={14} className={mockStats[announcement.id]?.userDisliked ? 'fill-current' : ''} />
+                            <span className="text-[10px] font-bold">{(announcement.dislikes || 0) + (mockStats[announcement.id]?.dislikes || 0)}</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Actions Row */}
+                      <div className="flex items-center justify-end gap-3 pt-3 border-t border-gray-200/50">
+                        <button
+                          onClick={() => handleView(announcement)}
+                          className="text-blue-500 hover:opacity-80 transition-colors"
+                          title="View Details"
+                        >
+                          <Eye size={18} />
+                        </button>
+                        <button
+                          onClick={() => handleEdit(announcement)}
+                          className="text-[#FF7B1D] hover:opacity-80 transition-colors"
+                          title="Edit"
+                        >
+                          <Edit2 size={18} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(announcement)}
+                          className="text-red-600 hover:bg-red-50 p-1 rounded-sm transition-colors"
+                          title="Delete"
+                        >
+                          <Trash2 size={18} />
+                        </button>
                       </div>
                     </div>
-
-                    {/* Actions Row */}
-                    <div className="flex items-center justify-end gap-2 pt-3 border-t border-gray-200/50">
-                      <button
-                        onClick={() => handleView(announcement)}
-                        className="p-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded shadow-sm transition-all hover:scale-105 active:scale-95"
-                        title="View Details"
-                      >
-                        <Eye size={14} />
-                      </button>
-                      <button
-                        onClick={() => handleEdit(announcement)}
-                        className="p-1.5 bg-green-500 hover:bg-green-600 text-white rounded shadow-sm transition-all hover:scale-105 active:scale-95"
-                        title="Edit"
-                      >
-                        <Pencil size={14} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(announcement)}
-                        className="p-1.5 bg-red-500 hover:bg-red-600 text-white rounded shadow-sm transition-all hover:scale-105 active:scale-95"
-                        title="Delete"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
                   </div>
+                ))}
+              </div>
+            ) : (
+              <div className="bg-white rounded-sm shadow-sm overflow-hidden border border-gray-200 animate-fadeIn">
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse">
+                    <thead>
+                      <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm">
+                        <th className="py-3 px-4 font-semibold text-left">Date/Time</th>
+                        <th className="py-3 px-4 font-semibold text-left">Category</th>
+                        <th className="py-3 px-4 font-semibold text-left">Title</th>
+                        <th className="py-3 px-4 font-semibold text-left">Author</th>
+                        <th className="py-3 px-4 font-semibold text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {filteredAnnouncements.map((announcement, idx) => (
+                        <tr key={announcement.id} className={`${idx % 2 === 0 ? "bg-white" : "bg-gray-50/50"} hover:bg-orange-50/30 transition-colors group`}>
+                          <td className="py-3 px-4 whitespace-nowrap">
+                            <div className="flex flex-col text-xs text-gray-600 font-medium">
+                              <div className="flex items-center gap-1.5">
+                                <Calendar size={12} className="text-orange-500" />
+                                {new Date(announcement.date).toLocaleDateString()}
+                              </div>
+                              <div className="mt-1 text-gray-400 font-normal">
+                                {announcement.time || "12:00 PM"}
+                              </div>
+                            </div>
+                          </td>
+                          <td className="py-3 px-4 whitespace-nowrap">
+                            <span className={`px-2.5 py-1 rounded-sm text-[10px] font-bold uppercase tracking-wider border shadow-sm ${getCategoryColor(announcement.category)}`}>
+                              {announcement.category}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4">
+                            <div className="text-sm font-bold text-gray-900 group-hover:text-orange-600 transition-colors truncate max-w-xs">{announcement.title}</div>
+                            <div className="text-xs text-gray-400 mt-1 truncate max-w-sm">{announcement.content}</div>
+                          </td>
+                          <td className="py-3 px-4 whitespace-nowrap">
+                            <div className="flex items-center gap-2">
+                              <div className="w-6 h-6 bg-orange-100 rounded-full flex items-center justify-center text-orange-600 font-bold text-[10px]">
+                                {announcement.author ? announcement.author.charAt(0) : "A"}
+                              </div>
+                              <span className="text-xs text-gray-600 font-medium">
+                                {(announcement.author || "System").split("-")[0].trim()}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="py-3 px-4 text-right">
+                            <div className="flex items-center justify-end gap-3 text-gray-400">
+                              <button
+                                onClick={() => handleView(announcement)}
+                                className="p-2 text-blue-600 hover:bg-blue-50 rounded-sm transition-all"
+                                title="View Details"
+                              >
+                                <Eye size={18} />
+                              </button>
+                              <button
+                                onClick={() => handleEdit(announcement)}
+                                className="p-2 text-orange-500 hover:bg-orange-50 rounded-sm transition-all"
+                                title="Edit"
+                              >
+                                <Edit2 size={18} />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(announcement)}
+                                className="p-2 text-red-600 hover:bg-red-50 rounded-sm transition-all shadow-sm"
+                                title="Delete"
+                              >
+                                <Trash2 size={18} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
-              ))
+              </div>
             )}
           </div>
-
-          {/* Pagination */}
-          {pagination.totalPages > 1 && (
-            <div className="flex justify-between items-center mt-8 bg-white p-4 rounded-sm border border-gray-100 shadow-sm">
-              <p className="text-sm text-gray-500 font-medium">
-                Showing <span className="text-gray-800 font-bold">{(currentPage - 1) * itemsPerPage + 1}</span> to <span className="text-gray-800 font-bold">{Math.min(currentPage * itemsPerPage, pagination.total)}</span> of <span className="text-[#FF7B1D] font-bold">{pagination.total}</span> announcements
-              </p>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={handlePrev}
-                  disabled={currentPage === 1}
-                  className="px-4 py-2 border border-gray-200 rounded-sm text-sm font-bold disabled:opacity-50 hover:bg-gray-50 transition-colors"
-                >
-                  Previous
-                </button>
-                <div className="flex items-center gap-1">
-                  {Array.from({ length: pagination.totalPages }, (_, i) => (
-                    <button
-                      key={i + 1}
-                      onClick={() => setCurrentPage(i + 1)}
-                      className={`w-9 h-9 border rounded-sm text-sm font-bold transition-all ${currentPage === i + 1
-                        ? "bg-[#FF7B1D] text-white border-[#FF7B1D] shadow-md transform scale-105"
-                        : "bg-white text-gray-600 border-gray-200 hover:border-[#FF7B1D] hover:text-[#FF7B1D]"
-                        }`}
-                    >
-                      {i + 1}
-                    </button>
-                  ))}
-                </div>
-                <button
-                  onClick={handleNext}
-                  disabled={currentPage === pagination.totalPages}
-                  className="px-4 py-2 border border-gray-200 rounded-sm text-sm font-bold disabled:opacity-50 hover:bg-gray-50 transition-colors"
-                >
-                  Next
-                </button>
-              </div>
-            </div>
-          )}
         </div>
 
-        <AddAnnouncementModal
-          isOpen={showAddModal}
-          onClose={() => {
-            setShowAddModal(false);
-          }}
-        />
+        {announcements.length > 0 && (
+          <div className="flex flex-col md:flex-row justify-between items-center mt-6 gap-4 bg-gray-50 p-4 rounded-sm border border-gray-200 mb-6 shadow-sm">
+            <p className="text-sm font-semibold text-gray-700">
+              Showing <span className="text-orange-600">{(currentPage - 1) * itemsPerPage + 1}</span> to <span className="text-orange-600">{Math.min(currentPage * itemsPerPage, pagination.total)}</span> of <span className="text-orange-600">{pagination.total || 0}</span> Announcements
+            </p>
 
-        <EditAnnouncementModal
-          isOpen={showEditModal}
-          onClose={() => {
-            setShowEditModal(false);
-            setSelectedAnnouncement(null);
-          }}
-          announcement={selectedAnnouncement}
-        />
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage(currentPage > 1 ? currentPage - 1 : 1)}
+                disabled={currentPage === 1}
+                className={`px-4 py-2 rounded-sm font-bold transition flex items-center gap-1 ${currentPage === 1 ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"
+                  }`}
+              >
+                Previous
+              </button>
 
-        <ViewAnnouncementModal
-          isOpen={showViewModal}
-          onClose={() => {
-            setShowViewModal(false);
-            setSelectedAnnouncement(null);
-          }}
-          announcement={selectedAnnouncement}
-        />
+              <div className="flex items-center gap-1">
+                {Array.from({ length: pagination.totalPages }, (_, i) => (
+                  <button
+                    key={i + 1}
+                    onClick={() => setCurrentPage(i + 1)}
+                    className={`w-10 h-10 rounded-sm font-bold transition ${currentPage === i + 1 ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md border-orange-500" : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+                      }`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+              </div>
 
-        <DeleteAnnouncementModal
-          isOpen={showDeleteModal}
-          onClose={() => {
-            setShowDeleteModal(false);
-            setSelectedAnnouncement(null);
-          }}
-        />
+              <button
+                onClick={() => setCurrentPage(currentPage < pagination.totalPages ? currentPage + 1 : currentPage)}
+                disabled={currentPage === pagination.totalPages || pagination.totalPages === 0}
+                className={`px-4 py-2 rounded-sm font-bold transition flex items-center gap-1 ${currentPage === pagination.totalPages || pagination.totalPages === 0 ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"
+                  }`}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </div>
+
+      <AddAnnouncementModal
+        isOpen={showAddModal}
+        onClose={() => {
+          setShowAddModal(false);
+        }}
+      />
+
+      <EditAnnouncementModal
+        isOpen={showEditModal}
+        onClose={() => {
+          setShowEditModal(false);
+          setSelectedAnnouncement(null);
+        }}
+        announcement={selectedAnnouncement}
+      />
+
+      <ViewAnnouncementModal
+        isOpen={showViewModal}
+        onClose={() => {
+          setShowViewModal(false);
+          setSelectedAnnouncement(null);
+        }}
+        announcement={selectedAnnouncement}
+      />
+
+      <DeleteAnnouncementModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setSelectedAnnouncement(null);
+        }}
+      />
     </DashboardLayout>
   );
 }

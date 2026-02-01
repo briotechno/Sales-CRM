@@ -2,11 +2,15 @@ const { pool } = require('../config/db');
 
 const Catalog = {
     create: async (data, userId) => {
-        const {
+        let {
             name, category, vendor, description, minPrice, maxPrice,
             status, image, images, features, specifications,
             deliveryTime
         } = data;
+
+        // Ensure prices are handled correctly if empty
+        minPrice = (minPrice === "" || minPrice === null || minPrice === undefined) ? null : minPrice;
+        maxPrice = (maxPrice === "" || maxPrice === null || maxPrice === undefined) ? null : maxPrice;
 
         // Generate unique catalog_id
         const [rows] = await pool.query('SELECT catalog_id FROM catalogs ORDER BY id DESC LIMIT 1');
@@ -97,11 +101,15 @@ const Catalog = {
     },
 
     update: async (id, data, userId) => {
-        const {
+        let {
             name, category, vendor, description, minPrice, maxPrice,
             status, image, images, features, specifications,
             deliveryTime
         } = data;
+
+        // Ensure prices are handled correctly if empty
+        minPrice = (minPrice === "" || minPrice === null || minPrice === undefined) ? null : minPrice;
+        maxPrice = (maxPrice === "" || maxPrice === null || maxPrice === undefined) ? null : maxPrice;
 
         const [result] = await pool.query(
             `UPDATE catalogs SET 

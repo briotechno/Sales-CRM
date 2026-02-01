@@ -25,23 +25,6 @@ export const noteApi = createApi({
                 }
             }),
             providesTags: ['Note'],
-            // Refetch when page changes or category/search changes
-            serializeQueryArgs: ({ endpointName, queryArgs }) => {
-                const { category, search } = queryArgs;
-                return `${endpointName}-${category}-${search}`;
-            },
-            merge: (currentCache, newItems, { arg }) => {
-                if (arg.page === 1) {
-                    return newItems;
-                }
-                return {
-                    ...newItems,
-                    notes: [...currentCache.notes, ...newItems.notes]
-                };
-            },
-            forceRefetch({ currentArg, previousArg }) {
-                return currentArg !== previousArg;
-            },
         }),
         getNoteById: builder.query({
             query: (id) => `/${id}`,

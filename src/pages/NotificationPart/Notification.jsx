@@ -296,7 +296,7 @@ export default function NotificationPage() {
 
   return (
     <DashboardLayout>
-      <div className="p-0 bg-gradient-to-br from-gray-0 to-gray-100 ml-6 min-h-screen">
+      <div className="p-0 bg-gradient-to-br from-gray-0 to-gray-100 ml-4 mr-4 min-h-screen">
         {/* Header */}
         <div className="bg-white border-b">
           <div className="max-w-8xl mx-auto py-4">
