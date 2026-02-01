@@ -22,6 +22,8 @@ export const taskApi = createApi({
                     category: params?.category || 'All',
                     search: params?.search || '',
                     timeframe: params?.timeframe || '',
+                    dateFrom: params?.dateFrom || '',
+                    dateTo: params?.dateTo || '',
                 }
             }),
             providesTags: ['Task'],

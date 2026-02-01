@@ -37,20 +37,59 @@ export default function TodoPage() {
   const [newTaskCategory, setNewTaskCategory] = useState("General");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [filterPriority, setFilterPriority] = useState("all");
-  const [filterType, setFilterType] = useState("All");
+  const [dateFilter, setDateFilter] = useState("All");
+  const [customStart, setCustomStart] = useState("");
+  const [customEnd, setCustomEnd] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [isPriorityFilterOpen, setIsPriorityFilterOpen] = useState(false);
+  const [isDateFilterOpen, setIsDateFilterOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [taskToEdit, setTaskToEdit] = useState(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState(null);
-  const dropdownRef = useRef(null);
+  const priorityDropdownRef = useRef(null);
+  const dateDropdownRef = useRef(null);
+
+  // Date Filter Logic
+  const getDateRange = () => {
+    const today = new Date();
+    const formatDate = (date) => date.toISOString().split('T')[0];
+
+    let dateFrom = "";
+    let dateTo = "";
+
+    if (dateFilter === "Today") {
+      dateFrom = formatDate(today);
+      dateTo = formatDate(today);
+    } else if (dateFilter === "Yesterday") {
+      const yesterday = new Date(today);
+      yesterday.setDate(today.getDate() - 1);
+      dateFrom = formatDate(yesterday);
+      dateTo = formatDate(yesterday);
+    } else if (dateFilter === "Last 7 Days") {
+      const last7 = new Date(today);
+      last7.setDate(today.getDate() - 7);
+      dateFrom = formatDate(last7);
+      dateTo = formatDate(today);
+    } else if (dateFilter === "This Month") {
+      const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+      dateFrom = formatDate(firstDay);
+      dateTo = formatDate(today);
+    } else if (dateFilter === "Custom") {
+      dateFrom = customStart;
+      dateTo = customEnd;
+    }
+    return { dateFrom, dateTo };
+  };
+
+  const { dateFrom, dateTo } = getDateRange();
 
   // API Hooks
   const { data, isLoading } = useGetTasksQuery({
     priority: filterPriority,
     search: searchTerm,
-    timeframe: filterType,
+    dateFrom,
+    dateTo,
   });
 
   const [createTask] = useCreateTaskMutation();
@@ -59,10 +98,21 @@ export default function TodoPage() {
   const [updateTask, { isLoading: isUpdating }] = useUpdateTaskMutation();
 
   const tasks = data?.tasks || [];
+  const summary = data?.summary || { total: 0, highPriority: 0, active: 0, completed: 0 };
 
   const addTask = async () => {
     if (!newTask.trim()) {
       toast.error("Please enter a task title");
+      return;
+    }
+
+    // Validate date is not in the past
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const selectedDate = new Date(newTaskDate);
+
+    if (selectedDate < today) {
+      toast.error("Due date cannot be in the past. Please select today or a future date.");
       return;
     }
 
@@ -161,16 +211,33 @@ export default function TodoPage() {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsFilterOpen(false);
+      if (priorityDropdownRef.current && !priorityDropdownRef.current.contains(event.target)) {
+        setIsPriorityFilterOpen(false);
+      }
+      if (dateDropdownRef.current && !dateDropdownRef.current.contains(event.target)) {
+        setIsDateFilterOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const clearAllFilters = () => {
+    setSearchTerm("");
+    setFilterPriority("all");
+    setDateFilter("All");
+    setCustomStart("");
+    setCustomEnd("");
+  };
+
+  const inputStyles =
+    "w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 shadow-sm font-semibold";
+
   const activeTasks = tasks.filter((t) => !t.completed);
   const completedTasks = tasks.filter((t) => t.completed);
+
+  const hasActiveFilters =
+    searchTerm || filterPriority !== "all" || dateFilter !== "All";
 
   return (
     <DashboardLayout>
@@ -189,10 +256,10 @@ export default function TodoPage() {
 
               <div className="flex flex-wrap items-center gap-2">
                 {/* Priority Filter */}
-                <div className="relative" ref={dropdownRef}>
+                <div className="relative" ref={priorityDropdownRef}>
                   <button
-                    onClick={() => setIsFilterOpen(!isFilterOpen)}
-                    className={`p-2 rounded-sm border transition shadow-sm ${isFilterOpen || filterPriority !== "all" || filterType !== "All"
+                    onClick={() => setIsPriorityFilterOpen(!isPriorityFilterOpen)}
+                    className={`p-2 rounded-sm border transition shadow-sm ${isPriorityFilterOpen || filterPriority !== "all"
                       ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
                       : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
                       }`}
@@ -200,51 +267,82 @@ export default function TodoPage() {
                     <Filter size={18} />
                   </button>
 
-                  {isFilterOpen && (
-                    <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-sm shadow-xl z-50 animate-fadeIn">
-                      <div className="p-3 border-b bg-gray-50 flex items-center justify-between">
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Filter by Priority & Period</p>
-
-                      </div>
-                      <div className="p-2 space-y-3">
-                        <div>
-                          <p className="text-[10px] font-bold text-gray-400 mb-2 px-2">PRIORITY</p>
-                          <div className="space-y-1">
-                            {["all", "high", "medium", "low"].map((p) => (
-                              <button
-                                key={p}
-                                onClick={() => { setFilterPriority(p); setIsFilterOpen(false); }}
-                                className={`block w-full text-left px-3 py-2 text-xs rounded-sm transition-colors ${filterPriority === p
-                                  ? "bg-orange-50 text-orange-600 font-bold"
-                                  : "text-gray-700 hover:bg-gray-50"
-                                  }`}
-                              >
-                                {p === "all" ? "All Priorities" : p.charAt(0).toUpperCase() + p.slice(1) + " Priority"}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                        <div className="border-t pt-3">
-                          <p className="text-[10px] font-bold text-gray-400 mb-2 px-2">TIMEFRAME</p>
-                          <div className="space-y-1">
-                            {["All", "Today", "Yesterday", "Last 7 Days", "This Month"].map((t) => (
-                              <button
-                                key={t}
-                                onClick={() => { setFilterType(t); setIsFilterOpen(false); }}
-                                className={`block w-full text-left px-3 py-2 text-xs rounded-sm transition-colors ${filterType === t
-                                  ? "bg-orange-50 text-orange-600 font-bold"
-                                  : "text-gray-700 hover:bg-gray-50"
-                                  }`}
-                              >
-                                {t}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
+                  {isPriorityFilterOpen && (
+                    <div className="absolute right-0 mt-2 w-44 bg-white border border-gray-200 rounded-sm shadow-xl z-50 animate-fadeIn">
+                      <div className="py-1">
+                        {["all", "high", "medium", "low"].map((p) => (
+                          <button
+                            key={p}
+                            onClick={() => {
+                              setFilterPriority(p);
+                              setIsPriorityFilterOpen(false);
+                            }}
+                            className={`block w-full text-left px-4 py-2 text-sm transition-colors ${filterPriority === p
+                              ? "bg-orange-50 text-orange-600 font-bold"
+                              : "text-gray-700 hover:bg-gray-50"
+                              }`}
+                          >
+                            {p === "all" ? "All Priorities" : p.charAt(0).toUpperCase() + p.slice(1) + " Priority"}
+                          </button>
+                        ))}
                       </div>
                     </div>
                   )}
                 </div>
+
+                {/* Date Filter */}
+                <div className="relative" ref={dateDropdownRef}>
+                  <button
+                    onClick={() => setIsDateFilterOpen(!isDateFilterOpen)}
+                    className={`p-2 rounded-sm border transition shadow-sm ${isDateFilterOpen || dateFilter !== "All"
+                      ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
+                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
+                      }`}
+                  >
+                    <Calendar size={18} />
+                  </button>
+
+                  {isDateFilterOpen && (
+                    <div className="absolute right-0 mt-2 w-36 bg-white border border-gray-200 rounded-sm shadow-xl z-50 animate-fadeIn">
+                      <div className="py-1">
+                        {["All", "Today", "Yesterday", "Last 7 Days", "This Month", "Custom"].map((option) => (
+                          <button
+                            key={option}
+                            onClick={() => {
+                              setDateFilter(option);
+                              setIsDateFilterOpen(false);
+                            }}
+                            className={`block w-full text-left px-4 py-2 text-sm transition-colors ${dateFilter === option
+                              ? "bg-orange-50 text-orange-600 font-bold"
+                              : "text-gray-700 hover:bg-gray-50"
+                              }`}
+                          >
+                            {option}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Show Custom Date Range Only When Selected */}
+                {dateFilter === "Custom" && (
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="date"
+                      value={customStart}
+                      onChange={(e) => setCustomStart(e.target.value)}
+                      className="px-2 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-orange-500 text-sm shadow-sm"
+                    />
+                    <span className="text-gray-400 text-xs font-bold">to</span>
+                    <input
+                      type="date"
+                      value={customEnd}
+                      onChange={(e) => setCustomEnd(e.target.value)}
+                      className="px-2 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-orange-500 text-sm shadow-sm"
+                    />
+                  </div>
+                )}
 
                 {/* Search Bar */}
                 <div className="relative">
@@ -270,6 +368,31 @@ export default function TodoPage() {
           </div>
         </div>
 
+        <div className="max-w-8xl mx-auto p-4">
+          {hasActiveFilters && (
+            <div className="mb-4 flex flex-wrap items-center justify-between bg-orange-50 border border-orange-200 rounded-sm p-3 gap-3 animate-fadeIn">
+              <div className="flex flex-wrap items-center gap-2">
+                <Filter className="text-orange-600" size={16} />
+                <span className="text-sm font-bold text-orange-800 uppercase tracking-wider">
+                  ACTIVE FILTERS:
+                </span>
+                {searchTerm && <span className="text-xs bg-white px-3 py-1 rounded-sm border border-orange-200 text-orange-700 shadow-sm font-bold">Search: "{searchTerm}"</span>}
+                {filterPriority !== "all" && <span className="text-xs bg-white px-3 py-1 rounded-sm border border-orange-200 text-orange-700 shadow-sm font-bold">Priority: {filterPriority.toUpperCase()}</span>}
+                {dateFilter !== "All" && dateFilter !== "Custom" && <span className="text-xs bg-white px-3 py-1 rounded-sm border border-orange-200 text-orange-700 shadow-sm font-bold">Period: {dateFilter}</span>}
+                {dateFilter === "Custom" && customStart && <span className="text-xs bg-white px-3 py-1 rounded-sm border border-orange-200 text-orange-700 shadow-sm font-bold">From: {customStart}</span>}
+                {dateFilter === "Custom" && customEnd && <span className="text-xs bg-white px-3 py-1 rounded-sm border border-orange-200 text-orange-700 shadow-sm font-bold">To: {customEnd}</span>}
+              </div>
+              <button
+                onClick={clearAllFilters}
+                className="flex items-center gap-2 px-3 py-1.5 bg-white border border-orange-300 text-orange-600 rounded-sm hover:bg-orange-100 transition shadow-sm text-xs font-bold active:scale-95 uppercase"
+              >
+                <X size={14} />
+                Clear All
+              </button>
+            </div>
+          )}
+        </div>
+
         <div className="max-w-8xl mx-auto p-4 mt-0 font-primary w-full flex-1">
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-32 space-y-4">
@@ -282,28 +405,28 @@ export default function TodoPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-3">
                 <NumberCard
                   title="Total Tasks"
-                  number={tasks.length}
+                  number={summary.total}
                   icon={<Layout className="text-blue-600" size={24} />}
                   iconBgColor="bg-blue-100"
                   lineBorderClass="border-blue-500"
                 />
                 <NumberCard
                   title="High Priority"
-                  number={tasks.filter(t => t.priority === "high").length}
+                  number={summary.highPriority}
                   icon={<Flag className="text-red-600" size={24} />}
                   iconBgColor="bg-red-100"
                   lineBorderClass="border-red-500"
                 />
                 <NumberCard
                   title="Active Tasks"
-                  number={activeTasks.length}
+                  number={summary.active}
                   icon={<Clock className="text-orange-600" size={24} />}
                   iconBgColor="bg-orange-100"
                   lineBorderClass="border-orange-500"
                 />
                 <NumberCard
                   title="Completed"
-                  number={completedTasks.length}
+                  number={summary.completed}
                   icon={<CheckCircle className="text-green-600" size={24} />}
                   iconBgColor="bg-green-100"
                   lineBorderClass="border-green-500"
@@ -311,208 +434,145 @@ export default function TodoPage() {
               </div>
 
               {tasks.length > 0 ? (
-                <div className="grid grid-cols-1 lg:grid-cols-1 gap-8">
-                  {/* Active Tasks Column */}
-                  <div className="space-y-6">
-                    <div className="flex items-center justify-between mb-2 px-2">
-                      <div className="flex items-center gap-4">
-                        <div className="p-2.5 bg-orange-100 rounded-xl shadow-inner">
-                          <Clock className="text-orange-600" size={24} />
-                        </div>
-                        <div>
-                          <h2 className="text-2xl font-black text-gray-900 tracking-tight">Active Tasks</h2>
-                          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-0.5">Tasks to be done</p>
-                        </div>
-                      </div>
-                      <span className="px-4 py-1.5 bg-orange-600 text-white text-sm rounded-full font-black shadow-lg shadow-orange-600/20">
-                        {activeTasks.length}
-                      </span>
-                    </div>
+                <div className="space-y-4">
+                  {/* All Tasks Grid - 4 columns */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    {tasks.map((task) => (
+                      <div
+                        key={task.id}
+                        className={`group bg-white rounded-lg border-l-4 ${task.completed
+                          ? 'border-l-green-500 border-r border-t border-b border-green-200 opacity-90 hover:opacity-100'
+                          : task.priority === 'high' ? 'border-l-red-500 border-r border-t border-b border-gray-200' :
+                            task.priority === 'medium' ? 'border-l-orange-500 border-r border-t border-b border-gray-200' :
+                              'border-l-green-500 border-r border-t border-b border-gray-200'
+                          } p-4 hover:shadow-md transition-all duration-200`}
+                      >
+                        <div className="space-y-3">
+                          {/* Header with badges */}
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              {/* Status Badge */}
+                              <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase ${task.completed
+                                ? 'bg-green-100 text-green-700'
+                                : 'bg-orange-100 text-orange-700'
+                                }`}>
+                                {task.completed ? 'Completed' : 'Active'}
+                              </span>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {activeTasks.map((task) => (
-                        <div
-                          key={task.id}
-                          className="group bg-white rounded-3xl border border-gray-100 p-6 hover:shadow-2xl hover:shadow-orange-500/10 transition-all duration-300 relative overflow-hidden"
-                        >
-                          <div className={`absolute top-0 left-0 bottom-0 w-2 ${task.priority === 'high' ? 'bg-red-500' :
-                            task.priority === 'medium' ? 'bg-orange-500' :
-                              'bg-green-500'
-                            }`}></div>
-
-                          <div className="space-y-6">
-                            <div className="flex items-start justify-between">
-                              <div className="flex items-center gap-3">
-                                <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${task.priority === 'high' ? 'bg-red-50 text-red-600' :
+                              {/* Priority Badge - only for active tasks */}
+                              {!task.completed && (
+                                <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase ${task.priority === 'high' ? 'bg-red-50 text-red-600' :
                                   task.priority === 'medium' ? 'bg-orange-50 text-orange-600' :
                                     'bg-green-50 text-green-600'
                                   }`}>
                                   {task.priority || 'Medium'}
                                 </span>
-                                <span className="bg-gray-50 text-gray-500 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border border-gray-100">
-                                  {task.category || 'General'}
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-1">
+                              )}
+                            </div>
+
+                            {/* Actions Dropdown */}
+                            <div className="flex items-center gap-1">
+                              {!task.completed && (
                                 <button
                                   onClick={() => handleEdit(task)}
-                                  className="p-2 text-orange-600 hover:bg-orange-50 rounded-sm transition-colors"
+                                  className="p-1.5 text-orange-600 hover:bg-orange-50 rounded transition-colors"
+                                  title="Edit"
                                 >
-                                  <Pencil size={16} />
+                                  <Pencil size={14} />
                                 </button>
-                                <button
-                                  onClick={() => confirmDelete(task)}
-                                  className="p-2 text-red-600 hover:bg-red-50 rounded-sm transition-colors"
-                                >
-                                  <Trash2 size={16} />
-                                </button>
-                              </div>
-                            </div>
-
-                            <div>
-                              <h3 className="text-lg font-black text-gray-900 leading-tight line-clamp-2 group-hover:text-orange-600 transition-colors">
-                                {task.title}
-                              </h3>
-                            </div>
-
-                            <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-gray-50">
-                              <div className="flex items-center gap-3">
-                                <div className="flex items-center gap-1.5 text-[12px] font-black text-gray-500 uppercase tracking-tight bg-gray-100/50 px-2.5 py-1.5 rounded-lg">
-                                  <Calendar size={16} className="text-orange-500" />
-                                  {new Date(task.due_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                                </div>
-                                <div className="flex items-center gap-1.5 text-[12px] font-black text-gray-500 uppercase tracking-tight bg-gray-100/50 px-2.5 py-1.5 rounded-lg">
-                                  <Clock size={16} className="text-orange-500" />
-                                  {task.due_time?.slice(0, 5)}
-                                </div>
-                              </div>
-
-                              <button
-                                onClick={() => handleToggleStatus(task.id)}
-                                className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all shadow-lg ${task.priority === 'high' ? 'bg-red-50 text-red-500 hover:bg-red-500 hover:text-white hover:shadow-red-500/20' :
-                                  task.priority === 'medium' ? 'bg-orange-50 text-orange-500 hover:bg-orange-500 hover:text-white hover:shadow-orange-500/20' :
-                                    'bg-green-50 text-green-500 hover:bg-green-500 hover:text-white hover:shadow-green-500/20'
-                                  }`}
-                              >
-                                <Check size={20} className="stroke-[3px]" />
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-
-                      {activeTasks.length === 0 && (
-                        <div className="md:col-span-2 text-center py-20 bg-white rounded-3xl border-2 border-dashed border-gray-100">
-                          <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-white shadow-xl">
-                            <CheckCircle className="w-10 h-10 text-green-500" />
-                          </div>
-                          <h3 className="text-lg font-black text-gray-900">Zero Active Tasks</h3>
-                          <p className="text-sm text-gray-400 font-bold max-w-[200px] mx-auto mt-1">You're all caught up! Enjoy your free time.</p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Completed Tasks Section */}
-                  <div className="space-y-6">
-                    <div className="flex items-center justify-between mb-2 px-2">
-                      <div className="flex items-center gap-4">
-                        <div className="p-2.5 bg-green-100 rounded-xl shadow-inner">
-                          <CheckCircle className="text-green-600" size={24} />
-                        </div>
-                        <div>
-                          <h2 className="text-2xl font-black text-gray-900 tracking-tight">Completed</h2>
-                          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-0.5">Successfully finished</p>
-                        </div>
-                      </div>
-                      <span className="px-4 py-1.5 bg-green-600 text-white text-sm rounded-full font-black shadow-lg shadow-green-600/20">
-                        {completedTasks.length}
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 opacity-70 hover:opacity-100 transition-opacity duration-500">
-                      {completedTasks.map((task) => (
-                        <div
-                          key={task.id}
-                          className="group bg-gray-50/50 rounded-3xl border border-gray-100 p-6 transition-all duration-300 relative overflow-hidden flex items-start gap-4 hover:bg-white hover:shadow-xl hover:shadow-green-500/5"
-                        >
-                          <button
-                            onClick={() => handleToggleStatus(task.id)}
-                            className="mt-1 flex-shrink-0 w-8 h-8 rounded-xl bg-green-500 flex items-center justify-center text-white shadow-lg shadow-green-500/20 hover:scale-110 active:scale-95 transition-all"
-                          >
-                            <Check size={16} strokeWidth={4} />
-                          </button>
-
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between mb-2">
-                              <h3 className="text-md font-bold text-gray-400 line-through truncate group-hover:text-gray-500 transition-colors">
-                                {task.title}
-                              </h3>
+                              )}
                               <button
                                 onClick={() => confirmDelete(task)}
-                                className="p-2 text-red-600 hover:bg-red-50 rounded-sm transition-colors"                              >
-                                <Trash2 size={16} />
+                                className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors"
+                                title="Delete"
+                              >
+                                <Trash2 size={14} />
                               </button>
                             </div>
+                          </div>
 
-                            <div className="flex flex-wrap items-center gap-4">
-                              <span className="bg-white text-gray-400 px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border border-gray-100 shadow-sm">
-                                {task.category || 'General'}
+                          {/* Category */}
+                          <div>
+                            <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded text-[9px] font-medium uppercase inline-block">
+                              {task.category || 'General'}
+                            </span>
+                          </div>
+
+                          {/* Task Title */}
+                          <h3 className={`text-sm font-bold leading-tight line-clamp-2 min-h-[2.5rem] ${task.completed ? 'text-gray-600 line-through' : 'text-gray-900'
+                            }`}>
+                            {task.title}
+                          </h3>
+
+                          {/* Date and Time */}
+                          <div className="flex flex-col gap-1.5 text-[11px] text-gray-500 pt-2 border-t border-gray-100">
+                            <div className="flex items-center gap-1.5">
+                              <Calendar size={12} className="text-orange-500 flex-shrink-0" />
+                              <span className="font-medium">
+                                {task.completed
+                                  ? `Done: ${new Date(task.updated_at || task.due_date).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}`
+                                  : `Due: ${new Date(task.due_date).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}`
+                                }
                               </span>
-                              <div className="flex items-center gap-1.5 text-[9px] font-black text-gray-400 uppercase tracking-widest bg-white px-3 py-1 rounded-lg border border-gray-100 shadow-sm">
-                                <Calendar size={12} className="text-green-500/50" />
-                                Done on {new Date(task.updated_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                              </div>
                             </div>
+                            {!task.completed && task.due_time && (
+                              <div className="flex items-center gap-1.5">
+                                <Clock size={12} className="text-orange-500 flex-shrink-0" />
+                                <span className="font-medium">{task.due_time?.slice(0, 5)}</span>
+                              </div>
+                            )}
                           </div>
-                        </div>
-                      ))}
 
-                      {completedTasks.length === 0 && (
-                        <div className="md:col-span-2 text-center py-16 bg-white/50 rounded-3xl border-2 border-dashed border-gray-100">
-                          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                            <AlertCircle className="w-8 h-8 text-gray-300" />
-                          </div>
-                          <p className="text-sm text-gray-400 font-bold uppercase tracking-widest italic">No completions yet.</p>
+                          {/* Action Button */}
+                          {!task.completed && (
+                            <button
+                              onClick={() => handleToggleStatus(task.id)}
+                              className="w-full mt-2 py-2 text-xs font-bold text-green-600 bg-green-50 hover:bg-green-100 rounded transition-colors flex items-center justify-center gap-1.5"
+                            >
+                              <Check size={14} strokeWidth={2.5} />
+                              Mark Complete
+                            </button>
+                          )}
                         </div>
-                      )}
-                    </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               ) : (
-                <div className="text-center py-32 bg-white rounded-[40px] border-2 border-dashed border-gray-100 mt-6 shadow-sm overflow-hidden relative group">
-                  <div className="absolute inset-0 bg-gradient-to-b from-orange-50/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>
+                <div className="group relative">
+                  <div className="max-w-2xl mx-auto">
+                    <div className="bg-white rounded-lg p-16 text-center border-2 border-dashed border-gray-200">
+                      <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 bg-orange-100">
+                        <CheckCircle className="w-10 h-10 text-orange-500" strokeWidth={2} />
+                      </div>
 
-                  <div className="relative z-10 text-black">
-                    <div className="bg-gradient-to-br from-orange-50 to-orange-100/50 w-32 h-32 rounded-[32px] flex items-center justify-center mx-auto mb-8 shadow-inner shadow-white border-2 border-white rotate-3 group-hover:rotate-6 transition-transform duration-500">
-                      <CheckCircle className="w-16 h-16 text-orange-500" strokeWidth={1.5} />
-                    </div>
+                      <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                        Master Your Day
+                      </h3>
+                      <p className="text-gray-500 max-w-md mx-auto mb-6 text-sm font-normal leading-relaxed">
+                        {searchTerm || filterPriority !== "all" || dateFilter !== "All"
+                          ? "We couldn't find any tasks matching your filters. Time for a broader view!"
+                          : "Your workspace is pristine. Ready to conquer your next big objective?"}
+                      </p>
 
-                    <h3 className="text-4xl font-black text-gray-900 mb-4 tracking-tight">
-                      Master Your Day
-                    </h3>
-                    <p className="text-gray-500 max-w-sm mx-auto mb-10 text-lg font-medium leading-relaxed italic">
-                      {searchTerm || filterPriority !== "all" || filterType !== "All"
-                        ? "We couldn't find any tasks matching your filters. Time for a broader view!"
-                        : "Your workspace is pristine. Ready to conquer your next big objective?"}
-                    </p>
-
-                    <div className="flex items-center justify-center gap-4">
-                      {searchTerm || filterPriority !== "all" || filterType !== "All" ? (
-                        <button
-                          onClick={() => { setSearchTerm(""); setFilterPriority("all"); setFilterType("All"); }}
-                          className="px-10 py-4 bg-gray-900 text-white font-black rounded-2xl hover:bg-gray-800 hover:shadow-2xl transition-all active:scale-95 text-sm uppercase tracking-widest"
-                        >
-                          Reset Filters
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => setIsAddModalOpen(true)}
-                          className="px-12 py-4 bg-orange-600 text-white font-black rounded-2xl hover:bg-orange-700 hover:shadow-2xl hover:shadow-orange-600/20 transition-all active:scale-95 text-sm uppercase tracking-widest"
-                        >
-                          Add Your First Task
-                        </button>
-                      )}
+                      <div className="flex items-center justify-center gap-3">
+                        {searchTerm || filterPriority !== "all" || dateFilter !== "All" ? (
+                          <button
+                            onClick={clearAllFilters}
+                            className="px-6 py-2.5 bg-orange-500 text-white font-semibold rounded-md hover:bg-orange-600 transition-all text-sm"
+                          >
+                            Reset Filters
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => setIsAddModalOpen(true)}
+                            className="flex items-center gap-2 px-4 py-2 rounded-sm font-bold transition shadow-md text-sm active:scale-95 bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
+                          >
+                            <Plus size={18} />
+                            NEW TASK
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -530,28 +590,27 @@ export default function TodoPage() {
           icon={<Plus size={24} strokeWidth={3} />}
           maxWidth="max-w-2xl"
           footer={
-            <div className="flex justify-end gap-3 w-full bg-gray-50 py-5 rounded-b-3xl border-t border-gray-100">
+            <div className="flex justify-end gap-3 w-full">
               <button
                 onClick={() => setIsAddModalOpen(false)}
-                className="px-6 py-2.5 rounded-sm border-2 border-gray-300 text-gray-700 font-semibold hover:bg-gray-100 transition-all font-primary"
+                className="px-8 py-2.5 rounded-sm border border-gray-300 text-gray-700 font-bold hover:bg-gray-50 transition-all text-sm"
               >
                 Cancel
               </button>
               <button
                 onClick={addTask}
-                className="px-6 py-2.5 rounded-sm bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold hover:from-orange-600 hover:to-orange-700 transition-all font-primary"
+                className="flex items-center justify-center gap-2 px-8 py-2.5 rounded-sm bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold hover:shadow-lg transform transition-all active:scale-95 text-sm"
               >
+                <Plus size={18} />
                 Create Task
               </button>
             </div>
           }
         >
-          <div className="space-y-6 px-2">
-
-            {/* Task Title */}
-            <div>
-              <label className="flex items-center gap-2 text-xs font-black text-gray-400 uppercase tracking-widest mb-2">
-                <AlertCircle size={14} className="text-orange-500" />
+          <div className="space-y-5 px-1 pb-2">
+            <div className="group">
+              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                <AlertCircle size={16} className="text-[#FF7B1D]" />
                 Task Title <span className="text-red-500">*</span>
               </label>
               <input
@@ -559,14 +618,13 @@ export default function TodoPage() {
                 value={newTask}
                 onChange={(e) => setNewTask(e.target.value)}
                 placeholder="What needs to be done?"
-                className="w-full px-6 py-4 bg-gray-50 border-2 border-transparent focus:border-orange-500 focus:bg-white rounded-2xl outline-none transition-all text-sm font-bold text-gray-700 placeholder:text-gray-300 shadow-inner"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300"
               />
             </div>
 
-            {/* Priority */}
-            <div>
-              <label className="flex items-center gap-2 text-xs font-black text-gray-400 uppercase tracking-widest mb-3">
-                <Flag size={14} className="text-orange-500" />
+            <div className="group">
+              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                <Flag size={16} className="text-[#FF7B1D]" />
                 Priority <span className="text-red-500">*</span>
               </label>
               <div className="grid grid-cols-3 gap-3">
@@ -574,14 +632,14 @@ export default function TodoPage() {
                   <button
                     key={p}
                     onClick={() => setNewTaskPriority(p)}
-                    className={`py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all
+                    className={`py-3 rounded-lg font-bold text-[11px] uppercase tracking-widest transition-all border-2
               ${newTaskPriority === p
                         ? p === "high"
-                          ? "bg-red-500 text-white shadow-lg shadow-red-500/20"
+                          ? "bg-red-500 text-white border-red-500 shadow-lg shadow-red-500/20"
                           : p === "medium"
-                            ? "bg-orange-500 text-white shadow-lg shadow-orange-500/20"
-                            : "bg-green-500 text-white shadow-lg shadow-green-500/20"
-                        : "bg-gray-50 text-gray-400 hover:bg-white hover:shadow-sm border border-gray-100"
+                            ? "bg-orange-500 text-white border-orange-500 shadow-lg shadow-orange-500/20"
+                            : "bg-green-500 text-white border-green-500 shadow-lg shadow-green-500/20"
+                        : "bg-white text-gray-400 border-gray-100 hover:border-gray-200"
                       }
             `}
                   >
@@ -591,39 +649,48 @@ export default function TodoPage() {
               </div>
             </div>
 
-            {/* Date & Time */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="flex items-center gap-2 text-xs font-black text-gray-400 uppercase tracking-widest mb-2">
-                  <Calendar size={14} className="text-orange-500" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="group">
+                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                  <Calendar size={16} className="text-[#FF7B1D]" />
                   Due Date <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="date"
                   value={newTaskDate}
-                  onChange={(e) => setNewTaskDate(e.target.value)}
-                  className="w-full px-6 py-4 bg-gray-50 border-2 border-transparent focus:border-orange-500 focus:bg-white rounded-2xl outline-none transition-all text-sm font-bold text-gray-700 shadow-inner"
+                  min={new Date().toISOString().split('T')[0]}
+                  onChange={(e) => {
+                    const selectedDate = new Date(e.target.value);
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+
+                    if (selectedDate < today) {
+                      toast.error("Due date cannot be in the past. Please select today or a future date.");
+                      return;
+                    }
+                    setNewTaskDate(e.target.value);
+                  }}
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300"
                 />
               </div>
 
-              <div>
-                <label className="flex items-center gap-2 text-xs font-black text-gray-400 uppercase tracking-widest mb-2">
-                  <Clock size={14} className="text-orange-500" />
+              <div className="group">
+                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                  <Clock size={16} className="text-[#FF7B1D]" />
                   Due Time <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="time"
                   value={newTaskTime}
                   onChange={(e) => setNewTaskTime(e.target.value)}
-                  className="w-full px-6 py-4 bg-gray-50 border-2 border-transparent focus:border-orange-500 focus:bg-white rounded-2xl outline-none transition-all text-sm font-bold text-gray-700 shadow-inner"
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300"
                 />
               </div>
             </div>
 
-            {/* Category */}
-            <div>
-              <label className="flex items-center gap-2 text-xs font-black text-gray-400 uppercase tracking-widest mb-2">
-                <Layout size={14} className="text-orange-500" />
+            <div className="group">
+              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                <Layout size={16} className="text-[#FF7B1D]" />
                 Task Category
               </label>
 
@@ -631,9 +698,9 @@ export default function TodoPage() {
                 <select
                   value={newTaskCategory}
                   onChange={(e) => setNewTaskCategory(e.target.value)}
-                  className="w-full px-6 py-4 bg-gray-50 border-2 border-transparent focus:border-orange-500 focus:bg-white rounded-2xl outline-none transition-all text-sm font-bold text-gray-700 appearance-none shadow-inner"
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 appearance-none"
                 >
-                  {["General", "Sales", "CRM", "Reports", "Admin", "Marketing", "Support"].map(
+                  {["General", "Work", "Personal", "Meeting", "Follow-up", "Documentation", "Research", "Development", "Design", "Testing", "Deployment"].map(
                     (cat) => (
                       <option key={cat} value={cat}>
                         {cat}
@@ -642,12 +709,11 @@ export default function TodoPage() {
                   )}
                 </select>
 
-                <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
                   <MoreVertical size={16} className="rotate-90" />
                 </div>
               </div>
             </div>
-
           </div>
         </Modal>
 
@@ -662,26 +728,26 @@ export default function TodoPage() {
           icon={<Pencil size={24} strokeWidth={3} />}
           maxWidth="max-w-2xl"
           footer={
-            <div className="flex justify-end gap-3 w-full bg-gray-50/50 p-4 rounded-b-3xl mt-6 border-t border-gray-100">
+            <div className="flex justify-end gap-3 w-full">
               <button
                 onClick={() => setIsEditModalOpen(false)}
-                className="px-8 py-3 rounded-2xl text-gray-600 font-black hover:bg-white hover:shadow-sm transition-all text-xs uppercase tracking-widest"
+                className="px-8 py-2.5 rounded-sm border border-gray-300 text-gray-700 font-bold hover:bg-gray-50 transition-all text-sm"
               >
                 Cancel
               </button>
               <button
                 onClick={handleUpdateTask}
-                className="px-10 py-3 rounded-2xl bg-orange-600 text-white font-black hover:bg-orange-700 hover:shadow-xl hover:shadow-orange-600/20 transition-all text-xs uppercase tracking-widest shadow-lg shadow-orange-600/10 active:scale-95"
+                className="flex items-center justify-center gap-2 px-10 py-2.5 rounded-sm bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold hover:shadow-lg transform transition-all active:scale-95 text-sm"
               >
                 Save Changes
               </button>
             </div>
           }
         >
-          <div className="space-y-8 p-2">
-            <div>
-              <label className="flex items-center gap-2 text-xs font-black text-gray-400 uppercase tracking-widest mb-3">
-                <AlertCircle size={16} className="text-orange-500" />
+          <div className="space-y-5 px-1 pb-2">
+            <div className="group">
+              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                <AlertCircle size={16} className="text-[#FF7B1D]" />
                 Task Title <span className="text-red-500">*</span>
               </label>
               <input
@@ -689,26 +755,30 @@ export default function TodoPage() {
                 value={newTask}
                 onChange={(e) => setNewTask(e.target.value)}
                 placeholder="What needs to be done?"
-                className="w-full px-6 py-4 bg-gray-50 border-2 border-transparent focus:border-orange-500 focus:bg-white rounded-2xl outline-none transition-all text-sm font-bold text-gray-700 placeholder:text-gray-300 shadow-inner"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300"
               />
             </div>
 
-            <div>
-              <label className="flex items-center gap-2 text-xs font-black text-gray-400 uppercase tracking-widest mb-3">
-                <Flag size={16} className="text-orange-500" />
+            <div className="group">
+              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                <Flag size={16} className="text-[#FF7B1D]" />
                 Select Priority <span className="text-red-500">*</span>
               </label>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-3 gap-3">
                 {["high", "medium", "low"].map((p) => (
                   <button
                     key={p}
                     onClick={() => setNewTaskPriority(p)}
-                    className={`py-4 px-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${newTaskPriority === p
-                      ? p === 'high' ? 'bg-red-500 text-white shadow-xl shadow-red-500/20' :
-                        p === 'medium' ? 'bg-orange-500 text-white shadow-xl shadow-orange-500/20' :
-                          'bg-green-500 text-white shadow-xl shadow-green-500/20'
-                      : 'bg-gray-50 text-gray-400 hover:bg-white hover:shadow-sm border border-gray-100'
-                      }`}
+                    className={`py-3 rounded-lg font-bold text-[11px] uppercase tracking-widest transition-all border-2
+              ${newTaskPriority === p
+                        ? p === "high"
+                          ? "bg-red-500 text-white border-red-500 shadow-lg shadow-red-500/20"
+                          : p === "medium"
+                            ? "bg-orange-500 text-white border-orange-500 shadow-lg shadow-orange-500/20"
+                            : "bg-green-500 text-white border-green-500 shadow-lg shadow-green-500/20"
+                        : "bg-white text-gray-400 border-gray-100 hover:border-gray-200"
+                      }
+            `}
                   >
                     {p}
                   </button>
@@ -716,49 +786,52 @@ export default function TodoPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div>
-                <label className="flex items-center gap-2 text-xs font-black text-gray-400 uppercase tracking-widest mb-3">
-                  <Calendar size={16} className="text-orange-500" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="group">
+                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                  <Calendar size={16} className="text-[#FF7B1D]" />
                   Due Date <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="date"
                   value={newTaskDate}
                   onChange={(e) => setNewTaskDate(e.target.value)}
-                  className="w-full px-6 py-4 bg-gray-50 border-2 border-transparent focus:border-orange-500 focus:bg-white rounded-2xl outline-none transition-all text-sm font-bold text-gray-700 shadow-inner"
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300"
                 />
               </div>
-              <div>
-                <label className="flex items-center gap-2 text-xs font-black text-gray-400 uppercase tracking-widest mb-3">
-                  <Clock size={16} className="text-orange-500" />
+
+              <div className="group">
+                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                  <Clock size={16} className="text-[#FF7B1D]" />
                   Due Time <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="time"
                   value={newTaskTime}
                   onChange={(e) => setNewTaskTime(e.target.value)}
-                  className="w-full px-6 py-4 bg-gray-50 border-2 border-transparent focus:border-orange-500 focus:bg-white rounded-2xl outline-none transition-all text-sm font-bold text-gray-700 shadow-inner"
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300"
                 />
               </div>
             </div>
 
-            <div>
-              <label className="flex items-center gap-2 text-xs font-black text-gray-400 uppercase tracking-widest mb-3">
-                <Layout size={16} className="text-orange-500" />
+            <div className="group">
+              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                <Layout size={16} className="text-[#FF7B1D]" />
                 Task Category
               </label>
-              <div className="relative group/select">
+
+              <div className="relative">
                 <select
                   value={newTaskCategory}
                   onChange={(e) => setNewTaskCategory(e.target.value)}
-                  className="w-full px-6 py-4 bg-gray-50 border-2 border-transparent focus:border-orange-500 focus:bg-white rounded-2xl outline-none transition-all text-sm font-bold text-gray-700 appearance-none shadow-inner"
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 appearance-none"
                 >
-                  {["General", "Sales", "CRM", "Reports", "Admin", "Marketing", "Support"].map(cat => (
+                  {["General", "Work", "Personal", "Meeting", "Follow-up", "Documentation", "Research", "Development", "Design", "Testing", "Deployment"].map(cat => (
                     <option key={cat} value={cat}>{cat}</option>
                   ))}
                 </select>
-                <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 group-focus-within/select:text-orange-500 transition-colors">
+
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
                   <MoreVertical size={16} className="rotate-90" />
                 </div>
               </div>
