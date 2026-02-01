@@ -3,24 +3,27 @@ const { pool } = require('../config/db');
 const Invoice = {
     create: async (data, userId) => {
         const {
-            invoice_number, client_id, client_name, client_email, client_phone,
+            invoice_number, quotation_id, client_id, client_name, client_email, client_phone,
             client_address, invoice_date, due_date, items, subtotal,
-            tax_rate, tax_amount, total_amount, paid_amount, balance_amount,
-            status, notes, quotation_id
+            tax_rate, tax_amount, discount, total_amount, paid_amount, balance_amount,
+            status, notes, tax_type, client_gstin, business_gstin, pan_number,
+            terms_and_conditions
         } = data;
 
         const [result] = await pool.query(
             `INSERT INTO invoices (
                 invoice_number, quotation_id, client_id, user_id, client_name, client_email, client_phone,
                 client_address, invoice_date, due_date, items, subtotal,
-                tax_rate, tax_amount, total_amount, paid_amount, balance_amount,
-                status, notes
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                tax_rate, tax_amount, discount, total_amount, paid_amount, balance_amount,
+                status, notes, tax_type, client_gstin, business_gstin, pan_number,
+                terms_and_conditions
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
-                invoice_number, quotation_id, client_id, userId, client_name, client_email, client_phone,
+                invoice_number, quotation_id || null, client_id, userId, client_name, client_email, client_phone,
                 client_address, invoice_date, due_date, JSON.stringify(items), subtotal,
-                tax_rate, tax_amount, total_amount, paid_amount || 0, balance_amount,
-                status || 'Unpaid', notes
+                tax_rate, tax_amount, discount || 0, total_amount, paid_amount || 0, balance_amount,
+                status || 'Unpaid', notes, tax_type || 'GST', client_gstin, business_gstin, pan_number,
+                terms_and_conditions
             ]
         );
         return result.insertId;
@@ -55,7 +58,6 @@ const Invoice = {
             queryParams.push(dateTo);
         }
 
-        // 1. Get summary stats for matrix cards
         const summaryQuery = `
             SELECT 
                 COUNT(*) as totalCount,
@@ -67,7 +69,6 @@ const Invoice = {
         `;
         const [summaryResult] = await pool.query(summaryQuery, queryParams);
 
-        // 2. Get paginated invoices
         const dataQuery = `
             SELECT * FROM invoices 
             ${whereClause} 
@@ -109,24 +110,27 @@ const Invoice = {
 
     update: async (id, data, userId) => {
         const {
-            invoice_number, client_id, client_name, client_email, client_phone,
+            invoice_number, quotation_id, client_id, client_name, client_email, client_phone,
             client_address, invoice_date, due_date, items, subtotal,
-            tax_rate, tax_amount, total_amount, paid_amount, balance_amount,
-            status, notes, quotation_id
+            tax_rate, tax_amount, discount, total_amount, paid_amount, balance_amount,
+            status, notes, tax_type, client_gstin, business_gstin, pan_number,
+            terms_and_conditions
         } = data;
 
         const [result] = await pool.query(
             `UPDATE invoices SET
                 invoice_number = ?, quotation_id = ?, client_id = ?, client_name = ?, client_email = ?, client_phone = ?,
                 client_address = ?, invoice_date = ?, due_date = ?, items = ?, subtotal = ?,
-                tax_rate = ?, tax_amount = ?, total_amount = ?, paid_amount = ?, balance_amount = ?,
-                status = ?, notes = ?
+                tax_rate = ?, tax_amount = ?, discount = ?, total_amount = ?, paid_amount = ?, balance_amount = ?,
+                status = ?, notes = ?, tax_type = ?, client_gstin = ?, business_gstin = ?, pan_number = ?,
+                terms_and_conditions = ?
             WHERE id = ? AND user_id = ?`,
             [
-                invoice_number, quotation_id, client_id, client_name, client_email, client_phone,
+                invoice_number, quotation_id || null, client_id, client_name, client_email, client_phone,
                 client_address, invoice_date, due_date, JSON.stringify(items), subtotal,
-                tax_rate, tax_amount, total_amount, paid_amount, balance_amount,
-                status, notes, id, userId
+                tax_rate, tax_amount, discount || 0, total_amount, paid_amount, balance_amount,
+                status, notes, tax_type || 'GST', client_gstin, business_gstin, pan_number,
+                terms_and_conditions, id, userId
             ]
         );
         return result.affectedRows > 0;

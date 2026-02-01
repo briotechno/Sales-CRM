@@ -1,8 +1,19 @@
-import React, { useEffect, useState } from "react";
-import { X, Plus, Trash2, Search, User, Building2, FileCheck } from "lucide-react";
+import React, { useEffect, useState, useRef } from "react";
+import { X, Plus, Trash2, Search, User, Building2, FileCheck, FileText, Tag, CreditCard, Calendar, Hash, Building, Mail, Phone, MapPin, DollarSign } from "lucide-react";
 import { useGetClientsQuery } from "../../store/api/clientApi";
-import { useGetQuotationsQuery } from "../../store/api/quotationApi";
-import { useDebounce } from "../../hooks/useDebounce";
+import { useGetBusinessInfoQuery } from "../../store/api/businessApi";
+import { useGetCatalogsQuery } from "../../store/api/catalogApi";
+import { useGetAllTermsQuery } from "../../store/api/termApi";
+import Modal from "../../components/common/Modal";
+import { toast } from "react-hot-toast";
+
+const INDIAN_STATES = [
+    "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat", "Haryana",
+    "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur",
+    "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana",
+    "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal", "Andaman and Nicobar Islands", "Chandigarh",
+    "Dadra and Nagar Haveli and Daman and Diu", "Delhi", "Jammu and Kashmir", "Ladakh", "Lakshadweep", "Puducherry"
+];
 
 export default function CreateInvoiceModal({
     showModal,
@@ -14,30 +25,58 @@ export default function CreateInvoiceModal({
 }) {
     const [clientSearch, setClientSearch] = useState("");
     const [showClientDropdown, setShowClientDropdown] = useState(false);
-
-    const [quotationSearch, setQuotationSearch] = useState("");
-    const debouncedQuotationSearch = useDebounce(quotationSearch, 500);
-    const [showQuotationDropdown, setShowQuotationDropdown] = useState(false);
+    const [activeItemSearchId, setActiveItemSearchId] = useState(null);
+    const clientDropdownRef = useRef(null);
+    const itemDropdownRef = useRef(null);
 
     const { data: clientsData } = useGetClientsQuery({ status: 'active' });
-    const { data: quotationsData } = useGetQuotationsQuery({
-        status: 'Approved',
-        search: debouncedQuotationSearch,
-        limit: 50
-    });
+    const { data: businessInfo } = useGetBusinessInfoQuery();
+    const { data: catalogsData } = useGetCatalogsQuery({ limit: 100, status: 'Active' });
+    const { data: termsData } = useGetAllTermsQuery({ limit: 100 });
 
     const clients = clientsData?.data || [];
-    const quotations = quotationsData?.quotations || [];
+    const catalogs = catalogsData?.catalogs || [];
+    const termsList = Array.isArray(termsData) ? termsData : [];
+
+    const [invoiceType, setInvoiceType] = useState(formData.tax_type || "GST");
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (clientDropdownRef.current && !clientDropdownRef.current.contains(event.target)) {
+                setShowClientDropdown(false);
+            }
+            if (itemDropdownRef.current && !itemDropdownRef.current.contains(event.target)) {
+                setActiveItemSearchId(null);
+            }
+        };
+
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
 
     useEffect(() => {
         if (!showModal) return;
 
+        if (businessInfo && !formData.business_gstin) {
+            setFormData(prev => ({
+                ...prev,
+                business_gstin: businessInfo.gst_number || "",
+            }));
+        }
+
         const subtotal = formData.lineItems.reduce((sum, item) => sum + (item.total || 0), 0);
-        const taxAmount = (subtotal * (parseFloat(formData.tax) || 0)) / 100;
+
+        let tax_rate = parseFloat(formData.tax) || 0;
+        if (invoiceType === "Non-GST") {
+            tax_rate = 0;
+        } else if (tax_rate === 0 && invoiceType === "GST") {
+            tax_rate = 18;
+        }
+
+        const taxAmount = (subtotal * tax_rate) / 100;
         const totalAmount = subtotal + taxAmount - (parseFloat(formData.discount) || 0);
         const balanceAmount = totalAmount - (parseFloat(formData.paidAmount) || 0);
 
-        // Auto-update status based on payments
         let status = formData.status;
         if (parseFloat(formData.paidAmount) === 0) {
             status = "Unpaid";
@@ -51,29 +90,33 @@ export default function CreateInvoiceModal({
             subtotal !== formData.subtotal ||
             totalAmount !== formData.totalAmount ||
             balanceAmount !== formData.balanceAmount ||
-            status !== formData.status
+            status !== formData.status ||
+            tax_rate !== formData.tax ||
+            invoiceType !== formData.tax_type
         ) {
             setFormData(prev => ({
                 ...prev,
                 subtotal,
+                tax: tax_rate,
                 totalAmount,
                 balanceAmount,
-                status
+                status,
+                tax_type: invoiceType
             }));
         }
-    }, [formData.lineItems, formData.tax, formData.discount, formData.paidAmount, showModal]);
+    }, [formData.lineItems, formData.tax, formData.discount, formData.paidAmount, showModal, invoiceType, businessInfo]);
 
     if (!showModal) return null;
 
     const inputStyles =
-        "w-full px-4 py-2 border-2 border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300";
+        "w-full px-4 py-3 border border-gray-200 rounded-lg focus:border-[#FF7B1D] focus:ring-1 focus:ring-[#FF7B1D] outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 shadow-sm";
 
     const addLineItem = () => {
         setFormData((prev) => ({
             ...prev,
             lineItems: [
                 ...prev.lineItems,
-                { id: Date.now(), name: "", qty: 1, rate: 0, total: 0 },
+                { id: Date.now(), name: "", hsn_code: "", qty: 1, rate: 0, total: 0 },
             ],
         }));
     };
@@ -89,7 +132,26 @@ export default function CreateInvoiceModal({
         setFormData((prev) => {
             const newLineItems = prev.lineItems.map((item) => {
                 if (item.id === id) {
-                    const updatedItem = { ...item, [field]: value };
+                    let newValue = value;
+
+                    // Prevent negative numbers for numeric fields
+                    if (field === "qty" || field === "rate") {
+                        newValue = Math.max(0, parseFloat(value) || 0);
+                    }
+
+                    // Enforce price constraints if they exist
+                    if (field === "rate") {
+                        if (item.minPrice !== undefined && item.minPrice !== null && newValue < item.minPrice) {
+                            newValue = item.minPrice;
+                            toast.error(`Minimum price for this item is ₹${item.minPrice}`);
+                        }
+                        if (item.maxPrice !== undefined && item.maxPrice !== null && item.maxPrice > 0 && newValue > item.maxPrice) {
+                            newValue = item.maxPrice;
+                            toast.error(`Maximum price for this item is ₹${item.maxPrice}`);
+                        }
+                    }
+
+                    const updatedItem = { ...item, [field]: newValue };
                     if (field === "qty" || field === "rate") {
                         updatedItem.total = (parseFloat(updatedItem.qty) || 0) * (parseFloat(updatedItem.rate) || 0);
                     }
@@ -97,53 +159,66 @@ export default function CreateInvoiceModal({
                 }
                 return item;
             });
-
-            return {
-                ...prev,
-                lineItems: newLineItems,
-            };
+            return { ...prev, lineItems: newLineItems };
         });
     };
 
+    const handleSelectCatalogItem = (item, lineItemId) => {
+        setFormData((prev) => ({
+            ...prev,
+            lineItems: prev.lineItems.map((li) => {
+                if (li.id === lineItemId) {
+                    const rate = parseFloat(item.minPrice) || parseFloat(item.price) || parseFloat(item.rate) || 0;
+                    return {
+                        ...li,
+                        name: item.name,
+                        rate: rate,
+                        minPrice: parseFloat(item.minPrice),
+                        maxPrice: parseFloat(item.maxPrice),
+                        total: (li.qty || 1) * rate
+                    };
+                }
+                return li;
+            })
+        }));
+        setActiveItemSearchId(null);
+    };
+
     const handleSelectClient = (client) => {
+        const name = client.type === 'person' ? `${client.first_name} ${client.last_name || ''}` : client.company_name;
         setFormData(prev => ({
             ...prev,
             clientId: client.id,
-            clientName: client.type === 'person' ? `${client.first_name} ${client.last_name || ''}` : client.company_name,
-            email: client.email,
-            phone: client.phone,
-            address: client.address || '',
-            companyName: client.company_name || ''
+            clientName: name,
+            email: client.email || "",
+            phone: client.phone || "",
+            address: client.address || "",
+            client_gstin: client.tax_id || "",
+            place_of_supply: client.state || prev.place_of_supply
         }));
-        setClientSearch("");
+        setClientSearch(name);
         setShowClientDropdown(false);
     };
 
-    const handleSelectQuotation = (q) => {
-        // Map line_items from quotation to items in invoice
-        const mappedItems = (q.line_items || []).map(item => ({
-            id: Date.now() + Math.random(),
-            name: item.name,
-            qty: item.qty,
-            rate: item.rate,
-            total: item.total
-        }));
+    const handlePolicyChange = (e) => {
+        const { name, value } = e.target;
+        const selectedId = parseInt(value);
+        if (name === "terms_and_conditions_id") {
+            const selected = termsList.find(t => t.id === selectedId);
+            setFormData(prev => ({ ...prev, terms_and_conditions: selected ? selected.description : "" }));
+        }
+    };
 
-        setFormData(prev => ({
-            ...prev,
-            quotationId: q.quotation_id,
-            clientName: q.client_name,
-            email: q.email,
-            phone: q.phone,
-            lineItems: mappedItems,
-            subtotal: q.subtotal,
-            tax: q.tax,
-            discount: q.discount,
-            totalAmount: q.total_amount,
-            notes: q.notes
-        }));
-        setQuotationSearch("");
-        setShowQuotationDropdown(false);
+    const validateAndSubmit = () => {
+        if (!formData.clientName) return toast.error("Client is required");
+        if (!formData.invoiceNo) return toast.error("Invoice Number is required");
+        if (!formData.invoiceDate) return toast.error("Invoice Date is required");
+        if (formData.lineItems.length === 0) return toast.error("At least one item is required");
+
+        const invalidItem = formData.lineItems.find(item => !item.name || item.rate < 0 || item.qty <= 0);
+        if (invalidItem) return toast.error("Please fill all item details correctly");
+
+        handleCreateInvoice();
     };
 
     const filteredClients = clients.filter(c => {
@@ -151,409 +226,508 @@ export default function CreateInvoiceModal({
         return name?.toLowerCase().includes(clientSearch.toLowerCase()) || c.email?.toLowerCase().includes(clientSearch.toLowerCase());
     });
 
+    const footer = (
+        <div className="flex gap-4 w-full">
+            <button
+                type="button"
+                onClick={() => setShowModal(false)}
+                className="flex-1 px-8 py-3 bg-white border border-gray-300 rounded-sm hover:bg-gray-50 font-bold text-gray-700 transition-all uppercase tracking-widest text-xs"
+            >
+                Cancel
+            </button>
+            <button
+                type="button"
+                onClick={validateAndSubmit}
+                className="flex-1 px-8 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm hover:from-orange-600 hover:to-orange-700 font-bold shadow-md transition-all uppercase tracking-widest text-xs active:scale-95 flex items-center justify-center gap-2"
+            >
+                {formData.id ? <><FileCheck size={18} /> Update Invoice</> : <><Plus size={18} /> Generate Invoice</>}
+            </button>
+        </div>
+    );
+
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 backdrop-blur-sm animate-fadeIn">
-            <div className="bg-white rounded-sm shadow-2xl max-w-5xl w-full max-h-[95vh] overflow-y-auto animate-slideUp">
-                {/* Header */}
-                <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white p-6 rounded-t-sm flex justify-between items-center sticky top-0 z-10">
-                    <h2 className="text-2xl font-bold">{formData.id ? "Edit Invoice" : "Create New Invoice"}</h2>
-                    <button
-                        onClick={() => setShowModal(false)}
-                        className="text-white hover:bg-orange-700 p-1 rounded-sm transition-colors"
-                    >
-                        <X size={24} />
-                    </button>
+        <Modal
+            isOpen={showModal}
+            onClose={() => setShowModal(false)}
+            title={formData.id ? "Edit Invoice" : "Create New Invoice"}
+            subtitle={formData.id ? "Update existing invoice details" : "Generate a professional invoice for your client"}
+            icon={<FileText size={24} />}
+            maxWidth="max-w-5xl"
+            footer={footer}
+        >
+            <div className="space-y-6 pb-4">
+                <div className="flex items-center justify-between bg-slate-50 p-4 rounded-sm border border-slate-100 mb-2">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 bg-orange-100 text-orange-600 rounded-lg">
+                            <Tag size={20} />
+                        </div>
+                        <div>
+                            <h3 className="text-sm font-bold text-gray-800 uppercase tracking-widest leading-none">Invoice Type</h3>
+                            <p className="text-[10px] text-gray-500 mt-1 uppercase font-semibold">Choose between GST compliant or Simple invoice</p>
+                        </div>
+                    </div>
+
+                    <div className="flex bg-white p-1 rounded-lg border border-gray-200 shadow-sm">
+                        <button
+                            type="button"
+                            onClick={() => setInvoiceType("GST")}
+                            className={`px-6 py-2 rounded-md text-xs font-bold uppercase tracking-widest transition-all ${invoiceType === "GST"
+                                ? "bg-orange-500 text-white shadow-md"
+                                : "text-gray-500 hover:bg-gray-50"
+                                }`}
+                        >
+                            GST Invoice
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setInvoiceType("Non-GST")}
+                            className={`px-6 py-2 rounded-md text-xs font-bold uppercase tracking-widest transition-all ${invoiceType === "Non-GST"
+                                ? "bg-orange-500 text-white shadow-md"
+                                : "text-gray-500 hover:bg-gray-50"
+                                }`}
+                        >
+                            Non-GST (Simple)
+                        </button>
+                    </div>
                 </div>
 
-                <div className="p-8 space-y-8">
-                    {/* Quotation Selection */}
-                    <section className="bg-orange-50 p-4 rounded-sm border border-orange-100">
-                        <div className="flex items-center gap-3 mb-4">
-                            <FileCheck className="text-orange-600" size={24} />
-                            <h3 className="text-lg font-bold text-orange-800 uppercase tracking-tighter">Import from Quotation</h3>
+                <section className="bg-white border border-gray-100 rounded-sm p-5 space-y-6">
+                    <div className="flex items-center gap-2.5 pb-3 border-b border-gray-50">
+                        <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
+                            <User size={18} />
                         </div>
-                        <div className="relative">
-                            <input
-                                type="text"
-                                value={quotationSearch}
-                                onChange={(e) => {
-                                    setQuotationSearch(e.target.value);
-                                    setShowQuotationDropdown(true);
-                                }}
-                                onFocus={() => setShowQuotationDropdown(true)}
-                                className={`${inputStyles} border-orange-200`}
-                                placeholder="Search by Quotation ID or Client Name..."
-                            />
-                            {showQuotationDropdown && (
-                                <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-sm shadow-xl max-h-60 overflow-y-auto font-medium">
-                                    {quotations.length > 0 ? (
-                                        quotations.map(q => (
+                        <h3 className="text-sm font-bold text-gray-800 uppercase tracking-widest">Client & Basic Details</h3>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 text-sm">
+                        <div className="relative group" ref={clientDropdownRef}>
+                            <label className="flex items-center gap-2 text-xs font-bold text-gray-500 mb-2 uppercase tracking-widest">
+                                <User size={13} className="text-orange-500" />
+                                Select Client <span className="text-red-500">*</span>
+                            </label>
+                            <div className="relative">
+                                <input
+                                    type="text"
+                                    value={clientSearch || formData.clientName}
+                                    onChange={(e) => {
+                                        setClientSearch(e.target.value);
+                                        setShowClientDropdown(true);
+                                    }}
+                                    onFocus={() => setShowClientDropdown(true)}
+                                    className={inputStyles}
+                                    placeholder="Search by name..."
+                                />
+                                <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300" size={16} />
+                            </div>
+                            {showClientDropdown && (
+                                <div className="absolute z-20 w-full mt-1 bg-white border border-gray-100 rounded-lg shadow-xl max-h-64 overflow-y-auto">
+                                    {filteredClients.length > 0 ? (
+                                        filteredClients.map(client => (
                                             <div
-                                                key={q.id}
-                                                onClick={() => handleSelectQuotation(q)}
-                                                className="p-3 hover:bg-orange-50 cursor-pointer border-b last:border-0"
+                                                key={client.id}
+                                                onClick={() => handleSelectClient(client)}
+                                                className="p-3 hover:bg-orange-50 cursor-pointer border-b border-gray-50 last:border-0 flex items-center gap-3 transition-colors"
                                             >
-                                                <div className="flex justify-between items-center">
-                                                    <span className="text-orange-600 font-black">{q.quotation_id}</span>
-                                                    <span className="text-xs font-bold bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full">₹{q.total_amount.toLocaleString()}</span>
+                                                <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-orange-500 shrink-0">
+                                                    {client.type === 'person' ? <User size={14} /> : <Building2 size={14} />}
                                                 </div>
-                                                <div className="text-sm text-gray-900 font-bold mt-1">{q.client_name}</div>
-                                                <div className="text-xs text-gray-500">{new Date(q.quotation_date).toLocaleDateString()}</div>
+                                                <div className="min-w-0">
+                                                    <div className="text-sm font-bold text-gray-900 truncate">{client.type === 'person' ? `${client.first_name} ${client.last_name || ''}` : client.company_name}</div>
+                                                    <div className="text-xs text-gray-400 truncate">{client.email}</div>
+                                                </div>
                                             </div>
                                         ))
                                     ) : (
-                                        <div className="p-4 text-center text-gray-500 text-sm italic">No approved quotations found</div>
+                                        <div className="p-4 text-center text-gray-500 text-xs italic">No matching clients</div>
                                     )}
                                 </div>
                             )}
                         </div>
-                        <p className="mt-2 text-xs text-orange-600 font-bold italic">* Selecting a quotation will automatically fill client details and line items.</p>
-                    </section>
 
-                    {/* Basic Section */}
-                    <section>
-                        <div className="flex items-center justify-between border-b-2 border-orange-500 pb-2 mb-6">
-                            <h3 className="text-lg font-bold text-gray-800">Client Information</h3>
-                            <span className="text-xs text-gray-500 italic">* Required fields</span>
+                        <div>
+                            <label className="flex items-center gap-2 text-xs font-bold text-gray-500 mb-2 uppercase tracking-widest">
+                                <Hash size={13} className="text-orange-500" />
+                                Invoice No <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                                type="text"
+                                name="invoiceNo"
+                                value={formData.invoiceNo}
+                                onChange={handleInputChange}
+                                className={inputStyles}
+                                placeholder="INV-2024-001"
+                            />
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div className="relative">
-                                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                                    Search & Select Client *
-                                </label>
-                                <div className="relative">
+                        <div>
+                            <label className="flex items-center gap-2 text-xs font-bold text-gray-500 mb-2 uppercase tracking-widest">
+                                <Calendar size={13} className="text-orange-500" />
+                                Date <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                                type="date"
+                                name="invoiceDate"
+                                value={formData.invoiceDate}
+                                onChange={handleInputChange}
+                                className={inputStyles}
+                            />
+                        </div>
+
+                        {invoiceType === "GST" && (
+                            <>
+                                <div>
+                                    <label className="flex items-center gap-2 text-xs font-bold text-gray-500 mb-2 uppercase tracking-widest">
+                                        <Building size={13} className="text-orange-500" />
+                                        Client GSTIN
+                                    </label>
                                     <input
                                         type="text"
-                                        value={clientSearch}
-                                        onChange={(e) => {
-                                            setClientSearch(e.target.value);
-                                            setShowClientDropdown(true);
-                                        }}
-                                        onFocus={() => setShowClientDropdown(true)}
+                                        name="client_gstin"
+                                        value={formData.client_gstin}
+                                        onChange={handleInputChange}
                                         className={inputStyles}
-                                        placeholder="Type name or email..."
+                                        placeholder="29AAAAA0000A1Z5"
                                     />
-                                    <Search className="absolute right-3 top-2.5 text-gray-400" size={16} />
                                 </div>
-                                {showClientDropdown && (
-                                    <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-sm shadow-xl max-h-60 overflow-y-auto">
-                                        {filteredClients.length > 0 ? (
-                                            filteredClients.map(client => (
-                                                <div
-                                                    key={client.id}
-                                                    onClick={() => handleSelectClient(client)}
-                                                    className="p-3 hover:bg-orange-50 cursor-pointer border-b last:border-0 flex items-center gap-3"
-                                                >
-                                                    <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-orange-600">
-                                                        {client.type === 'person' ? <User size={16} /> : <Building2 size={16} />}
-                                                    </div>
-                                                    <div>
-                                                        <div className="text-sm font-bold text-gray-900">
-                                                            {client.type === 'person' ? `${client.first_name} ${client.last_name || ''}` : client.company_name}
-                                                        </div>
-                                                        <div className="text-xs text-gray-500">{client.email}</div>
-                                                    </div>
+                            </>
+                        )}
+
+                        <div>
+                            <label className="flex items-center gap-2 text-xs font-bold text-gray-500 mb-2 uppercase tracking-widest">
+                                <Calendar size={13} className="text-orange-500" />
+                                Due Date
+                            </label>
+                            <input
+                                type="date"
+                                name="dueDate"
+                                value={formData.dueDate}
+                                onChange={handleInputChange}
+                                className={inputStyles}
+                            />
+                        </div>
+
+                        <div>
+                            <label className="flex items-center gap-2 text-xs font-bold text-gray-500 mb-2 uppercase tracking-widest">
+                                <Mail size={13} className="text-orange-500" />
+                                Email
+                            </label>
+                            <input
+                                type="email"
+                                name="email"
+                                value={formData.email}
+                                onChange={handleInputChange}
+                                className={inputStyles}
+                                placeholder="client@example.com"
+                            />
+                        </div>
+                        <div>
+                            <label className="flex items-center gap-2 text-xs font-bold text-gray-500 mb-2 uppercase tracking-widest">
+                                <Phone size={13} className="text-orange-500" />
+                                Phone
+                            </label>
+                            <input
+                                type="text"
+                                name="phone"
+                                value={formData.phone}
+                                onChange={handleInputChange}
+                                className={inputStyles}
+                                placeholder="+91 00000 00000"
+                            />
+                        </div>
+                        <div className="md:col-span-1">
+                            <label className="flex items-center gap-2 text-xs font-bold text-gray-500 mb-2 uppercase tracking-widest">
+                                <CreditCard size={13} className="text-orange-500" />
+                                PAN Number
+                            </label>
+                            <input
+                                type="text"
+                                name="pan_number"
+                                value={formData.pan_number}
+                                onChange={handleInputChange}
+                                className={inputStyles}
+                                placeholder="ABCDE1234F"
+                            />
+                        </div>
+                        <div className="md:col-span-3">
+                            <label className="flex items-center gap-2 text-xs font-bold text-gray-500 mb-2 uppercase tracking-widest">
+                                <MapPin size={13} className="text-orange-500" />
+                                Billing Address
+                            </label>
+                            <input
+                                type="text"
+                                name="address"
+                                value={formData.address}
+                                onChange={handleInputChange}
+                                className={inputStyles}
+                                placeholder="123 Street Name, City, State, ZIP"
+                            />
+                        </div>
+                    </div>
+                </section>
+
+                <section className="bg-white border border-gray-100 rounded-sm p-5">
+                    <div className="flex justify-between items-center mb-6">
+                        <div className="flex items-center gap-2.5">
+                            <div className="p-2 bg-green-50 text-green-600 rounded-lg">
+                                <Tag size={18} />
+                            </div>
+                            <h3 className="text-sm font-bold text-gray-800 uppercase tracking-widest">Line Items</h3>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={addLineItem}
+                            className="bg-[#FF7B1D] text-white px-4 py-2 rounded-sm text-xs font-bold flex items-center gap-2 hover:bg-[#E66A0D] transition-all shadow-sm uppercase tracking-widest"
+                        >
+                            <Plus size={16} /> Add Item
+                        </button>
+                    </div>
+
+                    <div className="border border-gray-100 rounded-sm overflow-visible mb-8 shadow-sm">
+                        <table className="w-full text-[11px]">
+                            <thead className="bg-gray-50 text-gray-500 font-bold border-b text-left">
+                                <tr>
+                                    <th className="px-4 py-3 uppercase tracking-widest">Description <span className="text-red-500">*</span></th>
+                                    <th className="px-4 py-3 text-center w-20">Qty <span className="text-red-500">*</span></th>
+                                    <th className="px-4 py-3 text-right w-28">Rate (₹) <span className="text-red-500">*</span></th>
+                                    <th className="px-4 py-3 text-right w-32">Total (₹)</th>
+                                    <th className="px-4 py-3 text-center w-10"></th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-50 bg-white">
+                                {formData.lineItems.map((item) => (
+                                    <tr key={item.id} className="hover:bg-gray-50/50">
+                                        <td className="p-2 relative">
+                                            <input
+                                                type="text"
+                                                value={item.name}
+                                                onChange={(e) => {
+                                                    updateLineItem(item.id, "name", e.target.value);
+                                                    setActiveItemSearchId(item.id);
+                                                }}
+                                                onFocus={() => setActiveItemSearchId(item.id)}
+                                                className="w-full px-2 py-1.5 border border-transparent hover:border-gray-100 bg-transparent focus:bg-white outline-none rounded-sm transition-all text-xs"
+                                                placeholder="Part name or Service..."
+                                            />
+                                            {activeItemSearchId === item.id && (
+                                                <div ref={itemDropdownRef} className="absolute z-30 left-0 right-0 top-full mt-1 bg-white border border-gray-100 rounded-sm shadow-xl max-h-48 overflow-y-auto">
+                                                    {catalogs.filter(c => c.name.toLowerCase().includes(item.name.toLowerCase())).length > 0 ? (
+                                                        catalogs.filter(c => c.name.toLowerCase().includes(item.name.toLowerCase())).map(cat => (
+                                                            <div
+                                                                key={cat.id}
+                                                                onClick={() => handleSelectCatalogItem(cat, item.id)}
+                                                                className="p-2 hover:bg-orange-50 cursor-pointer border-b border-gray-50 last:border-0 flex justify-between items-center"
+                                                            >
+                                                                <div>
+                                                                    <div className="text-xs font-bold text-gray-800">{cat.name}</div>
+                                                                </div>
+                                                                <div className="text-xs font-bold text-orange-600">
+                                                                    {cat.maxPrice && cat.maxPrice > cat.minPrice ? (
+                                                                        <span>₹{parseFloat(cat.minPrice).toLocaleString()} - ₹{parseFloat(cat.maxPrice).toLocaleString()}</span>
+                                                                    ) : (
+                                                                        <span>₹{parseFloat(cat.minPrice || cat.price || cat.rate || 0).toLocaleString()}</span>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        ))
+                                                    ) : (
+                                                        <div className="p-3 text-center text-gray-400 text-[10px] italic">No matching catalog items</div>
+                                                    )}
                                                 </div>
-                                            ))
-                                        ) : (
-                                            <div className="p-4 text-center text-gray-500 text-sm italic">No clients found</div>
-                                        )}
-                                    </div>
+                                            )}
+                                        </td>
+                                        <td className="p-2">
+                                            <input
+                                                type="number"
+                                                min="0"
+                                                onKeyDown={(e) => ["-", "+", "e", "E"].includes(e.key) && e.preventDefault()}
+                                                value={item.qty}
+                                                onChange={(e) => updateLineItem(item.id, "qty", e.target.value)}
+                                                className="w-full px-2 py-1.5 border border-transparent hover:border-gray-100 bg-transparent focus:bg-white text-center outline-none rounded-sm transition-all text-xs"
+                                                placeholder="0"
+                                            />
+                                        </td>
+                                        <td className="p-2 text-right">
+                                            <input
+                                                type="number"
+                                                min="0"
+                                                onKeyDown={(e) => ["-", "+", "e", "E"].includes(e.key) && e.preventDefault()}
+                                                value={item.rate}
+                                                onChange={(e) => updateLineItem(item.id, "rate", e.target.value)}
+                                                className="w-full px-2 py-1.5 border border-transparent hover:border-gray-100 bg-transparent focus:bg-white text-right outline-none rounded-sm transition-all text-xs"
+                                                placeholder="0.00"
+                                            />
+                                        </td>
+                                        <td className="p-2 text-right font-bold text-gray-900 pr-4">
+                                            ₹{(item.total || 0).toLocaleString()}
+                                        </td>
+                                        <td className="p-2 text-center">
+                                            <button onClick={() => removeLineItem(item.id)} className="text-gray-300 hover:text-red-500 transition-colors">
+                                                <Trash2 size={14} />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                                {formData.lineItems.length === 0 && (
+                                    <tr>
+                                        <td colSpan={invoiceType === "GST" ? 6 : 5} className="p-10 text-center text-gray-400 italic">No items added. Click "Add Item" to begin.</td>
+                                    </tr>
                                 )}
-                            </div>
+                            </tbody>
+                        </table>
+                    </div>
 
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                                    Client Name (Self/Auto)
-                                </label>
-                                <input
-                                    type="text"
-                                    name="clientName"
-                                    value={formData.clientName}
-                                    onChange={handleInputChange}
-                                    className={inputStyles}
-                                    placeholder="Select client or type"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                                    Invoice No *
-                                </label>
-                                <input
-                                    type="text"
-                                    name="invoiceNo"
-                                    value={formData.invoiceNo}
-                                    onChange={handleInputChange}
-                                    className={inputStyles}
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                                    Email
-                                </label>
-                                <input
-                                    type="email"
-                                    name="email"
-                                    value={formData.email}
-                                    onChange={handleInputChange}
-                                    className={inputStyles}
-                                    placeholder="client@example.com"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                                    Phone
-                                </label>
-                                <input
-                                    type="text"
-                                    name="phone"
-                                    value={formData.phone}
-                                    onChange={handleInputChange}
-                                    className={inputStyles}
-                                    placeholder="Enter phone number"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                                    Invoice Date *
-                                </label>
-                                <input
-                                    type="date"
-                                    name="invoiceDate"
-                                    value={formData.invoiceDate}
-                                    onChange={handleInputChange}
-                                    className={inputStyles}
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                                    Due Date
-                                </label>
-                                <input
-                                    type="date"
-                                    name="dueDate"
-                                    value={formData.dueDate}
-                                    onChange={handleInputChange}
-                                    className={inputStyles}
-                                />
-                            </div>
-                            <div className="md:col-span-2">
-                                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                                    Billing Address
-                                </label>
-                                <input
-                                    type="text"
-                                    name="address"
-                                    value={formData.address}
-                                    onChange={handleInputChange}
-                                    className={inputStyles}
-                                    placeholder="123 Street Name, City, Country"
-                                />
-                            </div>
-                        </div>
-                    </section>
-
-                    {/* Financial Section */}
-                    <section>
-                        <h3 className="text-lg font-bold text-gray-800 border-b-2 border-orange-500 pb-2 mb-6">Items & Payment Details</h3>
-
-                        {/* Line Items Table */}
-                        <div className="mb-8">
-                            <div className="flex justify-between items-center mb-4">
-                                <label className="text-sm font-bold text-gray-700">Line Items</label>
-                                <button
-                                    type="button"
-                                    onClick={addLineItem}
-                                    className="bg-[#FF7B1D] text-white px-4 py-2 rounded-sm text-sm font-bold flex items-center gap-2 hover:bg-[#E66A0D] transition-all shadow-md active:scale-95"
-                                >
-                                    <Plus size={16} /> Add Item
-                                </button>
-                            </div>
-                            <div className="border border-gray-200 rounded-sm overflow-hidden shadow-sm">
-                                <table className="w-full text-sm">
-                                    <thead className="bg-gray-50 text-gray-700 font-bold border-b text-left">
-                                        <tr>
-                                            <th className="px-4 py-3">Description</th>
-                                            <th className="px-4 py-3 text-center w-24">Qty</th>
-                                            <th className="px-4 py-3 text-right w-32">Rate</th>
-                                            <th className="px-4 py-3 text-right w-32">Total</th>
-                                            <th className="px-4 py-3 text-center w-16"></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-100">
-                                        {formData.lineItems.map((item) => (
-                                            <tr key={item.id} className="hover:bg-gray-50 transition-colors">
-                                                <td className="p-2">
-                                                    <input
-                                                        type="text"
-                                                        value={item.name}
-                                                        onChange={(e) => updateLineItem(item.id, "name", e.target.value)}
-                                                        className={inputStyles}
-                                                        placeholder="Item description"
-                                                    />
-                                                </td>
-                                                <td className="p-2">
-                                                    <input
-                                                        type="number"
-                                                        value={item.qty}
-                                                        onChange={(e) => updateLineItem(item.id, "qty", parseFloat(e.target.value) || 0)}
-                                                        className={`${inputStyles} text-center`}
-                                                    />
-                                                </td>
-                                                <td className="p-2">
-                                                    <input
-                                                        type="number"
-                                                        value={item.rate}
-                                                        onChange={(e) => updateLineItem(item.id, "rate", parseFloat(e.target.value) || 0)}
-                                                        className={`${inputStyles} text-right`}
-                                                    />
-                                                </td>
-                                                <td className="p-2 text-right font-bold text-gray-900">
-                                                    ₹{(item.total || 0).toLocaleString()}
-                                                </td>
-                                                <td className="p-2 text-center">
-                                                    <button
-                                                        onClick={() => removeLineItem(item.id)}
-                                                        className="text-red-400 hover:text-red-600 p-2 transition-colors"
-                                                    >
-                                                        <Trash2 size={18} />
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                        {formData.lineItems.length === 0 && (
-                                            <tr>
-                                                <td colSpan="5" className="p-8 text-center text-gray-400 italic">
-                                                    No items added yet. Click "Add Item" to begin.
-                                                </td>
-                                            </tr>
-                                        )}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                            <div className="space-y-6">
-                                <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
+                        <div className="space-y-4">
+                            <div className="grid grid-cols-2 gap-4">
+                                {invoiceType === "GST" && (
                                     <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                                            Tax (%)
+                                        <label className="flex items-center gap-2 text-[10px] font-bold text-gray-500 mb-1.5 uppercase tracking-widest">
+                                            <Tag size={12} className="text-orange-500" />
+                                            GST Rate (%)
                                         </label>
-                                        <input
-                                            type="number"
+                                        <select
                                             name="tax"
                                             value={formData.tax}
                                             onChange={handleInputChange}
                                             className={inputStyles}
-                                        />
+                                        >
+                                            <option value="0">0%</option>
+                                            <option value="5">5%</option>
+                                            <option value="12">12%</option>
+                                            <option value="18">18%</option>
+                                            <option value="28">28%</option>
+                                        </select>
                                     </div>
-                                    <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                                            Discount (Amt)
-                                        </label>
-                                        <input
-                                            type="number"
-                                            name="discount"
-                                            value={formData.discount}
-                                            onChange={handleInputChange}
-                                            className={inputStyles}
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="bg-orange-50 p-6 rounded-sm border border-orange-100 shadow-inner space-y-4">
-                                    <h4 className="font-bold text-orange-800 text-sm uppercase tracking-wider mb-2">Payment Support (Partial)</h4>
-                                    <div>
-                                        <label className="block text-sm font-bold text-gray-700 mb-1.5">
-                                            Amount Paid (₹)
-                                        </label>
-                                        <input
-                                            type="number"
-                                            name="paidAmount"
-                                            value={formData.paidAmount}
-                                            onChange={handleInputChange}
-                                            className={`${inputStyles} border-orange-200 text-lg font-bold text-green-700`}
-                                            placeholder="0.00"
-                                        />
-                                    </div>
-                                    <div className="flex justify-between items-center py-2 border-t border-orange-200">
-                                        <span className="text-sm font-bold text-gray-600">Remaining Balance:</span>
-                                        <span className={`text-xl font-black ${formData.balanceAmount > 0 ? "text-red-600" : "text-green-600"}`}>
-                                            ₹{(formData.balanceAmount || 0).toLocaleString()}
-                                        </span>
-                                    </div>
+                                )}
+                                <div className={invoiceType === "Non-GST" ? "col-span-2" : ""}>
+                                    <label className="flex items-center gap-2 text-[10px] font-bold text-gray-500 mb-1.5 uppercase tracking-widest">
+                                        <Tag size={12} className="text-orange-500" />
+                                        Discount (Amt)
+                                    </label>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        onKeyDown={(e) => ["-", "+", "e", "E"].includes(e.key) && e.preventDefault()}
+                                        name="discount"
+                                        value={formData.discount}
+                                        onChange={(e) => handleInputChange({ target: { name: "discount", value: Math.max(0, parseFloat(e.target.value) || 0) } })}
+                                        className={inputStyles}
+                                        placeholder="0.00"
+                                    />
                                 </div>
                             </div>
 
-                            <div className="bg-gray-50 p-8 rounded-sm space-y-4 shadow-sm h-full flex flex-col justify-center">
-                                <div className="flex justify-between text-gray-600 text-sm">
-                                    <span>Subtotal</span>
-                                    <span className="font-bold">₹{(formData.subtotal || 0).toLocaleString()}</span>
+                            <div className="bg-gray-50 p-5 rounded-sm border border-gray-100 space-y-4">
+                                <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
+                                    <CreditCard size={12} /> Payment Info
+                                </h4>
+                                <div>
+                                    <label className="flex items-center justify-between text-xs font-bold text-gray-700 mb-2 uppercase">
+                                        <span className="flex items-center gap-2">
+                                            <DollarSign size={13} className="text-orange-500" />
+                                            Amount Received (₹)
+                                        </span>
+                                        {parseFloat(formData.paidAmount) >= formData.totalAmount && formData.totalAmount > 0 &&
+                                            <span className="text-[9px] text-green-600 font-bold bg-green-100 px-2 py-0.5 rounded-sm">COMPLETELY PAID</span>
+                                        }
+                                    </label>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        onKeyDown={(e) => ["-", "+", "e", "E"].includes(e.key) && e.preventDefault()}
+                                        name="paidAmount"
+                                        value={formData.paidAmount}
+                                        onChange={(e) => handleInputChange({ target: { name: "paidAmount", value: Math.max(0, parseFloat(e.target.value) || 0) } })}
+                                        className={`${inputStyles} bg-white text-lg font-bold text-green-700 ring-2 ring-transparent focus:ring-green-100`}
+                                        placeholder="0.00"
+                                    />
                                 </div>
-                                <div className="flex justify-between text-gray-600 text-sm">
-                                    <span>Tax ({formData.tax || 0}%)</span>
-                                    <span className="font-bold">₹{(((formData.subtotal || 0) * (formData.tax || 0)) / 100).toLocaleString()}</span>
-                                </div>
-                                <div className="flex justify-between text-gray-600 text-sm pb-4 border-b">
-                                    <span>Discount</span>
-                                    <span className="font-bold text-red-500">- ₹{(formData.discount || 0).toLocaleString()}</span>
-                                </div>
-                                <div className="flex justify-between items-center pt-2">
-                                    <span className="text-xl font-bold text-gray-900">Total Amount</span>
-                                    <span className="text-3xl font-black text-[#FF7B1D]">
-                                        ₹{(formData.totalAmount || 0).toLocaleString()}
+                                <div className="flex justify-between items-center text-sm font-bold pt-1 border-t border-gray-200 mt-2">
+                                    <span className="text-gray-500 uppercase text-[10px] tracking-widest">Pending Balance:</span>
+                                    <span className={formData.balanceAmount > 0 ? "text-red-600" : "text-green-600"}>
+                                        ₹{(formData.balanceAmount || 0).toLocaleString()}
                                     </span>
                                 </div>
-                                <div className="mt-4">
-                                    <span className={`inline-block px-4 py-1.5 rounded-sm text-xs font-black uppercase tracking-widest border-2 ${formData.status === 'Paid' ? 'bg-green-100 text-green-700 border-green-500' :
-                                        formData.status === 'Partial' ? 'bg-yellow-100 text-yellow-700 border-yellow-500' :
-                                            'bg-red-100 text-red-700 border-red-500'
+                            </div>
+                        </div>
+
+                        <div className="bg-slate-900 rounded-sm p-6 text-white space-y-3 flex flex-col justify-center shadow-xl relative overflow-hidden">
+                            <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
+                                <Building2 size={120} />
+                            </div>
+
+                            <div className="relative z-10">
+                                <div className="flex justify-between text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-1">
+                                    <span>Subtotal</span>
+                                    <span>₹{(formData.subtotal || 0).toLocaleString()}</span>
+                                </div>
+
+                                {invoiceType === "GST" && (
+                                    <>
+                                        <div className="flex justify-between text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-1">
+                                            <span>CGST ({formData.tax / 2}%)</span>
+                                            <span>₹{(((formData.subtotal || 0) * (formData.tax / 2)) / 100).toLocaleString()}</span>
+                                        </div>
+                                        <div className="flex justify-between text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-1">
+                                            <span>SGST ({formData.tax / 2}%)</span>
+                                            <span>₹{(((formData.subtotal || 0) * (formData.tax / 2)) / 100).toLocaleString()}</span>
+                                        </div>
+                                    </>
+                                )}
+
+                                <div className="flex justify-between text-[10px] font-bold text-red-400 uppercase tracking-[0.2em] border-b border-white/5 pb-4 mb-4">
+                                    <span>Discount</span>
+                                    <span>- ₹{(formData.discount || 0).toLocaleString()}</span>
+                                </div>
+
+                                <div className="flex justify-between items-end">
+                                    <div>
+                                        <p className="text-[10px] font-bold text-orange-500 uppercase tracking-[0.2em] mb-1">Total Payable</p>
+                                        <p className="text-4xl font-bold text-white tracking-tight">₹{(formData.totalAmount || 0).toLocaleString()}</p>
+                                    </div>
+                                    <div className={`px-4 py-1.5 rounded-sm text-[10px] font-bold uppercase tracking-widest border transition-all ${formData.status === 'Paid' ? 'bg-green-500 text-white border-green-500 shadow-[0_0_15px_rgba(34,197,94,0.3)]' :
+                                        formData.status === 'Partial' ? 'bg-yellow-500 text-white border-yellow-500' :
+                                            'bg-red-500 text-white border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.3)]'
                                         }`}>
                                         {formData.status}
-                                    </span>
+                                    </div>
+                                </div>
+
+                                <div className="mt-5 pt-4 border-t border-white/10 flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <div className={`w-2 h-2 rounded-full ${invoiceType === 'GST' ? 'bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.5)]' : 'bg-gray-400'}`}></div>
+                                        <span className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em]">{invoiceType} MODE</span>
+                                    </div>
+                                    {formData.client_gstin && (
+                                        <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">GSTIN: {formData.client_gstin}</span>
+                                    )}
                                 </div>
                             </div>
                         </div>
-                    </section>
-
-                    {/* Extras Section */}
-                    <section>
-                        <h3 className="text-lg font-bold text-gray-800 border-b-2 border-orange-500 pb-2 mb-6">Notes & Terms</h3>
-                        <div>
-                            <textarea
-                                rows="3"
-                                name="notes"
-                                value={formData.notes}
-                                onChange={handleInputChange}
-                                placeholder="Enter terms & conditions or any specific notes for the client..."
-                                className={inputStyles}
-                            ></textarea>
-                        </div>
-                    </section>
-
-                    {/* Actions */}
-                    <div className="flex gap-4 pt-4">
-                        <button
-                            type="button"
-                            onClick={() => setShowModal(false)}
-                            className="flex-1 px-8 py-4 border-2 border-gray-300 rounded-sm hover:bg-gray-100 font-black text-gray-700 transition-all uppercase tracking-widest text-sm"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            type="button"
-                            onClick={handleCreateInvoice}
-                            className="flex-1 px-8 py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm hover:from-orange-600 hover:to-orange-700 font-black shadow-xl hover:shadow-2xl transition-all uppercase tracking-widest text-sm active:scale-95"
-                        >
-                            {formData.id ? "Update Invoice" : "Generate Invoice"}
-                        </button>
                     </div>
-                </div>
+                </section>
+
+                <section className="grid grid-cols-1 gap-6">
+                    <div>
+                        <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-widest">Select Terms & Conditions</label>
+                        <select
+                            name="terms_and_conditions_id"
+                            onChange={handlePolicyChange}
+                            className={inputStyles}
+                        >
+                            <option value="">Choose Terms...</option>
+                            {termsList.map(term => (
+                                <option key={term.id} value={term.id}>{term.title || `Terms ${term.id}`}</option>
+                            ))}
+                        </select>
+                        {formData.terms_and_conditions && (
+                            <div className="mt-3 p-3 bg-slate-50 border border-slate-100 rounded-sm text-[11px] text-gray-600 italic">
+                                {formData.terms_and_conditions}
+                            </div>
+                        )}
+                    </div>
+                </section>
             </div>
-        </div>
+        </Modal>
     );
 }
