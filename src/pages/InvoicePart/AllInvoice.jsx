@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
+import * as XLSX from "xlsx";
 import DashboardLayout from "../../components/DashboardLayout";
 import {
   Plus,
@@ -242,6 +243,64 @@ export default function AllInvoicePage() {
 
   const hasActiveFilters = searchTerm || filterStatus !== "all" || dateFilter !== "All";
 
+  const handleExportExcel = () => {
+    try {
+      if (!invoices || invoices.length === 0) {
+        toast.error("No data available to export");
+        return;
+      }
+
+      // Format data for Excel with professional headers
+      const exportData = invoices.map(inv => ({
+        "Invoice Number": inv.invoice_number,
+        "Invoice Date": inv.invoice_date?.split('T')[0] || "N/A",
+        "Due Date": inv.due_date?.split('T')[0] || "N/A",
+        "Client Name": inv.client_name,
+        "Client Email": inv.client_email || "N/A",
+        "Client Phone": inv.client_phone || "N/A",
+        "Status": inv.status.toUpperCase(),
+        "Subtotal (INR)": inv.subtotal,
+        "Discount (INR)": inv.discount || 0,
+        "Tax Rate (%)": inv.tax_rate || 0,
+        "Tax Amount (INR)": inv.tax_amount || 0,
+        "Grand Total (INR)": inv.total_amount,
+        "Paid Amount (INR)": inv.paid_amount || 0,
+        "Balance Due (INR)": inv.balance_amount || 0,
+        "Notes": inv.notes || ""
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(exportData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Invoices Report");
+
+      // Professional Column Widths
+      const wscols = [
+        { wch: 20 }, // Invoice Number
+        { wch: 15 }, // Invoice Date
+        { wch: 15 }, // Due Date
+        { wch: 25 }, // Client Name
+        { wch: 30 }, // Client Email
+        { wch: 15 }, // Client Phone
+        { wch: 12 }, // Status
+        { wch: 15 }, // Subtotal
+        { wch: 15 }, // Discount
+        { wch: 12 }, // Tax Rate
+        { wch: 15 }, // Tax Amount
+        { wch: 18 }, // Grand Total
+        { wch: 18 }, // Paid Amount
+        { wch: 18 }, // Balance Due
+        { wch: 30 }  // Notes
+      ];
+      worksheet['!cols'] = wscols;
+
+      XLSX.writeFile(workbook, `Invoices_${dateFilter}_${new Date().toLocaleDateString().replace(/\//g, '-')}.xlsx`);
+      toast.success("Exported to Excel successfully!");
+    } catch (error) {
+      console.error("Excel Export Error:", error);
+      toast.error("Error generating Excel report");
+    }
+  };
+
   return (
     <DashboardLayout>
       <div className="min-h-screen bg-gradient-to-br from-orange-0 via-white to-orange-100">
@@ -336,6 +395,15 @@ export default function AllInvoicePage() {
                     </div>
                   )}
                 </div>
+
+                <button
+                  onClick={handleExportExcel}
+                  className="bg-white border border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-sm flex items-center gap-2 transition text-sm font-semibold shadow-sm active:scale-95 text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed group"
+                  disabled={invoices.length === 0}
+                >
+                  <Download size={18} className="text-gray-700 transition-transform group-hover:scale-110" />
+                  EXPORT
+                </button>
 
                 {dateFilter === "Custom" && (
                   <div className="flex items-center gap-2">
