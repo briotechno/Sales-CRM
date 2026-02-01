@@ -31,15 +31,14 @@ const DeleteInvoiceModal = ({
     <div className="flex gap-4 w-full">
       <button
         onClick={onClose}
-        className="flex-1 px-6 py-3 border-2 border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-100 transition-all"
+        className="flex-1 px-6 py-3 border-2 border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-100 transition-all font-inter"
       >
         Cancel
       </button>
-
       <button
         onClick={handleDelete}
         disabled={isLoading}
-        className="flex-1 px-6 py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition-all shadow-lg hover:shadow-red-200 flex items-center justify-center gap-2 disabled:opacity-50"
+        className="flex-1 px-6 py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition-all shadow-lg hover:shadow-red-200 flex items-center justify-center gap-2 disabled:opacity-50 font-inter"
       >
         {isLoading ? (
           <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -66,20 +65,17 @@ const DeleteInvoiceModal = ({
           <AlertCircle size={48} className="text-red-600" />
         </div>
 
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">
+        <h2 className="text-2xl font-bold text-gray-800 mb-2 font-inter">
           Confirm Delete
         </h2>
 
-        <p className="text-gray-600 mb-2 leading-relaxed">
+        <p className="text-gray-600 mb-2 leading-relaxed font-inter">
           Are you sure you want to delete invoice{" "}
-          <span className="font-bold text-gray-800">
-            "{invoice.invoice_number}"
-          </span>
-          ?
+          <span className="font-bold text-gray-800">"{invoice.invoice_number}"</span>?
         </p>
 
-        <p className="text-sm text-red-500 italic">
-          This action cannot be undone. Invoice data will be permanently removed.
+        <p className="text-sm text-red-500 italic font-inter font-medium px-4">
+          This action cannot be undone. All associated data will be permanently removed.
         </p>
       </div>
     </Modal>

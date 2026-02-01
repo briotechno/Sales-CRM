@@ -24,11 +24,13 @@ import {
   Instagram,
   FileText,
   Award,
+  Handshake,
 } from "lucide-react";
 import { useGetBusinessInfoQuery, useUpdateBusinessInfoMutation } from "../../store/api/businessApi";
 import { useGetEmployeesQuery } from "../../store/api/employeeApi";
 import { useGetClientsQuery } from "../../store/api/clientApi";
 import { useGetQuotationsQuery } from "../../store/api/quotationApi";
+import { useGetLeadsQuery } from "../../store/api/leadApi";
 import { toast } from "react-hot-toast";
 import { useEffect } from "react";
 import ShareModal from "../../components/BusinessInfo/ShareModal";
@@ -42,6 +44,7 @@ export default function BusinessInfoPage() {
   const { data: employeesData } = useGetEmployeesQuery({ page: 1, limit: 1000, status: 'All' });
   const { data: clientsData } = useGetClientsQuery({});
   const { data: quotationsData } = useGetQuotationsQuery({ page: 1, limit: 1000, status: 'All' });
+  const { data: leadsData } = useGetLeadsQuery({ page: 1, limit: 1000, status: 'All' });
 
   const [isEditing, setIsEditing] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
@@ -205,6 +208,22 @@ export default function BusinessInfoPage() {
   const handleLogoChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      // 1MB Size Validation
+      if (file.size > 1024 * 1024) {
+        toast.error("File size must be less than 1MB");
+        return;
+      }
+
+      // PNG, JPG, SVG Type Validation
+      const allowedTypes = ["image/png", "image/jpeg", "image/jpg", "image/svg+xml"];
+      const allowedExtensions = [".png", ".jpg", ".jpeg", ".svg"];
+      const fileExtension = file.name.slice(((file.name.lastIndexOf(".") - 1) >>> 0) + 2).toLowerCase();
+
+      if (!allowedTypes.includes(file.type) && !allowedExtensions.includes("." + fileExtension)) {
+        toast.error("Only PNG, JPG, and SVG formats are allowed");
+        return;
+      }
+
       setFormData({ ...formData, logo: file });
     }
   };
@@ -252,7 +271,7 @@ export default function BusinessInfoPage() {
   // Calculate dynamic metrics
   const totalEmployees = employeesData?.pagination?.total || 0;
   const activeClients = clientsData?.data?.filter(client => client.status === 'active').length || 0;
-  const totalQuotations = quotationsData?.pagination?.total || 0;
+  const totalLeads = leadsData?.pagination?.total || 0;
   const yearsInBusiness = businessInfo?.founded_year ? new Date().getFullYear() - businessInfo.founded_year : 0;
 
   return (
@@ -348,9 +367,9 @@ export default function BusinessInfoPage() {
               lineBorderClass="border-purple-500"
             />
             <NumberCard
-              title="Total Quotations"
-              number={totalQuotations}
-              icon={<FileText className="text-orange-600" size={24} />}
+              title="Total Leads"
+              number={totalLeads}
+              icon={<Handshake className="text-orange-600" size={24} />}
               iconBgColor="bg-orange-100"
               lineBorderClass="border-orange-500"
             />
@@ -380,7 +399,7 @@ export default function BusinessInfoPage() {
                 <div className="relative">
                   <input
                     type="file"
-                    accept="image/*"
+                    accept=".png,.jpg,.jpeg,.svg"
                     onChange={handleLogoChange}
                     className="absolute inset-0 opacity-0 cursor-pointer"
                   />

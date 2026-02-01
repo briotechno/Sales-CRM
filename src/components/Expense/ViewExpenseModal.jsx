@@ -10,7 +10,8 @@ import {
     ExternalLink,
     Download,
     Receipt,
-    AlertCircle
+    AlertCircle,
+    Eye
 } from 'lucide-react';
 import Modal from '../common/Modal';
 
@@ -38,6 +39,8 @@ const ViewExpenseModal = ({ isOpen, onClose, expense }) => {
             isOpen={isOpen}
             onClose={onClose}
             title="Expense Details"
+            subtitle="Full breakdown of the selected expense"
+            icon={<Eye size={24} />}
             maxWidth="max-w-3xl"
         >
             <div className="flex flex-col h-full">

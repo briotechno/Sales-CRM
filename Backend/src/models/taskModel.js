@@ -11,7 +11,7 @@ const Task = {
     },
 
     findAll: async (userId, filters = {}) => {
-        const { priority, category, search, timeframe } = filters;
+        const { priority, category, search, timeframe, dateFrom, dateTo } = filters;
         let query = 'SELECT * FROM tasks WHERE user_id = ?';
         let queryParams = [userId];
 
@@ -31,8 +31,18 @@ const Task = {
             queryParams.push(searchPattern);
         }
 
-        // Timeframe filtering
-        if (timeframe && timeframe !== 'All') {
+        // Custom Date Range
+        if (dateFrom) {
+            query += ' AND due_date >= ?';
+            queryParams.push(dateFrom);
+        }
+        if (dateTo) {
+            query += ' AND due_date <= ?';
+            queryParams.push(dateTo);
+        }
+
+        // Timeframe filtering (only if dateFrom/dateTo not provided)
+        if (!dateFrom && !dateTo && timeframe && timeframe !== 'All') {
             const now = new Date();
             const today = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
 

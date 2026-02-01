@@ -15,7 +15,16 @@ const taskController = {
     getTasks: async (req, res) => {
         try {
             const tasks = await Task.findAll(req.user.id, req.query);
-            res.status(200).json({ tasks });
+
+            // Calculate summary statistics from filtered tasks
+            const summary = {
+                total: tasks.length,
+                highPriority: tasks.filter(t => t.priority === 'high').length,
+                active: tasks.filter(t => !t.completed).length,
+                completed: tasks.filter(t => t.completed).length
+            };
+
+            res.status(200).json({ tasks, summary });
         } catch (error) {
             console.error('Error in getTasks:', error);
             res.status(500).json({ message: 'Error fetching tasks', error: error.message });

@@ -29,7 +29,7 @@ const Navbar = ({ business, logoUrl }) => {
 
                     {/* Desktop Navigation Links */}
                     <div className="hidden lg:flex items-center gap-8">
-                        <a href="#about" className="text-sm font-semibold text-gray-700 hover:text-[#FF7B1D] transition-colors relative group">
+                        {/* <a href="#about" className="text-sm font-semibold text-gray-700 hover:text-[#FF7B1D] transition-colors relative group">
                             About
                             <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-[#FF7B1D] group-hover:w-full transition-all"></span>
                         </a>
@@ -38,13 +38,13 @@ const Navbar = ({ business, logoUrl }) => {
                                 Vision
                                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-[#FF7B1D] group-hover:w-full transition-all"></span>
                             </a>
-                        )}
-                        {(business.email || business.phone) && (
+                        )} */}
+                        {/* {(business.email || business.phone) && (
                             <a href="#contact" className="text-sm font-semibold text-gray-700 hover:text-[#FF7B1D] transition-colors relative group">
                                 Contact
                                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-[#FF7B1D] group-hover:w-full transition-all"></span>
                             </a>
-                        )}
+                        )} */}
                         {business.email && (
                             <a href={`mailto:${business.email}`} className="bg-gradient-to-r from-[#FF7B1D] to-orange-600 text-white px-6 py-2.5 rounded-lg text-sm font-bold hover:shadow-lg hover:scale-105 transition-all flex items-center gap-2">
                                 <Mail size={16} />

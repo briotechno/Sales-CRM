@@ -1,5 +1,5 @@
 import React from "react";
-import { X, Printer, Calendar, User, Building2, Mail, Phone, FileText } from "lucide-react";
+import { X, Printer, Calendar, User, Building2, Building, Mail, Phone, FileText, Tag } from "lucide-react";
 
 export default function ViewQuotationModal({
   showViewModal,
@@ -14,10 +14,13 @@ export default function ViewQuotationModal({
       <div className="bg-white rounded-sm shadow-2xl max-w-4xl w-full max-h-[95vh] overflow-y-auto">
         {/* Header */}
         <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white p-6 rounded-t-sm flex justify-between items-center sticky top-0 z-10">
-          <div className="flex items-center gap-4">
-            <h2 className="text-2xl font-bold">Quotation Details</h2>
-            <span className="bg-white/20 px-3 py-1 rounded-full text-sm font-medium border border-white/30">
-              {selectedQuote.id}
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-white/20 rounded-lg text-white">
+              <FileText size={24} />
+            </div>
+            <h2 className="text-2xl font-bold text-white">Quotation Details</h2>
+            <span className="bg-white/20 px-3 py-1 rounded-full text-xs font-medium border border-white/30 text-white ml-2">
+              {selectedQuote.quotation_id || selectedQuote.id}
             </span>
           </div>
           <button
@@ -65,20 +68,18 @@ export default function ViewQuotationModal({
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Client Info */}
+            {/* Business Info */}
             <section className="space-y-4">
-              <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2 border-b pb-2">
-                <User size={20} className="text-orange-500" />
-                Client Information
+              <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2 border-b-2 border-orange-500 pb-2">
+                <Building size={20} className="text-orange-500" />
+                Business Details
               </h3>
               <div className="grid grid-cols-1 gap-4">
                 <div className="flex items-start gap-3">
                   <Building2 size={18} className="text-gray-400 mt-1" />
                   <div>
-                    <p className="text-sm font-bold text-gray-800">{selectedQuote.client_name || selectedQuote.client}</p>
-                    <p className="text-xs text-gray-500">
-                      {selectedQuote.company_name || selectedQuote.companyName || "No Company Name Provided"}
-                    </p>
+                    <p className="text-sm font-bold text-gray-800">{selectedQuote.company_name || selectedQuote.companyName || "No Company Name Provided"}</p>
+                    <p className="text-xs text-gray-500 italic">Registered Organization</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -94,24 +95,25 @@ export default function ViewQuotationModal({
 
             {/* Financial Summary Preview */}
             <section className="space-y-4">
-              <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2 border-b pb-2">
+              <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2 border-b-2 border-orange-500 pb-2">
+                <Tag size={20} className="text-orange-500" />
                 Financial Summary
               </h3>
-              <div className="bg-gray-50 p-6 rounded-sm space-y-3">
-                <div className="flex justify-between text-gray-600">
+              <div className="bg-gray-50 p-6 rounded-sm space-y-3 shadow-inner">
+                <div className="flex justify-between text-gray-600 text-[11px] font-bold uppercase tracking-widest">
                   <span>Subtotal</span>
-                  <span className="font-semibold">{(selectedQuote.subtotal || 0).toLocaleString()}</span>
+                  <span>{(selectedQuote.subtotal || 0).toLocaleString()}</span>
                 </div>
-                <div className="flex justify-between text-gray-600">
+                <div className="flex justify-between text-gray-600 text-[11px] font-bold uppercase tracking-widest">
                   <span>Tax ({selectedQuote.tax || 0}%)</span>
-                  <span className="font-semibold">{(((selectedQuote.subtotal || 0) * (selectedQuote.tax || 0)) / 100).toLocaleString()}</span>
+                  <span>{(((selectedQuote.subtotal || 0) * (selectedQuote.tax || 0)) / 100).toLocaleString()}</span>
                 </div>
-                <div className="flex justify-between text-gray-600 pb-2 border-b">
+                <div className="flex justify-between text-red-400 text-[11px] font-bold uppercase tracking-widest pb-2 border-b border-gray-200">
                   <span>Discount</span>
-                  <span className="font-semibold">-{(selectedQuote.discount || 0).toLocaleString()}</span>
+                  <span>-{(selectedQuote.discount || 0).toLocaleString()}</span>
                 </div>
-                <div className="flex justify-between text-xl font-bold text-gray-900 pt-2">
-                  <span>Grand Total</span>
+                <div className="flex justify-between text-xl font-bold text-gray-900 pt-2 tracking-tight">
+                  <span className="text-xs uppercase tracking-[0.2em] text-gray-400">Grand Total</span>
                   <span className="text-orange-600">
                     {selectedQuote.currency === "INR" ? "₹" : "$"} {(selectedQuote.total_amount || selectedQuote.amount || 0).toLocaleString()}
                   </span>
@@ -122,7 +124,10 @@ export default function ViewQuotationModal({
 
           {/* Line Items Table */}
           <section className="space-y-4">
-            <h3 className="text-lg font-bold text-gray-800 border-b pb-2">Line Items</h3>
+            <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2 border-b-2 border-orange-500 pb-2">
+              <FileText size={20} className="text-orange-500" />
+              Line Items
+            </h3>
             <div className="border border-gray-100 rounded-sm overflow-hidden shadow-sm">
               <table className="w-full text-sm">
                 <thead className="bg-gray-50 text-gray-700 font-bold border-b">
@@ -159,41 +164,38 @@ export default function ViewQuotationModal({
             </div>
           </section>
 
-          {/* Extras Section */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
-            <section className="space-y-3">
-              <h4 className="text-sm font-bold text-gray-500 uppercase tracking-widest">Payment Terms</h4>
-              <div className="p-4 bg-gray-50 rounded-sm border-l-4 border-orange-500 text-sm text-gray-700 min-h-[100px]">
-                {selectedQuote.payment_terms || selectedQuote.paymentTerms || "No specific payment terms provided."}
-              </div>
-            </section>
-            <section className="space-y-3">
-              <h4 className="text-sm font-bold text-gray-500 uppercase tracking-widest">Notes / T&C</h4>
-              <div className="p-4 bg-gray-50 rounded-sm border-l-4 border-orange-500 text-sm text-gray-700 min-h-[100px]">
-                {selectedQuote.notes || selectedQuote.description || "No additional notes or terms provided."}
-              </div>
-            </section>
-          </div>
+          {/* Terms Section */}
+          <section className="space-y-4">
+            <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2 border-b-2 border-orange-500 pb-2">
+              <FileText size={20} className="text-orange-500" />
+              Terms & Conditions
+            </h3>
+            <div className="p-5 bg-orange-50/30 rounded-lg border border-orange-100 text-xs text-gray-700 italic leading-relaxed whitespace-pre-line break-words shadow-sm">
+              {selectedQuote.terms_and_conditions || "No terms and conditions provided for this quotation."}
+            </div>
+          </section>
 
           {/* Footer Actions */}
-          <div className="flex gap-4 pt-6 border-t">
+          {/* <div className="flex gap-4 pt-6 mt-4">
             <button
               onClick={() => setShowViewModal(false)}
-              className="flex-1 px-6 py-3 border-2 border-gray-300 rounded-sm hover:bg-gray-50 font-bold text-gray-700 transition-all uppercase tracking-wide text-sm"
+              className="flex-1 px-6 py-3 border-2 border-gray-200 rounded-sm hover:bg-gray-50 font-bold text-gray-700 transition-all uppercase tracking-wide text-sm"
             >
               Close
             </button>
             <button
-              onClick={() => window.print()}
-              className="flex-1 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm hover:from-orange-600 hover:to-orange-700 font-bold shadow-lg transition-all flex items-center justify-center gap-2 uppercase tracking-wide text-sm"
+              onClick={() => {
+                // Logic for download can be triggered from parent or implemented via window.print
+                window.print();
+              }}
+              className="flex-1 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm hover:from-orange-600 hover:to-orange-700 font-bold shadow-lg transition-all flex items-center justify-center gap-2 uppercase tracking-wide text-sm active:scale-95"
             >
               <Printer size={18} />
-              Download/Print PDF
+              Print / Save PDF
             </button>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>
   );
 }
-

@@ -22,6 +22,8 @@ export const quotationApi = createApi({
                     limit: params?.limit || 10,
                     status: params?.status !== 'All' ? params?.status : undefined,
                     search: params?.search || undefined,
+                    dateFrom: params?.dateFrom || undefined,
+                    dateTo: params?.dateTo || undefined,
                 },
             }),
             providesTags: ['Quotation'],

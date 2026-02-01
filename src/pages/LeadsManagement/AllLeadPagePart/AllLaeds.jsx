@@ -213,297 +213,302 @@ export default function LeadsList() {
 
   return (
     <DashboardLayout>
-      <div className="p-0 ml-6 bg-gray-50 min-h-screen">
+      <div className="min-h-screen bg-white">
         {/* Header */}
-        <div className="flex justify-between items-center flex-wrap gap-3 bg-white border-b py-3 px-6 shadow-sm">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-800">
-              Leads Management
-            </h1>
-            <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
-              <FiHome className="text-gray-700 text-sm" />
-              <span className="text-gray-400">/</span> CRM <span className="text-gray-400">/</span>{" "}
-              <span className="text-[#FF7B1D] font-medium">All Leads</span>
-            </p>
-          </div>
+        <div className="bg-white border-b sticky top-0 z-30">
+          <div className="max-w-8xl mx-auto px-4 py-2">
+            <div className="flex justify-between items-center flex-wrap gap-3">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
+                  Leads Management
+                </h1>
+                <p className="text-[10px] text-gray-500 mt-0.5 flex items-center gap-1.5">
+                  <FiHome className="text-gray-400" size={14} />
+                  CRM / <span className="text-[#FF7B1D] font-medium">All Leads</span>
+                </p>
+              </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            {["All", "Active", "Inactive"].map((status) => (
-              <button
-                key={status}
-                onClick={() => {
-                  setFilterStatus(status);
-                  setCurrentPage(1);
-                }}
-                className={`px-3 py-2 rounded-md font-medium border text-sm transition ${filterStatus === status
-                  ? "bg-[#FF7B1D] text-white border-[#FF7B1D]"
-                  : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-                  }`}
-              >
-                {status}
-              </button>
-            ))}
-
-            <button
-              onClick={() => setIsFilterOpen(true)}
-              className="flex items-center gap-2 bg-white text-gray-700 border border-gray-300 px-4 py-2 rounded-md font-medium hover:bg-gray-50 transition"
-            >
-              <Filter size={18} />
-              Filters
-            </button>
-
-            <div className="flex border border-gray-300 rounded-md overflow-hidden ml-2 bg-white">
-              <button
-                onClick={() => setView("list")}
-                className={`p-2 transition ${view === "list"
-                  ? "bg-orange-50 text-[#FF7B1D]"
-                  : "text-gray-600 hover:bg-gray-50"
-                  }`}
-              >
-                <List size={18} />
-              </button>
-
-              <button
-                onClick={() => setView("grid")}
-                className={`p-2 transition border-l border-gray-300 ${view === "grid"
-                  ? "bg-orange-50 text-[#FF7B1D]"
-                  : "text-gray-600 hover:bg-gray-50"
-                  }`}
-              >
-                <FiGrid size={18} />
-              </button>
-            </div>
-
-            <button
-              onClick={handleExport}
-              className="flex items-center gap-2 bg-white text-gray-700 border border-gray-300 px-4 py-2 rounded-md font-medium hover:bg-gray-50 transition"
-            >
-              <Download size={18} />
-              Export
-            </button>
-
-            <div className="flex flex-col sm:flex-row gap-3 relative">
-              <button
-                onClick={() => setOpenLeadMenu(!openLeadMenu)}
-                className="bg-[#FF7B1D] text-white px-5 py-2.5 rounded-md flex items-center justify-center gap-2 font-semibold hover:bg-[#e06915] transition-all shadow-md"
-              >
-                <UserPlus size={20} /> Add Lead
-              </button>
-
-              {openLeadMenu && (
-                <div className="absolute top-full right-0 mt-2 w-48 bg-white border border-gray-200 shadow-xl rounded-lg z-50 overflow-hidden">
+              <div className="flex flex-wrap items-center gap-2">
+                {["All", "Active", "Inactive"].map((status) => (
                   <button
+                    key={status}
                     onClick={() => {
-                      setOpenLeadMenu(false);
-                      handleAddLead();
+                      setFilterStatus(status);
+                      setCurrentPage(1);
                     }}
-                    className="w-full flex items-center gap-3 text-left px-4 py-3 hover:bg-orange-50 text-gray-700 hover:text-orange-600 transition"
+                    className={`px-3 py-2 rounded-md font-medium border text-sm transition ${filterStatus === status
+                      ? "bg-[#FF7B1D] text-white border-[#FF7B1D]"
+                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                      }`}
                   >
-                    <UserPlus size={16} />
-                    Add Single Lead
+                    {status}
+                  </button>
+                ))}
+
+                <button
+                  onClick={() => setIsFilterOpen(true)}
+                  className="flex items-center gap-2 bg-white text-gray-700 border border-gray-300 px-4 py-2 rounded-md font-medium hover:bg-gray-50 transition"
+                >
+                  <Filter size={18} />
+                  Filters
+                </button>
+
+                <div className="flex border border-gray-300 rounded-md overflow-hidden ml-2 bg-white">
+                  <button
+                    onClick={() => setView("list")}
+                    className={`p-2 transition ${view === "list"
+                      ? "bg-orange-50 text-[#FF7B1D]"
+                      : "text-gray-600 hover:bg-gray-50"
+                      }`}
+                  >
+                    <List size={18} />
                   </button>
 
                   <button
-                    onClick={() => {
-                      setOpenLeadMenu(false);
-                      handleBulkUpload();
-                    }}
-                    className="w-full flex items-center gap-3 text-left px-4 py-3 hover:bg-orange-50 text-gray-700 hover:text-orange-600 transition"
+                    onClick={() => setView("grid")}
+                    className={`p-2 transition border-l border-gray-300 ${view === "grid"
+                      ? "bg-orange-50 text-[#FF7B1D]"
+                      : "text-gray-600 hover:bg-gray-50"
+                      }`}
                   >
-                    <Upload size={16} />
-                    Bulk Upload
+                    <FiGrid size={18} />
                   </button>
                 </div>
-              )}
+
+                <button
+                  onClick={handleExport}
+                  className="flex items-center gap-2 bg-white text-gray-700 border border-gray-300 px-4 py-2 rounded-md font-medium hover:bg-gray-50 transition"
+                >
+                  <Download size={18} />
+                  Export
+                </button>
+
+                <div className="flex flex-col sm:flex-row gap-3 relative">
+                  <button
+                    onClick={() => setOpenLeadMenu(!openLeadMenu)}
+                    className="bg-[#FF7B1D] text-white px-5 py-2.5 rounded-md flex items-center justify-center gap-2 font-semibold hover:bg-[#e06915] transition-all shadow-md"
+                  >
+                    <UserPlus size={20} /> Add Lead
+                  </button>
+
+                  {openLeadMenu && (
+                    <div className="absolute top-full right-0 mt-2 w-48 bg-white border border-gray-200 shadow-xl rounded-lg z-50 overflow-hidden">
+                      <button
+                        onClick={() => {
+                          setOpenLeadMenu(false);
+                          handleAddLead();
+                        }}
+                        className="w-full flex items-center gap-3 text-left px-4 py-3 hover:bg-orange-50 text-gray-700 hover:text-orange-600 transition"
+                      >
+                        <UserPlus size={16} />
+                        Add Single Lead
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setOpenLeadMenu(false);
+                          handleBulkUpload();
+                        }}
+                        className="w-full flex items-center gap-3 text-left px-4 py-3 hover:bg-orange-50 text-gray-700 hover:text-orange-600 transition"
+                      >
+                        <Upload size={16} />
+                        Bulk Upload
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Filter Popup Component */}
-        <FilterPopup
-          isOpen={isFilterOpen}
-          onClose={() => setIsFilterOpen(false)}
-          filterType={filterType}
-          setFilterType={setFilterType}
-          filterPriority={filterPriority}
-          setFilterPriority={setFilterPriority}
-          filterServices={filterServices}
-          setFilterServices={setFilterServices}
-          filterDateFrom={filterDateFrom}
-          setFilterDateFrom={setFilterDateFrom}
-          filterDateTo={filterDateTo}
-          setFilterDateTo={setFilterDateTo}
-          filterSubtype={filterSubtype}
-          setFilterSubtype={setFilterSubtype}
-        />
+          <div className="max-w-8xl mx-auto p-4 mt-0">
+            {/* Filter Popup Component */}
+            <FilterPopup
+              isOpen={isFilterOpen}
+              onClose={() => setIsFilterOpen(false)}
+              filterType={filterType}
+              setFilterType={setFilterType}
+              filterPriority={filterPriority}
+              setFilterPriority={setFilterPriority}
+              filterServices={filterServices}
+              setFilterServices={setFilterServices}
+              filterDateFrom={filterDateFrom}
+              setFilterDateFrom={setFilterDateFrom}
+              filterDateTo={filterDateTo}
+              setFilterDateTo={setFilterDateTo}
+              filterSubtype={filterSubtype}
+              setFilterSubtype={setFilterSubtype}
+            />
 
-        {/* Statement Card - Using Static Data for now unless endpoint provides stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 my-6 px-6">
-          <NumberCard
-            title="Total Leads"
-            number={totalLeads.toString()}
-            icon={<Users className="text-blue-600" size={24} />}
-            iconBgColor="bg-blue-100"
-            lineBorderClass="border-blue-500"
-          />
-          <NumberCard
-            title="Active Leads"
-            number={dashboardStats.activeLeads.toString()} // Fallback
-            icon={<Server className="text-green-600" size={24} />}
-            iconBgColor="bg-green-100"
-            lineBorderClass="border-green-500"
-          />
-          {/* Placeholder stats */}
-          <NumberCard
-            title="Converted"
-            number={dashboardStats.convertedLeads.toString()}
-            icon={<Type className="text-orange-600" size={24} />}
-            iconBgColor="bg-orange-100"
-            lineBorderClass="border-orange-500"
-          />
-          <NumberCard
-            title="Lost"
-            number={dashboardStats.lostLeads.toString()}
-            icon={<Phone className="text-purple-600" size={24} />}
-            iconBgColor="bg-purple-100"
-            lineBorderClass="border-purple-500"
-          />
-        </div>
+            {/* Statement Card - Using Static Data for now unless endpoint provides stats */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+              <NumberCard
+                title="Total Leads"
+                number={totalLeads.toString()}
+                icon={<Users className="text-blue-600" size={24} />}
+                iconBgColor="bg-blue-100"
+                lineBorderClass="border-blue-500"
+              />
+              <NumberCard
+                title="Active Leads"
+                number={dashboardStats.activeLeads.toString()} // Fallback
+                icon={<Server className="text-green-600" size={24} />}
+                iconBgColor="bg-green-100"
+                lineBorderClass="border-green-500"
+              />
+              {/* Placeholder stats */}
+              <NumberCard
+                title="Converted"
+                number={dashboardStats.convertedLeads.toString()}
+                icon={<Type className="text-orange-600" size={24} />}
+                iconBgColor="bg-orange-100"
+                lineBorderClass="border-orange-500"
+              />
+              <NumberCard
+                title="Lost"
+                number={dashboardStats.lostLeads.toString()}
+                icon={<Phone className="text-purple-600" size={24} />}
+                iconBgColor="bg-purple-100"
+                lineBorderClass="border-purple-500"
+              />
+            </div>
 
-        {/* Action Bar with Selection */}
-        {selectedLeads.length > 0 && (
-          <div className="bg-orange-50 border border-orange-200 mx-6 p-4 rounded-lg mb-4 flex justify-between items-center animate-fadeIn">
-            <div className="flex items-center gap-4 text-orange-800">
-              <span className="font-semibold text-lg">
-                {selectedLeads.length} Lead(s) Selected
-              </span>
-            </div>
-            <div className="flex gap-3">
-              <button
-                onClick={handleAssignLeads}
-                className="flex items-center gap-2 bg-white border border-orange-300 text-orange-600 px-4 py-2 rounded-md font-semibold hover:bg-orange-50 transition"
-              >
-                <UserPlus size={18} />
-                Assign Leads
-              </button>
-              <button
-                onClick={handleDeleteSelected}
-                className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-md font-semibold hover:bg-red-700 transition shadow-sm"
-              >
-                <Trash2 size={18} />
-                Delete Selected
-              </button>
-            </div>
-          </div>
-        )}
+            {/* Action Bar with Selection */}
+            {selectedLeads.length > 0 && (
+              <div className="bg-orange-50 border border-orange-200 p-4 rounded-lg mb-4 flex justify-between items-center animate-fadeIn">
+                <div className="flex items-center gap-4 text-orange-800">
+                  <span className="font-semibold text-lg">
+                    {selectedLeads.length} Lead(s) Selected
+                  </span>
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    onClick={handleAssignLeads}
+                    className="flex items-center gap-2 bg-white border border-orange-300 text-orange-600 px-4 py-2 rounded-md font-semibold hover:bg-orange-50 transition"
+                  >
+                    <UserPlus size={18} />
+                    Assign Leads
+                  </button>
+                  <button
+                    onClick={handleDeleteSelected}
+                    className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-md font-semibold hover:bg-red-700 transition shadow-sm"
+                  >
+                    <Trash2 size={18} />
+                    Delete Selected
+                  </button>
+                </div>
+              </div>
+            )}
 
-        {/* Content Area */}
-        <div className="px-6 pb-6">
-          {isLoading ? (
-            <div className="flex justify-center items-center h-64">
-              <Loader2 size={40} className="animate-spin text-orange-500" />
-            </div>
-          ) : isError ? (
-            <div className="text-center text-red-500 py-10">
-              Failed to load leads. Please try again.
-            </div>
-          ) : leadsData.length === 0 ? (
-            <div className="text-center py-10 bg-white rounded-lg border border-gray-200 shadow-sm">
-              <Users size={48} className="mx-auto text-gray-300 mb-4" />
-              <h3 className="text-xl font-semibold text-gray-700">No Leads Found</h3>
-              <p className="text-gray-500 mt-2">Try adjusting your filters or add a new lead.</p>
-            </div>
-          ) : (
-            <>
-              {/* List or Grid View */}
-              {view === "list" ? (
-                <LeadsListView
-                  currentLeads={leadsData}
-                  selectedLeads={selectedLeads}
-                  handleSelectAll={handleSelectAll}
-                  handleSelectLead={handleSelectLead}
-                  handleLeadClick={handleLeadClick}
-                  currentPage={currentPage}
-                  itemsPerPage={itemsPerPage}
-                  handleDeleteLead={handleDeleteLead}
-                  handleEditLead={handleEditLead}
-                />
+            {/* Content Area */}
+            <div className="pb-6">
+              {isLoading ? (
+                <div className="flex justify-center items-center h-64">
+                  <Loader2 size={40} className="animate-spin text-orange-500" />
+                </div>
+              ) : isError ? (
+                <div className="text-center text-red-500 py-10">
+                  Failed to load leads. Please try again.
+                </div>
+              ) : leadsData.length === 0 ? (
+                <div className="text-center py-10 bg-white rounded-lg border border-gray-200 shadow-sm">
+                  <Users size={48} className="mx-auto text-gray-300 mb-4" />
+                  <h3 className="text-xl font-semibold text-gray-700">No Leads Found</h3>
+                  <p className="text-gray-500 mt-2">Try adjusting your filters or add a new lead.</p>
+                </div>
               ) : (
-                <LeadsGridView
-                  leadsData={leadsData}
-                  filterStatus={filterStatus}
-                  handleLeadClick={handleLeadClick}
-                  selectedLeads={selectedLeads}
-                  handleSelectLead={handleSelectLead}
-                />
+                <>
+                  {/* List or Grid View */}
+                  {view === "list" ? (
+                    <LeadsListView
+                      currentLeads={leadsData}
+                      selectedLeads={selectedLeads}
+                      handleSelectAll={handleSelectAll}
+                      handleSelectLead={handleSelectLead}
+                      handleLeadClick={handleLeadClick}
+                      currentPage={currentPage}
+                      itemsPerPage={itemsPerPage}
+                      handleDeleteLead={handleDeleteLead}
+                      handleEditLead={handleEditLead}
+                    />
+                  ) : (
+                    <LeadsGridView
+                      leadsData={leadsData}
+                      filterStatus={filterStatus}
+                      handleLeadClick={handleLeadClick}
+                      selectedLeads={selectedLeads}
+                      handleSelectLead={handleSelectLead}
+                    />
+                  )}
+
+                  {/* Pagination */}
+                  {totalPages > 1 && (
+                    <div className="flex justify-between items-center mt-6 bg-white p-4 rounded-sm border">
+                      <p className="text-sm text-gray-600">
+                        Showing <span className="font-bold">{((currentPage - 1) * itemsPerPage) + 1}</span> to <span className="font-bold">{Math.min(currentPage * itemsPerPage, totalLeads)}</span> of <span className="font-bold">{totalLeads}</span> leads
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={handlePrev}
+                          disabled={currentPage === 1}
+                          className="px-4 py-2 border rounded-sm text-sm font-bold disabled:opacity-50 bg-white hover:bg-gray-50 text-gray-700"
+                        >
+                          Previous
+                        </button>
+
+                        {Array.from({ length: totalPages }, (_, i) => i + 1)
+                          .filter(p => p === 1 || p === totalPages || (p >= currentPage - 1 && p <= currentPage + 1))
+                          .map((p, i, arr) => (
+                            <React.Fragment key={p}>
+                              {i > 0 && arr[i - 1] !== p - 1 && <span className="px-2">...</span>}
+                              <button
+                                onClick={() => handlePageChange(p)}
+                                className={`w-9 h-9 border rounded-sm text-sm font-bold ${currentPage === p
+                                  ? "bg-orange-500 text-white border-orange-500"
+                                  : "bg-white text-gray-700 hover:bg-gray-50"
+                                  }`}
+                              >
+                                {p}
+                              </button>
+                            </React.Fragment>
+                          ))
+                        }
+
+                        <button
+                          onClick={handleNext}
+                          disabled={currentPage === totalPages}
+                          className="px-4 py-2 border rounded-sm text-sm font-bold disabled:opacity-50 bg-white hover:bg-gray-50 text-gray-700"
+                        >
+                          Next
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
+            </div>
+          </div>
 
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="flex justify-between items-center mt-6 bg-gray-50 p-4 rounded-sm border">
-                  <p className="text-sm text-gray-600">
-                    Showing <span className="font-bold">{((currentPage - 1) * itemsPerPage) + 1}</span> to <span className="font-bold">{Math.min(currentPage * itemsPerPage, totalLeads)}</span> of <span className="font-bold">{totalLeads}</span> leads
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={handlePrev}
-                      disabled={currentPage === 1}
-                      className="px-4 py-2 border rounded-sm text-sm font-bold disabled:opacity-50 bg-white hover:bg-gray-50 text-gray-700"
-                    >
-                      Previous
-                    </button>
+          {/* Modals */}
+          <AssignLeadsModal
+            isOpen={isAssignModalOpen}
+            onClose={() => setIsAssignModalOpen(false)}
+            selectedLeadsCount={selectedLeads.length}
+            onAssign={handleAssign}
+          />
 
-                    {Array.from({ length: totalPages }, (_, i) => i + 1)
-                      .filter(p => p === 1 || p === totalPages || (p >= currentPage - 1 && p <= currentPage + 1))
-                      .map((p, i, arr) => (
-                        <React.Fragment key={p}>
-                          {i > 0 && arr[i - 1] !== p - 1 && <span className="px-2">...</span>}
-                          <button
-                            onClick={() => handlePageChange(p)}
-                            className={`w-9 h-9 border rounded-sm text-sm font-bold ${currentPage === p
-                              ? "bg-orange-500 text-white border-orange-500"
-                              : "bg-white text-gray-700 hover:bg-gray-50"
-                              }`}
-                          >
-                            {p}
-                          </button>
-                        </React.Fragment>
-                      ))
-                    }
+          {isModalOpen && (
+            <AddLeadPopup
+              isOpen={isModalOpen}
+              onClose={handleCloseModal}
+              leadToEdit={leadToEdit}
+            />
+          )}
 
-                    <button
-                      onClick={handleNext}
-                      disabled={currentPage === totalPages}
-                      className="px-4 py-2 border rounded-sm text-sm font-bold disabled:opacity-50 bg-white hover:bg-gray-50 text-gray-700"
-                    >
-                      Next
-                    </button>
-                  </div>
-                </div>
-              )}
-            </>
+          {showBulkUploadPopup && (
+            <BulkUploadLeads onClose={() => setShowBulkUploadPopup(false)} />
           )}
         </div>
-
-        {/* Modals */}
-        <AssignLeadsModal
-          isOpen={isAssignModalOpen}
-          onClose={() => setIsAssignModalOpen(false)}
-          selectedLeadsCount={selectedLeads.length}
-          onAssign={handleAssign}
-        />
-
-        {isModalOpen && (
-          <AddLeadPopup
-            isOpen={isModalOpen}
-            onClose={handleCloseModal}
-            leadToEdit={leadToEdit}
-          />
-        )}
-
-        {showBulkUploadPopup && (
-          <BulkUploadLeads onClose={() => setShowBulkUploadPopup(false)} />
-        )}
       </div>
     </DashboardLayout>
   );

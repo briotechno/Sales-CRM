@@ -14,8 +14,11 @@ import {
   CheckCircle,
   DollarSign,
   Edit2,
-  Filter
+  Filter,
+  Calendar,
+  X
 } from "lucide-react";
+import * as XLSX from "xlsx";
 
 import CreateQuotationModal from "../../pages/QuotationPart/CreateQuotationModal";
 import ViewQuotationModal from "../../pages/QuotationPart/ViewQuotationModal";
@@ -42,14 +45,54 @@ export default function QuotationPage() {
   const [filterStatus, setFilterStatus] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
   const [isStatusFilterOpen, setIsStatusFilterOpen] = useState(false);
+  const [dateFilter, setDateFilter] = useState("All");
+  const [isDateFilterOpen, setIsDateFilterOpen] = useState(false);
+  const [customStart, setCustomStart] = useState("");
+  const [customEnd, setCustomEnd] = useState("");
+  const dateDropdownRef = useRef(null);
   const statusDropdownRef = useRef(null);
   const itemsPerPage = 8;
+
+  const getDateRange = () => {
+    const today = new Date();
+    const formatDate = (date) => date.toISOString().split('T')[0];
+
+    let dateFrom = "";
+    let dateTo = "";
+
+    if (dateFilter === "Today") {
+      dateFrom = formatDate(today);
+      dateTo = formatDate(today);
+    } else if (dateFilter === "Yesterday") {
+      const yesterday = new Date(today);
+      yesterday.setDate(today.getDate() - 1);
+      dateFrom = formatDate(yesterday);
+      dateTo = formatDate(yesterday);
+    } else if (dateFilter === "Last 7 Days") {
+      const last7 = new Date(today);
+      last7.setDate(today.getDate() - 7);
+      dateFrom = formatDate(last7);
+      dateTo = formatDate(today);
+    } else if (dateFilter === "This Month") {
+      const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+      dateFrom = formatDate(firstDay);
+      dateTo = formatDate(today);
+    } else if (dateFilter === "Custom") {
+      dateFrom = customStart;
+      dateTo = customEnd;
+    }
+    return { dateFrom, dateTo };
+  };
+
+  const { dateFrom, dateTo } = getDateRange();
 
   const { data, isLoading, error, refetch } = useGetQuotationsQuery({
     page: currentPage,
     limit: itemsPerPage,
     status: filterStatus,
     search: searchTerm,
+    dateFrom,
+    dateTo
   });
 
   const { data: businessInfo } = useGetBusinessInfoQuery();
@@ -63,9 +106,19 @@ export default function QuotationPage() {
   const pagination = data?.pagination || { total: 0, totalPages: 1 };
   const summary = data?.summary || { total: 0, approved: 0, pending: 0, totalValue: 0 };
 
+  const hasActiveFilters = searchTerm || filterStatus !== "All" || dateFilter !== "All";
+
+  const clearAllFilters = () => {
+    setSearchTerm("");
+    setFilterStatus("All");
+    setDateFilter("All");
+    setCustomStart("");
+    setCustomEnd("");
+    setCurrentPage(1);
+  };
+
   const [formData, setFormData] = useState({
     quotationNo: `QT-${new Date().getFullYear()}-0000`,
-    clientName: "",
     companyName: "",
     email: "",
     phone: "",
@@ -77,8 +130,7 @@ export default function QuotationPage() {
     tax: 0,
     discount: 0,
     totalAmount: 0,
-    paymentTerms: "",
-    notes: "",
+    terms_and_conditions: "",
     status: "Draft",
   });
 
@@ -108,7 +160,6 @@ export default function QuotationPage() {
   const resetForm = () => {
     setFormData({
       quotationNo: `QT-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
-      clientName: "",
       companyName: "",
       email: "",
       phone: "",
@@ -120,14 +171,13 @@ export default function QuotationPage() {
       tax: 0,
       discount: 0,
       totalAmount: 0,
-      paymentTerms: "",
-      notes: "",
+      terms_and_conditions: "",
       status: "Draft",
     });
   };
 
   const handleCreateQuotation = async () => {
-    if (!formData.clientName || !formData.quotationDate || !formData.totalAmount) {
+    if (!formData.companyName || !formData.quotationDate || !formData.totalAmount) {
       toast.error("Please fill in all required fields");
       return;
     }
@@ -135,7 +185,6 @@ export default function QuotationPage() {
     try {
       const payload = {
         quotation_id: formData.quotationNo,
-        client_name: formData.clientName,
         company_name: formData.companyName,
         email: formData.email,
         phone: formData.phone,
@@ -147,8 +196,7 @@ export default function QuotationPage() {
         tax: formData.tax,
         discount: formData.discount,
         total_amount: formData.totalAmount,
-        payment_terms: formData.paymentTerms,
-        notes: formData.notes,
+        terms_and_conditions: formData.terms_and_conditions,
         status: formData.status,
       };
 
@@ -185,7 +233,6 @@ export default function QuotationPage() {
       setFormData({
         id: q.id,
         quotationNo: q.quotation_id,
-        clientName: q.client_name,
         companyName: q.company_name,
         email: q.email,
         phone: q.phone,
@@ -197,8 +244,7 @@ export default function QuotationPage() {
         tax: q.tax || 0,
         discount: q.discount || 0,
         totalAmount: q.total_amount || 0,
-        paymentTerms: q.payment_terms || "",
-        notes: q.notes || "",
+        terms_and_conditions: q.terms_and_conditions || "",
         status: q.status || "Draft",
       });
 
@@ -245,15 +291,70 @@ export default function QuotationPage() {
     }
   };
 
+  const handleExportExcel = () => {
+    try {
+      if (!quotations || quotations.length === 0) {
+        toast.error("No data available to export");
+        return;
+      }
+
+      // Format data for Excel with professional headers
+      const exportData = quotations.map(q => ({
+        "Quotation ID": q.quotation_id,
+        "Date": new Date(q.quotation_date).toLocaleDateString(),
+        "Valid Until": q.valid_until ? new Date(q.valid_until).toLocaleDateString() : 'N/A',
+        "Company": q.company_name || 'N/A',
+        "Email": q.email || "N/A",
+        "Phone": q.phone || "N/A",
+        "Subtotal (INR)": q.subtotal,
+        "Tax (%)": q.tax || 0,
+        "Discount (INR)": q.discount || 0,
+        "Total Amount (INR)": q.total_amount,
+        "Status": q.status.toUpperCase(),
+        "Payment Terms": q.payment_terms || "",
+        "Notes": q.notes || ""
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(exportData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Quotations Report");
+
+      // Professional Column Widths
+      const wscols = [
+        { wch: 20 }, // Quotation ID
+        { wch: 15 }, // Date
+        { wch: 15 }, // Valid Until
+        { wch: 25 }, // Client Name
+        { wch: 25 }, // Company
+        { wch: 30 }, // Email
+        { wch: 15 }, // Phone
+        { wch: 15 }, // Subtotal
+        { wch: 12 }, // Tax
+        { wch: 15 }, // Discount
+        { wch: 18 }, // Total Amount
+        { wch: 12 }, // Status
+        { wch: 30 }, // Payment Terms
+        { wch: 30 }  // Notes
+      ];
+      worksheet['!cols'] = wscols;
+
+      XLSX.writeFile(workbook, `Quotations_${dateFilter}_${new Date().toLocaleDateString().replace(/\//g, '-')}.xlsx`);
+      toast.success("Exported to Excel successfully!");
+    } catch (error) {
+      console.error("Excel Export Error:", error);
+      toast.error("Error generating Excel report");
+    }
+  };
+
   const handleExport = () => {
     if (quotations.length === 0) {
       toast.error("No data to export");
       return;
     }
-    const headers = ["Quotation ID", "Client Name", "Date", "Amount", "Status", "Valid Until"];
+    const headers = ["Quotation ID", "Company", "Date", "Amount", "Status", "Valid Until"];
     const csvData = quotations.map(q => [
       q.quotation_id,
-      q.client_name,
+      q.company_name,
       new Date(q.quotation_date).toLocaleDateString(),
       q.total_amount,
       q.status,
@@ -293,7 +394,7 @@ export default function QuotationPage() {
       id: qData.quotation_id || qData.id,
       date: qData.quotation_date ? new Date(qData.quotation_date).toLocaleDateString() : qData.date,
       validUntil: qData.valid_until ? new Date(qData.valid_until).toLocaleDateString() : (qData.validUntil || "Not Set"),
-      client: qData.client_name || qData.client || "Client Name",
+      client: qData.company_name || qData.companyName || "Client Name",
       companyName: qData.company_name || qData.companyName,
       email: qData.email,
       phone: qData.phone,
@@ -588,6 +689,12 @@ export default function QuotationPage() {
       ) {
         setIsStatusFilterOpen(false);
       }
+      if (
+        dateDropdownRef.current &&
+        !dateDropdownRef.current.contains(event.target)
+      ) {
+        setIsDateFilterOpen(false);
+      }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
@@ -599,21 +706,18 @@ export default function QuotationPage() {
 
   return (
     <DashboardLayout>
-      <div className="ml-6 min-h-screen">
+      <div className="min-h-screen bg-white">
         {/* Header Section */}
-        <div className="bg-white border-b my-3">
-          <div className="max-w-8xl mx-auto">
-            <div className="flex items-center justify-between py-3">
+        <div className="bg-white border-b sticky top-0 z-30">
+          <div className="max-w-8xl mx-auto px-4 py-2">
+            <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-2xl font-bold text-gray-800">
+                <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
                   Quotation Management
                 </h1>
-                <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
-                  <Home className="text-gray-700 text-sm" />
-                  <span className="text-gray-400"></span> CRM /{" "}
-                  <span className="text-[#FF7B1D] font-medium">
-                    All Quotations
-                  </span>
+                <p className="text-[10px] text-gray-500 mt-0.5 flex items-center gap-1.5">
+                  <Home className="text-gray-400" size={14} />
+                  CRM / <span className="text-[#FF7B1D] font-medium">All Quotations</span>
                 </p>
               </div>
 
@@ -622,19 +726,19 @@ export default function QuotationPage() {
                 <div className="relative" ref={statusDropdownRef}>
                   <button
                     onClick={() => setIsStatusFilterOpen(!isStatusFilterOpen)}
-                    className={`flex items-center gap-2 px-4 py-3 rounded-sm border transition shadow-sm ${isStatusFilterOpen || filterStatus !== "All"
+                    className={`p-2 rounded-sm border transition shadow-sm ${isStatusFilterOpen || filterStatus !== "All"
                       ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
                       : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
                       }`}
                   >
-                    <Filter size={20} />
+                    <Filter size={18} />
                   </button>
 
                   {isStatusFilterOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-sm shadow-xl z-50 animate-fadeIn">
+                    <div className="absolute right-0 mt-2 w-32 bg-white border border-gray-200 rounded-sm shadow-xl z-50 animate-fadeIn">
                       <div className="py-1">
                         {[
-                          { label: "All Status", value: "All" },
+                          { label: "All", value: "All" },
                           { label: "Draft", value: "Draft" },
                           { label: "Pending", value: "Pending" },
                           { label: "Approved", value: "Approved" },
@@ -647,7 +751,7 @@ export default function QuotationPage() {
                               setIsStatusFilterOpen(false);
                               setCurrentPage(1);
                             }}
-                            className={`block w-full text-left px-4 py-2.5 text-sm transition-colors ${filterStatus === option.value
+                            className={`block w-full text-left px-4 py-2 text-sm transition-colors ${filterStatus === option.value
                               ? "bg-orange-50 text-orange-600 font-bold"
                               : "text-gray-700 hover:bg-gray-50"
                               }`}
@@ -660,6 +764,59 @@ export default function QuotationPage() {
                   )}
                 </div>
 
+                <div className="relative" ref={dateDropdownRef}>
+                  <button
+                    onClick={() => setIsDateFilterOpen(!isDateFilterOpen)}
+                    className={`p-2 rounded-sm border transition shadow-sm ${isDateFilterOpen || dateFilter !== "All"
+                      ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
+                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
+                      }`}
+                  >
+                    <Calendar size={18} />
+                  </button>
+
+                  {isDateFilterOpen && (
+                    <div className="absolute right-0 mt-2 w-44 bg-white border border-gray-200 rounded-sm shadow-xl z-50 animate-fadeIn">
+                      <div className="py-1">
+                        {["All", "Today", "Yesterday", "Last 7 Days", "This Month", "Custom"].map((option) => (
+                          <button
+                            key={option}
+                            onClick={() => {
+                              setDateFilter(option);
+                              setIsDateFilterOpen(false);
+                              setCurrentPage(1);
+                            }}
+                            className={`block w-full text-left px-4 py-2 text-[11px] transition-colors uppercase ${dateFilter === option
+                              ? "bg-orange-50 text-orange-600 font-bold"
+                              : "text-gray-700 hover:bg-gray-50 font-medium"
+                              }`}
+                          >
+                            {option}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {dateFilter === "Custom" && (
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="date"
+                      value={customStart}
+                      onChange={(e) => setCustomStart(e.target.value)}
+                      className="px-2 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-orange-500 text-xs shadow-sm"
+                    />
+                    <span className="text-gray-400 text-[10px] font-bold uppercase">to</span>
+                    <input
+                      type="date"
+                      value={customEnd}
+                      onChange={(e) => setCustomEnd(e.target.value)}
+                      className="px-2 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-orange-500 text-xs shadow-sm"
+                    />
+                  </div>
+                )}
+
 
                 <div className="relative">
                   <input
@@ -670,20 +827,18 @@ export default function QuotationPage() {
                       setSearchTerm(e.target.value);
                       setCurrentPage(1);
                     }}
-                    className="pl-10 pr-4 py-3 border border-gray-200 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#FF7B1D] text-sm w-64 shadow-sm"
+                    className="pl-10 pr-4 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-orange-500 text-sm w-64 shadow-sm"
                   />
-                  <Search
-                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                    size={16}
-                  />
+                  <Search className="absolute left-3 top-2.5 text-gray-400" size={16} />
                 </div>
 
                 <button
-                  onClick={handleExport}
-                  className="px-6 py-3 bg-orange-50 text-orange-600 rounded-sm hover:bg-orange-100 flex items-center gap-2 font-bold shadow-sm"
+                  onClick={handleExportExcel}
+                  className="bg-white border border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-sm flex items-center gap-2 transition text-sm font-semibold shadow-sm active:scale-95 text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed group"
+                  disabled={quotations.length === 0}
                 >
-                  <Download size={20} />
-                  Export CSV
+                  <Download size={18} className="text-gray-700 transition-transform group-hover:scale-110" />
+                  EXPORT
                 </button>
 
                 <button
@@ -691,223 +846,245 @@ export default function QuotationPage() {
                     resetForm();
                     setShowModal(true);
                   }}
-                  className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm hover:shadow-lg transition-all flex items-center gap-2 font-bold shadow-md"
+                  className="flex items-center gap-2 px-4 py-2 rounded-sm font-bold transition shadow-md text-sm active:scale-95 bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
                 >
-                  <Plus size={20} />
-                  New Quotation
+                  <Plus size={18} />
+                  NEW QUOTATION
                 </button>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Stats Section */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <NumberCard
-            title="Total Quotations"
-            number={summary.total || "0"}
-            icon={<FileText className="text-blue-600" size={24} />}
-            iconBgColor="bg-blue-100"
-            lineBorderClass="border-blue-500"
-          />
-          <NumberCard
-            title="Total Value"
-            number={`₹${((summary.totalValue || 0) / 100000).toFixed(1)}L`}
-            icon={<DollarSign className="text-green-600" size={24} />}
-            iconBgColor="bg-green-100"
-            lineBorderClass="border-green-500"
-          />
-          <NumberCard
-            title="Pending"
-            number={summary.pending || "0"}
-            icon={<AlertCircle className="text-orange-600" size={24} />}
-            iconBgColor="bg-orange-100"
-            lineBorderClass="border-orange-500"
-          />
-          <NumberCard
-            title="Approved"
-            number={summary.approved || "0"}
-            icon={<CheckCircle className="text-purple-600" size={24} />}
-            iconBgColor="bg-purple-100"
-            lineBorderClass="border-purple-500"
-          />
-        </div>
+        <div className="max-w-8xl mx-auto p-4 mt-0">
+          {/* Stats Section */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-3">
+            <NumberCard
+              title="Total Quotations"
+              number={summary.total || "0"}
+              icon={<FileText className="text-blue-600" size={24} />}
+              iconBgColor="bg-blue-100"
+              lineBorderClass="border-blue-500"
+            />
+            <NumberCard
+              title="Total Value"
+              number={`₹${((summary.totalValue || 0) / 100000).toFixed(1)}L`}
+              icon={<DollarSign className="text-green-600" size={24} />}
+              iconBgColor="bg-green-100"
+              lineBorderClass="border-green-500"
+            />
+            <NumberCard
+              title="Pending"
+              number={summary.pending || "0"}
+              icon={<AlertCircle className="text-orange-600" size={24} />}
+              iconBgColor="bg-orange-100"
+              lineBorderClass="border-orange-500"
+            />
+            <NumberCard
+              title="Approved"
+              number={summary.approved || "0"}
+              icon={<CheckCircle className="text-purple-600" size={24} />}
+              iconBgColor="bg-purple-100"
+              lineBorderClass="border-purple-500"
+            />
+          </div>
 
-        {/* Table Section */}
-        <div className="overflow-x-auto border border-gray-200 rounded-sm shadow-sm bg-white">
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm">
-                <th className="py-4 px-6 font-semibold text-left">ID</th>
-                <th className="py-4 px-6 font-semibold text-left">Client Name</th>
-                <th className="py-4 px-6 font-semibold text-left">Date</th>
-                <th className="py-4 px-6 font-semibold text-right">Amount</th>
-                <th className="py-4 px-6 font-semibold text-left">Status</th>
-                <th className="py-4 px-6 font-semibold text-center">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {isLoading ? (
-                <tr>
-                  <td colSpan="6" className="py-20 text-center">
-                    <div className="flex justify-center flex-col items-center gap-4">
-                      <div className="w-12 h-12 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin"></div>
-                      <p className="text-gray-500 font-semibold animate-pulse">Fetching quotations...</p>
-                    </div>
-                  </td>
-                </tr>
-              ) : error ? (
-                <tr>
-                  <td colSpan="6" className="py-16 text-center text-red-500 font-medium">
-                    Error loading quotations. Please try again.
-                  </td>
-                </tr>
-              ) : quotations.length > 0 ? (
-                quotations.map((quote) => (
-                  <tr key={quote.id} className="hover:bg-gray-50 transition-colors group">
-                    <td className="py-4 px-6 font-bold text-orange-600">{quote.quotation_id}</td>
-                    <td className="py-4 px-6 font-medium text-gray-800">{quote.client_name}</td>
-                    <td className="py-4 px-6 text-gray-600 text-sm">{new Date(quote.quotation_date).toLocaleDateString()}</td>
-                    <td className="py-4 px-6 text-right font-bold text-gray-900">
-                      {quote.currency === "INR" ? "₹" : "$"} {quote.total_amount.toLocaleString()}
-                    </td>
-                    <td className="py-4 px-6">
-                      <select
-                        value={quote.status}
-                        onChange={(e) => handleStatusChange(quote.id, e.target.value)}
-                        className={`px-3 py-1 rounded-full text-xs font-bold border-0 cursor-pointer shadow-sm ${getStatusColor(quote.status)}`}
-                      >
-                        <option value="Draft">Draft</option>
-                        <option value="Pending">Pending</option>
-                        <option value="Approved">Approved</option>
-                        <option value="Rejected">Rejected</option>
-                      </select>
-                    </td>
-                    <td className="py-4 px-6">
-                      <div className="flex justify-center gap-2">
-                        <button
-                          onClick={() => handleView(quote)}
-                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-sm transition-all"
-                          title="View"
-                        >
-                          <Eye size={18} />
-                        </button>
-                        <button
-                          onClick={() => handleEdit(quote)}
-                          className="p-2 text-orange-500 hover:bg-orange-50 rounded-sm transition-all"
-                          title="Edit"
-                        >
-                          <Edit2 size={18} />
-                        </button>
-                        <button
-                          onClick={() => handleDownload(quote)}
-                          className="p-2 text-green-600 hover:bg-green-50 rounded-sm transition-all"
-                          title="Download PDF"
-                        >
-                          <Download size={18} />
-                        </button>
-                        <button
-                          onClick={() => {
-                            setSelectedQuotationId(quote.id);
-                            setIsDeleteModalOpen(true);
-                          }}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-sm transition-all shadow-sm"
-                          title="Delete"
-                        >
-                          <Trash2 size={18} />
-                        </button>
+          {hasActiveFilters && (
+            <div className="mb-4 flex flex-wrap items-center justify-between bg-orange-50 border border-orange-200 rounded-sm p-3 gap-3 animate-fadeIn">
+              <div className="flex flex-wrap items-center gap-2">
+                <Filter className="text-orange-600" size={16} />
+                <span className="text-sm font-bold text-orange-800 uppercase">
+                  ACTIVE FILTERS:
+                </span>
+                {searchTerm && <span className="text-xs bg-white px-2 py-1 rounded-sm border border-orange-200 text-orange-700 shadow-sm font-bold">Search: "{searchTerm}"</span>}
+                {filterStatus !== "All" && <span className="text-xs bg-white px-2 py-1 rounded-sm border border-orange-200 text-orange-700 shadow-sm font-bold">Status: {filterStatus}</span>}
+                {dateFilter !== "All" && <span className="text-xs bg-white px-2 py-1 rounded-sm border border-orange-200 text-orange-700 shadow-sm font-bold">Date: {dateFilter}</span>}
+              </div>
+              <button
+                onClick={clearAllFilters}
+                className="flex items-center gap-2 px-3 py-1.5 bg-white border border-orange-300 text-orange-600 rounded-sm hover:bg-orange-100 transition shadow-sm text-xs font-bold active:scale-95 uppercase"
+              >
+                <X size={14} />
+                Clear All
+              </button>
+            </div>
+          )}
 
+          {/* Table Section */}
+          <div className="overflow-x-auto border border-gray-200 rounded-sm shadow-sm bg-white">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm">
+                  <th className="py-4 px-6 font-semibold text-left">ID</th>
+                  <th className="py-4 px-6 font-semibold text-left">Company</th>
+                  <th className="py-4 px-6 font-semibold text-left">Date</th>
+                  <th className="py-4 px-6 font-semibold text-right">Amount</th>
+                  <th className="py-4 px-6 font-semibold text-left">Status</th>
+                  <th className="py-4 px-6 font-semibold text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {isLoading ? (
+                  <tr>
+                    <td colSpan="6" className="py-20 text-center">
+                      <div className="flex justify-center flex-col items-center gap-4">
+                        <div className="w-12 h-12 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin"></div>
+                        <p className="text-gray-500 font-semibold animate-pulse">Fetching quotations...</p>
                       </div>
                     </td>
                   </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="6" className="py-16 text-center text-gray-500">
-                    <div className="flex flex-col items-center gap-3">
-                      <FileText size={48} className="text-gray-200" />
-                      <p className="font-medium">No quotations found.</p>
-                      <button
-                        onClick={() => { resetForm(); setShowModal(true); }}
-                        className="text-orange-600 underline font-semibold mt-2"
-                      >
-                        Create your first quotation
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+                ) : error ? (
+                  <tr>
+                    <td colSpan="6" className="py-16 text-center text-red-500 font-medium">
+                      Error loading quotations. Please try again.
+                    </td>
+                  </tr>
+                ) : quotations.length > 0 ? (
+                  quotations.map((quote) => (
+                    <tr key={quote.id} className="hover:bg-gray-50 transition-colors group">
+                      <td className="py-4 px-6 font-bold text-orange-600">{quote.quotation_id}</td>
+                      <td className="py-4 px-6 font-medium text-gray-800">{quote.company_name}</td>
+                      <td className="py-4 px-6 text-gray-600 text-sm">{new Date(quote.quotation_date).toLocaleDateString()}</td>
+                      <td className="py-4 px-6 text-right font-bold text-gray-900">
+                        {quote.currency === "INR" ? "₹" : "$"} {quote.total_amount.toLocaleString()}
+                      </td>
+                      <td className="py-4 px-6">
+                        <select
+                          value={quote.status}
+                          onChange={(e) => handleStatusChange(quote.id, e.target.value)}
+                          className={`px-3 py-1 rounded-full text-xs font-bold border-0 cursor-pointer shadow-sm ${getStatusColor(quote.status)}`}
+                        >
+                          <option value="Draft">Draft</option>
+                          <option value="Pending">Pending</option>
+                          <option value="Approved">Approved</option>
+                          <option value="Rejected">Rejected</option>
+                        </select>
+                      </td>
+                      <td className="py-4 px-6">
+                        <div className="flex justify-center gap-2">
+                          <button
+                            onClick={() => handleView(quote)}
+                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-sm transition-all"
+                            title="View"
+                          >
+                            <Eye size={18} />
+                          </button>
+                          <button
+                            onClick={() => handleEdit(quote)}
+                            className="p-2 text-orange-500 hover:bg-orange-50 rounded-sm transition-all"
+                            title="Edit"
+                          >
+                            <Edit2 size={18} />
+                          </button>
+                          <button
+                            onClick={() => handleDownload(quote)}
+                            className="p-2 text-green-600 hover:bg-green-50 rounded-sm transition-all"
+                            title="Download PDF"
+                          >
+                            <Download size={18} />
+                          </button>
+                          <button
+                            onClick={() => {
+                              setSelectedQuotationId(quote.id);
+                              setIsDeleteModalOpen(true);
+                            }}
+                            className="p-2 text-red-600 hover:bg-red-50 rounded-sm transition-all shadow-sm"
+                            title="Delete"
+                          >
+                            <Trash2 size={18} />
+                          </button>
 
-        {/* Pagination Section */}
-        <div className="flex flex-col md:flex-row justify-between items-center mt-6 gap-4 bg-gray-50 p-4 rounded-sm border border-gray-200 mb-6 shadow-sm">
-          <p className="text-sm font-semibold text-gray-700">
-            Showing <span className="text-orange-600">{indexOfFirstItem + 1}</span> to <span className="text-orange-600">{indexOfLastItem}</span> of <span className="text-orange-600">{pagination.total || 0}</span> Quotations
-          </p>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handlePrev}
-              disabled={currentPage === 1}
-              className={`px-4 py-2 rounded-sm font-bold transition flex items-center gap-1 ${currentPage === 1 ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"
-                }`}
-            >
-              Previous
-            </button>
-
-            <div className="flex items-center gap-1">
-              {Array.from({ length: pagination.totalPages }, (_, i) => (
-                <button
-                  key={i + 1}
-                  onClick={() => handlePageChange(i + 1)}
-                  className={`w-10 h-10 rounded-sm font-bold transition ${currentPage === i + 1 ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md border-orange-500" : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
-                    }`}
-                >
-                  {i + 1}
-                </button>
-              ))}
-            </div>
-
-            <button
-              onClick={handleNext}
-              disabled={currentPage === pagination.totalPages || pagination.totalPages === 0}
-              className={`px-4 py-2 rounded-sm font-bold transition flex items-center gap-1 ${currentPage === pagination.totalPages || pagination.totalPages === 0 ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-green-600 text-white hover:opacity-90 shadow-md"
-                }`}
-            >
-              Next
-            </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="6" className="py-16 text-center text-gray-500">
+                      <div className="flex flex-col items-center gap-3">
+                        <FileText size={48} className="text-gray-200" />
+                        <p className="font-medium">No quotations found.</p>
+                        <button
+                          onClick={() => { resetForm(); setShowModal(true); }}
+                          className="text-orange-600 underline font-semibold mt-2"
+                        >
+                          Create your first quotation
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
+
+          {/* Pagination Section */}
+          <div className="flex flex-col md:flex-row justify-between items-center mt-6 gap-4 bg-gray-50 p-4 rounded-sm border border-gray-200 mb-6 shadow-sm">
+            <p className="text-sm font-semibold text-gray-700">
+              Showing <span className="text-orange-600">{indexOfFirstItem + 1}</span> to <span className="text-orange-600">{indexOfLastItem}</span> of <span className="text-orange-600">{pagination.total || 0}</span> Quotations
+            </p>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handlePrev}
+                disabled={currentPage === 1}
+                className={`px-4 py-2 rounded-sm font-bold transition flex items-center gap-1 ${currentPage === 1 ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"
+                  }`}
+              >
+                Previous
+              </button>
+
+              <div className="flex items-center gap-1">
+                {Array.from({ length: pagination.totalPages }, (_, i) => (
+                  <button
+                    key={i + 1}
+                    onClick={() => handlePageChange(i + 1)}
+                    className={`w-10 h-10 rounded-sm font-bold transition ${currentPage === i + 1 ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md border-orange-500" : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+                      }`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+              </div>
+
+              <button
+                onClick={handleNext}
+                disabled={currentPage === pagination.totalPages || pagination.totalPages === 0}
+                className={`px-4 py-2 rounded-sm font-bold transition flex items-center gap-1 ${currentPage === pagination.totalPages || pagination.totalPages === 0 ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-green-600 text-white hover:opacity-90 shadow-md"
+                  }`}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+
+          {/* Modals */}
+          <CreateQuotationModal
+            showModal={showModal}
+            setShowModal={(val) => { setShowModal(val); if (!val) resetForm(); }}
+            formData={formData}
+            handleInputChange={handleInputChange}
+            handleCreateQuotation={handleCreateQuotation}
+            setFormData={setFormData}
+          />
+
+          <ViewQuotationModal
+            showViewModal={showViewModal}
+            setShowViewModal={setShowViewModal}
+            selectedQuote={selectedQuote}
+            getStatusColor={getStatusColor}
+          />
+
+          <DeleteQuotationModal
+            isOpen={isDeleteModalOpen}
+            onClose={() => {
+              setIsDeleteModalOpen(false);
+              setSelectedQuotationId(null);
+            }}
+            quotationId={selectedQuotationId}
+            refetch={refetch}
+          />
         </div>
-
-        {/* Modals */}
-        <CreateQuotationModal
-          showModal={showModal}
-          setShowModal={(val) => { setShowModal(val); if (!val) resetForm(); }}
-          formData={formData}
-          handleInputChange={handleInputChange}
-          handleCreateQuotation={handleCreateQuotation}
-          setFormData={setFormData}
-        />
-
-        <ViewQuotationModal
-          showViewModal={showViewModal}
-          setShowViewModal={setShowViewModal}
-          selectedQuote={selectedQuote}
-          getStatusColor={getStatusColor}
-        />
-
-        <DeleteQuotationModal
-          isOpen={isDeleteModalOpen}
-          onClose={() => {
-            setIsDeleteModalOpen(false);
-            setSelectedQuotationId(null);
-          }}
-          quotationId={selectedQuotationId}
-          refetch={refetch}
-        />
-
       </div>
     </DashboardLayout>
   );

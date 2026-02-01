@@ -11,10 +11,9 @@ exports.createQuotation = async (req, res) => {
 
 exports.getQuotations = async (req, res) => {
     try {
-        const { page, limit, status, search } = req.query;
-        const result = await Quotation.findAll(req.user.id, page, limit, status, search);
-        const stats = await Quotation.getStats(req.user.id);
-        res.status(200).json({ success: true, ...result, summary: stats });
+        const { page, limit, status, search, dateFrom, dateTo } = req.query;
+        const result = await Quotation.findAll(req.user.id, page, limit, status, search, dateFrom, dateTo);
+        res.status(200).json({ success: true, ...result });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }

@@ -13,9 +13,12 @@ const invoiceController = {
 
     getAllInvoices: async (req, res) => {
         try {
-            const { status, search } = req.query;
-            const invoices = await Invoice.findAll(req.user.id, { status, search });
-            res.json({ success: true, data: invoices });
+            const { status, search, page, limit, dateFrom, dateTo } = req.query;
+            const result = await Invoice.findAll(req.user.id,
+                { status, search, dateFrom, dateTo },
+                { page, limit }
+            );
+            res.json({ success: true, ...result });
         } catch (error) {
             console.error('Error fetching invoices:', error);
             res.status(500).json({ success: false, message: 'Error fetching invoices' });

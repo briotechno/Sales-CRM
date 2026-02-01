@@ -20,6 +20,10 @@ export const invoiceApi = createApi({
                 params: {
                     status: params?.status && params.status !== 'all' ? params.status : undefined,
                     search: params?.search || undefined,
+                    page: params?.page || 1,
+                    limit: params?.limit || 10,
+                    dateFrom: params?.dateFrom || undefined,
+                    dateTo: params?.dateTo || undefined,
                 },
             }),
             providesTags: ['Invoice'],

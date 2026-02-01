@@ -221,194 +221,195 @@ export default function ManageLeave() {
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen bg-gray-50 ml-6 p-6">
-        {/* Header */}
-        <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">
-              Manage Leave
-            </h1>
-            <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
-              <FiHome className="text-gray-400" />
-              <span>HRM /</span>
-              <span className="text-[#FF7B1D] font-medium">
-                Manage all Leave
-              </span>
-            </p>
-          </div>
-          <div className="flex gap-3">
-            <button
-              onClick={() => setShowFilterModal(true)}
-              className="bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition shadow-sm flex items-center gap-2 font-medium"
-            >
-              <Filter size={18} />
-              Filter
-            </button>
-            <button
-              onClick={handleAddNew}
-              className="bg-[#FF7B1D] text-white px-4 py-2 rounded-lg hover:bg-[#e06915] transition shadow-sm flex items-center gap-2 font-medium"
-            >
-              <Plus size={18} />
-              Add Leave Type
-            </button>
-          </div>
-        </div>
+      <div className="min-h-screen bg-white">
+        {/* Header Section */}
+        <div className="bg-white border-b sticky top-0 z-30">
+          <div className="max-w-8xl mx-auto px-4 py-2">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Manage Leave</h1>
+                <p className="text-[10px] text-gray-500 mt-0.5 flex items-center gap-1.5">
+                  <FiHome className="text-gray-400" size={14} /> HRM / <span className="text-orange-500 font-medium">Manage all Leave</span>
+                </p>
+              </div>
 
+              <div className="flex flex-wrap items-center gap-3">
+                <button
+                  onClick={() => setShowFilterModal(true)}
+                  className="bg-white border border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-sm flex items-center gap-2 transition text-sm font-semibold shadow-sm active:scale-95 text-gray-700"
+                >
+                  <Filter size={18} /> FILTER
+                </button>
 
-        {/* Table Card */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
-                  <th className="px-6 py-4 text-left font-semibold tracking-wider">Leave Type</th>
-                  <th className="px-6 py-4 text-left font-semibold tracking-wider">Description</th>
-                  <th className="px-6 py-4 text-center font-semibold tracking-wider">Allocation</th>
-                  <th className="px-6 py-4 text-center font-semibold tracking-wider">Period</th>
-                  <th className="px-6 py-4 text-center font-semibold tracking-wider">Paid</th>
-                  <th className="px-6 py-4 text-center font-semibold tracking-wider">Status</th>
-                  <th className="px-6 py-4 text-center font-semibold tracking-wider">Action</th>
-                </tr>
-              </thead>
-
-              <tbody className="divide-y divide-gray-200">
-                {isLoading ? (
-                  Array.from({ length: 5 }).map((_, index) => (
-                    <tr key={index} className="border-b">
-                      <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded animate-pulse w-32"></div></td>
-                      <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded animate-pulse w-48"></div></td>
-                      <td className="px-6 py-4 text-center"><div className="h-6 bg-gray-200 rounded-full animate-pulse w-16 mx-auto"></div></td>
-                      <td className="px-6 py-4 text-center"><div className="h-4 bg-gray-200 rounded animate-pulse w-20 mx-auto"></div></td>
-                      <td className="px-6 py-4 text-center"><div className="h-5 bg-gray-200 rounded-full animate-pulse w-12 mx-auto"></div></td>
-                      <td className="px-6 py-4 text-center"><div className="h-5 bg-gray-200 rounded-full animate-pulse w-16 mx-auto"></div></td>
-                      <td className="px-6 py-4 text-center"><div className="h-8 bg-gray-200 rounded animate-pulse w-20 mx-auto"></div></td>
-                    </tr>
-                  ))
-                ) : isError ? (
-                  <tr><td colSpan="7" className="text-center py-8 text-red-500">Error loading data</td></tr>
-                ) : leaveData?.leave_types?.length === 0 ? (
-                  <tr><td colSpan="7" className="text-center py-8 text-gray-500">No leave types found</td></tr>
-                ) : (
-                  leaveData?.leave_types.map((leave) => (
-                    <tr key={leave.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-6 py-4">
-                        <span className="font-medium text-gray-900">{leave.leave_type}</span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="text-gray-500 text-sm line-clamp-1" title={leave.description}>{leave.description}</span>
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <span className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 font-medium text-xs">
-                          {leave.leave_allocation} days
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <span className="text-sm text-gray-700">{leave.renewal_type}</span>
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${leave.paid === "Yes" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
-                          {leave.paid}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${leave.status === "Active" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"}`}>
-                          {leave.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center justify-center gap-2">
-                          <button
-                            onClick={() => handleEdit(leave)}
-                            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition"
-                          >
-                            <Edit2 size={16} />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteClick(leave)}
-                            className="p-1.5 text-red-600 hover:bg-red-50 rounded transition"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Pagination */}
-          <div className="flex justify-between items-center mt-6 bg-gray-50 p-4 rounded-sm border-t border-gray-200">
-            <p className="text-sm text-gray-600">
-              Showing <span className="font-bold">{((currentPage - 1) * itemsPerPage) + 1}</span> to <span className="font-bold">{Math.min(currentPage * itemsPerPage, leaveData?.pagination?.total || 0)}</span> of <span className="font-bold">{leaveData?.pagination?.total || 0}</span> results
-            </p>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-                className="px-4 py-2 border rounded-sm text-sm font-bold disabled:opacity-50 bg-white hover:bg-gray-50 transition-colors"
-              >
-                Previous
-              </button>
-
-              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                let p = i + 1;
-                if (totalPages > 5 && currentPage > 3) p = currentPage - 2 + i;
-                if (p > totalPages) return null;
-                return (
-                  <button
-                    key={p}
-                    onClick={() => handlePageChange(p)}
-                    className={`w-9 h-9 border rounded-sm text-sm font-bold flex items-center justify-center transition-colors ${currentPage === p
-                      ? 'bg-orange-500 text-white border-orange-500'
-                      : 'bg-white text-gray-700 hover:bg-gray-50'
-                      }`}
-                  >
-                    {p}
-                  </button>
-                );
-              })}
-
-              <button
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                className="px-4 py-2 border rounded-sm text-sm font-bold disabled:opacity-50 bg-white hover:bg-gray-50 transition-colors"
-              >
-                Next
-              </button>
+                <button
+                  onClick={handleAddNew}
+                  className="flex items-center gap-2 px-4 py-2 rounded-sm font-bold transition shadow-md text-sm active:scale-95 bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
+                >
+                  <Plus size={18} /> ADD LEAVE TYPE
+                </button>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Modals */}
-        <LeaveFormModal
-          showModal={showModal}
-          setShowModal={setShowModal}
-          editingLeave={editingLeave}
-          formData={formData}
-          handleInputChange={handleInputChange}
-          handleSubmit={handleSubmit}
-        />
+        <div className="max-w-8xl mx-auto p-4 mt-0">
 
-        <DeleteHolidayModal
-          isOpen={showDeleteModal}
-          onClose={() => {
-            setShowDeleteModal(false);
-            setSelectedLeave(null);
-          }}
-          onConfirm={handleConfirmDelete}
-          isLoading={isDeleting}
-          holidayName={selectedLeave?.leave_type}
-        />
 
-        <FilterModal
-          showFilterModal={showFilterModal}
-          setShowFilterModal={setShowFilterModal}
-          filters={filters}
-          setFilters={setFilters}
-        />
+          {/* Table Card */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
+                    <th className="px-6 py-4 text-left font-semibold tracking-wider">Leave Type</th>
+                    <th className="px-6 py-4 text-left font-semibold tracking-wider">Description</th>
+                    <th className="px-6 py-4 text-center font-semibold tracking-wider">Allocation</th>
+                    <th className="px-6 py-4 text-center font-semibold tracking-wider">Period</th>
+                    <th className="px-6 py-4 text-center font-semibold tracking-wider">Paid</th>
+                    <th className="px-6 py-4 text-center font-semibold tracking-wider">Status</th>
+                    <th className="px-6 py-4 text-center font-semibold tracking-wider">Action</th>
+                  </tr>
+                </thead>
+
+                <tbody className="divide-y divide-gray-200">
+                  {isLoading ? (
+                    Array.from({ length: 5 }).map((_, index) => (
+                      <tr key={index} className="border-b">
+                        <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded animate-pulse w-32"></div></td>
+                        <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded animate-pulse w-48"></div></td>
+                        <td className="px-6 py-4 text-center"><div className="h-6 bg-gray-200 rounded-full animate-pulse w-16 mx-auto"></div></td>
+                        <td className="px-6 py-4 text-center"><div className="h-4 bg-gray-200 rounded animate-pulse w-20 mx-auto"></div></td>
+                        <td className="px-6 py-4 text-center"><div className="h-5 bg-gray-200 rounded-full animate-pulse w-12 mx-auto"></div></td>
+                        <td className="px-6 py-4 text-center"><div className="h-5 bg-gray-200 rounded-full animate-pulse w-16 mx-auto"></div></td>
+                        <td className="px-6 py-4 text-center"><div className="h-8 bg-gray-200 rounded animate-pulse w-20 mx-auto"></div></td>
+                      </tr>
+                    ))
+                  ) : isError ? (
+                    <tr><td colSpan="7" className="text-center py-8 text-red-500">Error loading data</td></tr>
+                  ) : leaveData?.leave_types?.length === 0 ? (
+                    <tr><td colSpan="7" className="text-center py-8 text-gray-500">No leave types found</td></tr>
+                  ) : (
+                    leaveData?.leave_types.map((leave) => (
+                      <tr key={leave.id} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-6 py-4">
+                          <span className="font-medium text-gray-900">{leave.leave_type}</span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="text-gray-500 text-sm line-clamp-1" title={leave.description}>{leave.description}</span>
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <span className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 font-medium text-xs">
+                            {leave.leave_allocation} days
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <span className="text-sm text-gray-700">{leave.renewal_type}</span>
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${leave.paid === "Yes" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+                            {leave.paid}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${leave.status === "Active" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"}`}>
+                            {leave.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center justify-center gap-2">
+                            <button
+                              onClick={() => handleEdit(leave)}
+                              className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition"
+                            >
+                              <Edit2 size={16} />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteClick(leave)}
+                              className="p-1.5 text-red-600 hover:bg-red-50 rounded transition"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination */}
+            <div className="flex justify-between items-center mt-6 bg-gray-50 p-4 rounded-sm border-t border-gray-200">
+              <p className="text-sm text-gray-600">
+                Showing <span className="font-bold">{((currentPage - 1) * itemsPerPage) + 1}</span> to <span className="font-bold">{Math.min(currentPage * itemsPerPage, leaveData?.pagination?.total || 0)}</span> of <span className="font-bold">{leaveData?.pagination?.total || 0}</span> results
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 border rounded-sm text-sm font-bold disabled:opacity-50 bg-white hover:bg-gray-50 transition-colors"
+                >
+                  Previous
+                </button>
+
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let p = i + 1;
+                  if (totalPages > 5 && currentPage > 3) p = currentPage - 2 + i;
+                  if (p > totalPages) return null;
+                  return (
+                    <button
+                      key={p}
+                      onClick={() => handlePageChange(p)}
+                      className={`w-9 h-9 border rounded-sm text-sm font-bold flex items-center justify-center transition-colors ${currentPage === p
+                        ? 'bg-orange-500 text-white border-orange-500'
+                        : 'bg-white text-gray-700 hover:bg-gray-50'
+                        }`}
+                    >
+                      {p}
+                    </button>
+                  );
+                })}
+
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="px-4 py-2 border rounded-sm text-sm font-bold disabled:opacity-50 bg-white hover:bg-gray-50 transition-colors"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Modals */}
+          <LeaveFormModal
+            showModal={showModal}
+            setShowModal={setShowModal}
+            editingLeave={editingLeave}
+            formData={formData}
+            handleInputChange={handleInputChange}
+            handleSubmit={handleSubmit}
+          />
+
+          <DeleteHolidayModal
+            isOpen={showDeleteModal}
+            onClose={() => {
+              setShowDeleteModal(false);
+              setSelectedLeave(null);
+            }}
+            onConfirm={handleConfirmDelete}
+            isLoading={isDeleting}
+            holidayName={selectedLeave?.leave_type}
+          />
+
+          <FilterModal
+            showFilterModal={showFilterModal}
+            setShowFilterModal={setShowFilterModal}
+            filters={filters}
+            setFilters={setFilters}
+          />
+        </div>
       </div>
     </DashboardLayout>
   );

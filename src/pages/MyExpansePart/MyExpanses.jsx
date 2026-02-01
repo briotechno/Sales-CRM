@@ -22,11 +22,14 @@ import DeleteExpenseModal from "../../components/Expense/DeleteExpenseModal";
 export default function ExpensePage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [filterType, setFilterType] = useState("All");
+  const [dateFilter, setDateFilter] = useState("All");
+  const [categoryFilter, setCategoryFilter] = useState("All");
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
   const [isDateFilterOpen, setIsDateFilterOpen] = useState(false);
+  const [isCategoryFilterOpen, setIsCategoryFilterOpen] = useState(false);
   const dateDropdownRef = useRef(null);
+  const categoryDropdownRef = useRef(null);
 
   // Modals state
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -45,24 +48,24 @@ export default function ExpensePage() {
     let dateFrom = "";
     let dateTo = "";
 
-    if (filterType === "Today") {
+    if (dateFilter === "Today") {
       dateFrom = formatDate(today);
       dateTo = formatDate(today);
-    } else if (filterType === "Yesterday") {
+    } else if (dateFilter === "Yesterday") {
       const yesterday = new Date(today);
       yesterday.setDate(today.getDate() - 1);
       dateFrom = formatDate(yesterday);
       dateTo = formatDate(yesterday);
-    } else if (filterType === "Last 7 Days") {
+    } else if (dateFilter === "Last 7 Days") {
       const last7 = new Date(today);
       last7.setDate(today.getDate() - 7);
       dateFrom = formatDate(last7);
       dateTo = formatDate(today);
-    } else if (filterType === "This Month") {
+    } else if (dateFilter === "This Month") {
       const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
       dateFrom = formatDate(firstDay);
       dateTo = formatDate(today);
-    } else if (filterType === "Custom") {
+    } else if (dateFilter === "Custom") {
       dateFrom = customStart;
       dateTo = customEnd;
     }
@@ -75,6 +78,7 @@ export default function ExpensePage() {
     page: currentPage,
     limit: itemsPerPage,
     search: searchTerm,
+    category: categoryFilter !== "All" ? categoryFilter : undefined,
     dateFrom,
     dateTo
   });
@@ -88,10 +92,24 @@ export default function ExpensePage() {
       if (dateDropdownRef.current && !dateDropdownRef.current.contains(event.target)) {
         setIsDateFilterOpen(false);
       }
+      if (categoryDropdownRef.current && !categoryDropdownRef.current.contains(event.target)) {
+        setIsCategoryFilterOpen(false);
+      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  const clearAllFilters = () => {
+    setSearchTerm("");
+    setDateFilter("All");
+    setCategoryFilter("All");
+    setCustomStart("");
+    setCustomEnd("");
+    setCurrentPage(1);
+  };
+
+  const hasActiveFilters = searchTerm || dateFilter !== "All" || categoryFilter !== "All";
 
   const handlePageChange = (page) => setCurrentPage(page);
 
@@ -115,55 +133,85 @@ export default function ExpensePage() {
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen ml-0 bg-gradient-to-br from-orange-0 via-white to-orange-100">
+      <div className="min-h-screen bg-gradient-to-br from-orange-0 via-white to-orange-100">
         {/* Header */}
-        <div className="bg-white border-b ml-4">
-          <div className="max-w-8xl mx-auto px-0 ml-6 py-4">
-            <div className="flex items-center justify-between">
+        <div className="bg-white border-b sticky top-0 z-30">
+          <div className="max-w-8xl mx-auto px-4 py-2">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               {/* Left Side */}
               <div>
-                <h1 className="text-2xl font-bold text-gray-800">
+                <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
                   My Expenses
                 </h1>
-                <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
-                  <FiHome className="text-gray-700 text-sm" />
-                  <span className="text-gray-400"></span> Additional /{" "}
-                  <span className="text-[#FF7B1D] font-medium">
-                    All Expenses
-                  </span>
+                <p className="text-[10px] text-gray-500 mt-0.5 flex items-center gap-1.5">
+                  <FiHome className="text-gray-400" size={14} />
+                  Additional / <span className="text-[#FF7B1D] font-medium">All Expenses</span>
                 </p>
               </div>
 
               {/* Right Side */}
-              <div className="flex flex-wrap items-center gap-2 ml-auto">
+              <div className="flex flex-wrap items-center gap-2">
+
+                {/* Category Filter Dropdown */}
+                <div className="relative" ref={categoryDropdownRef}>
+                  <button
+                    onClick={() => setIsCategoryFilterOpen(!isCategoryFilterOpen)}
+                    className={`p-2 rounded-sm border transition shadow-sm ${isCategoryFilterOpen || categoryFilter !== "All"
+                      ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
+                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
+                      }`}
+                  >
+                    <Filter size={18} />
+                  </button>
+
+                  {isCategoryFilterOpen && (
+                    <div className="absolute right-0 mt-2 w-44 bg-white border border-gray-200 rounded-sm shadow-xl z-50 animate-fadeIn">
+                      <div className="py-1">
+                        {["All", "Meals", "Travel", "Supplies", "Training", "Software", "Other"].map((option) => (
+                          <button
+                            key={option}
+                            onClick={() => {
+                              setCategoryFilter(option);
+                              setIsCategoryFilterOpen(false);
+                              setCurrentPage(1);
+                            }}
+                            className={`block w-full text-left px-4 py-2 text-sm transition-colors ${categoryFilter === option
+                              ? "bg-orange-50 text-orange-600 font-bold"
+                              : "text-gray-700 hover:bg-gray-50"
+                              }`}
+                          >
+                            {option}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
 
                 {/* Custom Date Filter Dropdown */}
                 <div className="relative" ref={dateDropdownRef}>
                   <button
                     onClick={() => setIsDateFilterOpen(!isDateFilterOpen)}
-                    className={`flex items-center gap-2 p-3 rounded-sm border transition-all shadow-sm ${isDateFilterOpen || filterType !== "Today"
-                      ? "bg-white text-gray-700 border-gray-300 hover:bg-orange-500 hover:text-white hover:border-[#FF7B1D]"
-                      : "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
+                    className={`p-2 rounded-sm border transition shadow-sm ${isDateFilterOpen || dateFilter !== "All"
+                      ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
+                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
                       }`}
                   >
-                    <Filter size={20} />
+                    <Calendar size={18} />
                   </button>
 
                   {isDateFilterOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-sm shadow-xl z-50 animate-fadeIn">
-                      <div className="p-2 border-b bg-gray-50">
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Filter by Expanses</p>
-                      </div>
+                    <div className="absolute right-0 mt-2 w-36 bg-white border border-gray-200 rounded-sm shadow-xl z-50 animate-fadeIn">
                       <div className="py-1">
-                        {["Today", "Yesterday", "Last 7 Days", "This Month", "Custom"].map((option) => (
+                        {["All", "Today", "Yesterday", "Last 7 Days", "This Month", "Custom"].map((option) => (
                           <button
                             key={option}
                             onClick={() => {
-                              setFilterType(option);
+                              setDateFilter(option);
                               setIsDateFilterOpen(false);
                               setCurrentPage(1);
                             }}
-                            className={`block w-full text-left px-4 py-2.5 text-sm transition-colors ${filterType === option
+                            className={`block w-full text-left px-4 py-2 text-sm transition-colors ${dateFilter === option
                               ? "bg-orange-50 text-orange-600 font-bold"
                               : "text-gray-700 hover:bg-gray-50"
                               }`}
@@ -177,20 +225,20 @@ export default function ExpensePage() {
                 </div>
 
                 {/* Show Custom Date Range Only When Selected */}
-                {filterType === "Custom" && (
+                {dateFilter === "Custom" && (
                   <div className="flex items-center gap-2">
                     <input
                       type="date"
                       value={customStart}
                       onChange={(e) => setCustomStart(e.target.value)}
-                      className="px-2 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
+                      className="px-2 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-orange-500 text-sm shadow-sm"
                     />
-                    <span className="text-gray-600 text-xs">to</span>
+                    <span className="text-gray-400 text-xs font-bold">to</span>
                     <input
                       type="date"
                       value={customEnd}
                       onChange={(e) => setCustomEnd(e.target.value)}
-                      className="px-2 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
+                      className="px-2 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-orange-500 text-sm shadow-sm"
                     />
                   </div>
                 )}
@@ -205,56 +253,78 @@ export default function ExpensePage() {
                       setSearchTerm(e.target.value);
                       setCurrentPage(1);
                     }}
-                    className="pl-10 pr-4 py-3 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm w-48 lg:w-64"
+                    className="pl-10 pr-4 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-orange-500 text-sm w-64 shadow-sm"
                   />
-                  <Search className="absolute left-3 top-3.5 text-gray-400" size={16} />
+                  <Search className="absolute left-3 top-2.5 text-gray-400" size={16} />
                 </div>
 
                 {/* Add Expense Button */}
                 <button
                   onClick={() => setIsAddModalOpen(true)}
-                  className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm hover:shadow-lg transition-all flex items-center gap-2 font-bold shadow-md"
+                  className="flex items-center gap-2 px-4 py-2 rounded-sm font-bold transition shadow-md text-sm active:scale-95 bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
                 >
                   <Plus size={18} />
-                  Add Expense
+                  ADD EXPENSE
                 </button>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="max-w-8xl mx-auto ml-6 mt-4 p-0">
+        <div className="max-w-8xl mx-auto p-4 mt-0">
           {/* Stats Cards (Dynamic) */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
             <NumberCard
               title={"Total Expenses"}
-              number={`₹${summary.totalAmount || 0}`}
+              number={`₹${(summary.totalAmount || 0).toLocaleString("en-IN")}`}
               icon={<DollarSign className="text-blue-600" size={24} />}
               iconBgColor={"bg-blue-100"}
               lineBorderClass={"border-blue-500"}
             />
             <NumberCard
               title={"With Receipt"}
-              number={summary.receiptCount || 0}
+              number={(summary.receiptCount || 0).toLocaleString()}
               icon={<Receipt className="text-green-600" size={24} />}
               iconBgColor={"bg-green-100"}
               lineBorderClass={"border-green-500"}
             />
             <NumberCard
               title={"Without Receipt"}
-              number={summary.noReceiptCount || 0}
+              number={(summary.noReceiptCount || 0).toLocaleString()}
               icon={<Receipt className="text-orange-600" size={24} />}
               iconBgColor={"bg-orange-100"}
               lineBorderClass={"border-orange-500"}
             />
             <NumberCard
               title={"Total Entries"}
-              number={summary.totalCount || 0}
+              number={(summary.totalCount || 0).toLocaleString()}
               icon={<Calendar className="text-purple-600" size={24} />}
               iconBgColor={"bg-purple-100"}
               lineBorderClass={"border-purple-500"}
             />
           </div>
+
+          {/* Clear Filters Banner */}
+          {hasActiveFilters && (
+            <div className="mb-4 flex flex-wrap items-center justify-between bg-orange-50 border border-orange-200 rounded-sm p-3 gap-3 animate-fadeIn">
+              <div className="flex flex-wrap items-center gap-2">
+                <Filter className="text-orange-600" size={16} />
+                <span className="text-sm font-semibold text-orange-800">
+                  {(searchTerm ? 1 : 0) + (dateFilter !== "All" ? 1 : 0) + (categoryFilter !== "All" ? 1 : 0)} filter(s) active
+                </span>
+                {searchTerm && <span className="text-xs bg-white px-2 py-1 rounded border border-orange-200 text-orange-700 shadow-sm font-medium">Search: "{searchTerm}"</span>}
+                {dateFilter !== "All" && <span className="text-xs bg-white px-2 py-1 rounded border border-orange-200 text-orange-700 shadow-sm font-medium">Date: {dateFilter}</span>}
+                {categoryFilter !== "All" && <span className="text-xs bg-white px-2 py-1 rounded border border-orange-200 text-orange-700 shadow-sm font-medium">Category: {categoryFilter}</span>}
+              </div>
+              <button
+                onClick={clearAllFilters}
+                className="flex items-center gap-2 px-3 py-1.5 bg-white border border-orange-300 text-orange-600 rounded-sm hover:bg-orange-100 transition shadow-sm text-sm font-semibold active:scale-95"
+              >
+                <X size={14} />
+                Clear All
+              </button>
+            </div>
+          )}
 
           {/* Expenses Table */}
           <div className="bg-white rounded-sm shadow-lg overflow-hidden">
@@ -262,24 +332,12 @@ export default function ExpensePage() {
               <table className="w-full">
                 <thead className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
                   <tr>
-                    <th className="px-4 py-3 text-left font-semibold text-sm">
-                      Date
-                    </th>
-                    <th className="px-4 py-3 text-left font-semibold text-sm">
-                      Description
-                    </th>
-                    <th className="px-4 py-3 text-left font-semibold text-sm">
-                      Category
-                    </th>
-                    <th className="px-4 py-3 text-left font-semibold text-sm">
-                      Amount
-                    </th>
-                    <th className="px-4 py-3 text-left font-semibold text-sm">
-                      Receipt
-                    </th>
-                    <th className="px-4 py-3 text-right font-semibold text-sm">
-                      Actions
-                    </th>
+                    <th className="px-4 py-3 text-left font-semibold text-sm">Date</th>
+                    <th className="px-4 py-3 text-left font-semibold text-sm">Description</th>
+                    <th className="px-4 py-3 text-left font-semibold text-sm">Category</th>
+                    <th className="px-4 py-3 text-left font-semibold text-sm">Amount</th>
+                    <th className="px-4 py-3 text-left font-semibold text-sm">Receipt</th>
+                    <th className="px-4 py-3 text-right font-semibold text-sm">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -293,7 +351,7 @@ export default function ExpensePage() {
                     expenses.map((expense, index) => (
                       <tr
                         key={expense.id}
-                        className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${index % 2 === 0 ? "bg-white" : "bg-gray-0"
+                        className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${index % 2 === 0 ? "bg-white" : "bg-gray-50/30"
                           }`}
                       >
                         <td className="px-4 py-3">
@@ -309,16 +367,16 @@ export default function ExpensePage() {
                           {expense.category}
                         </td>
                         <td className="px-4 py-3 font-bold text-gray-800 text-sm">
-                          ₹{expense.amount}
+                          ₹{expense.amount.toLocaleString("en-IN")}
                         </td>
-                        <td className="px-4 py-3">
+                        <td className="px-4 py-3 text-center">
                           {expense.receipt_url ? (
-                            <span className="text-green-600 font-semibold flex items-center gap-1 text-xs">
+                            <span className="text-green-600 font-semibold flex items-center gap-1 text-xs justify-center">
                               <Receipt size={14} />
                               Yes
                             </span>
                           ) : (
-                            <span className="text-red-500 font-semibold flex items-center gap-1 text-xs">
+                            <span className="text-red-500 font-semibold flex items-center gap-1 text-xs justify-center">
                               <X size={14} />
                               No
                             </span>
@@ -358,7 +416,7 @@ export default function ExpensePage() {
                           No expenses found
                         </h3>
                         <p className="text-gray-500 text-sm">
-                          Add your first expense to start tracking
+                          {hasActiveFilters ? "No expenses match your filters" : "Add your first expense to start tracking"}
                         </p>
                       </td>
                     </tr>
@@ -368,37 +426,40 @@ export default function ExpensePage() {
             </div>
           </div>
 
-          {/* Pagination */}
-          <div className="flex justify-between items-center mt-6 bg-gray-50 p-4 rounded-sm border">
-            <p className="text-sm text-gray-600">
-              Showing <span className="font-bold">{indexOfFirstItem + 1}</span> to <span className="font-bold">{indexOfLastItem}</span> of <span className="font-bold">{pagination.total}</span> expenses
+          {/* Pagination Section */}
+          <div className="flex flex-col md:flex-row justify-between items-center mt-6 gap-4 bg-gray-50 p-4 rounded-sm border border-gray-200 mb-6 shadow-sm">
+            <p className="text-sm font-semibold text-gray-700">
+              Showing <span className="text-orange-600">{(currentPage - 1) * itemsPerPage + 1}</span> to <span className="text-orange-600">{Math.min(currentPage * itemsPerPage, pagination.total)}</span> of <span className="text-orange-600">{pagination.total || 0}</span> Expenses
             </p>
+
             <div className="flex items-center gap-2">
               <button
                 onClick={() => handlePageChange(currentPage > 1 ? currentPage - 1 : 1)}
                 disabled={currentPage === 1}
-                className="px-4 py-2 border rounded-sm text-sm font-bold disabled:opacity-50 bg-white shadow-sm"
+                className={`px-4 py-2 rounded-sm font-bold transition flex items-center gap-1 ${currentPage === 1 ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"
+                  }`}
               >
                 Previous
               </button>
 
-              {Array.from({ length: pagination.totalPages }, (_, i) => (
-                <button
-                  key={i + 1}
-                  onClick={() => handlePageChange(i + 1)}
-                  className={`w-9 h-9 border rounded-sm text-sm font-bold transition-all ${currentPage === i + 1
-                    ? "bg-orange-500 text-white border-orange-500 shadow-sm"
-                    : "bg-white text-gray-700 hover:bg-gray-50 border-gray-300"
-                    }`}
-                >
-                  {i + 1}
-                </button>
-              ))}
+              <div className="flex items-center gap-1">
+                {Array.from({ length: pagination.totalPages }, (_, i) => (
+                  <button
+                    key={i + 1}
+                    onClick={() => handlePageChange(i + 1)}
+                    className={`w-10 h-10 rounded-sm font-bold transition ${currentPage === i + 1 ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md border-orange-500" : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+                      }`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+              </div>
 
               <button
                 onClick={() => handlePageChange(currentPage < pagination.totalPages ? currentPage + 1 : currentPage)}
-                disabled={currentPage === pagination.totalPages}
-                className="px-4 py-2 border rounded-sm text-sm font-bold disabled:opacity-50 bg-white shadow-sm"
+                disabled={currentPage === pagination.totalPages || pagination.totalPages === 0}
+                className={`px-4 py-2 rounded-sm font-bold transition flex items-center gap-1 ${currentPage === pagination.totalPages || pagination.totalPages === 0 ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"
+                  }`}
               >
                 Next
               </button>
