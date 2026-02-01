@@ -22,6 +22,8 @@ export const catalogApi = createApi({
                     limit: params?.limit || 10,
                     status: params?.status,
                     search: params?.search,
+                    dateFrom: params?.dateFrom,
+                    dateTo: params?.dateTo,
                 }
             }),
             providesTags: ['Catalog'],
