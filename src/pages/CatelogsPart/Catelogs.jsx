@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import * as XLSX from "xlsx";
 import { FiHome } from "react-icons/fi";
 import DashboardLayout from "../../components/DashboardLayout";
@@ -51,9 +52,13 @@ import {
   useDeleteCategoryMutation,
 } from "../../store/api/catalogCategoryApi";
 import usePermission from "../../hooks/usePermission";
+import ViewCatalogModal from "./ViewCatalogModal";
+import { useGetBusinessInfoQuery } from "../../store/api/businessApi";
 
 export default function CatalogsPage() {
+  const navigate = useNavigate();
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedCatalog, setSelectedCatalog] = useState(null);
@@ -128,6 +133,7 @@ export default function CatalogsPage() {
   const dbCategories = categoriesData?.categories || [];
 
   const { data: dashboardData } = useGetHRMDashboardDataQuery();
+  const { data: businessInfo } = useGetBusinessInfoQuery();
   const [createCatalog] = useCreateCatalogMutation();
   const [updateCatalog] = useUpdateCatalogMutation();
   const [deleteCatalog] = useDeleteCatalogMutation();
@@ -423,8 +429,9 @@ export default function CatalogsPage() {
     });
   };
 
-  const handleView = (id) => {
-    window.open(`/catalog/view/${id}`, "_blank");
+  const handleView = (catalog) => {
+    setSelectedCatalog(catalog);
+    setShowViewModal(true);
   };
 
   useEffect(() => {
@@ -753,7 +760,7 @@ export default function CatalogsPage() {
                       <td className="py-3 px-4">
                         <div className="flex justify-end gap-2">
                           <button
-                            onClick={() => handleView(catalog.catalog_id)}
+                            onClick={() => handleView(catalog)}
                             className="p-1 hover:bg-orange-100 rounded-sm text-blue-500 hover:text-blue-700 transition-all"
                             title="View"
                           >
@@ -1366,6 +1373,13 @@ export default function CatalogsPage() {
             </div>
           </div>
         )}
+        {/* View Catalog Modal */}
+        <ViewCatalogModal
+          isOpen={showViewModal}
+          onClose={() => setShowViewModal(false)}
+          catalog={selectedCatalog}
+          businessInfo={businessInfo}
+        />
       </div>
     </DashboardLayout >
   );
