@@ -232,7 +232,12 @@ export default function CatalogsPage() {
 
       fields.forEach(field => {
         if (formData[field] !== undefined && formData[field] !== null) {
-          data.append(field, formData[field]);
+          let value = formData[field];
+          // Handle price fields specifically
+          if ((field === 'minPrice' || field === 'maxPrice') && value === "") {
+            value = "0";
+          }
+          data.append(field, value);
         }
       });
 
@@ -1344,7 +1349,7 @@ export default function CatalogsPage() {
               </div>
               <div className="p-6">
                 <p className="text-gray-600 mb-4 font-medium">
-                  Share "<span className="text-orange-600 font-bold">{selectedCatalog?.name}</span>" with your clients:
+                  Share "<span className="text-orange-600 font-bold">{selectedCatalog?.name?.length > 60 ? `${selectedCatalog.name.substring(0, 60)}...` : selectedCatalog?.name}</span>" with your clients:
                 </p>
                 <div className="flex items-center gap-2 p-3 bg-gray-50 border rounded-sm">
                   <input

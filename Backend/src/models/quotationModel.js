@@ -3,13 +3,14 @@ const { pool } = require('../config/db');
 const Quotation = {
     create: async (data, userId) => {
         const {
-            company_name, email, phone, quotation_date,
-            valid_until, currency, line_items, subtotal, tax,
+            quotation_id, customer_type, company_name, contact_person, email, phone,
+            billing_address, shipping_address, state, pincode, gstin, pan_number, cin_number,
+            quotation_date, valid_until, sales_executive, currency, line_items, subtotal, tax,
             discount, total_amount, terms_and_conditions, status
         } = data;
 
         // Generate unique quotation_id if not provided
-        let q_id = data.quotation_id;
+        let q_id = quotation_id;
         if (!q_id) {
             const [rows] = await pool.query('SELECT quotation_id FROM quotations ORDER BY id DESC LIMIT 1');
             const year = new Date().getFullYear();
@@ -27,31 +28,32 @@ const Quotation = {
         // Auto-create or find existing client
         let client_id = null;
         if (email) {
-            // Check if client already exists with this email
             const [existingClients] = await pool.query(
                 'SELECT id FROM clients WHERE email = ? AND user_id = ? LIMIT 1',
                 [email, userId]
             );
 
             if (existingClients.length > 0) {
-                // Client exists, use existing client_id
                 client_id = existingClients[0].id;
             } else {
-                // Create new client based on company name
                 const [clientResult] = await pool.query(
                     `INSERT INTO clients (
                         user_id, type, first_name, last_name, email, phone,
-                        company_name, status
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+                        company_name, status, address, state, zip_code, tax_id
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
                     [
                         userId,
-                        'organization',
+                        customer_type === 'Individual' ? 'person' : 'organization',
                         company_name || 'Customer',
                         '',
                         email,
                         phone,
                         company_name,
-                        'active'
+                        'active',
+                        billing_address,
+                        state,
+                        pincode,
+                        gstin
                     ]
                 );
                 client_id = clientResult.insertId;
@@ -60,14 +62,16 @@ const Quotation = {
 
         const [result] = await pool.query(
             `INSERT INTO quotations (
-                quotation_id, client_id, company_name, email, phone, 
-                quotation_date, valid_until, currency, line_items, subtotal, 
+                quotation_id, client_id, customer_type, company_name, contact_person, email, phone, 
+                billing_address, shipping_address, state, pincode, gstin, pan_number, cin_number,
+                quotation_date, valid_until, sales_executive, currency, line_items, subtotal, 
                 tax, discount, total_amount, payment_terms, 
                 status, user_id
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
-                q_id, client_id, company_name, email, phone,
-                quotation_date, valid_until, currency || 'INR',
+                q_id, client_id, customer_type || 'Business', company_name, contact_person, email, phone,
+                billing_address, shipping_address, state, pincode, gstin, pan_number, cin_number,
+                quotation_date, valid_until, sales_executive, currency || 'INR',
                 JSON.stringify(line_items || []), subtotal,
                 tax, discount, total_amount, terms_and_conditions,
                 status || 'Draft', userId
@@ -88,8 +92,8 @@ const Quotation = {
 
         if (search) {
             const searchPattern = `%${search}%`;
-            whereClause += ' AND (company_name LIKE ? OR quotation_id LIKE ?)';
-            queryParams.push(searchPattern, searchPattern);
+            whereClause += ' AND (company_name LIKE ? OR quotation_id LIKE ? OR email LIKE ?)';
+            queryParams.push(searchPattern, searchPattern, searchPattern);
         }
 
         if (dateFrom) {
@@ -153,8 +157,9 @@ const Quotation = {
 
     update: async (id, data, userId) => {
         const {
-            company_name, email, phone, quotation_date,
-            valid_until, currency, line_items, subtotal, tax,
+            customer_type, company_name, contact_person, email, phone,
+            billing_address, shipping_address, state, pincode, gstin, pan_number, cin_number,
+            quotation_date, valid_until, sales_executive, currency, line_items, subtotal, tax,
             discount, total_amount, terms_and_conditions, status
         } = data;
 
@@ -173,14 +178,16 @@ const Quotation = {
 
         const [result] = await pool.query(
             `UPDATE quotations SET 
-                client_id = ?, company_name = ?, email = ?, phone = ?, 
-                quotation_date = ?, valid_until = ?, currency = ?, line_items = ?, 
+                client_id = ?, customer_type = ?, company_name = ?, contact_person = ?, email = ?, phone = ?, 
+                billing_address = ?, shipping_address = ?, state = ?, pincode = ?, gstin = ?, pan_number = ?, cin_number = ?,
+                quotation_date = ?, valid_until = ?, sales_executive = ?, currency = ?, line_items = ?, 
                 subtotal = ?, tax = ?, discount = ?, total_amount = ?, 
                 payment_terms = ?, status = ?
             WHERE id = ? AND user_id = ?`,
             [
-                client_id, company_name, email, phone,
-                quotation_date, valid_until, currency, JSON.stringify(line_items),
+                client_id, customer_type, company_name, contact_person, email, phone,
+                billing_address, shipping_address, state, pincode, gstin, pan_number, cin_number,
+                quotation_date, valid_until, sales_executive, currency, JSON.stringify(line_items),
                 subtotal, tax, discount, total_amount,
                 terms_and_conditions, status, id, userId
             ]

@@ -83,13 +83,17 @@ export default function AllInvoicePage() {
     totalAmount: 0,
     paidAmount: 0,
     balanceAmount: 0,
-    status: "Unpaid",
+    status: "Draft",
     notes: "",
     tax_type: "GST",
     client_gstin: "",
     business_gstin: "",
     pan_number: "",
-    terms_and_conditions: ""
+    terms_and_conditions: "",
+    customer_type: "Business",
+    pincode: "",
+    contact_person: "",
+    state: ""
   });
 
   const [createInvoice] = useCreateInvoiceMutation();
@@ -130,7 +134,11 @@ export default function AllInvoicePage() {
         client_gstin: formData.client_gstin,
         business_gstin: formData.business_gstin,
         pan_number: formData.pan_number,
-        terms_and_conditions: formData.terms_and_conditions
+        terms_and_conditions: formData.terms_and_conditions,
+        customer_type: formData.customer_type,
+        pincode: formData.pincode,
+        contact_person: formData.contact_person,
+        state: formData.state || formData.place_of_supply
       };
 
       if (formData.id) {
@@ -173,7 +181,11 @@ export default function AllInvoicePage() {
       client_gstin: invoice.client_gstin || "",
       business_gstin: invoice.business_gstin || "",
       pan_number: invoice.pan_number || "",
-      terms_and_conditions: invoice.terms_and_conditions || ""
+      terms_and_conditions: invoice.terms_and_conditions || "",
+      customer_type: invoice.customer_type || "Business",
+      pincode: invoice.pincode || "",
+      contact_person: invoice.contact_person || "",
+      state: invoice.state || invoice.place_of_supply || ""
     });
     setShowModal(true);
   };
@@ -460,7 +472,7 @@ export default function AllInvoicePage() {
                         <span className="text-sm font-bold text-gray-700 tracking-wide">Statuses</span>
                       </div>
                       <div className="py-1">
-                        {["all", "Paid", "Unpaid", "Partial", "Overdue"].map((status) => (
+                        {["all", "Draft", "Sent", "Partial", "Paid", "Unpaid", "Cancelled"].map((status) => (
                           <button
                             key={status}
                             onClick={() => {
@@ -577,7 +589,7 @@ export default function AllInvoicePage() {
                       totalAmount: 0,
                       paidAmount: 0,
                       balanceAmount: 0,
-                      status: "Unpaid",
+                      status: "Draft",
                       notes: "",
                       tax_type: "GST",
                       client_gstin: "",
@@ -688,13 +700,19 @@ export default function AllInvoicePage() {
                               value={invoice.status}
                               onChange={(e) => handleStatusUpdate(invoice, e.target.value)}
                               className={`px-2.5 py-1 rounded-sm text-[10px] font-bold border uppercase tracking-wider outline-none cursor-pointer transition-all ${invoice.status === 'Paid' ? 'bg-green-50 text-green-700 border-green-200' :
-                                invoice.status === 'Partial' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
-                                  'bg-red-50 text-red-700 border-red-200'
+                                  invoice.status === 'Partial' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                                    invoice.status === 'Unpaid' ? 'bg-red-50 text-red-700 border-red-200' :
+                                      invoice.status === 'Draft' ? 'bg-gray-50 text-gray-700 border-gray-200' :
+                                        invoice.status === 'Sent' ? 'bg-orange-50 text-orange-700 border-orange-200' :
+                                          'bg-slate-50 text-slate-700 border-slate-200'
                                 }`}
                             >
+                              <option value="Draft">Draft</option>
+                              <option value="Sent">Sent</option>
                               <option value="Unpaid">Unpaid</option>
                               <option value="Paid">Paid</option>
                               <option value="Partial">Partial</option>
+                              <option value="Cancelled">Cancelled</option>
                             </select>
                             {invoice.status === "Partial" && (
                               <button
