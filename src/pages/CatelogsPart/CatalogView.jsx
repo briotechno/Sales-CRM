@@ -4,7 +4,7 @@ import {
     Package,
     DollarSign,
     CheckCircle,
-    Share2,
+    Share,
     Clock,
     ChevronLeft,
     ChevronRight,
@@ -227,7 +227,7 @@ export default function CatalogView() {
                                         onClick={handleShare}
                                         className="bg-[#FF7B1D] text-white px-10 py-4 rounded-sm font-black text-[13px] uppercase tracking-widest shadow-xl hover:bg-orange-600 transition-all flex items-center gap-2 active:scale-95 transform hover:-translate-y-0.5"
                                     >
-                                        <Share2 size={18} />
+                                        <Share size={18} />
                                         Spread Details
                                     </button>
                                     <button className="bg-white border-2 border-gray-100 text-gray-800 px-10 py-4 rounded-sm font-black text-[13px] uppercase tracking-widest hover:border-[#FF7B1D] hover:text-[#FF7B1D] transition-all flex items-center gap-2 active:scale-95 transform hover:-translate-y-0.5">

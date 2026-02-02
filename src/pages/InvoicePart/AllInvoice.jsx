@@ -11,7 +11,7 @@ import {
   Search,
   CheckCircle,
   DollarSign,
-  Edit2,
+  Edit,
   CreditCard,
   Calendar,
   X,
@@ -26,7 +26,8 @@ import {
   FileSpreadsheet,
   RefreshCw,
   Hash,
-  Receipt
+  Receipt,
+  Edit2
 } from "lucide-react";
 import { FiHome } from "react-icons/fi";
 
@@ -434,78 +435,97 @@ export default function AllInvoicePage() {
               </div>
 
               <div className="flex flex-wrap items-center gap-3">
-                <button
-                  onClick={refetch}
-                  className={`px-3 py-3 rounded-sm border border-gray-300 bg-white text-gray-600 hover:bg-gray-100 transition shadow-sm ${isFetching ? 'animate-spin' : ''}`}
-                  title="Refresh Data"
-                >
-                  <RefreshCw size={18} />
-                </button>
 
+                {/* Unified Filter Dropdown */}
                 <div className="relative" ref={statusDropdownRef}>
                   <button
-                    onClick={() => setIsStatusFilterOpen(!isStatusFilterOpen)}
-                    className={`px-3 py-3 rounded-sm border transition shadow-sm ${isStatusFilterOpen || filterStatus !== "all"
+                    onClick={() => {
+                      if (hasActiveFilters) {
+                        clearAllFilters();
+                      } else {
+                        setIsStatusFilterOpen(!isStatusFilterOpen);
+                      }
+                    }}
+                    className={`px-3 py-3 rounded-sm border transition shadow-sm ${isStatusFilterOpen || hasActiveFilters
                       ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
                       : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
                       }`}
                   >
-                    <Filter size={18} />
+                    {hasActiveFilters ? <X size={18} /> : <Filter size={18} />}
                   </button>
 
                   {isStatusFilterOpen && (
-                    <div className="absolute right-0 mt-2 w-44 bg-white border border-gray-200 rounded-sm shadow-xl z-50 animate-fadeIn">
+                    <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-xl z-50 animate-fadeIn overflow-hidden">
+                      <div className="p-3 border-b border-gray-100 bg-gray-50">
+                        <span className="text-sm font-bold text-gray-700 tracking-wide">Statuses</span>
+                      </div>
                       <div className="py-1">
-                        {["all", "Paid", "Unpaid", "Partial"].map((option) => (
+                        {["all", "Paid", "Unpaid", "Partial", "Overdue"].map((status) => (
                           <button
-                            key={option}
+                            key={status}
                             onClick={() => {
-                              setFilterStatus(option);
+                              setFilterStatus(status);
                               setIsStatusFilterOpen(false);
                               setCurrentPage(1);
                             }}
-                            className={`block w-full text-left px-4 py-2 text-[11px] transition-colors uppercase ${filterStatus === option
+                            className={`block w-full text-left px-4 py-2 text-sm transition-colors ${filterStatus === status
                               ? "bg-orange-50 text-orange-600 font-bold"
-                              : "text-gray-700 hover:bg-gray-50 font-medium"
+                              : "text-gray-700 hover:bg-gray-50"
                               }`}
                           >
-                            {option}
+                            {status === "all" ? "All Invoices" : status}
                           </button>
                         ))}
                       </div>
-                    </div>
-                  )}
-                </div>
 
-                <div className="relative" ref={dateDropdownRef}>
-                  <button
-                    onClick={() => setIsDateFilterOpen(!isDateFilterOpen)}
-                    className={`px-3 py-3 rounded-sm border transition shadow-sm ${isDateFilterOpen || dateFilter !== "All"
-                      ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
-                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
-                      }`}
-                  >
-                    <Calendar size={18} />
-                  </button>
-
-                  {isDateFilterOpen && (
-                    <div className="absolute right-0 mt-2 w-44 bg-white border border-gray-200 rounded-sm shadow-xl z-50 animate-fadeIn">
+                      <div className="p-3 border-t border-b border-gray-100 bg-gray-50">
+                        <span className="text-sm font-bold text-gray-700 tracking-wide">Date Range</span>
+                      </div>
                       <div className="py-1">
                         {["All", "Today", "Yesterday", "Last 7 Days", "This Month", "Custom"].map((option) => (
-                          <button
-                            key={option}
-                            onClick={() => {
-                              setDateFilter(option);
-                              setIsDateFilterOpen(false);
-                              setCurrentPage(1);
-                            }}
-                            className={`block w-full text-left px-4 py-2 text-[11px] transition-colors uppercase ${dateFilter === option
-                              ? "bg-orange-50 text-orange-600 font-bold"
-                              : "text-gray-700 hover:bg-gray-50 font-medium"
-                              }`}
-                          >
-                            {option}
-                          </button>
+                          <div key={option}>
+                            <button
+                              key={option}
+                              onClick={() => {
+                                setDateFilter(option);
+                                if (option !== "Custom") {
+                                  setIsStatusFilterOpen(false);
+                                  setCurrentPage(1);
+                                }
+                              }}
+                              className={`block w-full text-left px-4 py-2 text-sm transition-colors ${dateFilter === option
+                                ? "bg-orange-50 text-orange-600 font-bold"
+                                : "text-gray-700 hover:bg-gray-50"
+                                }`}
+                            >
+                              {option}
+                            </button>
+                            {option === "Custom" && dateFilter === "Custom" && (
+                              <div className="px-4 py-3 space-y-2 border-t border-gray-50 bg-gray-50/50">
+                                <input
+                                  type="date"
+                                  value={customStart}
+                                  onChange={(e) => setCustomStart(e.target.value)}
+                                  className="w-full px-2 py-2 border border-gray-300 rounded-sm text-xs focus:outline-none focus:ring-1 focus:ring-orange-500"
+                                />
+                                <input
+                                  type="date"
+                                  value={customEnd}
+                                  onChange={(e) => setCustomEnd(e.target.value)}
+                                  className="w-full px-2 py-2 border border-gray-300 rounded-sm text-xs focus:outline-none focus:ring-1 focus:ring-orange-500"
+                                />
+                                <button
+                                  onClick={() => {
+                                    setIsStatusFilterOpen(false);
+                                    setCurrentPage(1);
+                                  }}
+                                  className="w-full bg-orange-500 text-white text-[10px] font-bold py-2 rounded-sm uppercase tracking-wider"
+                                >
+                                  Apply
+                                </button>
+                              </div>
+                            )}
+                          </div>
                         ))}
                       </div>
                     </div>
@@ -578,7 +598,7 @@ export default function AllInvoicePage() {
           </div>
         </div>
 
-        <div className="max-w-8xl mx-auto p-4 mt-0">
+        <div className="max-w-8xl mx-auto p-4 pt-0 mt-2">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
             <NumberCard
               title={"Total Invoices"}
@@ -610,26 +630,6 @@ export default function AllInvoicePage() {
             />
           </div>
 
-          {hasActiveFilters && (
-            <div className="mb-4 flex flex-wrap items-center justify-between bg-orange-50 border border-orange-200 rounded-sm p-3 gap-3 animate-fadeIn">
-              <div className="flex flex-wrap items-center gap-2">
-                <Filter className="text-orange-600" size={16} />
-                <span className="text-sm font-bold text-orange-800 uppercase">
-                  ACTIVE FILTERS:
-                </span>
-                {searchTerm && <span className="text-xs bg-white px-2 py-1 rounded-sm border border-orange-200 text-orange-700 shadow-sm font-bold">Search: "{searchTerm}"</span>}
-                {filterStatus !== "all" && <span className="text-xs bg-white px-2 py-1 rounded-sm border border-orange-200 text-orange-700 shadow-sm font-bold">Status: {filterStatus}</span>}
-                {dateFilter !== "All" && <span className="text-xs bg-white px-2 py-1 rounded-sm border border-orange-200 text-orange-700 shadow-sm font-bold">Date: {dateFilter}</span>}
-              </div>
-              <button
-                onClick={clearAllFilters}
-                className="flex items-center gap-2 px-3 py-1.5 bg-white border border-orange-300 text-orange-600 rounded-sm hover:bg-orange-100 transition shadow-sm text-xs font-bold active:scale-95 uppercase"
-              >
-                <X size={14} />
-                Clear All
-              </button>
-            </div>
-          )}
 
           <div className="bg-white rounded-sm shadow-sm overflow-hidden border border-gray-200">
             <div className="overflow-x-auto">
@@ -648,11 +648,14 @@ export default function AllInvoicePage() {
                 </thead>
                 <tbody className="divide-y divide-gray-50">
                   {isLoading ? (
-                    Array.from({ length: 5 }).map((_, i) => (
-                      <tr key={i} className="animate-pulse">
-                        <td colSpan="8" className="px-4 py-4 text-center text-gray-400 text-xs italic">Loading...</td>
-                      </tr>
-                    ))
+                    <tr>
+                      <td colSpan="8" className="py-20 text-center">
+                        <div className="flex justify-center flex-col items-center gap-4">
+                          <div className="w-12 h-12 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin"></div>
+                          <p className="text-gray-500 font-semibold animate-pulse">Loading invoices...</p>
+                        </div>
+                      </td>
+                    </tr>
                   ) : invoices.length > 0 ? (
                     invoices.map((invoice, index) => (
                       <tr
@@ -725,24 +728,24 @@ export default function AllInvoicePage() {
                                 setSelectedInvoice(invoice);
                                 setShowViewModal(true);
                               }}
-                              className="p-2 text-blue-600 hover:bg-blue-50 rounded-sm transition-all"
+                              className="p-1 hover:bg-orange-100 rounded-sm text-blue-500 hover:text-blue-700 transition-all"
                               title="View Invoice"
                             >
                               <Eye size={18} />
                             </button>
                             <button
                               onClick={() => handleEdit(invoice)}
-                              className="p-2 text-orange-500 hover:bg-orange-50 rounded-sm transition-all"
+                              className="p-1 hover:bg-orange-100 rounded-sm text-green-500 hover:text-green-700 transition-all"
                               title="Edit"
                             >
-                              <Edit2 size={18} />
+                              <Edit size={18} />
                             </button>
                             <button
                               onClick={() => {
                                 setSelectedInvoice(invoice);
                                 setShowDeleteModal(true);
                               }}
-                              className="p-2 text-red-600 hover:bg-red-50 rounded-sm transition-all shadow-sm"
+                              className="p-1 hover:bg-orange-100 rounded-sm text-red-500 hover:text-red-700 transition-all shadow-sm"
                               title="Delete"
                             >
                               <Trash2 size={18} />

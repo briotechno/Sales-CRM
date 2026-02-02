@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useParams } from "react-router-dom";
 import { useGetPublicBusinessInfoQuery } from "../../store/api/businessApi";
 import { useGetPublicCatalogsQuery } from "../../store/api/catalogApi";
@@ -20,8 +20,17 @@ import {
     Target,
     DollarSign,
     Package,
-    ExternalLink
+    ExternalLink,
+    ChevronLeft,
+    ChevronRight
 } from "lucide-react";
+
+// Swiper imports
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Navigation, Pagination, Autoplay } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/navigation';
+import 'swiper/css/pagination';
 
 // Import components
 import Navbar from "./Navbar";
@@ -36,6 +45,11 @@ const CompanyProfile = () => {
         { skip: !business?.user_id }
     );
     const catalogs = catalogsData?.catalogs || [];
+    const [showFullDescription, setShowFullDescription] = useState(false);
+    const [showFullVision, setShowFullVision] = useState(false);
+    const [showFullMission, setShowFullMission] = useState(false);
+    const DESCRIPTION_LIMIT = 300;
+    const VISION_MISSION_LIMIT = 200;
 
     if (isLoading) {
         return (
@@ -152,7 +166,7 @@ const CompanyProfile = () => {
                                     {business.email && (
                                         <a href={`mailto:${business.email}`} className="bg-[#FF7B1D] text-white px-6 py-2.5 rounded-sm font-bold text-sm shadow-sm hover:bg-orange-600 transition-all flex items-center gap-2">
                                             <Mail size={16} />
-                                            Contact Now
+                                            Get in Touch
                                         </a>
                                     )}
                                     {business.website && (
@@ -169,50 +183,88 @@ const CompanyProfile = () => {
                             </div>
                         </div>
                     </div>
+
+                    {/* FULL WIDTH - Business Overview (Strategic Placement First) */}
+                    <div className="bg-white rounded-sm shadow-md p-8 md:p-10 border border-gray-100 mb-8">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+                            <div>
+                                <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-3">
+                                    <Building2 className="text-[#FF7B1D]" size={32} />
+                                    Business Overview
+                                </h2>
+                                <p className="text-sm text-gray-500 mt-1 font-medium italic">Verified registration and legal identification details</p>
+                            </div>
+                            <div className="flex items-center gap-2 bg-orange-50 px-4 py-2 rounded-sm border border-orange-100">
+                                <Calendar className="text-[#FF7B1D]" size={18} />
+                                <span className="text-xs font-bold text-gray-700 uppercase tracking-widest">Established {business.founded_year || "N/A"}</span>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                            <div className="bg-gray-50/50 p-5 rounded-sm border border-gray-100 hover:border-orange-200 transition-colors group">
+                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 group-hover:text-[#FF7B1D] transition-colors">Legal Company Name</p>
+                                <p className="text-gray-900 font-bold text-base tracking-tight leading-snug">{business.legal_name || business.company_name}</p>
+                            </div>
+                            <div className="bg-gray-50/50 p-5 rounded-sm border border-gray-100 hover:border-orange-200 transition-colors group">
+                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 group-hover:text-[#FF7B1D] transition-colors">Registration Number</p>
+                                <p className="text-gray-900 font-bold text-sm tracking-widest font-mono break-all leading-relaxed">{business.registration_number || "N/A"}</p>
+                            </div>
+                            <div className="bg-gray-50/50 p-5 rounded-sm border border-gray-100 hover:border-orange-200 transition-colors group">
+                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 group-hover:text-[#FF7B1D] transition-colors">Business Type & Industry</p>
+                                <div className="flex flex-col gap-1">
+                                    <p className="text-gray-900 font-bold text-sm">{business.business_type || "Company"}</p>
+                                    <p className="text-[#FF7B1D] font-bold text-[11px] uppercase tracking-wider">{business.industry || "General"}</p>
+                                </div>
+                            </div>
+                            <div className="bg-gray-50/50 p-5 rounded-sm border border-gray-100 hover:border-orange-200 transition-colors group">
+                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 group-hover:text-[#FF7B1D] transition-colors">Tax Identifications</p>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <p className="text-[9px] font-bold text-gray-400 uppercase mb-0.5">GST NO.</p>
+                                        <p className="text-gray-900 font-bold text-xs">{business.gst_number || "N/A"}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-[9px] font-bold text-gray-400 uppercase mb-0.5">PAN NO.</p>
+                                        <p className="text-gray-900 font-bold text-xs">{business.pan_number || "N/A"}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         {/* Left Column - Main Info (2/3) */}
                         <div className="lg:col-span-2 space-y-6">
-                            {/* Basic Information */}
-                            <div className="bg-white rounded-sm shadow-md p-8 border border-gray-100">
-                                <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-                                    <Building2 className="text-[#FF7B1D]" size={24} />
-                                    Basic Information
-                                </h2>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
-                                    <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-1.5 uppercase tracking-wider">Company Name</label>
-                                        <p className="text-gray-900 font-medium text-base">{business.company_name}</p>
+                            {/* Company Description Card */}
+                            {business.company_description && (
+                                <div className="bg-white rounded-sm shadow-md p-8 border border-gray-100">
+                                    <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                                        <FileText className="text-[#FF7B1D]" size={24} />
+                                        Company Profile
+                                    </h2>
+                                    <div className="relative">
+                                        <p className={`text-gray-700 leading-relaxed text-base transition-all duration-300 break-words ${!showFullDescription && business.company_description.length > DESCRIPTION_LIMIT ? 'line-clamp-4' : ''}`}>
+                                            {showFullDescription
+                                                ? business.company_description
+                                                : (business.company_description.length > DESCRIPTION_LIMIT
+                                                    ? `${business.company_description.substring(0, DESCRIPTION_LIMIT)}...`
+                                                    : business.company_description
+                                                )
+                                            }
+                                        </p>
+                                        {business.company_description.length > DESCRIPTION_LIMIT && (
+                                            <button
+                                                onClick={() => setShowFullDescription(!showFullDescription)}
+                                                className="mt-4 text-[#FF7B1D] font-bold text-sm uppercase tracking-widest hover:text-orange-600 flex items-center gap-1 transition-all"
+                                            >
+                                                {showFullDescription ? 'Show Less' : 'Show More'}
+                                            </button>
+                                        )}
                                     </div>
-                                    <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-1.5 uppercase tracking-wider">Legal Name</label>
-                                        <p className="text-gray-900 font-medium text-base">{business.legal_name || "N/A"}</p>
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-1.5 uppercase tracking-wider">Industry</label>
-                                        <div className="flex items-center gap-2">
-                                            <Globe className="text-[#FF7B1D]" size={16} />
-                                            <p className="text-gray-900 font-medium text-base">{business.industry || "Information Technology"}</p>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-1.5 uppercase tracking-wider">Business Type</label>
-                                        <div className="flex items-center gap-2">
-                                            <Award className="text-[#FF7B1D]" size={16} />
-                                            <p className="text-gray-900 font-medium text-base">{business.business_type || "Private Limited Company"}</p>
-                                        </div>
-                                    </div>
-                                    {business.registration_number && (
-                                        <div className="sm:col-span-2">
-                                            <label className="block text-sm font-semibold text-gray-700 mb-1.5 uppercase tracking-wider">Company Description</label>
-                                            <p className="text-gray-700 leading-relaxed text-sm bg-gray-50/50 p-4 rounded-sm border border-gray-100">
-                                                {business.company_description}
-                                            </p>
-                                        </div>
-                                    )}
                                 </div>
-                            </div>
+                            )}
 
-                            {/* Products & Services */}
+                            {/* Our Products & Services (Shifted after Company Profile) */}
                             <div className="bg-white rounded-sm shadow-md p-8 border border-gray-100">
                                 <h2 className="text-xl font-bold text-gray-800 mb-8 flex items-center justify-between">
                                     <div className="flex items-center gap-2">
@@ -224,117 +276,142 @@ const CompanyProfile = () => {
                                     </span>
                                 </h2>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    {catalogs?.map((catalog) => (
-                                        <div key={catalog.id} className="group bg-white border border-gray-200 rounded-sm overflow-hidden hover:shadow-xl transition-all duration-300">
-                                            <div className="aspect-video relative overflow-hidden bg-gray-50">
-                                                <img
-                                                    src={catalog.image}
-                                                    alt={catalog.name}
-                                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                                                />
-                                                <div className="absolute top-2 right-2">
-                                                    <span className="bg-white/95 backdrop-blur-sm text-[#FF7B1D] text-[10px] font-black px-2 py-1 rounded-sm shadow-sm border border-orange-50 uppercase tracking-widest">
-                                                        {catalog.category}
-                                                    </span>
-                                                </div>
-                                            </div>
+                                {catalogs && catalogs.length > 0 ? (
+                                    <div className="relative group/swiper-inner">
+                                        <Swiper
+                                            modules={[Navigation, Pagination, Autoplay]}
+                                            spaceBetween={24}
+                                            slidesPerView={1}
+                                            navigation={{
+                                                prevEl: '.swiper-button-prev-inner',
+                                                nextEl: '.swiper-button-next-inner',
+                                            }}
+                                            pagination={{
+                                                clickable: true,
+                                                dynamicBullets: true,
+                                            }}
+                                            autoplay={{
+                                                delay: 3500,
+                                                disableOnInteraction: false,
+                                                pauseOnMouseEnter: true,
+                                            }}
+                                            breakpoints={{
+                                                640: { slidesPerView: 2 },
+                                                1200: { slidesPerView: 3 }
+                                            }}
+                                            className="pb-12"
+                                        >
+                                            {catalogs.map((catalog) => (
+                                                <SwiperSlide key={catalog.id}>
+                                                    <div className="group bg-white border border-gray-200 rounded-sm overflow-hidden hover:shadow-xl transition-all duration-300 h-full flex flex-col">
+                                                        <div className="aspect-video relative overflow-hidden bg-gray-50">
+                                                            <img
+                                                                src={catalog.image}
+                                                                alt={catalog.name}
+                                                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                                            />
+                                                            <div className="absolute top-2 right-2">
+                                                                <span className="bg-white/95 backdrop-blur-sm text-[#FF7B1D] text-[9px] font-black px-2 py-1 rounded-sm shadow-sm border border-orange-50 uppercase tracking-widest">
+                                                                    {catalog.category}
+                                                                </span>
+                                                            </div>
+                                                        </div>
 
-                                            <div className="p-5">
-                                                <h3 className="text-lg font-bold text-gray-900 mb-2 truncate">
-                                                    {catalog.name}
-                                                </h3>
-                                                <p className="text-sm text-gray-500 line-clamp-2 mb-4 leading-relaxed h-10">
-                                                    {catalog.description}
-                                                </p>
+                                                        <div className="p-4 flex-1 flex flex-col">
+                                                            <h3 className="text-base font-bold text-gray-900 mb-2 truncate">
+                                                                {catalog.name}
+                                                            </h3>
+                                                            <p className="text-xs text-gray-500 line-clamp-2 mb-4 leading-relaxed h-8">
+                                                                {catalog.description}
+                                                            </p>
 
-                                                <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                                                    <div>
-                                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Price Range</p>
-                                                        <p className="text-lg font-bold text-gray-900">₹{catalog.maxPrice?.toLocaleString()}</p>
+                                                            <div className="flex items-center justify-between pt-3 border-t border-gray-100 mt-auto">
+                                                                <div>
+                                                                    <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Price Range</p>
+                                                                    <p className="text-base font-bold text-gray-900">₹{catalog.maxPrice?.toLocaleString()}</p>
+                                                                </div>
+                                                                <a
+                                                                    href={`/catalog/view/${catalog.catalog_id}`}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    className="w-9 h-9 rounded-sm bg-orange-50 text-[#FF7B1D] flex items-center justify-center hover:bg-[#FF7B1D] hover:text-white transition-all border border-orange-100"
+                                                                >
+                                                                    <ExternalLink size={16} />
+                                                                </a>
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                    <a
-                                                        href={`/catalog/view/${catalog.catalog_id}`}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="w-10 h-10 rounded-sm bg-orange-50 text-[#FF7B1D] flex items-center justify-center hover:bg-[#FF7B1D] hover:text-white transition-all border border-orange-100"
-                                                    >
-                                                        <ExternalLink size={18} />
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
+                                                </SwiperSlide>
+                                            ))}
+                                        </Swiper>
 
-                                    {(!catalogs || catalogs.length === 0) && (
-                                        <div className="col-span-full py-16 text-center bg-gray-50 border-2 border-dashed border-gray-200 rounded-sm">
-                                            <Package size={48} className="mx-auto text-gray-300 mb-4" />
-                                            <p className="text-gray-500 font-bold text-sm uppercase tracking-widest">No service catalogs published yet</p>
-                                        </div>
+                                        {/* Inner Grid Navigation */}
+                                        <button className="swiper-button-prev-inner absolute left-1 top-1/2 -translate-y-1/2 -ml-2 z-10 w-9 h-9 bg-white shadow-lg rounded-full flex items-center justify-center text-gray-800 hover:text-[#FF7B1D] transition-all border border-gray-100 opacity-0 group-hover/swiper-inner:opacity-100 group-hover/swiper-inner:translate-x-2 invisible md:visible transform -translate-x-4">
+                                            <ChevronLeft size={20} />
+                                        </button>
+                                        <button className="swiper-button-next-inner absolute right-1 top-1/2 -translate-y-1/2 -mr-2 z-10 w-9 h-9 bg-white shadow-lg rounded-full flex items-center justify-center text-gray-800 hover:text-[#FF7B1D] transition-all border border-gray-100 opacity-0 group-hover/swiper-inner:opacity-100 group-hover/swiper-inner:-translate-x-2 invisible md:visible transform translate-x-4">
+                                            <ChevronRight size={20} />
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="py-12 text-center bg-gray-50 border-2 border-dashed border-gray-200 rounded-sm">
+                                        <Package size={40} className="mx-auto text-gray-300 mb-3 opacity-50" />
+                                        <p className="text-gray-500 font-bold text-xs uppercase tracking-widest">No service catalogs published yet</p>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Vision Card */}
+                            <div className="bg-white rounded-sm shadow-md p-8 border border-gray-100 relative overflow-hidden group">
+                                <div className="flex items-center gap-4 mb-6 text-gray-800">
+                                    <div className="w-12 h-12 bg-orange-50 rounded-full flex items-center justify-center text-[#FF7B1D] shadow-sm border border-orange-100/50">
+                                        <Target size={28} strokeWidth={2.5} />
+                                    </div>
+                                    <h2 className="text-xl font-bold tracking-tight">Our Vision</h2>
+                                </div>
+                                <div className="relative">
+                                    <p className={`text-gray-700 italic leading-relaxed text-base font-medium transition-all duration-300 break-words ${!showFullVision && (business.vision || "").length > VISION_MISSION_LIMIT ? 'line-clamp-4' : ''}`}>
+                                        "{showFullVision || !(business.vision) || business.vision.length <= VISION_MISSION_LIMIT
+                                            ? (business.vision || "To be a globally recognized leader in our industry, driven by innovation, quality, and a commitment to excellence.")
+                                            : business.vision.substring(0, VISION_MISSION_LIMIT) + "..."
+                                        }"
+                                    </p>
+                                    {(business.vision || "").length > VISION_MISSION_LIMIT && (
+                                        <button
+                                            onClick={() => setShowFullVision(!showFullVision)}
+                                            className="mt-6 text-[#FF7B1D] font-bold text-xs uppercase tracking-[0.2em] hover:text-orange-600 transition-all flex items-center gap-1 group/btn"
+                                        >
+                                            {showFullVision ? 'Show Less' : 'View Full Vision'}
+                                            <ChevronRight size={14} className={`transition-transform ${showFullVision ? 'rotate-[-90deg]' : 'group-hover:translate-x-1'}`} />
+                                        </button>
                                     )}
                                 </div>
                             </div>
 
-                            {/* Legal & Registration */}
-                            <div className="bg-white rounded-sm shadow-md p-8 border border-gray-100">
-                                <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-                                    <FileText className="text-[#FF7B1D]" size={24} />
-                                    Legal & Registration Details
-                                </h2>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
-                                    <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-1.5 uppercase tracking-wider">Founded Year</label>
-                                        <div className="flex items-center gap-2 text-gray-900 font-medium text-base">
-                                            <Calendar className="text-[#FF7B1D]" size={16} />
-                                            {business.founded_year || "N/A"}
-                                        </div>
+                            {/* Mission Card */}
+                            <div className="bg-white rounded-sm shadow-md p-8 border border-gray-100 relative overflow-hidden group">
+                                <div className="flex items-center gap-4 mb-6 text-gray-800">
+                                    <div className="w-12 h-12 bg-orange-50 rounded-full flex items-center justify-center text-[#FF7B1D] shadow-sm border border-orange-100/50">
+                                        <Award size={28} strokeWidth={2.5} />
                                     </div>
-                                    <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-1.5 uppercase tracking-wider">Registration Number</label>
-                                        <p className="text-gray-900 font-medium text-base font-mono bg-gray-50 px-3 py-1 border border-gray-100 inline-block rounded-sm">
-                                            {business.registration_number || "N/A"}
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-1.5 uppercase tracking-wider">GST Number</label>
-                                        <p className="text-gray-900 font-medium text-base font-mono bg-gray-50 px-3 py-1 border border-gray-100 inline-block rounded-sm">
-                                            {business.gst_number || "N/A"}
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-1.5 uppercase tracking-wider">PAN Number</label>
-                                        <p className="text-gray-900 font-medium text-base font-mono bg-gray-50 px-3 py-1 border border-gray-100 inline-block rounded-sm">
-                                            {business.pan_number || "N/A"}
-                                        </p>
-                                    </div>
+                                    <h2 className="text-xl font-bold tracking-tight">Our Mission</h2>
                                 </div>
-                            </div>
-
-                            {/* Vision & Mission */}
-                            <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-sm shadow-md p-8 border border-orange-200">
-                                <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-                                    <Target className="text-[#FF7B1D]" size={24} />
-                                    Vision & Mission
-                                </h2>
-                                <div className="grid md:grid-cols-2 gap-8">
-                                    <div>
-                                        <label className="text-sm font-bold text-[#FF7B1D] mb-3 flex items-center gap-2 uppercase tracking-widest">
-                                            <Target size={18} />
-                                            Our Vision
-                                        </label>
-                                        <p className="text-gray-800 italic leading-relaxed text-sm bg-white/60 p-5 rounded-sm border border-white/50 shadow-sm font-medium break-words">
-                                            "{business.vision || "To be a globally recognized leader in our industry, driven by innovation, quality, and a commitment to excellence."}"
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <label className="text-sm font-bold text-[#FF7B1D] mb-3 flex items-center gap-2 uppercase tracking-widest">
-                                            <Award size={18} />
-                                            Our Mission
-                                        </label>
-                                        <p className="text-gray-800 italic leading-relaxed text-sm bg-white/60 p-5 rounded-sm border border-white/50 shadow-sm font-medium break-words">
-                                            "{business.mission || "To provide exceptional value to our customers through dedicated service and superior product delivery."}"
-                                        </p>
-                                    </div>
+                                <div className="relative">
+                                    <p className={`text-gray-700 italic leading-relaxed text-base font-medium transition-all duration-300 break-words ${!showFullMission && (business.mission || "").length > VISION_MISSION_LIMIT ? 'line-clamp-4' : ''}`}>
+                                        "{showFullMission || !(business.mission) || business.mission.length <= VISION_MISSION_LIMIT
+                                            ? (business.mission || "To provide exceptional value to our customers through dedicated service and superior product delivery.")
+                                            : business.mission.substring(0, VISION_MISSION_LIMIT) + "..."
+                                        }"
+                                    </p>
+                                    {(business.mission || "").length > VISION_MISSION_LIMIT && (
+                                        <button
+                                            onClick={() => setShowFullMission(!showFullMission)}
+                                            className="mt-6 text-[#FF7B1D] font-bold text-xs uppercase tracking-[0.2em] hover:text-orange-600 transition-all flex items-center gap-1 group/btn"
+                                        >
+                                            {showFullMission ? 'Show Less' : 'View Full Mission'}
+                                            <ChevronRight size={14} className={`transition-transform ${showFullMission ? 'rotate-[-90deg]' : 'group-hover:translate-x-1'}`} />
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -475,6 +552,8 @@ const CompanyProfile = () => {
                             )}
                         </div>
                     </div>
+
+
                 </div>
             </div>
 

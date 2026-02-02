@@ -7,7 +7,7 @@ import {
   Search,
   Filter,
   Download,
-  Edit2,
+  Edit,
   Trash2,
   Eye,
   X,
@@ -17,7 +17,7 @@ import {
   Grid3x3,
   Grid,
   FileDown,
-  Share2,
+  Share,
   Target,
   Handshake,
   Users,
@@ -504,19 +504,29 @@ export default function CatalogsPage() {
 
               {/* Buttons */}
               <div className="flex flex-wrap items-center gap-3">
+                {/* Unified Filter */}
                 <div className="relative" ref={dropdownRef}>
                   <button
-                    onClick={() => setIsFilterOpen(!isFilterOpen)}
-                    className={`px-3 py-3 rounded-sm border transition shadow-sm ${isFilterOpen || statusFilter !== "All"
+                    onClick={() => {
+                      if (hasActiveFilters) {
+                        clearAllFilters();
+                      } else {
+                        setIsFilterOpen(!isFilterOpen);
+                      }
+                    }}
+                    className={`px-3 py-3 rounded-sm border transition shadow-sm ${isFilterOpen || hasActiveFilters
                       ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
                       : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
                       }`}
                   >
-                    <Filter size={18} />
+                    {hasActiveFilters ? <X size={18} /> : <Filter size={18} />}
                   </button>
 
                   {isFilterOpen && (
-                    <div className="absolute right-0 mt-2 w-32 bg-white border border-gray-200 rounded-sm shadow-xl z-50 animate-fadeIn">
+                    <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-xl z-50 animate-fadeIn overflow-hidden">
+                      <div className="p-3 border-b border-gray-100 bg-gray-50">
+                        <span className="text-sm font-bold text-gray-700 tracking-wide">Statuses</span>
+                      </div>
                       <div className="py-1">
                         {["All", "Active", "Inactive"].map((status) => (
                           <button
@@ -535,95 +545,60 @@ export default function CatalogsPage() {
                           </button>
                         ))}
                       </div>
-                    </div>
-                  )}
 
-                  {/* Date Filter */}
-                </div>
-
-                <div className="relative" ref={dateDropdownRef}>
-                  <button
-                    onClick={() => setIsDateFilterOpen(!isDateFilterOpen)}
-                    className={`px-3 py-3 rounded-sm border transition shadow-sm flex items-center gap-2 ${isDateFilterOpen || dateFilter !== "All"
-                      ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
-                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
-                      }`}
-                  >
-                    <Calendar size={18} />
-                    <span className="text-sm font-semibold">{dateFilter}</span>
-                  </button>
-
-                  {isDateFilterOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-sm shadow-xl z-50 animate-fadeIn">
+                      <div className="p-3 border-t border-b border-gray-100 bg-gray-50">
+                        <span className="text-sm font-bold text-gray-700 tracking-wide">Date Range</span>
+                      </div>
                       <div className="py-1">
                         {["All", "Today", "Yesterday", "Last 7 Days", "This Month", "Custom"].map((option) => (
-                          <button
-                            key={option}
-                            onClick={() => {
-                              setDateFilter(option);
-                              if (option !== "Custom") {
-                                setIsDateFilterOpen(false);
-                                setCurrentPage(1);
-                              }
-                            }}
-                            className={`block w-full text-left px-4 py-2 text-sm transition-colors ${dateFilter === option
-                              ? "bg-orange-50 text-orange-600 font-bold"
-                              : "text-gray-700 hover:bg-gray-50"
-                              }`}
-                          >
-                            {option}
-                          </button>
-                        ))}
-                        {dateFilter === "Custom" && (
-                          <div className="p-3 border-t border-gray-200">
-                            <label className="block text-xs font-semibold text-gray-700 mb-1">From</label>
-                            <input
-                              type="date"
-                              value={customStart}
-                              onChange={(e) => setCustomStart(e.target.value)}
-                              className="w-full px-2 py-1 border border-gray-300 rounded-sm text-xs mb-2"
-                            />
-                            <label className="block text-xs font-semibold text-gray-700 mb-1">To</label>
-                            <input
-                              type="date"
-                              value={customEnd}
-                              onChange={(e) => setCustomEnd(e.target.value)}
-                              className="w-full px-2 py-1 border border-gray-300 rounded-sm text-xs mb-2"
-                            />
+                          <div key={option}>
                             <button
                               onClick={() => {
-                                setIsDateFilterOpen(false);
-                                setCurrentPage(1);
+                                setDateFilter(option);
+                                if (option !== "Custom") {
+                                  setIsFilterOpen(false);
+                                  setCurrentPage(1);
+                                }
                               }}
-                              className="w-full px-3 py-1.5 bg-orange-500 text-white rounded-sm text-xs font-bold hover:bg-orange-600"
+                              className={`block w-full text-left px-4 py-2 text-sm transition-colors ${dateFilter === option
+                                ? "bg-orange-50 text-orange-600 font-bold"
+                                : "text-gray-700 hover:bg-gray-50"
+                                }`}
                             >
-                              Apply
+                              {option}
                             </button>
+                            {option === "Custom" && dateFilter === "Custom" && (
+                              <div className="px-4 py-3 space-y-2 border-t border-gray-50 bg-gray-50/50">
+                                <input
+                                  type="date"
+                                  value={customStart}
+                                  onChange={(e) => setCustomStart(e.target.value)}
+                                  className="w-full px-2 py-2 border border-gray-300 rounded-sm text-xs focus:outline-none focus:ring-1 focus:ring-orange-500"
+                                />
+                                <input
+                                  type="date"
+                                  value={customEnd}
+                                  onChange={(e) => setCustomEnd(e.target.value)}
+                                  className="w-full px-2 py-2 border border-gray-300 rounded-sm text-xs focus:outline-none focus:ring-1 focus:ring-orange-500"
+                                />
+                                <button
+                                  onClick={() => {
+                                    setIsFilterOpen(false);
+                                    setCurrentPage(1);
+                                  }}
+                                  className="w-full bg-orange-500 text-white text-[10px] font-bold py-2 rounded-sm uppercase tracking-wider"
+                                >
+                                  Apply
+                                </button>
+                              </div>
+                            )}
                           </div>
-                        )}
+                        ))}
                       </div>
                     </div>
                   )}
                 </div>
 
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="Search catalogs..."
-                    value={searchTerm}
-                    onChange={(e) => {
-                      setSearchTerm(e.target.value);
-                      setCurrentPage(1);
-                    }}
-                    className="pl-10 pr-4 py-3 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-orange-500 text-sm w-64 shadow-sm"
-                  />
-                  <Search className="absolute left-3 top-3.5 text-gray-400" size={16} />
-                </div>
-
-                <button onClick={handleExportExcel} className="bg-white border border-gray-300 hover:bg-gray-50 px-5 py-3 rounded-sm flex items-center gap-2 transition font-semibold shadow-sm text-gray-700">
-                  <FileDown size={18} />
-                  Export
-                </button>
 
                 <button
                   onClick={() => {
@@ -644,52 +619,7 @@ export default function CatalogsPage() {
           </div>
         </div>
 
-        <div className="max-w-8xl mx-auto p-4 mt-0">
-          {/* Active Filters Display */}
-          {hasActiveFilters && (
-            <div className="pb-3">
-              <div className="flex flex-wrap items-center justify-between bg-orange-50 border border-orange-200 rounded-sm p-3 gap-3 animate-fadeIn">
-                <div className="flex flex-wrap items-center gap-2">
-                  <Filter className="text-orange-600" size={16} />
-                  <span className="text-sm font-bold text-orange-800 uppercase tracking-wider">
-                    ACTIVE FILTERS:
-                  </span>
-                  {searchTerm && (
-                    <span className="text-xs bg-white px-3 py-1 rounded-sm border border-orange-200 text-orange-700 shadow-sm font-bold">
-                      Search: "{searchTerm}"
-                    </span>
-                  )}
-                  {statusFilter !== "All" && (
-                    <span className="text-xs bg-white px-3 py-1 rounded-sm border border-orange-200 text-orange-700 shadow-sm font-bold">
-                      Status: {statusFilter}
-                    </span>
-                  )}
-                  {dateFilter !== "All" && dateFilter !== "Custom" && (
-                    <span className="text-xs bg-white px-3 py-1 rounded-sm border border-orange-200 text-orange-700 shadow-sm font-bold">
-                      Period: {dateFilter}
-                    </span>
-                  )}
-                  {dateFilter === "Custom" && customStart && (
-                    <span className="text-xs bg-white px-3 py-1 rounded-sm border border-orange-200 text-orange-700 shadow-sm font-bold">
-                      From: {customStart}
-                    </span>
-                  )}
-                  {dateFilter === "Custom" && customEnd && (
-                    <span className="text-xs bg-white px-3 py-1 rounded-sm border border-orange-200 text-orange-700 shadow-sm font-bold">
-                      To: {customEnd}
-                    </span>
-                  )}
-                </div>
-                <button
-                  onClick={clearAllFilters}
-                  className="flex items-center gap-2 px-3 py-1.5 bg-white border border-orange-300 text-orange-600 rounded-sm hover:bg-orange-100 transition shadow-sm text-xs font-bold active:scale-95 uppercase"
-                >
-                  <X size={14} />
-                  Clear All
-                </button>
-              </div>
-            </div>
-          )}
+        <div className="max-w-8xl mx-auto p-4 pt-0 mt-2">
 
 
           {/* Statement Card */}
@@ -726,48 +656,48 @@ export default function CatalogsPage() {
 
           {/* Table */}
           <div className="overflow-x-auto mt-4 border border-gray-200 rounded-sm shadow-sm">
-            <table className="w-full border-collapse text-center">
+            <table className="w-full border-collapse text-left">
               <thead>
                 <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm">
-                  <th className="py-3 px-4 font-semibold">S.N</th>
-                  <th className="py-3 px-4 font-semibold">Image</th>
+                  <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[5%]">S.N</th>
+                  <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[8%]">Image</th>
                   <th
-                    className="py-3 px-4 font-semibold cursor-pointer hover:text-gray-200"
+                    className="py-3 px-4 font-semibold cursor-pointer hover:text-gray-200 text-left border-b border-orange-400 w-[10%]"
                     onClick={() => handleSort("id")}
                   >
                     ID
                   </th>
                   <th
-                    className="py-3 px-4 font-semibold cursor-pointer hover:text-gray-200"
+                    className="py-3 px-4 font-semibold cursor-pointer hover:text-gray-200 text-left border-b border-orange-400 w-[20%]"
                     onClick={() => handleSort("name")}
                   >
                     Name
                   </th>
                   <th
-                    className="py-3 px-4 font-semibold cursor-pointer hover:text-gray-200"
+                    className="py-3 px-4 font-semibold cursor-pointer hover:text-gray-200 text-left border-b border-orange-400 w-[12%]"
                     onClick={() => handleSort("minPrice")}
                   >
                     Min Price
                   </th>
                   <th
-                    className="py-3 px-4 font-semibold cursor-pointer hover:text-gray-200"
+                    className="py-3 px-4 font-semibold cursor-pointer hover:text-gray-200 text-left border-b border-orange-400 w-[12%]"
                     onClick={() => handleSort("maxPrice")}
                   >
                     Max Price
                   </th>
                   <th
-                    className="py-3 px-4 font-semibold cursor-pointer hover:text-gray-200"
+                    className="py-3 px-4 font-semibold cursor-pointer hover:text-gray-200 text-left border-b border-orange-400 w-[13%]"
                     onClick={() => handleSort("createdDate")}
                   >
                     Created Date
                   </th>
                   <th
-                    className="py-3 px-4 font-semibold cursor-pointer hover:text-gray-200"
+                    className="py-3 px-4 font-semibold cursor-pointer hover:text-gray-200 text-left border-b border-orange-400 w-[10%]"
                     onClick={() => handleSort("status")}
                   >
                     Status
                   </th>
-                  <th className="py-3 px-4 font-semibold">Action</th>
+                  <th className="py-3 px-4 font-semibold text-right border-b border-orange-400 w-[10%]">Action</th>
                 </tr>
               </thead>
 
@@ -787,28 +717,30 @@ export default function CatalogsPage() {
                       key={catalog.id}
                       className="border-t hover:bg-gray-50 transition-colors"
                     >
-                      <td className="py-3 px-4">
+                      <td className="py-3 px-4 text-left">
                         {(currentPage - 1) * itemsPerPage + index + 1}
                       </td>
-                      <td className="py-3 px-4">
+                      <td className="py-3 px-4 text-left">
                         <img
                           src={catalog.image}
                           alt={catalog.name}
-                          className="w-12 h-12 rounded-md border object-cover mx-auto shadow-sm"
+                          className="w-12 h-12 rounded-md border object-cover shadow-sm"
                         />
                       </td>
-                      <td className="py-3 px-4 font-medium text-orange-600">{catalog.catalog_id}</td>
-                      <td className="py-3 px-4 font-semibold text-gray-800">
-                        {catalog.name}
+                      <td className="py-3 px-4 font-medium text-orange-600 text-left">{catalog.catalog_id}</td>
+                      <td className="py-3 px-4 font-semibold text-gray-800 text-left max-w-sm">
+                        <div className="line-clamp-1 leading-tight" title={catalog.name}>
+                          {catalog.name}
+                        </div>
                       </td>
-                      <td className="py-3 px-4 font-medium text-gray-600">
+                      <td className="py-3 px-4 font-medium text-gray-600 text-left">
                         {catalog.minPrice ? `₹${catalog.minPrice.toLocaleString()}` : "N/A"}
                       </td>
-                      <td className="py-3 px-4 font-medium text-gray-600">
+                      <td className="py-3 px-4 font-medium text-gray-600 text-left">
                         {catalog.maxPrice ? `₹${catalog.maxPrice.toLocaleString()}` : "N/A"}
                       </td>
-                      <td className="py-3 px-4 text-gray-600 text-sm">{new Date(catalog.created_at).toLocaleDateString()}</td>
-                      <td className="py-3 px-4">
+                      <td className="py-3 px-4 text-gray-600 text-sm text-left">{new Date(catalog.created_at).toLocaleDateString()}</td>
+                      <td className="py-3 px-4 text-left">
                         <span
                           className={`px-3 py-1 rounded-sm text-[10px] font-bold border uppercase tracking-wider ${catalog.status === "Active"
                             ? "bg-green-50 text-green-700 border-green-200"
@@ -819,10 +751,10 @@ export default function CatalogsPage() {
                         </span>
                       </td>
                       <td className="py-3 px-4">
-                        <div className="flex justify-center gap-2">
+                        <div className="flex justify-end gap-2">
                           <button
                             onClick={() => handleView(catalog.catalog_id)}
-                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-sm transition-all"
+                            className="p-1 hover:bg-orange-100 rounded-sm text-blue-500 hover:text-blue-700 transition-all"
                             title="View"
                           >
                             <Eye size={18} />
@@ -830,16 +762,16 @@ export default function CatalogsPage() {
                           <button
                             onClick={() => handleEdit(catalog)}
                             disabled={!update}
-                            className={`p-2 rounded-sm transition-all ${update ? "text-orange-500 hover:bg-orange-50" : "text-gray-300 cursor-not-allowed"
+                            className={`p-1 hover:bg-orange-100 rounded-sm transition-all ${update ? "text-green-500 hover:text-green-700" : "text-gray-300 cursor-not-allowed"
                               }`}
                             title="Edit"
                           >
-                            <Edit2 size={18} />
+                            <Edit size={18} />
                           </button>
                           <button
                             onClick={() => handleDelete(catalog)}
                             disabled={!canDelete}
-                            className={`p-2 rounded-sm transition-all ${canDelete ? "text-red-600 hover:bg-red-50" : "text-gray-300 cursor-not-allowed"
+                            className={`p-1 hover:bg-orange-100 rounded-sm transition-all ${canDelete ? "text-red-500 hover:text-red-700" : "text-gray-300 cursor-not-allowed"
                               }`}
                             title="Delete"
                           >
@@ -847,10 +779,10 @@ export default function CatalogsPage() {
                           </button>
                           <button
                             onClick={() => handleShare(catalog)}
-                            className="p-2 text-purple-600 hover:bg-purple-50 rounded-sm transition-all"
+                            className="p-1 hover:bg-orange-100 rounded-sm text-purple-500 hover:text-purple-700 transition-all"
                             title="Share"
                           >
-                            <Share2 size={18} />
+                            <Share size={18} />
                           </button>
                         </div>
                       </td>
@@ -1393,7 +1325,7 @@ export default function CatalogsPage() {
             <div className="bg-white rounded-sm shadow-2xl w-full max-w-lg">
               <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-4 flex items-center justify-between">
                 <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                  <Share2 size={20} />
+                  <Share size={20} />
                   Share Catalog
                 </h2>
                 <button
