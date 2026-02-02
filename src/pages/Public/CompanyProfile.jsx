@@ -39,11 +39,11 @@ const CompanyProfile = () => {
 
     if (isLoading) {
         return (
-            <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-50 to-orange-50">
+            <div className="flex items-center justify-center min-h-screen bg-gray-50">
                 <div className="relative">
-                    <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-[#FF7B1D]"></div>
+                    <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-[#FF7B1D]"></div>
                     <div className="absolute inset-0 flex items-center justify-center">
-                        <Building2 size={24} className="text-[#FF7B1D] animate-pulse" />
+                        <Building2 size={24} className="text-[#FF7B1D]" />
                     </div>
                 </div>
             </div>
@@ -52,13 +52,13 @@ const CompanyProfile = () => {
 
     if (error || !business) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-gray-50 to-orange-50 text-center p-4">
-                <div className="bg-white p-8 rounded-2xl mb-6 shadow-2xl">
+            <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 text-center p-4 font-sans">
+                <div className="bg-white p-8 rounded-sm mb-6 shadow-sm border border-gray-100">
                     <Building2 size={64} className="text-red-500 mx-auto" />
                 </div>
                 <h1 className="text-3xl font-bold text-gray-900 mb-2">Profile Not Found</h1>
                 <p className="text-gray-600 max-w-sm mb-8">The business profile you're looking for doesn't exist or has been removed.</p>
-                <a href="/" className="bg-[#FF7B1D] text-white px-8 py-3 rounded-lg font-semibold shadow-lg hover:bg-orange-600 transition-all">
+                <a href="/" className="bg-[#FF7B1D] text-white px-8 py-3 rounded-sm font-semibold shadow-md hover:bg-orange-600 transition-all">
                     Return Home
                 </a>
             </div>
@@ -94,127 +94,170 @@ const CompanyProfile = () => {
             case "youtube": return "hover:bg-red-600 hover:text-white text-red-600 bg-red-50 border-red-100";
             case "twitter":
             case "x": return "hover:bg-black hover:text-white text-gray-800 bg-gray-50 border-gray-200";
-            default: return "hover:bg-orange-600 hover:text-white text-orange-600 bg-orange-50 border-orange-100";
+            default: return "hover:bg-[#FF7B1D] hover:text-white text-[#FF7B1D] bg-orange-50 border-orange-100";
         }
     };
 
     return (
-        <div className="min-h-screen bg-white font-sans antialiased">
+        <div className="min-h-screen bg-white font-primary antialiased text-gray-800 mt-16">
             <Navbar business={business} logoUrl={logoUrl} />
-            <HeroSection business={business} logoUrl={logoUrl} />
+            {/* Content Container */}
+            <div className="bg-[#f8f9fa] py-8 px-4 sm:px-6 lg:px-8">
+                <div className="max-w-[1400px] mx-auto">
+                    {/* Header Card (Setup View Style) */}
+                    <div className="bg-white rounded-sm shadow-md p-6 mb-6 border border-gray-100">
+                        <div className="flex flex-col md:flex-row items-center md:items-start gap-8">
+                            {/* Logo */}
+                            <div className="flex-shrink-0">
+                                <div className="w-32 h-32 bg-gray-50 border border-gray-100 rounded-sm flex items-center justify-center p-4 shadow-sm overflow-hidden">
+                                    {logoUrl ? (
+                                        <img src={logoUrl} alt={business.company_name} className="w-full h-full object-contain" />
+                                    ) : (
+                                        <Building2 size={64} className="text-[#FF7B1D]" />
+                                    )}
+                                </div>
+                            </div>
 
-            {/* Dashboard Reference Sections */}
-            <div className="bg-gray-50/50 py-16 px-4 sm:px-6 lg:px-8">
-                <div className="max-w-7xl mx-auto">
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                            {/* Info & Badges */}
+                            <div className="flex-1 text-center md:text-left">
+                                <div className="flex flex-wrap flex-col md:flex-row md:items-center gap-3 mb-3">
+                                    <h1 className="text-3xl font-bold text-gray-900 leading-tight">
+                                        {business.company_name}
+                                    </h1>
+                                    <div className="inline-flex items-center self-center md:self-auto gap-1.5 px-3 py-1 bg-green-50 text-green-700 text-[10px] font-bold uppercase tracking-widest rounded-sm border border-green-100">
+                                        <CheckCircle size={14} />
+                                        Verified Business
+                                    </div>
+                                </div>
+
+                                <div className="flex flex-wrap justify-center md:justify-start gap-x-4 gap-y-2 mb-6 text-sm text-gray-600 font-medium">
+                                    <div className="flex items-center gap-1.5">
+                                        <Building2 size={16} className="text-[#FF7B1D]" />
+                                        {business.industry || "Information Technology"}
+                                    </div>
+                                    <div className="flex items-center gap-1.5">
+                                        <MapPin size={16} className="text-[#FF7B1D]" />
+                                        {business.city}, {business.country}
+                                    </div>
+                                    {business.founded_year && (
+                                        <div className="flex items-center gap-1.5">
+                                            <Calendar size={16} className="text-[#FF7B1D]" />
+                                            Since {business.founded_year}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Action Buttons */}
+                                <div className="flex flex-wrap justify-center md:justify-start gap-3">
+                                    {business.email && (
+                                        <a href={`mailto:${business.email}`} className="bg-[#FF7B1D] text-white px-6 py-2.5 rounded-sm font-bold text-sm shadow-sm hover:bg-orange-600 transition-all flex items-center gap-2">
+                                            <Mail size={16} />
+                                            Contact Now
+                                        </a>
+                                    )}
+                                    {business.website && (
+                                        <a href={business.website.startsWith('http') ? business.website : `https://${business.website}`} target="_blank" rel="noopener noreferrer" className="bg-white border border-gray-200 text-gray-800 px-6 py-2.5 rounded-sm font-bold text-sm hover:border-[#FF7B1D] hover:text-[#FF7B1D] transition-all flex items-center gap-2">
+                                            <Globe size={16} />
+                                            Visit Website
+                                        </a>
+                                    )}
+                                    <button className="bg-gray-50 border border-gray-200 text-gray-600 px-6 py-2.5 rounded-sm font-bold text-sm hover:bg-gray-100 transition-all flex items-center gap-2">
+                                        <Share2 size={16} />
+                                        Share Profile
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         {/* Left Column - Main Info (2/3) */}
-                        <div className="lg:col-span-2 space-y-8">
+                        <div className="lg:col-span-2 space-y-6">
                             {/* Basic Information */}
-                            <div className="bg-white rounded-2xl shadow-sm border border-orange-100 p-8">
-                                <h2 className="text-2xl font-bold text-gray-900 mb-8 flex items-center gap-3">
-                                    <Building2 className="text-[#FF7B1D]" size={28} />
-                                    Business Overview
+                            <div className="bg-white rounded-sm shadow-md p-8 border border-gray-100">
+                                <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                                    <Building2 className="text-[#FF7B1D]" size={24} />
+                                    Basic Information
                                 </h2>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
                                     <div>
-                                        <p className="text-sm font-semibold text-gray-700 mb-2">Company Name</p>
-                                        <p className="text-gray-800 font-medium text-sm">{business.company_name}</p>
+                                        <label className="block text-sm font-semibold text-gray-700 mb-1.5 uppercase tracking-wider">Company Name</label>
+                                        <p className="text-gray-900 font-medium text-base">{business.company_name}</p>
                                     </div>
                                     <div>
-                                        <p className="text-sm font-semibold text-gray-700 mb-2">Legal Name</p>
-                                        <p className="text-gray-800 font-medium text-sm">{business.legal_name || "N/A"}</p>
+                                        <label className="block text-sm font-semibold text-gray-700 mb-1.5 uppercase tracking-wider">Legal Name</label>
+                                        <p className="text-gray-900 font-medium text-base">{business.legal_name || "N/A"}</p>
                                     </div>
                                     <div>
-                                        <p className="text-sm font-semibold text-gray-700 mb-2">Industry</p>
+                                        <label className="block text-sm font-semibold text-gray-700 mb-1.5 uppercase tracking-wider">Industry</label>
                                         <div className="flex items-center gap-2">
                                             <Globe className="text-[#FF7B1D]" size={16} />
-                                            <p className="text-gray-800 font-medium text-sm">{business.industry || "Information Technology"}</p>
+                                            <p className="text-gray-900 font-medium text-base">{business.industry || "Information Technology"}</p>
                                         </div>
                                     </div>
                                     <div>
-                                        <p className="text-sm font-semibold text-gray-700 mb-2">Business Type</p>
+                                        <label className="block text-sm font-semibold text-gray-700 mb-1.5 uppercase tracking-wider">Business Type</label>
                                         <div className="flex items-center gap-2">
                                             <Award className="text-[#FF7B1D]" size={16} />
-                                            <p className="text-gray-800 font-medium text-sm">{business.business_type || "Private Limited"}</p>
+                                            <p className="text-gray-900 font-medium text-base">{business.business_type || "Private Limited Company"}</p>
                                         </div>
                                     </div>
                                     {business.registration_number && (
-                                        <div>
-                                            <p className="text-sm font-semibold text-gray-700 mb-2">Registration No.</p>
-                                            <p className="text-gray-800 font-medium text-sm font-mono">{business.registration_number}</p>
-                                        </div>
-                                    )}
-                                    {business.founded_year && (
-                                        <div>
-                                            <p className="text-sm font-semibold text-gray-700 mb-2">Founded Year</p>
-                                            <div className="flex items-center gap-2">
-                                                <Calendar className="text-[#FF7B1D]" size={16} />
-                                                <p className="text-gray-800 font-medium text-sm">{business.founded_year}</p>
-                                            </div>
+                                        <div className="sm:col-span-2">
+                                            <label className="block text-sm font-semibold text-gray-700 mb-1.5 uppercase tracking-wider">Company Description</label>
+                                            <p className="text-gray-700 leading-relaxed text-sm bg-gray-50/50 p-4 rounded-sm border border-gray-100">
+                                                {business.company_description}
+                                            </p>
                                         </div>
                                     )}
                                 </div>
                             </div>
 
-                            {/* About Company */}
-                            <div className="bg-white rounded-2xl shadow-sm border border-orange-100 p-8">
-                                <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                                    <FileText className="text-[#FF7B1D]" size={28} />
-                                    About {business.company_name}
-                                </h2>
-                                <p className="text-gray-600 leading-relaxed text-lg italic bg-gray-50 p-6 rounded-xl border-l-4 border-orange-400">
-                                    "{business.company_description || "We are a technology-driven company committed to excellence and innovation in our field."}"
-                                </p>
-                            </div>
-
                             {/* Products & Services */}
-                            <div className="bg-white rounded-2xl shadow-sm border border-orange-100 p-8">
-                                <h2 className="text-2xl font-bold text-gray-900 mb-8 flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <Package className="text-[#FF7B1D]" size={28} />
+                            <div className="bg-white rounded-sm shadow-md p-8 border border-gray-100">
+                                <h2 className="text-xl font-bold text-gray-800 mb-8 flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <Package className="text-[#FF7B1D]" size={24} />
                                         Our Products & Services
                                     </div>
-                                    <span className="text-xs font-bold text-gray-400 uppercase tracking-widest bg-gray-50 px-3 py-1 rounded-full border border-gray-100">
-                                        {catalogs?.length || 0} Items
+                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.1em] bg-gray-50 px-3 py-1 rounded-full border border-gray-100">
+                                        {catalogs?.length || 0} ITEMS AVAILABLE
                                     </span>
                                 </h2>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     {catalogs?.map((catalog) => (
-                                        <div key={catalog.id} className="group relative bg-white border border-gray-100 rounded-2xl overflow-hidden hover:shadow-xl hover:border-orange-200 transition-all duration-300">
-                                            {/* Image */}
-                                            <div className="aspect-video relative overflow-hidden bg-gray-100">
+                                        <div key={catalog.id} className="group bg-white border border-gray-200 rounded-sm overflow-hidden hover:shadow-xl transition-all duration-300">
+                                            <div className="aspect-video relative overflow-hidden bg-gray-50">
                                                 <img
                                                     src={catalog.image}
                                                     alt={catalog.name}
-                                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                                                 />
-                                                <div className="absolute top-3 right-3">
-                                                    <span className="bg-white/90 backdrop-blur-sm text-[#FF7B1D] text-[10px] font-black px-3 py-1.5 rounded-full shadow-sm border border-orange-50 uppercase tracking-wider">
+                                                <div className="absolute top-2 right-2">
+                                                    <span className="bg-white/95 backdrop-blur-sm text-[#FF7B1D] text-[10px] font-black px-2 py-1 rounded-sm shadow-sm border border-orange-50 uppercase tracking-widest">
                                                         {catalog.category}
                                                     </span>
                                                 </div>
                                             </div>
 
-                                            {/* Content */}
-                                            <div className="p-6">
-                                                <h3 className="text-lg font-bold text-gray-900 mb-2 truncate group-hover:text-[#FF7B1D] transition-colors">
+                                            <div className="p-5">
+                                                <h3 className="text-lg font-bold text-gray-900 mb-2 truncate">
                                                     {catalog.name}
                                                 </h3>
-                                                <p className="text-sm text-gray-500 line-clamp-2 mb-4 leading-relaxed min-h-[40px]">
+                                                <p className="text-sm text-gray-500 line-clamp-2 mb-4 leading-relaxed h-10">
                                                     {catalog.description}
                                                 </p>
 
-                                                <div className="flex items-center justify-between pt-4 border-t border-gray-50">
+                                                <div className="flex items-center justify-between pt-4 border-t border-gray-100">
                                                     <div>
-                                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Starting From</p>
-                                                        <p className="text-lg font-black text-gray-900">₹{catalog.minPrice?.toLocaleString()}</p>
+                                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Price Range</p>
+                                                        <p className="text-lg font-bold text-gray-900">₹{catalog.maxPrice?.toLocaleString()}</p>
                                                     </div>
                                                     <a
                                                         href={`/catalog/view/${catalog.catalog_id}`}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
-                                                        className="w-10 h-10 rounded-xl bg-orange-50 text-[#FF7B1D] flex items-center justify-center hover:bg-[#FF7B1D] hover:text-white transition-all shadow-sm"
+                                                        className="w-10 h-10 rounded-sm bg-orange-50 text-[#FF7B1D] flex items-center justify-center hover:bg-[#FF7B1D] hover:text-white transition-all border border-orange-100"
                                                     >
                                                         <ExternalLink size={18} />
                                                     </a>
@@ -224,192 +267,154 @@ const CompanyProfile = () => {
                                     ))}
 
                                     {(!catalogs || catalogs.length === 0) && (
-                                        <div className="col-span-full py-12 text-center bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                                        <div className="col-span-full py-16 text-center bg-gray-50 border-2 border-dashed border-gray-200 rounded-sm">
                                             <Package size={48} className="mx-auto text-gray-300 mb-4" />
-                                            <p className="text-gray-500 font-bold text-sm">No services listed yet.</p>
+                                            <p className="text-gray-500 font-bold text-sm uppercase tracking-widest">No service catalogs published yet</p>
                                         </div>
                                     )}
                                 </div>
                             </div>
 
                             {/* Legal & Registration */}
-                            <div className="bg-white rounded-2xl shadow-sm border border-orange-100 p-8">
-                                <h2 className="text-2xl font-bold text-gray-900 mb-8 flex items-center gap-3">
-                                    <FileText className="text-[#FF7B1D]" size={28} />
-                                    Legal & Registration
+                            <div className="bg-white rounded-sm shadow-md p-8 border border-gray-100">
+                                <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                                    <FileText className="text-[#FF7B1D]" size={24} />
+                                    Legal & Registration Details
                                 </h2>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
                                     <div>
-                                        <p className="text-sm font-semibold text-gray-700 mb-2">Registration Number</p>
-                                        <p className="text-gray-800 font-medium text-sm bg-gray-50 px-4 py-2 rounded-sm border border-gray-100 inline-block font-mono">
-                                            {business.registration_number || "N/A"}
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <p className="text-sm font-semibold text-gray-700 mb-2">GST Number</p>
-                                        <p className="text-gray-800 font-medium text-sm bg-gray-50 px-4 py-2 rounded-sm border border-gray-100 inline-block font-mono">
-                                            {business.gst_number || "N/A"}
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <p className="text-sm font-semibold text-gray-700 mb-2">PAN Number</p>
-                                        <p className="text-gray-800 font-medium text-sm bg-gray-50 px-4 py-2 rounded-sm border border-gray-100 inline-block font-mono">
-                                            {business.pan_number || "N/A"}
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <p className="text-sm font-semibold text-gray-700 mb-2">Founded Year</p>
-                                        <div className="flex items-center gap-2 text-gray-800 font-medium text-sm">
+                                        <label className="block text-sm font-semibold text-gray-700 mb-1.5 uppercase tracking-wider">Founded Year</label>
+                                        <div className="flex items-center gap-2 text-gray-900 font-medium text-base">
                                             <Calendar className="text-[#FF7B1D]" size={16} />
                                             {business.founded_year || "N/A"}
                                         </div>
                                     </div>
-                                </div>
-                            </div>
-
-                            {/* Banking Information */}
-                            <div className="bg-white rounded-2xl shadow-sm border border-orange-100 p-8">
-                                <h2 className="text-2xl font-bold text-gray-900 mb-8 flex items-center gap-3">
-                                    <DollarSign className="text-[#FF7B1D]" size={28} />
-                                    Financial Handshake
-                                </h2>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                                     <div>
-                                        <p className="text-sm font-semibold text-gray-700 mb-2">Bank Name</p>
-                                        <p className="text-gray-800 font-medium text-sm">{business.bank_name || "N/A"}</p>
-                                        <p className="text-[10px] font-bold text-gray-400 uppercase mt-1">{business.branch_name || "Main Branch"}</p>
+                                        <label className="block text-sm font-semibold text-gray-700 mb-1.5 uppercase tracking-wider">Registration Number</label>
+                                        <p className="text-gray-900 font-medium text-base font-mono bg-gray-50 px-3 py-1 border border-gray-100 inline-block rounded-sm">
+                                            {business.registration_number || "N/A"}
+                                        </p>
                                     </div>
                                     <div>
-                                        <p className="text-sm font-semibold text-gray-700 mb-2">IFSC CODE</p>
-                                        <p className="text-gray-800 font-medium text-sm font-mono tracking-tighter">{business.ifsc_code || "N/A"}</p>
+                                        <label className="block text-sm font-semibold text-gray-700 mb-1.5 uppercase tracking-wider">GST Number</label>
+                                        <p className="text-gray-900 font-medium text-base font-mono bg-gray-50 px-3 py-1 border border-gray-100 inline-block rounded-sm">
+                                            {business.gst_number || "N/A"}
+                                        </p>
                                     </div>
-                                    <div className="sm:col-span-2 bg-gray-50 border border-gray-100 p-5 rounded-sm flex items-center justify-between">
-                                        <div>
-                                            <p className="text-sm font-semibold text-gray-700 mb-1">Account Number</p>
-                                            <p className="text-gray-800 font-medium text-sm font-mono tracking-widest">
-                                                {business.account_number ? `XXXX-XXXX-${business.account_number.slice(-4)}` : "N/A"}
-                                            </p>
-                                        </div>
-                                        <div className="hidden sm:block">
-                                            <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-gray-400 shadow-sm border border-gray-50">
-                                                <Target size={20} />
-                                            </div>
-                                        </div>
+                                    <div>
+                                        <label className="block text-sm font-semibold text-gray-700 mb-1.5 uppercase tracking-wider">PAN Number</label>
+                                        <p className="text-gray-900 font-medium text-base font-mono bg-gray-50 px-3 py-1 border border-gray-100 inline-block rounded-sm">
+                                            {business.pan_number || "N/A"}
+                                        </p>
                                     </div>
                                 </div>
                             </div>
 
                             {/* Vision & Mission */}
-                            <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl shadow-sm p-8 border border-orange-200">
-                                <h2 className="text-2xl font-bold text-gray-900 mb-8 flex items-center gap-3">
-                                    <Target className="text-[#FF7B1D]" size={28} />
+                            <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-sm shadow-md p-8 border border-orange-200">
+                                <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                                    <Target className="text-[#FF7B1D]" size={24} />
                                     Vision & Mission
                                 </h2>
                                 <div className="grid md:grid-cols-2 gap-8">
                                     <div>
-                                        <p className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                                            <Target size={18} className="text-orange-500" />
-                                            Vision
-                                        </p>
-                                        <p className="text-gray-800 italic leading-relaxed text-sm break-words bg-white/50 p-4 rounded-xl border border-orange-50">
-                                            "{business.vision || "To be the leading global provider of innovative solutions that empower businesses to thrive in a digital world."}"
+                                        <label className="text-sm font-bold text-[#FF7B1D] mb-3 flex items-center gap-2 uppercase tracking-widest">
+                                            <Target size={18} />
+                                            Our Vision
+                                        </label>
+                                        <p className="text-gray-800 italic leading-relaxed text-sm bg-white/60 p-5 rounded-sm border border-white/50 shadow-sm font-medium break-words">
+                                            "{business.vision || "To be a globally recognized leader in our industry, driven by innovation, quality, and a commitment to excellence."}"
                                         </p>
                                     </div>
                                     <div>
-                                        <p className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                                            <Award size={18} className="text-orange-500" />
-                                            Mission
-                                        </p>
-                                        <p className="text-gray-800 italic leading-relaxed text-sm break-words bg-white/50 p-4 rounded-xl border border-orange-50">
-                                            "{business.mission || "To deliver high-quality products and services that create sustainable value for our clients and the communities we serve."}"
+                                        <label className="text-sm font-bold text-[#FF7B1D] mb-3 flex items-center gap-2 uppercase tracking-widest">
+                                            <Award size={18} />
+                                            Our Mission
+                                        </label>
+                                        <p className="text-gray-800 italic leading-relaxed text-sm bg-white/60 p-5 rounded-sm border border-white/50 shadow-sm font-medium break-words">
+                                            "{business.mission || "To provide exceptional value to our customers through dedicated service and superior product delivery."}"
                                         </p>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Right Column - Contact & Status (1/3) */}
-                        <div className="space-y-8">
-                            {/* Verification Status */}
-                            <div className="bg-white rounded-2xl shadow-sm border border-orange-100 p-8 overflow-hidden">
-                                <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
-                                    <CheckCircle className="text-green-500" size={22} />
-                                    Verification Tracker
+                        {/* Right Column - Sidebar (1/3) */}
+                        <div className="space-y-6">
+                            {/* Verification Badge */}
+                            <div className="bg-white rounded-sm shadow-md p-6 border border-gray-100">
+                                <h3 className="text-lg font-bold text-gray-800 mb-5 flex items-center gap-2">
+                                    <CheckCircle className="text-green-500" size={20} />
+                                    Trust & Verification
                                 </h3>
-                                <div className="space-y-4">
-                                    <div className="flex items-center justify-between p-4 bg-green-50 rounded-xl border border-green-100 group">
+                                <div className="space-y-3">
+                                    <div className="flex items-center justify-between p-3.5 bg-green-50 rounded-sm border border-green-100 group">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-green-600 shadow-sm">
+                                            <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-green-600 shadow-sm border border-green-50">
                                                 <Mail size={14} />
                                             </div>
-                                            <span className="text-sm font-bold text-gray-700">Email Verified</span>
+                                            <span className="text-sm font-bold text-gray-700">Email Address</span>
                                         </div>
-                                        <CheckCircle className="text-green-600 group-hover:scale-110 transition-transform" size={18} />
+                                        <CheckCircle className="text-green-600" size={18} />
                                     </div>
-                                    <div className="flex items-center justify-between p-4 bg-green-50 rounded-xl border border-green-100 group">
+                                    <div className="flex items-center justify-between p-3.5 bg-green-50 rounded-sm border border-green-100 group">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-green-600 shadow-sm">
+                                            <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-green-600 shadow-sm border border-green-50">
                                                 <Phone size={14} />
                                             </div>
-                                            <span className="text-sm font-bold text-gray-700">Phone Verified</span>
+                                            <span className="text-sm font-bold text-gray-700">Phone Identity</span>
                                         </div>
-                                        <CheckCircle className="text-green-600 group-hover:scale-110 transition-transform" size={18} />
+                                        <CheckCircle className="text-green-600" size={18} />
                                     </div>
-                                    <div className="flex items-center justify-between p-4 bg-green-50 rounded-xl border border-green-100 group">
+                                    <div className="flex items-center justify-between p-3.5 bg-green-50 rounded-sm border border-green-100 group">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-green-600 shadow-sm">
-                                                <FileText size={14} />
+                                            <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-green-600 shadow-sm border border-green-50">
+                                                <Building2 size={14} />
                                             </div>
-                                            <span className="text-sm font-bold text-gray-700">GST Verified</span>
+                                            <span className="text-sm font-bold text-gray-700">GST Registration</span>
                                         </div>
-                                        <CheckCircle className="text-green-600 group-hover:scale-110 transition-transform" size={18} />
-                                    </div>
-                                    <div className="pt-2">
-                                        <div className="p-4 bg-orange-50 rounded-xl border border-orange-100 flex items-center gap-3">
-                                            <Award className="text-orange-600" size={18} />
-                                            <span className="text-xs font-bold text-orange-900 uppercase">Trusted Platinum Partner</span>
-                                        </div>
+                                        <CheckCircle className="text-green-600" size={18} />
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Contact Details */}
-                            <div className="bg-white rounded-2xl shadow-sm border border-orange-100 p-8">
-                                <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
-                                    <Phone className="text-[#FF7B1D]" size={22} />
-                                    Contact Details
+                            {/* Contact Sidebar */}
+                            <div className="bg-white rounded-sm shadow-md p-6 border border-gray-100">
+                                <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
+                                    <Phone className="text-[#FF7B1D]" size={20} />
+                                    Contact Information
                                 </h3>
                                 <div className="space-y-6">
                                     <div className="flex items-start gap-4">
-                                        <div className="w-10 h-10 rounded-lg bg-orange-50 flex items-center justify-center text-[#FF7B1D] shrink-0 border border-orange-100">
+                                        <div className="w-10 h-10 rounded-sm bg-orange-50 flex items-center justify-center text-[#FF7B1D] shrink-0 border border-orange-100">
                                             <Mail size={18} />
                                         </div>
-                                        <div>
-                                            <p className="text-sm font-semibold text-gray-700 mb-1">Email Address</p>
-                                            <p className="text-gray-800 font-medium text-sm break-all">{business.email}</p>
+                                        <div className="min-w-0">
+                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Email Address</p>
+                                            <p className="text-gray-900 font-semibold text-sm break-all">{business.email}</p>
                                         </div>
                                     </div>
                                     <div className="flex items-start gap-4">
-                                        <div className="w-10 h-10 rounded-lg bg-orange-50 flex items-center justify-center text-[#FF7B1D] shrink-0 border border-orange-100">
+                                        <div className="w-10 h-10 rounded-sm bg-orange-50 flex items-center justify-center text-[#FF7B1D] shrink-0 border border-orange-100">
                                             <Phone size={18} />
                                         </div>
                                         <div>
-                                            <p className="text-sm font-semibold text-gray-700 mb-1">Phone Number</p>
-                                            <p className="text-gray-800 font-medium text-sm">{business.phone || "N/A"}</p>
+                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Mobile Hotline</p>
+                                            <p className="text-gray-900 font-semibold text-sm">{business.phone || "N/A"}</p>
                                         </div>
                                     </div>
                                     <div className="flex items-start gap-4">
-                                        <div className="w-10 h-10 rounded-lg bg-orange-50 flex items-center justify-center text-[#FF7B1D] shrink-0 border border-orange-100">
+                                        <div className="w-10 h-10 rounded-sm bg-orange-50 flex items-center justify-center text-[#FF7B1D] shrink-0 border border-orange-100">
                                             <MapPin size={18} />
                                         </div>
                                         <div>
-                                            <p className="text-sm font-semibold text-gray-700 mb-1">Headquarters</p>
-                                            <p className="text-gray-800 font-medium text-sm leading-snug">
+                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Headquarters</p>
+                                            <p className="text-gray-900 font-semibold text-sm leading-relaxed">
                                                 {business.street_address ? (
                                                     <>
                                                         {business.street_address},<br />
                                                         {business.city}, {business.state} {business.pincode}<br />
-                                                        {business.country}
+                                                        <span className="text-[#FF7B1D] font-bold">{business.country}</span>
                                                     </>
                                                 ) : "Not Disclosed"}
                                             </p>
@@ -418,21 +423,48 @@ const CompanyProfile = () => {
                                 </div>
                             </div>
 
+                            {/* Banking (Public View) */}
+                            <div className="bg-white rounded-sm shadow-md p-6 border border-gray-100">
+                                <h2 className="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
+                                    <DollarSign className="text-[#FF7B1D]" size={20} />
+                                    Banking Information
+                                </h2>
+                                <div className="space-y-4">
+                                    <div className="bg-gray-50 border border-gray-100 p-4 rounded-sm">
+                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Bank Name</p>
+                                        <p className="text-gray-900 font-bold text-sm mb-1">{business.bank_name || "N/A"}</p>
+                                        <p className="text-[10px] font-bold text-[#FF7B1D] bg-white px-2 py-0.5 border border-orange-100 inline-block rounded-sm uppercase">{business.branch_name || "Main Branch"}</p>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="bg-gray-50 border border-gray-100 p-3 rounded-sm">
+                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">IFSC Code</p>
+                                            <p className="text-gray-900 font-bold text-xs tracking-tight">{business.ifsc_code || "N/A"}</p>
+                                        </div>
+                                        <div className="bg-gray-50 border border-gray-100 p-3 rounded-sm">
+                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Account No.</p>
+                                            <p className="text-gray-900 font-bold text-xs tracking-widest">
+                                                {business.account_number ? `...${business.account_number.slice(-4)}` : "N/A"}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             {/* Social Presence */}
                             {business.social_links?.length > 0 && (
-                                <div className="bg-white rounded-2xl shadow-sm border border-orange-100 p-8">
-                                    <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
-                                        <Share2 className="text-[#FF7B1D]" size={22} />
+                                <div className="bg-white rounded-sm shadow-md p-6 border border-gray-100">
+                                    <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
+                                        <Share2 className="text-[#FF7B1D]" size={20} />
                                         Connect With Us
                                     </h3>
-                                    <div className="flex flex-wrap gap-4">
+                                    <div className="flex flex-wrap gap-3">
                                         {business.social_links.map((link, idx) => (
                                             <a
                                                 key={idx}
                                                 href={link.url.startsWith('http') ? link.url : `https://${link.url}`}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className={`w-12 h-12 rounded-xl border flex items-center justify-center transition-all duration-300 hover:scale-110 shadow-sm ${getSocialBgColor(link.platform)}`}
+                                                className={`w-11 h-11 rounded-sm border flex items-center justify-center transition-all duration-300 hover:shadow-lg shadow-sm ${getSocialBgColor(link.platform)}`}
                                                 title={link.platform}
                                             >
                                                 {getSocialIcon(link.platform)}
@@ -452,4 +484,3 @@ const CompanyProfile = () => {
 };
 
 export default CompanyProfile;
-

@@ -13,6 +13,9 @@ export default {
         "custom-gradient-button":
           "linear-gradient(to right, #FFF4EC, #FFFFFF, #FF7B1D)",
       },
+      fontFamily: {
+        primary: ["Outfit", "sans-serif"],
+      },
     },
   },
   plugins: [],

@@ -33,6 +33,7 @@ import { FiHome } from "react-icons/fi";
 import CreateInvoiceModal from "./CreateInvoiceModal";
 import ViewInvoiceModal from "./ViewInvoiceModal";
 import NumberCard from "../../components/NumberCard";
+import Modal from "../../components/common/Modal";
 import {
   useGetInvoicesQuery,
   useCreateInvoiceMutation,
@@ -50,6 +51,9 @@ export default function AllInvoicePage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showPartialModal, setShowPartialModal] = useState(false);
+  const [partialAmount, setPartialAmount] = useState("");
+  const [invoiceForPartial, setInvoiceForPartial] = useState(null);
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
@@ -171,6 +175,115 @@ export default function AllInvoicePage() {
       terms_and_conditions: invoice.terms_and_conditions || ""
     });
     setShowModal(true);
+  };
+
+  const handleStatusUpdate = async (invoice, newStatus) => {
+    if (newStatus === "Partial") {
+      setInvoiceForPartial(invoice);
+      setPartialAmount(invoice.paid_amount || "");
+      setShowPartialModal(true);
+      return;
+    }
+
+    try {
+      let paid_amount = invoice.paid_amount;
+      let balance_amount = invoice.balance_amount;
+
+      if (newStatus === "Paid") {
+        paid_amount = invoice.total_amount;
+        balance_amount = 0;
+      } else if (newStatus === "Unpaid") {
+        paid_amount = 0;
+        balance_amount = invoice.total_amount;
+      }
+
+      const payload = {
+        id: invoice.id,
+        invoice_number: invoice.invoice_number,
+        quotation_id: invoice.quotation_id,
+        client_id: invoice.client_id,
+        client_name: invoice.client_name,
+        client_email: invoice.client_email,
+        client_phone: invoice.client_phone,
+        client_address: invoice.client_address,
+        invoice_date: invoice.invoice_date?.split("T")[0],
+        due_date: invoice.due_date?.split("T")[0],
+        items: invoice.items,
+        subtotal: invoice.subtotal,
+        tax_rate: invoice.tax_rate,
+        tax_amount: invoice.tax_amount,
+        discount: invoice.discount,
+        total_amount: invoice.total_amount,
+        paid_amount: paid_amount,
+        balance_amount: balance_amount,
+        status: newStatus,
+        notes: invoice.notes,
+        tax_type: invoice.tax_type,
+        client_gstin: invoice.client_gstin,
+        business_gstin: invoice.business_gstin,
+        pan_number: invoice.pan_number,
+        terms_and_conditions: invoice.terms_and_conditions
+      };
+
+      await updateInvoice(payload).unwrap();
+      toast.success(`Invoice marked as ${newStatus}`);
+      refetch();
+    } catch (error) {
+      console.error(error);
+      toast.error(error?.data?.message || "Failed to update status");
+    }
+  };
+
+  const handlePartialSubmit = async () => {
+    if (!invoiceForPartial) return;
+    const amount = parseFloat(partialAmount) || 0;
+
+    if (amount > invoiceForPartial.total_amount) {
+      toast.error("Paid amount cannot exceed total amount");
+      return;
+    }
+
+    try {
+      let finalStatus = "Partial";
+      if (amount === 0) finalStatus = "Unpaid";
+      if (amount >= invoiceForPartial.total_amount) finalStatus = "Paid";
+
+      const payload = {
+        id: invoiceForPartial.id,
+        invoice_number: invoiceForPartial.invoice_number,
+        quotation_id: invoiceForPartial.quotation_id,
+        client_id: invoiceForPartial.client_id,
+        client_name: invoiceForPartial.client_name,
+        client_email: invoiceForPartial.client_email,
+        client_phone: invoiceForPartial.client_phone,
+        client_address: invoiceForPartial.client_address,
+        invoice_date: invoiceForPartial.invoice_date?.split("T")[0],
+        due_date: invoiceForPartial.due_date?.split("T")[0],
+        items: invoiceForPartial.items,
+        subtotal: invoiceForPartial.subtotal,
+        tax_rate: invoiceForPartial.tax_rate,
+        tax_amount: invoiceForPartial.tax_amount,
+        discount: invoiceForPartial.discount,
+        total_amount: invoiceForPartial.total_amount,
+        paid_amount: amount,
+        balance_amount: invoiceForPartial.total_amount - amount,
+        status: finalStatus,
+        notes: invoiceForPartial.notes,
+        tax_type: invoiceForPartial.tax_type,
+        client_gstin: invoiceForPartial.client_gstin,
+        business_gstin: invoiceForPartial.business_gstin,
+        pan_number: invoiceForPartial.pan_number,
+        terms_and_conditions: invoiceForPartial.terms_and_conditions
+      };
+
+      await updateInvoice(payload).unwrap();
+      toast.success(`Payment updated: ${finalStatus}`);
+      setShowPartialModal(false);
+      refetch();
+    } catch (error) {
+      console.error(error);
+      toast.error(error?.data?.message || "Failed to update payment");
+    }
   };
 
   const getDateRange = () => {
@@ -304,23 +417,26 @@ export default function AllInvoicePage() {
   return (
     <DashboardLayout>
       <div className="min-h-screen bg-gradient-to-br from-orange-0 via-white to-orange-100">
-        <div className="bg-white border-b sticky top-0 z-30">
-          <div className="max-w-8xl mx-auto px-4 py-2">
+        <div className="bg-white sticky top-0 z-30">
+          <div className="max-w-8xl mx-auto px-4 py-4 border-b">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
+                <h1 className="text-2xl font-bold text-gray-800">
                   Invoices
                 </h1>
-                <p className="text-[10px] text-gray-500 mt-0.5 flex items-center gap-1.5 font-medium">
-                  <FiHome className="text-gray-400" size={14} />
-                  Dashboard / <span className="text-[#FF7B1D]">Invoice Management</span>
+                <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
+                  <FiHome className="text-gray-700" size={14} />
+                  <span className="text-gray-400"></span> Dashboard /{" "}
+                  <span className="text-[#FF7B1D] font-medium">
+                    Invoice Management
+                  </span>
                 </p>
               </div>
 
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex flex-wrap items-center gap-3">
                 <button
                   onClick={refetch}
-                  className={`p-2 rounded-sm border border-gray-300 bg-white text-gray-600 hover:bg-gray-100 transition shadow-sm ${isFetching ? 'animate-spin' : ''}`}
+                  className={`px-3 py-3 rounded-sm border border-gray-300 bg-white text-gray-600 hover:bg-gray-100 transition shadow-sm ${isFetching ? 'animate-spin' : ''}`}
                   title="Refresh Data"
                 >
                   <RefreshCw size={18} />
@@ -329,7 +445,7 @@ export default function AllInvoicePage() {
                 <div className="relative" ref={statusDropdownRef}>
                   <button
                     onClick={() => setIsStatusFilterOpen(!isStatusFilterOpen)}
-                    className={`p-2 rounded-sm border transition shadow-sm ${isStatusFilterOpen || filterStatus !== "all"
+                    className={`px-3 py-3 rounded-sm border transition shadow-sm ${isStatusFilterOpen || filterStatus !== "all"
                       ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
                       : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
                       }`}
@@ -340,7 +456,7 @@ export default function AllInvoicePage() {
                   {isStatusFilterOpen && (
                     <div className="absolute right-0 mt-2 w-44 bg-white border border-gray-200 rounded-sm shadow-xl z-50 animate-fadeIn">
                       <div className="py-1">
-                        {["all", "Paid", "Unpaid", "Partial", "Pending"].map((option) => (
+                        {["all", "Paid", "Unpaid", "Partial"].map((option) => (
                           <button
                             key={option}
                             onClick={() => {
@@ -364,7 +480,7 @@ export default function AllInvoicePage() {
                 <div className="relative" ref={dateDropdownRef}>
                   <button
                     onClick={() => setIsDateFilterOpen(!isDateFilterOpen)}
-                    className={`p-2 rounded-sm border transition shadow-sm ${isDateFilterOpen || dateFilter !== "All"
+                    className={`px-3 py-3 rounded-sm border transition shadow-sm ${isDateFilterOpen || dateFilter !== "All"
                       ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
                       : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
                       }`}
@@ -398,11 +514,11 @@ export default function AllInvoicePage() {
 
                 <button
                   onClick={handleExportExcel}
-                  className="bg-white border border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-sm flex items-center gap-2 transition text-sm font-semibold shadow-sm active:scale-95 text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed group"
+                  className="bg-white border border-gray-300 hover:bg-gray-50 px-5 py-3 rounded-sm flex items-center gap-2 transition font-semibold shadow-sm text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed group"
                   disabled={invoices.length === 0}
                 >
                   <Download size={18} className="text-gray-700 transition-transform group-hover:scale-110" />
-                  EXPORT
+                  Export
                 </button>
 
                 {dateFilter === "Custom" && (
@@ -411,31 +527,18 @@ export default function AllInvoicePage() {
                       type="date"
                       value={customStart}
                       onChange={(e) => setCustomStart(e.target.value)}
-                      className="px-2 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-orange-500 text-xs shadow-sm"
+                      className="px-3 py-3 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-orange-500 text-xs shadow-sm"
                     />
                     <span className="text-gray-400 text-[10px] font-bold uppercase">to</span>
                     <input
                       type="date"
                       value={customEnd}
                       onChange={(e) => setCustomEnd(e.target.value)}
-                      className="px-2 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-orange-500 text-xs shadow-sm"
+                      className="px-3 py-3 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-orange-500 text-xs shadow-sm"
                     />
                   </div>
                 )}
 
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="Search invoices..."
-                    value={searchTerm}
-                    onChange={(e) => {
-                      setSearchTerm(e.target.value);
-                      setCurrentPage(1);
-                    }}
-                    className="pl-10 pr-4 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-orange-500 text-sm w-64 shadow-sm"
-                  />
-                  <Search className="absolute left-3 top-2.5 text-gray-400" size={16} />
-                </div>
 
                 <button
                   onClick={() => {
@@ -465,10 +568,10 @@ export default function AllInvoicePage() {
                     });
                     setShowModal(true);
                   }}
-                  className="flex items-center gap-2 px-4 py-2 rounded-sm font-bold transition shadow-md text-sm active:scale-95 bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 uppercase tracking-widest"
+                  className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-2 font-semibold"
                 >
-                  <Plus size={18} />
-                  Create Invoice
+                  <Plus size={20} />
+                  Add Invoice
                 </button>
               </div>
             </div>
@@ -528,24 +631,26 @@ export default function AllInvoicePage() {
             </div>
           )}
 
-          <div className="bg-white rounded-sm shadow-lg overflow-hidden border border-gray-100">
+          <div className="bg-white rounded-sm shadow-sm overflow-hidden border border-gray-200">
             <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
-                  <tr>
-                    <th className="px-4 py-3 text-left font-bold text-xs uppercase tracking-widest">Date</th>
-                    <th className="px-4 py-3 text-left font-bold text-xs uppercase tracking-widest">Invoice ID</th>
-                    <th className="px-4 py-3 text-left font-bold text-xs uppercase tracking-widest">Client Name</th>
-                    <th className="px-4 py-3 text-left font-bold text-xs uppercase tracking-widest">Status</th>
-                    <th className="px-4 py-3 text-right font-bold text-xs uppercase tracking-widest">Amount</th>
-                    <th className="px-4 py-3 text-right font-bold text-xs uppercase tracking-widest">Actions</th>
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm">
+                    <th className="py-3 px-4 font-semibold text-left">Date</th>
+                    <th className="py-3 px-4 font-semibold text-left">Invoice ID</th>
+                    <th className="py-3 px-4 font-semibold text-left">Client Name</th>
+                    <th className="py-3 px-4 font-semibold text-left">Status</th>
+                    <th className="py-3 px-4 font-semibold text-right">Total Amount</th>
+                    <th className="py-3 px-4 font-semibold text-right">Received Amount</th>
+                    <th className="py-3 px-4 font-semibold text-right">Pending Amount</th>
+                    <th className="py-3 px-4 font-semibold text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
                   {isLoading ? (
                     Array.from({ length: 5 }).map((_, i) => (
                       <tr key={i} className="animate-pulse">
-                        <td colSpan="6" className="px-4 py-4 text-center text-gray-400 text-xs italic">Loading...</td>
+                        <td colSpan="8" className="px-4 py-4 text-center text-gray-400 text-xs italic">Loading...</td>
                       </tr>
                     ))
                   ) : invoices.length > 0 ? (
@@ -554,16 +659,16 @@ export default function AllInvoicePage() {
                         key={invoice.id}
                         className={`border-b border-gray-100 hover:bg-orange-50/20 transition-colors ${index % 2 === 0 ? "bg-white" : "bg-gray-50/30"}`}
                       >
-                        <td className="px-4 py-4 text-gray-600 text-sm font-medium">
+                        <td className="py-3 px-4 text-gray-600 text-sm font-medium">
                           <div className="flex items-center gap-2">
                             <Calendar size={14} className="text-orange-500" />
                             {new Date(invoice.invoice_date).toLocaleDateString('en-GB')}
                           </div>
                         </td>
-                        <td className="px-4 py-4 font-bold text-gray-900 text-sm italic">
+                        <td className="py-3 px-4 font-bold text-gray-900 text-sm italic">
                           {invoice.invoice_number}
                         </td>
-                        <td className="px-4 py-4">
+                        <td className="py-3 px-4">
                           <div className="flex items-center gap-2">
                             <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-500 shrink-0">
                               <User size={14} />
@@ -574,36 +679,60 @@ export default function AllInvoicePage() {
                             </div>
                           </div>
                         </td>
-                        <td className="px-4 py-4">
-                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm text-[10px] font-bold border uppercase tracking-wider ${invoice.status === 'Paid' ? 'bg-green-50 text-green-700 border-green-200' :
-                            invoice.status === 'Partial' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
-                              'bg-red-50 text-red-700 border-red-200'
-                            }`}>
-                            <div className={`w-1.5 h-1.5 rounded-full ${invoice.status === 'Paid' ? 'bg-green-500' : invoice.status === 'Partial' ? 'bg-yellow-500' : 'bg-red-500'} animate-pulse`} />
-                            {invoice.status}
-                          </span>
-                        </td>
-                        <td className="px-4 py-4 text-right">
-                          <div className="text-sm font-bold text-gray-900">₹{(invoice.total_amount || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
-                          <div className={`text-[10px] font-bold mt-0.5 uppercase tracking-widest ${(invoice.balance_amount || 0) > 0 ? "text-red-500" : "text-green-600"}`}>
-                            {invoice.balance_amount > 0 ? `BAL: ₹${invoice.balance_amount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}` : "Fully Paid"}
+                        <td className="py-3 px-4">
+                          <div className="flex items-center gap-2">
+                            <select
+                              value={invoice.status}
+                              onChange={(e) => handleStatusUpdate(invoice, e.target.value)}
+                              className={`px-2.5 py-1 rounded-sm text-[10px] font-bold border uppercase tracking-wider outline-none cursor-pointer transition-all ${invoice.status === 'Paid' ? 'bg-green-50 text-green-700 border-green-200' :
+                                invoice.status === 'Partial' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
+                                  'bg-red-50 text-red-700 border-red-200'
+                                }`}
+                            >
+                              <option value="Unpaid">Unpaid</option>
+                              <option value="Paid">Paid</option>
+                              <option value="Partial">Partial</option>
+                            </select>
+                            {invoice.status === "Partial" && (
+                              <button
+                                onClick={() => handleStatusUpdate(invoice, "Partial")}
+                                className="p-1.5 bg-orange-50 text-[#FF7B1D] rounded-full hover:bg-orange-100 transition-colors shadow-sm"
+                                title="Edit Partial Payment"
+                              >
+                                <Edit2 size={12} strokeWidth={3} />
+                              </button>
+                            )}
                           </div>
                         </td>
-                        <td className="px-4 py-4">
+                        <td className="py-3 px-4 text-right">
+                          <div className="text-sm font-bold text-gray-900">₹{(invoice.total_amount || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
+                        </td>
+                        <td className="py-3 px-4 text-right">
+                          <div className="text-sm font-bold text-green-600">₹{(invoice.paid_amount || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
+                        </td>
+                        <td className="py-3 px-4 text-right">
+                          <div className={`text-sm font-bold ${(invoice.balance_amount || 0) > 0 ? "text-red-500" : "text-green-600"}`}>
+                            ₹{(invoice.balance_amount || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                          </div>
+                          {(invoice.balance_amount || 0) === 0 && (
+                            <div className="text-[9px] font-black text-green-500 uppercase tracking-tighter mt-0.5 animate-pulse">CLEARED</div>
+                          )}
+                        </td>
+                        <td className="py-3 px-4">
                           <div className="flex items-center justify-end gap-3 text-gray-400">
                             <button
                               onClick={() => {
                                 setSelectedInvoice(invoice);
                                 setShowViewModal(true);
                               }}
-                              className="text-blue-500 hover:opacity-80 transition-colors"
+                              className="p-2 text-blue-600 hover:bg-blue-50 rounded-sm transition-all"
                               title="View Invoice"
                             >
                               <Eye size={18} />
                             </button>
                             <button
                               onClick={() => handleEdit(invoice)}
-                              className="text-[#FF7B1D] hover:opacity-80 transition-colors"
+                              className="p-2 text-orange-500 hover:bg-orange-50 rounded-sm transition-all"
                               title="Edit"
                             >
                               <Edit2 size={18} />
@@ -613,10 +742,10 @@ export default function AllInvoicePage() {
                                 setSelectedInvoice(invoice);
                                 setShowDeleteModal(true);
                               }}
-                              className="text-red-600 hover:bg-red-50 p-1.5 rounded-lg transition-colors"
+                              className="p-2 text-red-600 hover:bg-red-50 rounded-sm transition-all shadow-sm"
                               title="Delete"
                             >
-                              <Trash2 size={16} />
+                              <Trash2 size={18} />
                             </button>
                           </div>
                         </td>
@@ -624,7 +753,7 @@ export default function AllInvoicePage() {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="6" className="text-center py-10">
+                      <td colSpan="8" className="text-center py-10">
                         <div className="bg-orange-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3">
                           <FileText size={32} className="text-orange-500" />
                         </div>
@@ -699,6 +828,72 @@ export default function AllInvoicePage() {
           invoice={selectedInvoice}
           refetchInvoices={refetch}
         />
+
+        {/* Partial Payment Modal */}
+        <Modal
+          isOpen={showPartialModal}
+          onClose={() => setShowPartialModal(false)}
+          title="Partial Payment"
+          subtitle={`Updating payment for ${invoiceForPartial?.invoice_number}`}
+          icon={<DollarSign size={24} />}
+          maxWidth="max-w-md"
+          footer={
+            <div className="flex gap-4 w-full">
+              <button
+                onClick={() => setShowPartialModal(false)}
+                className="flex-1 px-8 py-3 bg-white border border-gray-300 rounded-sm hover:bg-gray-50 font-bold text-gray-700 transition-all uppercase tracking-widest text-[10px]"
+              >
+                Discard
+              </button>
+              <button
+                onClick={handlePartialSubmit}
+                className="flex-1 px-8 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm hover:from-orange-600 hover:to-orange-700 font-bold shadow-md transition-all uppercase tracking-widest text-[10px] active:scale-95 flex items-center justify-center gap-2"
+              >
+                <CheckCircle size={16} /> Update Receipt
+              </button>
+            </div>
+          }
+        >
+          <div className="space-y-6">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-slate-50 p-5 rounded-sm border border-slate-200 shadow-sm">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-2">Invoice Amount</p>
+                <p className="text-xl font-bold text-slate-900 leading-none">₹{invoiceForPartial?.total_amount?.toLocaleString()}</p>
+              </div>
+              <div className="bg-orange-50 p-5 rounded-sm border border-orange-100 shadow-sm relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-1 opacity-10">
+                  <CreditCard size={40} className="text-orange-300" />
+                </div>
+                <p className="text-[10px] font-bold text-orange-600 uppercase tracking-[0.2em] mb-2">Pending Balance</p>
+                <p className="text-xl font-bold text-orange-700 leading-none">₹{invoiceForPartial?.balance_amount?.toLocaleString()}</p>
+              </div>
+            </div>
+
+            <div className="pt-2">
+              <label className="flex items-center gap-2 text-xs font-bold text-gray-800 mb-3 uppercase tracking-widest">
+                <div className="w-6 h-6 bg-orange-100 text-[#FF7B1D] rounded-full flex items-center justify-center font-bold">₹</div>
+                Enter Received Amount <span className="text-red-500 font-bold">*</span>
+              </label>
+              <div className="relative group">
+                <input
+                  type="number"
+                  autoFocus
+                  value={partialAmount}
+                  onChange={(e) => setPartialAmount(e.target.value)}
+                  className="w-full px-5 py-5 border-2 border-gray-100 rounded-lg focus:border-[#FF7B1D] focus:ring-4 focus:ring-orange-50 outline-none transition-all text-4xl font-bold text-gray-900 placeholder-gray-200 bg-white"
+                  placeholder="0.00"
+                />
+                <div className="absolute right-5 top-1/2 -translate-y-1/2">
+                  <DollarSign size={24} className="text-[#FF7B1D] opacity-20" />
+                </div>
+              </div>
+              <p className="text-[10px] text-gray-400 mt-4 font-bold flex items-center gap-2 uppercase tracking-widest italic">
+                <RefreshCw size={12} className="text-[#FF7B1D] animate-spin-slow" />
+                System will auto-calculate remaining balance
+              </p>
+            </div>
+          </div>
+        </Modal>
       </div>
     </DashboardLayout>
   );

@@ -10,10 +10,25 @@ import {
     ChevronRight,
     Target,
     Building2,
+    Layout,
+    Tag,
+    Truck,
+    Info,
+    ArrowLeft,
+    Box,
+    FileText,
+    ShieldCheck,
+    Globe,
+    Mail,
+    ExternalLink
 } from "lucide-react";
-
+import { toast } from "react-hot-toast";
 import { useGetCatalogByIdQuery } from "../../store/api/catalogApi";
 import { useGetBusinessInfoQuery } from "../../store/api/businessApi";
+
+// Navigation components
+import Navbar from "../Public/Navbar";
+import Footer from "../Public/Footer";
 
 export default function CatalogView() {
     const { id } = useParams();
@@ -22,12 +37,21 @@ export default function CatalogView() {
     const [activeTab, setActiveTab] = useState("features");
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
+    const hasValue = (value) => {
+        if (value === null || value === undefined || value === "") return false;
+        if (Array.isArray(value) && value.length === 0) return false;
+        if (typeof value === "object" && Object.keys(value).length === 0) return false;
+        return true;
+    };
+
     if (isLoading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-16 w-16 border-4 border-orange-500 border-t-transparent mx-auto mb-4"></div>
-                    <p className="text-gray-600 font-medium">Loading catalog...</p>
+            <div className="min-h-screen flex items-center justify-center bg-[#f8f9fa] font-primary">
+                <div className="relative">
+                    <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-[#FF7B1D]"></div>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                        <Package size={24} className="text-[#FF7B1D]" />
+                    </div>
                 </div>
             </div>
         );
@@ -35,15 +59,34 @@ export default function CatalogView() {
 
     if (!catalog || error) {
         return (
-            <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
-                <div className="text-center bg-white p-12 rounded-lg shadow-lg">
-                    <Package className="w-20 h-20 text-gray-300 mx-auto mb-4" />
-                    <h2 className="text-3xl font-bold text-gray-800 mb-4">Catalog Not Found</h2>
-                    <p className="text-gray-600 mb-6">The catalog you're looking for doesn't exist.</p>
+            <div className="min-h-screen flex flex-col items-center justify-center bg-[#f8f9fa] text-center p-4 font-primary">
+                <div className="bg-white p-12 rounded-sm shadow-md border border-gray-100 max-w-sm w-full">
+                    <Package className="w-16 h-16 text-gray-200 mx-auto mb-6" />
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2 font-primary">Catalog Not Found</h2>
+                    <p className="text-gray-500 mb-8 font-medium">The catalog you're looking for doesn't exist or has been moved.</p>
+                    <button
+                        onClick={() => window.history.back()}
+                        className="w-full bg-[#FF7B1D] text-white px-8 py-3 rounded-sm font-bold shadow-md hover:bg-orange-600 transition-all flex items-center justify-center gap-2"
+                    >
+                        <ArrowLeft size={18} />
+                        Go Back
+                    </button>
                 </div>
             </div>
         );
     }
+
+    const nextImage = () => {
+        if (catalog.images?.length > 0) {
+            setCurrentImageIndex((prev) => (prev + 1) % catalog.images.length);
+        }
+    };
+
+    const prevImage = () => {
+        if (catalog.images?.length > 0) {
+            setCurrentImageIndex((prev) => (prev - 1 + catalog.images.length) % catalog.images.length);
+        }
+    };
 
     const handleShare = async () => {
         if (navigator.share) {
@@ -54,262 +97,315 @@ export default function CatalogView() {
                     url: window.location.href,
                 });
             } catch (err) {
-                navigator.clipboard.writeText(window.location.href);
-                alert("Link copied to clipboard!");
+                copyUrl();
             }
         } else {
-            navigator.clipboard.writeText(window.location.href);
-            alert("Link copied to clipboard!");
+            copyUrl();
         }
     };
 
-    const nextImage = () => {
-        setCurrentImageIndex((prev) => (prev + 1) % catalog.images.length);
+    const copyUrl = () => {
+        navigator.clipboard.writeText(window.location.href);
+        toast.success("Link copied to clipboard!");
     };
 
-    const prevImage = () => {
-        setCurrentImageIndex((prev) => (prev - 1 + catalog.images.length) % catalog.images.length);
-    };
+    const business = businessInfo || {};
+    const logoUrl = business.logo_url
+        ? `${import.meta.env.VITE_API_BASE_URL.replace("/api/", "")}${business.logo_url}`
+        : business.logo;
 
-    // Check if field has value
-    const hasValue = (value) => {
-        if (value === null || value === undefined || value === "") return false;
-        if (Array.isArray(value) && value.length === 0) return false;
-        if (typeof value === "object" && Object.keys(value).length === 0) return false;
-        return true;
-    };
+    const displayImages = catalog.images && catalog.images.length > 0 ? catalog.images : (catalog.image ? [catalog.image] : []);
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            {/* Header */}
-            <header className="bg-white shadow-sm sticky top-0 z-50 border-b border-gray-200">
-                <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        {businessInfo?.logo ? (
-                            <img
-                                src={businessInfo.logo}
-                                alt={businessInfo.name}
-                                className="w-10 h-10 rounded-lg object-cover"
-                            />
-                        ) : (
-                            <div className="bg-orange-500 text-white p-2 rounded-lg">
-                                <Package size={24} />
-                            </div>
-                        )}
-                        <div>
-                            <h1 className="text-lg font-bold text-gray-900">
-                                {businessInfo?.name || "Business Catalog"}
-                            </h1>
-                            <p className="text-xs text-gray-500 font-normal">Product Catalog</p>
-                        </div>
-                    </div>
-                    <button
-                        onClick={handleShare}
-                        className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-orange-500 hover:bg-orange-600 rounded-lg transition-all shadow-sm"
-                    >
-                        <Share2 size={16} />
-                        Share
-                    </button>
-                </div>
-            </header>
+        <div className="min-h-screen bg-white font-primary antialiased text-gray-800">
+            {/* Global Navbar */}
+            <Navbar business={business} logoUrl={logoUrl} />
 
-            <main className="max-w-7xl mx-auto px-6 py-8">
-                {/* Breadcrumb */}
-                {hasValue(catalog.category) && (
-                    <div className="flex items-center gap-2 text-sm text-gray-500 mb-6 font-normal">
-                        <span>catlog test</span>
-                        <span>/</span>
-                        <span className="text-gray-900 font-medium">{catalog.name}</span>
-                    </div>
-                )}
+            <main className="bg-[#f8f9fa] pt-24 pb-12 px-4 sm:px-6 lg:px-8">
+                <div className="max-w-[1400px] mx-auto font-primary">
 
-                <div className="max-w-2xl mx-auto">
-                    {/* Main Image */}
-                    <div className="space-y-4 mb-6">
-                        {/* Main Image */}
-                        <div className="relative overflow-hidden rounded-lg shadow-lg aspect-video bg-white group">
-                            <img
-                                src={catalog.image || (catalog.images && catalog.images[currentImageIndex])}
-                                alt={catalog.name}
-                                className="w-full h-full object-cover"
-                            />
+                    {/* Header Card - Matches CompanyProfile Identity Card */}
+                    <div className="bg-white rounded-sm shadow-md p-6 mb-8 border border-gray-100">
+                        <div className="flex flex-col md:flex-row items-center md:items-start gap-12">
 
-                            {/* Status Badge */}
-                            {hasValue(catalog.status) && (
-                                <div
-                                    className={`absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-semibold shadow-md ${catalog.status === "Active"
-                                        ? "bg-green-500 text-white"
-                                        : "bg-gray-500 text-white"
-                                        }`}
-                                >
-                                    {catalog.status}
-                                </div>
-                            )}
+                            {/* Left: Product Media Gallery */}
+                            <div className="flex-shrink-0">
+                                <div className="relative group">
+                                    <div className="w-56 h-56 sm:w-72 sm:h-72 bg-gray-50 border border-gray-100 rounded-sm flex items-center justify-center p-6 shadow-sm overflow-hidden relative">
+                                        {displayImages.length > 0 ? (
+                                            <img
+                                                src={displayImages[currentImageIndex]}
+                                                alt={catalog.name}
+                                                className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
+                                            />
+                                        ) : (
+                                            <Package size={80} className="text-[#FF7B1D]" />
+                                        )}
 
-                            {/* Image Navigation */}
-                            {catalog.images && catalog.images.length > 1 && (
-                                <>
-                                    <button
-                                        onClick={prevImage}
-                                        className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-2 rounded-full shadow-md transition-all opacity-0 group-hover:opacity-100"
-                                    >
-                                        <ChevronLeft size={20} className="text-gray-800" />
-                                    </button>
-                                    <button
-                                        onClick={nextImage}
-                                        className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-2 rounded-full shadow-md transition-all opacity-0 group-hover:opacity-100"
-                                    >
-                                        <ChevronRight size={20} className="text-gray-800" />
-                                    </button>
-                                </>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Category Badge */}
-                    {hasValue(catalog.category) && (
-                        <div className="inline-block px-3 py-1 bg-orange-100 text-orange-600 rounded text-xs font-semibold mb-4">
-                            {catalog.category}
-                        </div>
-                    )}
-
-                    {/* Title */}
-                    <h1 className="text-3xl font-bold text-gray-900 leading-tight mb-4">
-                        {catalog.name}
-                    </h1>
-
-                    {/* Description */}
-                    {hasValue(catalog.description) && (
-                        <div className="border-l-4 border-orange-500 pl-4 py-2 mb-6">
-                            <p className="text-sm text-gray-700 font-normal leading-relaxed">
-                                {catalog.description}
-                            </p>
-                        </div>
-                    )}
-
-                    {/* Delivery Info */}
-                    {hasValue(catalog.deliveryTime) && (
-                        <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm mb-4">
-                            <div className="flex items-center gap-2 mb-1">
-                                <Clock className="text-orange-500" size={16} />
-                                <span className="text-xs text-gray-500 font-medium">Delivery</span>
-                            </div>
-                            <p className="text-base font-bold text-gray-900">{catalog.deliveryTime}</p>
-                        </div>
-                    )}
-
-                    {/* Vendor Info */}
-                    {hasValue(catalog.vendor) && (
-                        <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm mb-6">
-                            <p className="text-xs text-gray-500 font-medium mb-1">Vendor</p>
-                            <p className="text-base font-bold text-gray-900">{catalog.vendor}</p>
-                        </div>
-                    )}
-
-                    {/* Price Card */}
-                    {hasValue(catalog.maxPrice) && (
-                        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 text-center mb-12">
-                            <div className="text-orange-500 mb-2 flex justify-center">
-                                <DollarSign size={24} />
-                            </div>
-                            <div className="text-2xl font-bold text-gray-900">
-                                ₹{parseFloat(catalog.maxPrice).toLocaleString()}
-                            </div>
-                            <div className="text-xs text-gray-500 uppercase tracking-wide font-medium mt-1">
-                                Estimated Price Range
-                            </div>
-                        </div>
-                    )}
-                </div>
-
-
-
-
-                {/* Tabbed Content Section */}
-                {(hasValue(catalog.features) || hasValue(catalog.specifications)) && (
-                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                        {/* Tab Headers */}
-                        <div className="flex border-b border-gray-200">
-                            {hasValue(catalog.features) && (
-                                <button
-                                    onClick={() => setActiveTab("features")}
-                                    className={`flex-1 px-6 py-4 font-semibold text-sm transition-all relative ${activeTab === "features"
-                                        ? "text-orange-500 bg-white"
-                                        : "text-gray-600 hover:text-gray-900 bg-gray-50"
-                                        }`}
-                                >
-                                    <div className="flex items-center justify-center gap-2">
-                                        <CheckCircle size={18} />
-                                        <span>Key Features</span>
-                                    </div>
-                                    {activeTab === "features" && (
-                                        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-orange-500"></div>
-                                    )}
-                                </button>
-                            )}
-                            {hasValue(catalog.specifications) && (
-                                <button
-                                    onClick={() => setActiveTab("specifications")}
-                                    className={`flex-1 px-6 py-4 font-semibold text-sm transition-all relative ${activeTab === "specifications"
-                                        ? "text-orange-500 bg-white"
-                                        : "text-gray-600 hover:text-gray-900 bg-gray-50"
-                                        }`}
-                                >
-                                    <div className="flex items-center justify-center gap-2">
-                                        <Target size={18} />
-                                        <span>Specifications</span>
-                                    </div>
-                                    {activeTab === "specifications" && (
-                                        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-orange-500"></div>
-                                    )}
-                                </button>
-                            )}
-                        </div>
-
-                        {/* Tab Content */}
-                        <div className="p-6">
-                            {activeTab === "features" && hasValue(catalog.features) && (
-                                <div className="space-y-3">
-                                    {catalog.features.map((feature, index) => (
-                                        <div
-                                            key={index}
-                                            className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg border border-gray-200"
-                                        >
-                                            <div className="flex-shrink-0 w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center text-white text-sm font-bold">
-                                                {index + 1}
+                                        {displayImages.length > 1 && (
+                                            <div className="absolute inset-y-0 inset-x-0 flex items-center justify-between px-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <button onClick={prevImage} className="w-9 h-9 bg-white/95 rounded-sm shadow-md flex items-center justify-center text-gray-800 hover:bg-white border border-gray-100 active:scale-95 transition-all">
+                                                    <ChevronLeft size={18} />
+                                                </button>
+                                                <button onClick={nextImage} className="w-9 h-9 bg-white/95 rounded-sm shadow-md flex items-center justify-center text-gray-800 hover:bg-white border border-gray-100 active:scale-95 transition-all">
+                                                    <ChevronRight size={18} />
+                                                </button>
                                             </div>
-                                            <p className="text-sm text-gray-900 font-medium flex-1">{feature}</p>
-                                            <CheckCircle className="text-green-500 flex-shrink-0" size={18} />
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
+                                        )}
 
-                            {activeTab === "specifications" && hasValue(catalog.specifications) && (
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {Object.entries(catalog.specifications).map(([key, value], index) => (
-                                        <div
-                                            key={index}
-                                            className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200"
-                                        >
-                                            <span className="text-sm text-gray-600 font-medium">{key}</span>
-                                            <span className="text-sm text-gray-900 font-bold">{value}</span>
+                                        {hasValue(catalog.status) && (
+                                            <div className="absolute top-4 right-4 animate-pulse-subtle">
+                                                <span className="bg-[#FF7B1D] text-white text-[9px] font-black px-3 py-1 rounded-sm shadow-lg uppercase tracking-widest border border-orange-400">
+                                                    {catalog.status}
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Gallery Indicator Bar */}
+                                    {displayImages.length > 1 && (
+                                        <div className="mt-4 flex gap-1.5 justify-center">
+                                            {displayImages.map((_, idx) => (
+                                                <button
+                                                    key={idx}
+                                                    onClick={() => setCurrentImageIndex(idx)}
+                                                    className={`h-1 rounded-full transition-all duration-300 ${currentImageIndex === idx ? "bg-[#FF7B1D] w-8" : "bg-gray-200 w-3 hover:bg-gray-300"}`}
+                                                />
+                                            ))}
                                         </div>
-                                    ))}
+                                    )}
                                 </div>
-                            )}
+                            </div>
+
+                            {/* Right: Identity & Essential Stats */}
+                            <div className="flex-1 text-center md:text-left pt-2">
+                                <div className="space-y-4 mb-8">
+                                    {hasValue(catalog.category) && (
+                                        <p className="text-[11px] font-black text-[#FF7B1D] uppercase tracking-[0.3em] mb-2 leading-none">
+                                            {catalog.category}
+                                        </p>
+                                    )}
+
+                                    <div className="flex flex-col md:flex-row md:items-center gap-4">
+                                        <h1 className="text-4xl font-bold text-gray-900 leading-tight tracking-tight">
+                                            {catalog.name}
+                                        </h1>
+                                        <div className="inline-flex items-center self-center md:self-auto gap-1.5 px-3 py-1 bg-green-50 text-green-700 text-[10px] font-black uppercase tracking-widest rounded-sm border border-green-100">
+                                            <ShieldCheck size={14} />
+                                            Authentic Listing
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-8 mb-10 py-6 border-y border-gray-50">
+                                    {hasValue(catalog.maxPrice) && (
+                                        <div className="space-y-1">
+                                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-2">Price Estimate</p>
+                                            <div className="flex items-baseline gap-1.5">
+                                                <span className="text-2xl font-black text-gray-900">₹{parseFloat(catalog.maxPrice).toLocaleString()}</span>
+                                                <span className="text-[11px] font-bold text-gray-400">INR</span>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {hasValue(catalog.deliveryTime) && (
+                                        <div className="space-y-1">
+                                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-2">Lead Time</p>
+                                            <p className="text-xl font-bold text-gray-900 uppercase tracking-tight">{catalog.deliveryTime}</p>
+                                        </div>
+                                    )}
+                                    {hasValue(catalog.catalog_id) && (
+                                        <div className="space-y-1">
+                                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-2">Catalog ID</p>
+                                            <p className="text-lg font-black text-gray-900 font-mono tracking-tighter">{catalog.catalog_id}</p>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Core Actions */}
+                                <div className="flex flex-wrap justify-center md:justify-start gap-4">
+                                    <button
+                                        onClick={handleShare}
+                                        className="bg-[#FF7B1D] text-white px-10 py-4 rounded-sm font-black text-[13px] uppercase tracking-widest shadow-xl hover:bg-orange-600 transition-all flex items-center gap-2 active:scale-95 transform hover:-translate-y-0.5"
+                                    >
+                                        <Share2 size={18} />
+                                        Spread Details
+                                    </button>
+                                    <button className="bg-white border-2 border-gray-100 text-gray-800 px-10 py-4 rounded-sm font-black text-[13px] uppercase tracking-widest hover:border-[#FF7B1D] hover:text-[#FF7B1D] transition-all flex items-center gap-2 active:scale-95 transform hover:-translate-y-0.5">
+                                        <Mail size={18} />
+                                        Inquiry
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                )}
 
-                {/* Footer */}
-                <div className="mt-12 pt-6 border-t border-gray-200 text-center">
-                    <p className="text-xs text-gray-500 font-normal">
-                        &copy; {new Date().getFullYear()} {businessInfo?.name || "Business"}. All rights reserved.
-                        {hasValue(catalog.catalog_id) && ` | Catalog ID: ${catalog.catalog_id}`}
-                    </p>
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                        {/* Main Description Area (L: 8/12) */}
+                        <div className="lg:col-span-8 space-y-8">
+
+                            {/* Description Box */}
+                            {hasValue(catalog.description) && (
+                                <div className="bg-white rounded-sm shadow-md p-10 border border-gray-100 group hover:border-orange-200 transition-all">
+                                    <h3 className="text-xl font-bold text-gray-800 mb-8 flex items-center gap-3">
+                                        <Info className="text-[#FF7B1D]" size={26} />
+                                        Product Insight
+                                    </h3>
+                                    <div className="bg-gray-50/80 p-8 rounded-sm border border-gray-100 relative overflow-hidden">
+                                        <div className="absolute top-0 left-0 w-1.5 h-full bg-[#FF7B1D]"></div>
+                                        <p className="text-gray-700 leading-relaxed text-[16px] font-medium whitespace-pre-wrap">
+                                            {catalog.description}
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Features vs Specs Tabs */}
+                            {(hasValue(catalog.features) || hasValue(catalog.specifications)) && (
+                                <div className="bg-white rounded-sm shadow-md border border-gray-100 overflow-hidden">
+                                    <div className="flex border-b border-gray-100">
+                                        {hasValue(catalog.features) && (
+                                            <button
+                                                onClick={() => setActiveTab("features")}
+                                                className={`flex-1 py-6 px-4 font-black text-[12px] uppercase tracking-[0.25em] transition-all relative ${activeTab === "features" ? "text-[#FF7B1D] bg-white border-b-4 border-[#FF7B1D]" : "text-gray-400 bg-gray-50/50 hover:bg-gray-50 hover:text-gray-600"
+                                                    }`}
+                                            >
+                                                Highlights
+                                            </button>
+                                        )}
+                                        {hasValue(catalog.specifications) && (
+                                            <button
+                                                onClick={() => setActiveTab("specifications")}
+                                                className={`flex-1 py-6 px-4 font-black text-[12px] uppercase tracking-[0.25em] transition-all relative ${activeTab === "specifications" ? "text-[#FF7B1D] bg-white border-b-4 border-[#FF7B1D]" : "text-gray-400 bg-gray-50/50 hover:bg-gray-50 hover:text-gray-600"
+                                                    }`}
+                                            >
+                                                Technicality
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    <div className="p-10">
+                                        {activeTab === "features" && hasValue(catalog.features) && (
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                {catalog.features.map((feature, idx) => (
+                                                    <div key={idx} className="flex items-start gap-5 p-6 bg-white border border-gray-100 rounded-sm hover:border-[#FF7B1D] hover:shadow-xl transition-all group">
+                                                        <div className="flex-shrink-0 w-10 h-10 bg-orange-50 rounded-sm flex items-center justify-center text-[#FF7B1D] border border-orange-100 group-hover:bg-[#FF7B1D] group-hover:text-white transition-all transform group-hover:rotate-12">
+                                                            <CheckCircle size={16} />
+                                                        </div>
+                                                        <p className="text-[15px] font-bold text-gray-700 leading-snug pt-2">{feature}</p>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+
+                                        {activeTab === "specifications" && hasValue(catalog.specifications) && (
+                                            <div className="grid grid-cols-1 gap-4">
+                                                {Object.entries(catalog.specifications).map(([key, value], idx) => (
+                                                    <div key={idx} className="flex flex-col sm:flex-row sm:items-center justify-between p-6 bg-gray-50/50 rounded-sm border border-gray-100 hover:bg-white hover:border-orange-200 transition-all gap-3">
+                                                        <div className="flex items-center gap-4">
+                                                            <div className="w-2 h-2 bg-orange-400 rounded-full shadow-sm shadow-orange-200"></div>
+                                                            <span className="text-[11px] font-black text-gray-400 uppercase tracking-widest">{key}</span>
+                                                        </div>
+                                                        <span className="text-[15px] font-black text-gray-900 tracking-tight">{value}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                        </div>
+
+                        {/* Sidebar Column (R: 4/12) */}
+                        <div className="lg:col-span-4 space-y-8">
+
+                            {/* Business Profile Shortcut Card */}
+                            <div className="bg-white rounded-sm shadow-md p-8 border border-gray-100 sticky top-28">
+                                <h4 className="text-[11px] font-black text-gray-400 uppercase tracking-[0.3em] mb-8">Official Distributor</h4>
+                                <div className="flex items-center gap-5 mb-10 pb-10 border-b border-gray-50 flex-col text-center">
+                                    <div className="w-24 h-24 bg-gray-50 rounded-sm border border-gray-100 flex items-center justify-center p-4 shadow-sm shrink-0 overflow-hidden transform hover:scale-105 transition-transform">
+                                        {logoUrl ? (
+                                            <img src={logoUrl} alt="Logo" className="w-full h-full object-contain" />
+                                        ) : (
+                                            <Building2 size={40} className="text-[#FF7B1D]" />
+                                        )}
+                                    </div>
+                                    <div className="min-w-0">
+                                        <p className="text-xl font-bold text-gray-900 truncate tracking-tight mb-2 uppercase">{business.company_name || business.name}</p>
+                                        <div className="inline-flex items-center gap-2 text-[10px] font-bold text-green-600 uppercase tracking-[0.2em] bg-green-50 px-3 py-1.5 rounded-sm border border-green-100">
+                                            <ShieldCheck size={14} /> Global Entity
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <a
+                                        href={`/business/${business.user_id}`}
+                                        className="w-full bg-[#FF7B1D] text-white py-5 rounded-sm font-black text-[12px] uppercase tracking-[0.25em] shadow-lg hover:bg-orange-600 transition-all flex items-center justify-center gap-3 active:scale-95"
+                                    >
+                                        Authority Credentials
+                                    </a>
+                                    <button className="w-full bg-white border-2 border-gray-50 text-gray-800 py-5 rounded-sm font-black text-[12px] uppercase tracking-[0.25em] hover:bg-gray-50 transition-all flex items-center justify-center gap-3 active:scale-95">
+                                        <Mail size={18} /> Direct Inquiry
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Trust Badge Grid - Enhanced Typography */}
+                            <div className="bg-gray-900 rounded-sm shadow-2xl p-10 text-white overflow-hidden relative border border-gray-800">
+                                <div className="absolute top-0 right-0 -m-12 w-48 h-48 bg-orange-500/10 rounded-full blur-[80px]"></div>
+                                <h4 className="text-[11px] font-black text-orange-400 uppercase tracking-[0.4em] mb-12 relative">Quality Assurance</h4>
+
+                                <div className="space-y-12 relative">
+                                    <div className="flex items-start gap-6 group">
+                                        <div className="w-12 h-12 bg-white/5 rounded-sm flex items-center justify-center text-orange-400 shrink-0 border border-white/10 group-hover:bg-orange-500 group-hover:text-white transition-all duration-500 transform group-hover:rotate-6">
+                                            <Target size={22} />
+                                        </div>
+                                        <div>
+                                            <p className="text-xs font-black uppercase tracking-[0.3em] mb-3 text-white">System Fidelity</p>
+                                            <p className="text-[12px] text-gray-500 font-medium leading-relaxed group-hover:text-gray-300 transition-colors">Every specification detail is digitally verified against official industrial inventories.</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-start gap-6 group">
+                                        <div className="w-12 h-12 bg-white/5 rounded-sm flex items-center justify-center text-orange-400 shrink-0 border border-white/10 group-hover:bg-orange-500 group-hover:text-white transition-all duration-500 transform group-hover:-rotate-6">
+                                            <ShieldCheck size={22} />
+                                        </div>
+                                        <div>
+                                            <p className="text-xs font-black uppercase tracking-[0.3em] mb-3 text-white">Verified Origin</p>
+                                            <p className="text-[12px] text-gray-500 font-medium leading-relaxed group-hover:text-gray-300 transition-colors">Information retrieval is managed through locked, secure provider channels.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Enhanced Bottom Metadata Bar */}
+                    <div className="mt-28 py-12 border-t border-gray-100 flex flex-col md:flex-row items-center justify-between gap-10 opacity-40 hover:opacity-100 transition-all duration-500">
+                        <div className="flex items-center gap-6">
+                            <div className="w-10 h-10 flex items-center justify-center bg-gray-50 rounded-sm p-1.5 grayscale transition-all hover:grayscale-0">
+                                {logoUrl ? <img src={logoUrl} className="w-full h-full object-contain" alt="" /> : <Building2 size={20} />}
+                            </div>
+                            <div className="space-y-1">
+                                <p className="text-[12px] font-black text-gray-600 uppercase tracking-[0.25em]">
+                                    © {new Date().getFullYear()} {business.company_name || business.name} Group
+                                </p>
+                                <p className="text-[9px] font-bold text-gray-400 uppercase tracking-[0.3em]">Institutional Catalog Repository</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-8">
+                            <div className="flex gap-4">
+                                <div className="text-[9px] font-black text-gray-400 uppercase tracking-[0.4em] bg-white border border-gray-100 px-4 py-2 rounded-sm shadow-sm">Verified V5.0</div>
+                                <div className="text-[9px] font-black text-gray-400 uppercase tracking-[0.4em] bg-white border border-gray-100 px-4 py-2 rounded-sm shadow-sm">Global CDN Node</div>
+                            </div>
+                            <Globe size={20} className="text-gray-300 animate-pulse-subtle" />
+                        </div>
+                    </div>
+
                 </div>
             </main>
+
+            <Footer business={business} logoUrl={logoUrl} />
         </div>
     );
 }

@@ -114,7 +114,7 @@ export default function TaskReminderPopup() {
                 />
             </audio>
 
-            <div className="fixed top-4 left-4 z-[9999] animate-slideIn w-96">
+            <div className="fixed bottom-4 right-4 z-[9999] animate-slideIn w-96">
                 <div className="bg-white rounded-lg shadow-2xl border border-orange-200 flex flex-col overflow-hidden">
                     {/* Header */}
                     <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-5 py-4 flex items-center justify-between">
@@ -153,8 +153,8 @@ export default function TaskReminderPopup() {
                                     <button
                                         onClick={() => toggleTask(task.id)}
                                         className={`w-full flex items-center justify-between px-4 py-3 transition ${isHighPriorityToday(task)
-                                                ? "bg-red-50 hover:bg-red-100 border-l-4 border-red-500"
-                                                : "hover:bg-orange-50"
+                                            ? "bg-red-50 hover:bg-red-100 border-l-4 border-red-500"
+                                            : "hover:bg-orange-50"
                                             }`}
                                     >
                                         <div className="flex items-center gap-2 truncate">
@@ -163,8 +163,8 @@ export default function TaskReminderPopup() {
                                             )}
                                             <p
                                                 className={`text-sm font-semibold truncate ${isHighPriorityToday(task)
-                                                        ? "text-red-700"
-                                                        : "text-gray-800"
+                                                    ? "text-red-700"
+                                                    : "text-gray-800"
                                                     }`}
                                             >
                                                 {task.title}
@@ -257,7 +257,7 @@ export default function TaskReminderPopup() {
             <style>{`
         @keyframes slideIn {
           from {
-            transform: translateX(-100%);
+            transform: translateX(100%);
             opacity: 0;
           }
           to {

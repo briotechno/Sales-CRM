@@ -488,22 +488,26 @@ export default function CatalogsPage() {
     <DashboardLayout>
       <div className="min-h-screen bg-white">
         {/* Header Section */}
-        <div className="bg-white border-b sticky top-0 z-30">
-          <div className="max-w-8xl mx-auto px-4 py-2">
+        <div className="bg-white sticky top-0 z-30">
+          <div className="max-w-8xl mx-auto px-4 py-4 border-b">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Catalog Module</h1>
-                <p className="text-[10px] text-gray-500 mt-0.5 flex items-center gap-1.5">
-                  <FiHome className="text-gray-400" size={14} /> CRM / <span className="text-[#FF7B1D] font-medium">All Catalogs</span>
+                <h1 className="text-2xl font-bold text-gray-800">Catalog Module</h1>
+                <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
+                  <FiHome className="text-gray-700" size={14} />
+                  <span className="text-gray-400"></span> CRM /{" "}
+                  <span className="text-[#FF7B1D] font-medium">
+                    All Catalogs
+                  </span>
                 </p>
               </div>
 
               {/* Buttons */}
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex flex-wrap items-center gap-3">
                 <div className="relative" ref={dropdownRef}>
                   <button
                     onClick={() => setIsFilterOpen(!isFilterOpen)}
-                    className={`p-2 rounded-sm border transition shadow-sm ${isFilterOpen || statusFilter !== "All"
+                    className={`px-3 py-3 rounded-sm border transition shadow-sm ${isFilterOpen || statusFilter !== "All"
                       ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
                       : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
                       }`}
@@ -540,7 +544,7 @@ export default function CatalogsPage() {
                 <div className="relative" ref={dateDropdownRef}>
                   <button
                     onClick={() => setIsDateFilterOpen(!isDateFilterOpen)}
-                    className={`p-2 rounded-sm border transition shadow-sm flex items-center gap-2 ${isDateFilterOpen || dateFilter !== "All"
+                    className={`px-3 py-3 rounded-sm border transition shadow-sm flex items-center gap-2 ${isDateFilterOpen || dateFilter !== "All"
                       ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
                       : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
                       }`}
@@ -611,14 +615,14 @@ export default function CatalogsPage() {
                       setSearchTerm(e.target.value);
                       setCurrentPage(1);
                     }}
-                    className="pl-10 pr-4 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-orange-500 text-sm w-64 shadow-sm"
+                    className="pl-10 pr-4 py-3 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-orange-500 text-sm w-64 shadow-sm"
                   />
-                  <Search className="absolute left-3 top-2.5 text-gray-400" size={16} />
+                  <Search className="absolute left-3 top-3.5 text-gray-400" size={16} />
                 </div>
 
-                <button onClick={handleExportExcel} className="bg-white border border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-sm flex items-center gap-2 transition text-sm font-semibold shadow-sm active:scale-95 text-gray-700">
+                <button onClick={handleExportExcel} className="bg-white border border-gray-300 hover:bg-gray-50 px-5 py-3 rounded-sm flex items-center gap-2 transition font-semibold shadow-sm text-gray-700">
                   <FileDown size={18} />
-                  EXPORT
+                  Export
                 </button>
 
                 <button
@@ -627,13 +631,13 @@ export default function CatalogsPage() {
                     setShowAddModal(true);
                   }}
                   disabled={!create}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-sm font-bold transition shadow-md text-sm active:scale-95 ${create
+                  className={`flex items-center gap-2 px-6 py-3 rounded-sm font-semibold transition shadow-lg hover:shadow-xl ${create
                     ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
                     : "bg-gray-300 text-gray-500 cursor-not-allowed"
                     }`}
                 >
-                  <Plus size={18} />
-                  ADD CATALOG
+                  <Plus size={20} />
+                  Add Catalog
                 </button>
               </div>
             </div>
@@ -797,18 +801,18 @@ export default function CatalogsPage() {
                       <td className="py-3 px-4 font-semibold text-gray-800">
                         {catalog.name}
                       </td>
-                      <td className="py-3 px-4 font-medium">
-                        ₹{catalog.minPrice?.toLocaleString() || 0}
+                      <td className="py-3 px-4 font-medium text-gray-600">
+                        {catalog.minPrice ? `₹${catalog.minPrice.toLocaleString()}` : "N/A"}
                       </td>
-                      <td className="py-3 px-4 font-medium">
-                        ₹{catalog.maxPrice?.toLocaleString() || 0}
+                      <td className="py-3 px-4 font-medium text-gray-600">
+                        {catalog.maxPrice ? `₹${catalog.maxPrice.toLocaleString()}` : "N/A"}
                       </td>
                       <td className="py-3 px-4 text-gray-600 text-sm">{new Date(catalog.created_at).toLocaleDateString()}</td>
                       <td className="py-3 px-4">
                         <span
-                          className={`px-3 py-1 rounded-full text-xs font-bold ${catalog.status === "Active"
-                            ? "bg-green-100 text-green-700"
-                            : "bg-red-100 text-red-600"
+                          className={`px-3 py-1 rounded-sm text-[10px] font-bold border uppercase tracking-wider ${catalog.status === "Active"
+                            ? "bg-green-50 text-green-700 border-green-200"
+                            : "bg-red-50 text-red-700 border-red-200"
                             }`}
                         >
                           {catalog.status}
@@ -969,7 +973,8 @@ export default function CatalogsPage() {
                       <div className="flex items-center justify-between mb-2">
                         <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
                           <Tag size={16} className="text-[#FF7B1D]" />
-                          Category *
+                          Category <span className="text-red-500">*</span>
+
                         </label>
                         <div className="flex items-center gap-3">
                           {!isAddingCategory && (
@@ -1165,7 +1170,7 @@ export default function CatalogsPage() {
                     <div>
                       <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
                         <DollarSign size={16} className="text-[#FF7B1D]" />
-                        Minimum Price (₹) <span className="text-red-500">*</span>
+                        Minimum Price (₹)
                       </label>
                       <input
                         type="number"
@@ -1173,14 +1178,13 @@ export default function CatalogsPage() {
                         value={formData.minPrice}
                         onChange={handleInputChange}
                         className="w-full px-4 py-3 border-2 border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300"
-                        required
                         placeholder="0"
                       />
                     </div>
                     <div>
                       <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
                         <DollarSign size={16} className="text-[#FF7B1D]" />
-                        Maximum Price (₹) <span className="text-red-500">*</span>
+                        Maximum Price (₹)
                       </label>
                       <input
                         type="number"
@@ -1188,7 +1192,6 @@ export default function CatalogsPage() {
                         value={formData.maxPrice}
                         onChange={handleInputChange}
                         className="w-full px-4 py-3 border-2 border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300"
-                        required
                         placeholder="0"
                       />
                     </div>
@@ -1432,6 +1435,6 @@ export default function CatalogsPage() {
           </div>
         )}
       </div>
-    </DashboardLayout>
+    </DashboardLayout >
   );
 }

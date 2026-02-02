@@ -18,6 +18,8 @@ export const taskApi = createApi({
             query: (params) => ({
                 url: '/',
                 params: {
+                    page: params?.page || 1,
+                    limit: params?.limit || 10,
                     priority: params?.priority || 'all',
                     category: params?.category || 'All',
                     search: params?.search || '',

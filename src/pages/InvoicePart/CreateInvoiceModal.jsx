@@ -348,14 +348,16 @@ export default function CreateInvoiceModal({
                             <label className="flex items-center gap-2 text-xs font-bold text-gray-500 mb-2 uppercase tracking-widest">
                                 <Hash size={13} className="text-orange-500" />
                                 Invoice No <span className="text-red-500">*</span>
+                                {formData.id && <span className="text-[10px] text-orange-400 normal-case">(Non-editable)</span>}
                             </label>
                             <input
                                 type="text"
                                 name="invoiceNo"
                                 value={formData.invoiceNo}
                                 onChange={handleInputChange}
-                                className={inputStyles}
+                                className={`${inputStyles} ${formData.id ? "bg-gray-50 text-gray-400 cursor-not-allowed border-gray-100" : ""}`}
                                 placeholder="INV-2024-001"
+                                disabled={!!formData.id}
                             />
                         </div>
 

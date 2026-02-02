@@ -276,7 +276,7 @@ export default function BusinessInfoPage() {
 
   return (
     <DashboardLayout>
-      <div className="p-0 bg-gradient-to-br from-gray-0 to-gray-100 ml-6 min-h-screen">
+      <div className="p-0 bg-gradient-to-br from-gray-0 to-gray-100 ml-4 mr-4 min-h-screen">
         {/* Header */}
         <div className="bg-white border-b ">
           <div className="max-w-8xl mx-auto ml-2 px-0 py-4">
@@ -314,7 +314,7 @@ export default function BusinessInfoPage() {
                 {!isEditing ? (
                   <button
                     onClick={() => setIsEditing(true)}
-                    className="mr-6 bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-2 font-semibold"
+                    className="mr-0 bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-2 font-semibold"
                   >
                     <Edit2 size={20} />
                     Edit Information
