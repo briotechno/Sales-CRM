@@ -443,100 +443,133 @@ export default function AnnouncementPage() {
                 )}
               </div>
             ) : viewMode === "grid" ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {filteredAnnouncements.map((announcement) => (
                   <div
                     key={announcement.id}
-                    className="group bg-white rounded-lg shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-orange-300 overflow-hidden relative flex flex-col h-full"
+                    className="bg-white border-2 border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all p-6 relative group flex flex-col h-full"
                   >
-                    {/* Theme Accent Bar */}
-                    <div className="h-1 w-full bg-gradient-to-r from-orange-400 to-orange-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    {/* Action Icons - Top Right (Hidden by default, shown on hover) */}
+                    <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                      <button
+                        onClick={() => handleView(announcement)}
+                        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-sm bg-white shadow-sm border border-blue-100"
+                        title="View Details"
+                      >
+                        <Eye size={16} />
+                      </button>
+                      <button
+                        onClick={() => handleEdit(announcement)}
+                        className="p-1.5 text-green-600 hover:bg-green-50 rounded-sm bg-white shadow-sm border border-green-100"
+                        title="Edit"
+                      >
+                        <Edit size={16} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(announcement)}
+                        className="p-1.5 text-red-600 hover:bg-red-50 rounded-sm bg-white shadow-sm border border-red-100"
+                        title="Delete"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
 
-                    <div className="p-6 flex-1 flex flex-col">
-                      {/* Header: Category & Date */}
-                      <div className="flex items-center justify-between mb-4">
-                        <span
-                          className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border shadow-sm ${getCategoryColor(announcement.category)}`}
-                        >
-                          {announcement.category}
-                        </span>
-                        <span className="text-[11px] font-medium text-gray-400 flex items-center gap-1.5 bg-gray-50 px-2.5 py-1 rounded-full">
-                          <Calendar size={12} className="text-orange-500" />
-                          {new Date(announcement.date).toLocaleDateString("en-IN", {
-                            month: "short",
-                            day: "numeric",
-                          })}
-                        </span>
+                    {/* Content Section */}
+                    <div className="flex flex-col items-center mt-4 flex-1">
+                      {/* Icon/Avatar */}
+                      <div className="relative">
+                        <div className="w-20 h-20 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-bold text-2xl border-4 border-gray-100">
+                          <Megaphone size={32} />
+                        </div>
+                        <div className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
                       </div>
 
                       {/* Title */}
-                      <h3 className="text-lg font-bold text-gray-800 mb-3 leading-tight group-hover:text-orange-600 transition-colors line-clamp-2">
+                      <h3 className="text-lg font-bold text-gray-800 mt-3 text-center line-clamp-2 min-h-[56px]">
                         {announcement.title}
                       </h3>
 
+                      {/* Category Badge */}
+                      <p
+                        className={`text-xs font-semibold px-3 py-1 rounded-full mt-2 ${getCategoryColor(announcement.category)}`}
+                      >
+                        {announcement.category}
+                      </p>
+
+                      {/* Date */}
+                      <p className="text-xs text-gray-500 mt-1 uppercase tracking-wider font-medium flex items-center gap-1">
+                        <Calendar size={12} className="text-orange-500" />
+                        {new Date(announcement.date).toLocaleDateString("en-IN", {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric"
+                        })}
+                      </p>
+
                       {/* Content Preview */}
-                      <p className="text-gray-600 text-sm leading-relaxed line-clamp-3 mb-6 flex-1">
+                      <p className="text-xs text-gray-600 leading-relaxed line-clamp-3 mt-4 text-center px-2">
                         {announcement.content}
                       </p>
                     </div>
 
-                    {/* Footer: Author & Social & Actions */}
-                    <div className="px-5 py-4 bg-gray-50/50 border-t border-gray-100 mt-auto">
-                      <div className="flex items-center justify-between mb-4">
-                        {/* Author Chip */}
-                        <div className="flex items-center gap-2 bg-white px-2 py-1 rounded-full shadow-sm border border-gray-100">
-                          <div className="w-6 h-6 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full flex items-center justify-center text-white font-bold text-[10px] shadow-sm">
-                            {announcement.author ? announcement.author.charAt(0) : "A"}
-                          </div>
-                          <span className="text-[11px] font-bold text-gray-700 truncate max-w-[100px]">
-                            {(announcement.author || "System").split("-")[0].trim()}
-                          </span>
-                        </div>
+                    {/* Stats Section */}
+                    <div className="flex justify-between items-center mt-6 text-center border-t pt-4">
+                      <div>
+                        <p className="text-[10px] text-gray-500 uppercase">Likes</p>
+                        <p className="text-sm font-bold text-gray-800">
+                          {(announcement.likes || 0) + (mockStats[announcement.id]?.likes || 0)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-gray-500 uppercase">Dislikes</p>
+                        <p className="text-sm font-bold text-gray-800">
+                          {(announcement.dislikes || 0) + (mockStats[announcement.id]?.dislikes || 0)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-gray-500 uppercase">Views</p>
+                        <p className="text-sm font-bold text-gray-800">
+                          {(announcement.views || 0) + (mockStats[announcement.id]?.views || 0)}
+                        </p>
+                      </div>
+                    </div>
 
-                        {/* Social Interactions */}
-                        <div className="flex items-center gap-3 px-3 py-1 rounded-full bg-white shadow-sm border border-gray-100">
-                          <button
-                            onClick={() => handleLike(announcement.id)}
-                            className={`flex items-center gap-1 transition-all ${mockStats[announcement.id]?.userLiked ? 'text-green-600' : 'text-gray-400 hover:text-green-600'}`}
-                            title="Like"
-                          >
-                            <ThumbsUp size={14} className={mockStats[announcement.id]?.userLiked ? 'fill-current' : ''} />
-                            <span className="text-[10px] font-bold">{(announcement.likes || 0) + (mockStats[announcement.id]?.likes || 0)}</span>
-                          </button>
-
-                          <button
-                            onClick={() => handleDislike(announcement.id)}
-                            className={`flex items-center gap-1 transition-all ${mockStats[announcement.id]?.userDisliked ? 'text-red-600' : 'text-gray-400 hover:text-red-600'}`}
-                            title="Dislike"
-                          >
-                            <ThumbsDown size={14} className={mockStats[announcement.id]?.userDisliked ? 'fill-current' : ''} />
-                            <span className="text-[10px] font-bold">{(announcement.dislikes || 0) + (mockStats[announcement.id]?.dislikes || 0)}</span>
-                          </button>
+                    {/* Author & Interactions Section */}
+                    <div className="mt-4 pt-4 border-t border-gray-100 flex flex-col gap-3">
+                      {/* Author Info */}
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full flex items-center justify-center text-white font-bold text-[10px] shadow-sm">
+                          {announcement.author ? announcement.author.charAt(0) : "A"}
                         </div>
+                        <span className="text-xs text-gray-700 font-semibold truncate">
+                          {(announcement.author || "System").split("-")[0].trim()}
+                        </span>
                       </div>
 
-                      {/* Actions Row */}
-                      <div className="flex items-center justify-end gap-3 pt-3 border-t border-gray-200/50">
+                      {/* Like/Dislike Buttons */}
+                      <div className="flex items-center gap-2">
                         <button
-                          onClick={() => handleView(announcement)}
-                          className="p-1 hover:bg-orange-100 rounded-sm text-blue-500 hover:text-blue-700 transition-all"
-                          title="View Details"
+                          onClick={() => handleLike(announcement.id)}
+                          className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-sm border transition-all ${mockStats[announcement.id]?.userLiked
+                            ? 'bg-green-50 border-green-200 text-green-600'
+                            : 'bg-white border-gray-200 text-gray-600 hover:bg-green-50 hover:border-green-200'
+                            }`}
+                          title="Like"
                         >
-                          <Eye size={18} />
+                          <ThumbsUp size={14} className={mockStats[announcement.id]?.userLiked ? 'fill-current' : ''} />
+                          <span className="text-[10px] font-bold">Like</span>
                         </button>
+
                         <button
-                          onClick={() => handleEdit(announcement)}
-                          className="p-1 hover:bg-orange-100 rounded-sm text-green-500 hover:text-green-700 transition-all"
-                          title="Edit"
+                          onClick={() => handleDislike(announcement.id)}
+                          className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-sm border transition-all ${mockStats[announcement.id]?.userDisliked
+                            ? 'bg-red-50 border-red-200 text-red-600'
+                            : 'bg-white border-gray-200 text-gray-600 hover:bg-red-50 hover:border-red-200'
+                            }`}
+                          title="Dislike"
                         >
-                          <Edit size={18} />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(announcement)}
-                          className="p-1 hover:bg-orange-100 rounded-sm text-red-500 hover:text-red-700 transition-all shadow-sm"
-                          title="Delete"
-                        >
-                          <Trash2 size={18} />
+                          <ThumbsDown size={14} className={mockStats[announcement.id]?.userDisliked ? 'fill-current' : ''} />
+                          <span className="text-[10px] font-bold">Dislike</span>
                         </button>
                       </div>
                     </div>
@@ -639,48 +672,49 @@ export default function AnnouncementPage() {
               </div>
             )}
           </div>
+          {announcements.length > 0 && (
+            <div className="flex flex-col md:flex-row justify-between items-center mt-6 gap-4 bg-gray-50 p-4 rounded-sm border border-gray-200 mb-6 shadow-sm">
+              <p className="text-sm font-semibold text-gray-700">
+                Showing <span className="text-orange-600">{(currentPage - 1) * itemsPerPage + 1}</span> to <span className="text-orange-600">{Math.min(currentPage * itemsPerPage, pagination.total)}</span> of <span className="text-orange-600">{pagination.total || 0}</span> Announcements
+              </p>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setCurrentPage(currentPage > 1 ? currentPage - 1 : 1)}
+                  disabled={currentPage === 1}
+                  className={`px-4 py-2 rounded-sm font-bold transition flex items-center gap-1 ${currentPage === 1 ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"
+                    }`}
+                >
+                  Previous
+                </button>
+
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: pagination.totalPages }, (_, i) => (
+                    <button
+                      key={i + 1}
+                      onClick={() => setCurrentPage(i + 1)}
+                      className={`w-10 h-10 rounded-sm font-bold transition ${currentPage === i + 1 ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md border-orange-500" : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+                        }`}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  onClick={() => setCurrentPage(currentPage < pagination.totalPages ? currentPage + 1 : currentPage)}
+                  disabled={currentPage === pagination.totalPages || pagination.totalPages === 0}
+                  className={`px-4 py-2 rounded-sm font-bold transition flex items-center gap-1 ${currentPage === pagination.totalPages || pagination.totalPages === 0 ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"
+                    }`}
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
-        {announcements.length > 0 && (
-          <div className="flex flex-col md:flex-row justify-between items-center mt-6 gap-4 bg-gray-50 p-4 rounded-sm border border-gray-200 mb-6 shadow-sm">
-            <p className="text-sm font-semibold text-gray-700">
-              Showing <span className="text-orange-600">{(currentPage - 1) * itemsPerPage + 1}</span> to <span className="text-orange-600">{Math.min(currentPage * itemsPerPage, pagination.total)}</span> of <span className="text-orange-600">{pagination.total || 0}</span> Announcements
-            </p>
 
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setCurrentPage(currentPage > 1 ? currentPage - 1 : 1)}
-                disabled={currentPage === 1}
-                className={`px-4 py-2 rounded-sm font-bold transition flex items-center gap-1 ${currentPage === 1 ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"
-                  }`}
-              >
-                Previous
-              </button>
-
-              <div className="flex items-center gap-1">
-                {Array.from({ length: pagination.totalPages }, (_, i) => (
-                  <button
-                    key={i + 1}
-                    onClick={() => setCurrentPage(i + 1)}
-                    className={`w-10 h-10 rounded-sm font-bold transition ${currentPage === i + 1 ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md border-orange-500" : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
-                      }`}
-                  >
-                    {i + 1}
-                  </button>
-                ))}
-              </div>
-
-              <button
-                onClick={() => setCurrentPage(currentPage < pagination.totalPages ? currentPage + 1 : currentPage)}
-                disabled={currentPage === pagination.totalPages || pagination.totalPages === 0}
-                className={`px-4 py-2 rounded-sm font-bold transition flex items-center gap-1 ${currentPage === pagination.totalPages || pagination.totalPages === 0 ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"
-                  }`}
-              >
-                Next
-              </button>
-            </div>
-          </div>
-        )}
       </div>
 
       <AddAnnouncementModal
