@@ -541,7 +541,8 @@ export default function BusinessInfoPage() {
                       ></textarea>
                     ) : (
                       <p className="text-gray-700 leading-relaxed text-sm">
-                        {formData.company_description}
+                        {formData.company_description.slice(0, 800)}
+                        {formData.company_description.length > 800 && "..."}
                       </p>
                     )}
                   </div>

@@ -165,7 +165,7 @@ const Header = () => {
 
         {/* Search Results Dropdown */}
         {searchValue && isSearchFocused && (
-          <div className="absolute top-full left-0 right-0 mt-3 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-y-auto max-h-[70vh] animate-fadeIn py-2 z-50 custom-scrollbar">
+          <div className="absolute top-full left-0 right-0 mt-3 bg-white rounded-lg shadow-2xl border border-gray-100 overflow-y-auto max-h-[70vh] animate-fadeIn py-2 z-50 custom-scrollbar">
             {searchResults.length > 0 ? (
               searchResults.map((cat, idx) => (
                 <div key={idx} className="mb-2 last:mb-0">
@@ -227,7 +227,7 @@ const Header = () => {
               <FiGrid size={20} />
             </button>
             {appsOpen && (
-              <div className="absolute right-0 mt-3 w-64 bg-white rounded-xl shadow-2xl border border-gray-100 p-2 z-50 animate-fadeIn">
+              <div className="absolute right-0 mt-3 w-64 bg-white rounded-lg shadow-2xl border border-gray-100 p-2 z-50 animate-fadeIn">
                 <div className="flex flex-col gap-1">
                   {[
                     { name: "To Do", icon: <FiCheckSquare />, path: "/additional/todo", color: "text-blue-500" },
@@ -281,7 +281,7 @@ const Header = () => {
               <span className="absolute top-2 right-2 h-2 w-2 bg-red-500 rounded-full border-2 border-[#2b303b]" />
             </button>
             {notificationOpen && (
-              <div className="absolute right-0 mt-3 w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50 animate-fadeIn">
+              <div className="absolute right-0 mt-3 w-80 bg-white rounded-lg shadow-2xl border border-gray-100 overflow-hidden z-50 animate-fadeIn">
                 <div className="px-5 py-4 border-b border-gray-100 bg-white flex items-center justify-between">
                   <h3 className="text-[15px] font-bold text-gray-900">Notifications</h3>
                   <span className="text-[10px] font-bold text-orange-600 bg-orange-50 px-2.5 py-1 rounded-full uppercase tracking-wider">3 New</span>
@@ -328,7 +328,7 @@ const Header = () => {
           </button>
 
           {isDropdownOpen && (
-            <div className="absolute right-0 mt-3 w-64 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-50 animate-fadeIn">
+            <div className="absolute right-0 mt-3 w-64 bg-white rounded-lg shadow-lg border border-gray-100 overflow-hidden z-50 animate-fadeIn">
               <div className="px-5 py-4 bg-gray-50/50 border-b border-gray-100">
                 <p className="text-sm font-bold text-gray-800">{user?.firstName} {user?.lastName}</p>
                 <p className="text-xs text-gray-500 mt-0.5 truncate">{user?.email}</p>

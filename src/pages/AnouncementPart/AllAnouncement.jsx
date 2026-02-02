@@ -9,7 +9,7 @@ import {
   Calendar,
   Search,
   Filter,
-  Edit2,
+  Edit,
   ThumbsUp,
   ThumbsDown,
   Package,
@@ -18,6 +18,7 @@ import {
   LayoutGrid,
   List,
   Loader2,
+  Clock,
 } from "lucide-react";
 import NumberCard from "../../components/NumberCard";
 import { useGetAnnouncementsQuery } from "../../store/api/announcementApi";
@@ -78,15 +79,37 @@ export default function AnnouncementPage() {
 
   const getCategoryColor = (category) => {
     const colors = {
-      Achievement: "bg-green-100 text-green-700 border-green-300",
-      "Product Update": "bg-blue-100 text-blue-700 border-blue-300",
-      Policy: "bg-purple-100 text-purple-700 border-purple-300",
-      Event: "bg-pink-100 text-pink-700 border-pink-300",
-      Process: "bg-yellow-100 text-yellow-700 border-yellow-300",
-      Recognition: "bg-orange-100 text-orange-700 border-orange-300",
-      General: "bg-gray-100 text-gray-700 border-gray-300",
+      Achievement: "bg-green-50 text-green-700 border-green-200",
+      "Product Update": "bg-blue-50 text-blue-700 border-blue-200",
+      Policy: "bg-purple-50 text-purple-700 border-purple-200",
+      Event: "bg-pink-50 text-pink-700 border-pink-200",
+      Process: "bg-yellow-50 text-yellow-700 border-yellow-200",
+      Recognition: "bg-orange-50 text-orange-700 border-orange-200",
+      Internal: "bg-indigo-50 text-indigo-700 border-indigo-200",
+      Urgent: "bg-red-50 text-red-700 border-red-200",
+      General: "bg-gray-50 text-slate-700 border-gray-200",
     };
-    return colors[category] || colors.General;
+
+    if (colors[category]) return colors[category];
+
+    // Fallback: Dynamic color based on string content for custom categories (like SSS, TEST CAT)
+    const fallbacks = [
+      "bg-blue-50 text-blue-700 border-blue-200 text-blue-700",
+      "bg-purple-50 text-purple-700 border-purple-200 text-purple-700",
+      "bg-indigo-50 text-indigo-700 border-indigo-200 text-indigo-700",
+      "bg-teal-50 text-teal-700 border-teal-200 text-teal-700",
+      "bg-cyan-50 text-cyan-700 border-cyan-200 text-cyan-700",
+      "bg-rose-50 text-rose-700 border-rose-200 text-rose-700",
+      "bg-amber-50 text-amber-700 border-amber-200 text-amber-700",
+    ];
+
+    let hash = 0;
+    const str = String(category || "General");
+    for (let i = 0; i < str.length; i++) {
+      hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const index = Math.abs(hash) % fallbacks.length;
+    return fallbacks[index];
   };
 
   const handleEdit = (announcement) => {
@@ -224,21 +247,30 @@ export default function AnnouncementPage() {
 
               {/* Right Side: Filter + New Button */}
               <div className="flex flex-wrap items-center gap-3">
-                {/* Filter */}
+                {/* Unified Filter */}
                 <div className="relative" ref={filterDropdownRef}>
                   <button
-                    onClick={() => setIsFilterOpen(!isFilterOpen)}
-                    className={`px-3 py-3 rounded-sm border transition shadow-sm ${isFilterOpen || categoryFilter !== "All"
+                    onClick={() => {
+                      if (hasActiveFilters) {
+                        clearAllFilters();
+                      } else {
+                        setIsFilterOpen(!isFilterOpen);
+                      }
+                    }}
+                    className={`px-3 py-3 rounded-sm border transition shadow-sm ${isFilterOpen || hasActiveFilters
                       ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
                       : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
                       }`}
                   >
-                    <Filter size={18} />
+                    {hasActiveFilters ? <X size={18} /> : <Filter size={18} />}
                   </button>
 
                   {isFilterOpen && (
-                    <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-sm shadow-xl z-50">
-                      <div className="py-1 max-h-64 overflow-y-auto custom-scrollbar">
+                    <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-xl z-50 animate-fadeIn">
+                      <div className="p-3 border-b border-gray-100 bg-gray-50">
+                        <span className="text-sm font-bold text-gray-700 tracking-wide">Categories</span>
+                      </div>
+                      <div className="py-1 max-h-48 overflow-y-auto custom-scrollbar">
                         <button
                           onClick={() => {
                             setCategoryFilter("All");
@@ -269,64 +301,59 @@ export default function AnnouncementPage() {
                           </button>
                         ))}
                       </div>
-                    </div>
-                  )}
-                </div>
 
-                {/* Date Filter */}
-                <div className="relative" ref={dateFilterDropdownRef}>
-                  <button
-                    onClick={() => setIsDateFilterOpen(!isDateFilterOpen)}
-                    className={`px-3 py-3 rounded-sm border transition shadow-sm ${isDateFilterOpen || dateFilter !== "All"
-                      ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
-                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
-                      }`}
-                  >
-                    <Calendar size={18} />
-                  </button>
-
-                  {isDateFilterOpen && (
-                    <div className="absolute right-0 mt-2 w-36 bg-white border border-gray-200 rounded-sm shadow-xl z-50">
+                      <div className="p-3 border-t border-b border-gray-100 bg-gray-50">
+                        <span className="text-sm font-bold text-gray-700 tracking-wide">Date Range</span>
+                      </div>
                       <div className="py-1">
                         {["All", "Today", "This Week", "This Month", "Custom"].map((option) => (
-                          <button
-                            key={option}
-                            onClick={() => {
-                              setDateFilter(option);
-                              setIsDateFilterOpen(false);
-                              setCurrentPage(1);
-                            }}
-                            className={`block w-full text-left px-4 py-2 text-sm transition-colors ${dateFilter === option
-                              ? "bg-orange-50 text-orange-600 font-bold"
-                              : "text-gray-700 hover:bg-gray-50"
-                              }`}
-                          >
-                            {option}
-                          </button>
+                          <div key={option}>
+                            <button
+                              onClick={() => {
+                                setDateFilter(option);
+                                if (option !== "Custom") {
+                                  setIsFilterOpen(false);
+                                  setCurrentPage(1);
+                                }
+                              }}
+                              className={`block w-full text-left px-4 py-2 text-sm transition-colors ${dateFilter === option
+                                ? "bg-orange-50 text-orange-600 font-bold"
+                                : "text-gray-700 hover:bg-gray-50"
+                                }`}
+                            >
+                              {option}
+                            </button>
+                            {option === "Custom" && dateFilter === "Custom" && (
+                              <div className="px-4 py-3 space-y-2 border-t border-gray-50 bg-gray-50/50">
+                                <input
+                                  type="date"
+                                  value={customStartDate}
+                                  onChange={(e) => setCustomStartDate(e.target.value)}
+                                  className="w-full px-2 py-2 border border-gray-300 rounded-sm text-xs focus:outline-none focus:ring-1 focus:ring-orange-500"
+                                />
+                                <input
+                                  type="date"
+                                  value={customEndDate}
+                                  onChange={(e) => setCustomEndDate(e.target.value)}
+                                  className="w-full px-2 py-2 border border-gray-300 rounded-sm text-xs focus:outline-none focus:ring-1 focus:ring-orange-500"
+                                />
+                                <button
+                                  onClick={() => {
+                                    setIsFilterOpen(false);
+                                    setCurrentPage(1);
+                                  }}
+                                  className="w-full bg-orange-500 text-white text-[10px] font-bold py-2 rounded-sm uppercase tracking-wider"
+                                >
+                                  Apply
+                                </button>
+                              </div>
+                            )}
+                          </div>
                         ))}
                       </div>
                     </div>
                   )}
                 </div>
-
-                {/* Custom Date Range */}
-                {dateFilter === "Custom" && (
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="date"
-                      value={customStartDate}
-                      onChange={(e) => setCustomStartDate(e.target.value)}
-                      className="px-3 py-3 border border-gray-300 rounded-sm text-sm focus:outline-none focus:ring-1 focus:ring-orange-500"
-                    />
-                    <span className="text-gray-500 text-xs">to</span>
-                    <input
-                      type="date"
-                      value={customEndDate}
-                      onChange={(e) => setCustomEndDate(e.target.value)}
-                      className="px-3 py-3 border border-gray-300 rounded-sm text-sm focus:outline-none focus:ring-1 focus:ring-orange-500"
-                    />
-                  </div>
-                )}
 
 
                 {/* View Mode Toggle */}
@@ -367,7 +394,7 @@ export default function AnnouncementPage() {
           </div>
         </div>
 
-        <div className="max-w-8xl mx-auto p-4 mt-0">
+        <div className="max-w-8xl mx-auto p-4 pt-0 mt-2">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
             <NumberCard
               title={"Total Announcements"}
@@ -385,34 +412,13 @@ export default function AnnouncementPage() {
             />
           </div>
 
-          {/* Clear Filters Banner */}
-          {hasActiveFilters && (
-            <div className="mb-4 flex flex-wrap items-center justify-between bg-orange-50 border border-orange-200 rounded-sm p-3 gap-3 animate-fadeIn">
-              <div className="flex flex-wrap items-center gap-2">
-                <Filter className="text-orange-600" size={16} />
-                <span className="text-sm font-bold text-orange-800 uppercase">
-                  ACTIVE FILTERS:
-                </span>
-                {searchTerm && <span className="text-xs bg-white px-2 py-1 rounded-sm border border-orange-200 text-orange-700 shadow-sm font-bold">Search: "{searchTerm}"</span>}
-                {categoryFilter !== "All" && <span className="text-xs bg-white px-2 py-1 rounded-sm border border-orange-200 text-orange-700 shadow-sm font-bold">Category: {categoryFilter}</span>}
-                {dateFilter !== "All" && <span className="text-xs bg-white px-2 py-1 rounded-sm border border-orange-200 text-orange-700 shadow-sm font-bold">Date: {dateFilter}</span>}
-              </div>
-              <button
-                onClick={clearAllFilters}
-                className="flex items-center gap-2 px-3 py-1.5 bg-white border border-orange-300 text-orange-600 rounded-sm hover:bg-orange-100 transition shadow-sm text-xs font-bold active:scale-95 uppercase"
-              >
-                <X size={14} />
-                Clear All
-              </button>
-            </div>
-          )}
 
           {/* Announcements Content */}
           <div className="mt-4">
             {isLoading ? (
-              <div className="col-span-full py-20 text-center text-gray-500 font-medium">
-                <Loader2 className="w-12 h-12 text-orange-500 animate-spin mx-auto mb-4" />
-                <p>Loading announcements...</p>
+              <div className="flex justify-center flex-col items-center gap-4 py-20">
+                <div className="w-12 h-12 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin"></div>
+                <p className="text-gray-500 font-semibold animate-pulse">Loading announcements...</p>
               </div>
             ) : filteredAnnouncements.length === 0 ? (
               <div className="col-span-full bg-white rounded-sm border-2 border-dashed border-gray-100 p-12 text-center">
@@ -437,100 +443,133 @@ export default function AnnouncementPage() {
                 )}
               </div>
             ) : viewMode === "grid" ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {filteredAnnouncements.map((announcement) => (
                   <div
                     key={announcement.id}
-                    className="group bg-white rounded-lg shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-orange-300 overflow-hidden relative flex flex-col h-full"
+                    className="bg-white border-2 border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all p-6 relative group flex flex-col h-full"
                   >
-                    {/* Theme Accent Bar */}
-                    <div className="h-1 w-full bg-gradient-to-r from-orange-400 to-orange-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    {/* Action Icons - Top Right (Hidden by default, shown on hover) */}
+                    <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                      <button
+                        onClick={() => handleView(announcement)}
+                        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-sm bg-white shadow-sm border border-blue-100"
+                        title="View Details"
+                      >
+                        <Eye size={16} />
+                      </button>
+                      <button
+                        onClick={() => handleEdit(announcement)}
+                        className="p-1.5 text-green-600 hover:bg-green-50 rounded-sm bg-white shadow-sm border border-green-100"
+                        title="Edit"
+                      >
+                        <Edit size={16} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(announcement)}
+                        className="p-1.5 text-red-600 hover:bg-red-50 rounded-sm bg-white shadow-sm border border-red-100"
+                        title="Delete"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
 
-                    <div className="p-6 flex-1 flex flex-col">
-                      {/* Header: Category & Date */}
-                      <div className="flex items-center justify-between mb-4">
-                        <span
-                          className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border shadow-sm ${getCategoryColor(announcement.category)}`}
-                        >
-                          {announcement.category}
-                        </span>
-                        <span className="text-[11px] font-medium text-gray-400 flex items-center gap-1.5 bg-gray-50 px-2.5 py-1 rounded-full">
-                          <Calendar size={12} className="text-orange-500" />
-                          {new Date(announcement.date).toLocaleDateString("en-IN", {
-                            month: "short",
-                            day: "numeric",
-                          })}
-                        </span>
+                    {/* Content Section */}
+                    <div className="flex flex-col items-center mt-4 flex-1">
+                      {/* Icon/Avatar */}
+                      <div className="relative">
+                        <div className="w-20 h-20 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-bold text-2xl border-4 border-gray-100">
+                          <Megaphone size={32} />
+                        </div>
+                        <div className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
                       </div>
 
                       {/* Title */}
-                      <h3 className="text-lg font-bold text-gray-800 mb-3 leading-tight group-hover:text-orange-600 transition-colors line-clamp-2">
+                      <h3 className="text-lg font-bold text-gray-800 mt-3 text-center line-clamp-2 min-h-[56px]">
                         {announcement.title}
                       </h3>
 
+                      {/* Category Badge */}
+                      <p
+                        className={`text-xs font-semibold px-3 py-1 rounded-full mt-2 ${getCategoryColor(announcement.category)}`}
+                      >
+                        {announcement.category}
+                      </p>
+
+                      {/* Date */}
+                      <p className="text-xs text-gray-500 mt-1 uppercase tracking-wider font-medium flex items-center gap-1">
+                        <Calendar size={12} className="text-orange-500" />
+                        {new Date(announcement.date).toLocaleDateString("en-IN", {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric"
+                        })}
+                      </p>
+
                       {/* Content Preview */}
-                      <p className="text-gray-600 text-sm leading-relaxed line-clamp-3 mb-6 flex-1">
+                      <p className="text-xs text-gray-600 leading-relaxed line-clamp-3 mt-4 text-center px-2">
                         {announcement.content}
                       </p>
                     </div>
 
-                    {/* Footer: Author & Social & Actions */}
-                    <div className="px-5 py-4 bg-gray-50/50 border-t border-gray-100 mt-auto">
-                      <div className="flex items-center justify-between mb-4">
-                        {/* Author Chip */}
-                        <div className="flex items-center gap-2 bg-white px-2 py-1 rounded-full shadow-sm border border-gray-100">
-                          <div className="w-6 h-6 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full flex items-center justify-center text-white font-bold text-[10px] shadow-sm">
-                            {announcement.author ? announcement.author.charAt(0) : "A"}
-                          </div>
-                          <span className="text-[11px] font-bold text-gray-700 truncate max-w-[100px]">
-                            {(announcement.author || "System").split("-")[0].trim()}
-                          </span>
-                        </div>
+                    {/* Stats Section */}
+                    <div className="flex justify-between items-center mt-6 text-center border-t pt-4">
+                      <div>
+                        <p className="text-[10px] text-gray-500 uppercase">Likes</p>
+                        <p className="text-sm font-bold text-gray-800">
+                          {(announcement.likes || 0) + (mockStats[announcement.id]?.likes || 0)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-gray-500 uppercase">Dislikes</p>
+                        <p className="text-sm font-bold text-gray-800">
+                          {(announcement.dislikes || 0) + (mockStats[announcement.id]?.dislikes || 0)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-gray-500 uppercase">Views</p>
+                        <p className="text-sm font-bold text-gray-800">
+                          {(announcement.views || 0) + (mockStats[announcement.id]?.views || 0)}
+                        </p>
+                      </div>
+                    </div>
 
-                        {/* Social Interactions */}
-                        <div className="flex items-center gap-3 px-3 py-1 rounded-full bg-white shadow-sm border border-gray-100">
-                          <button
-                            onClick={() => handleLike(announcement.id)}
-                            className={`flex items-center gap-1 transition-all ${mockStats[announcement.id]?.userLiked ? 'text-green-600' : 'text-gray-400 hover:text-green-600'}`}
-                            title="Like"
-                          >
-                            <ThumbsUp size={14} className={mockStats[announcement.id]?.userLiked ? 'fill-current' : ''} />
-                            <span className="text-[10px] font-bold">{(announcement.likes || 0) + (mockStats[announcement.id]?.likes || 0)}</span>
-                          </button>
-
-                          <button
-                            onClick={() => handleDislike(announcement.id)}
-                            className={`flex items-center gap-1 transition-all ${mockStats[announcement.id]?.userDisliked ? 'text-red-600' : 'text-gray-400 hover:text-red-600'}`}
-                            title="Dislike"
-                          >
-                            <ThumbsDown size={14} className={mockStats[announcement.id]?.userDisliked ? 'fill-current' : ''} />
-                            <span className="text-[10px] font-bold">{(announcement.dislikes || 0) + (mockStats[announcement.id]?.dislikes || 0)}</span>
-                          </button>
+                    {/* Author & Interactions Section */}
+                    <div className="mt-4 pt-4 border-t border-gray-100 flex flex-col gap-3">
+                      {/* Author Info */}
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full flex items-center justify-center text-white font-bold text-[10px] shadow-sm">
+                          {announcement.author ? announcement.author.charAt(0) : "A"}
                         </div>
+                        <span className="text-xs text-gray-700 font-semibold truncate">
+                          {(announcement.author || "System").split("-")[0].trim()}
+                        </span>
                       </div>
 
-                      {/* Actions Row */}
-                      <div className="flex items-center justify-end gap-3 pt-3 border-t border-gray-200/50">
+                      {/* Like/Dislike Buttons */}
+                      <div className="flex items-center gap-2">
                         <button
-                          onClick={() => handleView(announcement)}
-                          className="text-blue-500 hover:opacity-80 transition-colors"
-                          title="View Details"
+                          onClick={() => handleLike(announcement.id)}
+                          className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-sm border transition-all ${mockStats[announcement.id]?.userLiked
+                            ? 'bg-green-50 border-green-200 text-green-600'
+                            : 'bg-white border-gray-200 text-gray-600 hover:bg-green-50 hover:border-green-200'
+                            }`}
+                          title="Like"
                         >
-                          <Eye size={18} />
+                          <ThumbsUp size={14} className={mockStats[announcement.id]?.userLiked ? 'fill-current' : ''} />
+                          <span className="text-[10px] font-bold">Like</span>
                         </button>
+
                         <button
-                          onClick={() => handleEdit(announcement)}
-                          className="text-[#FF7B1D] hover:opacity-80 transition-colors"
-                          title="Edit"
+                          onClick={() => handleDislike(announcement.id)}
+                          className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-sm border transition-all ${mockStats[announcement.id]?.userDisliked
+                            ? 'bg-red-50 border-red-200 text-red-600'
+                            : 'bg-white border-gray-200 text-gray-600 hover:bg-red-50 hover:border-red-200'
+                            }`}
+                          title="Dislike"
                         >
-                          <Edit2 size={18} />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(announcement)}
-                          className="text-red-600 hover:bg-red-50 p-1 rounded-sm transition-colors"
-                          title="Delete"
-                        >
-                          <Trash2 size={18} />
+                          <ThumbsDown size={14} className={mockStats[announcement.id]?.userDisliked ? 'fill-current' : ''} />
+                          <span className="text-[10px] font-bold">Dislike</span>
                         </button>
                       </div>
                     </div>
@@ -543,65 +582,82 @@ export default function AnnouncementPage() {
                   <table className="w-full border-collapse">
                     <thead>
                       <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm">
-                        <th className="py-3 px-4 font-semibold text-left">Date/Time</th>
-                        <th className="py-3 px-4 font-semibold text-left">Category</th>
-                        <th className="py-3 px-4 font-semibold text-left">Title</th>
-                        <th className="py-3 px-4 font-semibold text-left">Author</th>
-                        <th className="py-3 px-4 font-semibold text-right">Actions</th>
+                        <th className="py-3 px-4 font-semibold text-left w-[20%]">Title</th>
+                        <th className="py-3 px-4 font-semibold text-left w-[30%]">Description</th>
+                        <th className="py-3 px-4 font-semibold text-left w-[18%]">Author</th>
+                        <th className="py-3 px-4 font-semibold text-left w-[12%]">Category</th>
+                        <th className="py-3 px-4 font-semibold text-left w-[15%]">Date/Time</th>
+                        <th className="py-3 px-4 font-semibold text-right w-[5%]">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
-                      {filteredAnnouncements.map((announcement, idx) => (
-                        <tr key={announcement.id} className={`${idx % 2 === 0 ? "bg-white" : "bg-gray-50/50"} hover:bg-orange-50/30 transition-colors group`}>
-                          <td className="py-3 px-4 whitespace-nowrap">
-                            <div className="flex flex-col text-xs text-gray-600 font-medium">
-                              <div className="flex items-center gap-1.5">
-                                <Calendar size={12} className="text-orange-500" />
-                                {new Date(announcement.date).toLocaleDateString()}
-                              </div>
-                              <div className="mt-1 text-gray-400 font-normal">
-                                {announcement.time || "12:00 PM"}
-                              </div>
+                      {isLoading ? (
+                        <tr>
+                          <td colSpan="6" className="py-20 text-center">
+                            <div className="flex justify-center flex-col items-center gap-4">
+                              <div className="w-12 h-12 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin"></div>
+                              <p className="text-gray-500 font-semibold animate-pulse">Loading announcements...</p>
                             </div>
                           </td>
-                          <td className="py-3 px-4 whitespace-nowrap">
-                            <span className={`px-2.5 py-1 rounded-sm text-[10px] font-bold uppercase tracking-wider border shadow-sm ${getCategoryColor(announcement.category)}`}>
+                        </tr>
+                      ) : filteredAnnouncements.map((announcement, idx) => (
+                        <tr key={announcement.id} className={`${idx % 2 === 0 ? "bg-white" : "bg-gray-50/50"} hover:bg-orange-50/30 transition-colors group`}>
+                          <td className="py-3 px-4 text-left">
+                            <div className="text-base font-normal text-gray-900 truncate max-w-xs">
+                              {announcement.title?.length > 100 ? `${announcement.title.substring(0, 100)}...` : announcement.title}
+                            </div>
+                          </td>
+                          <td className="py-3 px-4 text-left min-w-[200px]">
+                            <div className="text-sm text-gray-600 font-medium line-clamp-1 leading-relaxed" title={announcement.content}>
+                              {announcement.content}
+                            </div>
+                          </td>
+                          <td className="py-3 px-4 whitespace-nowrap text-left">
+                            <div className="flex items-center gap-2">
+                              <div className="w-7 h-7 bg-orange-100/80 rounded-full flex items-center justify-center text-orange-600 font-bold text-[11px] border border-orange-200">
+                                {announcement.author ? announcement.author.charAt(0) : "A"}
+                              </div>
+                              <span className="text-sm text-gray-700 font-medium">
+                                {(announcement.author || "System").split("-")[0].trim()}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="py-3 px-4 whitespace-nowrap text-left">
+                            <span className={`inline-block px-2.5 py-1.5 rounded-sm text-[10px] font-bold uppercase tracking-tight border shadow-sm ${getCategoryColor(announcement.category)}`}>
                               {announcement.category}
                             </span>
                           </td>
-                          <td className="py-3 px-4">
-                            <div className="text-sm font-bold text-gray-900 group-hover:text-orange-600 transition-colors truncate max-w-xs">{announcement.title}</div>
-                            <div className="text-xs text-gray-400 mt-1 truncate max-w-sm">{announcement.content}</div>
-                          </td>
-                          <td className="py-3 px-4 whitespace-nowrap">
-                            <div className="flex items-center gap-2">
-                              <div className="w-6 h-6 bg-orange-100 rounded-full flex items-center justify-center text-orange-600 font-bold text-[10px]">
-                                {announcement.author ? announcement.author.charAt(0) : "A"}
+                          <td className="py-3 px-4 whitespace-nowrap text-left">
+                            <div className="flex flex-col text-sm text-gray-600 font-medium">
+                              <div className="flex items-center gap-1.5">
+                                <Calendar size={14} className="text-orange-500" />
+                                {new Date(announcement.date).toLocaleDateString()}
                               </div>
-                              <span className="text-xs text-gray-600 font-medium">
-                                {(announcement.author || "System").split("-")[0].trim()}
-                              </span>
+                              <div className="mt-0.5 text-[11px] text-gray-400 font-medium flex items-center gap-1">
+                                <Clock size={10} />
+                                {announcement.time || "12:00 PM"}
+                              </div>
                             </div>
                           </td>
                           <td className="py-3 px-4 text-right">
                             <div className="flex items-center justify-end gap-3 text-gray-400">
                               <button
                                 onClick={() => handleView(announcement)}
-                                className="p-2 text-blue-600 hover:bg-blue-50 rounded-sm transition-all"
+                                className="p-1 hover:bg-orange-100 rounded text-blue-500 hover:text-blue-700 transition-all"
                                 title="View Details"
                               >
                                 <Eye size={18} />
                               </button>
                               <button
                                 onClick={() => handleEdit(announcement)}
-                                className="p-2 text-orange-500 hover:bg-orange-50 rounded-sm transition-all"
+                                className="p-1 hover:bg-orange-100 rounded text-green-500 hover:text-green-700 transition-all"
                                 title="Edit"
                               >
-                                <Edit2 size={18} />
+                                <Edit size={18} />
                               </button>
                               <button
                                 onClick={() => handleDelete(announcement)}
-                                className="p-2 text-red-600 hover:bg-red-50 rounded-sm transition-all shadow-sm"
+                                className="p-1 hover:bg-orange-100 rounded text-red-500 hover:text-red-700 transition-all shadow-sm"
                                 title="Delete"
                               >
                                 <Trash2 size={18} />
@@ -616,48 +672,49 @@ export default function AnnouncementPage() {
               </div>
             )}
           </div>
+          {announcements.length > 0 && (
+            <div className="flex flex-col md:flex-row justify-between items-center mt-6 gap-4 bg-gray-50 p-4 rounded-sm border border-gray-200 mb-6 shadow-sm">
+              <p className="text-sm font-semibold text-gray-700">
+                Showing <span className="text-orange-600">{(currentPage - 1) * itemsPerPage + 1}</span> to <span className="text-orange-600">{Math.min(currentPage * itemsPerPage, pagination.total)}</span> of <span className="text-orange-600">{pagination.total || 0}</span> Announcements
+              </p>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setCurrentPage(currentPage > 1 ? currentPage - 1 : 1)}
+                  disabled={currentPage === 1}
+                  className={`px-4 py-2 rounded-sm font-bold transition flex items-center gap-1 ${currentPage === 1 ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"
+                    }`}
+                >
+                  Previous
+                </button>
+
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: pagination.totalPages }, (_, i) => (
+                    <button
+                      key={i + 1}
+                      onClick={() => setCurrentPage(i + 1)}
+                      className={`w-10 h-10 rounded-sm font-bold transition ${currentPage === i + 1 ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md border-orange-500" : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+                        }`}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  onClick={() => setCurrentPage(currentPage < pagination.totalPages ? currentPage + 1 : currentPage)}
+                  disabled={currentPage === pagination.totalPages || pagination.totalPages === 0}
+                  className={`px-4 py-2 rounded-sm font-bold transition flex items-center gap-1 ${currentPage === pagination.totalPages || pagination.totalPages === 0 ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"
+                    }`}
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
-        {announcements.length > 0 && (
-          <div className="flex flex-col md:flex-row justify-between items-center mt-6 gap-4 bg-gray-50 p-4 rounded-sm border border-gray-200 mb-6 shadow-sm">
-            <p className="text-sm font-semibold text-gray-700">
-              Showing <span className="text-orange-600">{(currentPage - 1) * itemsPerPage + 1}</span> to <span className="text-orange-600">{Math.min(currentPage * itemsPerPage, pagination.total)}</span> of <span className="text-orange-600">{pagination.total || 0}</span> Announcements
-            </p>
 
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setCurrentPage(currentPage > 1 ? currentPage - 1 : 1)}
-                disabled={currentPage === 1}
-                className={`px-4 py-2 rounded-sm font-bold transition flex items-center gap-1 ${currentPage === 1 ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"
-                  }`}
-              >
-                Previous
-              </button>
-
-              <div className="flex items-center gap-1">
-                {Array.from({ length: pagination.totalPages }, (_, i) => (
-                  <button
-                    key={i + 1}
-                    onClick={() => setCurrentPage(i + 1)}
-                    className={`w-10 h-10 rounded-sm font-bold transition ${currentPage === i + 1 ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md border-orange-500" : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
-                      }`}
-                  >
-                    {i + 1}
-                  </button>
-                ))}
-              </div>
-
-              <button
-                onClick={() => setCurrentPage(currentPage < pagination.totalPages ? currentPage + 1 : currentPage)}
-                disabled={currentPage === pagination.totalPages || pagination.totalPages === 0}
-                className={`px-4 py-2 rounded-sm font-bold transition flex items-center gap-1 ${currentPage === pagination.totalPages || pagination.totalPages === 0 ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"
-                  }`}
-              >
-                Next
-              </button>
-            </div>
-          </div>
-        )}
       </div>
 
       <AddAnnouncementModal

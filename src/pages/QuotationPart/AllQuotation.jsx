@@ -13,7 +13,7 @@ import {
   AlertCircle,
   CheckCircle,
   DollarSign,
-  Edit2,
+  Edit,
   Filter,
   Calendar,
   X
@@ -118,12 +118,22 @@ export default function QuotationPage() {
   };
 
   const [formData, setFormData] = useState({
-    quotationNo: `QT-${new Date().getFullYear()}-0000`,
+    customerType: "Business",
     companyName: "",
+    contactPerson: "",
     email: "",
     phone: "",
+    billingAddress: "",
+    shippingAddress: "",
+    state: "",
+    pincode: "",
+    gstin: "",
+    pan: "",
+    cin: "",
+    quotationNo: `QT-${new Date().getFullYear()}-0000`,
     quotationDate: new Date().toISOString().split("T")[0],
     validUntil: "",
+    salesExecutive: "",
     currency: "INR",
     lineItems: [],
     subtotal: 0,
@@ -159,12 +169,22 @@ export default function QuotationPage() {
 
   const resetForm = () => {
     setFormData({
-      quotationNo: `QT-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
+      customerType: "Business",
       companyName: "",
+      contactPerson: "",
       email: "",
       phone: "",
+      billingAddress: "",
+      shippingAddress: "",
+      state: "",
+      pincode: "",
+      gstin: "",
+      pan: "",
+      cin: "",
+      quotationNo: `QT-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
       quotationDate: new Date().toISOString().split("T")[0],
       validUntil: "",
+      salesExecutive: "",
       currency: "INR",
       lineItems: [],
       subtotal: 0,
@@ -185,11 +205,21 @@ export default function QuotationPage() {
     try {
       const payload = {
         quotation_id: formData.quotationNo,
+        customer_type: formData.customerType,
         company_name: formData.companyName,
+        contact_person: formData.contactPerson,
         email: formData.email,
         phone: formData.phone,
+        billing_address: formData.billingAddress,
+        shipping_address: formData.shippingAddress,
+        state: formData.state,
+        pincode: formData.pincode,
+        gstin: formData.gstin,
+        pan_number: formData.pan,
+        cin_number: formData.cin,
         quotation_date: formData.quotationDate,
         valid_until: formData.validUntil,
+        sales_executive: formData.salesExecutive,
         currency: formData.currency,
         line_items: formData.lineItems,
         subtotal: formData.subtotal,
@@ -232,12 +262,22 @@ export default function QuotationPage() {
 
       setFormData({
         id: q.id,
+        customerType: q.customer_type || "Business",
         quotationNo: q.quotation_id,
         companyName: q.company_name,
+        contactPerson: q.contact_person,
         email: q.email,
         phone: q.phone,
+        billingAddress: q.billing_address,
+        shippingAddress: q.shipping_address,
+        state: q.state,
+        pincode: q.pincode,
+        gstin: q.gstin,
+        pan: q.pan_number,
+        cin: q.cin_number,
         quotationDate: q.quotation_date ? new Date(q.quotation_date).toISOString().split('T')[0] : "",
         validUntil: q.valid_until ? new Date(q.valid_until).toISOString().split('T')[0] : "",
+        salesExecutive: q.sales_executive,
         currency: q.currency,
         lineItems: q.line_items || [],
         subtotal: q.subtotal || 0,
@@ -726,99 +766,101 @@ export default function QuotationPage() {
 
               {/* Action Buttons */}
               <div className="flex flex-wrap items-center gap-3">
+                {/* Unified Filter Dropdown */}
                 <div className="relative" ref={statusDropdownRef}>
                   <button
-                    onClick={() => setIsStatusFilterOpen(!isStatusFilterOpen)}
-                    className={`px-3 py-3 rounded-sm border transition shadow-sm ${isStatusFilterOpen || filterStatus !== "All"
+                    onClick={() => {
+                      if (hasActiveFilters) {
+                        clearAllFilters();
+                      } else {
+                        setIsStatusFilterOpen(!isStatusFilterOpen);
+                      }
+                    }}
+                    className={`px-3 py-3 rounded-sm border transition shadow-sm ${isStatusFilterOpen || hasActiveFilters
                       ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
                       : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
                       }`}
                   >
-                    <Filter size={18} />
+                    {hasActiveFilters ? <X size={18} /> : <Filter size={18} />}
                   </button>
 
                   {isStatusFilterOpen && (
-                    <div className="absolute right-0 mt-2 w-32 bg-white border border-gray-200 rounded-sm shadow-xl z-50 animate-fadeIn">
+                    <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-xl z-50 animate-fadeIn overflow-hidden">
+                      <div className="p-3 border-b border-gray-100 bg-gray-50">
+                        <span className="text-sm font-bold text-gray-700 tracking-wide">Statuses</span>
+                      </div>
                       <div className="py-1">
-                        {[
-                          { label: "All", value: "All" },
-                          { label: "Draft", value: "Draft" },
-                          { label: "Pending", value: "Pending" },
-                          { label: "Approved", value: "Approved" },
-                          { label: "Rejected", value: "Rejected" },
-                        ].map((option) => (
+                        {["All", "Pending", "Approved", "Rejected", "Draft"].map((status) => (
                           <button
-                            key={option.value}
+                            key={status}
                             onClick={() => {
-                              setFilterStatus(option.value);
+                              setFilterStatus(status);
                               setIsStatusFilterOpen(false);
                               setCurrentPage(1);
                             }}
-                            className={`block w-full text-left px-4 py-2 text-sm transition-colors ${filterStatus === option.value
+                            className={`block w-full text-left px-4 py-2 text-sm transition-colors ${filterStatus === status
                               ? "bg-orange-50 text-orange-600 font-bold"
                               : "text-gray-700 hover:bg-gray-50"
                               }`}
                           >
-                            {option.label}
+                            {status}
                           </button>
                         ))}
                       </div>
-                    </div>
-                  )}
-                </div>
 
-                <div className="relative" ref={dateDropdownRef}>
-                  <button
-                    onClick={() => setIsDateFilterOpen(!isDateFilterOpen)}
-                    className={`px-3 py-3 rounded-sm border transition shadow-sm ${isDateFilterOpen || dateFilter !== "All"
-                      ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
-                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
-                      }`}
-                  >
-                    <Calendar size={18} />
-                  </button>
-
-                  {isDateFilterOpen && (
-                    <div className="absolute right-0 mt-2 w-44 bg-white border border-gray-200 rounded-sm shadow-xl z-50 animate-fadeIn">
+                      <div className="p-3 border-t border-b border-gray-100 bg-gray-50">
+                        <span className="text-sm font-bold text-gray-700 tracking-wide">Date Range</span>
+                      </div>
                       <div className="py-1">
                         {["All", "Today", "Yesterday", "Last 7 Days", "This Month", "Custom"].map((option) => (
-                          <button
-                            key={option}
-                            onClick={() => {
-                              setDateFilter(option);
-                              setIsDateFilterOpen(false);
-                              setCurrentPage(1);
-                            }}
-                            className={`block w-full text-left px-4 py-2 text-[11px] transition-colors uppercase ${dateFilter === option
-                              ? "bg-orange-50 text-orange-600 font-bold"
-                              : "text-gray-700 hover:bg-gray-50 font-medium"
-                              }`}
-                          >
-                            {option}
-                          </button>
+                          <div key={option}>
+                            <button
+                              key={option}
+                              onClick={() => {
+                                setDateFilter(option);
+                                if (option !== "Custom") {
+                                  setIsStatusFilterOpen(false);
+                                  setCurrentPage(1);
+                                }
+                              }}
+                              className={`block w-full text-left px-4 py-2 text-sm transition-colors ${dateFilter === option
+                                ? "bg-orange-50 text-orange-600 font-bold"
+                                : "text-gray-700 hover:bg-gray-50"
+                                }`}
+                            >
+                              {option}
+                            </button>
+                            {option === "Custom" && dateFilter === "Custom" && (
+                              <div className="px-4 py-3 space-y-2 border-t border-gray-50 bg-gray-50/50">
+                                <input
+                                  type="date"
+                                  value={customStart}
+                                  onChange={(e) => setCustomStart(e.target.value)}
+                                  className="w-full px-2 py-2 border border-gray-300 rounded-sm text-xs focus:outline-none focus:ring-1 focus:ring-orange-500"
+                                />
+                                <input
+                                  type="date"
+                                  value={customEnd}
+                                  onChange={(e) => setCustomEnd(e.target.value)}
+                                  className="w-full px-2 py-2 border border-gray-300 rounded-sm text-xs focus:outline-none focus:ring-1 focus:ring-orange-500"
+                                />
+                                <button
+                                  onClick={() => {
+                                    setIsStatusFilterOpen(false);
+                                    setCurrentPage(1);
+                                  }}
+                                  className="w-full bg-orange-500 text-white text-[10px] font-bold py-2 rounded-sm uppercase tracking-wider"
+                                >
+                                  Apply
+                                </button>
+                              </div>
+                            )}
+                          </div>
                         ))}
                       </div>
                     </div>
                   )}
                 </div>
-
-                {dateFilter === "Custom" && (
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="date"
-                      value={customStart}
-                      onChange={(e) => setCustomStart(e.target.value)}
-                      className="px-3 py-3 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-orange-500 text-xs shadow-sm"
-                    />
-                    <span className="text-gray-400 text-[10px] font-bold uppercase">to</span>
-                    <input
-                      type="date"
-                      value={customEnd}
-                      onChange={(e) => setCustomEnd(e.target.value)}
-                      className="px-3 py-3 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-orange-500 text-xs shadow-sm"
-                    />
-                  </div>
-                )}
 
 
 
@@ -846,7 +888,7 @@ export default function QuotationPage() {
           </div>
         </div>
 
-        <div className="max-w-8xl mx-auto p-4 mt-0">
+        <div className="max-w-8xl mx-auto p-4 pt-0 mt-2">
           {/* Stats Section */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-3">
             <NumberCard
@@ -879,26 +921,6 @@ export default function QuotationPage() {
             />
           </div>
 
-          {hasActiveFilters && (
-            <div className="mb-4 flex flex-wrap items-center justify-between bg-orange-50 border border-orange-200 rounded-sm p-3 gap-3 animate-fadeIn">
-              <div className="flex flex-wrap items-center gap-2">
-                <Filter className="text-orange-600" size={16} />
-                <span className="text-sm font-bold text-orange-800 uppercase">
-                  ACTIVE FILTERS:
-                </span>
-                {searchTerm && <span className="text-xs bg-white px-2 py-1 rounded-sm border border-orange-200 text-orange-700 shadow-sm font-bold">Search: "{searchTerm}"</span>}
-                {filterStatus !== "All" && <span className="text-xs bg-white px-2 py-1 rounded-sm border border-orange-200 text-orange-700 shadow-sm font-bold">Status: {filterStatus}</span>}
-                {dateFilter !== "All" && <span className="text-xs bg-white px-2 py-1 rounded-sm border border-orange-200 text-orange-700 shadow-sm font-bold">Date: {dateFilter}</span>}
-              </div>
-              <button
-                onClick={clearAllFilters}
-                className="flex items-center gap-2 px-3 py-1.5 bg-white border border-orange-300 text-orange-600 rounded-sm hover:bg-orange-100 transition shadow-sm text-xs font-bold active:scale-95 uppercase"
-              >
-                <X size={14} />
-                Clear All
-              </button>
-            </div>
-          )}
 
           {/* Table Section */}
           <div className="overflow-x-auto border border-gray-200 rounded-sm shadow-sm bg-white">
@@ -908,9 +930,9 @@ export default function QuotationPage() {
                   <th className="py-3 px-4 font-semibold text-left">ID</th>
                   <th className="py-3 px-4 font-semibold text-left">Company</th>
                   <th className="py-3 px-4 font-semibold text-left">Date</th>
-                  <th className="py-3 px-4 pr-12 font-semibold text-right">Amount</th>
+                  <th className="py-3 px-4 font-semibold text-left">Amount</th>
                   <th className="py-3 px-4 font-semibold text-left">Status</th>
-                  <th className="py-3 px-4 font-semibold text-center">Actions</th>
+                  <th className="py-3 px-4 font-semibold text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -919,7 +941,7 @@ export default function QuotationPage() {
                     <td colSpan="6" className="py-20 text-center">
                       <div className="flex justify-center flex-col items-center gap-4">
                         <div className="w-12 h-12 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin"></div>
-                        <p className="text-gray-500 font-semibold animate-pulse">Fetching quotations...</p>
+                        <p className="text-gray-500 font-semibold animate-pulse">Loading quotations...</p>
                       </div>
                     </td>
                   </tr>
@@ -932,13 +954,13 @@ export default function QuotationPage() {
                 ) : quotations.length > 0 ? (
                   quotations.map((quote) => (
                     <tr key={quote.id} className="hover:bg-gray-50 transition-colors group">
-                      <td className="py-3 px-4 font-bold text-orange-600">{quote.quotation_id}</td>
-                      <td className="py-3 px-4 font-medium text-gray-800">{quote.company_name}</td>
-                      <td className="py-3 px-4 text-gray-600 text-sm">{new Date(quote.quotation_date).toLocaleDateString()}</td>
-                      <td className="py-3 px-4 pr-12 text-right font-bold text-gray-900">
+                      <td className="py-3 px-4 font-bold text-orange-600 text-left">{quote.quotation_id}</td>
+                      <td className="py-3 px-4 font-medium text-gray-800 text-left">{quote.company_name}</td>
+                      <td className="py-3 px-4 text-gray-600 text-sm text-left">{new Date(quote.quotation_date).toLocaleDateString()}</td>
+                      <td className="py-3 px-4 text-left font-bold text-gray-900">
                         {quote.currency === "INR" ? "₹" : "$"} {quote.total_amount.toLocaleString()}
                       </td>
-                      <td className="py-3 px-4">
+                      <td className="py-3 px-4 text-left">
                         <select
                           value={quote.status}
                           onChange={(e) => handleStatusChange(quote.id, e.target.value)}
@@ -955,24 +977,24 @@ export default function QuotationPage() {
                         </select>
                       </td>
                       <td className="py-3 px-4">
-                        <div className="flex justify-center gap-2">
+                        <div className="flex justify-end gap-2">
                           <button
                             onClick={() => handleView(quote)}
-                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-sm transition-all"
+                            className="p-1 hover:bg-orange-100 rounded text-blue-500 hover:text-blue-700 transition-all"
                             title="View"
                           >
                             <Eye size={18} />
                           </button>
                           <button
                             onClick={() => handleEdit(quote)}
-                            className="p-2 text-orange-500 hover:bg-orange-50 rounded-sm transition-all"
+                            className="p-1 hover:bg-orange-100 rounded text-green-500 hover:text-green-700 transition-all"
                             title="Edit"
                           >
-                            <Edit2 size={18} />
+                            <Edit size={18} />
                           </button>
                           <button
                             onClick={() => handleDownload(quote)}
-                            className="p-2 text-green-600 hover:bg-green-50 rounded-sm transition-all"
+                            className="p-1 hover:bg-orange-100 rounded text-orange-500 hover:text-orange-700 transition-all"
                             title="Download PDF"
                           >
                             <Download size={18} />
@@ -982,12 +1004,11 @@ export default function QuotationPage() {
                               setSelectedQuotationId(quote.id);
                               setIsDeleteModalOpen(true);
                             }}
-                            className="p-2 text-red-600 hover:bg-red-50 rounded-sm transition-all shadow-sm"
+                            className="p-1 hover:bg-orange-100 rounded text-red-500 hover:text-red-700 transition-all shadow-sm"
                             title="Delete"
                           >
                             <Trash2 size={18} />
                           </button>
-
                         </div>
                       </td>
                     </tr>

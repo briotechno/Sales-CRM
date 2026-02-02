@@ -60,14 +60,14 @@ const Modal = ({
                         <div className="flex justify-between items-center">
                             <div className="flex items-center gap-3">
                                 {icon && (
-                                    <div className="bg-white bg-opacity-20 p-2 rounded-lg">
+                                    <div className="bg-white bg-opacity-20 p-2 rounded-sm">
                                         {icon}
                                     </div>
                                 )}
-                                <div>
-                                    {title && <h2 className="text-2xl font-bold">{title}</h2>}
+                                <div className="min-w-0 flex-1">
+                                    {title && <h2 className="text-2xl font-bold truncate" title={title}>{title}</h2>}
                                     {subtitle && (
-                                        <p className="text-sm text-white text-opacity-90 mt-1">
+                                        <p className="text-sm text-white text-opacity-90 mt-1 truncate">
                                             {subtitle}
                                         </p>
                                     )}
@@ -141,11 +141,11 @@ const Modal = ({
                     background: #f1f1f1;
                 }
                 .custom-scrollbar::-webkit-scrollbar-thumb {
-                    background: #ddd;
+                    background: #f97316;
                     border-radius: 10px;
                 }
                 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-                    background: #ccc;
+                    background: #ea580c;
                 }
             `}</style>
         </div>

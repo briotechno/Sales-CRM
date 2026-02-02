@@ -7,7 +7,7 @@ const Invoice = {
             client_address, invoice_date, due_date, items, subtotal,
             tax_rate, tax_amount, discount, total_amount, paid_amount, balance_amount,
             status, notes, tax_type, client_gstin, business_gstin, pan_number,
-            terms_and_conditions
+            terms_and_conditions, customer_type, pincode, contact_person, state
         } = data;
 
         const [result] = await pool.query(
@@ -16,14 +16,14 @@ const Invoice = {
                 client_address, invoice_date, due_date, items, subtotal,
                 tax_rate, tax_amount, discount, total_amount, paid_amount, balance_amount,
                 status, notes, tax_type, client_gstin, business_gstin, pan_number,
-                terms_and_conditions
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                terms_and_conditions, customer_type, pincode, contact_person, state
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 invoice_number, quotation_id || null, client_id, userId, client_name, client_email, client_phone,
                 client_address, invoice_date, due_date, JSON.stringify(items), subtotal,
                 tax_rate, tax_amount, discount || 0, total_amount, paid_amount || 0, balance_amount,
                 status || 'Unpaid', notes, tax_type || 'GST', client_gstin, business_gstin, pan_number,
-                terms_and_conditions
+                terms_and_conditions, customer_type || 'Business', pincode, contact_person, state
             ]
         );
         return result.insertId;
@@ -114,7 +114,7 @@ const Invoice = {
             client_address, invoice_date, due_date, items, subtotal,
             tax_rate, tax_amount, discount, total_amount, paid_amount, balance_amount,
             status, notes, tax_type, client_gstin, business_gstin, pan_number,
-            terms_and_conditions
+            terms_and_conditions, customer_type, pincode, contact_person, state
         } = data;
 
         const [result] = await pool.query(
@@ -123,14 +123,14 @@ const Invoice = {
                 client_address = ?, invoice_date = ?, due_date = ?, items = ?, subtotal = ?,
                 tax_rate = ?, tax_amount = ?, discount = ?, total_amount = ?, paid_amount = ?, balance_amount = ?,
                 status = ?, notes = ?, tax_type = ?, client_gstin = ?, business_gstin = ?, pan_number = ?,
-                terms_and_conditions = ?
+                terms_and_conditions = ?, customer_type = ?, pincode = ?, contact_person = ?, state = ?
             WHERE id = ? AND user_id = ?`,
             [
                 invoice_number, quotation_id || null, client_id, client_name, client_email, client_phone,
                 client_address, invoice_date, due_date, JSON.stringify(items), subtotal,
                 tax_rate, tax_amount, discount || 0, total_amount, paid_amount, balance_amount,
                 status, notes, tax_type || 'GST', client_gstin, business_gstin, pan_number,
-                terms_and_conditions, id, userId
+                terms_and_conditions, customer_type || 'Business', pincode, contact_person, state, id, userId
             ]
         );
         return result.affectedRows > 0;

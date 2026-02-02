@@ -78,12 +78,16 @@ export default function CreateInvoiceModal({
         const balanceAmount = totalAmount - (parseFloat(formData.paidAmount) || 0);
 
         let status = formData.status;
-        if (parseFloat(formData.paidAmount) === 0) {
-            status = "Unpaid";
-        } else if (balanceAmount <= 0) {
-            status = "Paid";
-        } else {
-            status = "Partial";
+        const autoStatuses = ["Paid", "Unpaid", "Partial"];
+
+        if (autoStatuses.includes(status) || !status) {
+            if (parseFloat(formData.paidAmount) === 0) {
+                status = "Unpaid";
+            } else if (balanceAmount <= 0) {
+                status = "Paid";
+            } else {
+                status = "Partial";
+            }
         }
 
         if (
@@ -109,7 +113,7 @@ export default function CreateInvoiceModal({
     if (!showModal) return null;
 
     const inputStyles =
-        "w-full px-4 py-3 border border-gray-200 rounded-lg focus:border-[#FF7B1D] focus:ring-1 focus:ring-[#FF7B1D] outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 shadow-sm";
+        "w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 shadow-sm font-medium";
 
     const addLineItem = () => {
         setFormData((prev) => ({
@@ -194,7 +198,10 @@ export default function CreateInvoiceModal({
             phone: client.phone || "",
             address: client.address || "",
             client_gstin: client.tax_id || "",
-            place_of_supply: client.state || prev.place_of_supply
+            state: client.state || prev.state,
+            pincode: client.pincode || prev.pincode,
+            customer_type: client.type === 'person' ? 'Individual' : 'Business',
+            contact_person: client.type === 'business' ? `${client.first_name} ${client.last_name || ''}` : ""
         }));
         setClientSearch(name);
         setShowClientDropdown(false);
@@ -210,9 +217,21 @@ export default function CreateInvoiceModal({
     };
 
     const validateAndSubmit = () => {
-        if (!formData.clientName) return toast.error("Client is required");
+        if (!formData.clientName) return toast.error("Client name is required");
         if (!formData.invoiceNo) return toast.error("Invoice Number is required");
         if (!formData.invoiceDate) return toast.error("Invoice Date is required");
+
+        if (invoiceType === "GST") {
+            if (!formData.state) return toast.error("State is required for GST Invoice");
+            if (!formData.address) return toast.error("Billing Address is required");
+            if (formData.customer_type === "Business") {
+                if (!formData.client_gstin) return toast.error("GSTIN is required for B2B Invoice");
+                if (!formData.pincode) return toast.error("Pincode is required for Business customer");
+            }
+        } else {
+            if (!formData.address) return toast.error("Address is required");
+        }
+
         if (formData.lineItems.length === 0) return toast.error("At least one item is required");
 
         const invalidItem = formData.lineItems.find(item => !item.name || item.rate < 0 || item.qty <= 0);
@@ -231,14 +250,14 @@ export default function CreateInvoiceModal({
             <button
                 type="button"
                 onClick={() => setShowModal(false)}
-                className="flex-1 px-8 py-3 bg-white border border-gray-300 rounded-sm hover:bg-gray-50 font-bold text-gray-700 transition-all uppercase tracking-widest text-xs"
+                className="flex-1 px-8 py-3 bg-white border border-gray-300 rounded-sm hover:bg-gray-50 font-bold text-gray-700 transition-all text-sm"
             >
                 Cancel
             </button>
             <button
                 type="button"
                 onClick={validateAndSubmit}
-                className="flex-1 px-8 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm hover:from-orange-600 hover:to-orange-700 font-bold shadow-md transition-all uppercase tracking-widest text-xs active:scale-95 flex items-center justify-center gap-2"
+                className="flex-1 px-8 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm hover:from-orange-600 hover:to-orange-700 font-bold shadow-md transition-all text-sm active:scale-95 flex items-center justify-center gap-2"
             >
                 {formData.id ? <><FileCheck size={18} /> Update Invoice</> : <><Plus size={18} /> Generate Invoice</>}
             </button>
@@ -256,54 +275,165 @@ export default function CreateInvoiceModal({
             footer={footer}
         >
             <div className="space-y-6 pb-4">
-                <div className="flex items-center justify-between bg-slate-50 p-4 rounded-sm border border-slate-100 mb-2">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 bg-orange-100 text-orange-600 rounded-lg">
-                            <Tag size={20} />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                    <div className="bg-slate-50 p-5 rounded-sm border border-slate-100 h-full">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="p-2 bg-orange-100 text-orange-600 rounded-lg">
+                                <Tag size={20} />
+                            </div>
+                            <div>
+                                <h3 className="text-sm font-bold text-gray-800 uppercase tracking-widest leading-none">Invoice Type</h3>
+                                <p className="text-[10px] text-gray-500 mt-1 uppercase font-semibold">Compliance Mode</p>
+                            </div>
                         </div>
-                        <div>
-                            <h3 className="text-sm font-bold text-gray-800 uppercase tracking-widest leading-none">Invoice Type</h3>
-                            <p className="text-[10px] text-gray-500 mt-1 uppercase font-semibold">Choose between GST compliant or Simple invoice</p>
+
+                        <div className="flex bg-white p-1 rounded-lg border border-gray-200 shadow-sm mb-4">
+                            <button
+                                type="button"
+                                onClick={() => setInvoiceType("GST")}
+                                className={`flex-1 py-2 rounded-md text-[11px] font-bold transition-all ${invoiceType === "GST"
+                                    ? "bg-orange-500 text-white shadow-md font-black"
+                                    : "text-gray-400 hover:bg-gray-50"
+                                    }`}
+                            >
+                                GST Tax Invoice
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setInvoiceType("Non-GST")}
+                                className={`flex-1 py-2 rounded-md text-[11px] font-bold transition-all ${invoiceType === "Non-GST"
+                                    ? "bg-orange-500 text-white shadow-md font-black"
+                                    : "text-gray-400 hover:bg-gray-50"
+                                    }`}
+                            >
+                                Simple / Non-GST
+                            </button>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-4">
+                            <div>
+                                <label className="flex items-center gap-2 text-xs font-semibold text-gray-700 mb-2 uppercase tracking-wide">
+                                    <Hash size={14} className="text-[#FF7B1D]" />
+                                    Invoice No <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    name="invoiceNo"
+                                    value={formData.invoiceNo}
+                                    onChange={handleInputChange}
+                                    className={`${inputStyles} ${formData.id ? "bg-gray-50 text-gray-400 cursor-not-allowed border-gray-100" : ""}`}
+                                    placeholder="INV-2024-001"
+                                    disabled={!!formData.id}
+                                />
+                            </div>
+                            <div>
+                                <label className="flex items-center gap-2 text-xs font-semibold text-gray-700 mb-2 uppercase tracking-wide">
+                                    <Calendar size={14} className="text-[#FF7B1D]" />
+                                    Invoice Date <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="date"
+                                    name="invoiceDate"
+                                    value={formData.invoiceDate}
+                                    onChange={handleInputChange}
+                                    className={inputStyles}
+                                />
+                            </div>
+                            <div>
+                                <label className="flex items-center gap-2 text-xs font-semibold text-gray-700 mb-2 uppercase tracking-wide">
+                                    <Tag size={14} className="text-[#FF7B1D]" />
+                                    Current Status
+                                </label>
+                                <select
+                                    name="status"
+                                    value={formData.status}
+                                    onChange={handleInputChange}
+                                    className={`${inputStyles} cursor-pointer`}
+                                >
+                                    <option value="Draft">Draft</option>
+                                    <option value="Sent">Sent</option>
+                                    <option value="Unpaid">Unpaid</option>
+                                    <option value="Paid">Paid</option>
+                                    <option value="Partial">Partial</option>
+                                    <option value="Cancelled">Cancelled</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
 
-                    <div className="flex bg-white p-1 rounded-lg border border-gray-200 shadow-sm">
-                        <button
-                            type="button"
-                            onClick={() => setInvoiceType("GST")}
-                            className={`px-6 py-2 rounded-md text-xs font-bold uppercase tracking-widest transition-all ${invoiceType === "GST"
-                                ? "bg-orange-500 text-white shadow-md"
-                                : "text-gray-500 hover:bg-gray-50"
-                                }`}
-                        >
-                            GST Invoice
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setInvoiceType("Non-GST")}
-                            className={`px-6 py-2 rounded-md text-xs font-bold uppercase tracking-widest transition-all ${invoiceType === "Non-GST"
-                                ? "bg-orange-500 text-white shadow-md"
-                                : "text-gray-500 hover:bg-gray-50"
-                                }`}
-                        >
-                            Non-GST (Simple)
-                        </button>
+                    <div className="bg-blue-50/30 p-5 rounded-sm border border-blue-50 h-full flex flex-col">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="p-2 bg-blue-100 text-blue-600 rounded-lg">
+                                <User size={20} />
+                            </div>
+                            <div>
+                                <h3 className="text-sm font-bold text-gray-800 uppercase tracking-widest leading-none">Customer Type</h3>
+                                <p className="text-[10px] text-gray-500 mt-1 uppercase font-semibold">Classification</p>
+                            </div>
+                        </div>
+
+                        {invoiceType === "GST" ? (
+                            <div className="flex bg-white p-1 rounded-lg border border-gray-200 shadow-sm mb-4">
+                                <button
+                                    type="button"
+                                    onClick={() => setFormData(p => ({ ...p, customer_type: "Business" }))}
+                                    className={`flex-1 py-2 rounded-md text-[11px] font-bold transition-all ${formData.customer_type === "Business"
+                                        ? "bg-blue-600 text-white shadow-md font-black"
+                                        : "text-gray-400 hover:bg-gray-50"
+                                        }`}
+                                >
+                                    Business (B2B)
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setFormData(p => ({ ...p, customer_type: "Individual" }))}
+                                    className={`flex-1 py-2 rounded-md text-[11px] font-bold transition-all ${formData.customer_type === "Individual"
+                                        ? "bg-blue-600 text-white shadow-md font-black"
+                                        : "text-gray-400 hover:bg-gray-50"
+                                        }`}
+                                >
+                                    Individual (B2C)
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="flex-1 flex items-center justify-center p-4 bg-white/50 rounded-lg border-2 border-dashed border-gray-200">
+                                <p className="text-[11px] font-bold text-gray-400 text-center">Standard Customer Mode</p>
+                            </div>
+                        )}
+
+                        <div className="mt-4">
+                            <label className="flex items-center gap-2 text-xs font-semibold text-gray-700 mb-2 uppercase tracking-wide">
+                                <Calendar size={14} className="text-[#FF7B1D]" />
+                                Payment Due Date
+                            </label>
+                            <input
+                                type="date"
+                                name="dueDate"
+                                value={formData.dueDate}
+                                onChange={handleInputChange}
+                                className={inputStyles}
+                            />
+                        </div>
                     </div>
                 </div>
 
-                <section className="bg-white border border-gray-100 rounded-sm p-5 space-y-6">
+                <section className="bg-white border-2 border-gray-100 rounded-lg p-6 space-y-6">
                     <div className="flex items-center gap-2.5 pb-3 border-b border-gray-50">
-                        <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
-                            <User size={18} />
+                        <div className="p-2 bg-orange-50 text-orange-600 rounded-lg">
+                            <Building2 size={18} />
                         </div>
-                        <h3 className="text-sm font-bold text-gray-800 uppercase tracking-widest">Client & Basic Details</h3>
+                        <h3 className="text-sm font-black text-gray-800 uppercase tracking-[0.1em]">
+                            {invoiceType === "GST"
+                                ? (formData.customer_type === "Business" ? "Business Info" : "Individual Customer")
+                                : "Customer Information"}
+                        </h3>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 text-sm">
-                        <div className="relative group" ref={clientDropdownRef}>
-                            <label className="flex items-center gap-2 text-xs font-bold text-gray-500 mb-2 uppercase tracking-widest">
-                                <User size={13} className="text-orange-500" />
-                                Select Client <span className="text-red-500">*</span>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div className="md:col-span-2 lg:col-span-1 relative group" ref={clientDropdownRef}>
+                            <label className="flex items-center gap-2 text-xs font-semibold text-gray-700 mb-2 uppercase">
+                                <User size={14} className="text-[#FF7B1D]" />
+                                {invoiceType === "GST" && formData.customer_type === "Business" ? "Company Name" : "Customer Name"} <span className="text-red-500">*</span>
                             </label>
                             <div className="relative">
                                 <input
@@ -311,16 +441,17 @@ export default function CreateInvoiceModal({
                                     value={clientSearch || formData.clientName}
                                     onChange={(e) => {
                                         setClientSearch(e.target.value);
+                                        setFormData(prev => ({ ...prev, clientName: e.target.value }));
                                         setShowClientDropdown(true);
                                     }}
                                     onFocus={() => setShowClientDropdown(true)}
                                     className={inputStyles}
-                                    placeholder="Search by name..."
+                                    placeholder="Search or enter name..."
                                 />
                                 <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300" size={16} />
                             </div>
                             {showClientDropdown && (
-                                <div className="absolute z-20 w-full mt-1 bg-white border border-gray-100 rounded-lg shadow-xl max-h-64 overflow-y-auto">
+                                <div className="absolute z-40 w-full mt-1 bg-white border-2 border-gray-100 rounded-lg shadow-2xl max-h-64 overflow-y-auto">
                                     {filteredClients.length > 0 ? (
                                         filteredClients.map(client => (
                                             <div
@@ -328,12 +459,12 @@ export default function CreateInvoiceModal({
                                                 onClick={() => handleSelectClient(client)}
                                                 className="p-3 hover:bg-orange-50 cursor-pointer border-b border-gray-50 last:border-0 flex items-center gap-3 transition-colors"
                                             >
-                                                <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-orange-500 shrink-0">
-                                                    {client.type === 'person' ? <User size={14} /> : <Building2 size={14} />}
+                                                <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-orange-500 shrink-0 font-bold">
+                                                    {client.type === 'person' ? "C" : "B"}
                                                 </div>
                                                 <div className="min-w-0">
                                                     <div className="text-sm font-bold text-gray-900 truncate">{client.type === 'person' ? `${client.first_name} ${client.last_name || ''}` : client.company_name}</div>
-                                                    <div className="text-xs text-gray-400 truncate">{client.email}</div>
+                                                    <div className="text-[10px] text-gray-400 truncate uppercase font-bold tracking-tighter">{client.email} | {client.type}</div>
                                                 </div>
                                             </div>
                                         ))
@@ -344,88 +475,98 @@ export default function CreateInvoiceModal({
                             )}
                         </div>
 
-                        <div>
-                            <label className="flex items-center gap-2 text-xs font-bold text-gray-500 mb-2 uppercase tracking-widest">
-                                <Hash size={13} className="text-orange-500" />
-                                Invoice No <span className="text-red-500">*</span>
-                                {formData.id && <span className="text-[10px] text-orange-400 normal-case">(Non-editable)</span>}
+                        {invoiceType === "GST" && (
+                            <div>
+                                <label className="flex items-center gap-2 text-xs font-semibold text-gray-700 mb-2 uppercase">
+                                    <Building size={14} className="text-[#FF7B1D]" />
+                                    GSTIN {formData.customer_type === "Business" && <span className="text-red-500">*</span>}
+                                </label>
+                                <input
+                                    type="text"
+                                    name="client_gstin"
+                                    value={formData.client_gstin}
+                                    onChange={handleInputChange}
+                                    className={inputStyles}
+                                    placeholder="29AAAAA0000A1Z5"
+                                />
+                            </div>
+                        )}
+
+                        {invoiceType === "GST" && formData.customer_type === "Business" && (
+                            <div>
+                                <label className="flex items-center gap-2 text-xs font-semibold text-gray-700 mb-2 uppercase">
+                                    <User size={14} className="text-[#FF7B1D]" />
+                                    Contact Person
+                                </label>
+                                <input
+                                    type="text"
+                                    name="contact_person"
+                                    value={formData.contact_person}
+                                    onChange={handleInputChange}
+                                    className={inputStyles}
+                                    placeholder="Full Name"
+                                />
+                            </div>
+                        )}
+
+                        <div className={invoiceType === "GST" ? "md:col-span-1" : "md:col-span-2"}>
+                            <label className="flex items-center gap-2 text-xs font-semibold text-gray-700 mb-2 uppercase">
+                                <MapPin size={14} className="text-[#FF7B1D]" />
+                                Billing Address <span className="text-red-500">*</span>
                             </label>
                             <input
                                 type="text"
-                                name="invoiceNo"
-                                value={formData.invoiceNo}
-                                onChange={handleInputChange}
-                                className={`${inputStyles} ${formData.id ? "bg-gray-50 text-gray-400 cursor-not-allowed border-gray-100" : ""}`}
-                                placeholder="INV-2024-001"
-                                disabled={!!formData.id}
-                            />
-                        </div>
-
-                        <div>
-                            <label className="flex items-center gap-2 text-xs font-bold text-gray-500 mb-2 uppercase tracking-widest">
-                                <Calendar size={13} className="text-orange-500" />
-                                Date <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                                type="date"
-                                name="invoiceDate"
-                                value={formData.invoiceDate}
+                                name="address"
+                                value={formData.address}
                                 onChange={handleInputChange}
                                 className={inputStyles}
+                                placeholder="Street, Area..."
                             />
                         </div>
 
                         {invoiceType === "GST" && (
                             <>
                                 <div>
-                                    <label className="flex items-center gap-2 text-xs font-bold text-gray-500 mb-2 uppercase tracking-widest">
-                                        <Building size={13} className="text-orange-500" />
-                                        Client GSTIN
+                                    <label className="flex items-center gap-2 text-xs font-semibold text-gray-700 mb-2 uppercase">
+                                        <MapPin size={14} className="text-[#FF7B1D]" />
+                                        State <span className="text-red-500">*</span>
                                     </label>
-                                    <input
-                                        type="text"
-                                        name="client_gstin"
-                                        value={formData.client_gstin}
-                                        onChange={handleInputChange}
+                                    <select
+                                        name="state"
+                                        value={formData.state || formData.place_of_supply}
+                                        onChange={(e) => {
+                                            handleInputChange(e);
+                                            setFormData(prev => ({ ...prev, place_of_supply: e.target.value }));
+                                        }}
                                         className={inputStyles}
-                                        placeholder="29AAAAA0000A1Z5"
-                                    />
+                                    >
+                                        <option value="">Select State</option>
+                                        {INDIAN_STATES.map(s => <option key={s} value={s}>{s}</option>)}
+                                    </select>
                                 </div>
+                                {formData.customer_type === "Business" && (
+                                    <div>
+                                        <label className="flex items-center gap-2 text-xs font-semibold text-gray-700 mb-2 uppercase">
+                                            <Hash size={14} className="text-[#FF7B1D]" />
+                                            Pincode <span className="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            name="pincode"
+                                            value={formData.pincode}
+                                            onChange={handleInputChange}
+                                            className={inputStyles}
+                                            placeholder="6 Digits"
+                                        />
+                                    </div>
+                                )}
                             </>
                         )}
 
                         <div>
-                            <label className="flex items-center gap-2 text-xs font-bold text-gray-500 mb-2 uppercase tracking-widest">
-                                <Calendar size={13} className="text-orange-500" />
-                                Due Date
-                            </label>
-                            <input
-                                type="date"
-                                name="dueDate"
-                                value={formData.dueDate}
-                                onChange={handleInputChange}
-                                className={inputStyles}
-                            />
-                        </div>
-
-                        <div>
-                            <label className="flex items-center gap-2 text-xs font-bold text-gray-500 mb-2 uppercase tracking-widest">
-                                <Mail size={13} className="text-orange-500" />
-                                Email
-                            </label>
-                            <input
-                                type="email"
-                                name="email"
-                                value={formData.email}
-                                onChange={handleInputChange}
-                                className={inputStyles}
-                                placeholder="client@example.com"
-                            />
-                        </div>
-                        <div>
-                            <label className="flex items-center gap-2 text-xs font-bold text-gray-500 mb-2 uppercase tracking-widest">
-                                <Phone size={13} className="text-orange-500" />
-                                Phone
+                            <label className="flex items-center gap-2 text-xs font-semibold text-gray-700 mb-2 uppercase">
+                                <Phone size={14} className="text-[#FF7B1D]" />
+                                Mobile Number
                             </label>
                             <input
                                 type="text"
@@ -436,32 +577,19 @@ export default function CreateInvoiceModal({
                                 placeholder="+91 00000 00000"
                             />
                         </div>
-                        <div className="md:col-span-1">
-                            <label className="flex items-center gap-2 text-xs font-bold text-gray-500 mb-2 uppercase tracking-widest">
-                                <CreditCard size={13} className="text-orange-500" />
-                                PAN Number
+
+                        <div>
+                            <label className="flex items-center gap-2 text-xs font-semibold text-gray-700 mb-2 uppercase">
+                                <Mail size={14} className="text-[#FF7B1D]" />
+                                Email ID
                             </label>
                             <input
-                                type="text"
-                                name="pan_number"
-                                value={formData.pan_number}
+                                type="email"
+                                name="email"
+                                value={formData.email}
                                 onChange={handleInputChange}
                                 className={inputStyles}
-                                placeholder="ABCDE1234F"
-                            />
-                        </div>
-                        <div className="md:col-span-3">
-                            <label className="flex items-center gap-2 text-xs font-bold text-gray-500 mb-2 uppercase tracking-widest">
-                                <MapPin size={13} className="text-orange-500" />
-                                Billing Address
-                            </label>
-                            <input
-                                type="text"
-                                name="address"
-                                value={formData.address}
-                                onChange={handleInputChange}
-                                className={inputStyles}
-                                placeholder="123 Street Name, City, State, ZIP"
+                                placeholder="name@domain.com"
                             />
                         </div>
                     </div>
@@ -478,9 +606,9 @@ export default function CreateInvoiceModal({
                         <button
                             type="button"
                             onClick={addLineItem}
-                            className="bg-[#FF7B1D] text-white px-4 py-2 rounded-sm text-xs font-bold flex items-center gap-2 hover:bg-[#E66A0D] transition-all shadow-sm uppercase tracking-widest"
+                            className="bg-[#FF7B1D] text-white px-6 capitalize py-2.5 rounded-sm text-sm font-bold flex items-center gap-2 hover:bg-[#E66A0D] transition-all shadow-md hover:shadow-lg active:scale-95"
                         >
-                            <Plus size={16} /> Add Item
+                            <Plus size={16} strokeWidth={3} /> Add New Item
                         </button>
                     </div>
 
@@ -498,7 +626,7 @@ export default function CreateInvoiceModal({
                             <tbody className="divide-y divide-gray-50 bg-white">
                                 {formData.lineItems.map((item) => (
                                     <tr key={item.id} className="hover:bg-gray-50/50">
-                                        <td className="p-2 relative">
+                                        <td className="p-3 relative">
                                             <input
                                                 type="text"
                                                 value={item.name}
@@ -507,8 +635,8 @@ export default function CreateInvoiceModal({
                                                     setActiveItemSearchId(item.id);
                                                 }}
                                                 onFocus={() => setActiveItemSearchId(item.id)}
-                                                className="w-full px-2 py-1.5 border border-transparent hover:border-gray-100 bg-transparent focus:bg-white outline-none rounded-sm transition-all text-xs"
-                                                placeholder="Part name or Service..."
+                                                className="w-full px-3 py-2 border-2 border-gray-100 focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-10 outline-none rounded-lg transition-all text-xs font-medium bg-gray-50/30 focus:bg-white"
+                                                placeholder="Service or Product name..."
                                             />
                                             {activeItemSearchId === item.id && (
                                                 <div ref={itemDropdownRef} className="absolute z-30 left-0 right-0 top-full mt-1 bg-white border border-gray-100 rounded-sm shadow-xl max-h-48 overflow-y-auto">
@@ -520,7 +648,9 @@ export default function CreateInvoiceModal({
                                                                 className="p-2 hover:bg-orange-50 cursor-pointer border-b border-gray-50 last:border-0 flex justify-between items-center"
                                                             >
                                                                 <div>
-                                                                    <div className="text-xs font-bold text-gray-800">{cat.name}</div>
+                                                                    <div className="text-xs font-bold text-gray-800 truncate max-w-[200px]" title={cat.name}>
+                                                                        {cat.name.length > 40 ? `${cat.name.substring(0, 40)}...` : cat.name}
+                                                                    </div>
                                                                 </div>
                                                                 <div className="text-xs font-bold text-orange-600">
                                                                     {cat.maxPrice && cat.maxPrice > cat.minPrice ? (
@@ -537,34 +667,37 @@ export default function CreateInvoiceModal({
                                                 </div>
                                             )}
                                         </td>
-                                        <td className="p-2">
+                                        <td className="p-3">
                                             <input
                                                 type="number"
                                                 min="0"
                                                 onKeyDown={(e) => ["-", "+", "e", "E"].includes(e.key) && e.preventDefault()}
                                                 value={item.qty}
                                                 onChange={(e) => updateLineItem(item.id, "qty", e.target.value)}
-                                                className="w-full px-2 py-1.5 border border-transparent hover:border-gray-100 bg-transparent focus:bg-white text-center outline-none rounded-sm transition-all text-xs"
+                                                className="w-full px-3 py-2 border-2 border-gray-100 focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-10 outline-none rounded-lg text-center transition-all text-xs font-bold bg-gray-50/30 focus:bg-white"
                                                 placeholder="0"
                                             />
                                         </td>
-                                        <td className="p-2 text-right">
-                                            <input
-                                                type="number"
-                                                min="0"
-                                                onKeyDown={(e) => ["-", "+", "e", "E"].includes(e.key) && e.preventDefault()}
-                                                value={item.rate}
-                                                onChange={(e) => updateLineItem(item.id, "rate", e.target.value)}
-                                                className="w-full px-2 py-1.5 border border-transparent hover:border-gray-100 bg-transparent focus:bg-white text-right outline-none rounded-sm transition-all text-xs"
-                                                placeholder="0.00"
-                                            />
+                                        <td className="p-3">
+                                            <div className="relative">
+                                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold">₹</span>
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    onKeyDown={(e) => ["-", "+", "e", "E"].includes(e.key) && e.preventDefault()}
+                                                    value={item.rate}
+                                                    onChange={(e) => updateLineItem(item.id, "rate", e.target.value)}
+                                                    className="w-full pl-7 pr-3 py-2 border-2 border-gray-100 focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-10 outline-none rounded-lg text-right transition-all text-xs font-bold bg-gray-50/30 focus:bg-white"
+                                                    placeholder="0.00"
+                                                />
+                                            </div>
                                         </td>
-                                        <td className="p-2 text-right font-bold text-gray-900 pr-4">
+                                        <td className="p-3 text-right font-black text-gray-900 pr-4 text-xs">
                                             ₹{(item.total || 0).toLocaleString()}
                                         </td>
-                                        <td className="p-2 text-center">
-                                            <button onClick={() => removeLineItem(item.id)} className="text-gray-300 hover:text-red-500 transition-colors">
-                                                <Trash2 size={14} />
+                                        <td className="p-3 text-center">
+                                            <button onClick={() => removeLineItem(item.id)} className="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all">
+                                                <Trash2 size={16} />
                                             </button>
                                         </td>
                                     </tr>
@@ -688,8 +821,11 @@ export default function CreateInvoiceModal({
                                         <p className="text-4xl font-bold text-white tracking-tight">₹{(formData.totalAmount || 0).toLocaleString()}</p>
                                     </div>
                                     <div className={`px-4 py-1.5 rounded-sm text-[10px] font-bold uppercase tracking-widest border transition-all ${formData.status === 'Paid' ? 'bg-green-500 text-white border-green-500 shadow-[0_0_15px_rgba(34,197,94,0.3)]' :
-                                        formData.status === 'Partial' ? 'bg-yellow-500 text-white border-yellow-500' :
-                                            'bg-red-500 text-white border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.3)]'
+                                        formData.status === 'Partial' ? 'bg-blue-500 text-white border-blue-500' :
+                                            formData.status === 'Draft' ? 'bg-gray-500 text-white border-gray-500' :
+                                                formData.status === 'Sent' ? 'bg-orange-500 text-white border-orange-500' :
+                                                    formData.status === 'Cancelled' ? 'bg-slate-700 text-white border-slate-700' :
+                                                        'bg-red-500 text-white border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.3)]'
                                         }`}>
                                         {formData.status}
                                     </div>
