@@ -700,11 +700,11 @@ export default function AllInvoicePage() {
                               value={invoice.status}
                               onChange={(e) => handleStatusUpdate(invoice, e.target.value)}
                               className={`px-2.5 py-1 rounded-sm text-[10px] font-bold border uppercase tracking-wider outline-none cursor-pointer transition-all ${invoice.status === 'Paid' ? 'bg-green-50 text-green-700 border-green-200' :
-                                  invoice.status === 'Partial' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                                    invoice.status === 'Unpaid' ? 'bg-red-50 text-red-700 border-red-200' :
-                                      invoice.status === 'Draft' ? 'bg-gray-50 text-gray-700 border-gray-200' :
-                                        invoice.status === 'Sent' ? 'bg-orange-50 text-orange-700 border-orange-200' :
-                                          'bg-slate-50 text-slate-700 border-slate-200'
+                                invoice.status === 'Partial' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                                  invoice.status === 'Unpaid' ? 'bg-red-50 text-red-700 border-red-200' :
+                                    invoice.status === 'Draft' ? 'bg-gray-50 text-gray-700 border-gray-200' :
+                                      invoice.status === 'Sent' ? 'bg-orange-50 text-orange-700 border-orange-200' :
+                                        'bg-slate-50 text-slate-700 border-slate-200'
                                 }`}
                             >
                               <option value="Draft">Draft</option>
