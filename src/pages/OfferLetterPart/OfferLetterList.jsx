@@ -134,15 +134,80 @@ export default function OfferLetterList() {
         }
     };
 
+    const renderActions = (offer) => {
+        if ((offer.status === 'Sent' || offer.status === 'Draft') && update) {
+            return (
+                <div className="flex gap-2">
+                    <button
+                        onClick={() => updateStatus(offer.id, 'Accepted')}
+                        className="px-2 py-1 bg-green-50 text-green-700 border border-green-200 rounded-sm text-[10px] font-bold uppercase tracking-widest hover:bg-green-100 transition-colors shadow-sm"
+                    >
+                        Accept
+                    </button>
+                    <button
+                        onClick={() => updateStatus(offer.id, 'Rejected')}
+                        className="px-2 py-1 bg-red-50 text-red-700 border border-red-200 rounded-sm text-[10px] font-bold uppercase tracking-widest hover:bg-red-100 transition-colors shadow-sm"
+                    >
+                        Reject
+                    </button>
+                </div>
+            );
+        }
+
+        if (offer.status === 'Accepted' && update) {
+            return (
+                <button
+                    onClick={() => updateStatus(offer.id, 'Joined')}
+                    className="px-3 py-1 bg-orange-500 text-white rounded-sm text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition shadow-md active:scale-95"
+                >
+                    Mark Joined
+                </button>
+            );
+        }
+
+        return (
+            <div className="flex gap-2 justify-end">
+                {update && (
+                    <button
+                        onClick={() => {
+                            setSelectedOffer(offer);
+                            setShowAddModal(true);
+                        }}
+                        className="p-1 hover:bg-orange-100 rounded-sm text-green-500 transition-all hover:text-green-700"
+                        title="Edit Offer"
+                    >
+                        <Edit size={18} />
+                    </button>
+                )}
+                {read && (
+                    <button
+                        className="p-1 hover:bg-orange-100 rounded-sm text-blue-500 transition-all hover:text-blue-700"
+                        title="View Details"
+                    >
+                        <Eye size={18} />
+                    </button>
+                )}
+                {canDelete && (
+                    <button
+                        onClick={() => handleDelete(offer.id)}
+                        className="p-1 hover:bg-orange-100 rounded-sm text-red-500 transition-all hover:text-red-700"
+                        title="Delete Offer"
+                    >
+                        <Trash2 size={18} />
+                    </button>
+                )}
+            </div>
+        );
+    };
+
     return (
         <DashboardLayout>
             <div className="min-h-screen bg-white">
-                {/* Header Section */}
                 <div className="bg-white sticky top-0 z-30">
                     <div className="max-w-8xl mx-auto px-4 py-4 border-b">
                         <div className="flex items-center justify-between">
                             <div>
-                                <h1 className="text-2xl font-bold text-gray-800 transition-all duration-300">Offer Letter Module</h1>
+                                <h1 className="text-2xl font-bold text-gray-800 transition-all duration-300">Offer Letter</h1>
                                 <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
                                     <FiHome className="text-gray-700" size={14} />
                                     <span className="text-gray-400"></span> HRM /{" "}
@@ -151,7 +216,6 @@ export default function OfferLetterList() {
                             </div>
 
                             <div className="flex flex-wrap items-center gap-3">
-                                {/* Unified Filter */}
                                 <div className="relative" ref={dropdownRef}>
                                     <button
                                         onClick={() => {
@@ -313,46 +377,7 @@ export default function OfferLetterList() {
                                             </td>
                                             <td className="py-3 px-4 text-right">
                                                 <div className="flex justify-end gap-2">
-                                                    {(offer.status === 'Sent' || offer.status === 'Draft') && update ? (
-                                                        <>
-                                                            <button
-                                                                onClick={() => updateStatus(offer.id, 'Accepted')}
-                                                                className="px-2 py-1 bg-green-50 text-green-700 border border-green-200 rounded-sm text-[10px] font-bold uppercase tracking-widest hover:bg-green-100 transition-colors shadow-sm"
-                                                            >
-                                                                Accept
-                                                            </button>
-                                                            <button
-                                                                onClick={() => updateStatus(offer.id, 'Rejected')}
-                                                                className="px-2 py-1 bg-red-50 text-red-700 border border-red-200 rounded-sm text-[10px] font-bold uppercase tracking-widest hover:bg-red-100 transition-colors shadow-sm"
-                                                            >
-                                                                Reject
-                                                            </button>
-                                                        </>
-                                                    ) : offer.status === 'Accepted' && update ? (
-                                                        <button
-                                                            onClick={() => updateStatus(offer.id, 'Joined')}
-                                                            className="px-3 py-1 bg-orange-500 text-white rounded-sm text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition shadow-md active:scale-95"
-                                                        >
-                                                            Mark Joined
-                                                        </button>
-                                                    ) : (
-                                                        <div className="flex gap-1">
-                                                            {read && (
-                                                                <button className="p-1 hover:bg-orange-100 rounded-sm text-blue-500 transition-all">
-                                                                    <Eye size={18} />
-                                                                </button>
-                                                            )}
-                                                            {canDelete && (
-                                                                <button
-                                                                    onClick={() => handleDelete(offer.id)}
-                                                                    className="p-1 hover:bg-orange-100 rounded-sm text-red-500 transition-all hover:text-red-700"
-                                                                    title="Delete Offer"
-                                                                >
-                                                                    <Trash2 size={18} />
-                                                                </button>
-                                                            )}
-                                                        </div>
-                                                    )}
+                                                    {renderActions(offer)}
                                                 </div>
                                             </td>
                                         </tr>
@@ -371,7 +396,6 @@ export default function OfferLetterList() {
                         </table>
                     </div>
 
-                    {/* Pagination */}
                     {pagination.totalPages > 0 && (
                         <div className="flex flex-col md:flex-row justify-between items-center mt-6 gap-4 bg-gray-50 p-4 rounded-sm border border-gray-200 shadow-sm">
                             <p className="text-sm font-semibold text-gray-700">
@@ -420,7 +444,6 @@ export default function OfferLetterList() {
                     )}
                 </div>
 
-                {/* Modals */}
                 <AddOfferLetterModal
                     isOpen={showAddModal}
                     onClose={() => {

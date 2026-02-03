@@ -149,7 +149,7 @@ const AddAnnouncementModal = ({ isOpen, onClose }) => {
                         type="text"
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300"
+                        className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300"
                         placeholder="Enter announcement title"
                     />
                 </div>
@@ -165,7 +165,7 @@ const AddAnnouncementModal = ({ isOpen, onClose }) => {
                             type="text"
                             value={author}
                             onChange={(e) => setAuthor(e.target.value)}
-                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300"
+                            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300"
                             placeholder="e.g. HR Department"
                         />
                     </div>
@@ -179,7 +179,7 @@ const AddAnnouncementModal = ({ isOpen, onClose }) => {
                             type="date"
                             value={date}
                             onChange={(e) => setDate(e.target.value)}
-                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300"
+                            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300"
                         />
                     </div>
                 </div>
@@ -211,7 +211,7 @@ const AddAnnouncementModal = ({ isOpen, onClose }) => {
                                 type="text"
                                 value={newCategoryName}
                                 onChange={(e) => setNewCategoryName(e.target.value)}
-                                className="flex-1 px-4 py-3 border-2 border-[#FF7B1D] rounded-lg focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white"
+                                className="flex-1 px-4 py-3 border border-[#FF7B1D] rounded-sm focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white"
                                 placeholder="Enter new category name"
                                 autoFocus
                             />
@@ -219,7 +219,7 @@ const AddAnnouncementModal = ({ isOpen, onClose }) => {
                                 type="button"
                                 onClick={handleAddNewCategory}
                                 disabled={isCreatingCategory}
-                                className="p-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:from-orange-600 hover:to-orange-700 transition-colors disabled:opacity-50 shadow-sm"
+                                className="p-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm hover:from-orange-600 hover:to-orange-700 transition-colors disabled:opacity-50 shadow-sm"
                                 title="Add Category"
                             >
                                 {isCreatingCategory ? (
@@ -234,7 +234,7 @@ const AddAnnouncementModal = ({ isOpen, onClose }) => {
                                     setIsAddingCategory(false);
                                     setNewCategoryName("");
                                 }}
-                                className="p-3 bg-gray-100 text-gray-500 rounded-lg hover:bg-gray-200 transition-colors shadow-sm"
+                                className="p-3 bg-gray-100 text-gray-500 rounded-sm hover:bg-gray-200 transition-colors shadow-sm"
                                 title="Cancel"
                             >
                                 <X size={20} />
@@ -245,7 +245,7 @@ const AddAnnouncementModal = ({ isOpen, onClose }) => {
                             <button
                                 type="button"
                                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                                className="w-full flex items-center justify-between px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 cursor-pointer"
+                                className="w-full flex items-center justify-between px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 cursor-pointer"
                             >
                                 <span className={category === "General" ? "text-gray-500" : "text-gray-900 font-medium"}>
                                     {category}
@@ -304,7 +304,7 @@ const AddAnnouncementModal = ({ isOpen, onClose }) => {
                         rows="6"
                         value={content}
                         onChange={(e) => setContent(e.target.value)}
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 resize-none"
+                        className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 resize-none"
                         placeholder="Write your announcement content here..."
                     ></textarea>
                 </div>

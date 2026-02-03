@@ -262,7 +262,7 @@ export default function SalaryManagement() {
           <div className="max-w-8xl mx-auto px-4 py-4 border-b">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-2xl font-bold text-gray-800 transition-all duration-300">Salary Module</h1>
+                <h1 className="text-2xl font-bold text-gray-800 transition-all duration-300">Salary Management</h1>
                 <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
                   <FiHome className="text-gray-700" size={14} />
                   <span className="text-gray-400"></span> HRM /{" "}

@@ -159,7 +159,7 @@ const AddTeamModal = ({ isOpen, onClose, onSubmit, isLoading }) => {
                                 type="text" required maxLength={50}
                                 value={formData.teamName}
                                 onChange={(e) => setFormData({ ...formData, teamName: e.target.value })}
-                                className="w-full px-3 py-2.5 border border-gray-200 rounded focus:border-[#FF7B1D] outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white"
+                                className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 shadow-sm"
                                 placeholder="Enter team name"
                             />
                         </div>
@@ -171,7 +171,7 @@ const AddTeamModal = ({ isOpen, onClose, onSubmit, isLoading }) => {
                             <select
                                 value={formData.status}
                                 onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                                className="w-full px-3 py-2.5 border border-gray-200 rounded focus:border-[#FF7B1D] outline-none transition-all text-sm text-gray-900 bg-white shadow-sm"
+                                className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 shadow-sm"
                             >
                                 <option value="Active">Active</option>
                                 <option value="Inactive">Inactive</option>
@@ -187,7 +187,7 @@ const AddTeamModal = ({ isOpen, onClose, onSubmit, isLoading }) => {
                         <textarea
                             value={formData.description} maxLength={500}
                             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                            className="w-full px-3 py-2.5 border border-gray-200 rounded focus:border-[#FF7B1D] outline-none transition-all resize-none text-sm text-gray-900 bg-white placeholder-gray-400 shadow-sm"
+                            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all resize-none text-sm text-gray-900 bg-white placeholder-gray-400 shadow-sm hover:border-gray-300"
                             rows={3}
                             placeholder="Enter team description"
                         />
@@ -269,7 +269,7 @@ const AddTeamModal = ({ isOpen, onClose, onSubmit, isLoading }) => {
                                                             <select
                                                                 value={row.departmentId}
                                                                 onChange={(e) => updateRow(level.id, row.id, 'departmentId', e.target.value)}
-                                                                className="w-full px-3 py-2 border border-gray-200 rounded focus:border-[#FF7B1D] outline-none text-xs bg-white hover:border-gray-300 transition-all"
+                                                                className="w-full px-3 py-2.5 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none text-xs bg-white hover:border-gray-300 transition-all"
                                                             >
                                                                 <option value="All">All Departments</option>
                                                                 {departments.map(dept => <option key={dept.id} value={dept.id}>{dept.department_name}</option>)}
@@ -282,7 +282,7 @@ const AddTeamModal = ({ isOpen, onClose, onSubmit, isLoading }) => {
                                                             <select
                                                                 value={row.designationId}
                                                                 onChange={(e) => updateRow(level.id, row.id, 'designationId', e.target.value)}
-                                                                className="w-full px-3 py-2 border border-gray-200 rounded focus:border-[#FF7B1D] outline-none text-xs bg-white hover:border-gray-300 transition-all"
+                                                                className="w-full px-3 py-2.5 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none text-xs bg-white hover:border-gray-300 transition-all"
                                                             >
                                                                 <option value="All">All Designations</option>
                                                                 {designations.map(desig => <option key={desig.id} value={desig.id}>{desig.designation_name}</option>)}
@@ -296,7 +296,7 @@ const AddTeamModal = ({ isOpen, onClose, onSubmit, isLoading }) => {
                                                                 <select
                                                                     value={row.employeeId}
                                                                     onChange={(e) => updateRow(level.id, row.id, 'employeeId', e.target.value)}
-                                                                    className={`w-full px-3 py-2 border rounded focus:border-[#FF7B1D] outline-none text-xs transition-all ${row.employeeId && assignedTeam ? 'border-red-500 text-red-600' : 'border-gray-200 text-gray-800'}`}
+                                                                    className={`w-full px-3 py-2.5 border rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none text-xs transition-all ${row.employeeId && assignedTeam ? 'border-red-500 text-red-600' : 'border-gray-200 text-gray-800 hover:border-gray-300'}`}
                                                                 >
                                                                     <option value="">Choose Employee...</option>
                                                                     {rowEmployees.map(emp => {

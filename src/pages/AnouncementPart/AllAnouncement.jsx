@@ -420,7 +420,7 @@ export default function AnnouncementPage() {
                 <p className="text-gray-500 font-semibold animate-pulse">Loading announcements...</p>
               </div>
             ) : filteredAnnouncements.length === 0 ? (
-              <div className="col-span-full bg-white rounded-sm border-2 border-dashed border-gray-100 p-12 text-center">
+              <div className="col-span-full bg-white rounded-sm border border-dashed border-gray-200 p-12 text-center">
                 <div className="bg-gray-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Megaphone className="text-gray-300" size={40} />
                 </div>
@@ -446,7 +446,7 @@ export default function AnnouncementPage() {
                 {filteredAnnouncements.map((announcement) => (
                   <div
                     key={announcement.id}
-                    className="bg-white border-2 border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all p-6 relative group flex flex-col h-full"
+                    className="bg-white border border-gray-200 rounded-sm shadow-sm hover:shadow-md transition-all p-6 relative group flex flex-col h-full"
                   >
                     {/* Action Icons - Top Right (Hidden by default, shown on hover) */}
                     <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
@@ -642,7 +642,7 @@ export default function AnnouncementPage() {
                             <div className="flex items-center justify-end gap-3 text-gray-400">
                               <button
                                 onClick={() => handleView(announcement)}
-                                className="p-1 hover:bg-orange-100 rounded text-blue-500 hover:text-blue-700 transition-all"
+                                className="p-1 hover:bg-orange-100 rounded-sm text-blue-500 hover:text-blue-700 transition-all"
                                 title="View Details"
                               >
                                 <Eye size={18} />

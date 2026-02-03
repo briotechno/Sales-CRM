@@ -384,10 +384,10 @@ export default function AttendanceApp() {
 
   return (
     <DashboardLayout>
-      <div className="p-0 bg-white ml-6 min-h-screen text-black">
+      <div className="p-0 bg-white ml-4 mr-4 min-h-screen text-black">
         {/* Header Section */}
         <div className="bg-white sticky top-0 z-30">
-          <div className="max-w-8xl mx-auto px-4 py-4 border-b">
+          <div className="max-w-8xl mx-auto  py-4 border-b">
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-2xl font-bold text-gray-800 transition-all duration-300">

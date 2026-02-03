@@ -33,6 +33,15 @@ import {
   View,
   Archive,
   AlertTriangle,
+
+  User,
+  Tags,
+  Calendar,
+  Layers,
+  CheckCircle,
+  Briefcase,
+  Upload,
+  AlignLeft,
 } from "lucide-react";
 import NumberCard from "../../components/NumberCard";
 import {
@@ -892,28 +901,28 @@ export default function HRPolicy() {
                     </div>
                   </div>
 
-                  <div className="p-6">
+                  <div className="p-6 font-sans">
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                          Policy Title *
+                        <label className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
+                          <FileText size={16} className="text-[#FF7B1D]" /> Policy Title <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="text"
                           value={formData.title}
                           onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                          className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                          className="w-full px-4 py-2.5 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
                           placeholder="Enter policy title"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                          Category *
+                        <label className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
+                          <Tags size={16} className="text-[#FF7B1D]" /> Category <span className="text-red-500">*</span>
                         </label>
                         <select
                           value={formData.category}
                           onChange={handleCategoryChange}
-                          className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                          className="w-full px-4 py-2.5 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm bg-white"
                         >
                           {categories.map((cat) => (
                             <option key={cat} value={cat}>
@@ -923,49 +932,55 @@ export default function HRPolicy() {
                         </select>
                       </div>
                       <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                          Effective Date *
+                        <label className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
+                          <Calendar size={16} className="text-[#FF7B1D]" /> Effective Date <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="date"
                           value={formData.effective_date}
                           onChange={(e) => setFormData({ ...formData, effective_date: e.target.value })}
-                          className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                          className="w-full px-4 py-2.5 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                          Review Date *
+                        <label className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
+                          <Calendar size={16} className="text-[#FF7B1D]" /> Review Date <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="date"
                           value={formData.review_date}
                           onChange={(e) => setFormData({ ...formData, review_date: e.target.value })}
-                          className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                          className="w-full px-4 py-2.5 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">Version</label>
+                        <label className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
+                          <Layers size={16} className="text-[#FF7B1D]" /> Version
+                        </label>
                         <input
                           type="text"
                           value={formData.version}
                           onChange={(e) => setFormData({ ...formData, version: e.target.value })}
-                          className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                          className="w-full px-4 py-2.5 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
                           placeholder="1.0"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">Author</label>
+                        <label className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
+                          <User size={16} className="text-[#FF7B1D]" /> Author
+                        </label>
                         <input
                           type="text"
                           value={formData.author}
                           onChange={(e) => setFormData({ ...formData, author: e.target.value })}
-                          className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                          className="w-full px-4 py-2.5 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
                           placeholder="Department or author name"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">Applicable To</label>
+                        <label className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
+                          <CheckCircle size={16} className="text-[#FF7B1D]" /> Applicable To
+                        </label>
                         <select
                           value={formData.applicable_to}
                           onChange={(e) => {
@@ -976,7 +991,7 @@ export default function HRPolicy() {
                               department: val === 'all' ? '' : formData.department
                             });
                           }}
-                          className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                          className="w-full px-4 py-2.5 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm bg-white"
                         >
                           <option value="all">All Employees</option>
                           <option value="specific">Specific Department</option>
@@ -985,11 +1000,13 @@ export default function HRPolicy() {
 
                       {formData.applicable_to === 'specific' && (
                         <div className="animate-fadeIn">
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">Select Department *</label>
+                          <label className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
+                            <Briefcase size={16} className="text-[#FF7B1D]" /> Select Department <span className="text-red-500">*</span>
+                          </label>
                           <select
                             value={formData.department}
                             onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                            className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                            className="w-full px-4 py-2.5 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm bg-white"
                           >
                             <option value="">Choose Department</option>
                             {departments.map((dep) => (
@@ -1002,7 +1019,9 @@ export default function HRPolicy() {
                       )}
 
                       <div className="col-span-2">
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">Upload Documents</label>
+                        <label className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
+                          <Upload size={16} className="text-[#FF7B1D]" /> Upload Documents
+                        </label>
                         <div className="border-2 border-dashed border-gray-300 rounded-sm p-4 hover:border-orange-500 transition-colors bg-gray-50">
                           <input
                             type="file"
@@ -1033,31 +1052,31 @@ export default function HRPolicy() {
                         )}
                       </div>
                       <div className="col-span-2">
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                          Description *
+                        <label className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
+                          <AlignLeft size={16} className="text-[#FF7B1D]" /> Description <span className="text-red-500">*</span>
                         </label>
                         <textarea
                           value={formData.description}
                           onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                          className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
+                          className="w-full px-4 py-2.5 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none text-sm"
                           rows="3"
                           placeholder="Enter policy description"
                         />
                       </div>
                     </div>
 
-                    <div className="flex gap-3 mt-6">
-                      <button
-                        onClick={handleAddPolicy}
-                        className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-6 py-3 rounded-lg font-semibold transition-all shadow-lg hover:shadow-xl"
-                      >
-                        {isUpdatingExisting ? "Update Existing Policy" : "Add Policy"}
-                      </button>
+                    <div className="flex justify-end gap-3 mt-6 border-t pt-4">
                       <button
                         onClick={() => setShowAddModal(false)}
-                        className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 rounded-sm font-semibold transition-colors"
+                        className="px-6 py-2.5 rounded-sm border-2 border-gray-300 text-gray-700 font-semibold hover:bg-gray-100 transition-all font-sans"
                       >
                         Cancel
+                      </button>
+                      <button
+                        onClick={handleAddPolicy}
+                        className="px-6 py-2.5 rounded-sm bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold hover:shadow-lg transform transition-all disabled:opacity-50 font-sans"
+                      >
+                        {isUpdatingExisting ? "Update Existing Policy" : "Add Policy"}
                       </button>
                     </div>
                   </div>
@@ -1065,6 +1084,7 @@ export default function HRPolicy() {
               </div>
             )
           }
+
 
           {/* Edit Policy Modal */}
           {
@@ -1088,28 +1108,28 @@ export default function HRPolicy() {
                     </div>
                   </div>
 
-                  <div className="p-6">
+                  <div className="p-6 font-sans">
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                          Policy Title *
+                        <label className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
+                          <FileText size={16} className="text-[#FF7B1D]" /> Policy Title
                         </label>
                         <input
                           type="text"
                           value={formData.title}
                           onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                          className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                          className="w-full px-4 py-2.5 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
                           placeholder="Enter policy title"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                          Category *
+                        <label className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
+                          <Tags size={16} className="text-[#FF7B1D]" /> Category
                         </label>
                         <select
                           value={formData.category}
                           onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                          className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                          className="w-full px-4 py-2.5 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm bg-white"
                         >
                           {categories.map((cat) => (
                             <option key={cat} value={cat}>
@@ -1119,43 +1139,47 @@ export default function HRPolicy() {
                         </select>
                       </div>
                       <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                          Effective Date *
+                        <label className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
+                          <Calendar size={16} className="text-[#FF7B1D]" /> Effective Date
                         </label>
                         <input
                           type="date"
                           value={formData.effective_date}
                           onChange={(e) => setFormData({ ...formData, effective_date: e.target.value })}
-                          className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                          className="w-full px-4 py-2.5 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                          Review Date *
+                        <label className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
+                          <Calendar size={16} className="text-[#FF7B1D]" /> Review Date
                         </label>
                         <input
                           type="date"
                           value={formData.review_date}
                           onChange={(e) => setFormData({ ...formData, review_date: e.target.value })}
-                          className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                          className="w-full px-4 py-2.5 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">Version</label>
+                        <label className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
+                          <Layers size={16} className="text-[#FF7B1D]" /> Version
+                        </label>
                         <input
                           type="text"
                           value={formData.version}
                           onChange={(e) => setFormData({ ...formData, version: e.target.value })}
-                          className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                          className="w-full px-4 py-2.5 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
                           placeholder="1.0"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">Status</label>
+                        <label className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
+                          <CheckCircle size={16} className="text-[#FF7B1D]" /> Status
+                        </label>
                         <select
                           value={formData.status}
                           onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                          className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                          className="w-full px-4 py-2.5 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm bg-white"
                         >
                           {statuses.map((status) => (
                             <option key={status} value={status}>
@@ -1165,17 +1189,21 @@ export default function HRPolicy() {
                         </select>
                       </div>
                       <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">Author</label>
+                        <label className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
+                          <User size={16} className="text-[#FF7B1D]" /> Author
+                        </label>
                         <input
                           type="text"
                           value={formData.author}
                           onChange={(e) => setFormData({ ...formData, author: e.target.value })}
-                          className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                          className="w-full px-4 py-2.5 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
                           placeholder="Department or author name"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">Applicable To</label>
+                        <label className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
+                          <CheckCircle size={16} className="text-[#FF7B1D]" /> Applicable To
+                        </label>
                         <select
                           value={formData.applicable_to}
                           onChange={(e) => {
@@ -1186,7 +1214,7 @@ export default function HRPolicy() {
                               department: val === 'all' ? '' : formData.department
                             });
                           }}
-                          className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                          className="w-full px-4 py-2.5 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm bg-white"
                         >
                           <option value="all">All Employees</option>
                           <option value="specific">Specific Department</option>
@@ -1195,11 +1223,13 @@ export default function HRPolicy() {
 
                       {formData.applicable_to === 'specific' && (
                         <div className="animate-fadeIn">
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">Select Department *</label>
+                          <label className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
+                            <Briefcase size={16} className="text-[#FF7B1D]" /> Select Department <span className="text-red-500">*</span>
+                          </label>
                           <select
                             value={formData.department}
                             onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                            className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                            className="w-full px-4 py-2.5 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm bg-white"
                           >
                             <option value="">Choose Department</option>
                             {departments.map((dep) => (
@@ -1212,7 +1242,9 @@ export default function HRPolicy() {
                       )}
 
                       <div className="col-span-2">
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">Existing Documents</label>
+                        <label className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
+                          <FileText size={16} className="text-[#FF7B1D]" /> Existing Documents
+                        </label>
                         {formData.existingDocuments && formData.existingDocuments.length > 0 ? (
                           <div className="flex flex-wrap gap-2 mb-4">
                             {formData.existingDocuments.map((doc, idx) => (
@@ -1234,7 +1266,9 @@ export default function HRPolicy() {
                           <p className="text-xs text-gray-500 italic mb-4">No documents uploaded yet.</p>
                         )}
 
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">Upload New Documents</label>
+                        <label className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
+                          <Upload size={16} className="text-[#FF7B1D]" /> Upload New Documents
+                        </label>
                         <div className="border-2 border-dashed border-gray-300 rounded-sm p-4 hover:border-orange-500 transition-colors bg-gray-50">
                           <input
                             type="file"
@@ -1265,31 +1299,31 @@ export default function HRPolicy() {
                         )}
                       </div>
                       <div className="col-span-2">
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                          Description *
+                        <label className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
+                          <AlignLeft size={16} className="text-[#FF7B1D]" /> Description
                         </label>
                         <textarea
                           value={formData.description}
                           onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                          className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
+                          className="w-full px-4 py-2.5 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none text-sm"
                           rows="3"
                           placeholder="Enter policy description"
                         />
                       </div>
                     </div>
 
-                    <div className="flex gap-3 mt-6">
-                      <button
-                        onClick={handleUpdatePolicy}
-                        className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-6 py-3 rounded-lg font-semibold transition-all shadow-lg hover:shadow-xl"
-                      >
-                        Update Policy
-                      </button>
+                    <div className="flex justify-end gap-3 mt-6 border-t pt-4">
                       <button
                         onClick={() => setShowEditModal(false)}
-                        className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 rounded-sm font-semibold transition-colors"
+                        className="px-6 py-2.5 rounded-sm border-2 border-gray-300 text-gray-700 font-semibold hover:bg-gray-100 transition-all font-sans"
                       >
                         Cancel
+                      </button>
+                      <button
+                        onClick={handleUpdatePolicy}
+                        className="px-6 py-2.5 rounded-sm bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold hover:shadow-lg transform transition-all disabled:opacity-50 font-sans"
+                      >
+                        Update Policy
                       </button>
                     </div>
                   </div>
@@ -1323,88 +1357,80 @@ export default function HRPolicy() {
                     </div>
                   </div>
 
-                  <div className="p-6 space-y-6">
-                    <div className="grid grid-cols-2 gap-6">
-                      <div>
-                        <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
-                          Category
-                        </label>
-                        <p className="text-lg font-semibold text-gray-900 mt-1">
-                          {selectedPolicy.category}
-                        </p>
+                  <div className="p-6 space-y-8 font-sans">
+                    {/* Stats Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <div className="bg-blue-50 p-4 rounded-sm border border-blue-100 flex flex-col items-center text-center group hover:shadow-md transition-shadow">
+                        <div className="bg-blue-600 p-2 rounded-sm text-white mb-2 group-hover:scale-110 transition-transform">
+                          <Tags size={20} />
+                        </div>
+                        <span className="text-lg font-bold text-blue-900 line-clamp-1">{selectedPolicy.category}</span>
+                        <span className="text-xs font-semibold text-blue-600 uppercase tracking-widest mt-1">Category</span>
                       </div>
-                      <div>
-                        <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
-                          Version
-                        </label>
-                        <p className="text-lg font-semibold text-gray-900 mt-1">
-                          {selectedPolicy.version}
-                        </p>
+
+                      <div className="bg-purple-50 p-4 rounded-sm border border-purple-100 flex flex-col items-center text-center group hover:shadow-md transition-shadow">
+                        <div className="bg-purple-600 p-2 rounded-sm text-white mb-2 group-hover:scale-110 transition-transform">
+                          <Layers size={20} />
+                        </div>
+                        <span className="text-lg font-bold text-purple-900">{selectedPolicy.version}</span>
+                        <span className="text-xs font-semibold text-purple-600 uppercase tracking-widest mt-1">Version</span>
                       </div>
-                      <div>
-                        <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
-                          Effective Date
-                        </label>
-                        <p className="text-lg font-semibold text-gray-900 mt-1">
-                          {new Date(selectedPolicy.effective_date).toLocaleDateString()}
-                        </p>
+
+                      <div className="bg-green-50 p-4 rounded-sm border border-green-100 flex flex-col items-center text-center group hover:shadow-md transition-shadow">
+                        <div className="bg-green-600 p-2 rounded-sm text-white mb-2 group-hover:scale-110 transition-transform">
+                          {selectedPolicy.status === "Active" ? <CheckCircle size={20} /> : <AlertTriangle size={20} />}
+                        </div>
+                        <span className={`text-lg font-bold ${selectedPolicy.status === "Active" ? "text-green-900" : "text-yellow-900"}`}>
+                          {selectedPolicy.status}
+                        </span>
+                        <span className="text-xs font-semibold text-green-600 uppercase tracking-widest mt-1">Status</span>
                       </div>
-                      <div>
-                        <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
-                          Review Date
-                        </label>
-                        <p className="text-lg font-semibold text-gray-900 mt-1">
-                          {new Date(selectedPolicy.review_date).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <div>
-                        <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
-                          Department
-                        </label>
-                        <p className="text-lg font-semibold text-gray-900 mt-1">
-                          {selectedPolicy.department || "All Departments"}
-                        </p>
-                      </div>
-                      <div>
-                        <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
-                          Status
-                        </label>
-                        <div className="mt-1">
-                          <span
-                            className={`px-3 py-1 rounded-md text-sm font-semibold ${selectedPolicy.status === "Active"
-                              ? "bg-green-100 text-green-700"
-                              : selectedPolicy.status === "Under Review"
-                                ? "bg-yellow-100 text-yellow-700"
-                                : "bg-gray-100 text-gray-700"
-                              }`}
-                          >
-                            {selectedPolicy.status}
-                          </span>
+                    </div>
+
+                    {/* Additional Details */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t border-gray-100">
+                      <div className="flex items-center gap-3">
+                        <div className="bg-orange-100 p-2 rounded-sm text-orange-600">
+                          <Calendar size={18} />
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">Effective Date</p>
+                          <p className="text-sm font-semibold text-gray-700">{new Date(selectedPolicy.effective_date).toLocaleDateString()}</p>
                         </div>
                       </div>
-                      <div className="col-span-2">
-                        <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
-                          Applicable To
-                        </label>
-                        <p className="text-lg font-semibold text-gray-900 mt-1">
-                          {selectedPolicy.applicable_to === "all" ? "All Employees" : "Specific Department"}
-                        </p>
+                      <div className="flex items-center gap-3">
+                        <div className="bg-orange-100 p-2 rounded-sm text-orange-600">
+                          <Calendar size={18} />
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">Review Date</p>
+                          <p className="text-sm font-semibold text-gray-700">{new Date(selectedPolicy.review_date).toLocaleDateString()}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="bg-orange-100 p-2 rounded-sm text-orange-600">
+                          <User size={18} />
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">Author</p>
+                          <p className="text-sm font-semibold text-gray-700">{selectedPolicy.author || "N/A"}</p>
+                        </div>
                       </div>
                     </div>
 
                     {selectedPolicy.description && (
                       <div>
-                        <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
-                          Description
-                        </label>
-                        <p className="text-gray-700 mt-2 leading-relaxed">
+                        <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                          <AlignLeft size={16} /> Description
+                        </h3>
+                        <p className="text-gray-700 leading-relaxed bg-gray-50 p-4 rounded-sm border border-gray-200 break-words whitespace-pre-wrap text-sm">
                           {selectedPolicy.description}
                         </p>
                       </div>
                     )}
 
                     {selectedPolicy.documents && selectedPolicy.documents.length > 0 && (
-                      <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                      <div className="bg-blue-50 p-4 rounded-sm border border-blue-200">
                         <label className="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-3">
                           <FileText size={16} className="text-blue-600" />
                           Attached Documents ({selectedPolicy.documents.length})
@@ -1429,15 +1455,15 @@ export default function HRPolicy() {
                         </div>
                       </div>
                     )}
-                  </div>
 
-                  <div className="flex justify-end gap-3 px-6 py-4 border-t bg-gray-50">
-                    <button
-                      onClick={() => setShowViewModal(false)}
-                      className="px-6 py-2.5 text-sm font-semibold text-gray-700 bg-white border-2 border-gray-300 hover:bg-gray-100 rounded-lg transition-all"
-                    >
-                      Close Details
-                    </button>
+                    <div className="flex justify-end gap-3 px-6 py-4 border-t bg-gray-50">
+                      <button
+                        onClick={() => setShowViewModal(false)}
+                        className="px-8 py-3 bg-white border border-gray-200 text-gray-700 font-bold rounded-sm hover:bg-gray-100 transition-all shadow-sm font-sans"
+                      >
+                        Close Details
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1524,14 +1550,15 @@ export default function HRPolicy() {
             </div>
           </div>
         )} */}
+
+          <DeleteHrModal
+            isOpen={showDeleteModal}
+            onClose={() => setShowDeleteModal(false)}
+            onConfirm={confirmDelete}
+            isLoading={false} // Or set loading state if you have one
+            policyTitle={policyToDelete?.title || ""} // safe
+          />
         </div>
-        <DeleteHrModal
-          isOpen={showDeleteModal}
-          onClose={() => setShowDeleteModal(false)}
-          onConfirm={confirmDelete}
-          isLoading={false} // Or set loading state if you have one
-          policyTitle={policyToDelete?.title || ""} // safe
-        />
       </div>
     </DashboardLayout>
   );

@@ -66,7 +66,7 @@ export default function CreateQuotationModal({
     }
   }, [formData.lineItems, formData.tax, formData.discount]);
 
-  const inputStyles = "w-full px-4 py-2.5 border border-gray-300 rounded focus:border-[#FF7B1D] focus:ring-1 focus:ring-[#FF7B1D] outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white";
+  const inputStyles = "w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 shadow-sm";
 
   const addLineItem = () => {
     setFormData((prev) => ({
@@ -347,7 +347,7 @@ export default function CreateQuotationModal({
         </div>
 
         {/* Client Details Section */}
-        <section className="bg-white border-2 border-gray-100 rounded-lg p-6 space-y-6 shadow-sm">
+        <section className="bg-white border border-gray-200 rounded-sm p-6 space-y-6 shadow-sm">
           <div className="flex items-center gap-2.5 pb-3 border-b border-gray-50">
             <div className="p-2 bg-orange-50 text-orange-600 rounded-lg">
               <Building2 size={18} />
@@ -565,7 +565,7 @@ export default function CreateQuotationModal({
         </section>
 
         {/* Item Management Section */}
-        <section className="bg-white border-2 border-gray-100 rounded-lg p-6 space-y-6 shadow-sm">
+        <section className="bg-white border border-gray-200 rounded-sm p-6 space-y-6 shadow-sm">
           <div className="flex items-center justify-between pb-3 border-b border-gray-50">
             <div className="flex items-center gap-2.5">
               <div className="p-2 bg-orange-50 text-orange-600 rounded-lg">
@@ -757,7 +757,7 @@ export default function CreateQuotationModal({
         </section>
 
         {/* Terms Section */}
-        <section className="bg-white border-2 border-gray-100 rounded-lg p-6 space-y-6 shadow-sm">
+        <section className="bg-white border border-gray-200 rounded-sm p-6 space-y-6 shadow-sm">
           <div className="flex items-center gap-2.5 pb-3 border-b border-gray-50">
             <div className="p-2 bg-orange-50 text-orange-600 rounded-lg">
               <ScrollText size={18} />
