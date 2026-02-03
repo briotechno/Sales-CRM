@@ -63,7 +63,7 @@ export const LeaveFormModal = ({
                 value={formData.leave_type}
                 onChange={handleInputChange}
                 required
-                className="w-full px-3 py-2.5 border border-gray-200 rounded focus:border-[#FF7B1D] outline-none transition-all text-sm text-gray-900 bg-white shadow-sm"
+                className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 shadow-sm font-medium"
                 placeholder="e.g., Casual Leave"
               />
             </div>
@@ -79,7 +79,7 @@ export const LeaveFormModal = ({
                 onChange={handleInputChange}
                 required
                 rows="3"
-                className="w-full px-3 py-2.5 border border-gray-200 rounded focus:border-[#FF7B1D] outline-none transition-all text-sm text-gray-900 bg-white shadow-sm resize-none"
+                className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 shadow-sm resize-none font-medium"
                 placeholder="Enter leave description"
               />
             </div>
@@ -94,7 +94,7 @@ export const LeaveFormModal = ({
                 value={formData.renewal_type}
                 onChange={handleInputChange}
                 required
-                className="w-full px-3 py-2.5 border border-gray-200 rounded focus:border-[#FF7B1D] outline-none transition-all text-sm text-gray-900 bg-white shadow-sm appearance-none"
+                className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 shadow-sm appearance-none font-medium"
               >
                 <option value="Monthly">Monthly</option>
                 <option value="Yearly">Yearly</option>
@@ -116,7 +116,7 @@ export const LeaveFormModal = ({
                 onChange={handleInputChange}
                 min="0"
                 required
-                className="w-full px-3 py-2.5 border border-gray-200 rounded focus:border-[#FF7B1D] outline-none transition-all text-sm text-gray-900 bg-white shadow-sm"
+                className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 shadow-sm font-medium"
                 placeholder="Number of leaves"
               />
               <p className="text-[10px] text-gray-500 mt-1.5 font-medium ml-1">
@@ -138,7 +138,7 @@ export const LeaveFormModal = ({
                 onChange={handleInputChange}
                 min="1"
                 required
-                className="w-full px-3 py-2.5 border border-gray-200 rounded focus:border-[#FF7B1D] outline-none transition-all text-sm text-gray-900 bg-white shadow-sm"
+                className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 shadow-sm font-medium"
                 placeholder="Maximum days in a row"
               />
             </div>
@@ -155,7 +155,7 @@ export const LeaveFormModal = ({
                 onChange={handleInputChange}
                 min="0"
                 required
-                className="w-full px-3 py-2.5 border border-gray-200 rounded focus:border-[#FF7B1D] outline-none transition-all text-sm text-gray-900 bg-white shadow-sm"
+                className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 shadow-sm font-medium"
                 placeholder="Days after joining"
               />
             </div>
@@ -169,7 +169,7 @@ export const LeaveFormModal = ({
                 name="paid"
                 value={formData.paid}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2.5 border border-gray-200 rounded focus:border-[#FF7B1D] outline-none transition-all text-sm text-gray-900 bg-white shadow-sm appearance-none"
+                className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 shadow-sm appearance-none font-medium"
               >
                 <option value="Yes">Yes</option>
                 <option value="No">No</option>
@@ -185,7 +185,7 @@ export const LeaveFormModal = ({
                 name="status"
                 value={formData.status}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2.5 border border-gray-200 rounded focus:border-[#FF7B1D] outline-none transition-all text-sm text-gray-900 bg-white shadow-sm appearance-none"
+                className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 shadow-sm appearance-none font-medium"
               >
                 <option value="Active">Active</option>
                 <option value="Inactive">Inactive</option>
@@ -247,7 +247,7 @@ export const FilterModal = ({
                 onChange={(e) =>
                   setFilters({ ...filters, status: e.target.value })
                 }
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300"
+                className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 shadow-sm font-medium"
               >
                 <option value="All">All</option>
                 <option value="Active">Active</option>
@@ -264,7 +264,7 @@ export const FilterModal = ({
                 onChange={(e) =>
                   setFilters({ ...filters, paid: e.target.value })
                 }
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300"
+                className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 shadow-sm font-medium"
               >
                 <option value="All">All</option>
                 <option value="Yes">Yes</option>

@@ -39,12 +39,12 @@ const AddHolidayModal = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex justify-center items-center z-50 animate-fadeIn">
-      <div className="bg-white rounded-lg shadow-2xl w-full max-w-2xl mx-4 relative transform transition-all animate-slideUp">
+      <div className="bg-white rounded-sm shadow-2xl w-full max-w-2xl mx-4 relative transform transition-all animate-slideUp">
         {/* Header with Gradient */}
-        <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white p-6 rounded-t-lg">
+        <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white p-6 rounded-t-sm">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-3">
-              <div className="bg-white bg-opacity-20 p-2 rounded-lg">
+              <div className="bg-white bg-opacity-20 p-2 rounded-sm">
                 <Calendar size={24} />
               </div>
               <div>
@@ -80,7 +80,7 @@ const AddHolidayModal = ({
                 setFormData({ ...formData, name: e.target.value })
               }
               placeholder="e.g., New Year, Republic Day..."
-              className="w-full px-3 py-2.5 border border-gray-200 rounded focus:border-[#FF7B1D] outline-none transition-all text-sm text-gray-900 bg-white shadow-sm"
+              className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 shadow-sm font-medium"
               required
             />
           </div>
@@ -98,7 +98,7 @@ const AddHolidayModal = ({
                 onChange={(e) =>
                   setFormData({ ...formData, start_date: e.target.value })
                 }
-                className="w-full px-3 py-2.5 border border-gray-200 rounded focus:border-[#FF7B1D] outline-none transition-all text-sm text-gray-900 bg-white shadow-sm"
+                className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 shadow-sm font-medium"
                 required
               />
             </div>
@@ -116,7 +116,7 @@ const AddHolidayModal = ({
                   setFormData({ ...formData, end_date: e.target.value })
                 }
                 min={formData.start_date}
-                className="w-full px-3 py-2.5 border border-gray-200 rounded focus:border-[#FF7B1D] outline-none transition-all text-sm text-gray-900 bg-white shadow-sm"
+                className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 shadow-sm font-medium"
                 required
               />
             </div>
@@ -124,16 +124,16 @@ const AddHolidayModal = ({
         </div>
 
         {/* Footer with Actions */}
-        <div className="bg-white px-6 py-4 rounded-b-lg border-t border-gray-100 flex justify-end gap-3">
+        <div className="bg-white px-6 py-4 rounded-b-sm border-t border-gray-100 flex justify-end gap-3">
           <button
             onClick={onClose}
-            className="px-6 py-2.5 border border-gray-300 font-bold text-gray-700 hover:bg-gray-50 transition-all  shadow-sm text-sm"
+            className="px-6 py-2.5 border border-gray-300 font-bold text-gray-700 hover:bg-gray-50 transition-all rounded-sm shadow-sm text-sm"
           >
             Cancel
           </button>
           <button
             onClick={onSubmit}
-            className="px-6 py-2.5 bg-[#FF7B1D] text-white font-bold shadow-md hover:bg-[#e66a15] transition-all duration-300  text-sm"
+            className="px-6 py-2.5 bg-[#FF7B1D] text-white font-bold shadow-md hover:bg-[#e66a15] transition-all duration-300 rounded-sm text-sm"
           >
             {editingId ? "Update Holiday" : "Add Holiday"}
           </button>
@@ -160,7 +160,7 @@ const DeleteHolidayModal = ({
         <div className="flex gap-4 w-full">
           <button
             onClick={onClose}
-            className="flex-1 px-6 py-3 border-2 border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-100"
+            className="flex-1 px-6 py-3 border border-gray-200 text-gray-700 font-bold rounded-sm hover:bg-gray-100 shadow-sm transition-all"
           >
             Cancel
           </button>
@@ -168,7 +168,7 @@ const DeleteHolidayModal = ({
           <button
             onClick={onConfirm}
             disabled={isLoading}
-            className="flex-1 px-6 py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 shadow-lg disabled:opacity-50 flex items-center justify-center gap-2"
+            className="flex-1 px-6 py-3 bg-red-600 text-white font-bold rounded-sm hover:bg-red-700 shadow-md hover:shadow-lg disabled:opacity-50 flex items-center justify-center gap-2 transition-all"
           >
             {isLoading ? (
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />

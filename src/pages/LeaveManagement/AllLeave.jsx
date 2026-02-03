@@ -640,8 +640,8 @@ export default function LeaveManagement() {
           {/* Apply Leave Modal */}
           {showApplyModal && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 font-primary text-left">
-              <div className="bg-white w-full max-w-md shadow-2xl rounded-lg animate-scaleIn">
-                <div className="sticky top-0 bg-[#FF7B1D] px-6 py-4 flex items-center justify-between z-50 rounded-t-lg shadow-md">
+              <div className="bg-white w-full max-w-md shadow-2xl rounded-sm animate-scaleIn">
+                <div className="sticky top-0 bg-[#FF7B1D] px-6 py-4 flex items-center justify-between z-50 rounded-t-sm shadow-md">
                   <h2 className="text-xl font-bold text-white flex items-center gap-2 capitalize tracking-wide">
                     <Plus size={20} />
                     Apply for Leave
@@ -659,7 +659,7 @@ export default function LeaveManagement() {
                     <select
                       value={formData.employee_id}
                       onChange={(e) => setFormData({ ...formData, employee_id: e.target.value })}
-                      className="w-full px-3 py-2.5 border border-gray-200 rounded focus:border-[#FF7B1D] outline-none transition-all text-sm text-gray-900 bg-white shadow-sm"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 shadow-sm font-medium"
                       required
                     >
                       <option value="">Select Employee</option>
@@ -676,7 +676,7 @@ export default function LeaveManagement() {
                     <select
                       value={formData.leave_type_id}
                       onChange={(e) => setFormData({ ...formData, leave_type_id: e.target.value })}
-                      className="w-full px-3 py-2.5 border border-gray-200 rounded focus:border-[#FF7B1D] outline-none transition-all text-sm text-gray-900 bg-white shadow-sm"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 shadow-sm font-medium"
                       required
                     >
                       <option value="">Select Leave Type</option>
@@ -695,7 +695,7 @@ export default function LeaveManagement() {
                         type="date"
                         value={formData.from_date}
                         onChange={(e) => setFormData({ ...formData, from_date: e.target.value })}
-                        className="w-full px-3 py-2.5 border border-gray-200 rounded focus:border-[#FF7B1D] outline-none transition-all text-sm text-gray-900 bg-white placeholder-gray-400"
+                        className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 shadow-sm font-medium"
                         required
                       />
                     </div>
@@ -708,7 +708,7 @@ export default function LeaveManagement() {
                         type="date"
                         value={formData.to_date}
                         onChange={(e) => setFormData({ ...formData, to_date: e.target.value })}
-                        className="w-full px-3 py-2.5 border border-gray-200 rounded focus:border-[#FF7B1D] outline-none transition-all text-sm text-gray-900 bg-white placeholder-gray-400"
+                        className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 shadow-sm font-medium"
                         required
                       />
                     </div>
@@ -732,7 +732,7 @@ export default function LeaveManagement() {
                       maxLength={500}
                       value={formData.reason}
                       onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
-                      className="w-full px-3 py-2.5 border border-gray-200 rounded focus:border-[#FF7B1D] outline-none transition-all resize-none text-sm text-gray-900 bg-white placeholder-gray-400 shadow-sm"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all resize-none text-sm text-gray-900 bg-white placeholder-gray-400 shadow-sm hover:border-gray-300 font-medium"
                       placeholder="Enter reason for leave (Max 500 chars)..."
                     ></textarea>
                     <div className="text-right text-[10px] text-gray-400 font-medium mt-1">
@@ -744,13 +744,13 @@ export default function LeaveManagement() {
                     <button
                       type="button"
                       onClick={() => setShowApplyModal(false)}
-                      className="px-6 py-2.5 border border-gray-300 font-bold text-gray-700 hover:bg-gray-50 transition-all  shadow-sm text-sm"
+                      className="px-6 py-2.5 border border-gray-300 font-bold text-gray-700 hover:bg-gray-50 transition-all rounded-sm shadow-sm text-sm"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
-                      className="px-6 py-2.5 bg-[#FF7B1D] text-white font-bold shadow-md hover:bg-[#e66a15] transition-all duration-300  text-sm"
+                      className="px-6 py-2.5 bg-[#FF7B1D] text-white font-bold shadow-md hover:bg-[#e66a15] transition-all duration-300 rounded-sm text-sm"
                     >
                       Submit
                     </button>
