@@ -14,6 +14,7 @@ import {
     Download,
     CheckCircle,
     XCircle,
+    AlertTriangle,
     Clock,
     ArrowRight,
     Activity,
@@ -34,6 +35,60 @@ import { useLazyGetJobByIdQuery } from "../../store/api/jobApi";
 import toast from 'react-hot-toast';
 import Modal from "../../components/common/Modal";
 
+const DeleteApplicantModal = ({ isOpen, onClose, onConfirm, isLoading, title }) => {
+    return (
+        <Modal
+            isOpen={isOpen}
+            onClose={onClose}
+            headerVariant="simple"
+            maxWidth="max-w-md"
+            footer={
+                <div className="flex gap-4 w-full">
+                    <button
+                        onClick={onClose}
+                        className="flex-1 px-6 py-3 border border-gray-200 text-gray-700 font-bold rounded-sm hover:bg-gray-100 shadow-sm transition-all"
+                    >
+                        Cancel
+                    </button>
+
+                    <button
+                        onClick={onConfirm}
+                        disabled={isLoading}
+                        className="flex-1 px-6 py-3 bg-red-600 text-white font-bold rounded-sm hover:bg-red-700 shadow-md hover:shadow-lg disabled:opacity-50 flex items-center justify-center gap-2 transition-all"
+                    >
+                        {isLoading ? (
+                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                            <Trash2 size={20} />
+                        )}
+                        {isLoading ? "Deleting..." : "Delete Now"}
+                    </button>
+                </div>
+            }
+        >
+            <div className="flex flex-col items-center text-center p-6">
+                <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mb-6 animate-bounce">
+                    <AlertTriangle size={48} className="text-red-600" />
+                </div>
+
+                <h2 className="text-2xl font-bold text-gray-800 mb-2">
+                    Confirm Delete
+                </h2>
+
+                <p className="text-gray-600 mb-2 leading-relaxed">
+                    Are you sure you want to delete applicant Management{" "}
+                    <span className="font-bold text-gray-800">"{title}"</span>?
+                </p>
+
+                <p className="text-sm text-red-500 italic mb-6">
+                    This action cannot be undone. All associated data will be permanently removed.
+                </p>
+
+            </div>
+        </Modal>
+    );
+};
+
 const ApplicantList = () => {
     const navigate = useNavigate();
     const [currentPage, setCurrentPage] = useState(1);
@@ -41,7 +96,9 @@ const ApplicantList = () => {
     const [selectedStatus, setSelectedStatus] = useState("All");
     const [showViewModal, setShowViewModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [selectedApplicant, setSelectedApplicant] = useState(null);
+    const [applicantToDelete, setApplicantToDelete] = useState(null);
     const [editFormData, setEditFormData] = useState({
         name: "",
         email: "",
@@ -64,7 +121,7 @@ const ApplicantList = () => {
 
     const { data: statsData } = useGetApplicantStatsQuery();
     const [updateStatus] = useUpdateApplicantStatusMutation();
-    const [deleteApplicant] = useDeleteApplicantMutation();
+    const [deleteApplicant, { isLoading: deleteLoading }] = useDeleteApplicantMutation();
 
     const safeParse = (data, fallback = []) => {
         if (!data) return fallback;
@@ -171,11 +228,18 @@ const ApplicantList = () => {
         }
     };
 
-    const handleDelete = async (id) => {
-        if (window.confirm("Are you sure you want to delete this applicant?")) {
+    const handleDelete = (applicant) => {
+        setApplicantToDelete(applicant);
+        setShowDeleteModal(true);
+    };
+
+    const confirmDelete = async () => {
+        if (applicantToDelete?.id) {
             try {
-                await deleteApplicant(id).unwrap();
+                await deleteApplicant(applicantToDelete.id).unwrap();
                 toast.success("Applicant deleted successfully");
+                setShowDeleteModal(false);
+                setApplicantToDelete(null);
             } catch (error) {
                 toast.error("Failed to delete applicant");
             }
@@ -341,7 +405,7 @@ const ApplicantList = () => {
                                                         <Edit size={18} />
                                                     </button>
                                                     <button
-                                                        onClick={() => handleDelete(applicant.id)}
+                                                        onClick={() => handleDelete(applicant)}
                                                         className="p-1 hover:bg-orange-100 rounded-sm text-red-500 hover:text-red-700 transition-all"
                                                         title="Delete"
                                                     >
@@ -764,6 +828,14 @@ const ApplicantList = () => {
                     </div>
                 )}
             </Modal>
+
+            <DeleteApplicantModal
+                isOpen={showDeleteModal}
+                onClose={() => setShowDeleteModal(false)}
+                onConfirm={confirmDelete}
+                isLoading={deleteLoading}
+                title={applicantToDelete?.name || ""}
+            />
         </DashboardLayout>
     );
 };
