@@ -5,7 +5,7 @@ import AddTermModal from "../../components/TermCondition/AddTermModal";
 import ViewTermModal from "../../components/TermCondition/ViewTermModal";
 import EditTermModal from "../../components/TermCondition/EditTermModal";
 import {
-  Pencil,
+  Edit,
   Trash2,
   Eye,
   Filter,
@@ -264,7 +264,7 @@ const TermsAndCondition = () => {
                     }`}
                 >
                   <Plus size={20} />
-                  ADD TERMS
+                  Add Terms
                 </button>
               </div>
             </div>
@@ -350,42 +350,38 @@ const TermsAndCondition = () => {
 
                       <td className="py-3 px-4 text-right">
                         <div className="flex justify-end gap-2">
-                          {read && (
-                            <button
-                              onClick={() => {
-                                setSelectedTerm(term);
-                                setIsViewModalOpen(true);
-                              }}
-                              className="p-1 hover:bg-orange-100 rounded-sm text-blue-500 hover:text-blue-700 transition-all font-medium"
-                              title="View"
-                            >
-                              <Eye size={18} />
-                            </button>
-                          )}
-                          {update && (
-                            <button
-                              onClick={() => {
-                                setSelectedTerm(term);
-                                setIsEditModalOpen(true);
-                              }}
-                              className="p-1 hover:bg-orange-100 rounded-sm text-green-500 hover:text-green-700 transition-all font-medium"
-                              title="Edit"
-                            >
-                              <Pencil size={18} />
-                            </button>
-                          )}
-                          {remove && (
-                            <button
-                              onClick={() => {
-                                setSelectedTermId(term.id);
-                                setIsDeleteModalOpen(true);
-                              }}
-                              className="p-1 hover:bg-orange-100 rounded-sm text-red-500 hover:text-red-700 transition-all font-medium"
-                              title="Delete"
-                            >
-                              <Trash2 size={18} />
-                            </button>
-                          )}
+                          <button
+                            onClick={() => {
+                              setSelectedTerm(term);
+                              setIsViewModalOpen(true);
+                            }}
+                            className="p-1 hover:bg-orange-100 rounded-sm text-blue-500 hover:text-blue-700 transition-all"
+                            title="View"
+                          >
+                            <Eye size={18} />
+                          </button>
+                          <button
+                            onClick={() => {
+                              setSelectedTerm(term);
+                              setIsEditModalOpen(true);
+                            }}
+                            disabled={!update}
+                            className={`p-1 hover:bg-orange-100 rounded-sm transition-all ${update ? "text-green-500 hover:text-green-700" : "text-gray-300 cursor-not-allowed text-opacity-50"}`}
+                            title="Edit"
+                          >
+                            <Edit size={18} />
+                          </button>
+                          <button
+                            onClick={() => {
+                              setSelectedTermId(term.id);
+                              setIsDeleteModalOpen(true);
+                            }}
+                            disabled={!remove}
+                            className={`p-1 hover:bg-orange-100 rounded-sm transition-all ${remove ? "text-red-500 hover:text-red-700" : "text-gray-300 cursor-not-allowed text-opacity-50"}`}
+                            title="Delete"
+                          >
+                            <Trash2 size={18} />
+                          </button>
                         </div>
                       </td>
                     </tr>

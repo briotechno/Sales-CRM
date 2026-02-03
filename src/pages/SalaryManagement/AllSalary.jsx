@@ -479,7 +479,7 @@ export default function SalaryManagement() {
                           {salary.status === "pending" && update && (
                             <button
                               onClick={() => handleMarkAsPaid(salary.id)}
-                              className="p-1 hover:bg-orange-100 rounded-sm text-green-500 hover:text-green-700 transition-all"
+                              className="p-1 hover:bg-orange-100 rounded-sm text-green-500 hover:text-green-700 transition-all font-medium"
                               title="Mark as Paid"
                             >
                               <DollarSign size={18} />
@@ -495,42 +495,38 @@ export default function SalaryManagement() {
                           >
                             <Calculator size={18} />
                           </button>
-                          {read && (
-                            <button
-                              onClick={() => {
-                                setSelectedSalary(salary);
-                                setViewModalOpen(true);
-                              }}
-                              className="p-1 hover:bg-orange-100 rounded-sm text-blue-500 hover:text-blue-700 transition-all"
-                              title="View"
-                            >
-                              <Eye size={18} />
-                            </button>
-                          )}
-                          {update && (
-                            <button
-                              onClick={() => {
-                                setSelectedSalary(salary);
-                                setEditModalOpen(true);
-                              }}
-                              className="p-1 hover:bg-orange-100 rounded-sm text-green-500 hover:text-green-700 transition-all"
-                              title="Edit"
-                            >
-                              <Pencil size={18} />
-                            </button>
-                          )}
-                          {remove && (
-                            <button
-                              onClick={() => {
-                                setSelectedSalaryId(salary.id);
-                                setOpenDelete(true);
-                              }}
-                              className="p-1 hover:bg-orange-100 rounded-sm text-red-500 hover:text-red-700 transition-all"
-                              title="Delete"
-                            >
-                              <Trash2 size={18} />
-                            </button>
-                          )}
+                          <button
+                            onClick={() => {
+                              setSelectedSalary(salary);
+                              setViewModalOpen(true);
+                            }}
+                            className="p-1 hover:bg-orange-100 rounded-sm text-blue-500 hover:text-blue-700 transition-all font-medium"
+                            title="View"
+                          >
+                            <Eye size={18} />
+                          </button>
+                          <button
+                            onClick={() => {
+                              setSelectedSalary(salary);
+                              setEditModalOpen(true);
+                            }}
+                            disabled={!update}
+                            className={`p-1 hover:bg-orange-100 rounded-sm transition-all ${update ? "text-green-500 hover:text-green-700" : "text-gray-300 cursor-not-allowed"}`}
+                            title="Edit"
+                          >
+                            <Edit size={18} />
+                          </button>
+                          <button
+                            onClick={() => {
+                              setSelectedSalaryId(salary.id);
+                              setOpenDelete(true);
+                            }}
+                            disabled={!remove}
+                            className={`p-1 hover:bg-orange-100 rounded-sm transition-all ${remove ? "text-red-500 hover:text-red-700" : "text-gray-300 cursor-not-allowed"}`}
+                            title="Delete"
+                          >
+                            <Trash2 size={18} />
+                          </button>
                         </div>
                       </td>
                     </tr>

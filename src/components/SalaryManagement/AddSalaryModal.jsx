@@ -140,7 +140,7 @@ const AddSalaryModal = ({ isOpen, onClose, onSubmit, loading }) => {
   const getDateStatus = (dateStr) => {
     const isPaid = salaryData?.salaries?.some(s => s.pay_date?.split('T')[0] === dateStr);
     if (isPaid) return 'text-green-600 font-bold';
-    return 'text-amber-500';
+    return 'text-orange-500';
   };
 
   const workingDaysValue = Number(formData.working_days) || 30;
@@ -166,13 +166,13 @@ const AddSalaryModal = ({ isOpen, onClose, onSubmit, loading }) => {
       }
       footer={
         <div className="flex justify-end gap-3 p-4 bg-gray-50 rounded-b-xl border-t">
-          <button onClick={onClose} className="px-6 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-all">
+          <button onClick={onClose} className="px-6 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-sm font-semibold hover:bg-gray-50 transition-all">
             Cancel
           </button>
           <button
             onClick={handleAdd}
             disabled={loading}
-            className="px-6 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg flex items-center gap-2 font-bold shadow-lg shadow-orange-200 hover:scale-[1.02] transition-all disabled:opacity-50"
+            className="px-6 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm flex items-center gap-2 font-bold shadow-lg shadow-orange-200 hover:scale-[1.02] transition-all disabled:opacity-50"
           >
             <Save size={18} />
             {loading ? "Processing..." : "Add Salary"}
@@ -180,17 +180,18 @@ const AddSalaryModal = ({ isOpen, onClose, onSubmit, loading }) => {
         </div>
       }
     >
-      <div className="space-y-6 p-2">
+      <div className="space-y-6 p-2 font-sans">
         {/* Employee Selection Section */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Select Employee</label>
+            <label className="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-1">
+              <User size={16} className="text-[#FF7B1D]" /> Select Employee
+            </label>
             <div className="relative">
-              <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
               <select
                 value={formData.Employee}
                 onChange={(e) => setFormData({ ...formData, Employee: e.target.value })}
-                className="w-full border-2 border-gray-100 pl-10 pr-3 py-2.5 rounded-lg focus:border-orange-500 outline-none transition-all font-medium"
+                className="w-full border border-gray-200 px-4 py-3 rounded-sm focus:border-orange-500 outline-none transition-all font-medium text-sm bg-white"
                 disabled={loadingEmployees}
               >
                 <option value="">Select Employee</option>
@@ -202,14 +203,15 @@ const AddSalaryModal = ({ isOpen, onClose, onSubmit, loading }) => {
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Payment Date</label>
+            <label className="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-1">
+              <Calendar size={16} className="text-[#FF7B1D]" /> Payment Date
+            </label>
             <div className="relative">
-              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
               <input
                 type="date"
                 value={formData.pay_date}
                 onChange={(e) => setFormData({ ...formData, pay_date: e.target.value })}
-                className={`w-full border-2 border-gray-100 pl-10 pr-3 py-2.5 rounded-lg focus:border-orange-500 outline-none transition-all font-medium ${getDateStatus(formData.pay_date)}`}
+                className={`w-full border border-gray-200 px-4 py-3 rounded-sm focus:border-orange-500 outline-none transition-all font-medium text-sm ${getDateStatus(formData.pay_date)}`}
               />
             </div>
             {salaryData?.salaries?.some(s => s.pay_date?.split('T')[0] === formData.pay_date) && (
@@ -252,7 +254,7 @@ const AddSalaryModal = ({ isOpen, onClose, onSubmit, loading }) => {
                 value={formData.start_date}
                 setFormData
                 onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
-                className="w-full border border-gray-200 p-2 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none shadow-sm"
+                className="w-full border border-gray-200 p-2 rounded-sm focus:ring-2 focus:ring-orange-500 outline-none shadow-sm text-sm"
               />
             </div>
             <div>
@@ -261,7 +263,7 @@ const AddSalaryModal = ({ isOpen, onClose, onSubmit, loading }) => {
                 type="date"
                 value={formData.end_date}
                 onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
-                className="w-full border border-gray-200 p-2 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none shadow-sm"
+                className="w-full border border-gray-200 p-2 rounded-sm focus:ring-2 focus:ring-orange-500 outline-none shadow-sm text-sm"
               />
             </div>
 
@@ -285,35 +287,40 @@ const AddSalaryModal = ({ isOpen, onClose, onSubmit, loading }) => {
         {/* Amount Section */}
         <div className="grid grid-cols-3 gap-4">
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Basic Salary</label>
+            <label className="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-1">
+              <DollarSign size={16} className="text-[#FF7B1D]" /> Basic Salary
+            </label>
             <div className="relative">
-              <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
               <input
                 type="number"
                 value={formData.basic_salary}
                 onChange={(e) => setFormData({ ...formData, basic_salary: e.target.value })}
-                className="w-full border-2 border-gray-100 pl-8 pr-3 py-2.5 rounded-lg focus:border-orange-500 outline-none font-bold"
+                className="w-full border border-gray-200 px-4 py-3 rounded-sm focus:border-orange-500 outline-none font-bold text-sm"
                 placeholder="0.00"
               />
             </div>
           </div>
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Allowances</label>
+            <label className="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-1">
+              <DollarSign size={16} className="text-[#FF7B1D]" /> Allowances
+            </label>
             <input
               type="number"
               value={formData.allowances}
               onChange={(e) => setFormData({ ...formData, allowances: e.target.value })}
-              className="w-full border-2 border-gray-100 px-3 py-2.5 rounded-lg focus:border-orange-500 outline-none text-green-600 font-bold"
+              className="w-full border border-gray-200 px-4 py-3 rounded-sm focus:border-orange-500 outline-none text-green-600 font-bold text-sm"
               placeholder="0.00"
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Deductions</label>
+            <label className="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-1">
+              <DollarSign size={16} className="text-[#FF7B1D]" /> Deductions
+            </label>
             <input
               type="number"
               value={formData.deductions}
               onChange={(e) => setFormData({ ...formData, deductions: e.target.value })}
-              className="w-full border-2 border-gray-100 px-3 py-2.5 rounded-lg focus:border-rose-500 outline-none text-rose-600 font-bold"
+              className="w-full border border-gray-200 px-4 py-3 rounded-sm focus:border-rose-500 outline-none text-rose-600 font-bold text-sm"
               placeholder="0.00"
             />
           </div>

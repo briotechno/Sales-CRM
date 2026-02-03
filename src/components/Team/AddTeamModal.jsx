@@ -201,7 +201,7 @@ const AddTeamModal = ({ isOpen, onClose, onSubmit, isLoading }) => {
                             </label>
                             <button
                                 type="button" onClick={addLevel}
-                                className="flex items-center gap-2 px-4 py-2 bg-[#FF7B1D] text-white rounded font-bold text-[11px] capitalize tracking-wider hover:bg-[#e66a15] transition-all shadow-sm"
+                                className="flex items-center gap-2 px-4 py-2 bg-[#FF7B1D] text-white  font-bold text-[11px] capitalize tracking-wider hover:bg-[#e66a15] transition-all shadow-sm"
                             >
                                 <Plus size={16} />
                                 Add New Level
@@ -395,13 +395,13 @@ const AddTeamModal = ({ isOpen, onClose, onSubmit, isLoading }) => {
                         <button
                             type="submit"
                             disabled={isLoading || !formData.levels.some(l => l.rows.some(r => r.employeeId))}
-                            className="flex-1 bg-[#FF7B1D] text-white px-8 py-3.5 font-bold shadow-md hover:bg-[#e66a15] transition-all duration-300 disabled:opacity-50 rounded text-xs capitalize tracking-widest"
+                            className="flex-1 bg-[#FF7B1D] text-white px-8 py-3.5 font-bold shadow-md hover:bg-[#e66a15] transition-all duration-300 disabled:opacity-50  text-xs capitalize tracking-widest"
                         >
                             {isLoading ? "Creating..." : "Create Team"}
                         </button>
                         <button
                             type="button" onClick={onClose}
-                            className="px-8 py-3.5 border border-gray-300 font-bold text-gray-600 hover:bg-gray-50 transition-all rounded text-xs capitalize tracking-widest bg-white"
+                            className="px-8 py-3.5 border border-gray-300 font-bold text-gray-600 hover:bg-gray-50 transition-all  text-xs capitalize tracking-widest bg-white"
                         >
                             Cancel
                         </button>

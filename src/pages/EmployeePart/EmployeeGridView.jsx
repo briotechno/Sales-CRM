@@ -4,7 +4,7 @@ import {
   Camera,
   Mic,
   Eye,
-  Pencil,
+  Edit,
 } from "lucide-react";
 
 /**
@@ -76,7 +76,7 @@ const EmployeeGridView = ({ employees, onEdit, onDelete, onView }) => {
                   <Eye size={16} />
                 </button>
                 <button onClick={(e) => { e.stopPropagation(); onEdit(emp); }} className="p-1.5 text-orange-600 hover:bg-orange-50 rounded-sm bg-white shadow-sm border border-orange-100">
-                  <Pencil size={16} />
+                  <Edit size={16} />
                 </button>
                 <button onClick={(e) => { e.stopPropagation(); onDelete(emp); }} className="p-1.5 text-red-600 hover:bg-red-50 rounded-sm bg-white shadow-sm border border-red-100">
                   <Trash2 size={16} />

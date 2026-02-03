@@ -4,7 +4,7 @@ import { FiHome, FiGrid } from "react-icons/fi";
 import DashboardLayout from "../../components/DashboardLayout";
 import {
   Eye,
-  Pencil,
+  Edit,
   Trash2,
   Plus,
   List,
@@ -387,12 +387,12 @@ const AllEmployee = () => {
                               </button>
                             )}
                             {update && (
-                              <button onClick={() => handleEdit(emp)} className="p-1 hover:bg-orange-100 rounded-sm text-green-500 hover:text-green-700 transition-all font-medium" title="Edit">
-                                <Pencil size={18} />
+                              <button onClick={() => handleEdit(emp)} className="p-1 hover:bg-orange-100 rounded-sm text-green-500 hover:text-green-700 transition-all" title="Edit">
+                                <Edit size={18} />
                               </button>
                             )}
                             {remove && (
-                              <button onClick={() => handleDelete(emp)} className="p-1 hover:bg-orange-100 rounded-sm text-red-500 hover:text-red-700 transition-all font-medium" title="Delete">
+                              <button onClick={() => handleDelete(emp)} className="p-1 hover:bg-orange-100 rounded-sm text-red-500 hover:text-red-700 transition-all" title="Delete">
                                 <Trash2 size={18} />
                               </button>
                             )}

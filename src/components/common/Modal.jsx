@@ -51,21 +51,21 @@ const Modal = ({
     return (
         <div className={`fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex justify-center items-center ${zIndex} animate-fadeIn p-4`}>
             <div
-                className={`bg-white rounded-sm shadow-2xl w-full ${maxWidth} relative transform transition-all animate-slideUp overflow-hidden`}
+                className={`bg-white rounded-lg shadow-2xl w-full ${maxWidth} relative transform transition-all animate-slideUp overflow-hidden`}
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
                 {headerVariant === "orange" ? (
-                    <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white p-6">
+                    <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-4">
                         <div className="flex justify-between items-center">
                             <div className="flex items-center gap-3">
                                 {icon && (
-                                    <div className="bg-white bg-opacity-20 p-2 rounded-sm">
+                                    <div className="bg-white bg-opacity-20 p-2 rounded-lg">
                                         {icon}
                                     </div>
                                 )}
                                 <div className="min-w-0 flex-1">
-                                    {title && <h2 className="text-2xl font-bold truncate" title={title}>{title}</h2>}
+                                    {title && <h2 className="text-xl font-bold truncate" title={title}>{title}</h2>}
                                     {subtitle && (
                                         <p className="text-sm text-white text-opacity-90 mt-1 truncate">
                                             {subtitle}
@@ -76,9 +76,9 @@ const Modal = ({
                             {showCloseButton && (
                                 <button
                                     onClick={onClose}
-                                    className="text-white hover:bg-orange-700 p-1 rounded-sm transition-colors"
+                                    className="text-white hover:bg-white hover:bg-opacity-20 p-2 rounded-lg transition-all"
                                 >
-                                    <X size={22} />
+                                    <X size={24} />
                                 </button>
                             )}
                         </div>

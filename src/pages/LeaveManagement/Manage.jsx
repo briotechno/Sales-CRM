@@ -3,7 +3,7 @@ import DashboardLayout from "../../components/DashboardLayout";
 import { FiHome } from "react-icons/fi";
 import {
   Plus,
-  Edit2,
+  Edit,
   Trash2,
   FileText,
   CheckCircle,
@@ -389,17 +389,17 @@ export default function ManageLeave() {
                         </span>
                       </td>
                       <td className="px-4 py-4">
-                        <div className="flex items-center justify-end gap-3 px-2">
+                        <div className="flex items-center justify-end gap-2 px-2">
                           <button
                             onClick={() => handleEdit(leave)}
-                            className="text-blue-500 hover:text-blue-700 transition-colors p-1"
+                            className="p-1 hover:bg-orange-100 rounded-sm text-green-500 hover:text-green-700 transition-all"
                             title="Edit"
                           >
-                            <Edit2 size={18} />
+                            <Edit size={18} />
                           </button>
                           <button
                             onClick={() => handleDeleteClick(leave)}
-                            className="text-red-500 hover:text-red-700 transition-colors p-1"
+                            className="p-1 hover:bg-orange-100 rounded-sm text-red-500 hover:text-red-700 transition-all"
                             title="Delete"
                           >
                             <Trash2 size={18} />

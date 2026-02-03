@@ -136,8 +136,9 @@ const AddDesignationModal = ({ isOpen, onClose, refetchDashboard }) => {
       subtitle="Create a new role for your organization"
       icon={<User size={24} />}
       footer={footer}
+
     >
-      <div className="flex border-b border-gray-200 mb-6">
+      <div className="flex border-b border-gray-200 mb-6 ">
         <button
           onClick={() => setActiveTab("general")}
           className={`px-6 py-3 text-sm font-bold uppercase tracking-wider transition-all border-b-2 ${activeTab === "general"
@@ -169,7 +170,7 @@ const AddDesignationModal = ({ isOpen, onClose, refetchDashboard }) => {
             <select
               value={departmentId}
               onChange={handleDepartmentChange}
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 cursor-pointer"
+              className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 cursor-pointer"
             >
               <option value="">-- Choose Department --</option>
               {departmentsData?.departments?.map((dept) => (
@@ -187,11 +188,10 @@ const AddDesignationModal = ({ isOpen, onClose, refetchDashboard }) => {
               Designation Name <span className="text-red-500">*</span>
             </label>
             <input
-              type="text"
               value={designationName}
               onChange={(e) => setDesignationName(e.target.value)}
               placeholder="e.g., Software Engineer, Manager, Executive..."
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300"
+              className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300"
             />
           </div>
 
@@ -207,7 +207,7 @@ const AddDesignationModal = ({ isOpen, onClose, refetchDashboard }) => {
                   type="file"
                   accept="image/*"
                   onChange={handleImageChange}
-                  className="block w-full text-sm text-gray-900 px-4 py-3 border-2 border-gray-200 rounded-lg cursor-pointer focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all bg-white hover:border-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100"
+                  className="block w-full text-sm text-gray-900 px-4 py-3 border border-gray-200 rounded-sm cursor-pointer focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all bg-white hover:border-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-sm file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100"
                 />
               </div>
               {imagePreview && (
@@ -235,7 +235,7 @@ const AddDesignationModal = ({ isOpen, onClose, refetchDashboard }) => {
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Describe the role's responsibilities and requirements..."
               rows="4"
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 resize-none"
+              className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 resize-none"
             />
           </div>
         </div>

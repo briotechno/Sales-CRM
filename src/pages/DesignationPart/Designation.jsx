@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { FiHome } from "react-icons/fi";
-import { Pencil, Trash2, Eye, FileDown, Users, Warehouse, Handshake, Target, Plus, Search, Filter, X } from "lucide-react";
+import { Edit, Trash2, Eye, FileDown, Users, Warehouse, Handshake, Target, Plus, Search, Filter, X } from "lucide-react";
 import DashboardLayout from "../../components/DashboardLayout";
 import AddDesignationModal from "../../components/Designation/AddDesignationModal";
 import EditDesignationModal from "../../components/Designation/EditDesignationModal";
@@ -292,8 +292,12 @@ const AllDesignation = () => {
                       </td>
                       <td className="py-3 px-4 text-orange-600 font-bold">{dsg.designation_id}</td>
                       <td className="py-3 px-4 text-gray-800 font-semibold">{dsg.designation_name}</td>
-                      <td className="py-3 px-4 text-gray-600 max-w-xs truncate" title={dsg.description}>
-                        {dsg.description || "---"}
+                      <td className="py-3 px-4 text-gray-600">
+                        <div className="cursor-pointer" title={dsg.description}>
+                          {dsg.description && dsg.description.length > 60
+                            ? dsg.description.substring(0, 60) + "..."
+                            : dsg.description || "---"}
+                        </div>
                       </td>
                       <td className="py-3 px-4 text-gray-700 font-medium">{dsg.department_name}</td>
                       <td className="py-3 px-4 text-center font-bold text-gray-700">{dsg.employee_count}</td>
@@ -303,34 +307,32 @@ const AllDesignation = () => {
                         </span>
                       </td>
                       <td className="py-3 px-4 text-right">
-                        <div className="flex justify-end gap-1">
-                          {read && (
-                            <button
-                              onClick={() => handleView(dsg)}
-                              className="p-1 hover:bg-orange-100 rounded-sm text-blue-500 hover:text-blue-700 transition-all font-medium"
-                              title="View"
-                            >
-                              <Eye size={18} />
-                            </button>
-                          )}
-                          {update && (
-                            <button
-                              onClick={() => handleEdit(dsg)}
-                              className="p-1 hover:bg-orange-100 rounded-sm text-green-500 hover:text-green-700 transition-all font-medium"
-                              title="Edit"
-                            >
-                              <Pencil size={18} />
-                            </button>
-                          )}
-                          {remove && (
-                            <button
-                              onClick={() => handleDelete(dsg)}
-                              className="p-1 hover:bg-orange-100 rounded-sm text-red-500 hover:text-red-700 transition-all font-medium"
-                              title="Delete"
-                            >
-                              <Trash2 size={18} />
-                            </button>
-                          )}
+                        <div className="flex justify-end gap-2">
+                          <button
+                            onClick={() => handleView(dsg)}
+                            className="p-1 hover:bg-orange-100 rounded-sm text-blue-500 hover:text-blue-700 transition-all font-medium"
+                            title="View"
+                          >
+                            <Eye size={18} />
+                          </button>
+                          <button
+                            onClick={() => handleEdit(dsg)}
+                            disabled={!update}
+                            className={`p-1 hover:bg-orange-100 rounded-sm transition-all ${update ? "text-green-500 hover:text-green-700" : "text-gray-300 cursor-not-allowed"
+                              }`}
+                            title="Edit"
+                          >
+                            <Edit size={18} />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(dsg)}
+                            disabled={!remove}
+                            className={`p-1 hover:bg-orange-100 rounded-sm transition-all ${remove ? "text-red-500 hover:text-red-700" : "text-gray-300 cursor-not-allowed"
+                              }`}
+                            title="Delete"
+                          >
+                            <Trash2 size={18} />
+                          </button>
                         </div>
                       </td>
                     </tr>

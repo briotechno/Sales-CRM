@@ -627,7 +627,7 @@ export default function HRPolicy() {
                     : "bg-gray-300 text-gray-500 cursor-not-allowed"
                     }`}
                 >
-                  <Plus size={20} /> ADD POLICY
+                  <Plus size={20} /> Add Policy
                 </button>
               </div>
             </div>

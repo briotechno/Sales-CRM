@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { FiHome } from "react-icons/fi";
-import { Pencil, Trash2, Eye, Grid, FileDown, Plus, Target, Handshake, Warehouse, Users, Search, Filter, X } from "lucide-react";
+import { Edit, Trash2, Eye, Grid, FileDown, Plus, Target, Handshake, Warehouse, Users, Search, Filter, X } from "lucide-react";
 import DashboardLayout from "../../components/DashboardLayout";
 import AddDepartmentModal from "../../components/Department/AddDepartmentModal";
 import EditDepartmentModal from "../../components/Department/EditDepartmentModal";
@@ -278,8 +278,12 @@ const AllDepartment = () => {
                       </td>
                       <td className="py-3 px-4 text-orange-600 font-bold">{dept.department_id}</td>
                       <td className="py-3 px-4 text-gray-800 font-semibold">{dept.department_name}</td>
-                      <td className="py-3 px-4 text-gray-600 max-w-xs truncate" title={dept.description}>
-                        {dept.description || "---"}
+                      <td className="py-3 px-4 text-gray-600">
+                        <div className="cursor-pointer" title={dept.description}>
+                          {dept.description && dept.description.length > 60
+                            ? dept.description.substring(0, 60) + "..."
+                            : dept.description || "---"}
+                        </div>
                       </td>
                       <td className="py-3 px-4 text-center font-bold text-gray-700">{dept.employee_count || 0}</td>
                       <td className="py-3 px-4 text-center">
@@ -288,34 +292,32 @@ const AllDepartment = () => {
                         </span>
                       </td>
                       <td className="py-3 px-4 text-right">
-                        <div className="flex justify-end gap-1">
-                          {read && (
-                            <button
-                              onClick={() => { setSelectedDept(dept); setIsViewModalOpen(true); }}
-                              className="p-1 hover:bg-orange-100 rounded-sm text-blue-500 hover:text-blue-700 transition-all font-medium"
-                              title="View"
-                            >
-                              <Eye size={18} />
-                            </button>
-                          )}
-                          {update && (
-                            <button
-                              onClick={() => { setSelectedDept(dept); setIsEditModalOpen(true); }}
-                              className="p-1 hover:bg-orange-100 rounded-sm text-green-500 hover:text-green-700 transition-all font-medium"
-                              title="Edit"
-                            >
-                              <Pencil size={18} />
-                            </button>
-                          )}
-                          {remove && (
-                            <button
-                              onClick={() => { setSelectedDept(dept); setIsDeleteModalOpen(true); }}
-                              className="p-1 hover:bg-orange-100 rounded-sm text-red-500 hover:text-red-700 transition-all font-medium"
-                              title="Delete"
-                            >
-                              <Trash2 size={18} />
-                            </button>
-                          )}
+                        <div className="flex justify-end gap-2">
+                          <button
+                            onClick={() => { setSelectedDept(dept); setIsViewModalOpen(true); }}
+                            className="p-1 hover:bg-orange-100 rounded-sm text-blue-500 hover:text-blue-700 transition-all"
+                            title="View"
+                          >
+                            <Eye size={18} />
+                          </button>
+                          <button
+                            onClick={() => { setSelectedDept(dept); setIsEditModalOpen(true); }}
+                            disabled={!update}
+                            className={`p-1 hover:bg-orange-100 rounded-sm transition-all ${update ? "text-green-500 hover:text-green-700" : "text-gray-300 cursor-not-allowed"
+                              }`}
+                            title="Edit"
+                          >
+                            <Edit size={18} />
+                          </button>
+                          <button
+                            onClick={() => { setSelectedDept(dept); setIsDeleteModalOpen(true); }}
+                            disabled={!remove}
+                            className={`p-1 hover:bg-orange-100 rounded-sm transition-all ${remove ? "text-red-500 hover:text-red-700" : "text-gray-300 cursor-not-allowed"
+                              }`}
+                            title="Delete"
+                          >
+                            <Trash2 size={18} />
+                          </button>
                         </div>
                       </td>
                     </tr>

@@ -86,7 +86,7 @@ const AddTermModal = ({ isOpen, onClose }) => {
           <select
             value={department}
             onChange={(e) => setDepartment(e.target.value)}
-            className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none transition-all"
+            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:ring-2 focus:ring-orange-500 outline-none transition-all text-sm bg-white hover:border-gray-300"
           >
             <option value="">-- Select Department --</option>
             {departments.map((dept) => (
@@ -106,7 +106,7 @@ const AddTermModal = ({ isOpen, onClose }) => {
           <select
             value={designation}
             onChange={(e) => setDesignation(e.target.value)}
-            className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none transition-all"
+            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:ring-2 focus:ring-orange-500 outline-none transition-all text-sm bg-white hover:border-gray-300"
           >
             <option value="">-- Select Designation --</option>
             {designations.map((dsg) => (
@@ -127,7 +127,7 @@ const AddTermModal = ({ isOpen, onClose }) => {
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg"
+            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:ring-2 focus:ring-orange-500 outline-none transition-all text-sm bg-white hover:border-gray-300"
           />
         </div>
 
@@ -141,7 +141,7 @@ const AddTermModal = ({ isOpen, onClose }) => {
             rows="4"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg resize-none"
+            className="w-full px-4 py-3 border border-gray-200 rounded-sm resize-none focus:ring-2 focus:ring-orange-500 outline-none transition-all text-sm bg-white hover:border-gray-300"
           />
         </div>
       </div>

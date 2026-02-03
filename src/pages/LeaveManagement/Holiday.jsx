@@ -5,7 +5,7 @@ import {
   Calendar,
   Plus,
   Trash2,
-  Edit2,
+  Edit,
   X,
   TrendingUp,
   Clock,
@@ -58,12 +58,10 @@ const AddHolidayModal = ({
                 </p>
               </div>
             </div>
-            <button
-              onClick={onClose}
-              className="text-white hover:bg-orange-700 p-1 rounded-sm transition-colors"
-            >
-              <X size={22} className="text-white" />
+            <button onClick={onClose} className="text-white hover:bg-white hover:bg-opacity-20 p-2 transition-all ">
+              <X size={24} />
             </button>
+
           </div>
         </div>
 
@@ -71,8 +69,8 @@ const AddHolidayModal = ({
         <div className="p-6 space-y-5 max-h-[70vh] overflow-y-auto">
           {/* Holiday Name Input */}
           <div className="group">
-            <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-              <Calendar size={16} className="text-[#FF7B1D]" />
+            <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2 capitalize">
+              <Calendar size={14} className="text-[#FF7B1D]" />
               Holiday Name <span className="text-red-500">*</span>
             </label>
             <input
@@ -82,17 +80,16 @@ const AddHolidayModal = ({
                 setFormData({ ...formData, name: e.target.value })
               }
               placeholder="e.g., New Year, Republic Day..."
-              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#FF7B1D] focus:border-transparent outline-none transition-all text-sm"
+              className="w-full px-3 py-2.5 border border-gray-200 rounded focus:border-[#FF7B1D] outline-none transition-all text-sm text-gray-900 bg-white shadow-sm"
               required
             />
           </div>
 
-          {/* Date Inputs */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {/* Start Date */}
             <div className="group">
-              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-                <Calendar size={16} className="text-[#FF7B1D]" />
+              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2 capitalize">
+                <Calendar size={14} className="text-[#FF7B1D]" />
                 Start Date <span className="text-red-500">*</span>
               </label>
               <input
@@ -101,15 +98,15 @@ const AddHolidayModal = ({
                 onChange={(e) =>
                   setFormData({ ...formData, start_date: e.target.value })
                 }
-                className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#FF7B1D] focus:border-transparent outline-none transition-all text-sm"
+                className="w-full px-3 py-2.5 border border-gray-200 rounded focus:border-[#FF7B1D] outline-none transition-all text-sm text-gray-900 bg-white shadow-sm"
                 required
               />
             </div>
 
             {/* End Date */}
             <div className="group">
-              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-                <Calendar size={16} className="text-[#FF7B1D]" />
+              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2 capitalize">
+                <Calendar size={14} className="text-[#FF7B1D]" />
                 End Date <span className="text-red-500">*</span>
               </label>
               <input
@@ -119,7 +116,7 @@ const AddHolidayModal = ({
                   setFormData({ ...formData, end_date: e.target.value })
                 }
                 min={formData.start_date}
-                className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#FF7B1D] focus:border-transparent outline-none transition-all text-sm"
+                className="w-full px-3 py-2.5 border border-gray-200 rounded focus:border-[#FF7B1D] outline-none transition-all text-sm text-gray-900 bg-white shadow-sm"
                 required
               />
             </div>
@@ -127,16 +124,16 @@ const AddHolidayModal = ({
         </div>
 
         {/* Footer with Actions */}
-        <div className="bg-gray-50 px-6 py-4 rounded-b-lg border-t border-gray-200 flex justify-end gap-3">
+        <div className="bg-white px-6 py-4 rounded-b-lg border-t border-gray-100 flex justify-end gap-3">
           <button
             onClick={onClose}
-            className="px-6 py-2.5 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition-all"
+            className="px-6 py-2.5 border border-gray-300 font-bold text-gray-700 hover:bg-gray-50 transition-all  shadow-sm text-sm"
           >
             Cancel
           </button>
           <button
             onClick={onSubmit}
-            className="px-6 py-2.5 rounded-lg bg-[#FF7B1D] text-white font-medium hover:bg-[#e06915] transition-all shadow-sm"
+            className="px-6 py-2.5 bg-[#FF7B1D] text-white font-bold shadow-md hover:bg-[#e66a15] transition-all duration-300  text-sm"
           >
             {editingId ? "Update Holiday" : "Add Holiday"}
           </button>
@@ -636,21 +633,21 @@ export default function HolidaysManagement() {
                       </td>
 
                       <td className="py-3 px-4">
-                        <div className="flex justify-end gap-3 px-2">
+                        <div className="flex justify-end gap-2 px-2">
                           <button
                             onClick={() => handleEdit(holiday)}
-                            className="text-blue-500 hover:text-blue-700 transition-colors p-1"
+                            className="p-1 hover:bg-orange-100 rounded-sm text-green-500 hover:text-green-700 transition-all"
                             title="Edit"
                           >
-                            <Edit2 className="w-5 h-5" />
+                            <Edit size={18} />
                           </button>
 
                           <button
                             onClick={() => handleDeleteClick(holiday)}
-                            className="text-red-500 hover:text-red-700 transition-colors p-1"
+                            className="p-1 hover:bg-orange-100 rounded-sm text-red-500 hover:text-red-700 transition-all"
                             title="Delete"
                           >
-                            <Trash2 className="w-5 h-5" />
+                            <Trash2 size={18} />
                           </button>
                         </div>
                       </td>
