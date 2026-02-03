@@ -86,7 +86,7 @@ const AddTermModal = ({ isOpen, onClose }) => {
           <select
             value={department}
             onChange={(e) => setDepartment(e.target.value)}
-            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:ring-2 focus:ring-orange-500 outline-none transition-all text-sm bg-white hover:border-gray-300"
+            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 shadow-sm font-medium"
           >
             <option value="">-- Select Department --</option>
             {departments.map((dept) => (
@@ -106,7 +106,7 @@ const AddTermModal = ({ isOpen, onClose }) => {
           <select
             value={designation}
             onChange={(e) => setDesignation(e.target.value)}
-            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:ring-2 focus:ring-orange-500 outline-none transition-all text-sm bg-white hover:border-gray-300"
+            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 shadow-sm font-medium"
           >
             <option value="">-- Select Designation --</option>
             {designations.map((dsg) => (
@@ -127,7 +127,7 @@ const AddTermModal = ({ isOpen, onClose }) => {
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:ring-2 focus:ring-orange-500 outline-none transition-all text-sm bg-white hover:border-gray-300"
+            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 shadow-sm font-medium"
           />
         </div>
 
@@ -141,7 +141,7 @@ const AddTermModal = ({ isOpen, onClose }) => {
             rows="4"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="w-full px-4 py-3 border border-gray-200 rounded-sm resize-none focus:ring-2 focus:ring-orange-500 outline-none transition-all text-sm bg-white hover:border-gray-300"
+            className="w-full px-4 py-3 border border-gray-200 rounded-sm resize-none focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 shadow-sm font-medium"
           />
         </div>
       </div>

@@ -142,16 +142,16 @@ const FormSection = ({ formData, handleChange, handleChanges, setFormData, mode 
   const designations = dsgData?.designations || [];
 
   const inputStyles =
-    "w-full px-3 py-2.5 border border-gray-200 rounded focus:border-[#FF7B1D] outline-none transition-all text-sm text-gray-900 bg-white shadow-sm";
+    "w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 shadow-sm font-medium";
 
   const selectStyles =
-    "w-full px-3 py-2.5 border border-gray-200 rounded focus:border-[#FF7B1D] outline-none transition-all text-sm text-gray-900 bg-white shadow-sm appearance-none cursor-pointer";
+    "w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 shadow-sm appearance-none cursor-pointer font-medium";
 
   const readOnlyStyles =
     "w-full px-3 py-2.5 border border-gray-200 rounded bg-gray-50 text-sm text-gray-900 font-semibold shadow-sm cursor-not-allowed";
 
   const fileStyles =
-    "w-full px-3 py-2 border border-gray-200 rounded focus:border-[#FF7B1D] outline-none transition-all text-sm text-gray-700 bg-white shadow-sm file:mr-4 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100 cursor-pointer";
+    "w-full px-4 py-2 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-700 bg-white shadow-sm file:mr-4 file:py-2 file:px-4 file:rounded-sm file:border-0 file:text-xs file:font-semibold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100 cursor-pointer";
 
   const labelStyles =
     "flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2 capitalize";

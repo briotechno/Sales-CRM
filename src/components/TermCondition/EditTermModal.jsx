@@ -91,7 +91,7 @@ const EditTermModal = ({ isOpen, onClose, term, onSubmit, loading }) => {
             onChange={(e) =>
               setFormData({ ...formData, department: e.target.value })
             }
-            className="w-full border border-gray-200 rounded-sm px-4 py-3 focus:ring-2 focus:ring-orange-500 outline-none bg-white text-sm"
+            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 shadow-sm font-medium"
           >
             <option value="">Select Department</option>
             {departments.map((dept) => (
@@ -113,7 +113,7 @@ const EditTermModal = ({ isOpen, onClose, term, onSubmit, loading }) => {
             onChange={(e) =>
               setFormData({ ...formData, designation: e.target.value })
             }
-            className="w-full border border-gray-200 rounded-sm px-4 py-3 focus:ring-2 focus:ring-orange-500 outline-none bg-white text-sm"
+            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 shadow-sm font-medium"
           >
             <option value="">Select Designation</option>
             {designations.map((dsg) => (
@@ -137,7 +137,7 @@ const EditTermModal = ({ isOpen, onClose, term, onSubmit, loading }) => {
               setFormData({ ...formData, title: e.target.value })
             }
             placeholder="Enter term title"
-            className="w-full border border-gray-200 rounded-sm px-4 py-3 focus:ring-2 focus:ring-orange-500 outline-none text-sm"
+            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 shadow-sm font-medium"
           />
         </div>
 
@@ -154,7 +154,7 @@ const EditTermModal = ({ isOpen, onClose, term, onSubmit, loading }) => {
               setFormData({ ...formData, description: e.target.value })
             }
             placeholder="Enter detailed description"
-            className="w-full border border-gray-200 rounded-sm px-4 py-3 focus:ring-2 focus:ring-orange-500 outline-none resize-none text-sm"
+            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all resize-none text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 shadow-sm font-medium"
           />
         </div>
       </div>

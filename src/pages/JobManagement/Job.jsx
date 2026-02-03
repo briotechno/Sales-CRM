@@ -432,7 +432,7 @@ export default function JobManagement() {
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6 ">
             <NumberCard
               title={"Total Jobs"}
               number={statsData?.total_jobs || 0}

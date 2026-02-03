@@ -171,7 +171,7 @@ const EditSalaryModal = ({ isOpen, onClose, salary, onSubmit, loading }: any) =>
                   const emp = employeeData?.employees?.find((ex: any) => ex.id == e.target.value);
                   setFormData({ ...formData, employee_id: e.target.value, employee_name: emp?.employee_name || "" });
                 }}
-                className="w-full border border-gray-200 px-4 py-3 rounded-sm focus:border-orange-500 outline-none transition-all font-medium text-sm bg-white"
+                className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 shadow-sm font-medium"
                 disabled={loadingEmployees}
               >
                 <option value="">Select Employee</option>
@@ -191,7 +191,7 @@ const EditSalaryModal = ({ isOpen, onClose, salary, onSubmit, loading }: any) =>
                 type="date"
                 value={formData.pay_date}
                 onChange={(e) => setFormData({ ...formData, pay_date: e.target.value })}
-                className={`w-full border border-gray-200 px-4 py-3 rounded-sm focus:border-orange-500 outline-none transition-all font-medium text-sm ${getDateStatus(formData.pay_date)}`}
+                className={`w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 shadow-sm font-medium ${getDateStatus(formData.pay_date)}`}
               />
             </div>
           </div>
@@ -226,7 +226,7 @@ const EditSalaryModal = ({ isOpen, onClose, salary, onSubmit, loading }: any) =>
                 type="date"
                 value={formData.start_date}
                 onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
-                className="w-full border border-gray-200 p-2 rounded-sm focus:ring-2 focus:ring-orange-500 outline-none text-sm"
+                className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 shadow-sm font-medium"
               />
             </div>
             <div>
@@ -235,7 +235,7 @@ const EditSalaryModal = ({ isOpen, onClose, salary, onSubmit, loading }: any) =>
                 type="date"
                 value={formData.end_date}
                 onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
-                className="w-full border border-gray-200 p-2 rounded-sm focus:ring-2 focus:ring-orange-500 outline-none text-sm"
+                className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 shadow-sm font-medium"
               />
             </div>
             <div className="col-span-2 grid grid-cols-2 gap-2 mt-2 pt-3 border-t border-gray-200">
@@ -261,7 +261,7 @@ const EditSalaryModal = ({ isOpen, onClose, salary, onSubmit, loading }: any) =>
                 type="number"
                 value={formData.basic_salary}
                 onChange={(e) => setFormData({ ...formData, basic_salary: e.target.value })}
-                className="w-full border border-gray-200 px-4 py-3 rounded-sm focus:border-orange-500 outline-none font-bold text-sm"
+                className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 shadow-sm font-bold"
               />
             </div>
           </div>
@@ -273,7 +273,7 @@ const EditSalaryModal = ({ isOpen, onClose, salary, onSubmit, loading }: any) =>
               type="number"
               value={formData.allowances}
               onChange={(e) => setFormData({ ...formData, allowances: e.target.value })}
-              className="w-full border border-gray-200 px-4 py-3 rounded-sm focus:border-orange-500 outline-none text-green-600 font-bold text-sm"
+              className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-green-600 font-bold bg-white hover:border-gray-300 shadow-sm"
             />
           </div>
           <div className="flex flex-col gap-1.5">
@@ -284,7 +284,7 @@ const EditSalaryModal = ({ isOpen, onClose, salary, onSubmit, loading }: any) =>
               type="number"
               value={formData.deductions}
               onChange={(e) => setFormData({ ...formData, deductions: e.target.value })}
-              className="w-full border border-gray-200 px-4 py-3 rounded-sm focus:border-rose-500 outline-none text-rose-600 font-bold text-sm"
+              className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-rose-600 font-bold bg-white hover:border-gray-300 shadow-sm"
             />
           </div>
         </div>
