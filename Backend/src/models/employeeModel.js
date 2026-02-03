@@ -71,10 +71,13 @@ const Employee = {
         let query = `
             SELECT e.*, 
             d.department_name, d.department_id as department_uid,
-            deg.designation_name, deg.designation_id as designation_uid
+            deg.designation_name, deg.designation_id as designation_uid,
+            t.team_name as assigned_team_name
             FROM employees e 
             LEFT JOIN departments d ON e.department_id = d.id 
             LEFT JOIN designations deg ON e.designation_id = deg.id
+            LEFT JOIN team_members tm ON e.id = tm.employee_id
+            LEFT JOIN teams t ON tm.team_id = t.id
             WHERE e.user_id = ?
         `;
         let countQuery = 'SELECT COUNT(*) as total FROM employees e WHERE e.user_id = ?';

@@ -3,7 +3,7 @@ import DashboardLayout from "../../components/DashboardLayout";
 import {
   Users,
   Plus,
-  Edit2,
+  Edit,
   Trash2,
   Eye,
   Filter,
@@ -49,7 +49,7 @@ export default function TeamManagement() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState(null);
 
-  const { create, read, update, delete: remove } = usePermission("Team Management");
+  const { create, read, update, delete: canDelete } = usePermission("Team Management");
 
   // Filter Logic (Frontend side since backend only supports search)
   const getDateRange = () => {
@@ -219,7 +219,7 @@ export default function TeamManagement() {
                     <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-xl z-50 animate-fadeIn overflow-hidden">
                       {/* Status Section */}
                       <div className="p-3 border-b border-gray-100 bg-gray-50">
-                        <span className="text-sm font-bold text-gray-700 tracking-wide">status</span>
+                        <span className="text-sm font-bold text-gray-700 tracking-wide">Status</span>
                       </div>
                       <div className="py-1">
                         {["All", "Active", "Inactive"].map((status) => (
@@ -242,7 +242,7 @@ export default function TeamManagement() {
 
                       {/* Date Range Section */}
                       <div className="p-3 border-t border-b border-gray-100 bg-gray-50">
-                        <span className="text-sm font-bold text-gray-700 tracking-wide">dateCreated</span>
+                        <span className="text-sm font-bold text-gray-700 tracking-wide">Date Created</span>
                       </div>
                       <div className="py-1">
                         {["All", "Today", "Yesterday", "Last 7 Days", "This Month", "Custom"].map((option) => (
@@ -401,33 +401,31 @@ export default function TeamManagement() {
                       </td>
                       <td className="py-3 px-4 text-right">
                         <div className="flex justify-end gap-2">
-                          {read && (
-                            <button
-                              onClick={() => { setSelectedTeam(team); setShowViewModal(true); }}
-                              className="p-1 hover:bg-orange-100 rounded-sm text-blue-500 hover:text-blue-700 transition-all font-medium"
-                              title="View"
-                            >
-                              <Eye size={18} />
-                            </button>
-                          )}
-                          {update && (
-                            <button
-                              onClick={() => { setSelectedTeam(team); setShowEditModal(true); }}
-                              className="p-1 hover:bg-orange-100 rounded-sm text-green-500 hover:text-green-700 transition-all font-medium"
-                              title="Edit"
-                            >
-                              <Edit2 size={18} />
-                            </button>
-                          )}
-                          {remove && (
-                            <button
-                              onClick={() => { setSelectedTeam(team); setShowDeleteModal(true); }}
-                              className="p-1 hover:bg-orange-100 rounded-sm text-red-500 hover:text-red-700 transition-all font-medium border border-transparent shadow-sm"
-                              title="Delete"
-                            >
-                              <Trash2 size={18} />
-                            </button>
-                          )}
+                          <button
+                            onClick={() => { setSelectedTeam(team); setShowViewModal(true); }}
+                            className="p-1 hover:bg-orange-100 rounded-sm text-blue-500 hover:text-blue-700 transition-all"
+                            title="View"
+                          >
+                            <Eye size={18} />
+                          </button>
+                          <button
+                            onClick={() => { setSelectedTeam(team); setShowEditModal(true); }}
+                            disabled={!update}
+                            className={`p-1 hover:bg-orange-100 rounded-sm transition-all ${update ? "text-green-500 hover:text-green-700" : "text-gray-300 cursor-not-allowed"
+                              }`}
+                            title="Edit"
+                          >
+                            <Edit size={18} />
+                          </button>
+                          <button
+                            onClick={() => { setSelectedTeam(team); setShowDeleteModal(true); }}
+                            disabled={!canDelete}
+                            className={`p-1 hover:bg-orange-100 rounded-sm transition-all ${canDelete ? "text-red-500 hover:text-red-700" : "text-gray-300 cursor-not-allowed"
+                              }`}
+                            title="Delete"
+                          >
+                            <Trash2 size={18} />
+                          </button>
                         </div>
                       </td>
                     </tr>
