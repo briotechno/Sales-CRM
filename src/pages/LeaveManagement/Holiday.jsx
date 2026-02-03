@@ -11,7 +11,11 @@ import {
   Clock,
   CheckCircle,
   Search,
-  AlertCircle
+  Filter,
+  ChevronLeft,
+  ChevronRight,
+  AlertCircle,
+  Package
 } from "lucide-react";
 import {
   useGetHolidaysQuery,
@@ -211,12 +215,40 @@ export default function HolidaysManagement() {
   const [editingId, setEditingId] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedHoliday, setSelectedHoliday] = useState(null);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const dropdownRef = React.useRef(null);
+  const [statusFilter, setStatusFilter] = useState("All");
+  const [dateFilter, setDateFilter] = useState("All");
+  const [customStart, setCustomStart] = useState("");
+  const [customEnd, setCustomEnd] = useState("");
 
   const [formData, setFormData] = useState({
     name: "",
     start_date: "",
     end_date: "",
   });
+
+  // Handle outside click for filter dropdown
+  React.useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsFilterOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const clearAllFilters = () => {
+    setStatusFilter("All");
+    setDateFilter("All");
+    setCustomStart("");
+    setCustomEnd("");
+    setCurrentPage(1);
+  };
+
+  const hasActiveFilters = statusFilter !== "All" || dateFilter !== "All";
+
 
   // Queries
   const {
@@ -339,29 +371,29 @@ export default function HolidaysManagement() {
   const getStatusBadge = (status) => {
     const badges = {
       active: {
-        bg: "bg-green-100",
-        text: "text-green-800",
+        bg: "bg-[#E6F9F1]",
+        text: "text-[#00B050]",
         label: "Active Now",
-        icon: <Clock className="w-3 h-3" />,
+        icon: <Clock className="w-3.5 h-3.5" />,
       },
       upcoming: {
-        bg: "bg-blue-100",
-        text: "text-blue-800",
+        bg: "bg-[#E6F4FE]",
+        text: "text-[#0070FF]",
         label: "Upcoming",
-        icon: <TrendingUp className="w-3 h-3" />,
+        icon: <TrendingUp className="w-3.5 h-3.5" />,
       },
       passed: {
-        bg: "bg-gray-100",
-        text: "text-gray-800",
+        bg: "bg-[#F1F3F5]",
+        text: "text-[#495057]",
         label: "Passed",
-        icon: <CheckCircle className="w-3 h-3" />,
+        icon: <CheckCircle className="w-3.5 h-3.5" />,
       },
     };
 
     const badge = badges[status] || badges.upcoming;
     return (
       <span
-        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${badge.bg} ${badge.text}`}
+        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-sm text-xs font-bold border-0 ${badge.bg} ${badge.text}`}
       >
         {badge.icon}
         {badge.label}
@@ -380,230 +412,322 @@ export default function HolidaysManagement() {
     <DashboardLayout>
       <div className="min-h-screen bg-white">
         {/* Header Section */}
-        <div className="bg-white border-b sticky top-0 z-30">
-          <div className="max-w-8xl mx-auto px-4 py-2">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="bg-white sticky top-0 z-30">
+          <div className="max-w-8xl mx-auto px-4 py-4 border-b">
+            <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Holidays Management</h1>
-                <p className="text-[10px] text-gray-500 mt-0.5 flex items-center gap-1.5">
-                  <FiHome className="text-gray-400" size={14} /> HRM / <span className="text-orange-500 font-medium">All Holidays</span>
+                <h1 className="text-2xl font-bold text-gray-800">Holidays Management</h1>
+                <p className="text-xs text-gray-500 mt-1 flex items-center gap-2 font-medium">
+                  <FiHome className="text-gray-400" size={14} />
+                  <span>HRM</span> /{" "}
+                  <span className="text-[#FF7B1D]">
+                    All Holidays
+                  </span>
                 </p>
               </div>
 
+              {/* Buttons */}
               <div className="flex flex-wrap items-center gap-3">
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="Search holidays..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 pr-4 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-orange-500 text-sm w-64 shadow-sm"
-                  />
-                  <Search className="absolute left-3 top-2.5 text-gray-400" size={16} />
+                {/* Unified Filter */}
+                <div className="relative" ref={dropdownRef}>
+                  <button
+                    onClick={() => {
+                      if (hasActiveFilters) {
+                        clearAllFilters();
+                      } else {
+                        setIsFilterOpen(!isFilterOpen);
+                      }
+                    }}
+                    className={`px-3 py-3 rounded-sm border transition shadow-sm ${isFilterOpen || hasActiveFilters
+                      ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
+                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
+                      }`}
+                  >
+                    {hasActiveFilters ? <X size={18} /> : <Filter size={18} />}
+                  </button>
+
+                  {isFilterOpen && (
+                    <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-xl z-50 animate-fadeIn overflow-hidden">
+                      <div className="p-3 border-b border-gray-100 bg-gray-50">
+                        <span className="text-sm font-bold text-gray-700 tracking-wide">status</span>
+                      </div>
+                      <div className="py-1">
+                        {["All", "Upcoming", "Active", "Passed"].map((status) => (
+                          <button
+                            key={status}
+                            onClick={() => {
+                              setStatusFilter(status);
+                              setIsFilterOpen(false);
+                              setCurrentPage(1);
+                            }}
+                            className={`block w-full text-left px-4 py-2 text-sm transition-colors ${statusFilter === status
+                              ? "bg-orange-50 text-orange-600 font-bold"
+                              : "text-gray-700 hover:bg-gray-50"
+                              }`}
+                          >
+                            {status}
+                          </button>
+                        ))}
+                      </div>
+
+                      <div className="p-3 border-t border-b border-gray-100 bg-gray-50">
+                        <span className="text-sm font-bold text-gray-700 tracking-wide">dateCreated</span>
+                      </div>
+                      <div className="py-1">
+                        {["All", "Today", "Yesterday", "Last 7 Days", "This Month", "Custom"].map((option) => (
+                          <div key={option}>
+                            <button
+                              onClick={() => {
+                                setDateFilter(option);
+                                if (option !== "Custom") {
+                                  setIsFilterOpen(false);
+                                  setCurrentPage(1);
+                                }
+                              }}
+                              className={`block w-full text-left px-4 py-2 text-sm transition-colors ${dateFilter === option
+                                ? "bg-orange-50 text-orange-600 font-bold"
+                                : "text-gray-700 hover:bg-gray-50"
+                                }`}
+                            >
+                              {option}
+                            </button>
+                            {option === "Custom" && dateFilter === "Custom" && (
+                              <div className="px-4 py-3 space-y-2 border-t border-gray-50 bg-gray-50/50">
+                                <input
+                                  type="date"
+                                  value={customStart}
+                                  onChange={(e) => setCustomStart(e.target.value)}
+                                  className="w-full px-2 py-2 border border-gray-300 rounded-sm text-xs focus:outline-none focus:ring-1 focus:ring-orange-500"
+                                />
+                                <input
+                                  type="date"
+                                  value={customEnd}
+                                  onChange={(e) => setCustomEnd(e.target.value)}
+                                  className="w-full px-2 py-2 border border-gray-300 rounded-sm text-xs focus:outline-none focus:ring-1 focus:ring-orange-500"
+                                />
+                                <button
+                                  onClick={() => {
+                                    setIsFilterOpen(false);
+                                    setCurrentPage(1);
+                                  }}
+                                  className="w-full bg-orange-500 text-white text-[10px] font-bold py-2 rounded-sm uppercase tracking-wider"
+                                >
+                                  Apply
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <button
-                  onClick={() => setIsModalOpen(true)}
-                  className="flex items-center gap-2 px-4 py-2 rounded-sm font-bold transition shadow-md text-sm active:scale-95 bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
+                  onClick={() => {
+                    setEditingId(null);
+                    setFormData({ name: "", start_date: "", end_date: "" });
+                    setIsModalOpen(true);
+                  }}
+                  className={`flex items-center gap-2 px-6 py-3 rounded-sm font-semibold transition shadow-lg hover:shadow-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700`}
                 >
-                  <Plus size={18} /> ADD HOLIDAY
+                  <Plus size={20} />
+                  Add Holiday
                 </button>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="max-w-8xl mx-auto p-4 mt-0">
-
-
-
+        <div className="max-w-8xl mx-auto p-4 pt-2 mt-0">
           {/* Holidays Table */}
-          <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
-                  <tr>
-                    <th className="px-6 py-4 text-left font-semibold tracking-wider">
-                      Holiday Name
-                    </th>
-                    <th className="px-6 py-4 text-center font-semibold tracking-wider">
-                      Start Date
-                    </th>
-                    <th className="px-6 py-4 text-center font-semibold tracking-wider">
-                      End Date
-                    </th>
-                    <th className="px-6 py-4 text-center font-semibold tracking-wider">
-                      Days
-                    </th>
-                    <th className="px-6 py-4 text-center font-semibold tracking-wider">
-                      Status
-                    </th>
-                    <th className="px-6 py-4 text-center font-semibold tracking-wider">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
+          <div className="overflow-x-auto border border-gray-200 rounded-sm shadow-sm">
+            <table className="w-full border-collapse text-left">
+              <thead>
+                <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm">
+                  <th className="py-3 px-4 font-semibold text-left border-b border-orange-400">
+                    Holiday Name
+                  </th>
+                  <th className="py-3 px-4 font-semibold text-center border-b border-orange-400">
+                    Start Date
+                  </th>
+                  <th className="py-3 px-4 font-semibold text-center border-b border-orange-400">
+                    End Date
+                  </th>
+                  <th className="py-3 px-4 font-semibold text-center border-b border-orange-400">
+                    Days
+                  </th>
+                  <th className="py-3 px-4 font-semibold text-center border-b border-orange-400">
+                    Status
+                  </th>
+                  <th className="py-3 px-4 font-semibold text-right border-b border-orange-400">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
 
-                <tbody className="divide-y divide-gray-200">
-                  {isLoading ? (
-                    Array.from({ length: 5 }).map((_, index) => (
-                      <tr key={index} className="border-b">
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-gray-200 animate-pulse"></div>
-                            <div className="h-4 bg-gray-200 rounded animate-pulse w-32"></div>
+              <tbody className="divide-y divide-gray-200">
+                {isLoading ? (
+                  Array.from({ length: 5 }).map((_, index) => (
+                    <tr key={index} className="border-b">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-gray-200 animate-pulse"></div>
+                          <div className="h-4 bg-gray-200 rounded animate-pulse w-32"></div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-center"><div className="h-4 bg-gray-200 rounded animate-pulse w-24 mx-auto"></div></td>
+                      <td className="px-6 py-4 text-center"><div className="h-4 bg-gray-200 rounded animate-pulse w-24 mx-auto"></div></td>
+                      <td className="px-6 py-4 text-center"><div className="h-5 bg-gray-200 rounded-full animate-pulse w-16 mx-auto"></div></td>
+                      <td className="px-6 py-4 text-center"><div className="h-5 bg-gray-200 rounded-full animate-pulse w-20 mx-auto"></div></td>
+                      <td className="px-6 py-4"><div className="flex justify-end gap-2"><div className="h-8 w-16 bg-gray-200 rounded animate-pulse"></div></div></td>
+                    </tr>
+                  ))
+                ) : isError ? (
+                  <tr><td colSpan="6" className="text-center py-8 text-red-500">Error loading data</td></tr>
+                ) : holidaysData?.holidays?.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan="6"
+                      className="px-6 py-12 text-center text-gray-500"
+                    >
+                      <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                      <p className="font-medium">No holidays found</p>
+                      <p className="text-sm mt-1">
+                        {searchTerm
+                          ? "Try adjusting your search"
+                          : 'Click "Add Holiday" to create one'}
+                      </p>
+                    </td>
+                  </tr>
+                ) : (
+                  holidaysData?.holidays.map((holiday) => (
+                    <tr
+                      key={holiday.id}
+                      className="hover:bg-gray-50 transition-colors"
+                    >
+                      <td className="px-4 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-orange-50 rounded-sm flex items-center justify-center border border-orange-100 shadow-sm transition-transform hover:scale-105">
+                            <Calendar className="w-4 h-4 text-[#FF7B1D]" strokeWidth={2.5} />
                           </div>
-                        </td>
-                        <td className="px-6 py-4 text-center"><div className="h-4 bg-gray-200 rounded animate-pulse w-24 mx-auto"></div></td>
-                        <td className="px-6 py-4 text-center"><div className="h-4 bg-gray-200 rounded animate-pulse w-24 mx-auto"></div></td>
-                        <td className="px-6 py-4 text-center"><div className="h-5 bg-gray-200 rounded-full animate-pulse w-16 mx-auto"></div></td>
-                        <td className="px-6 py-4 text-center"><div className="h-5 bg-gray-200 rounded-full animate-pulse w-20 mx-auto"></div></td>
-                        <td className="px-6 py-4"><div className="flex justify-end gap-2"><div className="h-8 w-16 bg-gray-200 rounded animate-pulse"></div></div></td>
-                      </tr>
-                    ))
-                  ) : isError ? (
-                    <tr><td colSpan="6" className="text-center py-8 text-red-500">Error loading data</td></tr>
-                  ) : holidaysData?.holidays?.length === 0 ? (
-                    <tr>
-                      <td
-                        colSpan="6"
-                        className="px-6 py-12 text-center text-gray-500"
-                      >
-                        <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                        <p className="font-medium">No holidays found</p>
-                        <p className="text-sm mt-1">
-                          {searchTerm
-                            ? "Try adjusting your search"
-                            : 'Click "Add Holiday" to create one'}
-                        </p>
+                          <span className="font-bold text-gray-800">
+                            {holiday.name}
+                          </span>
+                        </div>
+                      </td>
+
+                      <td className="px-3 py-4 text-center text-gray-500 text-sm">
+                        {formatDate(holiday.start_date)}
+                      </td>
+
+                      <td className="px-3 py-4 text-center text-gray-500 text-sm">
+                        {formatDate(holiday.end_date)}
+                      </td>
+
+                      <td className="px-3 py-4 text-center">
+                        <span className="inline-flex items-center px-3 py-1 rounded-sm text-[11px] font-bold bg-[#E6F4FE] text-[#0070FF]">
+                          {holiday.days} {holiday.days === 1 ? "Day" : "Days"}
+                        </span>
+                      </td>
+
+                      <td className="px-3 py-4 text-center">
+                        {getStatusBadge(getHolidayStatus(holiday))}
+                      </td>
+
+                      <td className="py-3 px-4">
+                        <div className="flex justify-end gap-3 px-2">
+                          <button
+                            onClick={() => handleEdit(holiday)}
+                            className="text-blue-500 hover:text-blue-700 transition-colors p-1"
+                            title="Edit"
+                          >
+                            <Edit2 className="w-5 h-5" />
+                          </button>
+
+                          <button
+                            onClick={() => handleDeleteClick(holiday)}
+                            className="text-red-500 hover:text-red-700 transition-colors p-1"
+                            title="Delete"
+                          >
+                            <Trash2 className="w-5 h-5" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
-                  ) : (
-                    holidaysData?.holidays.map((holiday) => (
-                      <tr
-                        key={holiday.id}
-                        className="hover:bg-gray-50 transition-colors"
-                      >
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
-                              <Calendar className="w-4 h-4 text-[#FF7B1D]" />
-                            </div>
-                            <span className="font-medium text-gray-900">
-                              {holiday.name}
-                            </span>
-                          </div>
-                        </td>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
 
-                        <td className="px-6 py-4 text-center text-gray-500 text-sm">
-                          {formatDate(holiday.start_date)}
-                        </td>
+          {/* 🔹 Pagination Section */}
+          <div className="flex flex-col md:flex-row justify-between items-center mt-6 gap-4 bg-gray-50 p-4 rounded-sm border border-gray-200">
+            <p className="text-sm font-semibold text-gray-700">
+              Showing <span className="text-orange-600">{((currentPage - 1) * itemsPerPage) + 1}</span> to <span className="text-orange-600">{Math.min(currentPage * itemsPerPage, totalHolidays)}</span> of <span className="text-orange-600">{totalHolidays}</span> results
+            </p>
 
-                        <td className="px-6 py-4 text-center text-gray-500 text-sm">
-                          {formatDate(holiday.end_date)}
-                        </td>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className={`px-4 py-2 rounded-sm font-bold transition flex items-center gap-1 ${currentPage === 1
+                  ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                  : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"
+                  }`}
+              >
+                Previous
+              </button>
 
-                        <td className="px-6 py-4 text-center">
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
-                            {holiday.days} {holiday.days === 1 ? "Day" : "Days"}
-                          </span>
-                        </td>
-
-                        <td className="px-6 py-4 text-center">
-                          {getStatusBadge(getHolidayStatus(holiday))}
-                        </td>
-
-                        <td className="px-6 py-4">
-                          <div className="flex justify-center gap-2">
-                            <button
-                              onClick={() => handleEdit(holiday)}
-                              className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition"
-                              title="Edit"
-                            >
-                              <Edit2 className="w-4 h-4" />
-                            </button>
-
-                            <button
-                              onClick={() => handleDeleteClick(holiday)}
-                              className="p-1.5 text-red-600 hover:bg-red-50 rounded transition"
-                              title="Delete"
-                            >
-                              <Trash2 size={16} />
-                            </button>
-
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Pagination */}
-            <div className="flex justify-between items-center mt-6 bg-gray-50 p-4 rounded-sm border-t border-gray-200">
-              <p className="text-sm text-gray-600">
-                Showing <span className="font-bold">{((currentPage - 1) * itemsPerPage) + 1}</span> to <span className="font-bold">{Math.min(currentPage * itemsPerPage, totalHolidays)}</span> of <span className="font-bold">{totalHolidays}</span> results
-              </p>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 1}
-                  className="px-4 py-2 border rounded-sm text-sm font-bold disabled:opacity-50 bg-white hover:bg-gray-50 transition-colors"
-                >
-                  Previous
-                </button>
-
-                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                  let p = i + 1;
-                  if (totalPages > 5 && currentPage > 3) p = currentPage - 2 + i;
-                  if (p > totalPages) return null;
-                  return (
-                    <button
-                      key={p}
-                      onClick={() => handlePageChange(p)}
-                      className={`w-9 h-9 border rounded-sm text-sm font-bold flex items-center justify-center transition-colors ${currentPage === p
-                        ? 'bg-orange-500 text-white border-orange-500'
-                        : 'bg-white text-gray-700 hover:bg-gray-50'
-                        }`}
-                    >
-                      {p}
-                    </button>
-                  );
-                })}
-
-                <button
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                  className="px-4 py-2 border rounded-sm text-sm font-bold disabled:opacity-50 bg-white hover:bg-gray-50 transition-colors"
-                >
-                  Next
-                </button>
+              <div className="flex items-center gap-1">
+                {Array.from({ length: totalPages }, (_, i) => (
+                  <button
+                    key={i + 1}
+                    onClick={() => handlePageChange(i + 1)}
+                    className={`w-10 h-10 rounded-sm font-bold transition ${currentPage === i + 1
+                      ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md"
+                      : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+                      }`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
               </div>
+
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className={`px-4 py-2 rounded-sm font-bold transition flex items-center gap-1 ${currentPage === totalPages
+                  ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                  : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"
+                  }`}
+              >
+                Next
+              </button>
             </div>
           </div>
         </div>
-
-        {/* Add/Edit Holiday Modal */}
-        <AddHolidayModal
-          isOpen={isModalOpen}
-          onClose={handleCancel}
-          formData={formData}
-          setFormData={setFormData}
-          onSubmit={handleSubmit}
-          editingId={editingId}
-        />
-        <DeleteHolidayModal
-          isOpen={showDeleteModal}
-          onClose={() => {
-            setShowDeleteModal(false);
-            setSelectedHoliday(null);
-          }}
-          onConfirm={handleConfirmDelete}
-          isLoading={isDeleting}
-          holidayName={selectedHoliday?.name}
-        />
       </div>
+
+      {/* Add/Edit Holiday Modal */}
+      <AddHolidayModal
+        isOpen={isModalOpen}
+        onClose={handleCancel}
+        formData={formData}
+        setFormData={setFormData}
+        onSubmit={handleSubmit}
+        editingId={editingId}
+      />
+      <DeleteHolidayModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setSelectedHoliday(null);
+        }}
+        onConfirm={handleConfirmDelete}
+        isLoading={isDeleting}
+        holidayName={selectedHoliday?.name}
+      />
     </DashboardLayout>
   );
 }

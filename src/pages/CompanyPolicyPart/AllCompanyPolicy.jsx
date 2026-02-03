@@ -367,6 +367,8 @@ export default function CompanyPolicy() {
   const handleClearFilters = () => {
     setFilterStatus("All");
     setSearchTerm("");
+    setCurrentPage(1);
+    setShowFilters(false);
   };
 
   const handlePageChange = (page) => {
@@ -410,32 +412,72 @@ export default function CompanyPolicy() {
     <DashboardLayout>
       <div className="min-h-screen bg-white">
         {/* Header Section */}
-        <div className="bg-white border-b sticky top-0 z-30">
-          <div className="max-w-8xl mx-auto px-4 py-2">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="bg-white sticky top-0 z-30">
+          <div className="max-w-8xl mx-auto px-4 py-4 border-b">
+            <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Company Policy</h1>
-                <p className="text-[10px] text-gray-500 mt-0.5 flex items-center gap-1.5">
-                  <FiHome className="text-gray-400" size={14} /> HRM / <span className="text-orange-500 font-medium">All Company Policy</span>
+                <h1 className="text-2xl font-bold text-gray-800 transition-all duration-300">Company Policy</h1>
+                <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
+                  <FiHome className="text-gray-700" size={14} />
+                  <span className="text-gray-400"></span> HRM /{" "}
+                  <span className="text-[#FF7B1D] font-medium">
+                    All Company Policy
+                  </span>
                 </p>
               </div>
 
               <div className="flex flex-wrap items-center gap-3">
-                <button
-                  onClick={() => setShowFilters(!showFilters)}
-                  className={`p-2 rounded-sm border transition shadow-sm ${showFilters || filterStatus !== "All" || searchTerm
-                    ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
-                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
-                    }`}
-                >
-                  <Filter size={18} />
-                </button>
+                {/* Unified Filter */}
+                <div className="relative">
+                  <button
+                    onClick={() => {
+                      if (filterStatus !== "All") {
+                        handleClearFilters();
+                      } else {
+                        setShowFilters(!showFilters);
+                      }
+                    }}
+                    className={`px-3 py-3 rounded-sm border transition shadow-sm ${showFilters || filterStatus !== "All"
+                      ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
+                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
+                      }`}
+                  >
+                    {filterStatus !== "All" ? <X size={18} /> : <Filter size={18} />}
+                  </button>
+
+                  {showFilters && (
+                    <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-xl z-50 animate-fadeIn overflow-hidden">
+                      {/* Status Section */}
+                      <div className="p-3 border-b border-gray-100 bg-gray-50">
+                        <span className="text-sm font-bold text-gray-700 tracking-wide">status</span>
+                      </div>
+                      <div className="py-1">
+                        {["All", "Active", "Under Review", "Archived"].map((status) => (
+                          <button
+                            key={status}
+                            onClick={() => {
+                              setFilterStatus(status);
+                              setShowFilters(false);
+                              setCurrentPage(1);
+                            }}
+                            className={`block w-full text-left px-4 py-2 text-sm transition-colors ${filterStatus === status
+                              ? "bg-orange-50 text-orange-600 font-bold"
+                              : "text-gray-700 hover:bg-gray-50"
+                              }`}
+                          >
+                            {status}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
 
                 <button
                   onClick={handleExport}
-                  className="bg-white border border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-sm flex items-center gap-2 transition text-sm font-semibold shadow-sm active:scale-95"
+                  className="bg-white border border-gray-300 hover:bg-gray-50 px-4 py-3 rounded-sm flex items-center gap-2 transition text-sm font-semibold shadow-sm active:scale-95"
                 >
-                  <Download className="w-4 h-4" /> EXPORT
+                  <Download className="w-5 h-5" /> EXPORT
                 </button>
 
                 <button
@@ -444,150 +486,68 @@ export default function CompanyPolicy() {
                     setShowAddModal(true);
                   }}
                   disabled={!create}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-sm font-bold transition shadow-md text-sm active:scale-95 ${create
+                  className={`flex items-center gap-2 px-6 py-3 rounded-sm font-semibold transition shadow-lg hover:shadow-xl ${create
                     ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
                     : "bg-gray-300 text-gray-500 cursor-not-allowed"
                     }`}
                 >
-                  <Plus size={18} /> ADD POLICY
+                  <Plus size={20} /> ADD POLICY
                 </button>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="max-w-8xl mx-auto p-4 mt-0">
-
-          {/* FILTER DROPDOWN */}
-          {showFilters && (
-            <div className="absolute right-6 top-24 mt-2 bg-white border border-gray-200 rounded-xl shadow-2xl w-80 p-5 animate-fadeIn z-50 transition-all">
-              <div className="flex justify-between items-center mb-4 pb-2 border-b">
-                <h3 className="font-bold text-gray-800 flex items-center gap-2">
-                  <Filter size={18} className="text-orange-500" />
-                  Filter Options
-                </h3>
-                <button
-                  onClick={() => setShowFilters(false)}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
-                >
-                  <X size={20} />
-                </button>
-              </div>
-
-              {/* Search */}
-              <div className="mb-4">
-                <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">
-                  Search Policies
-                </label>
-                <input
-                  type="text"
-                  placeholder="Search..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all bg-gray-50"
-                />
-              </div>
-
-              {/* Category */}
-
-
-              {/* Status */}
-              <div className="mb-6">
-                <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">
-                  Status
-                </label>
-                <select
-                  value={filterStatus}
-                  onChange={(e) => setFilterStatus(e.target.value)}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all bg-gray-50"
-                >
-                  <option value="All">All Statuses</option>
-                  {statuses.map((status) => (
-                    <option key={status} value={status}>
-                      {status}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="flex gap-3">
-                <button
-                  onClick={handleClearFilters}
-                  className="flex-1 px-4 py-2 border border-gray-200 text-gray-600 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-all font-sans"
-                >
-                  Clear All
-                </button>
-                <button
-                  onClick={() => setShowFilters(false)}
-                  className="flex-1 px-4 py-2 bg-orange-500 text-white rounded-lg text-sm font-semibold hover:bg-orange-600 transition-all shadow-md shadow-orange-500/20 font-sans"
-                >
-                  Apply
-                </button>
-              </div>
-            </div>
-          )}
-
+        <div className="max-w-8xl mx-auto p-4 pt-0 mt-2">
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-3">
             <NumberCard
               title={"Total Policies"}
-              number={stats.total}
+              number={stats.total || "0"}
               icon={<FileText className="text-blue-600" size={24} />}
               iconBgColor={"bg-blue-100"}
               lineBorderClass={"border-blue-500"}
             />
             <NumberCard
               title={"Active"}
-              number={stats.active}
+              number={stats.active || "0"}
               icon={<Activity className="text-green-600" size={24} />}
               iconBgColor={"bg-green-100"}
               lineBorderClass={"border-green-500"}
             />
             <NumberCard
               title={"Under Review"}
-              number={stats.underReview}
+              number={stats.underReview || "0"}
               icon={<View className="text-orange-600" size={24} />}
               iconBgColor={"bg-orange-100"}
               lineBorderClass={"border-orange-500"}
             />
             <NumberCard
               title={"Archived"}
-              number={stats.archived}
+              number={stats.archived || "0"}
               icon={<Archive className="text-purple-600" size={24} />}
               iconBgColor={"bg-purple-100"}
               lineBorderClass={"border-purple-500"}
             />
           </div>
 
+
+
           {/* Tabs */}
 
 
           {/* Table */}
-          <div className="bg-white rounded-sm shadow-sm overflow-hidden">
-            <table className="w-full">
-              <thead className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
-                <tr>
-                  <th className="px-6 py-4 text-left text-sm font-semibold uppercase whitespace-nowrap">
-                    Policy Title
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold uppercase whitespace-nowrap">
-                    Category
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold uppercase whitespace-nowrap">
-                    Effective Date
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold uppercase whitespace-nowrap">
-                    Review Date
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold uppercase whitespace-nowrap">
-                    Version
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold uppercase whitespace-nowrap">
-                    Status
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold uppercase whitespace-nowrap">
-                    Actions
-                  </th>
+          <div className="overflow-x-auto mt-4 border border-gray-200 rounded-sm shadow-sm">
+            <table className="w-full border-collapse text-left">
+              <thead>
+                <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm">
+                  <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[20%]">Policy Title</th>
+                  <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[15%]">Category</th>
+                  <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[15%]">Effective Date</th>
+                  <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[15%]">Review Date</th>
+                  <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[10%]">Version</th>
+                  <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[10%]">Status</th>
+                  <th className="py-3 px-4 font-semibold text-right border-b border-orange-400 w-[15%]">Actions</th>
                 </tr>
               </thead>
 
@@ -626,66 +586,66 @@ export default function CompanyPolicy() {
                   </tr>
                 ) : currentPolicies.length > 0 ? (
                   currentPolicies.map((policy, index) => (
-                    <tr key={policy.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-6 py-4">
+                    <tr key={policy.id} className="border-t hover:bg-gray-50 transition-colors">
+                      <td className="py-3 px-4">
                         <div className="flex items-center gap-3">
                           <div
-                            className={`w-12 h-12 rounded-full ${getColorClass(
+                            className={`w-10 h-10 rounded-sm ${getColorClass(
                               index
-                            )} flex items-center justify-center font-semibold text-sm`}
+                            )} flex items-center justify-center font-bold text-sm shadow-sm border border-orange-100 transition-transform hover:scale-105`}
                           >
                             {getInitials(policy.title)}
                           </div>
-                          <span className="font-medium text-gray-900">{policy.title}</span>
+                          <span className="font-semibold text-gray-800 transition-all duration-300 hover:text-orange-600 cursor-pointer">{policy.title}</span>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-gray-700">{policy.category}</td>
-                      <td className="px-6 py-4 text-gray-700">
+                      <td className="py-3 px-4 text-gray-700 text-sm">{policy.category}</td>
+                      <td className="py-3 px-4 text-gray-600 text-sm">
                         {new Date(policy.effective_date).toLocaleDateString()}
                       </td>
-                      <td className="px-6 py-4 text-gray-700">
+                      <td className="py-3 px-4 text-gray-600 text-sm">
                         {new Date(policy.review_date).toLocaleDateString()}
                       </td>
-                      <td className="px-6 py-4 text-gray-700">{policy.version}</td>
-                      <td className="px-6 py-4">
+                      <td className="py-3 px-4 text-gray-700 font-medium text-sm">{policy.version}</td>
+                      <td className="py-3 px-4">
                         <span
-                          className={`inline-block px-4 py-1 rounded-full text-sm font-medium ${policy.status === "Active"
-                            ? "bg-green-100 text-green-700"
+                          className={`px-3 py-1 rounded-sm text-[10px] font-bold border uppercase tracking-wider ${policy.status === "Active"
+                            ? "bg-green-50 text-green-700 border-green-200"
                             : policy.status === "Under Review"
-                              ? "bg-yellow-100 text-yellow-700"
-                              : "bg-gray-100 text-gray-700"
+                              ? "bg-yellow-50 text-yellow-700 border-yellow-200"
+                              : "bg-red-50 text-red-700 border-red-200"
                             }`}
                         >
                           {policy.status}
                         </span>
                       </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-2">
+                      <td className="py-3 px-4 text-right">
+                        <div className="flex justify-end gap-2">
                           {read && (
                             <button
                               onClick={() => handleView(policy)}
-                              className="p-2 hover:bg-blue-100 rounded-sm transition-all"
+                              className="p-1 hover:bg-orange-100 rounded-sm text-blue-500 hover:text-blue-700 transition-all font-medium"
                               title="View"
                             >
-                              <Eye size={18} className="text-blue-600" />
+                              <Eye size={18} />
                             </button>
                           )}
                           {update && (
                             <button
                               onClick={() => handleEditClick(policy)}
-                              className="p-2 hover:bg-orange-100 rounded-sm transition-all"
+                              className="p-1 hover:bg-orange-100 rounded-sm text-green-500 hover:text-green-700 transition-all font-medium"
                               title="Edit"
                             >
-                              <Edit size={18} className="text-orange-600" />
+                              <Edit size={18} />
                             </button>
                           )}
                           {remove && (
                             <button
                               onClick={() => handleDeleteClick(policy)}
-                              className="p-2 hover:bg-red-100 rounded-sm transition-all"
+                              className="p-1 hover:bg-orange-100 rounded-sm text-red-500 hover:text-red-700 transition-all font-medium"
                               title="Delete"
                             >
-                              <Trash2 size={18} className="text-red-600" />
+                              <Trash2 size={18} />
                             </button>
                           )}
                         </div>
@@ -703,49 +663,55 @@ export default function CompanyPolicy() {
             </table>
           </div>
 
-          {/* Pagination - Updated to match Designation.jsx */}
-          <div className="flex justify-between items-center mt-6 bg-gray-50 p-4 rounded-sm border-t border-gray-200">
-            <p className="text-sm text-gray-600">
-              Showing <span className="font-bold">{indexOfFirstItem + 1}</span> to{" "}
-              <span className="font-bold">{Math.min(indexOfLastItem, filteredPolicies.length)}</span> of{" "}
-              <span className="font-bold">{filteredPolicies.length}</span> results
-            </p>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={handlePrev}
-                disabled={currentPage === 1}
-                className="px-4 py-2 border rounded-sm text-sm font-bold disabled:opacity-50 bg-white hover:bg-gray-50 transition-colors"
-              >
-                Previous
-              </button>
+          {/* Pagination - Updated to match Team.jsx */}
+          {totalPages > 0 && (
+            <div className="flex flex-col md:flex-row justify-between items-center mt-6 gap-4 bg-gray-50 p-4 rounded-sm border border-gray-200">
+              <p className="text-sm font-semibold text-gray-700">
+                Showing <span className="text-orange-600">{indexOfFirstItem + 1}</span> to <span className="text-orange-600">{Math.min(indexOfLastItem, filteredPolicies.length)}</span> of <span className="text-orange-600">{filteredPolicies.length}</span> Results
+              </p>
 
-              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                let p = i + 1;
-                if (totalPages > 5 && currentPage > 3) p = currentPage - 2 + i;
-                if (p > totalPages) return null;
-                return (
-                  <button
-                    key={p}
-                    onClick={() => handlePageChange(p)}
-                    className={`w-9 h-9 border rounded-sm text-sm font-bold flex items-center justify-center transition-colors ${currentPage === p
-                      ? "bg-orange-500 text-white border-orange-500"
-                      : "bg-white text-gray-700 hover:bg-gray-50"
-                      }`}
-                  >
-                    {p}
-                  </button>
-                );
-              })}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handlePrev}
+                  disabled={currentPage === 1}
+                  className={`px-4 py-2 rounded-sm font-bold transition flex items-center gap-1 ${currentPage === 1
+                    ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                    : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"
+                    }`}
+                >
+                  Previous
+                </button>
 
-              <button
-                onClick={handleNext}
-                disabled={currentPage === totalPages}
-                className="px-4 py-2 border rounded-sm text-sm font-bold disabled:opacity-50 bg-white hover:bg-gray-50 transition-colors"
-              >
-                Next
-              </button>
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: totalPages }, (_, i) => (
+                    <button
+                      key={i + 1}
+                      onClick={() => handlePageChange(i + 1)}
+                      className={`w-10 h-10 rounded-sm font-bold transition ${currentPage === i + 1
+                        ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md"
+                        : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+                        }`}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  onClick={handleNext}
+                  disabled={currentPage === totalPages}
+                  className={`px-4 py-2 rounded-sm font-bold transition flex items-center gap-1 ${currentPage === totalPages
+                    ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                    : "bg-[#22C55E] text-white hover:opacity-90 shadow-md"
+                    }`}
+                >
+                  Next
+                </button>
+              </div>
             </div>
-          </div>
+          )}
+
+
 
           {/* Add Policy Modal */}
           {showAddModal && (

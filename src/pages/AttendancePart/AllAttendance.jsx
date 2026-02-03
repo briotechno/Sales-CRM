@@ -28,6 +28,8 @@ import {
   Home,
   ClipboardList,
   FileText,
+  Filter,
+  Mic,
 } from "lucide-react";
 import {
   useGetAllAttendanceQuery,
@@ -43,9 +45,11 @@ export default function AttendanceApp() {
   const [currentPage, setCurrentPage] = useState("dashboard");
   const [userIP, setUserIP] = useState(null);
   const [isOnCompanyNetwork, setIsOnCompanyNetwork] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterDepartment, setFilterDepartment] = useState("all");
+  const [dateRange, setDateRange] = useState({ state: "All", start: "", end: "" });
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const dropdownRef = useRef(null);
   const [showSelfieCapture, setShowSelfieCapture] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [detailsModal, setDetailsModal] = useState(null);
@@ -69,7 +73,8 @@ export default function AttendanceApp() {
   const { data: attendanceResponse, isLoading: isAttendanceLoading } = useGetAllAttendanceQuery({
     status: filterStatus !== 'all' ? filterStatus : undefined,
     department_id: filterDepartment !== 'all' ? filterDepartment : undefined,
-    date: new Date().toISOString().split('T')[0] // Default to today
+    dateFrom: dateRange.start || undefined,
+    dateTo: dateRange.end || undefined,
   });
 
   const { data: statsResponse } = useGetDashboardStatsQuery();
@@ -330,13 +335,8 @@ export default function AttendanceApp() {
 
 
   const filteredAttendance = useMemo(() => {
-    return attendanceData.filter((record) => {
-      const matchesSearch =
-        (record.employee_name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (record.emp_uid || "").toLowerCase().includes(searchQuery.toLowerCase());
-      return matchesSearch;
-    });
-  }, [attendanceData, searchQuery]);
+    return attendanceData;
+  }, [attendanceData]);
 
   const getStatusBadge = (status) => {
     const badges = {
@@ -385,62 +385,207 @@ export default function AttendanceApp() {
   return (
     <DashboardLayout>
       <div className="p-0 bg-white ml-6 min-h-screen text-black">
-        {/* Navigation */}
-        <nav className="bg-white border-b my-3 ">
-          <div className="px-6 py-4">
+        {/* Header Section */}
+        <div className="bg-white sticky top-0 z-30">
+          <div className="max-w-8xl mx-auto px-4 py-4 border-b">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-800">
-                    Attendance Syatem
-                  </h1>
-                  <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
-                    <FiHome className="text-gray-700 text-sm" />
-
-                    <span className="text-gray-600">HRM /</span>
-
-                    <span className="text-[#FF7B1D] font-medium">
-                      All Attendance
-                    </span>
-                  </p>
-                </div>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-800 transition-all duration-300">
+                  Attendance System
+                </h1>
+                <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
+                  <FiHome className="text-gray-700" size={14} />
+                  <span className="text-gray-400"></span> HRM /{" "}
+                  <span className="text-[#FF7B1D] font-medium">
+                    {currentPage === 'dashboard' ? 'Dashboard' : currentPage === 'checkin' ? 'Check-In' : 'All Attendance'}
+                  </span>
+                </p>
               </div>
 
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setCurrentPage("dashboard")}
-                  className={`px-6 py-3 rounded-sm font-semibold transition-all flex items-center gap-2 ${currentPage === "dashboard"
-                    ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg"
-                    : "bg-orange-50 text-orange-700 hover:bg-orange-100"
-                    }`}
-                >
-                  <Home className="w-5 h-5" />
-                  Dashboard
-                </button>
-                <button
-                  onClick={() => setCurrentPage("checkin")}
-                  className={`px-6 py-3 rounded-sm font-semibold transition-all flex items-center gap-2 ${currentPage === "checkin"
-                    ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg"
-                    : "bg-orange-50 text-orange-700 hover:bg-orange-100"
-                    }`}
-                >
-                  <Camera className="w-5 h-5" />
-                  Check-In
-                </button>
-                <button
-                  onClick={() => setCurrentPage("records")}
-                  className={`px-6 py-3 rounded-sm font-semibold transition-all flex items-center gap-2 ${currentPage === "records"
-                    ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg"
-                    : "bg-orange-50 text-orange-700 hover:bg-orange-100"
-                    }`}
-                >
-                  <ClipboardList className="w-5 h-5" />
-                  Records
-                </button>
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="flex items-center bg-gray-100 p-1 rounded-sm border border-gray-200 shadow-inner mr-4">
+                  <button
+                    onClick={() => setCurrentPage("dashboard")}
+                    className={`p-2 px-4 rounded-sm transition-all duration-200 flex items-center gap-2 text-sm font-bold ${currentPage === "dashboard"
+                      ? "bg-white text-orange-600 shadow-sm border border-gray-100"
+                      : "text-gray-400 hover:text-gray-600"
+                      }`}
+                  >
+                    <Home size={18} />
+                    Dashboard
+                  </button>
+                  <button
+                    onClick={() => setCurrentPage("checkin")}
+                    className={`p-2 px-4 rounded-sm transition-all duration-200 flex items-center gap-2 text-sm font-bold ${currentPage === "checkin"
+                      ? "bg-white text-orange-600 shadow-sm border border-gray-100"
+                      : "text-gray-400 hover:text-gray-600"
+                      }`}
+                  >
+                    <Camera size={18} />
+                    Check-In
+                  </button>
+                  <button
+                    onClick={() => setCurrentPage("records")}
+                    className={`p-2 px-4 rounded-sm transition-all duration-200 flex items-center gap-2 text-sm font-bold ${currentPage === "records"
+                      ? "bg-white text-orange-600 shadow-sm border border-gray-100"
+                      : "text-gray-400 hover:text-gray-600"
+                      }`}
+                  >
+                    <ClipboardList size={18} />
+                    Records
+                  </button>
+                </div>
+
+                {currentPage === 'records' && (
+                  <div className="flex items-center gap-2">
+                    {/* Unified Filter */}
+                    <div className="relative" ref={dropdownRef}>
+                      <button
+                        onClick={() => {
+                          if (filterStatus !== 'all' || filterDepartment !== 'all' || dateRange.state !== 'All') {
+                            setFilterStatus('all');
+                            setFilterDepartment('all');
+                            setDateRange({ state: "All", start: "", end: "" });
+                          } else {
+                            setIsFilterOpen(!isFilterOpen);
+                          }
+                        }}
+                        className={`px-3 py-3 rounded-sm border transition shadow-sm ${(isFilterOpen || (filterStatus !== 'all' || filterDepartment !== 'all' || dateRange.state !== 'All'))
+                          ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
+                          : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
+                          }`}
+                      >
+                        {(filterStatus !== 'all' || filterDepartment !== 'all' || dateRange.state !== 'All') ? <X size={18} /> : <Filter size={18} />}
+                      </button>
+
+                      {isFilterOpen && (
+                        <div className="absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-xl shadow-xl z-50 animate-fadeIn overflow-hidden">
+                          <div className="p-3 border-b border-gray-100 bg-gray-50">
+                            <span className="text-sm font-bold text-gray-700 tracking-wide">status</span>
+                          </div>
+                          <div className="py-1">
+                            {['all', 'present', 'absent', 'late', 'half-day'].map((status) => (
+                              <button
+                                key={status}
+                                onClick={() => {
+                                  setFilterStatus(status);
+                                  setIsFilterOpen(false);
+                                }}
+                                className={`block w-full text-left px-4 py-2 text-sm transition-colors ${filterStatus === status
+                                  ? "bg-orange-50 text-orange-600 font-bold"
+                                  : "text-gray-700 hover:bg-gray-50"
+                                  }`}
+                              >
+                                {status.charAt(0).toUpperCase() + status.slice(1)}
+                              </button>
+                            ))}
+                          </div>
+
+                          <div className="p-3 border-t border-b border-gray-100 bg-gray-50">
+                            <span className="text-sm font-bold text-gray-700 tracking-wide">department</span>
+                          </div>
+                          <div className="py-1 max-h-48 overflow-y-auto custom-scrollbar">
+                            <button
+                              onClick={() => { setFilterDepartment('all'); setIsFilterOpen(false); }}
+                              className={`block w-full text-left px-4 py-2 text-sm transition-colors ${filterDepartment === 'all'
+                                ? "bg-orange-50 text-orange-600 font-bold"
+                                : "text-gray-700 hover:bg-gray-50"
+                                }`}
+                            >
+                              All Departments
+                            </button>
+                            {departments.map((dept) => (
+                              <button
+                                key={dept.id}
+                                onClick={() => {
+                                  setFilterDepartment(dept.id);
+                                  setIsFilterOpen(false);
+                                }}
+                                className={`block w-full text-left px-4 py-2 text-sm transition-colors ${filterDepartment === dept.id
+                                  ? "bg-orange-50 text-orange-600 font-bold"
+                                  : "text-gray-700 hover:bg-gray-50"
+                                  }`}
+                              >
+                                {dept.department_name}
+                              </button>
+                            ))}
+                          </div>
+
+                          <div className="p-3 border-t border-b border-gray-100 bg-gray-50">
+                            <span className="text-sm font-bold text-gray-700 tracking-wide">Date Range</span>
+                          </div>
+                          <div className="py-1">
+                            {["All", "Today", "Yesterday", "Last 7 Days", "Custom"].map((option) => (
+                              <div key={option}>
+                                <button
+                                  onClick={() => {
+                                    const today = new Date().toISOString().split('T')[0];
+                                    if (option === 'All') setDateRange({ state: 'All', start: '', end: '' });
+                                    else if (option === 'Today') setDateRange({ state: 'Today', start: today, end: today });
+                                    else if (option === 'Yesterday') {
+                                      const yesterday = new Date();
+                                      yesterday.setDate(yesterday.getDate() - 1);
+                                      const d = yesterday.toISOString().split('T')[0];
+                                      setDateRange({ state: 'Yesterday', start: d, end: d });
+                                    } else if (option === 'Last 7 Days') {
+                                      const last7 = new Date();
+                                      last7.setDate(last7.getDate() - 7);
+                                      setDateRange({ state: 'Last 7 Days', start: last7.toISOString().split('T')[0], end: today });
+                                    } else if (option === 'Custom') {
+                                      setDateRange({ ...dateRange, state: 'Custom' });
+                                      return;
+                                    }
+                                    setIsFilterOpen(false);
+                                  }}
+                                  className={`block w-full text-left px-4 py-2 text-sm transition-colors ${dateRange.state === option
+                                    ? "bg-orange-50 text-orange-600 font-bold"
+                                    : "text-gray-700 hover:bg-gray-50"
+                                    }`}
+                                >
+                                  {option}
+                                </button>
+                                {option === "Custom" && dateRange.state === "Custom" && (
+                                  <div className="px-4 py-3 space-y-2 bg-gray-50/50">
+                                    <input
+                                      type="date"
+                                      value={dateRange.start}
+                                      onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
+                                      className="w-full px-2 py-2 border border-gray-300 rounded-sm text-xs focus:ring-1 focus:ring-orange-500 outline-none"
+                                    />
+                                    <input
+                                      type="date"
+                                      value={dateRange.end}
+                                      onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
+                                      className="w-full px-2 py-2 border border-gray-300 rounded-sm text-xs focus:ring-1 focus:ring-orange-500 outline-none"
+                                    />
+                                    <button
+                                      onClick={() => setIsFilterOpen(false)}
+                                      className="w-full bg-orange-500 text-white text-[10px] font-bold py-2 rounded-sm"
+                                    >
+                                      Apply
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <button
+                      onClick={handleExport}
+                      className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm hover:from-orange-600 hover:to-orange-700 transition shadow-lg flex items-center gap-2 font-semibold"
+                    >
+                      <Download size={18} />
+                      Export
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
-        </nav>
+        </div>
 
         {/* Page Content */}
         <div className="px-0 mt-4 py-0">
@@ -678,7 +823,7 @@ export default function AttendanceApp() {
                                 onClick={(e) => { e.stopPropagation(); if (canMonitor) startLiveMonitoring(employee, 'camera'); }}
                                 disabled={!canMonitor}
                                 className={`p-2.5 rounded-lg transition-all duration-300 shadow-sm border ${!canMonitor ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed' :
-                                    (monitoringEmployee?.id === employee.id && monitorType === 'camera' ? 'bg-orange-500 text-white border-orange-600 scale-110' : 'bg-gray-50 text-gray-600 border-gray-100 hover:bg-orange-50 hover:text-orange-600 hover:border-orange-200')
+                                  (monitoringEmployee?.id === employee.id && monitorType === 'camera' ? 'bg-orange-500 text-white border-orange-600 scale-110' : 'bg-gray-50 text-gray-600 border-gray-100 hover:bg-orange-50 hover:text-orange-600 hover:border-orange-200')
                                   }`}
                                 title={canMonitor ? "Toggle Camera Feed" : "Monitoring disabled (Employee not on duty)"}
                               >
@@ -689,7 +834,7 @@ export default function AttendanceApp() {
                                 onClick={(e) => { e.stopPropagation(); if (canMonitor) startLiveMonitoring(employee, 'mic'); }}
                                 disabled={!canMonitor}
                                 className={`p-2.5 rounded-lg transition-all duration-300 shadow-sm border ${!canMonitor ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed' :
-                                    (monitoringEmployee?.id === employee.id && monitorType === 'mic' ? 'bg-blue-500 text-white border-blue-600 scale-110' : 'bg-gray-50 text-gray-600 border-gray-100 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200')
+                                  (monitoringEmployee?.id === employee.id && monitorType === 'mic' ? 'bg-blue-500 text-white border-blue-600 scale-110' : 'bg-gray-50 text-gray-600 border-gray-100 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200')
                                   }`}
                                 title={canMonitor ? "Toggle Audio Feed" : "Monitoring disabled (Employee not on duty)"}
                               >
@@ -755,99 +900,24 @@ export default function AttendanceApp() {
           {/* ==================== ATTENDANCE RECORDS PAGE ==================== */}
           {currentPage === "records" && (
             <div className="space-y-8">
-              {/* Header */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-4 rounded-sm shadow-sm">
-                    <ClipboardList className="w-10 h-10 text-white" />
-                  </div>
-                  <div>
-                    <h1 className="text-4xl font-bold bg-gradient-to-r from-orange-600 to-orange-800 bg-clip-text text-transparent">
-                      Attendance Records
-                    </h1>
-                    <p className="text-gray-600 mt-1">
-                      View and manage employee attendance
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={handleExport}
-                  className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-sm flex items-center gap-2 font-semibold"
-                >
-                  <Download className="w-5 h-5" />
-                  Export CSV
-                </button>
-              </div>
-
-              {/* Filters */}
-              <div className="bg-white rounded-sm shadow-xl p-6">
-                <div className="flex flex-col md:flex-row gap-4">
-                  <select
-                    value={filterDepartment}
-                    onChange={(e) => setFilterDepartment(e.target.value)}
-                    className="px-4 py-3 border-2 border-orange-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  >
-                    <option value="all">All Departments</option>
-                    {departments.map((dept) => (
-                      <option key={dept.id} value={dept.id}>
-                        {dept.department_name}
-                      </option>
-                    ))}
-                  </select>
-
-                  <select
-                    value={filterStatus}
-                    onChange={(e) => setFilterStatus(e.target.value)}
-                    className="px-4 py-3 border-2 border-orange-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  >
-                    <option value="all">All Status</option>
-                    <option value="present">Present</option>
-                    <option value="absent">Absent</option>
-                    <option value="late">Late</option>
-                    <option value="half-day">Half Day</option>
-                  </select>
-                </div>
-              </div>
 
               {/* Table */}
-              <div className="bg-white rounded-sm shadow-sm overflow-hidden">
-                <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-6">
-                  <h2 className="text-2xl font-bold text-white flex items-center gap-3">
-                    <Users className="w-7 h-7" />
-                    Records ({filteredAttendance.length})
-                  </h2>
-                </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-gradient-to-r from-orange-400 to-orange-500">
-                      <tr>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase">
-                          Employee
-                        </th>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase">
-                          Department
-                        </th>
-                        <th className="px-6 py-4 text-center text-xs font-bold text-white uppercase">
-                          Check In
-                        </th>
-                        <th className="px-6 py-4 text-center text-xs font-bold text-white uppercase">
-                          Method
-                        </th>
-                        <th className="px-6 py-4 text-center text-xs font-bold text-white uppercase">
-                          Check Out
-                        </th>
-                        <th className="px-6 py-4 text-center text-xs font-bold text-white uppercase">
-                          Work Hours
-                        </th>
-                        <th className="px-6 py-4 text-center text-xs font-bold text-white uppercase">
-                          Status
-                        </th>
-                        <th className="px-6 py-4 text-center text-xs font-bold text-white uppercase">
-                          Actions
-                        </th>
+              <div className="overflow-x-auto">
+                <div className="overflow-x-auto border border-gray-200 rounded-sm shadow-sm">
+                  <table className="w-full border-collapse text-left">
+                    <thead>
+                      <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm">
+                        <th className="py-3 px-4 font-semibold text-left border-b border-orange-400">Employee</th>
+                        <th className="py-3 px-4 font-semibold text-left border-b border-orange-400">Department</th>
+                        <th className="py-3 px-4 font-semibold text-center border-b border-orange-400">Check In</th>
+                        <th className="py-3 px-4 font-semibold text-center border-b border-orange-400">Method</th>
+                        <th className="py-3 px-4 font-semibold text-center border-b border-orange-400">Check Out</th>
+                        <th className="py-3 px-4 font-semibold text-center border-b border-orange-400">Work Hours</th>
+                        <th className="py-3 px-4 font-semibold text-center border-b border-orange-400">Status</th>
+                        <th className="py-3 px-4 font-semibold text-right border-b border-orange-400">Action</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-100">
+                    <tbody className="text-sm">
                       {filteredAttendance.map((record) => {
                         const badge = getStatusBadge(record.status);
                         const StatusIcon = badge.icon;
@@ -860,83 +930,60 @@ export default function AttendanceApp() {
                         return (
                           <tr
                             key={record.id}
-                            className="hover:bg-orange-50 transition-colors"
+                            className="border-t hover:bg-gray-50 transition-colors"
                           >
-                            <td className="px-6 py-4">
+                            <td className="py-3 px-4">
                               <div className="flex items-center gap-3">
-                                {record.selfie && (
+                                {record.selfie ? (
                                   <img
                                     src={record.selfie}
-                                    alt="Selfie"
-                                    className="w-10 h-10 rounded-full object-cover border-2 border-orange-300"
+                                    alt=""
+                                    className="w-8 h-8 rounded-full object-cover border border-orange-200"
                                   />
-                                )}
-                                {!record.selfie && (
-                                  <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center">
-                                    <UserCheck className="w-5 h-5 text-orange-600" />
+                                ) : (
+                                  <div className="w-8 h-8 rounded-full bg-orange-50 flex items-center justify-center text-orange-400">
+                                    <Users size={14} />
                                   </div>
                                 )}
                                 <div>
-                                  <p className="font-bold text-gray-900">
-                                    {record.employee_name}
-                                  </p>
-                                  <p className="text-sm text-orange-600 font-medium">
-                                    {record.emp_uid}
-                                  </p>
+                                  <p className="font-bold text-gray-800">{record.employee_name}</p>
+                                  <p className="text-[10px] text-orange-600 font-bold tracking-wider">{record.emp_uid}</p>
                                 </div>
-
                               </div>
                             </td>
-                            <td className="px-6 py-4">
-                              <span className="text-gray-700 font-medium">
-                                {record.department_name}
-                              </span>
+                            <td className="py-3 px-4">
+                              <span className="text-gray-700 font-medium">{record.department_name}</span>
                             </td>
-
-                            <td className="px-6 py-4 text-center">
-                              <div className="flex items-center justify-center gap-2">
-                                <Clock className="w-4 h-4 text-orange-400" />
-                                <span className="text-gray-900 font-semibold">
-                                  {record.check_in}
-                                </span>
+                            <td className="py-3 px-4 text-center">
+                              <div className="flex items-center justify-center gap-1.5 font-bold text-gray-800">
+                                <Clock size={12} className="text-orange-500" />
+                                {record.check_in}
                               </div>
                             </td>
-
-                            <td className="px-6 py-4 text-center">
-                              <span
-                                className={`inline-flex items-center gap-2 px-3 py-1 ${methodBadge.bg} ${methodBadge.text} rounded-sm text-xs font-bold`}
-                              >
-                                <MethodIcon className="w-4 h-4" />
+                            <td className="py-3 px-4 text-center">
+                              <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm text-[10px] font-bold border uppercase tracking-wider ${methodBadge.bg} ${methodBadge.text} border-current opacity-80`}>
+                                <MethodIcon size={10} />
                                 {record.check_in_method}
                               </span>
                             </td>
-
-                            <td className="px-6 py-4 text-center">
-                              <span className="text-gray-900 font-semibold">
-                                {record.check_out}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 text-center">
-                              <span className="inline-flex items-center gap-2 px-3 py-1 bg-orange-100 text-orange-700 rounded-sm text-xs font-bold">
-                                <Timer className="w-4 h-4" />
+                            <td className="py-3 px-4 text-center font-bold text-gray-800">{record.check_out}</td>
+                            <td className="py-3 px-4 text-center">
+                              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-orange-50 text-orange-700 rounded-sm text-[10px] font-bold border border-orange-100 uppercase tracking-wider">
+                                <Timer size={10} />
                                 {record.work_hours}
                               </span>
                             </td>
-
-                            <td className="px-6 py-4 text-center">
-                              <span
-                                className={`inline-flex items-center gap-2 px-3 py-1 ${badge.bg} ${badge.text} rounded-sm text-xs font-bold`}
-                              >
-                                <StatusIcon className="w-4 h-4" />
+                            <td className="py-3 px-4 text-center">
+                              <span className={`px-2 py-0.5 rounded-sm text-[10px] font-bold border uppercase tracking-wider ${badge.bg} ${badge.text} border-current`}>
                                 {badge.label}
                               </span>
                             </td>
-                            <td className="px-6 py-4 text-center">
+                            <td className="py-3 px-4 text-right">
                               <button
                                 onClick={() => setDetailsModal(record)}
-                                className="text-orange-600 hover:text-orange-800 font-medium text-sm underline"
+                                className="p-1 hover:bg-orange-100 rounded-sm text-blue-500 hover:text-blue-700 transition-all font-medium"
                               >
-                                View
+                                <Eye size={18} />
                               </button>
                             </td>
                           </tr>

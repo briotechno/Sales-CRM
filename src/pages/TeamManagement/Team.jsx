@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import DashboardLayout from "../../components/DashboardLayout";
 import {
   Users,
@@ -11,7 +11,13 @@ import {
   DollarSign,
   Handshake,
   Target,
+  X,
+  Plus as PlusIcon,
+  ChevronDown,
+  Calendar,
+  AlertCircle,
 } from "lucide-react";
+import { FiHome } from "react-icons/fi";
 import NumberCard from "../../components/NumberCard";
 import {
   useGetTeamsQuery,
@@ -27,12 +33,16 @@ import { toast } from "react-hot-toast";
 import usePermission from "../../hooks/usePermission";
 
 export default function TeamManagement() {
-  // 1. States for filtering and pagination
   const [currentPage, setCurrentPage] = useState(1);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All");
+  const [dateFilter, setDateFilter] = useState("All");
+  const [customStart, setCustomStart] = useState("");
+  const [customEnd, setCustomEnd] = useState("");
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
   const itemsPerPage = 10;
 
-  // 2. States for Modals
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
@@ -41,22 +51,81 @@ export default function TeamManagement() {
 
   const { create, read, update, delete: remove } = usePermission("Team Management");
 
-  // 3. API Queries and Mutations
+  // Filter Logic (Frontend side since backend only supports search)
+  const getDateRange = () => {
+    const today = new Date();
+    const formatDate = (date) => date.toISOString().split('T')[0];
+
+    let dateFrom = "";
+    let dateTo = "";
+
+    if (dateFilter === "Today") {
+      dateFrom = formatDate(today);
+      dateTo = formatDate(today);
+    } else if (dateFilter === "Yesterday") {
+      const yesterday = new Date(today);
+      yesterday.setDate(today.getDate() - 1);
+      dateFrom = formatDate(yesterday);
+      dateTo = formatDate(yesterday);
+    } else if (dateFilter === "Last 7 Days") {
+      const last7 = new Date(today);
+      last7.setDate(today.getDate() - 7);
+      dateFrom = formatDate(last7);
+      dateTo = formatDate(today);
+    } else if (dateFilter === "This Month") {
+      const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+      dateFrom = formatDate(firstDay);
+      dateTo = formatDate(today);
+    } else if (dateFilter === "Custom") {
+      dateFrom = customStart;
+      dateTo = customEnd;
+    }
+    return { dateFrom, dateTo };
+  };
+
+  const { dateFrom, dateTo } = getDateRange();
+
   const { data, isLoading, isError, error, refetch } = useGetTeamsQuery({
     page: currentPage,
     limit: itemsPerPage,
-    search: searchQuery,
+    // Note: status and date filters are handled on frontend if backend doesn't support them
+    // but we pass them anyway in case backend is updated or supports them
+    status: statusFilter !== "All" ? statusFilter : undefined,
+    dateFrom,
+    dateTo,
   });
 
   const [createTeam, { isLoading: isCreating }] = useCreateTeamMutation();
   const [updateTeam, { isLoading: isUpdating }] = useUpdateTeamMutation();
   const [deleteTeam, { isLoading: isDeleting }] = useDeleteTeamMutation();
 
-  const teams = data?.teams || [];
-  const totalItems = data?.pagination?.total || 0;
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const teamsData = data?.teams || [];
 
-  // 4. Handlers
+  // Frontend Filtering
+  const filteredTeams = teamsData.filter(team => {
+    let statusMatch = true;
+    if (statusFilter !== "All") {
+      statusMatch = team.status === statusFilter;
+    }
+
+    let dateMatch = true;
+    if (dateFilter !== "All" && (dateFrom || dateTo)) {
+      const teamDate = team.created_at ? new Date(team.created_at).toISOString().split('T')[0] : "";
+      if (dateFrom && dateTo) {
+        dateMatch = teamDate >= dateFrom && teamDate <= dateTo;
+      } else if (dateFrom) {
+        dateMatch = teamDate >= dateFrom;
+      } else if (dateTo) {
+        dateMatch = teamDate <= dateTo;
+      }
+    }
+
+    return statusMatch && dateMatch;
+  });
+
+  const totalItems = data?.pagination?.total || 0;
+  const totalPages = data?.pagination?.totalPages || 1;
+
   const handleAddTeam = async (formData) => {
     try {
       await createTeam(formData).unwrap();
@@ -87,83 +156,160 @@ export default function TeamManagement() {
     }
   };
 
-  const handleToggleStatus = async (team) => {
-    try {
-      const newStatus = team.status === "Active" ? "Inactive" : "Active";
-      await updateTeam({ id: team.id, status: newStatus }).unwrap();
-      toast.success(`Team status updated to ${newStatus}`);
-    } catch (err) {
-      toast.error("Failed to update status");
-    }
+  const clearAllFilters = () => {
+    setStatusFilter("All");
+    setDateFilter("All");
+    setCustomStart("");
+    setCustomEnd("");
+    setCurrentPage(1);
+    setIsFilterOpen(false);
   };
 
-  // Custom scrollbar styles
-  const scrollbarStyles = `
-    .custom-scrollbar::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
-    .custom-scrollbar::-webkit-scrollbar-track {
-      background: #f1f1f1;
-      border-radius: 10px;
-    }
-    .custom-scrollbar::-webkit-scrollbar-thumb {
-      background: linear-gradient(180deg, #f97316, #ea580c);
-      border-radius: 10px;
-    }
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-      background: linear-gradient(180deg, #ea580c, #c2410c);
-    }
-  `;
+  const hasActiveFilters = statusFilter !== "All" || dateFilter !== "All";
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsFilterOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   return (
     <DashboardLayout>
       <div className="min-h-screen bg-white">
-        <style>{scrollbarStyles}</style>
         {/* Header Section */}
-        <div className="bg-white border-b sticky top-0 z-30">
-          <div className="max-w-8xl mx-auto px-4 py-2">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="bg-white sticky top-0 z-30">
+          <div className="max-w-8xl mx-auto px-4 py-4 border-b">
+            <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Team Management</h1>
-                <p className="text-[10px] text-gray-500 mt-0.5 flex items-center gap-1.5">
-                  <Home className="text-gray-400" size={14} /> HRM / <span className="text-orange-500 font-medium">All Team</span>
+                <h1 className="text-2xl font-bold text-gray-800 transition-all duration-300">Team Management</h1>
+                <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
+                  <FiHome className="text-gray-700" size={14} />
+                  <span className="text-gray-400"></span> HRM /{" "}
+                  <span className="text-[#FF7B1D] font-medium">
+                    All Teams
+                  </span>
                 </p>
               </div>
 
+              {/* Buttons */}
               <div className="flex flex-wrap items-center gap-3">
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="Search teams..."
-                    value={searchQuery}
-                    onChange={(e) => {
-                      setSearchQuery(e.target.value);
-                      setCurrentPage(1);
+                {/* Unified Filter */}
+                <div className="relative" ref={dropdownRef}>
+                  <button
+                    onClick={() => {
+                      if (hasActiveFilters) {
+                        clearAllFilters();
+                      } else {
+                        setIsFilterOpen(!isFilterOpen);
+                      }
                     }}
-                    className="pl-4 pr-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-1 focus:ring-orange-500 text-sm w-64 shadow-sm"
-                  />
+                    className={`px-3 py-3 rounded-sm border transition shadow-sm ${isFilterOpen || hasActiveFilters
+                      ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
+                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
+                      }`}
+                  >
+                    {hasActiveFilters ? <X size={18} /> : <Filter size={18} />}
+                  </button>
+
+                  {isFilterOpen && (
+                    <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-xl z-50 animate-fadeIn overflow-hidden">
+                      {/* Status Section */}
+                      <div className="p-3 border-b border-gray-100 bg-gray-50">
+                        <span className="text-sm font-bold text-gray-700 tracking-wide">status</span>
+                      </div>
+                      <div className="py-1">
+                        {["All", "Active", "Inactive"].map((status) => (
+                          <button
+                            key={status}
+                            onClick={() => {
+                              setStatusFilter(status);
+                              setIsFilterOpen(false);
+                              setCurrentPage(1);
+                            }}
+                            className={`block w-full text-left px-4 py-2 text-sm transition-colors ${statusFilter === status
+                              ? "bg-orange-50 text-orange-600 font-bold"
+                              : "text-gray-700 hover:bg-gray-50"
+                              }`}
+                          >
+                            {status}
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Date Range Section */}
+                      <div className="p-3 border-t border-b border-gray-100 bg-gray-50">
+                        <span className="text-sm font-bold text-gray-700 tracking-wide">dateCreated</span>
+                      </div>
+                      <div className="py-1">
+                        {["All", "Today", "Yesterday", "Last 7 Days", "This Month", "Custom"].map((option) => (
+                          <div key={option}>
+                            <button
+                              onClick={() => {
+                                setDateFilter(option);
+                                if (option !== "Custom") {
+                                  setIsFilterOpen(false);
+                                  setCurrentPage(1);
+                                }
+                              }}
+                              className={`block w-full text-left px-4 py-2 text-sm transition-colors ${dateFilter === option
+                                ? "bg-orange-50 text-orange-600 font-bold"
+                                : "text-gray-700 hover:bg-gray-50"
+                                }`}
+                            >
+                              {option}
+                            </button>
+                            {option === "Custom" && dateFilter === "Custom" && (
+                              <div className="px-4 py-3 space-y-2 border-t border-gray-50 bg-gray-50/50">
+                                <input
+                                  type="date"
+                                  value={customStart}
+                                  onChange={(e) => setCustomStart(e.target.value)}
+                                  className="w-full px-2 py-2 border border-gray-300 rounded-sm text-xs focus:ring-1 focus:ring-orange-500 outline-none"
+                                />
+                                <input
+                                  type="date"
+                                  value={customEnd}
+                                  onChange={(e) => setCustomEnd(e.target.value)}
+                                  className="w-full px-2 py-2 border border-gray-300 rounded-sm text-xs focus:ring-1 focus:ring-orange-500 outline-none"
+                                />
+                                <button
+                                  onClick={() => { setIsFilterOpen(false); setCurrentPage(1); }}
+                                  className="w-full bg-[#FF7B1D] text-white text-[10px] font-bold py-2 rounded-sm uppercase"
+                                >
+                                  Apply
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
+
                 <button
                   onClick={() => setShowAddModal(true)}
                   disabled={!create}
-                  className={`flex items-center justify-center gap-2 px-6 py-2 rounded-sm font-bold transition shadow-md text-sm active:scale-95 ${create
+                  className={`flex items-center gap-2 px-6 py-3 rounded-sm font-semibold transition shadow-lg hover:shadow-xl ${create
                     ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
                     : "bg-gray-300 text-gray-500 cursor-not-allowed"
                     }`}
                 >
-                  <Plus size={18} />
-                  CREATE TEAM
+                  <PlusIcon size={20} />
+                  Add Team
                 </button>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="max-w-8xl mx-auto p-4 mt-0">
-
-          {/* Statement Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="max-w-8xl mx-auto p-4 pt-0 mt-2">
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-3">
             <NumberCard
               title="Total Team"
               number={totalItems || "0"}
@@ -173,97 +319,93 @@ export default function TeamManagement() {
             />
             <NumberCard
               title="Avg Members"
-              number={teams.length > 0 ? (teams.reduce((acc, t) => acc + (t.total_members || 0), 0) / teams.length).toFixed(1) : "0"}
+              number={teamsData.length > 0 ? (teamsData.reduce((acc, t) => acc + (t.total_members || 0), 0) / teamsData.length).toFixed(1) : "0"}
               icon={<DollarSign className="text-green-600" size={24} />}
               iconBgColor="bg-green-100"
               lineBorderClass="border-green-500"
             />
             <NumberCard
               title="Active Teams"
-              number={teams.filter(t => t.status === 'Active').length || "0"}
+              number={teamsData.filter(t => t.status === 'Active').length || "0"}
               icon={<Handshake className="text-orange-600" size={24} />}
               iconBgColor="bg-orange-100"
               lineBorderClass="border-orange-500"
             />
             <NumberCard
               title="Inactive Teams"
-              number={teams.filter(t => t.status === 'Inactive').length || "0"}
+              number={teamsData.filter(t => t.status === 'Inactive').length || "0"}
               icon={<Target className="text-purple-600" size={24} />}
               iconBgColor="bg-purple-100"
               lineBorderClass="border-purple-500"
             />
           </div>
 
-          {/* 🧾 Table */}
-          <div className="overflow-x-auto border border-gray-200 rounded-sm shadow-sm">
-            <table className="w-full border-collapse text-center">
+          {/* Table */}
+          <div className="overflow-x-auto mt-4 border border-gray-200 rounded-sm shadow-sm">
+            <table className="w-full border-collapse text-left">
               <thead>
                 <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm">
-                  <th className="py-3 px-4 font-semibold">S.N</th>
-                  <th className="py-3 px-4 font-semibold">Team ID</th>
-                  <th className="py-3 px-4 font-semibold">Team Name</th>
-                  <th className="py-3 px-4 font-semibold">Total Members</th>
-                  <th className="py-3 px-4 font-semibold">Date Created</th>
-                  <th className="py-3 px-4 font-semibold">Status</th>
-                  <th className="py-3 px-4 font-semibold">Action</th>
+                  <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[5%]">S.N</th>
+                  <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[15%]">Team ID</th>
+                  <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[25%]">Team Name</th>
+                  <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[15%]">Total Members</th>
+                  <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[15%]">Date Created</th>
+                  <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[15%]">Status</th>
+                  <th className="py-3 px-4 font-semibold text-right border-b border-orange-400 w-[10%]">Action</th>
                 </tr>
               </thead>
-              <tbody className="text-sm">
+
+              <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan="7" className="py-10 text-gray-500 font-medium">
-                      Loading...
+                    <td colSpan="7" className="py-20 text-center">
+                      <div className="flex justify-center flex-col items-center gap-4">
+                        <div className="w-12 h-12 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin"></div>
+                        <p className="text-gray-500 font-semibold animate-pulse">Loading teams...</p>
+                      </div>
                     </td>
                   </tr>
-                ) : isError ? (
-                  <tr>
-                    <td colSpan="7" className="py-10 text-red-500 font-medium">
-                      Error loading teams.
-                    </td>
-                  </tr>
-                ) : teams.length > 0 ? (
-                  teams.map((team, index) => (
+                ) : filteredTeams.length > 0 ? (
+                  filteredTeams.map((team, index) => (
                     <tr
                       key={team.id}
                       className="border-t hover:bg-gray-50 transition-colors"
                     >
-                      <td className="py-3 px-4">
+                      <td className="py-3 px-4 text-left">
                         {(currentPage - 1) * itemsPerPage + index + 1}
                       </td>
-                      <td className="py-3 px-4 text-orange-600 font-medium">
-                        {team.team_id}
-                      </td>
-                      <td className="py-3 px-4 text-gray-800 font-medium">
+                      <td className="py-3 px-4 font-medium text-orange-600 text-left">{team.team_id}</td>
+                      <td className="py-3 px-4 font-semibold text-gray-800 text-left">
                         {team.team_name}
                       </td>
-                      <td className="py-3 px-4">
-                        <div className="flex items-center justify-center gap-3">
-                          <div className="w-8 h-8 rounded-sm bg-orange-100 flex items-center justify-center text-orange-600">
-                            <Users size={16} />
+                      <td className="py-3 px-4 text-left">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-sm bg-orange-100 flex items-center justify-center text-orange-600 shadow-sm border border-orange-200">
+                            <Users size={14} />
                           </div>
                           <span className="font-bold text-gray-700">{team.total_members || 0}</span>
                         </div>
                       </td>
-                      <td className="py-3 px-4 text-gray-600">
+                      <td className="py-3 px-4 text-gray-600 text-sm text-left">
                         {team.created_at ? new Date(team.created_at).toLocaleDateString() : 'N/A'}
                       </td>
-                      <td className="py-3 px-4">
+                      <td className="py-3 px-4 text-left">
                         <span
-                          className={`px-3 py-1 rounded-full text-xs font-semibold ${team.status === "Active"
-                            ? "bg-green-100 text-green-700"
-                            : "bg-red-100 text-red-700"
+                          className={`px-3 py-1 rounded-sm text-[10px] font-bold border uppercase tracking-wider ${team.status === "Active"
+                            ? "bg-green-50 text-green-700 border-green-200"
+                            : "bg-red-50 text-red-700 border-red-200"
                             }`}
                         >
                           {team.status}
                         </span>
                       </td>
-                      <td className="py-3 px-4">
-                        <div className="flex justify-center gap-2">
+                      <td className="py-3 px-4 text-right">
+                        <div className="flex justify-end gap-2">
                           {read && (
                             <button
                               onClick={() => { setSelectedTeam(team); setShowViewModal(true); }}
-                              className="p-2 text-blue-600 hover:bg-blue-50 rounded-sm transition-colors"
-                              title="View Team"
+                              className="p-1 hover:bg-orange-100 rounded-sm text-blue-500 hover:text-blue-700 transition-all font-medium"
+                              title="View"
                             >
                               <Eye size={18} />
                             </button>
@@ -271,8 +413,8 @@ export default function TeamManagement() {
                           {update && (
                             <button
                               onClick={() => { setSelectedTeam(team); setShowEditModal(true); }}
-                              className="p-2 text-orange-600 hover:bg-orange-50 rounded-sm transition-colors"
-                              title="Edit Team"
+                              className="p-1 hover:bg-orange-100 rounded-sm text-green-500 hover:text-green-700 transition-all font-medium"
+                              title="Edit"
                             >
                               <Edit2 size={18} />
                             </button>
@@ -280,8 +422,8 @@ export default function TeamManagement() {
                           {remove && (
                             <button
                               onClick={() => { setSelectedTeam(team); setShowDeleteModal(true); }}
-                              className="p-2 text-red-600 hover:bg-red-50 rounded-sm transition-colors"
-                              title="Delete Team"
+                              className="p-1 hover:bg-orange-100 rounded-sm text-red-500 hover:text-red-700 transition-all font-medium border border-transparent shadow-sm"
+                              title="Delete"
                             >
                               <Trash2 size={18} />
                             </button>
@@ -292,8 +434,14 @@ export default function TeamManagement() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="7" className="py-10 text-gray-500 font-medium">
-                      No teams found
+                    <td
+                      colSpan="7"
+                      className="py-12 text-gray-500 font-medium text-sm text-center"
+                    >
+                      <div className="flex flex-col items-center gap-3">
+                        <Users size={48} className="text-gray-200" />
+                        <p>No teams found matches your criteria.</p>
+                      </div>
                     </td>
                   </tr>
                 )}
@@ -301,42 +449,53 @@ export default function TeamManagement() {
             </table>
           </div>
 
-          {/* 🔹 Pagination */}
-          <div className="flex justify-between items-center mt-6 bg-gray-50 p-4 rounded-sm border">
-            <p className="text-sm text-gray-600">
-              Showing <span className="font-bold">{(currentPage - 1) * itemsPerPage + 1}</span> to <span className="font-bold">{Math.min(currentPage * itemsPerPage, totalItems)}</span> of <span className="font-bold">{totalItems}</span> teams
-            </p>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
-                className="px-4 py-2 border rounded-sm text-sm font-bold disabled:opacity-50 bg-white"
-              >
-                Previous
-              </button>
+          {/* Pagination */}
+          {totalPages > 0 && (
+            <div className="flex flex-col md:flex-row justify-between items-center mt-6 gap-4 bg-gray-50 p-4 rounded-sm border border-gray-200">
+              <p className="text-sm font-semibold text-gray-700">
+                Showing <span className="text-orange-600">{(currentPage - 1) * itemsPerPage + 1}</span> to <span className="text-orange-600">{Math.min(currentPage * itemsPerPage, totalItems)}</span> of <span className="text-orange-600">{totalItems}</span> Teams
+              </p>
 
-              {Array.from({ length: totalPages }, (_, i) => (
+              <div className="flex items-center gap-2">
                 <button
-                  key={i + 1}
-                  onClick={() => setCurrentPage(i + 1)}
-                  className={`w-9 h-9 border rounded-sm text-sm font-bold ${currentPage === i + 1
-                    ? "bg-orange-500 text-white border-orange-500"
-                    : "bg-white text-gray-700 hover:bg-gray-50"
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                  className={`px-4 py-2 rounded-sm font-bold transition flex items-center gap-1 ${currentPage === 1
+                    ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                    : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"
                     }`}
                 >
-                  {i + 1}
+                  Previous
                 </button>
-              ))}
 
-              <button
-                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                disabled={currentPage === totalPages}
-                className="px-4 py-2 border rounded-sm text-sm font-bold disabled:opacity-50 bg-white"
-              >
-                Next
-              </button>
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: totalPages }, (_, i) => (
+                    <button
+                      key={i + 1}
+                      onClick={() => setCurrentPage(i + 1)}
+                      className={`w-10 h-10 rounded-sm font-bold transition ${currentPage === i + 1
+                        ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md"
+                        : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+                        }`}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                  className={`px-4 py-2 rounded-sm font-bold transition flex items-center gap-1 ${currentPage === totalPages
+                    ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                    : "bg-[#22C55E] text-white hover:opacity-90 shadow-md"
+                    }`}
+                >
+                  Next
+                </button>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 
@@ -371,7 +530,6 @@ export default function TeamManagement() {
         teamId={selectedTeam?.id}
         teamName={selectedTeam?.team_name}
       />
-
     </DashboardLayout>
   );
 }

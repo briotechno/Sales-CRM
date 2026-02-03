@@ -213,7 +213,6 @@ export default function AnnouncementPage() {
 
   // Clear all filters function
   const clearAllFilters = () => {
-    setSearchTerm("");
     setCategoryFilter("All");
     setDateFilter("All");
     setCustomStartDate("");
@@ -221,7 +220,7 @@ export default function AnnouncementPage() {
     setCurrentPage(1);
   };
 
-  const hasActiveFilters = searchTerm || categoryFilter !== "All" || dateFilter !== "All";
+  const hasActiveFilters = categoryFilter !== "All" || dateFilter !== "All";
 
 
 
@@ -268,9 +267,9 @@ export default function AnnouncementPage() {
                   {isFilterOpen && (
                     <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-xl z-50 animate-fadeIn">
                       <div className="p-3 border-b border-gray-100 bg-gray-50">
-                        <span className="text-sm font-bold text-gray-700 tracking-wide">Categories</span>
+                        <span className="text-sm font-bold text-gray-700 tracking-wide">category</span>
                       </div>
-                      <div className="py-1 max-h-48 overflow-y-auto custom-scrollbar">
+                      <div className="py-1 max-h-48 overflow-y-auto custom-scrollbar border-b border-gray-100">
                         <button
                           onClick={() => {
                             setCategoryFilter("All");
@@ -302,8 +301,8 @@ export default function AnnouncementPage() {
                         ))}
                       </div>
 
-                      <div className="p-3 border-t border-b border-gray-100 bg-gray-50">
-                        <span className="text-sm font-bold text-gray-700 tracking-wide">Date Range</span>
+                      <div className="p-3 border-b border-gray-100 bg-gray-50">
+                        <span className="text-sm font-bold text-gray-700 tracking-wide">dateCreated</span>
                       </div>
                       <div className="py-1">
                         {["All", "Today", "This Week", "This Month", "Custom"].map((option) => (

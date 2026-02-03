@@ -442,6 +442,8 @@ export default function HRPolicy() {
     setFilterStatus("All");
     setFilterDepartment("All");
     setSearchTerm("");
+    setCurrentPage(1);
+    setShowFilters(false);
   };
 
   const handlePageChange = (page) => {
@@ -483,986 +485,967 @@ export default function HRPolicy() {
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen ml-6 p-0">
-        {/* Header */}
-        <div className="bg-white rounded-sm p-3 mb-4 border-b">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">HR Policy</h1>
-              <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
-                <FiHome className="text-gray-700 text-sm" />
-                <span className="text-gray-400">HRM /</span>
-                <span className="text-[#FF7B1D] font-medium">All HR Policy</span>
-              </p>
-            </div>
+      <div className="min-h-screen bg-white">
+        {/* Header Section */}
+        <div className="bg-white sticky top-0 z-30">
+          <div className="max-w-8xl mx-auto px-4 py-4 border-b">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-800 transition-all duration-300">HR Policy</h1>
+                <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
+                  <FiHome className="text-gray-700" size={14} />
+                  <span className="text-gray-400"></span> HRM /{" "}
+                  <span className="text-[#FF7B1D] font-medium">
+                    All HR Policy
+                  </span>
+                </p>
+              </div>
 
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowFilters(!showFilters)}
-                className={`px-4 py-2 rounded-lg border flex items-center gap-2 transition-all shadow-sm ${showFilters || filterCategory !== "All" || filterStatus !== "All" || filterDepartment !== "All" || searchTerm
-                  ? "bg-orange-50 border-orange-200 text-orange-600"
-                  : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
-                  }`}
-              >
-                <Filter size={18} className={filterCategory !== "All" || filterStatus !== "All" || filterDepartment !== "All" || searchTerm ? "fill-orange-500" : ""} />
-                <span className="font-semibold text-sm">Filters</span>
-                {(filterCategory !== "All" || filterStatus !== "All" || filterDepartment !== "All" || searchTerm) && (
-                  <span className="flex h-2 w-2 rounded-full bg-orange-500"></span>
-                )}
-              </button>
+              <div className="flex flex-wrap items-center gap-3">
+                {/* Unified Filter */}
+                <div className="relative">
+                  <button
+                    onClick={() => {
+                      if (filterCategory !== "All" || filterStatus !== "All" || filterDepartment !== "All") {
+                        handleClearFilters();
+                      } else {
+                        setShowFilters(!showFilters);
+                      }
+                    }}
+                    className={`px-3 py-3 rounded-sm border transition shadow-sm ${showFilters || filterCategory !== "All" || filterStatus !== "All" || filterDepartment !== "All"
+                      ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
+                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
+                      }`}
+                  >
+                    {filterCategory !== "All" || filterStatus !== "All" || filterDepartment !== "All" ? <X size={18} /> : <Filter size={18} />}
+                  </button>
 
-              <button
-                onClick={handleExport}
-                className="flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 px-5 py-2.5 rounded-sm font-medium border border-gray-300 transition-colors"
-              >
-                <Download size={18} />
-                Export
-              </button>
-              <button
-                onClick={() => {
-                  resetForm();
-                  setShowAddModal(true);
-                }}
-                disabled={!create}
-                className={`flex items-center gap-2 px-4 py-2 rounded-sm font-semibold transition ml-2 ${create
-                  ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 hover:opacity-90"
-                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                  }`}
-              >
-                <Plus size={18} />
-                Add Policy
-              </button>
+                  {showFilters && (
+                    <div className="absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-xl shadow-2xl z-50 animate-fadeIn overflow-hidden">
+                      <div className="max-h-96 overflow-y-auto">
+                        {/* Status Section */}
+                        <div className="p-3 border-b border-gray-100 bg-gray-50">
+                          <span className="text-sm font-bold text-gray-700 tracking-wide">status</span>
+                        </div>
+                        <div className="py-1">
+                          {["All", ...statuses].map((status) => (
+                            <button
+                              key={status}
+                              onClick={() => {
+                                setFilterStatus(status);
+                                setShowFilters(false);
+                                setCurrentPage(1);
+                              }}
+                              className={`block w-full text-left px-4 py-2 text-sm transition-colors ${filterStatus === status
+                                ? "bg-orange-50 text-orange-600 font-bold"
+                                : "text-gray-700 hover:bg-gray-50"
+                                }`}
+                            >
+                              {status}
+                            </button>
+                          ))}
+                        </div>
+
+                        {/* Category Section */}
+                        <div className="p-3 border-t border-b border-gray-100 bg-gray-50">
+                          <span className="text-sm font-bold text-gray-700 tracking-wide">category</span>
+                        </div>
+                        <div className="py-1">
+                          {["All", ...categories].map((cat) => (
+                            <button
+                              key={cat}
+                              onClick={() => {
+                                setFilterCategory(cat);
+                                setShowFilters(false);
+                                setCurrentPage(1);
+                              }}
+                              className={`block w-full text-left px-4 py-2 text-sm transition-colors ${filterCategory === cat
+                                ? "bg-orange-50 text-orange-600 font-bold"
+                                : "text-gray-700 hover:bg-gray-50"
+                                }`}
+                            >
+                              {cat}
+                            </button>
+                          ))}
+                        </div>
+
+                        {/* Department Section */}
+                        <div className="p-3 border-t border-b border-gray-100 bg-gray-50">
+                          <span className="text-sm font-bold text-gray-700 tracking-wide">department</span>
+                        </div>
+                        <div className="py-1">
+                          <button
+                            onClick={() => {
+                              setFilterDepartment("All");
+                              setShowFilters(false);
+                              setCurrentPage(1);
+                            }}
+                            className={`block w-full text-left px-4 py-2 text-sm transition-colors ${filterDepartment === "All"
+                              ? "bg-orange-50 text-orange-600 font-bold"
+                              : "text-gray-700 hover:bg-gray-50"
+                              }`}
+                          >
+                            All Departments
+                          </button>
+                          {departments.map((dept) => (
+                            <button
+                              key={dept.id}
+                              onClick={() => {
+                                setFilterDepartment(dept.department_name);
+                                setShowFilters(false);
+                                setCurrentPage(1);
+                              }}
+                              className={`block w-full text-left px-4 py-2 text-sm transition-colors ${filterDepartment === dept.department_name
+                                ? "bg-orange-50 text-orange-600 font-bold"
+                                : "text-gray-700 hover:bg-gray-50"
+                                }`}
+                            >
+                              {dept.department_name}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  onClick={handleExport}
+                  className="bg-white border border-gray-300 hover:bg-gray-50 px-4 py-3 rounded-sm flex items-center gap-2 transition text-sm font-semibold shadow-sm active:scale-95"
+                >
+                  <Download className="w-5 h-5" /> EXPORT
+                </button>
+
+                <button
+                  onClick={() => {
+                    resetForm();
+                    setShowAddModal(true);
+                  }}
+                  disabled={!create}
+                  className={`flex items-center gap-2 px-6 py-3 rounded-sm font-semibold transition shadow-lg hover:shadow-xl ${create
+                    ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 font-bold"
+                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    }`}
+                >
+                  <Plus size={20} /> ADD POLICY
+                </button>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* FILTER DROPDOWN */}
-        {showFilters && (
-          <div className="absolute right-6 top-24 mt-2 bg-white border border-gray-200 rounded-xl shadow-2xl w-80 p-5 animate-fadeIn z-50 transition-all">
-            <div className="flex justify-between items-center mb-4 pb-2 border-b">
-              <h3 className="font-bold text-gray-800 flex items-center gap-2">
-                <Filter size={18} className="text-orange-500" />
-                Filter Options
-              </h3>
-              <button
-                onClick={() => setShowFilters(false)}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            {/* Search */}
-            <div className="mb-4">
-              <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">
-                Search Policies
-              </label>
-              <input
-                type="text"
-                placeholder="Search..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all bg-gray-50"
-              />
-            </div>
-
-            {/* Category */}
-            <div className="mb-4">
-              <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">
-                Category
-              </label>
-              <select
-                value={filterCategory}
-                onChange={(e) => setFilterCategory(e.target.value)}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all bg-gray-50"
-              >
-                <option value="All">All Categories</option>
-                {categories.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Status */}
-            <div className="mb-4">
-              <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">
-                Status
-              </label>
-              <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all bg-gray-50"
-              >
-                <option value="All">All Statuses</option>
-                {statuses.map((status) => (
-                  <option key={status} value={status}>
-                    {status}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Department */}
-            <div className="mb-6">
-              <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">
-                Department
-              </label>
-              <select
-                value={filterDepartment}
-                onChange={(e) => setFilterDepartment(e.target.value)}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all bg-gray-50"
-              >
-                <option value="All">All Departments</option>
-                {departments.map((dep) => (
-                  <option key={dep.id} value={dep.department_name}>
-                    {dep.department_name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="flex gap-3">
-              <button
-                onClick={handleClearFilters}
-                className="flex-1 px-4 py-2 border border-gray-200 text-gray-600 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-all font-sans"
-              >
-                Clear All
-              </button>
-              <button
-                onClick={() => setShowFilters(false)}
-                className="flex-1 px-4 py-2 bg-orange-500 text-white rounded-lg text-sm font-semibold hover:bg-orange-600 transition-all shadow-md shadow-orange-500/20 font-sans"
-              >
-                Apply
-              </button>
-            </div>
+        <div className="max-w-8xl mx-auto p-4 pt-0 mt-2">
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-3">
+            <NumberCard
+              title={"Total Policies"}
+              number={stats.total || "0"}
+              icon={<FileText className="text-blue-600" size={24} />}
+              iconBgColor={"bg-blue-100"}
+              lineBorderClass={"border-blue-500"}
+            />
+            <NumberCard
+              title={"Active"}
+              number={stats.active || "0"}
+              icon={<Activity className="text-green-600" size={24} />}
+              iconBgColor={"bg-green-100"}
+              lineBorderClass={"border-green-500"}
+            />
+            <NumberCard
+              title={"Under Review"}
+              number={stats.underReview || "0"}
+              icon={<View className="text-orange-600" size={24} />}
+              iconBgColor={"bg-orange-100"}
+              lineBorderClass={"border-orange-500"}
+            />
+            <NumberCard
+              title={"Archived"}
+              number={stats.archived || "0"}
+              icon={<Archive className="text-purple-600" size={24} />}
+              iconBgColor={"bg-purple-100"}
+              lineBorderClass={"border-purple-500"}
+            />
           </div>
-        )}
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-          <NumberCard
-            title={"Total Policies"}
-            number={stats.total}
-            icon={<FileText className="text-blue-600" size={24} />}
-            iconBgColor={"bg-blue-100"}
-            lineBorderClass={"border-blue-500"}
-          />
-          <NumberCard
-            title={"Active"}
-            number={stats.active}
-            icon={<Activity className="text-green-600" size={24} />}
-            iconBgColor={"bg-green-100"}
-            lineBorderClass={"border-green-500"}
-          />
-          <NumberCard
-            title={"Under Review"}
-            number={stats.underReview}
-            icon={<View className="text-orange-600" size={24} />}
-            iconBgColor={"bg-orange-100"}
-            lineBorderClass={"border-orange-500"}
-          />
-          <NumberCard
-            title={"Archived"}
-            number={stats.archived}
-            icon={<Archive className="text-purple-600" size={24} />}
-            iconBgColor={"bg-purple-100"}
-            lineBorderClass={"border-purple-500"}
-          />
-        </div >
-
-        {/* Tabs */}
-        < div className="flex gap-8 mb-6 border-b border-gray-200" >
-          {
-            ["All", "Active", "Under Review", "Archived"].map((tab) => (
+          {/* Tabs */}
+          <div className="flex gap-8 mb-4 border-b border-gray-200">
+            {["All", "Active", "Under Review", "Archived"].map((tab) => (
               <button
                 key={tab}
                 onClick={() => {
                   setActiveTab(tab);
                   setCurrentPage(1);
                 }}
-                className={`pb-3 font-medium transition-colors ${activeTab === tab
+                className={`pb-3 font-bold transition-colors text-sm ${activeTab === tab
                   ? "text-orange-500 border-b-2 border-orange-500"
-                  : "text-gray-600 hover:text-gray-900"
+                  : "text-gray-500 hover:text-gray-900"
                   }`}
               >
                 {tab}
               </button>
-            ))
-          }
-        </div >
-
-        {/* Table */}
-        < div className="bg-white rounded-sm shadow-sm overflow-hidden" >
-          <table className="w-full">
-            <thead className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
-              <tr>
-                <th className="px-6 py-4 text-left text-sm font-semibold uppercase whitespace-nowrap">
-                  Policy Title
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-semibold uppercase whitespace-nowrap">
-                  Category
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-semibold uppercase whitespace-nowrap">
-                  Effective Date
-                </th>
-                <th className="py-4 text-left text-sm font-semibold uppercase whitespace-nowrap">
-                  Review Date
-                </th>
-                <th className="py-4 text-left text-sm font-semibold uppercase whitespace-nowrap">
-                  Department
-                </th>
-                <th className="py-4 text-left text-sm font-semibold uppercase whitespace-nowrap">
-                  Version
-                </th>
-                <th className="py-4 text-left text-sm font-semibold uppercase whitespace-nowrap">
-                  Status
-                </th>
-                <th className="py-4 text-left text-sm font-semibold uppercase whitespace-nowrap">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-
-            <tbody className="divide-y divide-gray-200">
-              {isLoading ? (
-                Array.from({ length: 5 }).map((_, index) => (
-                  <tr key={index} className="bg-white animate-pulse">
-                    <td className="px-6 py-4">
-                      <div className="h-4 bg-gray-200 rounded w-32"></div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="h-4 bg-gray-200 rounded w-24"></div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="h-4 bg-gray-200 rounded w-24"></div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="h-4 bg-gray-200 rounded w-24"></div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="h-4 bg-gray-200 rounded w-24"></div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="h-4 bg-gray-200 rounded w-16"></div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="h-6 bg-gray-200 rounded w-20"></div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="h-8 bg-gray-200 rounded w-24"></div>
-                    </td>
-                  </tr>
-                ))
-              ) : isError ? (
-                <tr>
-                  <td colSpan="8" className="px-6 py-12 text-center text-red-500">
-                    Error loading HR policies
-                  </td>
-                </tr>
-              ) : currentPolicies.length > 0 ? (
-                currentPolicies.map((policy, index) => (
-                  <tr key={policy.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={`w-12 h-12 rounded-full ${getColorClass(
-                            index
-                          )} flex items-center justify-center font-semibold text-sm`}
-                        >
-                          {getInitials(policy.title)}
-                        </div>
-                        <span className="font-medium text-gray-900">{policy.title}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-gray-700">{policy.category}</td>
-                    <td className="px-6 py-4 text-gray-700">
-                      {new Date(policy.effective_date).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-4 text-gray-700">
-                      {new Date(policy.review_date).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-4 text-gray-700">{policy.department || "All Departments"}</td>
-                    <td className="px-6 py-4 text-gray-700">{policy.version}</td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`inline-block px-4 py-1 rounded-full text-sm font-medium ${policy.status === "Active"
-                          ? "bg-green-100 text-green-700"
-                          : policy.status === "Under Review"
-                            ? "bg-yellow-100 text-yellow-700"
-                            : "bg-gray-100 text-gray-700"
-                          }`}
-                      >
-                        {policy.status}
-                      </span>
-                    </td>
-                    <td className="py-4">
-                      <div className="flex items-center gap-2">
-                        {read && (
-                          <button
-                            onClick={() => handleView(policy)}
-                            className="p-2 hover:bg-blue-100 rounded-sm transition-all"
-                            title="View"
-                          >
-                            <Eye size={18} className="text-blue-600" />
-                          </button>
-                        )}
-                        {update && (
-                          <button
-                            onClick={() => handleEditClick(policy)}
-                            className="p-2 hover:bg-orange-100 rounded-sm transition-all"
-                            title="Edit"
-                          >
-                            <Edit size={18} className="text-orange-600" />
-                          </button>
-                        )}
-                        {remove && (
-                          <button
-                            onClick={() => handleDeleteClick(policy)}
-                            className="p-2 hover:bg-red-100 rounded-sm transition-all"
-                            title="Delete"
-                          >
-                            <Trash2 size={18} className="text-red-600" />
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="8" className="px-6 py-12 text-center text-gray-500">
-                    No HR policies found matching the current filters
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div >
-
-        {/* Pagination - Updated to match Designation.jsx */}
-        < div className="flex justify-between items-center mt-6 bg-gray-50 p-4 rounded-sm border-t border-gray-200" >
-          <p className="text-sm text-gray-600">
-            Showing <span className="font-bold">{indexOfFirstItem + 1}</span> to{" "}
-            <span className="font-bold">{Math.min(indexOfLastItem, filteredPolicies.length)}</span> of{" "}
-            <span className="font-bold">{filteredPolicies.length}</span> results
-          </p>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handlePrev}
-              disabled={currentPage === 1}
-              className="px-4 py-2 border rounded-sm text-sm font-bold disabled:opacity-50 bg-white hover:bg-gray-50 transition-colors"
-            >
-              Previous
-            </button>
-
-            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-              let p = i + 1;
-              if (totalPages > 5 && currentPage > 3) p = currentPage - 2 + i;
-              if (p > totalPages) return null;
-              return (
-                <button
-                  key={p}
-                  onClick={() => handlePageChange(p)}
-                  className={`w-9 h-9 border rounded-sm text-sm font-bold flex items-center justify-center transition-colors ${currentPage === p
-                    ? "bg-orange-500 text-white border-orange-500"
-                    : "bg-white text-gray-700 hover:bg-gray-50"
-                    }`}
-                >
-                  {p}
-                </button>
-              );
-            })}
-
-            <button
-              onClick={handleNext}
-              disabled={currentPage === totalPages}
-              className="px-4 py-2 border rounded-sm text-sm font-bold disabled:opacity-50 bg-white hover:bg-gray-50 transition-colors"
-            >
-              Next
-            </button>
+            ))}
           </div>
-        </div >
 
-        {/* Add Policy Modal */}
-        {
-          showAddModal && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-              <div className="bg-white rounded-sm shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-                <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-6">
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-3">
-                      <div className="bg-white bg-opacity-20 p-2 rounded-sm">
-                        <Plus className="text-white" size={24} />
-                      </div>
-                      <h2 className="text-2xl font-bold text-white">
-                        {isUpdatingExisting ? "Update HR Policy (New Version)" : "Add New HR Policy"}
-                      </h2>
-                    </div>
-                    <button
-                      onClick={() => setShowAddModal(false)}
-                      className="text-white hover:bg-white hover:bg-opacity-20 p-2 rounded-sm transition-colors"
-                    >
-                      <X size={24} />
-                    </button>
-                  </div>
-                </div>
+          {/* Table */}
+          <div className="overflow-x-auto mt-4 border border-gray-200 rounded-sm shadow-sm">
+            <table className="w-full border-collapse text-left">
+              <thead>
+                <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm">
+                  <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[15%]">Policy Title</th>
+                  <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[12%]">Category</th>
+                  <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[12%]">Effective Date</th>
+                  <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[12%]">Review Date</th>
+                  <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[12%]">Department</th>
+                  <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[8%]">Version</th>
+                  <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[10%]">Status</th>
+                  <th className="py-3 px-4 font-semibold text-right border-b border-orange-400 w-[12%]">Actions</th>
+                </tr>
+              </thead>
 
-                <div className="p-6">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Policy Title *
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.title}
-                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                        placeholder="Enter policy title"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Category *
-                      </label>
-                      <select
-                        value={formData.category}
-                        onChange={handleCategoryChange}
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                      >
-                        {categories.map((cat) => (
-                          <option key={cat} value={cat}>
-                            {cat}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Effective Date *
-                      </label>
-                      <input
-                        type="date"
-                        value={formData.effective_date}
-                        onChange={(e) => setFormData({ ...formData, effective_date: e.target.value })}
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Review Date *
-                      </label>
-                      <input
-                        type="date"
-                        value={formData.review_date}
-                        onChange={(e) => setFormData({ ...formData, review_date: e.target.value })}
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Version</label>
-                      <input
-                        type="text"
-                        value={formData.version}
-                        onChange={(e) => setFormData({ ...formData, version: e.target.value })}
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                        placeholder="1.0"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Author</label>
-                      <input
-                        type="text"
-                        value={formData.author}
-                        onChange={(e) => setFormData({ ...formData, author: e.target.value })}
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                        placeholder="Department or author name"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Applicable To</label>
-                      <select
-                        value={formData.applicable_to}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          setFormData({
-                            ...formData,
-                            applicable_to: val,
-                            department: val === 'all' ? '' : formData.department
-                          });
-                        }}
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                      >
-                        <option value="all">All Employees</option>
-                        <option value="specific">Specific Department</option>
-                      </select>
-                    </div>
-
-                    {formData.applicable_to === 'specific' && (
-                      <div className="animate-fadeIn">
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">Select Department *</label>
-                        <select
-                          value={formData.department}
-                          onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                          className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                        >
-                          <option value="">Choose Department</option>
-                          {departments.map((dep) => (
-                            <option key={dep.id} value={dep.department_name}>
-                              {dep.department_name}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    )}
-
-                    <div className="col-span-2">
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Upload Documents</label>
-                      <div className="border-2 border-dashed border-gray-300 rounded-sm p-4 hover:border-orange-500 transition-colors bg-gray-50">
-                        <input
-                          type="file"
-                          multiple
-                          onChange={handleFileChange}
-                          id="policy-docs"
-                          className="hidden"
-                          accept=".pdf,.doc,.docx,.xls,.xlsx,.txt"
-                        />
-                        <label htmlFor="policy-docs" className="flex flex-col items-center cursor-pointer">
-                          <Plus className="text-gray-400 mb-2" size={24} />
-                          <span className="text-sm text-gray-500 font-medium">Click to upload multiple documents</span>
-                          <span className="text-xs text-gray-400 mt-1">PDF, DOC, DOCX, XLS, XLSX, TXT (Max 10MB)</span>
-                        </label>
-                      </div>
-
-                      {formData.documents.length > 0 && (
-                        <div className="mt-4 flex flex-wrap gap-2">
-                          {formData.documents.map((file, idx) => (
-                            <div key={idx} className="flex items-center gap-2 bg-orange-50 text-orange-700 px-3 py-1.5 rounded-sm border border-orange-200 text-xs font-semibold">
-                              <span className="max-w-[150px] truncate">{file.name}</span>
-                              <button onClick={() => removeFile(idx)} className="hover:text-red-500">
-                                <X size={14} />
-                              </button>
-                            </div>
-                          ))}
+              <tbody className="divide-y divide-gray-200">
+                {isLoading ? (
+                  Array.from({ length: 5 }).map((_, index) => (
+                    <tr key={index} className="bg-white animate-pulse">
+                      <td className="px-6 py-4">
+                        <div className="h-4 bg-gray-200 rounded w-32"></div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="h-4 bg-gray-200 rounded w-24"></div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="h-4 bg-gray-200 rounded w-24"></div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="h-4 bg-gray-200 rounded w-24"></div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="h-4 bg-gray-200 rounded w-24"></div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="h-4 bg-gray-200 rounded w-16"></div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="h-6 bg-gray-200 rounded w-20"></div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="h-8 bg-gray-200 rounded w-24"></div>
+                      </td>
+                    </tr>
+                  ))
+                ) : isError ? (
+                  <tr>
+                    <td colSpan="8" className="px-6 py-12 text-center text-red-500">
+                      Error loading HR policies
+                    </td>
+                  </tr>
+                ) : currentPolicies.length > 0 ? (
+                  currentPolicies.map((policy, index) => (
+                    <tr key={policy.id} className="border-t hover:bg-gray-50 transition-colors">
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-3">
+                          <div
+                            className={`w-10 h-10 rounded-sm ${getColorClass(
+                              index
+                            )} flex items-center justify-center font-bold text-sm shadow-sm border border-orange-100 transition-transform hover:scale-105`}
+                          >
+                            {getInitials(policy.title)}
+                          </div>
+                          <span className="font-semibold text-gray-800 transition-all duration-300 hover:text-orange-600 cursor-pointer">{policy.title}</span>
                         </div>
-                      )}
-                    </div>
-                    <div className="col-span-2">
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Description *
-                      </label>
-                      <textarea
-                        value={formData.description}
-                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
-                        rows="3"
-                        placeholder="Enter policy description"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex gap-3 mt-6">
-                    <button
-                      onClick={handleAddPolicy}
-                      className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-6 py-3 rounded-lg font-semibold transition-all shadow-lg hover:shadow-xl"
-                    >
-                      {isUpdatingExisting ? "Update Existing Policy" : "Add Policy"}
-                    </button>
-                    <button
-                      onClick={() => setShowAddModal(false)}
-                      className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 rounded-sm font-semibold transition-colors"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )
-        }
-
-        {/* Edit Policy Modal */}
-        {
-          showEditModal && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-              <div className="bg-white rounded-sm shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-                <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-6">
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-3">
-                      <div className="bg-white bg-opacity-20 p-2 rounded-sm">
-                        <Edit className="text-white" size={24} />
-                      </div>
-                      <h2 className="text-2xl font-bold text-white">Edit HR Policy</h2>
-                    </div>
-                    <button
-                      onClick={() => setShowEditModal(false)}
-                      className="text-white hover:bg-white hover:bg-opacity-20 p-2 rounded-sm transition-colors"
-                    >
-                      <X size={24} />
-                    </button>
-                  </div>
-                </div>
-
-                <div className="p-6">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Policy Title *
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.title}
-                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                        placeholder="Enter policy title"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Category *
-                      </label>
-                      <select
-                        value={formData.category}
-                        onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                      >
-                        {categories.map((cat) => (
-                          <option key={cat} value={cat}>
-                            {cat}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Effective Date *
-                      </label>
-                      <input
-                        type="date"
-                        value={formData.effective_date}
-                        onChange={(e) => setFormData({ ...formData, effective_date: e.target.value })}
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Review Date *
-                      </label>
-                      <input
-                        type="date"
-                        value={formData.review_date}
-                        onChange={(e) => setFormData({ ...formData, review_date: e.target.value })}
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Version</label>
-                      <input
-                        type="text"
-                        value={formData.version}
-                        onChange={(e) => setFormData({ ...formData, version: e.target.value })}
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                        placeholder="1.0"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Status</label>
-                      <select
-                        value={formData.status}
-                        onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                      >
-                        {statuses.map((status) => (
-                          <option key={status} value={status}>
-                            {status}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Author</label>
-                      <input
-                        type="text"
-                        value={formData.author}
-                        onChange={(e) => setFormData({ ...formData, author: e.target.value })}
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                        placeholder="Department or author name"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Applicable To</label>
-                      <select
-                        value={formData.applicable_to}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          setFormData({
-                            ...formData,
-                            applicable_to: val,
-                            department: val === 'all' ? '' : formData.department
-                          });
-                        }}
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                      >
-                        <option value="all">All Employees</option>
-                        <option value="specific">Specific Department</option>
-                      </select>
-                    </div>
-
-                    {formData.applicable_to === 'specific' && (
-                      <div className="animate-fadeIn">
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">Select Department *</label>
-                        <select
-                          value={formData.department}
-                          onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                          className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                        >
-                          <option value="">Choose Department</option>
-                          {departments.map((dep) => (
-                            <option key={dep.id} value={dep.department_name}>
-                              {dep.department_name}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    )}
-
-                    <div className="col-span-2">
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Existing Documents</label>
-                      {formData.existingDocuments && formData.existingDocuments.length > 0 ? (
-                        <div className="flex flex-wrap gap-2 mb-4">
-                          {formData.existingDocuments.map((doc, idx) => (
-                            <div key={idx} className="flex items-center gap-2 bg-blue-50 text-blue-700 px-3 py-1.5 rounded-sm border border-blue-200 text-xs font-semibold">
-                              <FileText size={14} />
-                              <span className="max-w-[200px] truncate">Document {idx + 1}</span>
-                              <a
-                                href={`${import.meta.env.VITE_API_BASE_URL.replace('/api/', '')}${doc}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="hover:text-blue-900 ml-1"
-                              >
-                                <Eye size={14} />
-                              </a>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-xs text-gray-500 italic mb-4">No documents uploaded yet.</p>
-                      )}
-
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Upload New Documents</label>
-                      <div className="border-2 border-dashed border-gray-300 rounded-sm p-4 hover:border-orange-500 transition-colors bg-gray-50">
-                        <input
-                          type="file"
-                          multiple
-                          onChange={handleFileChange}
-                          id="edit-policy-docs"
-                          className="hidden"
-                          accept=".pdf,.doc,.docx,.xls,.xlsx,.txt"
-                        />
-                        <label htmlFor="edit-policy-docs" className="flex flex-col items-center cursor-pointer">
-                          <Plus className="text-gray-400 mb-2" size={24} />
-                          <span className="text-sm text-gray-500 font-medium">Click to upload more documents</span>
-                          <span className="text-xs text-gray-400 mt-1">PDF, DOC, DOCX, XLS, XLSX, TXT (Max 10MB)</span>
-                        </label>
-                      </div>
-
-                      {formData.documents.length > 0 && (
-                        <div className="mt-4 flex flex-wrap gap-2">
-                          {formData.documents.map((file, idx) => (
-                            <div key={idx} className="flex items-center gap-2 bg-orange-50 text-orange-700 px-3 py-1.5 rounded-sm border border-orange-200 text-xs font-semibold">
-                              <span className="max-w-[150px] truncate">{file.name}</span>
-                              <button onClick={() => removeFile(idx)} className="hover:text-red-500">
-                                <X size={14} />
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                    <div className="col-span-2">
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Description *
-                      </label>
-                      <textarea
-                        value={formData.description}
-                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
-                        rows="3"
-                        placeholder="Enter policy description"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex gap-3 mt-6">
-                    <button
-                      onClick={handleUpdatePolicy}
-                      className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-6 py-3 rounded-lg font-semibold transition-all shadow-lg hover:shadow-xl"
-                    >
-                      Update Policy
-                    </button>
-                    <button
-                      onClick={() => setShowEditModal(false)}
-                      className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 rounded-sm font-semibold transition-colors"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )
-        }
-
-        {/* View Policy Modal */}
-        {
-          showViewModal && selectedPolicy && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-              <div className="bg-white rounded-sm shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
-                <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-6">
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-3">
-                      <div className="bg-white bg-opacity-20 p-2 rounded-lg">
-                        <FileText size={24} className="text-white" />
-                      </div>
-                      <div>
-                        <h2 className="text-2xl font-bold text-white">{selectedPolicy.title}</h2>
-                        <p className="text-sm text-white text-opacity-90 mt-1">HR Policy Details</p>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => setShowViewModal(false)}
-                      className="bg-white bg-opacity-20 hover:bg-opacity-30 p-2 rounded-lg transition-all"
-                    >
-                      <X size={22} className="text-white" />
-                    </button>
-                  </div>
-                </div>
-
-                <div className="p-6 space-y-6">
-                  <div className="grid grid-cols-2 gap-6">
-                    <div>
-                      <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
-                        Category
-                      </label>
-                      <p className="text-lg font-semibold text-gray-900 mt-1">
-                        {selectedPolicy.category}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
-                        Version
-                      </label>
-                      <p className="text-lg font-semibold text-gray-900 mt-1">
-                        {selectedPolicy.version}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
-                        Effective Date
-                      </label>
-                      <p className="text-lg font-semibold text-gray-900 mt-1">
-                        {new Date(selectedPolicy.effective_date).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
-                        Review Date
-                      </label>
-                      <p className="text-lg font-semibold text-gray-900 mt-1">
-                        {new Date(selectedPolicy.review_date).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
-                        Department
-                      </label>
-                      <p className="text-lg font-semibold text-gray-900 mt-1">
-                        {selectedPolicy.department || "All Departments"}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
-                        Status
-                      </label>
-                      <div className="mt-1">
+                      </td>
+                      <td className="py-3 px-4 text-gray-700 text-sm">{policy.category}</td>
+                      <td className="py-3 px-4 text-gray-600 text-sm">
+                        {new Date(policy.effective_date).toLocaleDateString()}
+                      </td>
+                      <td className="py-3 px-4 text-gray-600 text-sm">
+                        {new Date(policy.review_date).toLocaleDateString()}
+                      </td>
+                      <td className="py-3 px-4 text-gray-700 font-medium text-sm">{policy.department || "All Departments"}</td>
+                      <td className="py-3 px-4 text-gray-700 font-medium text-sm">{policy.version}</td>
+                      <td className="py-3 px-4">
                         <span
-                          className={`px-3 py-1 rounded-md text-sm font-semibold ${selectedPolicy.status === "Active"
-                            ? "bg-green-100 text-green-700"
-                            : selectedPolicy.status === "Under Review"
-                              ? "bg-yellow-100 text-yellow-700"
-                              : "bg-gray-100 text-gray-700"
+                          className={`px-3 py-1 rounded-sm text-[10px] font-bold border uppercase tracking-wider ${policy.status === "Active"
+                            ? "bg-green-50 text-green-700 border-green-200"
+                            : policy.status === "Under Review"
+                              ? "bg-yellow-50 text-yellow-700 border-yellow-200"
+                              : "bg-red-50 text-red-700 border-red-200"
                             }`}
                         >
-                          {selectedPolicy.status}
+                          {policy.status}
                         </span>
+                      </td>
+                      <td className="py-3 px-4 text-right">
+                        <div className="flex justify-end gap-2 text-right">
+                          {read && (
+                            <button
+                              onClick={() => handleView(policy)}
+                              className="p-1 hover:bg-orange-100 rounded-sm text-blue-500 hover:text-blue-700 transition-all font-medium"
+                              title="View"
+                            >
+                              <Eye size={18} />
+                            </button>
+                          )}
+                          {update && (
+                            <button
+                              onClick={() => handleEditClick(policy)}
+                              className="p-1 hover:bg-orange-100 rounded-sm text-green-500 hover:text-green-700 transition-all font-medium"
+                              title="Edit"
+                            >
+                              <Edit size={18} />
+                            </button>
+                          )}
+                          {remove && (
+                            <button
+                              onClick={() => handleDeleteClick(policy)}
+                              className="p-1 hover:bg-orange-100 rounded-sm text-red-500 hover:text-red-700 transition-all font-medium"
+                              title="Delete"
+                            >
+                              <Trash2 size={18} />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="8" className="px-6 py-12 text-center text-gray-500">
+                      No HR policies found matching the current filters
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination - Updated to match Team.jsx */}
+          {totalPages > 0 && (
+            <div className="flex flex-col md:flex-row justify-between items-center mt-6 gap-4 bg-gray-50 p-4 rounded-sm border border-gray-200">
+              <p className="text-sm font-semibold text-gray-700">
+                Showing <span className="text-orange-600">{indexOfFirstItem + 1}</span> to <span className="text-orange-600">{Math.min(indexOfLastItem, filteredPolicies.length)}</span> of <span className="text-orange-600">{filteredPolicies.length}</span> Results
+              </p>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handlePrev}
+                  disabled={currentPage === 1}
+                  className={`px-4 py-2 rounded-sm font-bold transition flex items-center gap-1 ${currentPage === 1
+                    ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                    : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"
+                    }`}
+                >
+                  Previous
+                </button>
+
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: totalPages }, (_, i) => (
+                    <button
+                      key={i + 1}
+                      onClick={() => handlePageChange(i + 1)}
+                      className={`w-10 h-10 rounded-sm font-bold transition ${currentPage === i + 1
+                        ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md"
+                        : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+                        }`}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  onClick={handleNext}
+                  disabled={currentPage === totalPages}
+                  className={`px-4 py-2 rounded-sm font-bold transition flex items-center gap-1 ${currentPage === totalPages
+                    ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                    : "bg-[#22C55E] text-white hover:opacity-90 shadow-md"
+                    }`}
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
+
+
+
+          {/* Add Policy Modal */}
+          {
+            showAddModal && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                <div className="bg-white rounded-sm shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+                  <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-6">
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-3">
+                        <div className="bg-white bg-opacity-20 p-2 rounded-sm">
+                          <Plus className="text-white" size={24} />
+                        </div>
+                        <h2 className="text-2xl font-bold text-white">
+                          {isUpdatingExisting ? "Update HR Policy (New Version)" : "Add New HR Policy"}
+                        </h2>
                       </div>
-                    </div>
-                    <div className="col-span-2">
-                      <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
-                        Applicable To
-                      </label>
-                      <p className="text-lg font-semibold text-gray-900 mt-1">
-                        {selectedPolicy.applicable_to === "all" ? "All Employees" : "Specific Department"}
-                      </p>
+                      <button
+                        onClick={() => setShowAddModal(false)}
+                        className="text-white hover:bg-white hover:bg-opacity-20 p-2 rounded-sm transition-colors"
+                      >
+                        <X size={24} />
+                      </button>
                     </div>
                   </div>
 
-                  {selectedPolicy.description && (
-                    <div>
-                      <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
-                        Description
-                      </label>
-                      <p className="text-gray-700 mt-2 leading-relaxed">
-                        {selectedPolicy.description}
-                      </p>
-                    </div>
-                  )}
+                  <div className="p-6">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Policy Title *
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.title}
+                          onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                          className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                          placeholder="Enter policy title"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Category *
+                        </label>
+                        <select
+                          value={formData.category}
+                          onChange={handleCategoryChange}
+                          className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        >
+                          {categories.map((cat) => (
+                            <option key={cat} value={cat}>
+                              {cat}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Effective Date *
+                        </label>
+                        <input
+                          type="date"
+                          value={formData.effective_date}
+                          onChange={(e) => setFormData({ ...formData, effective_date: e.target.value })}
+                          className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Review Date *
+                        </label>
+                        <input
+                          type="date"
+                          value={formData.review_date}
+                          onChange={(e) => setFormData({ ...formData, review_date: e.target.value })}
+                          className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Version</label>
+                        <input
+                          type="text"
+                          value={formData.version}
+                          onChange={(e) => setFormData({ ...formData, version: e.target.value })}
+                          className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                          placeholder="1.0"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Author</label>
+                        <input
+                          type="text"
+                          value={formData.author}
+                          onChange={(e) => setFormData({ ...formData, author: e.target.value })}
+                          className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                          placeholder="Department or author name"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Applicable To</label>
+                        <select
+                          value={formData.applicable_to}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setFormData({
+                              ...formData,
+                              applicable_to: val,
+                              department: val === 'all' ? '' : formData.department
+                            });
+                          }}
+                          className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        >
+                          <option value="all">All Employees</option>
+                          <option value="specific">Specific Department</option>
+                        </select>
+                      </div>
 
-                  {selectedPolicy.documents && selectedPolicy.documents.length > 0 && (
-                    <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                      <label className="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-3">
-                        <FileText size={16} className="text-blue-600" />
-                        Attached Documents ({selectedPolicy.documents.length})
-                      </label>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {selectedPolicy.documents.map((doc, idx) => (
-                          <a
-                            key={idx}
-                            href={`${import.meta.env.VITE_API_BASE_URL.replace('/api/', '')}${doc}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-3 p-3 bg-white rounded-sm border border-blue-100 hover:border-blue-400 hover:shadow-md transition-all group"
+                      {formData.applicable_to === 'specific' && (
+                        <div className="animate-fadeIn">
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">Select Department *</label>
+                          <select
+                            value={formData.department}
+                            onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+                            className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                           >
-                            <div className="bg-blue-100 p-2 rounded-sm group-hover:bg-blue-600 group-hover:text-white transition-colors">
-                              <Download size={16} />
-                            </div>
-                            <span className="text-sm text-gray-600 font-medium truncate">
-                              Document {idx + 1}
-                            </span>
-                          </a>
-                        ))}
+                            <option value="">Choose Department</option>
+                            {departments.map((dep) => (
+                              <option key={dep.id} value={dep.department_name}>
+                                {dep.department_name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+
+                      <div className="col-span-2">
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Upload Documents</label>
+                        <div className="border-2 border-dashed border-gray-300 rounded-sm p-4 hover:border-orange-500 transition-colors bg-gray-50">
+                          <input
+                            type="file"
+                            multiple
+                            onChange={handleFileChange}
+                            id="policy-docs"
+                            className="hidden"
+                            accept=".pdf,.doc,.docx,.xls,.xlsx,.txt"
+                          />
+                          <label htmlFor="policy-docs" className="flex flex-col items-center cursor-pointer">
+                            <Plus className="text-gray-400 mb-2" size={24} />
+                            <span className="text-sm text-gray-500 font-medium">Click to upload multiple documents</span>
+                            <span className="text-xs text-gray-400 mt-1">PDF, DOC, DOCX, XLS, XLSX, TXT (Max 10MB)</span>
+                          </label>
+                        </div>
+
+                        {formData.documents.length > 0 && (
+                          <div className="mt-4 flex flex-wrap gap-2">
+                            {formData.documents.map((file, idx) => (
+                              <div key={idx} className="flex items-center gap-2 bg-orange-50 text-orange-700 px-3 py-1.5 rounded-sm border border-orange-200 text-xs font-semibold">
+                                <span className="max-w-[150px] truncate">{file.name}</span>
+                                <button onClick={() => removeFile(idx)} className="hover:text-red-500">
+                                  <X size={14} />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <div className="col-span-2">
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Description *
+                        </label>
+                        <textarea
+                          value={formData.description}
+                          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                          className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
+                          rows="3"
+                          placeholder="Enter policy description"
+                        />
                       </div>
                     </div>
-                  )}
-                </div>
 
-                <div className="flex justify-end gap-3 px-6 py-4 border-t bg-gray-50">
-                  <button
-                    onClick={() => setShowViewModal(false)}
-                    className="px-6 py-2.5 text-sm font-semibold text-gray-700 bg-white border-2 border-gray-300 hover:bg-gray-100 rounded-lg transition-all"
-                  >
-                    Close Details
-                  </button>
+                    <div className="flex gap-3 mt-6">
+                      <button
+                        onClick={handleAddPolicy}
+                        className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-6 py-3 rounded-lg font-semibold transition-all shadow-lg hover:shadow-xl"
+                      >
+                        {isUpdatingExisting ? "Update Existing Policy" : "Add Policy"}
+                      </button>
+                      <button
+                        onClick={() => setShowAddModal(false)}
+                        className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 rounded-sm font-semibold transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
+            )
+          }
 
-          )}
+          {/* Edit Policy Modal */}
+          {
+            showEditModal && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                <div className="bg-white rounded-sm shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+                  <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-6">
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-3">
+                        <div className="bg-white bg-opacity-20 p-2 rounded-sm">
+                          <Edit className="text-white" size={24} />
+                        </div>
+                        <h2 className="text-2xl font-bold text-white">Edit HR Policy</h2>
+                      </div>
+                      <button
+                        onClick={() => setShowEditModal(false)}
+                        className="text-white hover:bg-white hover:bg-opacity-20 p-2 rounded-sm transition-colors"
+                      >
+                        <X size={24} />
+                      </button>
+                    </div>
+                  </div>
 
-        {/* Filter Modal */}
-        {/* {showFilterModal && (
+                  <div className="p-6">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Policy Title *
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.title}
+                          onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                          className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                          placeholder="Enter policy title"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Category *
+                        </label>
+                        <select
+                          value={formData.category}
+                          onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                          className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        >
+                          {categories.map((cat) => (
+                            <option key={cat} value={cat}>
+                              {cat}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Effective Date *
+                        </label>
+                        <input
+                          type="date"
+                          value={formData.effective_date}
+                          onChange={(e) => setFormData({ ...formData, effective_date: e.target.value })}
+                          className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Review Date *
+                        </label>
+                        <input
+                          type="date"
+                          value={formData.review_date}
+                          onChange={(e) => setFormData({ ...formData, review_date: e.target.value })}
+                          className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Version</label>
+                        <input
+                          type="text"
+                          value={formData.version}
+                          onChange={(e) => setFormData({ ...formData, version: e.target.value })}
+                          className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                          placeholder="1.0"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Status</label>
+                        <select
+                          value={formData.status}
+                          onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                          className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        >
+                          {statuses.map((status) => (
+                            <option key={status} value={status}>
+                              {status}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Author</label>
+                        <input
+                          type="text"
+                          value={formData.author}
+                          onChange={(e) => setFormData({ ...formData, author: e.target.value })}
+                          className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                          placeholder="Department or author name"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Applicable To</label>
+                        <select
+                          value={formData.applicable_to}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setFormData({
+                              ...formData,
+                              applicable_to: val,
+                              department: val === 'all' ? '' : formData.department
+                            });
+                          }}
+                          className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        >
+                          <option value="all">All Employees</option>
+                          <option value="specific">Specific Department</option>
+                        </select>
+                      </div>
+
+                      {formData.applicable_to === 'specific' && (
+                        <div className="animate-fadeIn">
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">Select Department *</label>
+                          <select
+                            value={formData.department}
+                            onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+                            className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                          >
+                            <option value="">Choose Department</option>
+                            {departments.map((dep) => (
+                              <option key={dep.id} value={dep.department_name}>
+                                {dep.department_name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+
+                      <div className="col-span-2">
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Existing Documents</label>
+                        {formData.existingDocuments && formData.existingDocuments.length > 0 ? (
+                          <div className="flex flex-wrap gap-2 mb-4">
+                            {formData.existingDocuments.map((doc, idx) => (
+                              <div key={idx} className="flex items-center gap-2 bg-blue-50 text-blue-700 px-3 py-1.5 rounded-sm border border-blue-200 text-xs font-semibold">
+                                <FileText size={14} />
+                                <span className="max-w-[200px] truncate">Document {idx + 1}</span>
+                                <a
+                                  href={`${import.meta.env.VITE_API_BASE_URL.replace('/api/', '')}${doc}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="hover:text-blue-900 ml-1"
+                                >
+                                  <Eye size={14} />
+                                </a>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-xs text-gray-500 italic mb-4">No documents uploaded yet.</p>
+                        )}
+
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Upload New Documents</label>
+                        <div className="border-2 border-dashed border-gray-300 rounded-sm p-4 hover:border-orange-500 transition-colors bg-gray-50">
+                          <input
+                            type="file"
+                            multiple
+                            onChange={handleFileChange}
+                            id="edit-policy-docs"
+                            className="hidden"
+                            accept=".pdf,.doc,.docx,.xls,.xlsx,.txt"
+                          />
+                          <label htmlFor="edit-policy-docs" className="flex flex-col items-center cursor-pointer">
+                            <Plus className="text-gray-400 mb-2" size={24} />
+                            <span className="text-sm text-gray-500 font-medium">Click to upload more documents</span>
+                            <span className="text-xs text-gray-400 mt-1">PDF, DOC, DOCX, XLS, XLSX, TXT (Max 10MB)</span>
+                          </label>
+                        </div>
+
+                        {formData.documents.length > 0 && (
+                          <div className="mt-4 flex flex-wrap gap-2">
+                            {formData.documents.map((file, idx) => (
+                              <div key={idx} className="flex items-center gap-2 bg-orange-50 text-orange-700 px-3 py-1.5 rounded-sm border border-orange-200 text-xs font-semibold">
+                                <span className="max-w-[150px] truncate">{file.name}</span>
+                                <button onClick={() => removeFile(idx)} className="hover:text-red-500">
+                                  <X size={14} />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <div className="col-span-2">
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Description *
+                        </label>
+                        <textarea
+                          value={formData.description}
+                          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                          className="w-full px-4 py-2.5 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
+                          rows="3"
+                          placeholder="Enter policy description"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3 mt-6">
+                      <button
+                        onClick={handleUpdatePolicy}
+                        className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-6 py-3 rounded-lg font-semibold transition-all shadow-lg hover:shadow-xl"
+                      >
+                        Update Policy
+                      </button>
+                      <button
+                        onClick={() => setShowEditModal(false)}
+                        className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 rounded-sm font-semibold transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )
+          }
+
+          {/* View Policy Modal */}
+          {
+            showViewModal && selectedPolicy && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                <div className="bg-white rounded-sm shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+                  <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-6">
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-3">
+                        <div className="bg-white bg-opacity-20 p-2 rounded-lg">
+                          <FileText size={24} className="text-white" />
+                        </div>
+                        <div>
+                          <h2 className="text-2xl font-bold text-white">{selectedPolicy.title}</h2>
+                          <p className="text-sm text-white text-opacity-90 mt-1">HR Policy Details</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => setShowViewModal(false)}
+                        className="bg-white bg-opacity-20 hover:bg-opacity-30 p-2 rounded-lg transition-all"
+                      >
+                        <X size={22} className="text-white" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="p-6 space-y-6">
+                    <div className="grid grid-cols-2 gap-6">
+                      <div>
+                        <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
+                          Category
+                        </label>
+                        <p className="text-lg font-semibold text-gray-900 mt-1">
+                          {selectedPolicy.category}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
+                          Version
+                        </label>
+                        <p className="text-lg font-semibold text-gray-900 mt-1">
+                          {selectedPolicy.version}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
+                          Effective Date
+                        </label>
+                        <p className="text-lg font-semibold text-gray-900 mt-1">
+                          {new Date(selectedPolicy.effective_date).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
+                          Review Date
+                        </label>
+                        <p className="text-lg font-semibold text-gray-900 mt-1">
+                          {new Date(selectedPolicy.review_date).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
+                          Department
+                        </label>
+                        <p className="text-lg font-semibold text-gray-900 mt-1">
+                          {selectedPolicy.department || "All Departments"}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
+                          Status
+                        </label>
+                        <div className="mt-1">
+                          <span
+                            className={`px-3 py-1 rounded-md text-sm font-semibold ${selectedPolicy.status === "Active"
+                              ? "bg-green-100 text-green-700"
+                              : selectedPolicy.status === "Under Review"
+                                ? "bg-yellow-100 text-yellow-700"
+                                : "bg-gray-100 text-gray-700"
+                              }`}
+                          >
+                            {selectedPolicy.status}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="col-span-2">
+                        <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
+                          Applicable To
+                        </label>
+                        <p className="text-lg font-semibold text-gray-900 mt-1">
+                          {selectedPolicy.applicable_to === "all" ? "All Employees" : "Specific Department"}
+                        </p>
+                      </div>
+                    </div>
+
+                    {selectedPolicy.description && (
+                      <div>
+                        <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
+                          Description
+                        </label>
+                        <p className="text-gray-700 mt-2 leading-relaxed">
+                          {selectedPolicy.description}
+                        </p>
+                      </div>
+                    )}
+
+                    {selectedPolicy.documents && selectedPolicy.documents.length > 0 && (
+                      <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                        <label className="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-3">
+                          <FileText size={16} className="text-blue-600" />
+                          Attached Documents ({selectedPolicy.documents.length})
+                        </label>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          {selectedPolicy.documents.map((doc, idx) => (
+                            <a
+                              key={idx}
+                              href={`${import.meta.env.VITE_API_BASE_URL.replace('/api/', '')}${doc}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-3 p-3 bg-white rounded-sm border border-blue-100 hover:border-blue-400 hover:shadow-md transition-all group"
+                            >
+                              <div className="bg-blue-100 p-2 rounded-sm group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                                <Download size={16} />
+                              </div>
+                              <span className="text-sm text-gray-600 font-medium truncate">
+                                Document {idx + 1}
+                              </span>
+                            </a>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex justify-end gap-3 px-6 py-4 border-t bg-gray-50">
+                    <button
+                      onClick={() => setShowViewModal(false)}
+                      className="px-6 py-2.5 text-sm font-semibold text-gray-700 bg-white border-2 border-gray-300 hover:bg-gray-100 rounded-lg transition-all"
+                    >
+                      Close Details
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+            )}
+
+          {/* Filter Modal */}
+          {/* {showFilterModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-sm shadow-2xl w-full max-w-md">
               <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-6 rounded-t-xl">
@@ -1541,14 +1524,15 @@ export default function HRPolicy() {
             </div>
           </div>
         )} */}
+        </div>
+        <DeleteHrModal
+          isOpen={showDeleteModal}
+          onClose={() => setShowDeleteModal(false)}
+          onConfirm={confirmDelete}
+          isLoading={false} // Or set loading state if you have one
+          policyTitle={policyToDelete?.title || ""} // safe
+        />
       </div>
-      <DeleteHrModal
-        isOpen={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
-        onConfirm={confirmDelete}
-        isLoading={false} // Or set loading state if you have one
-        policyTitle={policyToDelete?.title || ""} // safe
-      />
     </DashboardLayout>
   );
 }
