@@ -2,7 +2,7 @@ const { pool } = require('../config/db');
 
 const Team = {
     create: async (data, userId) => {
-        const { team_name, description, status, employee_ids } = data;
+        const { team_name, description, status, members } = data;
 
         const connection = await pool.getConnection();
         try {
@@ -26,11 +26,11 @@ const Team = {
             const teamTableId = result.insertId;
 
             // Add members if provided
-            if (employee_ids && Array.isArray(employee_ids)) {
-                for (const empId of employee_ids) {
+            if (members && Array.isArray(members)) {
+                for (const member of members) {
                     await connection.query(
-                        'INSERT INTO team_members (team_id, employee_id) VALUES (?, ?)',
-                        [teamTableId, empId]
+                        'INSERT INTO team_members (team_id, employee_id, level) VALUES (?, ?, ?)',
+                        [teamTableId, member.employee_id, member.level || 1]
                     );
                 }
             }
@@ -94,19 +94,21 @@ const Team = {
         const [members] = await pool.query(`
             SELECT e.*, 
             d.department_name, d.department_id as department_uid,
-            deg.designation_name, deg.designation_id as designation_uid
+            deg.designation_name, deg.designation_id as designation_uid,
+            tm.level
             FROM employees e
             JOIN team_members tm ON e.id = tm.employee_id
             LEFT JOIN departments d ON e.department_id = d.id 
             LEFT JOIN designations deg ON e.designation_id = deg.id
             WHERE tm.team_id = ?
+            ORDER BY tm.level ASC
         `, [id]);
 
         return { ...rows[0], members };
     },
 
     update: async (id, data, userId) => {
-        const { team_name, description, status, employee_ids } = data;
+        const { team_name, description, status, members } = data;
 
         const connection = await pool.getConnection();
         try {
@@ -122,12 +124,12 @@ const Team = {
             }
 
             // Update members: delete existing and add new ones
-            if (employee_ids && Array.isArray(employee_ids)) {
+            if (members && Array.isArray(members)) {
                 await connection.query('DELETE FROM team_members WHERE team_id = ?', [id]);
-                for (const empId of employee_ids) {
+                for (const member of members) {
                     await connection.query(
-                        'INSERT INTO team_members (team_id, employee_id) VALUES (?, ?)',
-                        [id, empId]
+                        'INSERT INTO team_members (team_id, employee_id, level) VALUES (?, ?, ?)',
+                        [id, member.employee_id, member.level || 1]
                     );
                 }
             }

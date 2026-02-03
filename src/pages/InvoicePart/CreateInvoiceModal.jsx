@@ -113,7 +113,7 @@ export default function CreateInvoiceModal({
     if (!showModal) return null;
 
     const inputStyles =
-        "w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 shadow-sm font-medium";
+        "w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 shadow-sm font-medium";
 
     const addLineItem = () => {
         setFormData((prev) => ({
@@ -417,7 +417,7 @@ export default function CreateInvoiceModal({
                     </div>
                 </div>
 
-                <section className="bg-white border-2 border-gray-100 rounded-lg p-6 space-y-6">
+                <section className="bg-white border border-gray-200 rounded-sm p-6 space-y-6 shadow-sm">
                     <div className="flex items-center gap-2.5 pb-3 border-b border-gray-50">
                         <div className="p-2 bg-orange-50 text-orange-600 rounded-lg">
                             <Building2 size={18} />
@@ -635,7 +635,7 @@ export default function CreateInvoiceModal({
                                                     setActiveItemSearchId(item.id);
                                                 }}
                                                 onFocus={() => setActiveItemSearchId(item.id)}
-                                                className="w-full px-3 py-2 border-2 border-gray-100 focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-10 outline-none rounded-lg transition-all text-xs font-medium bg-gray-50/30 focus:bg-white"
+                                                className="w-full px-3 py-2 border border-gray-200 focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-10 outline-none rounded-sm transition-all text-xs font-medium bg-gray-50/30 focus:bg-white"
                                                 placeholder="Service or Product name..."
                                             />
                                             {activeItemSearchId === item.id && (
@@ -674,7 +674,7 @@ export default function CreateInvoiceModal({
                                                 onKeyDown={(e) => ["-", "+", "e", "E"].includes(e.key) && e.preventDefault()}
                                                 value={item.qty}
                                                 onChange={(e) => updateLineItem(item.id, "qty", e.target.value)}
-                                                className="w-full px-3 py-2 border-2 border-gray-100 focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-10 outline-none rounded-lg text-center transition-all text-xs font-bold bg-gray-50/30 focus:bg-white"
+                                                className="w-full px-3 py-2 border border-gray-200 focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-10 outline-none rounded-sm text-center transition-all text-xs font-bold bg-gray-50/30 focus:bg-white"
                                                 placeholder="0"
                                             />
                                         </td>
@@ -687,7 +687,7 @@ export default function CreateInvoiceModal({
                                                     onKeyDown={(e) => ["-", "+", "e", "E"].includes(e.key) && e.preventDefault()}
                                                     value={item.rate}
                                                     onChange={(e) => updateLineItem(item.id, "rate", e.target.value)}
-                                                    className="w-full pl-7 pr-3 py-2 border-2 border-gray-100 focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-10 outline-none rounded-lg text-right transition-all text-xs font-bold bg-gray-50/30 focus:bg-white"
+                                                    className="w-full pl-7 pr-3 py-2 border border-gray-200 focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-10 outline-none rounded-sm text-right transition-all text-xs font-bold bg-gray-50/30 focus:bg-white"
                                                     placeholder="0.00"
                                                 />
                                             </div>

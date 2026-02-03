@@ -18,14 +18,14 @@ const ViewSalaryModal = ({ isOpen, onClose, salary }) => {
     const footer = (
         <button
             onClick={onClose}
-            className="px-8 py-3 bg-white border-2 border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-100 transition-all shadow-sm"
+            className="px-8 py-3 bg-white border border-gray-200 text-gray-700 font-bold rounded-sm hover:bg-gray-100 transition-all shadow-sm font-sans"
         >
             Close Details
         </button>
     );
 
     const icon = (
-        <div className="bg-orange-500 text-white p-2 rounded-xl">
+        <div className="bg-orange-500 text-white p-2 rounded-lg">
             <DollarSign size={22} />
         </div>
     );
@@ -39,14 +39,14 @@ const ViewSalaryModal = ({ isOpen, onClose, salary }) => {
             icon={icon}
             footer={footer}
         >
-            <div className="space-y-8 text-black bg-white">
+            <div className="space-y-8 text-black bg-white font-sans capitalize">
                 {/* Stats Cards */}
                 <div className="grid grid-cols-3 gap-6">
-                    <div className="bg-blue-50 p-4 rounded-2xl border border-blue-100 flex flex-col items-center text-center">
-                        <div className="bg-blue-600 p-2 rounded-xl text-white mb-2">
+                    <div className="bg-blue-50 p-4 rounded-sm border border-blue-100 flex flex-col items-center text-center group hover:shadow-md transition-shadow">
+                        <div className="bg-blue-600 p-2 rounded-sm text-white mb-2 group-hover:scale-110 transition-transform">
                             <Briefcase size={20} />
                         </div>
-                        <span className="text-sm font-bold text-blue-900">
+                        <span className="text-sm font-bold text-blue-900 capitalize">
                             {salary.designation || "-"}
                         </span>
                         <span className="text-xs font-semibold text-blue-600 uppercase tracking-widest mt-1">
@@ -54,11 +54,11 @@ const ViewSalaryModal = ({ isOpen, onClose, salary }) => {
                         </span>
                     </div>
 
-                    <div className="bg-green-50 p-4 rounded-2xl border border-green-100 flex flex-col items-center text-center">
-                        <div className="bg-green-600 p-2 rounded-xl text-white mb-2">
+                    <div className="bg-green-50 p-4 rounded-sm border border-green-100 flex flex-col items-center text-center group hover:shadow-md transition-shadow">
+                        <div className="bg-green-600 p-2 rounded-sm text-white mb-2 group-hover:scale-110 transition-transform">
                             <Users size={20} />
                         </div>
-                        <span className="text-sm font-bold text-green-900">
+                        <span className="text-sm font-bold text-green-900 capitalize">
                             {salary.department || "-"}
                         </span>
                         <span className="text-xs font-semibold text-green-600 uppercase tracking-widest mt-1">
@@ -66,11 +66,11 @@ const ViewSalaryModal = ({ isOpen, onClose, salary }) => {
                         </span>
                     </div>
 
-                    <div className="bg-orange-50 p-4 rounded-2xl border border-orange-100 flex flex-col items-center text-center">
-                        <div className="bg-orange-500 p-2 rounded-xl text-white mb-2">
+                    <div className="bg-orange-50 p-4 rounded-sm border border-orange-100 flex flex-col items-center text-center group hover:shadow-md transition-shadow">
+                        <div className="bg-orange-500 p-2 rounded-sm text-white mb-2 group-hover:scale-110 transition-transform">
                             <Calendar size={20} />
                         </div>
-                        <span className="text-sm font-bold text-orange-900">
+                        <span className="text-sm font-bold text-orange-900 capitalize">
                             {formatDate(salary.pay_date)}
                         </span>
                         <span className="text-xs font-semibold text-orange-600 uppercase tracking-widest mt-1">

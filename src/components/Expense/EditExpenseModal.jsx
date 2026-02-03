@@ -107,7 +107,7 @@ const EditExpenseModal = ({ isOpen, onClose, expense }) => {
                         name="title"
                         value={formData.title}
                         onChange={handleChange}
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300"
+                        className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300"
                     />
                 </div>
 
@@ -123,7 +123,7 @@ const EditExpenseModal = ({ isOpen, onClose, expense }) => {
                             name="amount"
                             value={formData.amount}
                             onChange={handleChange}
-                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300"
+                            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300"
                         />
                     </div>
 
@@ -137,7 +137,7 @@ const EditExpenseModal = ({ isOpen, onClose, expense }) => {
                             name="category"
                             value={formData.category}
                             onChange={handleChange}
-                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300"
+                            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300"
                         >
                             {["Meals", "Travel", "Supplies", "Training", "Software", "Other"].map((cat) => (
                                 <option key={cat} value={cat}>{cat}</option>
@@ -157,7 +157,7 @@ const EditExpenseModal = ({ isOpen, onClose, expense }) => {
                         name="date"
                         value={formData.date}
                         onChange={handleChange}
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300"
+                        className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300"
                     />
                 </div>
 
@@ -177,7 +177,7 @@ const EditExpenseModal = ({ isOpen, onClose, expense }) => {
                         />
                         <label
                             htmlFor="edit-receipt-upload"
-                            className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg hover:border-[#FF7B1D] hover:bg-orange-50 cursor-pointer transition-all text-sm text-gray-600"
+                            className="w-full flex items-center justify-center gap-2 px-4 py-3 border border-dashed border-gray-300 rounded-sm hover:border-[#FF7B1D] hover:bg-orange-50 cursor-pointer transition-all text-sm text-gray-600"
                         >
                             {formData.receipt ? (
                                 <span className="text-[#FF7B1D] font-medium flex items-center gap-2">
@@ -193,7 +193,7 @@ const EditExpenseModal = ({ isOpen, onClose, expense }) => {
                         </label>
                     </div>
                     {expense?.receipt_full_url && !formData.receipt && (
-                        <div className="mt-4 p-3 bg-gray-50 border rounded-lg">
+                        <div className="mt-4 p-3 bg-gray-50 border rounded-sm">
                             <h4 className="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">Current Receipt</h4>
                             {expense.receipt_full_url.toLowerCase().endsWith('.pdf') ? (
                                 <a

@@ -103,7 +103,7 @@ const AddExpenseModal = ({ isOpen, onClose }) => {
                         value={formData.title}
                         onChange={handleChange}
                         placeholder="e.g., Office Supplies, Client Lunch..."
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300"
+                        className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300"
                     />
                 </div>
 
@@ -120,7 +120,7 @@ const AddExpenseModal = ({ isOpen, onClose }) => {
                             value={formData.amount}
                             onChange={handleChange}
                             placeholder="0.00"
-                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300"
+                            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300"
                         />
                     </div>
 
@@ -134,7 +134,7 @@ const AddExpenseModal = ({ isOpen, onClose }) => {
                             name="category"
                             value={formData.category}
                             onChange={handleChange}
-                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300"
+                            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300"
                         >
                             {["Meals", "Travel", "Supplies", "Training", "Software", "Other"].map((cat) => (
                                 <option key={cat} value={cat}>{cat}</option>
@@ -154,7 +154,7 @@ const AddExpenseModal = ({ isOpen, onClose }) => {
                         name="date"
                         value={formData.date}
                         onChange={handleChange}
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300"
+                        className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300"
                     />
                 </div>
 
@@ -174,7 +174,7 @@ const AddExpenseModal = ({ isOpen, onClose }) => {
                         />
                         <label
                             htmlFor="receipt-upload"
-                            className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg hover:border-[#FF7B1D] hover:bg-orange-50 cursor-pointer transition-all text-sm text-gray-600"
+                            className="w-full flex items-center justify-center gap-2 px-4 py-3 border border-dashed border-gray-300 rounded-sm hover:border-[#FF7B1D] hover:bg-orange-50 cursor-pointer transition-all text-sm text-gray-600"
                         >
                             {formData.receipt ? (
                                 <span className="text-[#FF7B1D] font-medium flex items-center gap-2">

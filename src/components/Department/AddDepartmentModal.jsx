@@ -139,7 +139,7 @@ const AddDepartmentModal = ({ isOpen, onClose, refetchDashboard }) => {
               value={departmentName}
               onChange={(e) => setDepartmentName(e.target.value)}
               placeholder="e.g., Human Resources, Engineering, Marketing..."
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300"
+              className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300"
             />
           </div>
 
@@ -154,7 +154,7 @@ const AddDepartmentModal = ({ isOpen, onClose, refetchDashboard }) => {
               onChange={(e) => setDepartmentDescription(e.target.value)}
               placeholder="Describe the department's role and responsibilities..."
               rows="5"
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 resize-none"
+              className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 resize-none"
             />
             <div className="text-xs text-gray-500 mt-1 flex justify-between">
               <span>Optional: Add details about this department</span>
@@ -174,7 +174,7 @@ const AddDepartmentModal = ({ isOpen, onClose, refetchDashboard }) => {
                   type="file"
                   accept="image/*"
                   onChange={handleIconChange}
-                  className="block w-full text-sm text-gray-900 px-4 py-3 border-2 border-gray-200 rounded-lg cursor-pointer focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all bg-white hover:border-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100"
+                  className="block w-full text-sm text-gray-900 px-4 py-3 border border-gray-200 rounded-sm cursor-pointer focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all bg-white hover:border-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-sm file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100"
                 />
                 <p className="text-xs text-gray-500 mt-2">
                   Recommended: 512px × 512px or smaller

@@ -19,7 +19,9 @@ import {
   ArrowLeft,
   Shield,
   Heart,
-  Globe
+  Globe,
+  ClipboardList,
+  Clock
 } from "lucide-react";
 import { useGetEmployeeByIdQuery } from "../../../store/api/employeeApi";
 import { useLocation } from "react-router-dom";
@@ -83,6 +85,8 @@ export default function EmployeeProfile() {
     family: false,
     education: true,
     experience: true,
+    task: true,
+    attendance: true,
   });
 
   const toggleSection = (section) => {
@@ -493,6 +497,93 @@ export default function EmployeeProfile() {
                     </div>
                   </div>
                 )}
+              </div>
+
+              {/* Task & Attendance Reports */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Task Report */}
+                <div className="bg-white rounded-sm shadow border border-gray-100 overflow-hidden">
+                  <div
+                    className="flex items-center justify-between p-6 cursor-pointer hover:bg-slate-50 transition-colors border-b border-gray-100"
+                    onClick={() => toggleSection("task")}
+                  >
+                    <h3 className="font-bold text-slate-800 text-lg">
+                      Task Report
+                    </h3>
+                    <div className="flex items-center gap-3">
+                      <ChevronDown
+                        className={`w-5 h-5 text-slate-400 transition-transform ${expandedSections.task ? "rotate-180" : ""}`}
+                      />
+                    </div>
+                  </div>
+                  {expandedSections.task && (
+                    <div className="p-6 bg-slate-50/30 space-y-4">
+                      <div>
+                        <div className="flex justify-between text-sm mb-1">
+                          <span className="font-bold text-slate-700">Total Tasks Completed</span>
+                          <span className="font-bold text-green-600">85%</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div className="bg-green-500 h-2 rounded-full" style={{ width: "85%" }}></div>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4 pt-2">
+                        <div className="bg-white p-3 rounded border border-gray-100 text-center">
+                          <p className="text-2xl font-bold text-slate-800">12</p>
+                          <p className="text-xs text-slate-500 uppercase font-bold tracking-wider">Pending</p>
+                        </div>
+                        <div className="bg-white p-3 rounded border border-gray-100 text-center">
+                          <p className="text-2xl font-bold text-slate-800">45</p>
+                          <p className="text-xs text-slate-500 uppercase font-bold tracking-wider">Completed</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Attendance Report */}
+                <div className="bg-white rounded-sm shadow border border-gray-100 overflow-hidden">
+                  <div
+                    className="flex items-center justify-between p-6 cursor-pointer hover:bg-slate-50 transition-colors border-b border-gray-100"
+                    onClick={() => toggleSection("attendance")}
+                  >
+                    <h3 className="font-bold text-slate-800 text-lg">
+                      Attendance Report
+                    </h3>
+                    <div className="flex items-center gap-3">
+                      <ChevronDown
+                        className={`w-5 h-5 text-slate-400 transition-transform ${expandedSections.attendance ? "rotate-180" : ""}`}
+                      />
+                    </div>
+                  </div>
+                  {expandedSections.attendance && (
+                    <div className="p-6 bg-slate-50/30 space-y-4">
+                      <div>
+                        <div className="flex justify-between text-sm mb-1">
+                          <span className="font-bold text-slate-700">Monthly Attendance</span>
+                          <span className="font-bold text-orange-600">92%</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div className="bg-orange-500 h-2 rounded-full" style={{ width: "92%" }}></div>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2 pt-2">
+                        <div className="bg-white p-2 rounded border border-gray-100 text-center">
+                          <p className="text-xl font-bold text-green-600">24</p>
+                          <p className="text-[10px] text-slate-500 uppercase font-bold">Present</p>
+                        </div>
+                        <div className="bg-white p-2 rounded border border-gray-100 text-center">
+                          <p className="text-xl font-bold text-red-500">2</p>
+                          <p className="text-[10px] text-slate-500 uppercase font-bold">Absent</p>
+                        </div>
+                        <div className="bg-white p-2 rounded border border-gray-100 text-center">
+                          <p className="text-xl font-bold text-blue-500">0</p>
+                          <p className="text-[10px] text-slate-500 uppercase font-bold">Leave</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Education and Experience in Grid */}

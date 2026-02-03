@@ -680,7 +680,7 @@ export default function NotesPage() {
                         required
                         maxLength={250}
                         placeholder="e.g., Meeting Notes, Ideas, Tasks..."
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm"
+                        className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm hover:border-gray-300"
                       />
                       <div className="flex justify-end mt-1">
                         <span className={`text-[10px] font-bold ${formData.title.length > 240 ? 'text-red-500' : 'text-gray-400'}`}>
@@ -699,7 +699,7 @@ export default function NotesPage() {
                         value={formData.category}
                         onChange={handleInputChange}
                         required
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm bg-white"
+                        className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm bg-white hover:border-gray-300"
                       >
                         {categories.filter(c => c !== "All").map(cat => (
                           <option key={cat} value={cat}>{cat}</option>
@@ -720,7 +720,7 @@ export default function NotesPage() {
                         required
                         maxLength={10000}
                         placeholder="Write your note content here..."
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm resize-none"
+                        className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm resize-none hover:border-gray-300"
                       ></textarea>
                       <div className="flex justify-end mt-1">
                         <span className={`text-[10px] font-bold ${formData.content.length > 9500 ? 'text-red-500' : 'text-gray-400'}`}>

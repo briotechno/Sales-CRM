@@ -14,12 +14,14 @@ import {
     Download,
     CheckCircle,
     XCircle,
+    AlertTriangle,
     Clock,
     ArrowRight,
     Activity,
     Edit,
     Plus,
-    X
+    X,
+    User
 } from "lucide-react";
 import { FiHome } from "react-icons/fi";
 import NumberCard from "../../components/NumberCard";
@@ -33,6 +35,60 @@ import { useLazyGetJobByIdQuery } from "../../store/api/jobApi";
 import toast from 'react-hot-toast';
 import Modal from "../../components/common/Modal";
 
+const DeleteApplicantModal = ({ isOpen, onClose, onConfirm, isLoading, title }) => {
+    return (
+        <Modal
+            isOpen={isOpen}
+            onClose={onClose}
+            headerVariant="simple"
+            maxWidth="max-w-md"
+            footer={
+                <div className="flex gap-4 w-full">
+                    <button
+                        onClick={onClose}
+                        className="flex-1 px-6 py-3 border border-gray-200 text-gray-700 font-bold rounded-sm hover:bg-gray-100 shadow-sm transition-all"
+                    >
+                        Cancel
+                    </button>
+
+                    <button
+                        onClick={onConfirm}
+                        disabled={isLoading}
+                        className="flex-1 px-6 py-3 bg-red-600 text-white font-bold rounded-sm hover:bg-red-700 shadow-md hover:shadow-lg disabled:opacity-50 flex items-center justify-center gap-2 transition-all"
+                    >
+                        {isLoading ? (
+                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                            <Trash2 size={20} />
+                        )}
+                        {isLoading ? "Deleting..." : "Delete Now"}
+                    </button>
+                </div>
+            }
+        >
+            <div className="flex flex-col items-center text-center p-6">
+                <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mb-6 animate-bounce">
+                    <AlertTriangle size={48} className="text-red-600" />
+                </div>
+
+                <h2 className="text-2xl font-bold text-gray-800 mb-2">
+                    Confirm Delete
+                </h2>
+
+                <p className="text-gray-600 mb-2 leading-relaxed">
+                    Are you sure you want to delete applicant Management{" "}
+                    <span className="font-bold text-gray-800">"{title}"</span>?
+                </p>
+
+                <p className="text-sm text-red-500 italic mb-6">
+                    This action cannot be undone. All associated data will be permanently removed.
+                </p>
+
+            </div>
+        </Modal>
+    );
+};
+
 const ApplicantList = () => {
     const navigate = useNavigate();
     const [currentPage, setCurrentPage] = useState(1);
@@ -40,7 +96,9 @@ const ApplicantList = () => {
     const [selectedStatus, setSelectedStatus] = useState("All");
     const [showViewModal, setShowViewModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [selectedApplicant, setSelectedApplicant] = useState(null);
+    const [applicantToDelete, setApplicantToDelete] = useState(null);
     const [editFormData, setEditFormData] = useState({
         name: "",
         email: "",
@@ -63,7 +121,7 @@ const ApplicantList = () => {
 
     const { data: statsData } = useGetApplicantStatsQuery();
     const [updateStatus] = useUpdateApplicantStatusMutation();
-    const [deleteApplicant] = useDeleteApplicantMutation();
+    const [deleteApplicant, { isLoading: deleteLoading }] = useDeleteApplicantMutation();
 
     const safeParse = (data, fallback = []) => {
         if (!data) return fallback;
@@ -170,11 +228,18 @@ const ApplicantList = () => {
         }
     };
 
-    const handleDelete = async (id) => {
-        if (window.confirm("Are you sure you want to delete this applicant?")) {
+    const handleDelete = (applicant) => {
+        setApplicantToDelete(applicant);
+        setShowDeleteModal(true);
+    };
+
+    const confirmDelete = async () => {
+        if (applicantToDelete?.id) {
             try {
-                await deleteApplicant(id).unwrap();
+                await deleteApplicant(applicantToDelete.id).unwrap();
                 toast.success("Applicant deleted successfully");
+                setShowDeleteModal(false);
+                setApplicantToDelete(null);
             } catch (error) {
                 toast.error("Failed to delete applicant");
             }
@@ -197,10 +262,10 @@ const ApplicantList = () => {
 
     return (
         <DashboardLayout>
-            <div className="min-h-screen bg-gray-50/50 p-0 ml-6">
+            <div className="min-h-screen bg-gray-50/50 p-0 ">
                 <div className="max-w-8xl mx-auto">
                     {/* Header */}
-                    <div className="bg-white rounded-sm p-4 mb-6 border-b shadow-sm">
+                    <div className="bg-white rounded-sm p-4 mb-4 border-b shadow-sm">
                         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                             <div>
                                 <h1 className="text-2xl font-bold text-gray-900">Applicant Management</h1>
@@ -211,7 +276,7 @@ const ApplicantList = () => {
                                 </p>
                             </div>
                             <div className="flex items-center gap-3 w-full md:w-auto">
-                                <div className="relative flex-1 md:w-64">
+                                {/* <div className="relative flex-1 md:w-64">
                                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                                     <input
                                         type="text"
@@ -220,7 +285,7 @@ const ApplicantList = () => {
                                         onChange={(e) => setSearch(e.target.value)}
                                         className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 outline-none transition-all bg-white"
                                     />
-                                </div>
+                                </div> */}
                                 <select
                                     value={selectedStatus}
                                     onChange={(e) => setSelectedStatus(e.target.value)}
@@ -327,24 +392,24 @@ const ApplicantList = () => {
                                                 <div className="flex items-center justify-center gap-2">
                                                     <button
                                                         onClick={() => handleViewApplicant(applicant)}
-                                                        className="p-2 hover:bg-blue-100 rounded-sm transition-all"
+                                                        className="p-1 hover:bg-orange-100 rounded-sm text-blue-500 hover:text-blue-700 transition-all"
                                                         title="View Details"
                                                     >
-                                                        <Eye size={18} className="text-blue-600" />
+                                                        <Eye size={18} />
                                                     </button>
                                                     <button
                                                         onClick={() => handleEditApplicant(applicant)}
-                                                        className="p-2 hover:bg-orange-100 rounded-sm transition-all"
+                                                        className="p-1 hover:bg-orange-100 rounded-sm text-green-500 hover:text-green-700 transition-all"
                                                         title="Edit Applicant"
                                                     >
-                                                        <Edit size={18} className="text-orange-600" />
+                                                        <Edit size={18} />
                                                     </button>
                                                     <button
-                                                        onClick={() => handleDelete(applicant.id)}
-                                                        className="p-2 hover:bg-red-100 rounded-sm transition-all"
+                                                        onClick={() => handleDelete(applicant)}
+                                                        className="p-1 hover:bg-orange-100 rounded-sm text-red-500 hover:text-red-700 transition-all"
                                                         title="Delete"
                                                     >
-                                                        <Trash2 size={18} className="text-red-600" />
+                                                        <Trash2 size={18} />
                                                     </button>
                                                 </div>
                                             </td>
@@ -366,9 +431,10 @@ const ApplicantList = () => {
                 }}
                 title="Applicant Details"
                 maxWidth="max-w-5xl"
+                icon={<User size={24} />}
             >
                 {selectedApplicant && (
-                    <div className="p-6">
+                    <div className="">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             {/* Basic Info */}
                             <div className="space-y-6">
@@ -418,7 +484,7 @@ const ApplicantList = () => {
                                                 href={`${import.meta.env.VITE_API_BASE_URL}/${selectedApplicant.resume}`}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="flex items-center justify-center gap-2 w-full py-3 bg-orange-500 text-white rounded-lg font-bold hover:bg-orange-600 transition-colors mt-4"
+                                                className="flex items-center justify-center gap-2 w-full py-3 bg-orange-500 text-white rounded-sm font-bold hover:bg-orange-600 transition-colors mt-4"
                                             >
                                                 <Download size={18} /> Download Resume
                                             </a>
@@ -491,21 +557,21 @@ const ApplicantList = () => {
                                                                         value={updatingFeedback}
                                                                         onChange={(e) => setUpdatingFeedback(e.target.value)}
                                                                         placeholder="Add assessment notes or reasons for passing/failing..."
-                                                                        className="w-full p-3 text-sm bg-gray-50 border-2 border-gray-100 rounded-lg focus:border-orange-500 outline-none transition-all h-20"
+                                                                        className="w-full p-4 py-3 text-sm bg-white border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all h-20 placeholder-gray-400 hover:border-gray-300 shadow-sm font-medium"
                                                                     />
                                                                 </div>
                                                                 <div className="flex gap-2">
                                                                     <button
                                                                         disabled={isUpdating}
                                                                         onClick={() => handleUpdateStatus(selectedApplicant.id, index === interviewRounds.length - 1 ? 'Selected' : interviewRounds[index + 1], index + 1)}
-                                                                        className="flex-1 py-2 bg-green-600 text-white text-xs font-black uppercase tracking-widest rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                                                                        className="flex-1 py-2 bg-green-600 text-white text-xs font-black uppercase tracking-widest rounded-sm hover:bg-green-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
                                                                     >
                                                                         {isUpdating ? 'Updating...' : <>Pass Round <ArrowRight size={14} /></>}
                                                                     </button>
                                                                     <button
                                                                         disabled={isUpdating}
                                                                         onClick={() => handleUpdateStatus(selectedApplicant.id, 'Rejected')}
-                                                                        className="px-4 py-2 bg-rose-100 text-rose-600 text-xs font-black uppercase tracking-widest rounded-lg hover:bg-rose-200 transition-colors flex items-center gap-2 disabled:opacity-50"
+                                                                        className="px-4 py-2 bg-rose-100 text-rose-600 text-xs font-black uppercase tracking-widest rounded-sm hover:bg-rose-200 transition-colors flex items-center gap-2 disabled:opacity-50"
                                                                     >
                                                                         <XCircle size={14} /> Fail
                                                                     </button>
@@ -548,7 +614,7 @@ const ApplicantList = () => {
                                                             }
                                                         }
                                                     })}
-                                                    className="mt-3 px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm font-bold rounded-lg shadow-md hover:opacity-90 transition-all flex items-center gap-2"
+                                                    className="mt-3 px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm font-bold rounded-sm shadow-md hover:opacity-90 transition-all flex items-center gap-2"
                                                 >
                                                     Generate Offer Letter
                                                 </button>
@@ -568,50 +634,66 @@ const ApplicantList = () => {
                 onClose={() => setShowEditModal(false)}
                 title="Edit Applicant & Rounds"
                 maxWidth="max-w-4xl"
+                icon={<Edit size={24} />}
             >
                 {selectedApplicant && (
-                    <div className="p-8 space-y-8">
+                    <div className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div>
-                                <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Name</label>
+                                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                                    <User size={16} className="text-[#FF7B1D]" />
+                                    Name
+                                </label>
                                 <input
                                     type="text"
                                     value={editFormData.name}
                                     onChange={(e) => setEditFormData(prev => ({ ...prev, name: e.target.value }))}
-                                    className="w-full p-3 bg-gray-50 border-2 border-gray-100 rounded-xl focus:border-orange-500 outline-none transition-all text-sm font-bold"
+                                    className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 shadow-sm font-medium"
                                 />
                             </div>
                             <div>
-                                <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Email</label>
+                                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                                    <Mail size={16} className="text-[#FF7B1D]" />
+                                    Email
+                                </label>
                                 <input
                                     type="email"
                                     value={editFormData.email}
                                     onChange={(e) => setEditFormData(prev => ({ ...prev, email: e.target.value }))}
-                                    className="w-full p-3 bg-gray-50 border-2 border-gray-100 rounded-xl focus:border-orange-500 outline-none transition-all text-sm font-bold"
+                                    className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 shadow-sm font-medium"
                                 />
                             </div>
                             <div>
-                                <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Phone</label>
+                                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                                    <Phone size={16} className="text-[#FF7B1D]" />
+                                    Phone
+                                </label>
                                 <input
                                     type="text"
                                     value={editFormData.phone}
                                     onChange={(e) => setEditFormData(prev => ({ ...prev, phone: e.target.value }))}
-                                    className="w-full p-3 bg-gray-50 border-2 border-gray-100 rounded-xl focus:border-orange-500 outline-none transition-all text-sm font-bold"
+                                    className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 shadow-sm font-medium"
                                 />
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50/50 p-4 rounded-2xl border border-gray-100">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-orange-50 p-4 rounded-sm border border-orange-100">
                             <div>
-                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Applying For (Job ID)</label>
+                                <label className="flex items-center gap-2 text-xs font-bold text-orange-800 uppercase tracking-wide mb-1">
+                                    <Briefcase size={16} className="text-[#FF7B1D]" />
+                                    Applying For (Job ID)
+                                </label>
                                 <div className="text-sm font-bold text-gray-700 flex items-center gap-2">
-                                    <span className="bg-orange-100 text-orange-600 px-2 py-0.5 rounded text-[10px]">ID: {editFormData.job_id}</span>
+                                    <span className="bg-white text-orange-600 px-2 py-0.5 rounded border border-orange-200 text-xs">ID: {editFormData.job_id}</span>
                                     <span className="truncate">{editFormData.job_title}</span>
                                 </div>
                             </div>
                             <div className="flex flex-col justify-center">
-                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Application Date</label>
-                                <div className="text-sm font-bold text-gray-600">
+                                <label className="flex items-center gap-2 text-xs font-bold text-orange-800 uppercase tracking-wide mb-1">
+                                    <Calendar size={16} className="text-[#FF7B1D]" />
+                                    Application Date
+                                </label>
+                                <div className="text-sm font-bold text-gray-700">
                                     {selectedApplicant.created_at ? new Date(selectedApplicant.created_at).toLocaleDateString(undefined, { dateStyle: 'long' }) : 'N/A'}
                                 </div>
                             </div>
@@ -620,13 +702,16 @@ const ApplicantList = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-6 border-t border-gray-100">
                             <div className="space-y-6">
                                 <div>
-                                    <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Interview Rounds</label>
+                                    <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-4">
+                                        <Activity size={16} className="text-[#FF7B1D]" />
+                                        Interview Rounds
+                                    </label>
                                     <div className="space-y-3 mb-4 max-h-[400px] overflow-y-auto pr-2">
                                         {editFormData.interview_rounds.length > 0 ? (
                                             editFormData.interview_rounds.map((round, index) => {
                                                 const isCompleted = editFormData.current_round_index > index || editFormData.status === 'Selected';
                                                 return (
-                                                    <div key={index} className={`flex items-center gap-4 p-4 rounded-2xl border-2 transition-all ${isCompleted ? 'bg-orange-50 border-orange-500 shadow-sm' : 'bg-white border-gray-100 hover:border-orange-200'}`}>
+                                                    <div key={index} className={`flex items-center gap-4 p-4 rounded-sm border transition-all ${isCompleted ? 'bg-orange-50 border-orange-200 shadow-sm' : 'bg-white border-gray-200 hover:border-orange-300'}`}>
                                                         <div className="flex-shrink-0">
                                                             <input
                                                                 type="checkbox"
@@ -662,14 +747,14 @@ const ApplicantList = () => {
                                                                 type="text"
                                                                 readOnly
                                                                 value={round}
-                                                                className={`w-full bg-transparent border-none outline-none text-sm font-black uppercase tracking-widest ${isCompleted ? 'text-orange-900' : 'text-gray-400'}`}
+                                                                className={`w-full bg-transparent border-none outline-none text-sm font-semibold uppercase tracking-wide ${isCompleted ? 'text-orange-900' : 'text-gray-500'}`}
                                                             />
                                                         </div>
                                                     </div>
                                                 );
                                             })
                                         ) : (
-                                            <div className="py-8 text-center bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
+                                            <div className="py-8 text-center bg-gray-50 rounded-sm border-2 border-dashed border-gray-200">
                                                 <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">No rounds defined for this applicant</p>
                                             </div>
                                         )}
@@ -679,14 +764,20 @@ const ApplicantList = () => {
 
                             <div className="space-y-6">
                                 <div>
-                                    <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Process Management</label>
-                                    <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100 space-y-6">
+                                    <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                                        <Filter size={16} className="text-[#FF7B1D]" />
+                                        Process Management
+                                    </label>
+                                    <div className="bg-gray-50 p-6 rounded-sm border border-gray-200 space-y-6">
                                         <div>
-                                            <label className="block text-[10px] font-black text-gray-400 uppercase mb-2">Current Active Round</label>
+                                            <label className="flex items-center gap-2 text-xs font-semibold text-gray-500 uppercase mb-2">
+                                                <Clock size={16} className="text-[#FF7B1D]" />
+                                                Current Active Round
+                                            </label>
                                             <select
                                                 value={editFormData.current_round_index}
                                                 onChange={(e) => setEditFormData(prev => ({ ...prev, current_round_index: Number(e.target.value) }))}
-                                                className="w-full p-3 bg-white border-2 border-gray-100 rounded-xl focus:border-orange-500 outline-none text-sm font-bold"
+                                                className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none bg-white text-sm text-gray-900 hover:border-gray-300 shadow-sm font-medium transition-all"
                                             >
                                                 <option value={-1}>Pre-Interview (Applied)</option>
                                                 {editFormData.interview_rounds.map((r, i) => (
@@ -695,11 +786,14 @@ const ApplicantList = () => {
                                             </select>
                                         </div>
                                         <div>
-                                            <label className="block text-[10px] font-black text-gray-400 uppercase mb-2">Overall Status</label>
+                                            <label className="flex items-center gap-2 text-xs font-semibold text-gray-500 uppercase mb-2">
+                                                <CheckCircle size={16} className="text-[#FF7B1D]" />
+                                                Overall Status
+                                            </label>
                                             <select
                                                 value={editFormData.status}
                                                 onChange={(e) => setEditFormData(prev => ({ ...prev, status: e.target.value }))}
-                                                className="w-full p-3 bg-white border-2 border-gray-100 rounded-xl focus:border-orange-500 outline-none text-sm font-bold"
+                                                className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none bg-white text-sm text-gray-900 hover:border-gray-300 shadow-sm font-medium transition-all"
                                             >
                                                 <option value="Applied">Applied</option>
                                                 <option value="In Process">In Process</option>
@@ -719,14 +813,14 @@ const ApplicantList = () => {
                         <div className="flex gap-4 pt-8 border-t border-gray-100">
                             <button
                                 onClick={() => setShowEditModal(false)}
-                                className="flex-1 py-4 bg-gray-100 text-gray-600 font-black uppercase tracking-widest text-xs rounded-xl hover:bg-gray-200 transition-all"
+                                className="flex-1 py-3 bg-white border border-gray-300 text-gray-700 font-bold text-sm rounded-sm hover:bg-gray-50 transition-all shadow-sm"
                             >
                                 Cancel
                             </button>
                             <button
                                 disabled={isUpdating}
                                 onClick={handleSaveEdit}
-                                className="flex-[2] py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-black uppercase tracking-widest text-xs rounded-xl shadow-lg shadow-orange-100 hover:opacity-90 transition-all disabled:opacity-50"
+                                className="flex-[2] py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold text-sm rounded-sm shadow-md hover:from-orange-600 hover:to-orange-700 transition-all disabled:opacity-50"
                             >
                                 {isUpdating ? 'Saving...' : 'Save Changes'}
                             </button>
@@ -734,6 +828,14 @@ const ApplicantList = () => {
                     </div>
                 )}
             </Modal>
+
+            <DeleteApplicantModal
+                isOpen={showDeleteModal}
+                onClose={() => setShowDeleteModal(false)}
+                onConfirm={confirmDelete}
+                isLoading={deleteLoading}
+                title={applicantToDelete?.name || ""}
+            />
         </DashboardLayout>
     );
 };

@@ -8,7 +8,7 @@ const ViewDesignationModal = ({ isOpen, onClose, designation }) => {
     const footer = (
         <button
             onClick={onClose}
-            className="px-8 py-3 bg-white border-2 border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-100 transition-all shadow-sm"
+            className="px-8 py-3 bg-white border border-gray-200 text-gray-700 font-bold rounded-sm hover:bg-gray-100 transition-all shadow-sm font-sans"
         >
             Close Details
         </button>
@@ -29,18 +29,18 @@ const ViewDesignationModal = ({ isOpen, onClose, designation }) => {
             icon={icon}
             footer={footer}
         >
-            <div className="space-y-8 text-black bg-white">
+            <div className="space-y-8 text-black bg-white font-sans">
                 {/* Stats Grid */}
                 <div className="grid grid-cols-3 gap-6">
-                    <div className="bg-blue-50 p-4 rounded-2xl border border-blue-100 flex flex-col items-center text-center group hover:shadow-md transition-shadow">
-                        <div className="bg-blue-600 p-2 rounded-xl text-white mb-2 group-hover:scale-110 transition-transform">
+                    <div className="bg-blue-50 p-4 rounded-sm border border-blue-100 flex flex-col items-center text-center group hover:shadow-md transition-shadow">
+                        <div className="bg-blue-600 p-2 rounded-sm text-white mb-2 group-hover:scale-110 transition-transform">
                             <Users size={20} />
                         </div>
                         <span className="text-2xl font-bold text-blue-900">{designation.employee_count || 0}</span>
                         <span className="text-xs font-semibold text-blue-600 uppercase tracking-widest mt-1">Employees</span>
                     </div>
-                    <div className="bg-orange-50 p-4 rounded-2xl border border-orange-100 flex flex-col items-center text-center group hover:shadow-md transition-shadow">
-                        <div className="bg-orange-500 p-2 rounded-xl text-white mb-2 group-hover:scale-110 transition-transform">
+                    <div className="bg-orange-50 p-4 rounded-sm border border-orange-100 flex flex-col items-center text-center group hover:shadow-md transition-shadow">
+                        <div className="bg-orange-500 p-2 rounded-sm text-white mb-2 group-hover:scale-110 transition-transform">
                             <Briefcase size={20} />
                         </div>
                         <div className="truncate w-full px-1">
@@ -48,8 +48,8 @@ const ViewDesignationModal = ({ isOpen, onClose, designation }) => {
                             <span className="text-[10px] font-semibold text-orange-600 uppercase tracking-widest mt-1">Department</span>
                         </div>
                     </div>
-                    <div className="bg-green-50 p-4 rounded-2xl border border-green-100 flex flex-col items-center text-center group hover:shadow-md transition-shadow">
-                        <div className="bg-green-600 p-2 rounded-xl text-white mb-2 group-hover:scale-110 transition-transform">
+                    <div className="bg-green-50 p-4 rounded-sm border border-green-100 flex flex-col items-center text-center group hover:shadow-md transition-shadow">
+                        <div className="bg-green-600 p-2 rounded-sm text-white mb-2 group-hover:scale-110 transition-transform">
                             {designation.status === "Active" ? <CheckCircle size={20} /> : <XCircle size={20} />}
                         </div>
                         <span className={`text-xl font-bold ${designation.status === "Active" ? "text-green-900" : "text-red-900"}`}>{designation.status}</span>
@@ -63,7 +63,7 @@ const ViewDesignationModal = ({ isOpen, onClose, designation }) => {
                         <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2">
                             <FileText size={16} /> Job Description
                         </h3>
-                        <p className="text-gray-700 leading-relaxed bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                        <p className="text-gray-700 leading-relaxed bg-gray-50 p-4 rounded-sm border border-gray-100">
                             {designation.description || "No description provided for this role."}
                         </p>
                     </div>

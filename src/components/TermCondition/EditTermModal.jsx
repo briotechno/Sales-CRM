@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { FileText, Building, Briefcase, AlignLeft, Save } from "lucide-react";
+import { FileText, Briefcase, User, AlignLeft, Save } from "lucide-react";
 import Modal from "../common/Modal";
 import { toast } from "react-hot-toast";
 import { useGetDepartmentsQuery } from "../../store/api/departmentApi";
@@ -48,7 +48,7 @@ const EditTermModal = ({ isOpen, onClose, term, onSubmit, loading }) => {
     <div className="flex gap-3 justify-end">
       <button
         onClick={onClose}
-        className="px-6 py-3 bg-white border-2 border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-100 transition-all"
+        className="px-6 py-3 bg-white border-2 border-gray-200 text-gray-700 font-bold rounded-sm hover:bg-gray-100 transition-all"
       >
         Cancel
       </button>
@@ -56,7 +56,7 @@ const EditTermModal = ({ isOpen, onClose, term, onSubmit, loading }) => {
       <button
         onClick={handleSave}
         disabled={loading}
-        className="px-6 py-3 bg-orange-500 text-white font-bold rounded-xl hover:bg-orange-600 transition-all disabled:opacity-50 flex items-center gap-2"
+        className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold rounded-sm hover:shadow-lg transition-all disabled:opacity-50 flex items-center gap-2"
       >
         <Save size={18} />
         {loading ? "Saving..." : "Update Term"}
@@ -65,7 +65,7 @@ const EditTermModal = ({ isOpen, onClose, term, onSubmit, loading }) => {
   );
 
   const icon = (
-    <div className="bg-orange-500 text-white p-2 rounded-xl">
+    <div className="bg-orange-500 text-white p-2 rounded-lg">
       <FileText size={22} />
     </div>
   );
@@ -82,15 +82,16 @@ const EditTermModal = ({ isOpen, onClose, term, onSubmit, loading }) => {
       <div className="space-y-6 text-black">
         {/* Department */}
         <div>
-          <label className="text-sm font-bold text-gray-500 flex items-center gap-2 mb-2">
-            <Building size={16} /> Department
+          <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+            <Briefcase size={16} className="text-[#FF7B1D]" />
+            Department
           </label>
           <select
             value={formData.department}
             onChange={(e) =>
               setFormData({ ...formData, department: e.target.value })
             }
-            className="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-orange-500 outline-none bg-white"
+            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 shadow-sm font-medium"
           >
             <option value="">Select Department</option>
             {departments.map((dept) => (
@@ -103,15 +104,16 @@ const EditTermModal = ({ isOpen, onClose, term, onSubmit, loading }) => {
 
         {/* Designation */}
         <div>
-          <label className="text-sm font-bold text-gray-500 flex items-center gap-2 mb-2">
-            <Briefcase size={16} /> Designation
+          <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+            <User size={16} className="text-[#FF7B1D]" />
+            Designation
           </label>
           <select
             value={formData.designation}
             onChange={(e) =>
               setFormData({ ...formData, designation: e.target.value })
             }
-            className="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-orange-500 outline-none bg-white"
+            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 shadow-sm font-medium"
           >
             <option value="">Select Designation</option>
             {designations.map((dsg) => (
@@ -124,8 +126,9 @@ const EditTermModal = ({ isOpen, onClose, term, onSubmit, loading }) => {
 
         {/* Title */}
         <div>
-          <label className="text-sm font-bold text-gray-500 flex items-center gap-2 mb-2">
-            <FileText size={16} /> Title
+          <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+            <FileText size={16} className="text-[#FF7B1D]" />
+            Title
           </label>
           <input
             type="text"
@@ -134,14 +137,15 @@ const EditTermModal = ({ isOpen, onClose, term, onSubmit, loading }) => {
               setFormData({ ...formData, title: e.target.value })
             }
             placeholder="Enter term title"
-            className="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-orange-500 outline-none"
+            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 shadow-sm font-medium"
           />
         </div>
 
         {/* Description */}
         <div>
-          <label className="text-sm font-bold text-gray-500 flex items-center gap-2 mb-2">
-            <AlignLeft size={16} /> Description
+          <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+            <AlignLeft size={16} className="text-[#FF7B1D]" />
+            Description
           </label>
           <textarea
             rows={4}
@@ -150,7 +154,7 @@ const EditTermModal = ({ isOpen, onClose, term, onSubmit, loading }) => {
               setFormData({ ...formData, description: e.target.value })
             }
             placeholder="Enter detailed description"
-            className="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-orange-500 outline-none resize-none"
+            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all resize-none text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 shadow-sm font-medium"
           />
         </div>
       </div>

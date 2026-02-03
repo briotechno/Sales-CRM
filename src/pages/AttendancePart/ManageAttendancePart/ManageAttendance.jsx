@@ -337,12 +337,12 @@ export default function AttendanceManagement() {
   return (
     <DashboardLayout>
       <div className="p-0 bg-white ml-2 min-h-screen text-black">
-        <div className="relative z-10 p-0 ml-6">
+        <div className="relative z-10 p-0 ml-2">
           {/* Header */}
-          <div className="mb-6">
+          <div className="mb-4">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white border-b py-6 pr-6">
               <div>
-                <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">
+                <h1 className="text-3xl font-semibold text-gray-900 tracking-tight">
                   Attendance Management
                 </h1>
                 <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
@@ -378,7 +378,7 @@ export default function AttendanceManagement() {
           </div>
 
           {/* Main Content Area */}
-          <div className="pr-6 pb-12">
+          <div className="pr-4 pb-12">
             {mainTab === "monitor" && (
               <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 {/* Stats for Today */}

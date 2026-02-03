@@ -275,7 +275,7 @@ const AddEmployeeModal = ({ isOpen, onClose }) => {
                 <p className="text-sm text-white text-opacity-90">Manage your workforce efficiently</p>
               </div>
             </div>
-            <button onClick={onClose} className="hover:bg-orange-700 p-1 rounded-sm transition-all">
+            <button onClick={onClose} className="text-white hover:bg-white/20 p-2 transition-all rounded">
               <X size={24} />
             </button>
           </div>

@@ -26,11 +26,9 @@ import {
  * />
  */
 
-const JobViewModal = ({ job, onClose, onEdit }) => {
-  // Don't render if no job is provided
+const JobViewModal = ({ job, onClose }) => {
   if (!job) return null;
 
-  // Helper to ensure we have an array
   const getList = (items) => {
     if (Array.isArray(items)) return items;
     if (typeof items === 'string') {
@@ -45,201 +43,187 @@ const JobViewModal = ({ job, onClose, onEdit }) => {
 
   const responsibilities = getList(job.responsibilities);
   const requirements = getList(job.requirements);
+  const interviewRounds = getList(job.interview_rounds);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-sm shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         {/* HEADER SECTION */}
-        <div className="sticky top-0 bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <div className="bg-white bg-opacity-20 p-2 rounded-lg">
-              <Briefcase size={24} />
+        <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-6">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-3">
+              <div className="bg-white bg-opacity-20 p-2 rounded-lg">
+                <Briefcase size={24} className="text-white" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-white">{job.title}</h2>
+                <p className="text-sm text-white text-opacity-90 mt-1">{job.department} Department</p>
+              </div>
             </div>
-            <div>
-              <h2 className="text-2xl font-bold">{job.title}</h2>
-              <p className="text-sm opacity-90">{job.department} Department</p>
-            </div>
+            <button
+              onClick={onClose}
+              className="bg-white bg-opacity-20 hover:bg-opacity-30 p-2 rounded-lg transition-all"
+            >
+              <X size={22} className="text-white" />
+            </button>
           </div>
-          <button
-            onClick={onClose}
-            className="text-white hover:bg-orange-700 p-2 rounded-lg transition-colors"
-            aria-label="Close modal"
-          >
-            <X size={24} />
-          </button>
         </div>
 
         {/* CONTENT SECTION */}
-        <div className="p-8">
-          {/* QUICK INFO CARDS - 4 Cards in a Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-            {/* Location Card */}
-            <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-sm border-l-4 border-blue-500">
-              <div className="flex items-center gap-2 mb-1">
-                <MapPin size={18} className="text-blue-600" />
-                <span className="text-xs font-semibold text-blue-600 uppercase">
-                  Location
-                </span>
+        <div className="p-6 space-y-8 font-sans">
+
+          {/* QUICK INFO CARDS */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="bg-blue-50 p-4 rounded-sm border border-blue-100 flex flex-col items-center text-center group hover:shadow-md transition-shadow">
+              <div className="bg-blue-600 p-2 rounded-sm text-white mb-2 group-hover:scale-110 transition-transform">
+                <MapPin size={20} />
               </div>
-              <p className="text-lg font-bold text-gray-800">{job.location}</p>
+              <span className="text-lg font-bold text-blue-900 line-clamp-1">{job.location}</span>
+              <span className="text-xs font-semibold text-blue-600 uppercase tracking-widest mt-1">Location</span>
             </div>
 
-            {/* Job Type Card */}
-            <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-sm border-l-4 border-green-500">
-              <div className="flex items-center gap-2 mb-1">
-                <Clock size={18} className="text-green-600" />
-                <span className="text-xs font-semibold text-green-600 uppercase">
-                  Job Type
-                </span>
+            <div className="bg-green-50 p-4 rounded-sm border border-green-100 flex flex-col items-center text-center group hover:shadow-md transition-shadow">
+              <div className="bg-green-600 p-2 rounded-sm text-white mb-2 group-hover:scale-110 transition-transform">
+                <Clock size={20} />
               </div>
-              <p className="text-lg font-bold text-gray-800">{job.type}</p>
+              <span className="text-lg font-bold text-green-900 line-clamp-1">{job.type}</span>
+              <span className="text-xs font-semibold text-green-600 uppercase tracking-widest mt-1">Job Type</span>
             </div>
 
-            {/* Applicants Card */}
-            <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-4 rounded-sm border-l-4 border-orange-500">
-              <div className="flex items-center gap-2 mb-1">
-                <Users size={18} className="text-orange-600" />
-                <span className="text-xs font-semibold text-orange-600 uppercase">
-                  Applicants
-                </span>
+            <div className="bg-orange-50 p-4 rounded-sm border border-orange-100 flex flex-col items-center text-center group hover:shadow-md transition-shadow">
+              <div className="bg-orange-600 p-2 rounded-sm text-white mb-2 group-hover:scale-110 transition-transform">
+                <Users size={20} />
               </div>
-              <p className="text-lg font-bold text-gray-800">
-                {job.applicants}
-              </p>
+              <span className="text-lg font-bold text-orange-900">{job.applicants}</span>
+              <span className="text-xs font-semibold text-orange-600 uppercase tracking-widest mt-1">Applicants</span>
             </div>
 
-            {/* Positions Card */}
-            <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-sm border-l-4 border-purple-500">
-              <div className="flex items-center gap-2 mb-1">
-                <Briefcase size={18} className="text-purple-600" />
-                <span className="text-xs font-semibold text-purple-600 uppercase">
-                  Positions
-                </span>
+            <div className="bg-purple-50 p-4 rounded-sm border border-purple-100 flex flex-col items-center text-center group hover:shadow-md transition-shadow">
+              <div className="bg-purple-600 p-2 rounded-sm text-white mb-2 group-hover:scale-110 transition-transform">
+                <Briefcase size={20} />
               </div>
-              <p className="text-lg font-bold text-gray-800">{job.positions}</p>
+              <span className="text-lg font-bold text-purple-900">{job.positions}</span>
+              <span className="text-xs font-semibold text-purple-600 uppercase tracking-widest mt-1">Positions</span>
             </div>
           </div>
 
-          {/* JOB DETAILS SECTIONS */}
-          <div className="space-y-6">
-            {/* STATUS AND POSTED DATE SECTION */}
-            <div className="bg-gray-50 p-6 rounded-sm">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Status */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-600 mb-2">
-                    Status
-                  </label>
-                  <div className="flex items-center gap-2">
-                    {job.status === "Active" ? (
-                      <CheckCircle size={20} className="text-green-600" />
-                    ) : (
-                      <XCircle size={20} className="text-red-600" />
-                    )}
-                    <span
-                      className={`px-4 py-2 text-sm font-semibold rounded-sm ${job.status === "Active"
-                        ? "bg-green-100 text-green-700"
-                        : job.status === "On Hold"
-                          ? "bg-yellow-100 text-yellow-700"
-                          : "bg-gray-200 text-gray-700"
-                        }`}
-                    >
-                      {job.status}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Posted Date */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-600 mb-2">
-                    Posted Date
-                  </label>
-                  <div className="flex items-center gap-2">
-                    <Calendar size={20} className="text-orange-600" />
-                    <span className="text-gray-800 font-medium">
-                      {new Date(job.posted_date).toLocaleDateString()}
-                    </span>
-                  </div>
-                </div>
+          {/* STATUS AND DATES */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t border-gray-100">
+            <div className="flex items-center gap-3">
+              <div className="bg-orange-100 p-2 rounded-sm text-orange-600">
+                {job.status === "Active" ? <CheckCircle size={18} /> : <XCircle size={18} />}
+              </div>
+              <div>
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">Status</p>
+                <span
+                  className={`text-sm font-bold ${job.status === "Active"
+                    ? "text-green-600"
+                    : job.status === "On Hold"
+                      ? "text-yellow-600"
+                      : "text-gray-600"
+                    }`}
+                >
+                  {job.status}
+                </span>
               </div>
             </div>
 
-            {/* JOB DESCRIPTION SECTION */}
-            <div>
-              <h3 className="text-xl font-bold text-gray-800 mb-3 flex items-center gap-2">
-                <div className="w-1 h-6 bg-orange-500 rounded-full"></div>
-                Job Description
-              </h3>
-              <div className="bg-white border-2 border-gray-200 p-6 rounded-sm">
-                <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
-                  {job.description}
-                </p>
+            <div className="flex items-center gap-3">
+              <div className="bg-orange-100 p-2 rounded-sm text-orange-600">
+                <Calendar size={18} />
               </div>
-            </div>
-
-            {/* KEY RESPONSIBILITIES SECTION */}
-            <div>
-              <h3 className="text-xl font-bold text-gray-800 mb-3 flex items-center gap-2">
-                <div className="w-1 h-6 bg-orange-500 rounded-full"></div>
-                Key Responsibilities
-              </h3>
-              <div className="bg-white border-2 border-gray-200 p-6 rounded-sm">
-                <ul className="space-y-2">
-                  {responsibilities.length > 0 ? (
-                    responsibilities.map((item, index) => (
-                      <li key={index} className="flex items-start gap-3">
-                        <div className="bg-orange-100 p-1 rounded-full mt-1">
-                          <CheckCircle size={16} className="text-orange-600" />
-                        </div>
-                        <span className="text-gray-700">{item}</span>
-                      </li>
-                    ))
-                  ) : (
-                    <p className="text-gray-500 italic">No specific responsibilities listed.</p>
-                  )}
-                </ul>
-              </div>
-            </div>
-
-            {/* REQUIREMENTS SECTION */}
-            <div>
-              <h3 className="text-xl font-bold text-gray-800 mb-3 flex items-center gap-2">
-                <div className="w-1 h-6 bg-orange-500 rounded-full"></div>
-                Requirements
-              </h3>
-              <div className="bg-white border-2 border-gray-200 p-6 rounded-sm">
-                <ul className="space-y-2">
-                  {requirements.length > 0 ? (
-                    requirements.map((item, index) => (
-                      <li key={index} className="flex items-start gap-3">
-                        <div className="bg-blue-100 p-1 rounded-full mt-1">
-                          <CheckCircle size={16} className="text-blue-600" />
-                        </div>
-                        <span className="text-gray-700">{item}</span>
-                      </li>
-                    ))
-                  ) : (
-                    <p className="text-gray-500 italic">No specific requirements listed.</p>
-                  )}
-                </ul>
+              <div>
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">Posted Date</p>
+                <p className="text-sm font-semibold text-gray-700">{new Date(job.posted_date).toLocaleDateString()}</p>
               </div>
             </div>
           </div>
+
+          {/* JOB DESCRIPTION */}
+          <div>
+            <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+              <div className="w-1 h-4 bg-orange-500 rounded-full"></div> Job Description
+            </h3>
+            <p className="text-gray-700 leading-relaxed bg-gray-50 p-4 rounded-sm border border-gray-200 break-words whitespace-pre-wrap text-sm">
+              {job.description}
+            </p>
+          </div>
+
+          {/* RESPONSIBILITIES */}
+          <div>
+            <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+              <div className="w-1 h-4 bg-orange-500 rounded-full"></div> Key Responsibilities
+            </h3>
+            <div className="bg-white border border-gray-200 p-4 rounded-sm">
+              <ul className="space-y-3">
+                {responsibilities.length > 0 ? (
+                  responsibilities.map((item, index) => (
+                    <li key={index} className="flex items-start gap-3 text-sm">
+                      <div className="bg-orange-100 p-1 rounded-full mt-0.5">
+                        <CheckCircle size={14} className="text-orange-600" />
+                      </div>
+                      <span className="text-gray-700">{item}</span>
+                    </li>
+                  ))
+                ) : (
+                  <p className="text-gray-500 italic text-sm">No specific responsibilities listed.</p>
+                )}
+              </ul>
+            </div>
+          </div>
+
+          {/* REQUIREMENTS */}
+          <div>
+            <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+              <div className="w-1 h-4 bg-orange-500 rounded-full"></div> Requirements
+            </h3>
+            <div className="bg-white border border-gray-200 p-4 rounded-sm">
+              <ul className="space-y-3">
+                {requirements.length > 0 ? (
+                  requirements.map((item, index) => (
+                    <li key={index} className="flex items-start gap-3 text-sm">
+                      <div className="bg-blue-100 p-1 rounded-full mt-0.5">
+                        <CheckCircle size={14} className="text-blue-600" />
+                      </div>
+                      <span className="text-gray-700">{item}</span>
+                    </li>
+                  ))
+                ) : (
+                  <p className="text-gray-500 italic text-sm">No specific requirements listed.</p>
+                )}
+              </ul>
+            </div>
+          </div>
+
+          {/* INTERVIEW ROUNDS */}
+          {interviewRounds.length > 0 && (
+            <div>
+              <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                <div className="w-1 h-4 bg-orange-500 rounded-full"></div> Interview Rounds (Pre-Defined Sequence)
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                {interviewRounds.map((round, index) => (
+                  <div key={index} className="bg-orange-50 border border-orange-100 p-4 rounded-sm flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-orange-500 text-white flex items-center justify-center font-bold text-sm shadow-sm">
+                      {index + 1}
+                    </div>
+                    <span className="font-semibold text-gray-700 text-sm">{round}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
         </div>
 
-        {/* FOOTER SECTION - Action Buttons */}
-        <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 p-6 flex justify-end gap-4">
+        {/* FOOTER SECTION */}
+        <div className="flex justify-end gap-3 px-6 py-4 border-t bg-gray-50">
           <button
             onClick={onClose}
-            className="px-8 py-3 bg-white border-2 border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-100 hover:border-gray-300 transition-all shadow-sm"
+            className="px-8 py-3 bg-white border border-gray-200 text-gray-700 font-bold rounded-sm hover:bg-gray-100 transition-all shadow-sm font-sans"
           >
             Close Details
           </button>
-          {/* <button
-            onClick={onEdit}
-            className="px-8 py-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-sm font-semibold shadow-lg transition-all">
-            Edit Job
-          </button>  */}
         </div>
       </div>
     </div>

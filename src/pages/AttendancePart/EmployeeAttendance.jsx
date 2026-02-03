@@ -386,10 +386,10 @@ export default function EmployeeAttendance() {
 
   return (
     <DashboardLayout>
-      <div className="p-0 bg-white ml-6 min-h-screen text-black">
+      <div className="p-0 bg-white  min-h-screen text-black">
         {/* Navigation */}
         <nav className="bg-white border-b my-3 ">
-          <div className="px-6 py-4">
+          <div className="px-4 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div>
@@ -448,11 +448,11 @@ export default function EmployeeAttendance() {
         </nav>
 
         {/* Page Content */}
-        <div className="px-0 mt-4 py-0">
+        <div className="px-0 mt-2 py-0">
 
           {/* ==================== DASHBOARD PAGE ==================== */}
           {currentPage === "dashboard" && (
-            <div className="space-y-6 px-6">
+            <div className="space-y-6 px-4">
               {/* Header */}
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-2">
                 <div>

@@ -111,13 +111,13 @@ const AddOfferLetterModal = ({ isOpen, onClose, onSubmit, loading, initialData }
             }
             footer={
                 <div className="flex justify-end gap-3">
-                    <button onClick={onClose} className="px-5 py-2 border rounded-sm font-semibold text-gray-700 hover:bg-gray-50">
+                    <button onClick={onClose} className="px-6 py-2.5 rounded-sm border border-gray-300 text-gray-700 font-bold hover:bg-gray-100 transition-all shadow-sm text-sm">
                         Cancel
                     </button>
                     <button
                         onClick={handleAdd}
                         disabled={loading}
-                        className="px-5 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm flex items-center gap-2 font-semibold shadow-lg hover:from-orange-600 hover:to-orange-700 disabled:opacity-50"
+                        className="px-6 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm flex items-center gap-2 font-bold shadow-md hover:from-orange-600 hover:to-orange-700 transition-all disabled:opacity-50 text-sm"
                     >
                         <Save size={18} />
                         {loading ? "Creating..." : "Generate Offer Letter"}
@@ -127,139 +127,144 @@ const AddOfferLetterModal = ({ isOpen, onClose, onSubmit, loading, initialData }
         >
             <div className="space-y-6 max-h-[70vh] overflow-y-auto px-1 custom-scrollbar">
                 {/* Selection & Personal Info */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 p-4 rounded-sm border border-gray-100">
-
-                    <div>
-                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 block">Candidate Name *</label>
-                        <div className="relative">
-                            <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                            <input
-                                type="text"
-                                value={formData.candidate_name}
-                                onChange={(e) => setFormData({ ...formData, candidate_name: e.target.value })}
-                                className="w-full border-2 border-gray-200 pl-10 pr-3 py-2.5 rounded-sm focus:border-orange-500 outline-none transition-all"
-                                placeholder="Enter full name"
-                            />
-                        </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div className="group">
+                        <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                            <UserIcon size={16} className="text-[#FF7B1D]" />
+                            Candidate Name <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            value={formData.candidate_name}
+                            onChange={(e) => setFormData({ ...formData, candidate_name: e.target.value })}
+                            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 shadow-sm font-medium"
+                            placeholder="Enter full name"
+                        />
                     </div>
 
-                    <div>
-                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 block">Email Address *</label>
-                        <div className="relative">
-                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                            <input
-                                type="email"
-                                value={formData.email}
-                                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                className="w-full border-2 border-gray-200 pl-10 pr-3 py-2.5 rounded-sm focus:border-orange-500 outline-none transition-all"
-                                placeholder="candidate@example.com"
-                            />
-                        </div>
+                    <div className="group">
+                        <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                            <Mail size={16} className="text-[#FF7B1D]" />
+                            Email Address <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                            type="email"
+                            value={formData.email}
+                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 shadow-sm font-medium"
+                            placeholder="candidate@example.com"
+                        />
                     </div>
 
-                    <div>
-                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 block">Phone Number</label>
-                        <div className="relative">
-                            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                            <input
-                                type="tel"
-                                value={formData.phone}
-                                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                className="w-full border-2 border-gray-200 pl-10 pr-3 py-2.5 rounded-sm focus:border-orange-500 outline-none transition-all"
-                                placeholder="+91 0000000000"
-                            />
-                        </div>
+                    <div className="group">
+                        <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                            <Phone size={16} className="text-[#FF7B1D]" />
+                            Phone Number
+                        </label>
+                        <input
+                            type="tel"
+                            value={formData.phone}
+                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 shadow-sm font-medium"
+                            placeholder="+91 0000000000"
+                        />
                     </div>
 
-                    <div>
-                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 block">Candidate Address</label>
+                    <div className="group">
+                        <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                            <Building2 size={16} className="text-[#FF7B1D]" />
+                            Candidate Address
+                        </label>
                         <input
                             type="text"
                             value={formData.address}
                             onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                            className="w-full border-2 border-gray-200 px-3 py-2.5 rounded-sm focus:border-orange-500 outline-none transition-all"
+                            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 shadow-sm font-medium"
                             placeholder="Current address"
                         />
                     </div>
                 </div>
 
                 {/* Job Details */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 block">Department</label>
-                        <div className="relative">
-                            <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                            <select
-                                value={formData.department}
-                                onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                                className="w-full border-2 border-gray-200 pl-10 pr-3 py-2.5 rounded-sm focus:border-orange-500 outline-none transition-all"
-                            >
-                                <option value="">Select Department</option>
-                                {departmentData?.departments?.map(dept => (
-                                    <option key={dept.id} value={dept.department_name}>{dept.department_name}</option>
-                                ))}
-                            </select>
-                        </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div className="group">
+                        <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                            <Building2 size={16} className="text-[#FF7B1D]" />
+                            Department
+                        </label>
+                        <select
+                            value={formData.department}
+                            onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+                            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 cursor-pointer shadow-sm font-medium"
+                        >
+                            <option value="">Select Department</option>
+                            {departmentData?.departments?.map(dept => (
+                                <option key={dept.id} value={dept.department_name}>{dept.department_name}</option>
+                            ))}
+                        </select>
                     </div>
 
-                    <div>
-                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 block">Designation</label>
-                        <div className="relative">
-                            <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                            <select
-                                value={formData.designation}
-                                onChange={(e) => setFormData({ ...formData, designation: e.target.value })}
-                                className="w-full border-2 border-gray-200 pl-10 pr-3 py-2.5 rounded-sm focus:border-orange-500 outline-none transition-all"
-                            >
-                                <option value="">Select Designation</option>
-                                {designationData?.designations?.map(des => (
-                                    <option key={des.id} value={des.designation_name}>{des.designation_name}</option>
-                                ))}
-                            </select>
-                        </div>
+                    <div className="group">
+                        <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                            <Briefcase size={16} className="text-[#FF7B1D]" />
+                            Designation
+                        </label>
+                        <select
+                            value={formData.designation}
+                            onChange={(e) => setFormData({ ...formData, designation: e.target.value })}
+                            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 cursor-pointer shadow-sm font-medium"
+                        >
+                            <option value="">Select Designation</option>
+                            {designationData?.designations?.map(des => (
+                                <option key={des.id} value={des.designation_name}>{des.designation_name}</option>
+                            ))}
+                        </select>
                     </div>
 
-                    <div>
-                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 block">Offer Date</label>
-                        <div className="relative">
-                            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                            <input
-                                type="date"
-                                value={formData.offer_date}
-                                onChange={(e) => setFormData({ ...formData, offer_date: e.target.value })}
-                                className="w-full border-2 border-gray-200 pl-10 pr-3 py-2.5 rounded-sm focus:border-orange-500 outline-none transition-all"
-                            />
-                        </div>
+                    <div className="group">
+                        <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                            <Calendar size={16} className="text-[#FF7B1D]" />
+                            Offer Date
+                        </label>
+                        <input
+                            type="date"
+                            value={formData.offer_date}
+                            onChange={(e) => setFormData({ ...formData, offer_date: e.target.value })}
+                            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 shadow-sm font-medium"
+                        />
                     </div>
 
-                    <div>
-                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 block">Expected Joining Date</label>
-                        <div className="relative">
-                            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                            <input
-                                type="date"
-                                value={formData.joining_date}
-                                onChange={(e) => setFormData({ ...formData, joining_date: e.target.value })}
-                                className="w-full border-2 border-gray-200 pl-10 pr-3 py-2.5 rounded-sm focus:border-orange-500 outline-none transition-all"
-                            />
-                        </div>
+                    <div className="group">
+                        <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                            <Calendar size={16} className="text-[#FF7B1D]" />
+                            Expected Joining Date
+                        </label>
+                        <input
+                            type="date"
+                            value={formData.joining_date}
+                            onChange={(e) => setFormData({ ...formData, joining_date: e.target.value })}
+                            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 shadow-sm font-medium"
+                        />
                     </div>
                 </div>
 
                 {/* Salary Section */}
-                <div className="space-y-4 pt-2 border-t">
-                    <h3 className="text-sm font-bold text-gray-800 flex items-center gap-2">
+                <div className="space-y-4 pt-6 border-t border-gray-100">
+                    <h3 className="text-sm font-bold text-gray-800 flex items-center gap-2 mb-4">
                         <DollarSign size={18} className="text-orange-500" />
                         Salary Structure Details
                     </h3>
 
-                    <div>
-                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 block">Basic Salary (Annual/Monthly as per policy)</label>
+                    <div className="group">
+                        <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                            <DollarSign size={16} className="text-[#FF7B1D]" />
+                            Basic Salary (Annual/Monthly as per policy)
+                        </label>
                         <input
                             type="number"
                             value={formData.basic_salary}
                             onChange={(e) => setFormData({ ...formData, basic_salary: e.target.value })}
-                            className="w-full border-2 border-gray-200 px-3 py-2.5 rounded-sm focus:border-orange-500 outline-none transition-all"
+                            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 shadow-sm font-medium"
                             placeholder="Enter base amount"
                         />
                     </div>

@@ -15,7 +15,14 @@ import {
   Plus,
   Trash2,
   Users,
-  X
+  X,
+  FileText,
+  MapPin,
+  AlignLeft,
+  Calendar,
+  Layers,
+
+
 } from "lucide-react";
 import { FiHome } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
@@ -43,7 +50,7 @@ const DeleteJobModal = ({ isOpen, onClose, onConfirm, isLoading, title }) => {
         <div className="flex gap-4 w-full">
           <button
             onClick={onClose}
-            className="flex-1 px-6 py-3 border-2 border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-100"
+            className="flex-1 px-6 py-3 border border-gray-200 text-gray-700 font-bold rounded-sm hover:bg-gray-100 shadow-sm transition-all"
           >
             Cancel
           </button>
@@ -51,7 +58,7 @@ const DeleteJobModal = ({ isOpen, onClose, onConfirm, isLoading, title }) => {
           <button
             onClick={onConfirm}
             disabled={isLoading}
-            className="flex-1 px-6 py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 shadow-lg disabled:opacity-50 flex items-center justify-center gap-2"
+            className="flex-1 px-6 py-3 bg-red-600 text-white font-bold rounded-sm hover:bg-red-700 shadow-md hover:shadow-lg disabled:opacity-50 flex items-center justify-center gap-2 transition-all"
           >
             {isLoading ? (
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -350,10 +357,10 @@ export default function JobManagement() {
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen bg-gradient-to-br from-orange-0 via-white to-orange-0 p-0 ml-6">
+      <div className="min-h-screen bg-gradient-to-br from-orange-0 via-white to-orange-0 p-0 ml-4 mr-4">
         <div className="max-w-8xl mx-auto">
           {/* Header */}
-          <div className="bg-white rounded-sm p-3 mb-4 border-b">
+          <div className="bg-white rounded-sm p-3 mb-2 border-b">
             <div className="flex justify-between items-center">
               <div>
                 <h1 className="text-2xl font-bold text-gray-900 whitespace-nowrap">
@@ -425,7 +432,7 @@ export default function JobManagement() {
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6 ">
             <NumberCard
               title={"Total Jobs"}
               number={statsData?.total_jobs || 0}
@@ -597,8 +604,8 @@ export default function JobManagement() {
                             {update && (
                               <button
                                 onClick={() => handleEditJob(job)}
-                                className="p-2 hover:bg-orange-100 rounded-sm transition-all">
-                                <Edit size={18} className="text-orange-600" />
+                                className="p-2 hover:bg-green-100 rounded-sm transition-all">
+                                <Edit size={18} className="text-green-600" />
                               </button>
                             )}
                             {remove && (
@@ -665,18 +672,22 @@ export default function JobManagement() {
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
               <div className="bg-white rounded-sm shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
                 <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-6 flex justify-between items-center">
-                  <h2 className="text-3xl font-bold text-white flex items-center gap-3">
-                    {editingJobId ? <Edit size={28} /> : <Plus size={28} />}
-                    {editingJobId ? "Edit Job Posting" : "Add New Job Posting"}
-                  </h2>
-                  <button onClick={() => setShowAddModal(false)} className="text-white hover:bg-white/20 p-2 rounded-full">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-white bg-opacity-20 p-2 rounded-sm">
+                      {editingJobId ? <Edit className="text-white" size={24} /> : <Plus className="text-white" size={24} />}
+                    </div>
+                    <h2 className="text-2xl font-bold text-white">
+                      {editingJobId ? "Edit Job Posting" : "Add New Job Posting"}
+                    </h2>
+                  </div>
+                  <button onClick={() => setShowAddModal(false)} className="text-white hover:bg-white hover:bg-opacity-20 p-2 rounded-sm transition-colors">
                     <X size={24} />
                   </button>
                 </div>
-                <div className="p-8 space-y-6">
+                <div className="p-8 space-y-6 bg-white">
                   <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">
-                      Job Title *
+                    <label className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
+                      <FileText size={16} className="text-[#FF7B1D]" /> Job Title *
                     </label>
                     <input
                       type="text"
@@ -684,19 +695,20 @@ export default function JobManagement() {
                       value={formData.title}
                       onChange={handleInputChange}
                       placeholder="e.g., Senior Software Engineer"
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 shadow-sm font-medium"
                     />
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-bold text-gray-700 mb-2">
-                        Department *
+                      <label className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
+                        <Briefcase size={16} className="text-[#FF7B1D]" /> Department *
                       </label>
                       <select
                         name="department"
                         value={formData.department}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300">
+                        className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 shadow-sm font-medium"
+                      >
                         <option value="">Select Department</option>
                         {departmentsData?.departments?.map((dept) => (
                           <option key={dept.id} value={dept.department_name}>
@@ -706,8 +718,8 @@ export default function JobManagement() {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-bold text-gray-700 mb-2">
-                        Location *
+                      <label className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
+                        <MapPin size={16} className="text-[#FF7B1D]" /> Location *
                       </label>
                       <input
                         type="text"
@@ -715,20 +727,21 @@ export default function JobManagement() {
                         value={formData.location}
                         onChange={handleInputChange}
                         placeholder="e.g., Remote, New York"
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300"
+                        className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 shadow-sm font-medium"
                       />
                     </div>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-bold text-gray-700 mb-2">
-                        Job Type *
+                      <label className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
+                        <Briefcase size={16} className="text-[#FF7B1D]" /> Job Type *
                       </label>
                       <select
                         name="type"
                         value={formData.type}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300">
+                        className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 shadow-sm font-medium"
+                      >
                         <option>Full-Time Employee</option>
                         <option>Part-Time Employee</option>
                         <option>Contract Employee</option>
@@ -742,8 +755,8 @@ export default function JobManagement() {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-bold text-gray-700 mb-2">
-                        Number of Positions *
+                      <label className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
+                        <Users size={16} className="text-[#FF7B1D]" /> Number of Positions *
                       </label>
                       <input
                         type="number"
@@ -752,7 +765,7 @@ export default function JobManagement() {
                         onChange={handleInputChange}
                         placeholder="1"
                         min="1"
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300"
+                        className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 shadow-sm font-medium"
                       />
                     </div>
                   </div>
@@ -760,14 +773,15 @@ export default function JobManagement() {
                   {/* Status selection only when editing */}
                   {editingJobId && (
                     <div>
-                      <label className="block text-sm font-bold text-gray-700 mb-2">
-                        Status
+                      <label className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
+                        <CheckCircle size={16} className="text-[#FF7B1D]" /> Status
                       </label>
                       <select
                         name="status"
                         value={formData.status}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300">
+                        className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 shadow-sm font-medium"
+                      >
                         <option value="Active">Active</option>
                         <option value="On Hold">On Hold</option>
                         <option value="Closed">Closed</option>
@@ -776,8 +790,8 @@ export default function JobManagement() {
                   )}
 
                   <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">
-                      Job Description *
+                    <label className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
+                      <AlignLeft size={16} className="text-[#FF7B1D]" /> Job Description *
                     </label>
                     <textarea
                       name="description"
@@ -785,14 +799,14 @@ export default function JobManagement() {
                       onChange={handleInputChange}
                       rows="4"
                       placeholder="Describe the role, responsibilities, and requirements..."
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all resize-none text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 shadow-sm font-medium"
                     ></textarea>
                   </div>
 
                   {/* Key Responsibilities - Dynamic List */}
                   <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">
-                      Key Responsibilities
+                    <label className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
+                      <FileText size={16} className="text-[#FF7B1D]" /> Key Responsibilities
                     </label>
                     <div className="space-y-3">
                       {formData.responsibilities.map((item, index) => (
@@ -812,7 +826,7 @@ export default function JobManagement() {
                           onChange={(e) => setResponsibilityInput(e.target.value)}
                           onKeyPress={(e) => e.key === 'Enter' && addResponsibility()}
                           placeholder="Add a responsibility..."
-                          className="flex-1 px-4 py-2 border-2 border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm"
+                          className="flex-1 px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 shadow-sm font-medium"
                         />
                         <button
                           onClick={addResponsibility}
@@ -825,8 +839,8 @@ export default function JobManagement() {
 
                   {/* Requirements - Dynamic List */}
                   <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">
-                      Requirements
+                    <label className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
+                      <CheckCircle size={16} className="text-[#FF7B1D]" /> Requirements
                     </label>
                     <div className="space-y-3">
                       {formData.requirements.map((item, index) => (
@@ -846,7 +860,7 @@ export default function JobManagement() {
                           onChange={(e) => setRequirementInput(e.target.value)}
                           onKeyPress={(e) => e.key === 'Enter' && addRequirement()}
                           placeholder="Add a requirement..."
-                          className="flex-1 px-4 py-2 border-2 border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm"
+                          className="flex-1 px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 shadow-sm font-medium"
                         />
                         <button
                           onClick={addRequirement}
@@ -857,14 +871,15 @@ export default function JobManagement() {
                     </div>
                   </div>
 
+
                   {/* Interview Rounds - Dynamic List */}
                   <div className="pt-6 border-t border-gray-100">
-                    <label className="block text-sm font-bold text-gray-700 mb-2">
-                      Interview Rounds (Pre-defined sequence)
+                    <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                      <Layers size={16} className="text-[#FF7B1D]" /> Interview Rounds (Pre-Defined Sequence)
                     </label>
                     <div className="space-y-3">
                       {formData.interview_rounds.map((round, index) => (
-                        <div key={index} className="flex items-center gap-2 bg-orange-50 p-3 rounded-xl border border-orange-100">
+                        <div key={index} className="flex items-center gap-2 bg-orange-50 p-3 rounded-sm border border-orange-100">
                           <span className="flex items-center justify-center w-6 h-6 bg-orange-500 text-white text-xs font-bold rounded-full">{index + 1}</span>
                           <span className="flex-1 text-sm font-bold text-gray-700 uppercase tracking-wider">{round}</span>
                           <button
@@ -881,12 +896,12 @@ export default function JobManagement() {
                           onChange={(e) => setRoundInput(e.target.value)}
                           onKeyPress={(e) => e.key === 'Enter' && addRound()}
                           placeholder="Add a round (e.g., Technical Assessment)..."
-                          className="flex-1 px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-orange-500 transition-all outline-none text-sm"
+                          className="flex-1 px-4 py-3 bg-white border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 hover:border-gray-300 shadow-sm font-medium"
                         />
                         <button
                           onClick={addRound}
-                          className="bg-orange-500 text-white px-4 py-3 rounded-xl font-bold hover:bg-orange-600 transition-colors flex items-center gap-2">
-                          <Plus size={20} /> Add Round
+                          className="bg-orange-500 text-white px-4 py-2.5 rounded-sm font-bold hover:bg-orange-600 transition-colors flex items-center gap-2 capitalize text-xs tracking-wider">
+                          <Plus size={16} /> Add Round
                         </button>
                       </div>
                     </div>
@@ -894,12 +909,12 @@ export default function JobManagement() {
 
                   {/* Application Form Fields - Dynamic List */}
                   <div className="pt-6 border-t border-gray-100">
-                    <label className="block text-sm font-bold text-gray-700 mb-2">
-                      Custom Application Form Fields
+                    <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                      <FileText size={16} className="text-[#FF7B1D]" /> Custom Application Form Fields
                     </label>
                     <div className="space-y-4">
                       {formData.application_fields.map((field, index) => (
-                        <div key={index} className="flex flex-wrap items-center gap-4 bg-gray-50 p-4 rounded-xl border border-gray-200">
+                        <div key={index} className="flex flex-wrap items-center gap-4 bg-gray-50 p-4 rounded-sm border border-gray-200">
                           <div className="flex-1 min-w-[150px]">
                             <p className="text-xs font-bold text-gray-400 uppercase">Label</p>
                             <p className="text-sm font-bold text-gray-800">{field.label}</p>
@@ -916,14 +931,14 @@ export default function JobManagement() {
                           </div>
                           <button
                             onClick={() => removeField(index)}
-                            className="text-red-500 hover:text-red-700 p-2 bg-white rounded-lg shadow-sm border border-gray-100">
+                            className="text-red-500 hover:text-red-700 p-2 bg-white rounded-sm shadow-sm border border-gray-100">
                             <Trash2 size={16} />
                           </button>
                         </div>
                       ))}
 
                       {/* Add Field Inputs */}
-                      <div className="bg-orange-50/50 p-6 rounded-2xl border-2 border-dashed border-orange-200 space-y-4">
+                      <div className="bg-orange-50/50 p-6 rounded-sm border-2 border-dashed border-orange-200 space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                           <div>
                             <label className="text-xs font-bold text-orange-600 uppercase mb-1 block">Field Label</label>
@@ -932,7 +947,7 @@ export default function JobManagement() {
                               value={fieldInput.label}
                               onChange={(e) => setFieldInput({ ...fieldInput, label: e.target.value })}
                               placeholder="e.g., Portfolio Link"
-                              className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:border-orange-500 outline-none text-sm"
+                              className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 shadow-sm font-medium"
                             />
                           </div>
                           <div>
@@ -940,7 +955,7 @@ export default function JobManagement() {
                             <select
                               value={fieldInput.type}
                               onChange={(e) => setFieldInput({ ...fieldInput, type: e.target.value })}
-                              className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:border-orange-500 outline-none text-sm"
+                              className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 shadow-sm font-medium"
                             >
                               <option value="text">Text Input</option>
                               <option value="textarea">Multi-line Text</option>
@@ -954,7 +969,7 @@ export default function JobManagement() {
                                 type="checkbox"
                                 checked={fieldInput.required}
                                 onChange={(e) => setFieldInput({ ...fieldInput, required: e.target.checked })}
-                                className="w-4 h-4 accent-orange-500"
+                                className="w-4 h-4 accent-orange-500 rounded-sm"
                               />
                               <span className="text-sm font-bold text-gray-700">Mandatory</span>
                             </label>
@@ -962,7 +977,7 @@ export default function JobManagement() {
                         </div>
                         <button
                           onClick={addField}
-                          className="w-full bg-white border-2 border-orange-500 text-orange-600 px-4 py-2.5 rounded-xl font-black uppercase tracking-widest text-xs hover:bg-orange-500 hover:text-white transition-all">
+                          className="w-full bg-white border-2 border-orange-500 text-orange-600 px-4 py-2.5 rounded-sm font-black capitalize tracking-widest text-xs hover:bg-orange-500 hover:text-white transition-all">
                           Add Custom Field
                         </button>
                       </div>
@@ -972,37 +987,40 @@ export default function JobManagement() {
                 <div className="p-6 bg-gray-50 border-t border-gray-200 flex justify-end gap-4">
                   <button
                     onClick={() => setShowAddModal(false)}
-                    className="px-8 py-3 border-2 border-gray-300 text-gray-700 rounded-sm hover:bg-gray-100 transition-all font-semibold"
+                    className="px-8 py-2.5 border border-gray-300 text-gray-700 rounded-sm hover:bg-gray-100 transition-all font-bold shadow-sm text-sm"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleSubmit}
-                    className="px-8 py-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-sm transition-all font-semibold shadow-lg">
+                    className="px-8 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-sm transition-all font-bold shadow-md hover:shadow-lg text-sm">
                     {editingJobId ? "Update Job Posting" : "Publish Job Posting"}
                   </button>
                 </div>
               </div>
             </div>
-          )}
+          )
+          }
 
           {/* View Job Modal */}
-          {showViewModal && (
-            <JobViewModal
-              job={selectedJob}
-              onClose={() => setShowViewModal(false)}
-              onEdit={() => {
-                setShowViewModal(false);
-                handleEditJob(selectedJob);
-              }}
-            />
-          )}
+          {
+            showViewModal && (
+              <JobViewModal
+                job={selectedJob}
+                onClose={() => setShowViewModal(false)}
+                onEdit={() => {
+                  setShowViewModal(false);
+                  handleEditJob(selectedJob);
+                }}
+              />
+            )
+          }
 
-        </div>
-      </div>
+        </div >
+      </div >
 
       {/* Delete Modal */}
-      <DeleteJobModal
+      < DeleteJobModal
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
         onConfirm={confirmDelete}
@@ -1010,6 +1028,6 @@ export default function JobManagement() {
         title={jobToDelete?.title || ""}
       />
 
-    </DashboardLayout>
+    </DashboardLayout >
   );
 }
