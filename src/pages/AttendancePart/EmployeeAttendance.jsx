@@ -3,7 +3,6 @@ import { useSearchParams } from "react-router-dom";
 
 import DashboardLayout from "../../components/DashboardLayout";
 import { Html5QrcodeScanner } from "html5-qrcode";
-import { FiHome } from "react-icons/fi";
 import { useSelector } from "react-redux";
 import {
   useMarkAttendanceMutation,
@@ -397,7 +396,7 @@ export default function EmployeeAttendance() {
                     My Attendance
                   </h1>
                   <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
-                    <FiHome className="text-gray-700 text-sm" />
+                    <Home className="text-gray-700" size={14} />
 
                     <span className="text-gray-600">HRM /</span>
 

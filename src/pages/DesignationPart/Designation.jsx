@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { FiHome } from "react-icons/fi";
-import { Pencil, Trash2, Eye, FileDown, Users, Warehouse, Handshake, Target, Plus, Search, Filter } from "lucide-react";
+import { Home, Pencil, Trash2, Eye, FileDown, Users, Warehouse, Handshake, Target, Plus, Search, Filter } from "lucide-react";
 import DashboardLayout from "../../components/DashboardLayout";
 import AddDesignationModal from "../../components/Designation/AddDesignationModal";
 import EditDesignationModal from "../../components/Designation/EditDesignationModal";
@@ -86,7 +85,7 @@ const AllDesignation = () => {
               <div>
                 <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Designation</h1>
                 <p className="text-[10px] text-gray-500 mt-0.5 flex items-center gap-1.5">
-                  <FiHome className="text-gray-400" size={14} /> HRM / <span className="text-orange-500 font-medium">Designation</span>
+                  <Home className="text-gray-400" size={14} /> HRM / <span className="text-orange-500 font-medium">Designation</span>
                 </p>
               </div>
 

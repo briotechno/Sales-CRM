@@ -392,7 +392,7 @@ export default function AttendanceApp() {
               <div className="flex items-center gap-3">
                 <div>
                   <h1 className="text-2xl font-bold text-gray-800">
-                    Attendance Syatem
+                    Attendance System
                   </h1>
                   <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
                     <FiHome className="text-gray-700 text-sm" />
@@ -678,7 +678,7 @@ export default function AttendanceApp() {
                                 onClick={(e) => { e.stopPropagation(); if (canMonitor) startLiveMonitoring(employee, 'camera'); }}
                                 disabled={!canMonitor}
                                 className={`p-2.5 rounded-lg transition-all duration-300 shadow-sm border ${!canMonitor ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed' :
-                                    (monitoringEmployee?.id === employee.id && monitorType === 'camera' ? 'bg-orange-500 text-white border-orange-600 scale-110' : 'bg-gray-50 text-gray-600 border-gray-100 hover:bg-orange-50 hover:text-orange-600 hover:border-orange-200')
+                                  (monitoringEmployee?.id === employee.id && monitorType === 'camera' ? 'bg-orange-500 text-white border-orange-600 scale-110' : 'bg-gray-50 text-gray-600 border-gray-100 hover:bg-orange-50 hover:text-orange-600 hover:border-orange-200')
                                   }`}
                                 title={canMonitor ? "Toggle Camera Feed" : "Monitoring disabled (Employee not on duty)"}
                               >
@@ -689,7 +689,7 @@ export default function AttendanceApp() {
                                 onClick={(e) => { e.stopPropagation(); if (canMonitor) startLiveMonitoring(employee, 'mic'); }}
                                 disabled={!canMonitor}
                                 className={`p-2.5 rounded-lg transition-all duration-300 shadow-sm border ${!canMonitor ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed' :
-                                    (monitoringEmployee?.id === employee.id && monitorType === 'mic' ? 'bg-blue-500 text-white border-blue-600 scale-110' : 'bg-gray-50 text-gray-600 border-gray-100 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200')
+                                  (monitoringEmployee?.id === employee.id && monitorType === 'mic' ? 'bg-blue-500 text-white border-blue-600 scale-110' : 'bg-gray-50 text-gray-600 border-gray-100 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200')
                                   }`}
                                 title={canMonitor ? "Toggle Audio Feed" : "Monitoring disabled (Employee not on duty)"}
                               >

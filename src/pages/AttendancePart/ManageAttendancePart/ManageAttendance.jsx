@@ -1,8 +1,8 @@
-import React, { useState } from "react";
-import { FiHome } from "react-icons/fi";
+import React, { useState, useEffect } from "react";
 import { QRCodeCanvas } from "qrcode.react";
 import DashboardLayout from "../../../components/DashboardLayout";
 import {
+  Home,
   Clock,
   Settings,
   Save,
@@ -59,7 +59,6 @@ import {
 } from "../../../store/api/attendanceApi";
 import { toast } from "react-hot-toast";
 import NumberCard from "../../../components/NumberCard";
-import { useEffect } from "react";
 
 export default function AttendanceManagement() {
   const [mainTab, setMainTab] = useState("monitor");
@@ -346,7 +345,7 @@ export default function AttendanceManagement() {
                   Attendance Management
                 </h1>
                 <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
-                  <FiHome className="text-gray-400 text-sm" />
+                  <Home className="text-gray-700" size={14} />
                   <span className="text-gray-300">/</span> HRM /{" "}
                   <span className="text-[#FF7B1D] font-semibold">Manage Attendance</span>
                 </p>

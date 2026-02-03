@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import * as XLSX from "xlsx";
-import { FiHome } from "react-icons/fi";
 import DashboardLayout from "../../components/DashboardLayout";
 import {
+  Home,
   Plus,
   Search,
   Filter,
@@ -501,7 +501,7 @@ export default function CatalogsPage() {
               <div>
                 <h1 className="text-2xl font-bold text-gray-800">Catalog Module</h1>
                 <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
-                  <FiHome className="text-gray-700" size={14} />
+                  <Home className="text-gray-700" size={14} />
                   <span className="text-gray-400"></span> CRM /{" "}
                   <span className="text-[#FF7B1D] font-medium">
                     All Catalogs
