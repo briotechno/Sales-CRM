@@ -50,7 +50,7 @@ const DeleteJobModal = ({ isOpen, onClose, onConfirm, isLoading, title }) => {
         <div className="flex gap-4 w-full">
           <button
             onClick={onClose}
-            className="flex-1 px-6 py-3 border-2 border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-100"
+            className="flex-1 px-6 py-3 border border-gray-200 text-gray-700 font-bold rounded-sm hover:bg-gray-100 shadow-sm transition-all"
           >
             Cancel
           </button>
@@ -58,7 +58,7 @@ const DeleteJobModal = ({ isOpen, onClose, onConfirm, isLoading, title }) => {
           <button
             onClick={onConfirm}
             disabled={isLoading}
-            className="flex-1 px-6 py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 shadow-lg disabled:opacity-50 flex items-center justify-center gap-2"
+            className="flex-1 px-6 py-3 bg-red-600 text-white font-bold rounded-sm hover:bg-red-700 shadow-md hover:shadow-lg disabled:opacity-50 flex items-center justify-center gap-2 transition-all"
           >
             {isLoading ? (
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -695,7 +695,7 @@ export default function JobManagement() {
                       value={formData.title}
                       onChange={handleInputChange}
                       placeholder="e.g., Senior Software Engineer"
-                      className="w-full px-4 py-2.5 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm placeholder-gray-400"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 shadow-sm font-medium"
                     />
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -707,7 +707,8 @@ export default function JobManagement() {
                         name="department"
                         value={formData.department}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-2.5 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm bg-white">
+                        className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 shadow-sm font-medium"
+                      >
                         <option value="">Select Department</option>
                         {departmentsData?.departments?.map((dept) => (
                           <option key={dept.id} value={dept.department_name}>
@@ -726,7 +727,7 @@ export default function JobManagement() {
                         value={formData.location}
                         onChange={handleInputChange}
                         placeholder="e.g., Remote, New York"
-                        className="w-full px-4 py-2.5 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm placeholder-gray-400"
+                        className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 shadow-sm font-medium"
                       />
                     </div>
                   </div>
@@ -739,7 +740,8 @@ export default function JobManagement() {
                         name="type"
                         value={formData.type}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-2.5 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm bg-white">
+                        className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 shadow-sm font-medium"
+                      >
                         <option>Full-Time Employee</option>
                         <option>Part-Time Employee</option>
                         <option>Contract Employee</option>
@@ -763,7 +765,7 @@ export default function JobManagement() {
                         onChange={handleInputChange}
                         placeholder="1"
                         min="1"
-                        className="w-full px-4 py-2.5 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm placeholder-gray-400"
+                        className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 shadow-sm font-medium"
                       />
                     </div>
                   </div>
@@ -778,7 +780,8 @@ export default function JobManagement() {
                         name="status"
                         value={formData.status}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-2.5 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm bg-white">
+                        className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 shadow-sm font-medium"
+                      >
                         <option value="Active">Active</option>
                         <option value="On Hold">On Hold</option>
                         <option value="Closed">Closed</option>
@@ -796,7 +799,7 @@ export default function JobManagement() {
                       onChange={handleInputChange}
                       rows="4"
                       placeholder="Describe the role, responsibilities, and requirements..."
-                      className="w-full px-4 py-2.5 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none text-sm placeholder-gray-400"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all resize-none text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 shadow-sm font-medium"
                     ></textarea>
                   </div>
 
@@ -823,7 +826,7 @@ export default function JobManagement() {
                           onChange={(e) => setResponsibilityInput(e.target.value)}
                           onKeyPress={(e) => e.key === 'Enter' && addResponsibility()}
                           placeholder="Add a responsibility..."
-                          className="flex-1 px-4 py-2.5 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm placeholder-gray-400"
+                          className="flex-1 px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 shadow-sm font-medium"
                         />
                         <button
                           onClick={addResponsibility}
@@ -857,7 +860,7 @@ export default function JobManagement() {
                           onChange={(e) => setRequirementInput(e.target.value)}
                           onKeyPress={(e) => e.key === 'Enter' && addRequirement()}
                           placeholder="Add a requirement..."
-                          className="flex-1 px-4 py-2.5 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm placeholder-gray-400"
+                          className="flex-1 px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 shadow-sm font-medium"
                         />
                         <button
                           onClick={addRequirement}
@@ -893,7 +896,7 @@ export default function JobManagement() {
                           onChange={(e) => setRoundInput(e.target.value)}
                           onKeyPress={(e) => e.key === 'Enter' && addRound()}
                           placeholder="Add a round (e.g., Technical Assessment)..."
-                          className="flex-1 px-4 py-2.5 bg-white border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm placeholder-gray-400"
+                          className="flex-1 px-4 py-3 bg-white border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 hover:border-gray-300 shadow-sm font-medium"
                         />
                         <button
                           onClick={addRound}
@@ -944,7 +947,7 @@ export default function JobManagement() {
                               value={fieldInput.label}
                               onChange={(e) => setFieldInput({ ...fieldInput, label: e.target.value })}
                               placeholder="e.g., Portfolio Link"
-                              className="w-full px-4 py-2.5 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm placeholder-gray-400 bg-white"
+                              className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 shadow-sm font-medium"
                             />
                           </div>
                           <div>
@@ -952,7 +955,7 @@ export default function JobManagement() {
                             <select
                               value={fieldInput.type}
                               onChange={(e) => setFieldInput({ ...fieldInput, type: e.target.value })}
-                              className="w-full px-4 py-2.5 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm bg-white"
+                              className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 shadow-sm font-medium"
                             >
                               <option value="text">Text Input</option>
                               <option value="textarea">Multi-line Text</option>
@@ -984,37 +987,40 @@ export default function JobManagement() {
                 <div className="p-6 bg-gray-50 border-t border-gray-200 flex justify-end gap-4">
                   <button
                     onClick={() => setShowAddModal(false)}
-                    className="px-8 py-3 border-2 border-gray-300 text-gray-700 rounded-sm hover:bg-gray-100 transition-all font-semibold"
+                    className="px-8 py-2.5 border border-gray-300 text-gray-700 rounded-sm hover:bg-gray-100 transition-all font-bold shadow-sm text-sm"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleSubmit}
-                    className="px-8 py-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-sm transition-all font-semibold shadow-lg">
+                    className="px-8 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-sm transition-all font-bold shadow-md hover:shadow-lg text-sm">
                     {editingJobId ? "Update Job Posting" : "Publish Job Posting"}
                   </button>
                 </div>
               </div>
             </div>
-          )}
+          )
+          }
 
           {/* View Job Modal */}
-          {showViewModal && (
-            <JobViewModal
-              job={selectedJob}
-              onClose={() => setShowViewModal(false)}
-              onEdit={() => {
-                setShowViewModal(false);
-                handleEditJob(selectedJob);
-              }}
-            />
-          )}
+          {
+            showViewModal && (
+              <JobViewModal
+                job={selectedJob}
+                onClose={() => setShowViewModal(false)}
+                onEdit={() => {
+                  setShowViewModal(false);
+                  handleEditJob(selectedJob);
+                }}
+              />
+            )
+          }
 
-        </div>
-      </div>
+        </div >
+      </div >
 
       {/* Delete Modal */}
-      <DeleteJobModal
+      < DeleteJobModal
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
         onConfirm={confirmDelete}
@@ -1022,6 +1028,6 @@ export default function JobManagement() {
         title={jobToDelete?.title || ""}
       />
 
-    </DashboardLayout>
+    </DashboardLayout >
   );
 }

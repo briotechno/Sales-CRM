@@ -111,13 +111,13 @@ const AddOfferLetterModal = ({ isOpen, onClose, onSubmit, loading, initialData }
             }
             footer={
                 <div className="flex justify-end gap-3">
-                    <button onClick={onClose} className="px-6 py-2.5 rounded-sm border-2 border-gray-300 text-gray-700 font-semibold hover:bg-gray-100 transition-all">
+                    <button onClick={onClose} className="px-6 py-2.5 rounded-sm border border-gray-300 text-gray-700 font-bold hover:bg-gray-100 transition-all shadow-sm text-sm">
                         Cancel
                     </button>
                     <button
                         onClick={handleAdd}
                         disabled={loading}
-                        className="px-6 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm flex items-center gap-2 font-semibold shadow-lg hover:from-orange-600 hover:to-orange-700 transition-all disabled:opacity-50"
+                        className="px-6 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm flex items-center gap-2 font-bold shadow-md hover:from-orange-600 hover:to-orange-700 transition-all disabled:opacity-50 text-sm"
                     >
                         <Save size={18} />
                         {loading ? "Creating..." : "Generate Offer Letter"}
@@ -137,7 +137,7 @@ const AddOfferLetterModal = ({ isOpen, onClose, onSubmit, loading, initialData }
                             type="text"
                             value={formData.candidate_name}
                             onChange={(e) => setFormData({ ...formData, candidate_name: e.target.value })}
-                            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300"
+                            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 shadow-sm font-medium"
                             placeholder="Enter full name"
                         />
                     </div>
@@ -151,7 +151,7 @@ const AddOfferLetterModal = ({ isOpen, onClose, onSubmit, loading, initialData }
                             type="email"
                             value={formData.email}
                             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300"
+                            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 shadow-sm font-medium"
                             placeholder="candidate@example.com"
                         />
                     </div>
@@ -165,7 +165,7 @@ const AddOfferLetterModal = ({ isOpen, onClose, onSubmit, loading, initialData }
                             type="tel"
                             value={formData.phone}
                             onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300"
+                            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 shadow-sm font-medium"
                             placeholder="+91 0000000000"
                         />
                     </div>
@@ -179,7 +179,7 @@ const AddOfferLetterModal = ({ isOpen, onClose, onSubmit, loading, initialData }
                             type="text"
                             value={formData.address}
                             onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300"
+                            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 shadow-sm font-medium"
                             placeholder="Current address"
                         />
                     </div>
@@ -195,7 +195,7 @@ const AddOfferLetterModal = ({ isOpen, onClose, onSubmit, loading, initialData }
                         <select
                             value={formData.department}
                             onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 cursor-pointer"
+                            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 cursor-pointer shadow-sm font-medium"
                         >
                             <option value="">Select Department</option>
                             {departmentData?.departments?.map(dept => (
@@ -212,7 +212,7 @@ const AddOfferLetterModal = ({ isOpen, onClose, onSubmit, loading, initialData }
                         <select
                             value={formData.designation}
                             onChange={(e) => setFormData({ ...formData, designation: e.target.value })}
-                            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 cursor-pointer"
+                            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 cursor-pointer shadow-sm font-medium"
                         >
                             <option value="">Select Designation</option>
                             {designationData?.designations?.map(des => (
@@ -230,7 +230,7 @@ const AddOfferLetterModal = ({ isOpen, onClose, onSubmit, loading, initialData }
                             type="date"
                             value={formData.offer_date}
                             onChange={(e) => setFormData({ ...formData, offer_date: e.target.value })}
-                            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300"
+                            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 shadow-sm font-medium"
                         />
                     </div>
 
@@ -243,7 +243,7 @@ const AddOfferLetterModal = ({ isOpen, onClose, onSubmit, loading, initialData }
                             type="date"
                             value={formData.joining_date}
                             onChange={(e) => setFormData({ ...formData, joining_date: e.target.value })}
-                            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300"
+                            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 shadow-sm font-medium"
                         />
                     </div>
                 </div>
@@ -264,7 +264,7 @@ const AddOfferLetterModal = ({ isOpen, onClose, onSubmit, loading, initialData }
                             type="number"
                             value={formData.basic_salary}
                             onChange={(e) => setFormData({ ...formData, basic_salary: e.target.value })}
-                            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300"
+                            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 shadow-sm font-medium"
                             placeholder="Enter base amount"
                         />
                     </div>

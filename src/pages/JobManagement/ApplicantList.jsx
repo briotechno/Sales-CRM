@@ -493,7 +493,7 @@ const ApplicantList = () => {
                                                                         value={updatingFeedback}
                                                                         onChange={(e) => setUpdatingFeedback(e.target.value)}
                                                                         placeholder="Add assessment notes or reasons for passing/failing..."
-                                                                        className="w-full p-3 text-sm bg-gray-50 border-2 border-gray-100 rounded-lg focus:border-orange-500 outline-none transition-all h-20"
+                                                                        className="w-full p-4 py-3 text-sm bg-white border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all h-20 placeholder-gray-400 hover:border-gray-300 shadow-sm font-medium"
                                                                     />
                                                                 </div>
                                                                 <div className="flex gap-2">
@@ -584,7 +584,7 @@ const ApplicantList = () => {
                                     type="text"
                                     value={editFormData.name}
                                     onChange={(e) => setEditFormData(prev => ({ ...prev, name: e.target.value }))}
-                                    className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all text-sm"
+                                    className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 shadow-sm font-medium"
                                 />
                             </div>
                             <div>
@@ -596,7 +596,7 @@ const ApplicantList = () => {
                                     type="email"
                                     value={editFormData.email}
                                     onChange={(e) => setEditFormData(prev => ({ ...prev, email: e.target.value }))}
-                                    className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all text-sm"
+                                    className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 shadow-sm font-medium"
                                 />
                             </div>
                             <div>
@@ -608,7 +608,7 @@ const ApplicantList = () => {
                                     type="text"
                                     value={editFormData.phone}
                                     onChange={(e) => setEditFormData(prev => ({ ...prev, phone: e.target.value }))}
-                                    className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all text-sm"
+                                    className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 shadow-sm font-medium"
                                 />
                             </div>
                         </div>
@@ -713,7 +713,7 @@ const ApplicantList = () => {
                                             <select
                                                 value={editFormData.current_round_index}
                                                 onChange={(e) => setEditFormData(prev => ({ ...prev, current_round_index: Number(e.target.value) }))}
-                                                className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white text-sm"
+                                                className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none bg-white text-sm text-gray-900 hover:border-gray-300 shadow-sm font-medium transition-all"
                                             >
                                                 <option value={-1}>Pre-Interview (Applied)</option>
                                                 {editFormData.interview_rounds.map((r, i) => (
@@ -729,7 +729,7 @@ const ApplicantList = () => {
                                             <select
                                                 value={editFormData.status}
                                                 onChange={(e) => setEditFormData(prev => ({ ...prev, status: e.target.value }))}
-                                                className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white text-sm"
+                                                className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none bg-white text-sm text-gray-900 hover:border-gray-300 shadow-sm font-medium transition-all"
                                             >
                                                 <option value="Applied">Applied</option>
                                                 <option value="In Process">In Process</option>
@@ -749,7 +749,7 @@ const ApplicantList = () => {
                         <div className="flex gap-4 pt-8 border-t border-gray-100">
                             <button
                                 onClick={() => setShowEditModal(false)}
-                                className="flex-1 py-3 bg-white border border-gray-300 text-gray-700 font-bold text-sm rounded-sm hover:bg-gray-50 transition-all"
+                                className="flex-1 py-3 bg-white border border-gray-300 text-gray-700 font-bold text-sm rounded-sm hover:bg-gray-50 transition-all shadow-sm"
                             >
                                 Cancel
                             </button>
