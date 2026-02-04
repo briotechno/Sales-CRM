@@ -67,6 +67,9 @@ export default function CatalogsPage() {
   const [imagePreview, setImagePreview] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState("All");
+  const [categoryFilter, setCategoryFilter] = useState("All");
+  const [tempStatuses, setTempStatuses] = useState([]);
+  const [tempCategories, setTempCategories] = useState([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [deliveryValue, setDeliveryValue] = useState("");
   const [deliveryUnit, setDeliveryUnit] = useState("Days");
@@ -74,60 +77,22 @@ export default function CatalogsPage() {
   const [newCategoryName, setNewCategoryName] = useState("");
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
 
-  // Date filter states
-  const [dateFilter, setDateFilter] = useState("All");
-  const [customStart, setCustomStart] = useState("");
-  const [customEnd, setCustomEnd] = useState("");
-  const [isDateFilterOpen, setIsDateFilterOpen] = useState(false);
-  const dateDropdownRef = React.useRef(null);
-
   const dropdownRef = React.useRef(null);
   const categoryDropdownRef = React.useRef(null);
   const { create, read, update, delete: canDelete } = usePermission("Catalog");
   const itemsPerPage = 8;
 
-  // Date range function
-  const getDateRange = () => {
-    const today = new Date();
-    const formatDate = (date) => date.toISOString().split('T')[0];
-
-    let dateFrom = "";
-    let dateTo = "";
-
-    if (dateFilter === "Today") {
-      dateFrom = formatDate(today);
-      dateTo = formatDate(today);
-    } else if (dateFilter === "Yesterday") {
-      const yesterday = new Date(today);
-      yesterday.setDate(today.getDate() - 1);
-      dateFrom = formatDate(yesterday);
-      dateTo = formatDate(yesterday);
-    } else if (dateFilter === "Last 7 Days") {
-      const last7 = new Date(today);
-      last7.setDate(today.getDate() - 7);
-      dateFrom = formatDate(last7);
-      dateTo = formatDate(today);
-    } else if (dateFilter === "This Month") {
-      const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-      dateFrom = formatDate(firstDay);
-      dateTo = formatDate(today);
-    } else if (dateFilter === "Custom") {
-      dateFrom = customStart;
-      dateTo = customEnd;
-    }
-    return { dateFrom, dateTo };
-  };
-
-  const { dateFrom, dateTo } = getDateRange();
-
   const { data, isLoading, refetch } = useGetCatalogsQuery({
     page: currentPage,
     limit: itemsPerPage,
-    status: statusFilter,
+    status: statusFilter === "All" ? "" : statusFilter,
+    category: categoryFilter === "All" ? "" : categoryFilter,
     search: searchTerm,
-    dateFrom,
-    dateTo,
   });
+
+  useEffect(() => {
+    refetch();
+  }, [statusFilter, categoryFilter, searchTerm, currentPage, refetch]);
 
   const { data: categoriesData, refetch: refetchCategories } = useGetCategoriesQuery({ status: 'Active', limit: 1000 });
   const dbCategories = categoriesData?.categories || [];
@@ -407,13 +372,13 @@ export default function CatalogsPage() {
   const clearAllFilters = () => {
     setSearchTerm("");
     setStatusFilter("All");
-    setDateFilter("All");
-    setCustomStart("");
-    setCustomEnd("");
+    setCategoryFilter("All");
+    setTempStatuses([]);
+    setTempCategories([]);
     setCurrentPage(1);
   };
 
-  const hasActiveFilters = searchTerm || statusFilter !== "All" || dateFilter !== "All";
+  const hasActiveFilters = searchTerm || statusFilter !== "All" || categoryFilter !== "All";
 
   const handlePrev = () =>
     setCurrentPage((prev) => (prev > 1 ? prev - 1 : prev));
@@ -488,6 +453,7 @@ export default function CatalogsPage() {
         setFormData({ ...formData, category: "" });
       }
       refetchCategories();
+      refetch(); // Refetch catalogs as some might have been deleted
     } catch (err) {
       toast.error("Error deleting category: " + (err?.data?.message || err.message));
     }
@@ -523,6 +489,9 @@ export default function CatalogsPage() {
                       if (hasActiveFilters) {
                         clearAllFilters();
                       } else {
+                        // Initialize temp states with current single filters when opening
+                        setTempStatuses(statusFilter === "All" ? ["All"] : [statusFilter]);
+                        setTempCategories(categoryFilter === "All" ? ["All"] : [categoryFilter]);
                         setIsFilterOpen(!isFilterOpen);
                       }
                     }}
@@ -535,77 +504,83 @@ export default function CatalogsPage() {
                   </button>
 
                   {isFilterOpen && (
-                    <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-xl z-50 animate-fadeIn overflow-hidden">
-                      <div className="p-3 border-b border-gray-100 bg-gray-50">
-                        <span className="text-sm font-bold text-gray-700 tracking-wide">Statuses</span>
-                      </div>
-                      <div className="py-1">
-                        {["All", "Active", "Inactive"].map((status) => (
-                          <button
-                            key={status}
-                            onClick={() => {
-                              setStatusFilter(status);
-                              setIsFilterOpen(false);
-                              setCurrentPage(1);
-                            }}
-                            className={`block w-full text-left px-4 py-2 text-sm transition-colors ${statusFilter === status
-                              ? "bg-orange-50 text-orange-600 font-bold"
-                              : "text-gray-700 hover:bg-gray-50"
-                              }`}
-                          >
-                            {status}
-                          </button>
-                        ))}
+                    <div className="absolute right-0 mt-2 w-[400px] bg-white border border-gray-200 rounded-sm shadow-2xl z-50 animate-fadeIn overflow-hidden">
+                      <div className="p-4 bg-gray-50 border-b flex justify-between items-center">
+                        <span className="text-sm font-bold text-gray-800">Filter Options</span>
+                        <button
+                          onClick={() => {
+                            setTempStatuses(["All"]);
+                            setTempCategories(["All"]);
+                          }}
+                          className="text-[10px] font-bold text-orange-600 hover:underline hover:text-orange-700 capitalize"
+                        >
+                          Reset all
+                        </button>
                       </div>
 
-                      <div className="p-3 border-t border-b border-gray-100 bg-gray-50">
-                        <span className="text-sm font-bold text-gray-700 tracking-wide">Date Range</span>
-                      </div>
-                      <div className="py-1">
-                        {["All", "Today", "Yesterday", "Last 7 Days", "This Month", "Custom"].map((option) => (
-                          <div key={option}>
-                            <button
-                              onClick={() => {
-                                setDateFilter(option);
-                                if (option !== "Custom") {
-                                  setIsFilterOpen(false);
-                                  setCurrentPage(1);
-                                }
-                              }}
-                              className={`block w-full text-left px-4 py-2 text-sm transition-colors ${dateFilter === option
-                                ? "bg-orange-50 text-orange-600 font-bold"
-                                : "text-gray-700 hover:bg-gray-50"
-                                }`}
-                            >
-                              {option}
-                            </button>
-                            {option === "Custom" && dateFilter === "Custom" && (
-                              <div className="px-4 py-3 space-y-2 border-t border-gray-50 bg-gray-50/50">
-                                <input
-                                  type="date"
-                                  value={customStart}
-                                  onChange={(e) => setCustomStart(e.target.value)}
-                                  className="w-full px-2 py-2 border border-gray-300 rounded-sm text-xs focus:outline-none focus:ring-1 focus:ring-orange-500"
-                                />
-                                <input
-                                  type="date"
-                                  value={customEnd}
-                                  onChange={(e) => setCustomEnd(e.target.value)}
-                                  className="w-full px-2 py-2 border border-gray-300 rounded-sm text-xs focus:outline-none focus:ring-1 focus:ring-orange-500"
-                                />
-                                <button
-                                  onClick={() => {
-                                    setIsFilterOpen(false);
-                                    setCurrentPage(1);
-                                  }}
-                                  className="w-full bg-orange-500 text-white text-[10px] font-bold py-2 rounded-sm uppercase tracking-wider"
-                                >
-                                  Apply
-                                </button>
-                              </div>
-                            )}
+                      <div className="p-5 grid grid-cols-2 gap-6">
+                        {/* Status Section */}
+                        <div className="space-y-4">
+                          <span className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-2 border-b pb-1">Select Status</span>
+                          <div className="space-y-2">
+                            {["All", "Active", "Inactive"].map((status) => (
+                              <label key={status} className="flex items-center group cursor-pointer">
+                                <div className="relative flex items-center">
+                                  <input
+                                    type="radio"
+                                    name="status_filter"
+                                    checked={tempStatuses[0] === status}
+                                    onChange={() => setTempStatuses([status])}
+                                    className="peer h-4 w-4 cursor-pointer appearance-none rounded-full border-2 border-gray-200 transition-all checked:border-[#FF7B1D] checked:border-[5px] hover:border-orange-300"
+                                  />
+                                </div>
+                                <span className={`ml-3 text-sm font-medium transition-colors ${tempStatuses[0] === status ? "text-[#FF7B1D] font-bold" : "text-gray-600 group-hover:text-gray-900"}`}>
+                                  {status}
+                                </span>
+                              </label>
+                            ))}
                           </div>
-                        ))}
+                        </div>
+
+                        {/* Category Section */}
+                        <div className="space-y-4">
+                          <span className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-2 border-b pb-1">Product Category</span>
+                          <div className="relative">
+                            <select
+                              value={tempCategories[0]}
+                              onChange={(e) => setTempCategories([e.target.value])}
+                              className="w-full px-3 py-2.5 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-1 focus:ring-orange-500/20 outline-none transition-all text-xs font-semibold text-gray-700 bg-gray-50 hover:bg-white"
+                            >
+                              <option value="All">All Categories</option>
+                              {dbCategories.map((cat) => (
+                                <option key={cat.id} value={cat.name}>
+                                  {cat.name}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Filter Actions */}
+                      <div className="p-4 bg-gray-50 border-t flex gap-3">
+                        <button
+                          onClick={() => setIsFilterOpen(false)}
+                          className="flex-1 py-2.5 text-[11px] font-bold text-gray-500 capitalize tracking-wider hover:bg-gray-200 transition-colors rounded-sm border border-gray-200 bg-white"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={() => {
+                            setStatusFilter(tempStatuses[0]);
+                            setCategoryFilter(tempCategories[0]);
+                            setIsFilterOpen(false);
+                            setCurrentPage(1);
+                          }}
+                          className="flex-1 py-2.5 text-[11px] font-bold text-white capitalize tracking-wider bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 transition-all rounded-sm shadow-md active:scale-95"
+                        >
+                          Apply filters
+                        </button>
                       </div>
                     </div>
                   )}
@@ -672,44 +647,56 @@ export default function CatalogsPage() {
               <thead>
                 <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm">
                   <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[5%]">S.N</th>
-                  <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[8%]">Image</th>
+                  <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[7%]">Image</th>
                   <th
-                    className="py-3 px-4 font-semibold cursor-pointer hover:text-gray-200 text-left border-b border-orange-400 w-[10%]"
+                    className="py-3 px-4 font-semibold cursor-pointer hover:text-gray-200 text-left border-b border-orange-400 w-[8%]"
                     onClick={() => handleSort("id")}
                   >
                     ID
                   </th>
                   <th
-                    className="py-3 px-4 font-semibold cursor-pointer hover:text-gray-200 text-left border-b border-orange-400 w-[20%]"
+                    className="py-3 px-4 font-semibold cursor-pointer hover:text-gray-200 text-left border-b border-orange-400 w-[15%]"
                     onClick={() => handleSort("name")}
                   >
                     Name
                   </th>
                   <th
-                    className="py-3 px-4 font-semibold cursor-pointer hover:text-gray-200 text-left border-b border-orange-400 w-[12%]"
+                    className="py-3 px-4 font-semibold cursor-pointer hover:text-gray-200 text-left border-b border-orange-400 w-[10%]"
+                    onClick={() => handleSort("category")}
+                  >
+                    Category
+                  </th>
+                  <th
+                    className="py-3 px-4 font-semibold cursor-pointer hover:text-gray-200 text-left border-b border-orange-400 w-[10%]"
                     onClick={() => handleSort("minPrice")}
                   >
                     Min Price
                   </th>
                   <th
-                    className="py-3 px-4 font-semibold cursor-pointer hover:text-gray-200 text-left border-b border-orange-400 w-[12%]"
+                    className="py-3 px-4 font-semibold cursor-pointer hover:text-gray-200 text-left border-b border-orange-400 w-[10%]"
                     onClick={() => handleSort("maxPrice")}
                   >
                     Max Price
                   </th>
                   <th
-                    className="py-3 px-4 font-semibold cursor-pointer hover:text-gray-200 text-left border-b border-orange-400 w-[13%]"
+                    className="py-3 px-4 font-semibold cursor-pointer hover:text-gray-200 text-left border-b border-orange-400 w-[10%]"
+                    onClick={() => handleSort("deliveryTime")}
+                  >
+                    Delivery Time
+                  </th>
+                  <th
+                    className="py-3 px-4 font-semibold cursor-pointer hover:text-gray-200 text-left border-b border-orange-400 w-[10%]"
                     onClick={() => handleSort("createdDate")}
                   >
                     Created Date
                   </th>
                   <th
-                    className="py-3 px-4 font-semibold cursor-pointer hover:text-gray-200 text-left border-b border-orange-400 w-[10%]"
+                    className="py-3 px-4 font-semibold cursor-pointer hover:text-gray-200 text-left border-b border-orange-400 w-[8%]"
                     onClick={() => handleSort("status")}
                   >
                     Status
                   </th>
-                  <th className="py-3 px-4 font-semibold text-right border-b border-orange-400 w-[10%]">Action</th>
+                  <th className="py-3 px-4 font-semibold text-right border-b border-orange-400 w-[7%]">Action</th>
                 </tr>
               </thead>
 
@@ -745,13 +732,19 @@ export default function CatalogsPage() {
                           {catalog.name}
                         </div>
                       </td>
+                      <td className="py-3 px-4 font-medium text-gray-600 text-left truncate max-w-[120px]" title={catalog.category}>
+                        {catalog.category || "General"}
+                      </td>
                       <td className="py-3 px-4 font-medium text-gray-600 text-left">
                         {catalog.minPrice ? `₹${catalog.minPrice.toLocaleString()}` : "N/A"}
                       </td>
                       <td className="py-3 px-4 font-medium text-gray-600 text-left">
                         {catalog.maxPrice ? `₹${catalog.maxPrice.toLocaleString()}` : "N/A"}
                       </td>
-                      <td className="py-3 px-4 text-gray-600 text-sm text-left">{new Date(catalog.created_at).toLocaleDateString()}</td>
+                      <td className="py-3 px-4 font-medium text-gray-600 text-left truncate max-w-[100px]" title={catalog.deliveryTime}>
+                        {catalog.deliveryTime || "TBD"}
+                      </td>
+                      <td className="py-3 px-4 text-gray-600 text-xs text-left">{new Date(catalog.created_at).toLocaleDateString()}</td>
                       <td className="py-3 px-4 text-left">
                         <span
                           className={`px-3 py-1 rounded-sm text-[10px] font-bold border uppercase tracking-wider ${catalog.status === "Active"

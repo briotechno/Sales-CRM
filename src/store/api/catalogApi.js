@@ -21,6 +21,7 @@ export const catalogApi = createApi({
                     page: params?.page || 1,
                     limit: params?.limit || 10,
                     status: params?.status,
+                    category: params?.category,
                     search: params?.search,
                     dateFrom: params?.dateFrom,
                     dateTo: params?.dateTo,
@@ -62,6 +63,7 @@ export const catalogApi = createApi({
                     page: params?.page || 1,
                     limit: params?.limit || 100,
                     status: params?.status || 'Active',
+                    category: params?.category,
                     search: params?.search,
                 }
             }),
