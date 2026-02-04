@@ -24,7 +24,9 @@ const hrPolicyController = {
                 category: req.query.category,
                 status: req.query.status,
                 search: req.query.search,
-                department: req.query.department
+                department: req.query.department,
+                startDate: req.query.startDate,
+                endDate: req.query.endDate
             };
             const policies = await HRPolicy.findAll(userId, filters);
 

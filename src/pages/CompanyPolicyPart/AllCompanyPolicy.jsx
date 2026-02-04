@@ -50,6 +50,8 @@ import {
 import toast from "react-hot-toast";
 import usePermission from "../../hooks/usePermission";
 import Modal from "../../components/common/Modal";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 const DeletePolicyModal = ({ isOpen, onClose, onConfirm, isLoading, policyTitle }) => {
   return (
@@ -113,7 +115,11 @@ export default function CompanyPolicy() {
   const [showFilters, setShowFilters] = useState(false);
   const [selectedPolicy, setSelectedPolicy] = useState(null);
   const [policyToDelete, setPolicyToDelete] = useState(null);
+  const [filterCategory, setFilterCategory] = useState("All");
   const [filterStatus, setFilterStatus] = useState("All");
+  const [filterAuthor, setFilterAuthor] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
@@ -122,9 +128,12 @@ export default function CompanyPolicy() {
   const [existingId, setExistingId] = useState(null);
 
   const { data: allPoliciesDataForCheck } = useGetCompanyPoliciesQuery({
-    category: "All",
-    status: "All",
-    search: "",
+    category: filterCategory,
+    status: filterStatus,
+    author: filterAuthor,
+    startDate: startDate,
+    endDate: endDate,
+    search: searchTerm,
   });
   const allPolicies = allPoliciesDataForCheck || [];
 
@@ -158,8 +167,11 @@ export default function CompanyPolicy() {
     isLoading,
     isError,
   } = useGetCompanyPoliciesQuery({
-    category: "All",
+    category: filterCategory,
     status: filterStatus,
+    author: filterAuthor,
+    startDate: startDate,
+    endDate: endDate,
     search: searchTerm,
   });
 
@@ -347,31 +359,53 @@ export default function CompanyPolicy() {
   };
 
   const handleExport = () => {
-    const csvContent = [
-      ["Policy Title", "Category", "Effective Date", "Review Date", "Version", "Status", "Author"],
-      ...filteredPolicies.map((p) => [
+    const doc = new jsPDF();
+    
+    // Add title
+    doc.setFontSize(18);
+    doc.text("Company Policies Report", 14, 22);
+    doc.setFontSize(11);
+    doc.setTextColor(100);
+    
+    // Add date
+    const date = new Date().toLocaleDateString();
+    doc.text(`Generated on: ${date}`, 14, 30);
+    
+    const tableColumn = ["Policy Title", "Category", "Effective Date", "Review Date", "Version", "Status", "Author"];
+    const tableRows = [];
+
+    filteredPolicies.forEach(p => {
+      const policyData = [
         p.title,
         p.category,
-        p.effective_date,
-        p.review_date,
+        new Date(p.effective_date).toLocaleDateString(),
+        new Date(p.review_date).toLocaleDateString(),
         p.version,
         p.status,
-        p.author || "",
-      ]),
-    ]
-      .map((row) => row.join(","))
-      .join("\n");
+        p.author || "N/A"
+      ];
+      tableRows.push(policyData);
+    });
 
-    const blob = new Blob([csvContent], { type: "text/csv" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "company_policies.csv";
-    a.click();
+    autoTable(doc, {
+      head: [tableColumn],
+      body: tableRows,
+      startY: 35,
+      theme: 'grid',
+      headStyles: { fillColor: [255, 123, 29], textColor: [255, 255, 255] },
+      alternateRowStyles: { fillColor: [250, 250, 250] },
+      margin: { top: 35 }
+    });
+
+    doc.save("company_policies.pdf");
   };
 
   const handleClearFilters = () => {
+    setFilterCategory("All");
     setFilterStatus("All");
+    setFilterAuthor("");
+    setStartDate("");
+    setEndDate("");
     setSearchTerm("");
     setCurrentPage(1);
     setShowFilters(false);
@@ -437,43 +471,127 @@ export default function CompanyPolicy() {
                 <div className="relative">
                   <button
                     onClick={() => {
-                      if (filterStatus !== "All") {
+                      if (filterStatus !== "All" || filterCategory !== "All" || filterAuthor !== "" || startDate !== "" || endDate !== "") {
                         handleClearFilters();
                       } else {
                         setShowFilters(!showFilters);
                       }
                     }}
-                    className={`px-3 py-3 rounded-sm border transition shadow-sm ${showFilters || filterStatus !== "All"
+                    className={`px-3 py-3 rounded-sm border transition shadow-sm ${showFilters || filterStatus !== "All" || filterCategory !== "All" || filterAuthor !== "" || startDate !== "" || endDate !== ""
                       ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
                       : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
                       }`}
                   >
-                    {filterStatus !== "All" ? <X size={18} /> : <Filter size={18} />}
+                    {filterStatus !== "All" || filterCategory !== "All" || filterAuthor !== "" || startDate !== "" || endDate !== "" ? <X size={18} /> : <Filter size={18} />}
                   </button>
 
                   {showFilters && (
-                    <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-xl z-50 animate-fadeIn overflow-hidden">
-                      {/* Status Section */}
-                      <div className="p-3 border-b border-gray-100 bg-gray-50">
-                        <span className="text-sm font-bold text-gray-700 tracking-wide">status</span>
-                      </div>
-                      <div className="py-1">
-                        {["All", "Active", "Inactive"].map((status) => (
-                          <button
-                            key={status}
-                            onClick={() => {
-                              setFilterStatus(status);
-                              setShowFilters(false);
+                    <div className="absolute right-0 mt-2 w-72 bg-white border border-gray-200 rounded-xl shadow-2xl z-50 animate-fadeIn overflow-hidden">
+                      <div className="max-h-[32rem] overflow-y-auto">
+                        {/* Status Section */}
+                        <div className="p-3 border-b border-gray-100 bg-gray-50">
+                          <span className="text-sm font-bold text-gray-700 tracking-wide uppercase">status</span>
+                        </div>
+                        <div className="p-2 grid grid-cols-2 gap-2">
+                          {["All", ...statuses].map((status) => (
+                            <button
+                              key={status}
+                              onClick={() => {
+                                setFilterStatus(status);
+                                setCurrentPage(1);
+                              }}
+                              className={`px-3 py-2 text-xs font-bold rounded-sm border transition-colors ${filterStatus === status
+                                ? "bg-orange-500 text-white border-orange-500"
+                                : "text-gray-700 hover:bg-gray-50 border-gray-200"
+                                }`}
+                            >
+                              {status}
+                            </button>
+                          ))}
+                        </div>
+
+                        {/* Category Section */}
+                        <div className="p-3 border-t border-b border-gray-100 bg-gray-50">
+                          <span className="text-sm font-bold text-gray-700 tracking-wide uppercase">category</span>
+                        </div>
+                        <div className="p-2">
+                          <select
+                            value={filterCategory}
+                            onChange={(e) => {
+                              setFilterCategory(e.target.value);
                               setCurrentPage(1);
                             }}
-                            className={`block w-full text-left px-4 py-2 text-sm transition-colors ${filterStatus === status
-                              ? "bg-orange-50 text-orange-600 font-bold"
-                              : "text-gray-700 hover:bg-gray-50"
-                              }`}
+                            className="w-full px-3 py-2 border border-gray-200 rounded-sm text-sm focus:outline-none focus:border-orange-500"
                           >
-                            {status}
+                            <option value="All">All Categories</option>
+                            {categories.map((cat) => (
+                              <option key={cat} value={cat}>{cat}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        {/* Author Section */}
+                        <div className="p-3 border-t border-b border-gray-100 bg-gray-50">
+                          <span className="text-sm font-bold text-gray-700 tracking-wide uppercase">author</span>
+                        </div>
+                        <div className="p-2">
+                          <input
+                            type="text"
+                            value={filterAuthor}
+                            onChange={(e) => {
+                              setFilterAuthor(e.target.value);
+                              setCurrentPage(1);
+                            }}
+                            placeholder="Search by author..."
+                            className="w-full px-3 py-2 border border-gray-200 rounded-sm text-sm focus:outline-none focus:border-orange-500"
+                          />
+                        </div>
+
+                        {/* Date Range Section */}
+                        <div className="p-3 border-t border-b border-gray-100 bg-gray-50">
+                          <span className="text-sm font-bold text-gray-700 tracking-wide uppercase">date range</span>
+                        </div>
+                        <div className="p-3 space-y-2">
+                          <div>
+                            <label className="text-[10px] font-bold text-gray-400 uppercase">From</label>
+                            <input
+                              type="date"
+                              value={startDate}
+                              onChange={(e) => {
+                                setStartDate(e.target.value);
+                                setCurrentPage(1);
+                              }}
+                              className="w-full px-3 py-2 border border-gray-200 rounded-sm text-sm focus:outline-none focus:border-orange-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-[10px] font-bold text-gray-400 uppercase">To</label>
+                            <input
+                              type="date"
+                              value={endDate}
+                              onChange={(e) => {
+                                setEndDate(e.target.value);
+                                setCurrentPage(1);
+                              }}
+                              className="w-full px-3 py-2 border border-gray-200 rounded-sm text-sm focus:outline-none focus:border-orange-500"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="p-3 border-t bg-gray-50 flex gap-2">
+                          <button
+                            onClick={handleClearFilters}
+                            className="flex-1 px-3 py-2 text-xs font-bold text-gray-600 bg-white border border-gray-300 rounded-sm hover:bg-gray-50"
+                          >
+                            RESET
                           </button>
-                        ))}
+                          <button
+                            onClick={() => setShowFilters(false)}
+                            className="flex-1 px-3 py-2 text-xs font-bold text-white bg-orange-50 rounded-sm hover:bg-orange-600 shadow-sm"
+                          >
+                            DONE
+                          </button>
+                        </div>
                       </div>
                     </div>
                   )}

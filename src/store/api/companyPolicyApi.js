@@ -15,12 +15,15 @@ export const companyPolicyApi = createApi({
     tagTypes: ['CompanyPolicy'],
     endpoints: (builder) => ({
         getCompanyPolicies: builder.query({
-            query: ({ category, status, search }) => {
+            query: ({ category, status, search, author, startDate, endDate }) => {
                 let url = 'company-policies';
                 const params = new URLSearchParams();
                 if (category && category !== 'All') params.append('category', category);
                 if (status && status !== 'All') params.append('status', status);
                 if (search) params.append('search', search);
+                if (author) params.append('author', author);
+                if (startDate) params.append('startDate', startDate);
+                if (endDate) params.append('endDate', endDate);
                 const queryString = params.toString();
                 return queryString ? `${url}?${queryString}` : url;
             },

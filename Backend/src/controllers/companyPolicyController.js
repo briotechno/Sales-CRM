@@ -17,7 +17,10 @@ const companyPolicyController = {
             const filters = {
                 category: req.query.category,
                 status: req.query.status,
-                search: req.query.search
+                search: req.query.search,
+                author: req.query.author,
+                startDate: req.query.startDate,
+                endDate: req.query.endDate
             };
             const policies = await CompanyPolicy.findAll(userId, filters);
             res.json(policies);
