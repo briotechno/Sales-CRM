@@ -83,7 +83,7 @@ export default function CatalogsPage() {
   const dropdownRef = React.useRef(null);
   const categoryDropdownRef = React.useRef(null);
   const { create, read, update, delete: canDelete } = usePermission("Catalog");
-  const itemsPerPage = 8;
+  const itemsPerPage = 6;
 
   const { data, isLoading, refetch } = useGetCatalogsQuery({
     page: currentPage,
@@ -831,12 +831,16 @@ export default function CatalogsPage() {
                 ) : (
                   <tr>
                     <td
-                      colSpan="9"
-                      className="py-12 text-gray-500 font-medium text-sm"
+                      colSpan="11"
+                      className="py-12 text-center text-gray-500 font-medium text-sm"
                     >
                       <div className="flex flex-col items-center gap-3">
                         <Package size={48} className="text-gray-200" />
-                        <p>No catalogs found matches your criteria.</p>
+                        <p>
+                          {hasActiveFilters
+                            ? "No catalogs found matching your filter criteria. Try clearing filters."
+                            : "No catalogs available."}
+                        </p>
                       </div>
                     </td>
                   </tr>
@@ -883,7 +887,7 @@ export default function CatalogsPage() {
                 disabled={currentPage === totalPages}
                 className={`px-4 py-2 rounded-sm font-bold transition flex items-center gap-1 ${currentPage === totalPages
                   ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                  : "bg-[#22C55E] text-white hover:opacity-90 shadow-md"
+                  : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"
                   }`}
               >
                 Next
@@ -963,7 +967,7 @@ export default function CatalogsPage() {
                       </div>
 
                       {isAddingCategory ? (
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 items-start">
                           <div className="flex-1 space-y-1">
                             <input
                               type="text"
