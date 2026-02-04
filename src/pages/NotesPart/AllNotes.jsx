@@ -906,29 +906,29 @@ export default function NotesPage() {
               <div className="flex gap-4 w-full">
                 <button
                   onClick={() => setShowDeleteModal(false)}
-                  className="flex-1 px-6 py-3 border-2 border-gray-200 text-gray-700 font-bold rounded-sm hover:bg-gray-100 transition-all text-sm uppercase tracking-wider"
+                  className="flex-1 px-6 py-3 border-2 border-gray-200 text-gray-700 font-bold rounded-sm hover:bg-gray-100 transition-all font-primary text-xs uppercase tracking-widest"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleDeleteNote}
-                  className="flex-1 px-6 py-3 bg-red-600 text-white font-bold rounded-sm hover:bg-red-700 transition-all shadow-lg flex items-center justify-center gap-2 text-sm uppercase tracking-wider"
+                  className="flex-1 px-6 py-3 bg-red-600 text-white font-bold rounded-sm hover:bg-red-700 transition-all shadow-lg flex items-center justify-center gap-2 text-xs uppercase tracking-widest font-primary"
                 >
-                  <Trash2 size={20} />
+                  <Trash2 size={18} />
                   Delete Now
                 </button>
               </div>
             }
           >
-            <div className="flex flex-col items-center text-center text-black">
-              <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mb-6 animate-bounce">
+            <div className="flex flex-col items-center text-center text-black font-primary">
+              <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mb-6">
                 <AlertCircle size={48} className="text-red-600" />
               </div>
               <h2 className="text-2xl font-bold text-gray-800 mb-2">Confirm Delete</h2>
               <p className="text-gray-600 mb-2 leading-relaxed">
-                Are you sure you want to delete <span className="font-bold text-gray-800">"{noteToDelete?.title}"</span>?
+                Are you sure you want to delete the note <span className="font-bold text-gray-800">"{noteToDelete?.title}"</span>?
               </p>
-              <p className="text-sm text-red-500 italic">This action cannot be undone and will permanently remove all associated data.</p>
+              <p className="text-xs text-red-500 italic font-medium">This action cannot be undone. All associated data will be permanently removed.</p>
             </div>
           </Modal>
         </div>

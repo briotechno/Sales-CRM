@@ -760,6 +760,7 @@ export default function AnnouncementPage() {
           setShowDeleteModal(false);
           setSelectedAnnouncement(null);
         }}
+        announcement={selectedAnnouncement}
       />
     </DashboardLayout >
   );

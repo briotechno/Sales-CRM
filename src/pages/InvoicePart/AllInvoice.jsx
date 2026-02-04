@@ -439,7 +439,7 @@ export default function AllInvoicePage() {
                 </h1>
                 <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
                   <FiHome className="text-gray-700" size={14} />
-                  <span className="text-gray-400"></span> Dashboard /{" "}
+                  <span className="text-gray-400"></span> Additional /{" "}
                   <span className="text-[#FF7B1D] font-medium">
                     Invoice Management
                   </span>
