@@ -73,8 +73,32 @@ const CatalogCategory = {
     },
 
     delete: async (id, userId) => {
-        const [result] = await pool.query('DELETE FROM catalog_categories WHERE id = ? AND user_id = ?', [id, userId]);
-        return result.affectedRows > 0;
+        // First get the category name to identify associated catalogs
+        const [category] = await pool.query('SELECT name FROM catalog_categories WHERE id = ? AND user_id = ?', [id, userId]);
+        if (category.length === 0) return false;
+
+        const categoryName = category[0].name;
+
+        const connection = await pool.getConnection();
+        await connection.beginTransaction();
+
+        try {
+            // Delete the category itself
+            const [delResult] = await connection.query('DELETE FROM catalog_categories WHERE id = ? AND user_id = ?', [id, userId]);
+
+            if (delResult.affectedRows > 0) {
+                // Also delete all catalogs that belong to this category
+                await connection.query('DELETE FROM catalogs WHERE category = ? AND user_id = ?', [categoryName, userId]);
+            }
+
+            await connection.commit();
+            return delResult.affectedRows > 0;
+        } catch (error) {
+            await connection.rollback();
+            throw error;
+        } finally {
+            connection.release();
+        }
     }
 };
 

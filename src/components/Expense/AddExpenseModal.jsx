@@ -29,6 +29,11 @@ const AddExpenseModal = ({ isOpen, onClose }) => {
             return;
         }
 
+        if (formData.title.length > 1000) {
+            toast.error("Description cannot exceed 1000 characters");
+            return;
+        }
+
         try {
             const data = new FormData();
             data.append('title', formData.title);
@@ -71,10 +76,7 @@ const AddExpenseModal = ({ isOpen, onClose }) => {
                 {isLoading ? (
                     'Adding...'
                 ) : (
-                    <>
-                        <Plus size={18} />
-                        Add Expense
-                    </>
+                    'Add Expense'
                 )}
             </button>
         </>
@@ -97,14 +99,22 @@ const AddExpenseModal = ({ isOpen, onClose }) => {
                         <FileText size={16} className="text-[#FF7B1D]" />
                         Description <span className="text-red-500">*</span>
                     </label>
-                    <input
-                        type="text"
+                    <textarea
                         name="title"
                         value={formData.title}
                         onChange={handleChange}
                         placeholder="e.g., Office Supplies, Client Lunch..."
-                        className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300"
+                        rows={3}
+                        className={`w-full px-4 py-3 border rounded-sm outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white resize-none ${formData.title.length > 1000
+                            ? "border-red-500 focus:ring-2 focus:ring-red-200"
+                            : "border-gray-200 focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 hover:border-gray-300"
+                            }`}
                     />
+                    <div className="flex justify-end mt-1">
+                        <span className={`text-xs font-bold ${formData.title.length > 1000 ? "text-red-500" : "text-gray-400"}`}>
+                            {formData.title.length}/1000
+                        </span>
+                    </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

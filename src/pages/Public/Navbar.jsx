@@ -7,7 +7,7 @@ const Navbar = ({ business, logoUrl }) => {
     return (
         <nav className="fixed top-0 w-full z-50 bg-white/95 backdrop-blur-xl border-b border-gray-100 shadow-sm transition-all duration-300">
             <div className="px-4 sm:px-6 lg:px-8">
-                <div className="max-w-[1400px] mx-auto">
+                <div className="max-w-full mx-auto">
                     <div className="flex justify-between items-center h-16 lg:h-18">
                         {/* Logo & Brand */}
                         <div className="flex items-center gap-3 lg:gap-4">
@@ -28,71 +28,20 @@ const Navbar = ({ business, logoUrl }) => {
                             </div>
                         </div>
 
-                        {/* Desktop Navigation Links */}
-                        <div className="hidden lg:flex items-center gap-8">
+                        {/* Header Action Button */}
+                        <div className="flex items-center gap-3">
                             {business.email && (
-                                <a href={`mailto:${business.email}`} className="bg-[#FF7B1D] text-white px-6 py-2.5 rounded-sm text-sm font-bold hover:bg-orange-600 shadow-sm transition-all flex items-center gap-2">
-                                    <Mail size={16} />
-                                    Get in Touch
-                                </a>
-                            )}
-                        </div>
-
-                        {/* Mobile Menu Button */}
-                        <button
-                            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                            className="lg:hidden p-2 rounded-sm hover:bg-gray-100 transition-colors"
-                            aria-label="Toggle menu"
-                        >
-                            {mobileMenuOpen ? (
-                                <X size={24} className="text-gray-900" />
-                            ) : (
-                                <Menu size={24} className="text-gray-900" />
-                            )}
-                        </button>
-                    </div>
-
-                    {/* Mobile Menu */}
-                    {mobileMenuOpen && (
-                        <div className="lg:hidden py-4 border-t border-gray-100 animate-fadeIn text-center">
-                            <div className="flex flex-col space-y-4">
                                 <a
-                                    href="#about"
-                                    onClick={() => setMobileMenuOpen(false)}
-                                    className="text-sm font-semibold text-gray-700 hover:text-[#FF7B1D] transition-colors py-2"
+                                    href={`mailto:${business.email}`}
+                                    className="bg-[#FF7B1D] text-white px-4 lg:px-6 py-2 lg:py-2.5 rounded-sm text-[12px] lg:text-sm font-bold hover:bg-orange-600 shadow-sm transition-all flex items-center gap-2 group whitespace-nowrap"
                                 >
-                                    About
+                                    <Mail size={16} className="group-hover:scale-110 transition-transform" />
+                                    <span className="">Get in Touch</span>
                                 </a>
-                                {(business.vision || business.mission) && (
-                                    <a
-                                        href="#vision"
-                                        onClick={() => setMobileMenuOpen(false)}
-                                        className="text-sm font-semibold text-gray-700 hover:text-[#FF7B1D] transition-colors py-2"
-                                    >
-                                        Vision
-                                    </a>
-                                )}
-                                {(business.email || business.phone) && (
-                                    <a
-                                        href="#contact"
-                                        onClick={() => setMobileMenuOpen(false)}
-                                        className="text-sm font-semibold text-gray-700 hover:text-[#FF7B1D] transition-colors py-2"
-                                    >
-                                        Contact
-                                    </a>
-                                )}
-                                {business.email && (
-                                    <a
-                                        href={`mailto:${business.email}`}
-                                        className="bg-[#FF7B1D] text-white px-6 py-3 rounded-sm text-sm font-bold hover:bg-orange-600 transition-all flex items-center justify-center gap-2"
-                                    >
-                                        <Mail size={18} />
-                                        Get in Touch
-                                    </a>
-                                )}
-                            </div>
+                            )}
                         </div>
-                    )}
+
+                    </div>
                 </div>
             </div>
         </nav>

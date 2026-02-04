@@ -55,6 +55,9 @@ import usePermission from "../../hooks/usePermission";
 import ViewCatalogModal from "./ViewCatalogModal";
 import { useGetBusinessInfoQuery } from "../../store/api/businessApi";
 
+const DESC_LIMIT = 1500;
+const CAT_LIMIT = 100;
+
 export default function CatalogsPage() {
   const navigate = useNavigate();
   const [showAddModal, setShowAddModal] = useState(false);
@@ -67,6 +70,9 @@ export default function CatalogsPage() {
   const [imagePreview, setImagePreview] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState("All");
+  const [categoryFilter, setCategoryFilter] = useState("All");
+  const [tempStatuses, setTempStatuses] = useState([]);
+  const [tempCategories, setTempCategories] = useState([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [deliveryValue, setDeliveryValue] = useState("");
   const [deliveryUnit, setDeliveryUnit] = useState("Days");
@@ -74,60 +80,22 @@ export default function CatalogsPage() {
   const [newCategoryName, setNewCategoryName] = useState("");
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
 
-  // Date filter states
-  const [dateFilter, setDateFilter] = useState("All");
-  const [customStart, setCustomStart] = useState("");
-  const [customEnd, setCustomEnd] = useState("");
-  const [isDateFilterOpen, setIsDateFilterOpen] = useState(false);
-  const dateDropdownRef = React.useRef(null);
-
   const dropdownRef = React.useRef(null);
   const categoryDropdownRef = React.useRef(null);
   const { create, read, update, delete: canDelete } = usePermission("Catalog");
-  const itemsPerPage = 8;
-
-  // Date range function
-  const getDateRange = () => {
-    const today = new Date();
-    const formatDate = (date) => date.toISOString().split('T')[0];
-
-    let dateFrom = "";
-    let dateTo = "";
-
-    if (dateFilter === "Today") {
-      dateFrom = formatDate(today);
-      dateTo = formatDate(today);
-    } else if (dateFilter === "Yesterday") {
-      const yesterday = new Date(today);
-      yesterday.setDate(today.getDate() - 1);
-      dateFrom = formatDate(yesterday);
-      dateTo = formatDate(yesterday);
-    } else if (dateFilter === "Last 7 Days") {
-      const last7 = new Date(today);
-      last7.setDate(today.getDate() - 7);
-      dateFrom = formatDate(last7);
-      dateTo = formatDate(today);
-    } else if (dateFilter === "This Month") {
-      const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-      dateFrom = formatDate(firstDay);
-      dateTo = formatDate(today);
-    } else if (dateFilter === "Custom") {
-      dateFrom = customStart;
-      dateTo = customEnd;
-    }
-    return { dateFrom, dateTo };
-  };
-
-  const { dateFrom, dateTo } = getDateRange();
+  const itemsPerPage = 6;
 
   const { data, isLoading, refetch } = useGetCatalogsQuery({
     page: currentPage,
     limit: itemsPerPage,
-    status: statusFilter,
+    status: statusFilter === "All" ? "" : statusFilter,
+    category: categoryFilter === "All" ? "" : categoryFilter,
     search: searchTerm,
-    dateFrom,
-    dateTo,
   });
+
+  useEffect(() => {
+    refetch();
+  }, [statusFilter, categoryFilter, searchTerm, currentPage, refetch]);
 
   const { data: categoriesData, refetch: refetchCategories } = useGetCategoriesQuery({ status: 'Active', limit: 1000 });
   const dbCategories = categoriesData?.categories || [];
@@ -159,7 +127,9 @@ export default function CatalogsPage() {
   });
 
   const handleInputChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    if (name === 'description' && value.length > DESC_LIMIT) return;
+    setFormData({ ...formData, [name]: value });
   };
 
   const handleImageChange = (e) => {
@@ -221,6 +191,11 @@ export default function CatalogsPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (formData.description.length > DESC_LIMIT) {
+      toast.error(`Description cannot exceed ${DESC_LIMIT} characters`);
+      return;
+    }
+
     try {
       const data = new FormData();
 
@@ -407,13 +382,13 @@ export default function CatalogsPage() {
   const clearAllFilters = () => {
     setSearchTerm("");
     setStatusFilter("All");
-    setDateFilter("All");
-    setCustomStart("");
-    setCustomEnd("");
+    setCategoryFilter("All");
+    setTempStatuses([]);
+    setTempCategories([]);
     setCurrentPage(1);
   };
 
-  const hasActiveFilters = searchTerm || statusFilter !== "All" || dateFilter !== "All";
+  const hasActiveFilters = searchTerm || statusFilter !== "All" || categoryFilter !== "All";
 
   const handlePrev = () =>
     setCurrentPage((prev) => (prev > 1 ? prev - 1 : prev));
@@ -444,9 +419,6 @@ export default function CatalogsPage() {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsFilterOpen(false);
       }
-      if (dateDropdownRef.current && !dateDropdownRef.current.contains(event.target)) {
-        setIsDateFilterOpen(false);
-      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -462,6 +434,11 @@ export default function CatalogsPage() {
   }, []);
 
   const handleAddNewCategory = async () => {
+    if (newCategoryName.length > CAT_LIMIT) {
+      toast.error(`Category name cannot exceed ${CAT_LIMIT} characters`);
+      return;
+    }
+
     if (!newCategoryName.trim()) {
       toast.error("Category name cannot be empty");
       return;
@@ -488,9 +465,22 @@ export default function CatalogsPage() {
         setFormData({ ...formData, category: "" });
       }
       refetchCategories();
+      refetch(); // Refetch catalogs as some might have been deleted
     } catch (err) {
       toast.error("Error deleting category: " + (err?.data?.message || err.message));
     }
+  };
+
+  const formatCurrencyShorthand = (value) => {
+    const num = Number(value);
+    if (isNaN(num) || num === 0) return "0";
+
+    if (num >= 10000000) { // 1 Crore = 10,000,000
+      return (num / 10000000).toLocaleString(undefined, { maximumFractionDigits: 2 }) + " Cr";
+    } else if (num >= 100000) { // 1 Lakh = 100,000
+      return (num / 100000).toLocaleString(undefined, { maximumFractionDigits: 2 }) + " Lakh";
+    }
+    return num.toLocaleString();
   };
 
   const indexOfFirstItem = (currentPage - 1) * itemsPerPage;
@@ -507,7 +497,7 @@ export default function CatalogsPage() {
                 <h1 className="text-2xl font-bold text-gray-800">Catalog Module</h1>
                 <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
                   <FiHome className="text-gray-700" size={14} />
-                  <span className="text-gray-400"></span> CRM /{" "}
+                  <span className="text-gray-400"></span> Additional /{" "}
                   <span className="text-[#FF7B1D] font-medium">
                     All Catalogs
                   </span>
@@ -523,6 +513,9 @@ export default function CatalogsPage() {
                       if (hasActiveFilters) {
                         clearAllFilters();
                       } else {
+                        // Initialize temp states with current single filters when opening
+                        setTempStatuses(statusFilter === "All" ? ["All"] : [statusFilter]);
+                        setTempCategories(categoryFilter === "All" ? ["All"] : [categoryFilter]);
                         setIsFilterOpen(!isFilterOpen);
                       }
                     }}
@@ -535,77 +528,83 @@ export default function CatalogsPage() {
                   </button>
 
                   {isFilterOpen && (
-                    <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-xl z-50 animate-fadeIn overflow-hidden">
-                      <div className="p-3 border-b border-gray-100 bg-gray-50">
-                        <span className="text-sm font-bold text-gray-700 tracking-wide">Statuses</span>
-                      </div>
-                      <div className="py-1">
-                        {["All", "Active", "Inactive"].map((status) => (
-                          <button
-                            key={status}
-                            onClick={() => {
-                              setStatusFilter(status);
-                              setIsFilterOpen(false);
-                              setCurrentPage(1);
-                            }}
-                            className={`block w-full text-left px-4 py-2 text-sm transition-colors ${statusFilter === status
-                              ? "bg-orange-50 text-orange-600 font-bold"
-                              : "text-gray-700 hover:bg-gray-50"
-                              }`}
-                          >
-                            {status}
-                          </button>
-                        ))}
+                    <div className="absolute right-0 mt-2 w-[400px] bg-white border border-gray-200 rounded-sm shadow-2xl z-50 animate-fadeIn overflow-hidden">
+                      <div className="p-4 bg-gray-50 border-b flex justify-between items-center">
+                        <span className="text-sm font-bold text-gray-800">Filter Options</span>
+                        <button
+                          onClick={() => {
+                            setTempStatuses(["All"]);
+                            setTempCategories(["All"]);
+                          }}
+                          className="text-[10px] font-bold text-orange-600 hover:underline hover:text-orange-700 capitalize"
+                        >
+                          Reset all
+                        </button>
                       </div>
 
-                      <div className="p-3 border-t border-b border-gray-100 bg-gray-50">
-                        <span className="text-sm font-bold text-gray-700 tracking-wide">Date Range</span>
-                      </div>
-                      <div className="py-1">
-                        {["All", "Today", "Yesterday", "Last 7 Days", "This Month", "Custom"].map((option) => (
-                          <div key={option}>
-                            <button
-                              onClick={() => {
-                                setDateFilter(option);
-                                if (option !== "Custom") {
-                                  setIsFilterOpen(false);
-                                  setCurrentPage(1);
-                                }
-                              }}
-                              className={`block w-full text-left px-4 py-2 text-sm transition-colors ${dateFilter === option
-                                ? "bg-orange-50 text-orange-600 font-bold"
-                                : "text-gray-700 hover:bg-gray-50"
-                                }`}
-                            >
-                              {option}
-                            </button>
-                            {option === "Custom" && dateFilter === "Custom" && (
-                              <div className="px-4 py-3 space-y-2 border-t border-gray-50 bg-gray-50/50">
-                                <input
-                                  type="date"
-                                  value={customStart}
-                                  onChange={(e) => setCustomStart(e.target.value)}
-                                  className="w-full px-2 py-2 border border-gray-300 rounded-sm text-xs focus:outline-none focus:ring-1 focus:ring-orange-500"
-                                />
-                                <input
-                                  type="date"
-                                  value={customEnd}
-                                  onChange={(e) => setCustomEnd(e.target.value)}
-                                  className="w-full px-2 py-2 border border-gray-300 rounded-sm text-xs focus:outline-none focus:ring-1 focus:ring-orange-500"
-                                />
-                                <button
-                                  onClick={() => {
-                                    setIsFilterOpen(false);
-                                    setCurrentPage(1);
-                                  }}
-                                  className="w-full bg-orange-500 text-white text-[10px] font-bold py-2 rounded-sm uppercase tracking-wider"
-                                >
-                                  Apply
-                                </button>
-                              </div>
-                            )}
+                      <div className="p-5 grid grid-cols-2 gap-6">
+                        {/* Status Section */}
+                        <div className="space-y-4">
+                          <span className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-2 border-b pb-1">Select Status</span>
+                          <div className="space-y-2">
+                            {["All", "Active", "Inactive"].map((status) => (
+                              <label key={status} className="flex items-center group cursor-pointer">
+                                <div className="relative flex items-center">
+                                  <input
+                                    type="radio"
+                                    name="status_filter"
+                                    checked={tempStatuses[0] === status}
+                                    onChange={() => setTempStatuses([status])}
+                                    className="peer h-4 w-4 cursor-pointer appearance-none rounded-full border-2 border-gray-200 transition-all checked:border-[#FF7B1D] checked:border-[5px] hover:border-orange-300"
+                                  />
+                                </div>
+                                <span className={`ml-3 text-sm font-medium transition-colors ${tempStatuses[0] === status ? "text-[#FF7B1D] font-bold" : "text-gray-600 group-hover:text-gray-900"}`}>
+                                  {status}
+                                </span>
+                              </label>
+                            ))}
                           </div>
-                        ))}
+                        </div>
+
+                        {/* Category Section */}
+                        <div className="space-y-4">
+                          <span className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-2 border-b pb-1">Product Category</span>
+                          <div className="relative">
+                            <select
+                              value={tempCategories[0]}
+                              onChange={(e) => setTempCategories([e.target.value])}
+                              className="w-full px-3 py-2.5 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-1 focus:ring-orange-500/20 outline-none transition-all text-xs font-semibold text-gray-700 bg-gray-50 hover:bg-white"
+                            >
+                              <option value="All">All Categories</option>
+                              {dbCategories.map((cat) => (
+                                <option key={cat.id} value={cat.name}>
+                                  {cat.name}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Filter Actions */}
+                      <div className="p-4 bg-gray-50 border-t flex gap-3">
+                        <button
+                          onClick={() => setIsFilterOpen(false)}
+                          className="flex-1 py-2.5 text-[11px] font-bold text-gray-500 capitalize tracking-wider hover:bg-gray-200 transition-colors rounded-sm border border-gray-200 bg-white"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={() => {
+                            setStatusFilter(tempStatuses[0]);
+                            setCategoryFilter(tempCategories[0]);
+                            setIsFilterOpen(false);
+                            setCurrentPage(1);
+                          }}
+                          className="flex-1 py-2.5 text-[11px] font-bold text-white capitalize tracking-wider bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 transition-all rounded-sm shadow-md active:scale-95"
+                        >
+                          Apply filters
+                        </button>
                       </div>
                     </div>
                   )}
@@ -672,44 +671,56 @@ export default function CatalogsPage() {
               <thead>
                 <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm">
                   <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[5%]">S.N</th>
-                  <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[8%]">Image</th>
+                  <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[7%]">Image</th>
                   <th
-                    className="py-3 px-4 font-semibold cursor-pointer hover:text-gray-200 text-left border-b border-orange-400 w-[10%]"
+                    className="py-3 px-4 font-semibold cursor-pointer hover:text-gray-200 text-left border-b border-orange-400 w-[8%]"
                     onClick={() => handleSort("id")}
                   >
                     ID
                   </th>
                   <th
-                    className="py-3 px-4 font-semibold cursor-pointer hover:text-gray-200 text-left border-b border-orange-400 w-[20%]"
+                    className="py-3 px-4 font-semibold cursor-pointer hover:text-gray-200 text-left border-b border-orange-400 w-[15%]"
                     onClick={() => handleSort("name")}
                   >
                     Name
                   </th>
                   <th
-                    className="py-3 px-4 font-semibold cursor-pointer hover:text-gray-200 text-left border-b border-orange-400 w-[12%]"
+                    className="py-3 px-4 font-semibold cursor-pointer hover:text-gray-200 text-left border-b border-orange-400 w-[10%]"
+                    onClick={() => handleSort("category")}
+                  >
+                    Category
+                  </th>
+                  <th
+                    className="py-3 px-4 font-semibold cursor-pointer hover:text-gray-200 text-left border-b border-orange-400 w-[10%]"
                     onClick={() => handleSort("minPrice")}
                   >
                     Min Price
                   </th>
                   <th
-                    className="py-3 px-4 font-semibold cursor-pointer hover:text-gray-200 text-left border-b border-orange-400 w-[12%]"
+                    className="py-3 px-4 font-semibold cursor-pointer hover:text-gray-200 text-left border-b border-orange-400 w-[10%]"
                     onClick={() => handleSort("maxPrice")}
                   >
                     Max Price
                   </th>
                   <th
-                    className="py-3 px-4 font-semibold cursor-pointer hover:text-gray-200 text-left border-b border-orange-400 w-[13%]"
+                    className="py-3 px-4 font-semibold cursor-pointer hover:text-gray-200 text-left border-b border-orange-400 w-[10%]"
+                    onClick={() => handleSort("deliveryTime")}
+                  >
+                    Delivery Time
+                  </th>
+                  <th
+                    className="py-3 px-4 font-semibold cursor-pointer hover:text-gray-200 text-left border-b border-orange-400 w-[10%]"
                     onClick={() => handleSort("createdDate")}
                   >
                     Created Date
                   </th>
                   <th
-                    className="py-3 px-4 font-semibold cursor-pointer hover:text-gray-200 text-left border-b border-orange-400 w-[10%]"
+                    className="py-3 px-4 font-semibold cursor-pointer hover:text-gray-200 text-left border-b border-orange-400 w-[8%]"
                     onClick={() => handleSort("status")}
                   >
                     Status
                   </th>
-                  <th className="py-3 px-4 font-semibold text-right border-b border-orange-400 w-[10%]">Action</th>
+                  <th className="py-3 px-4 font-semibold text-right border-b border-orange-400 w-[7%]">Action</th>
                 </tr>
               </thead>
 
@@ -733,11 +744,22 @@ export default function CatalogsPage() {
                         {(currentPage - 1) * itemsPerPage + index + 1}
                       </td>
                       <td className="py-3 px-4 text-left">
-                        <img
-                          src={catalog.image}
-                          alt={catalog.name}
-                          className="w-12 h-12 rounded-md border object-cover shadow-sm"
-                        />
+                        <div className="w-12 h-12 rounded-md border border-gray-100 object-cover shadow-sm overflow-hidden flex items-center justify-center bg-gray-50">
+                          {catalog.image ? (
+                            <img
+                              src={catalog.image}
+                              alt={catalog.name}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.style.display = 'none';
+                                e.target.parentNode.innerHTML = '<div class="w-full h-full flex items-center justify-center text-gray-400"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-package"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg></div>';
+                              }}
+                            />
+                          ) : (
+                            <Package size={20} className="text-gray-400" />
+                          )}
+                        </div>
                       </td>
                       <td className="py-3 px-4 font-medium text-orange-600 text-left">{catalog.catalog_id}</td>
                       <td className="py-3 px-4 font-semibold text-gray-800 text-left max-w-sm">
@@ -745,13 +767,19 @@ export default function CatalogsPage() {
                           {catalog.name}
                         </div>
                       </td>
-                      <td className="py-3 px-4 font-medium text-gray-600 text-left">
-                        {catalog.minPrice ? `₹${catalog.minPrice.toLocaleString()}` : "N/A"}
+                      <td className="py-3 px-4 font-medium text-gray-600 text-left truncate max-w-[120px]" title={catalog.category}>
+                        {catalog.category || "General"}
                       </td>
                       <td className="py-3 px-4 font-medium text-gray-600 text-left">
-                        {catalog.maxPrice ? `₹${catalog.maxPrice.toLocaleString()}` : "N/A"}
+                        {catalog.minPrice ? `₹${formatCurrencyShorthand(catalog.minPrice)}` : "N/A"}
                       </td>
-                      <td className="py-3 px-4 text-gray-600 text-sm text-left">{new Date(catalog.created_at).toLocaleDateString()}</td>
+                      <td className="py-3 px-4 font-medium text-gray-600 text-left">
+                        {catalog.maxPrice ? `₹${formatCurrencyShorthand(catalog.maxPrice)}` : "N/A"}
+                      </td>
+                      <td className="py-3 px-4 font-medium text-gray-600 text-left truncate max-w-[100px]" title={catalog.deliveryTime}>
+                        {catalog.deliveryTime || "TBD"}
+                      </td>
+                      <td className="py-3 px-4 text-gray-600 text-xs text-left">{new Date(catalog.created_at).toLocaleDateString()}</td>
                       <td className="py-3 px-4 text-left">
                         <span
                           className={`px-3 py-1 rounded-sm text-[10px] font-bold border uppercase tracking-wider ${catalog.status === "Active"
@@ -803,12 +831,35 @@ export default function CatalogsPage() {
                 ) : (
                   <tr>
                     <td
-                      colSpan="9"
-                      className="py-12 text-gray-500 font-medium text-sm"
+                      colSpan="11"
+                      className="py-12 text-center text-gray-500 font-medium text-sm"
                     >
                       <div className="flex flex-col items-center gap-3">
                         <Package size={48} className="text-gray-200" />
-                        <p>No catalogs found matches your criteria.</p>
+                        <p className="mb-4">
+                          {hasActiveFilters
+                            ? "No catalogs found matching your filter criteria. Try clearing filters."
+                            : "Your catalog collection is currently empty. Start showcasing your products today!"}
+                        </p>
+                        {hasActiveFilters ? (
+                          <button
+                            onClick={clearAllFilters}
+                            className="px-6 py-2 border-2 border-[#FF7B1D] text-[#FF7B1D] font-bold rounded-sm hover:bg-orange-50 transition-all text-xs uppercase tracking-wider"
+                          >
+                            Clear Filter
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => {
+                              resetForm();
+                              setShowAddModal(true);
+                            }}
+                            className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl inline-flex items-center gap-2 font-semibold"
+                          >
+                            <Plus size={20} />
+                            Create First Catalog
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -855,7 +906,7 @@ export default function CatalogsPage() {
                 disabled={currentPage === totalPages}
                 className={`px-4 py-2 rounded-sm font-bold transition flex items-center gap-1 ${currentPage === totalPages
                   ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                  : "bg-[#22C55E] text-white hover:opacity-90 shadow-md"
+                  : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"
                   }`}
               >
                 Next
@@ -935,15 +986,26 @@ export default function CatalogsPage() {
                       </div>
 
                       {isAddingCategory ? (
-                        <div className="flex gap-2">
-                          <input
-                            type="text"
-                            value={newCategoryName}
-                            onChange={(e) => setNewCategoryName(e.target.value)}
-                            className="flex-1 px-4 py-3 border border-[#FF7B1D] rounded-sm focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white"
-                            placeholder="Enter new category name"
-                            autoFocus
-                          />
+                        <div className="flex gap-2 items-start">
+                          <div className="flex-1 space-y-1">
+                            <input
+                              type="text"
+                              value={newCategoryName}
+                              onChange={(e) => {
+                                if (e.target.value.length <= CAT_LIMIT) {
+                                  setNewCategoryName(e.target.value);
+                                }
+                              }}
+                              className={`w-full px-4 py-3 border rounded-sm focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white ${newCategoryName.length >= CAT_LIMIT ? 'border-red-500' : 'border-[#FF7B1D]'}`}
+                              placeholder="Enter new category name"
+                              autoFocus
+                            />
+                            <div className="flex justify-end">
+                              <span className={`text-[10px] font-bold ${newCategoryName.length >= CAT_LIMIT ? 'text-red-500' : 'text-gray-400'}`}>
+                                {newCategoryName.length}/{CAT_LIMIT}
+                              </span>
+                            </div>
+                          </div>
                           <button
                             type="button"
                             onClick={handleAddNewCategory}
@@ -1098,15 +1160,22 @@ export default function CatalogsPage() {
                       <FileText size={16} className="text-[#FF7B1D]" />
                       Description <span className="text-red-500">*</span>
                     </label>
-                    <textarea
-                      name="description"
-                      value={formData.description}
-                      onChange={handleInputChange}
-                      rows="3"
-                      className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 resize-none"
-                      required
-                      placeholder="Describe your catalog..."
-                    />
+                    <div className="space-y-1">
+                      <textarea
+                        name="description"
+                        value={formData.description}
+                        onChange={handleInputChange}
+                        rows="3"
+                        className={`w-full px-4 py-3 border rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 resize-none ${formData.description.length >= DESC_LIMIT ? 'border-red-500' : 'border-gray-200'}`}
+                        required
+                        placeholder="Describe your catalog..."
+                      />
+                      <div className="flex justify-end">
+                        <span className={`text-[10px] font-bold ${formData.description.length >= DESC_LIMIT ? 'text-red-500' : 'text-gray-400'}`}>
+                          {formData.description.length}/{DESC_LIMIT}
+                        </span>
+                      </div>
+                    </div>
                   </div>
 
                   {/* Price Range */}
@@ -1305,29 +1374,29 @@ export default function CatalogsPage() {
             <div className="flex gap-4 w-full">
               <button
                 onClick={() => setShowDeleteModal(false)}
-                className="flex-1 px-6 py-3 border-2 border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-100 transition-all"
+                className="flex-1 px-6 py-3 border-2 border-gray-200 text-gray-700 font-bold rounded-sm hover:bg-gray-100 transition-all font-primary text-xs uppercase tracking-widest"
               >
                 Cancel
               </button>
               <button
                 onClick={confirmDelete}
-                className="flex-1 px-6 py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition-all shadow-lg flex items-center justify-center gap-2"
+                className="flex-1 px-6 py-3 bg-red-600 text-white font-bold rounded-sm hover:bg-red-700 transition-all shadow-lg flex items-center justify-center gap-2 font-primary text-xs uppercase tracking-widest"
               >
-                <Trash2 size={20} />
+                <Trash2 size={18} />
                 Delete Now
               </button>
             </div>
           }
         >
-          <div className="flex flex-col items-center text-center text-black">
-            <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mb-6 animate-bounce">
+          <div className="flex flex-col items-center text-center text-black font-primary">
+            <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mb-6">
               <AlertCircle size={48} className="text-red-600" />
             </div>
             <h2 className="text-2xl font-bold text-gray-800 mb-2">Confirm Delete</h2>
             <p className="text-gray-600 mb-2 leading-relaxed">
-              Are you sure you want to delete <span className="font-bold text-gray-800">"{catalogToDelete?.name}"</span>?
+              Are you sure you want to delete the catalog <span className="font-bold text-gray-800">"{catalogToDelete?.name}"</span>?
             </p>
-            <p className="text-sm text-red-500 italic">This action cannot be undone and will permanently remove all associated data.</p>
+            <p className="text-xs text-red-500 italic font-medium">This action cannot be undone. All associated data will be permanently removed.</p>
           </div>
         </Modal>
 

@@ -21,6 +21,7 @@ import {
   LayoutGrid,
   List,
   RotateCcw,
+  FileText,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import NumberCard from "../../components/NumberCard";
@@ -37,11 +38,21 @@ export default function TodoPage() {
   const [newTask, setNewTask] = useState("");
   const [newTaskPriority, setNewTaskPriority] = useState("medium");
   const [newTaskDate, setNewTaskDate] = useState(new Date().toISOString().split("T")[0]);
-  const [newTaskTime, setNewTaskTime] = useState("09:00");
+  const [newTaskTime, setNewTaskTime] = useState(new Date().toTimeString().slice(0, 5));
   const [newTaskCategory, setNewTaskCategory] = useState("General");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [filterPriority, setFilterPriority] = useState("all");
+  const [filterCategory, setFilterCategory] = useState("All");
+
+  const [tempPriority, setTempPriority] = useState("all");
+  const [tempCategory, setTempCategory] = useState("All");
+  const [tempDateFilter, setTempDateFilter] = useState("All");
+  const [tempCustomStart, setTempCustomStart] = useState("");
+  const [tempCustomEnd, setTempCustomEnd] = useState("");
+  const [tempStatus, setTempStatus] = useState("All");
+
   const [dateFilter, setDateFilter] = useState("All");
+  const [filterStatus, setFilterStatus] = useState("All");
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
@@ -100,9 +111,12 @@ export default function TodoPage() {
     page: currentPage,
     limit: itemsPerPage,
     priority: filterPriority,
+    category: filterCategory !== "All" ? filterCategory : undefined,
     search: searchTerm,
+    status: filterStatus !== "All" ? filterStatus : undefined,
     dateFrom,
     dateTo,
+    timeframe: dateFilter,
   });
 
   const [createTask] = useCreateTaskMutation();
@@ -139,13 +153,21 @@ export default function TodoPage() {
       return;
     }
 
+    if (newTask.length > 250) {
+      toast.error("Task title cannot exceed 250 characters");
+      return;
+    }
+
     // Validate date is not in the past
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const selectedDate = new Date(newTaskDate);
+    today.setSeconds(0, 0); // Reset seconds/millis for comparison
 
-    if (selectedDate < today) {
-      toast.error("Due date cannot be in the past. Please select today or a future date.");
+    // Create date objects for comparison
+    const selectedDateTime = new Date(`${newTaskDate}T${newTaskTime}`);
+
+    // Check if the selected time is in the past (when date is today)
+    if (selectedDateTime < today) {
+      toast.error("Due time cannot be in the past.");
       return;
     }
 
@@ -156,6 +178,7 @@ export default function TodoPage() {
         due_date: newTaskDate,
         due_time: newTaskTime,
         category: newTaskCategory,
+        status: "Pending",
       };
 
       await createTask(newTaskObj).unwrap();
@@ -166,7 +189,7 @@ export default function TodoPage() {
       setNewTask("");
       setNewTaskPriority("medium");
       setNewTaskDate(new Date().toISOString().split("T")[0]);
-      setNewTaskTime("09:00");
+      setNewTaskTime(new Date().toTimeString().slice(0, 5));
       setNewTaskCategory("General");
       setIsAddModalOpen(false);
     } catch (err) {
@@ -177,6 +200,20 @@ export default function TodoPage() {
   const handleUpdateTask = async () => {
     if (!newTask.trim()) {
       toast.error("Task title is required");
+      return;
+    }
+
+    if (newTask.length > 250) {
+      toast.error("Task title cannot exceed 250 characters");
+      return;
+    }
+
+    const today = new Date();
+    today.setSeconds(0, 0);
+    const selectedDateTime = new Date(`${newTaskDate}T${newTaskTime}`);
+
+    if (selectedDateTime < today) {
+      toast.error("Due time cannot be in the past.");
       return;
     }
 
@@ -202,6 +239,20 @@ export default function TodoPage() {
     try {
       await toggleTaskStatus(id).unwrap();
       toast.success("Task status updated!");
+    } catch (err) {
+      toast.error("Failed to update status");
+    }
+  };
+
+  const handleStatusChange = async (task, newStatus) => {
+    try {
+      const isCompleted = newStatus === 'Completed';
+      await updateTask({
+        id: task.id,
+        status: newStatus,
+        completed: isCompleted ? 1 : 0
+      }).unwrap();
+      toast.success(`Status updated to ${newStatus}`);
     } catch (err) {
       toast.error("Failed to update status");
     }
@@ -258,6 +309,8 @@ export default function TodoPage() {
   const clearAllFilters = () => {
     setSearchTerm("");
     setFilterPriority("all");
+    setFilterCategory("All");
+    setFilterStatus("All");
     setDateFilter("All");
     setCustomStart("");
     setCustomEnd("");
@@ -270,7 +323,7 @@ export default function TodoPage() {
   const completedTasks = tasks.filter((t) => t.completed);
 
   const hasActiveFilters =
-    searchTerm || filterPriority !== "all" || dateFilter !== "All";
+    searchTerm || filterPriority !== "all" || dateFilter !== "All" || filterCategory !== "All" || filterStatus !== "All";
 
   return (
     <DashboardLayout>
@@ -298,6 +351,12 @@ export default function TodoPage() {
                       if (hasActiveFilters) {
                         clearAllFilters();
                       } else {
+                        setTempPriority(filterPriority);
+                        setTempCategory(filterCategory);
+                        setTempStatus(filterStatus);
+                        setTempDateFilter(dateFilter);
+                        setTempCustomStart(customStart);
+                        setTempCustomEnd(customEnd);
                         setIsPriorityFilterOpen(!isPriorityFilterOpen);
                       }
                     }}
@@ -310,75 +369,114 @@ export default function TodoPage() {
                   </button>
 
                   {isPriorityFilterOpen && (
-                    <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-xl z-50 animate-fadeIn overflow-hidden">
-                      <div className="p-3 border-b border-gray-100 bg-gray-50">
-                        <span className="text-sm font-bold text-gray-700 tracking-wide">Priority</span>
-                      </div>
-                      <div className="py-1">
-                        {["all", "high", "medium", "low"].map((p) => (
-                          <button
-                            key={p}
-                            onClick={() => {
-                              setFilterPriority(p);
-                              setIsPriorityFilterOpen(false);
-                            }}
-                            className={`block w-full text-left px-4 py-2 text-sm transition-colors ${filterPriority === p
-                              ? "bg-orange-50 text-orange-600 font-bold"
-                              : "text-gray-700 hover:bg-gray-50"
-                              }`}
-                          >
-                            {p === "all" ? "All Priorities" : p.charAt(0).toUpperCase() + p.slice(1) + " Priority"}
-                          </button>
-                        ))}
+                    <div className="absolute right-0 mt-2 w-[650px] bg-white border border-gray-200 rounded-sm shadow-2xl z-50 animate-fadeIn overflow-hidden">
+                      {/* Header */}
+                      <div className="p-4 bg-gray-50 border-b flex justify-between items-center">
+                        <span className="text-sm font-bold text-gray-800">Filter Options</span>
+                        <button
+                          onClick={() => {
+                            setTempPriority("all");
+                            setTempCategory("All");
+                            setTempStatus("All");
+                            setTempDateFilter("All");
+                            setTempCustomStart("");
+                            setTempCustomEnd("");
+                          }}
+                          className="text-[10px] font-bold text-orange-600 hover:underline hover:text-orange-700 capitalize"
+                        >
+                          Reset all
+                        </button>
                       </div>
 
-                      <div className="p-3 border-t border-b border-gray-100 bg-gray-50">
-                        <span className="text-sm font-bold text-gray-700 tracking-wide">Date Range</span>
-                      </div>
-                      <div className="py-1">
-                        {["All", "Today", "Yesterday", "Last 7 Days", "This Month", "Custom"].map((option) => (
-                          <div key={option}>
-                            <button
-                              key={option}
-                              onClick={() => {
-                                setDateFilter(option);
-                                if (option !== "Custom") {
-                                  setIsPriorityFilterOpen(false);
-                                }
-                              }}
-                              className={`block w-full text-left px-4 py-2 text-sm transition-colors ${dateFilter === option
-                                ? "bg-orange-50 text-orange-600 font-bold"
-                                : "text-gray-700 hover:bg-gray-50"
-                                }`}
-                            >
-                              {option}
-                            </button>
-                            {option === "Custom" && dateFilter === "Custom" && (
-                              <div className="px-4 py-3 space-y-2 border-t border-gray-50 bg-gray-50/50">
-                                <input
-                                  type="date"
-                                  value={customStart}
-                                  onChange={(e) => setCustomStart(e.target.value)}
-                                  className="w-full px-2 py-2 border border-gray-300 rounded-sm text-xs focus:outline-none focus:ring-1 focus:ring-orange-500"
-                                />
-                                <input
-                                  type="date"
-                                  value={customEnd}
-                                  onChange={(e) => setCustomEnd(e.target.value)}
-                                  className="w-full px-2 py-2 border border-gray-300 rounded-sm text-xs focus:outline-none focus:ring-1 focus:ring-orange-500"
-                                />
-                                <button
-                                  onClick={() => {
-                                    setIsPriorityFilterOpen(false);
-                                  }}
-                                  className="w-full bg-orange-500 text-white text-[10px] font-bold py-2 rounded-sm uppercase tracking-wider"
-                                >
-                                  Apply
-                                </button>
-                              </div>
-                            )}
+                      <div className="p-5 grid grid-cols-3 gap-6">
+                        {/* Column 1: Priority */}
+                        <div className="space-y-4">
+                          <span className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-2 border-b pb-1">Priority</span>
+                          <div className="space-y-2">
+                            {["all", "high", "medium", "low"].map((p) => (
+                              <label key={p} className="flex items-center group cursor-pointer">
+                                <div className="relative flex items-center">
+                                  <input
+                                    type="radio"
+                                    name="priority_filter"
+                                    checked={tempPriority === p}
+                                    onChange={() => setTempPriority(p)}
+                                    className="peer h-4 w-4 cursor-pointer appearance-none rounded-full border-2 border-gray-200 transition-all checked:border-[#FF7B1D] checked:border-[5px] hover:border-orange-300"
+                                  />
+                                </div>
+                                <span className={`ml-3 text-sm font-medium transition-colors capitalize ${tempPriority === p ? "text-[#FF7B1D] font-bold" : "text-gray-600 group-hover:text-gray-900"}`}>
+                                  {p === "all" ? "All Priorities" : p}
+                                </span>
+                              </label>
+                            ))}
                           </div>
-                        ))}
+                        </div>
+
+                        {/* Column 2: Category */}
+                        <div className="space-y-4">
+                          <span className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-2 border-b pb-1">Category</span>
+                          <div className="relative">
+                            <select
+                              value={tempCategory}
+                              onChange={(e) => setTempCategory(e.target.value)}
+                              className="w-full px-3 py-2.5 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-1 focus:ring-orange-500/20 outline-none transition-all text-xs font-semibold text-gray-700 bg-gray-50 hover:bg-white"
+                            >
+                              <option value="All">All Categories</option>
+                              {["General", "Work", "Personal", "Meeting", "Follow-up", "Documentation", "Research", "Development", "Design", "Testing", "Deployment"].map((cat) => (
+                                <option key={cat} value={cat}>
+                                  {cat}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+                        <div className="space-y-4">
+                          <span className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-2 border-b pb-1">Status</span>
+                          <div className="space-y-2">
+                            {["All", "Active", "Pending", "Completed"].map((s) => (
+                              <label key={s} className="flex items-center group cursor-pointer">
+                                <div className="relative flex items-center">
+                                  <input
+                                    type="radio"
+                                    name="status_filter"
+                                    checked={tempStatus === s}
+                                    onChange={() => setTempStatus(s)}
+                                    className="peer h-4 w-4 cursor-pointer appearance-none rounded-full border-2 border-gray-200 transition-all checked:border-[#FF7B1D] checked:border-[5px] hover:border-orange-300"
+                                  />
+                                </div>
+                                <span className={`ml-3 text-sm font-medium transition-colors capitalize ${tempStatus === s ? "text-[#FF7B1D] font-bold" : "text-gray-600 group-hover:text-gray-900"}`}>
+                                  {s}
+                                </span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+
+                      </div>
+
+                      {/* Filter Actions */}
+                      <div className="p-4 bg-gray-50 border-t flex gap-3">
+                        <button
+                          onClick={() => setIsPriorityFilterOpen(false)}
+                          className="flex-1 py-2.5 text-[11px] font-bold text-gray-500 capitalize tracking-wider hover:bg-gray-200 transition-colors rounded-sm border border-gray-200 bg-white"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={() => {
+                            setFilterPriority(tempPriority);
+                            setFilterCategory(tempCategory);
+                            setFilterStatus(tempStatus);
+                            setDateFilter(tempDateFilter);
+                            setCustomStart(tempCustomStart);
+                            setCustomEnd(tempCustomEnd);
+                            setIsPriorityFilterOpen(false);
+                            setCurrentPage(1);
+                          }}
+                          className="flex-1 py-2.5 text-[11px] font-bold text-white capitalize tracking-wider bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 transition-all rounded-sm shadow-md active:scale-95"
+                        >
+                          Apply filters
+                        </button>
                       </div>
                     </div>
                   )}
@@ -408,7 +506,16 @@ export default function TodoPage() {
                 </div>
 
                 <button
-                  onClick={() => setIsAddModalOpen(true)}
+                  onClick={() => {
+                    setNewTask("");
+                    setNewTaskPriority("medium");
+                    const today = new Date();
+                    const localDate = today.toLocaleDateString('en-CA'); // YYYY-MM-DD in local time
+                    setNewTaskDate(localDate);
+                    setNewTaskTime(today.toTimeString().slice(0, 5));
+                    setNewTaskCategory("General");
+                    setIsAddModalOpen(true);
+                  }}
                   className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-2 font-semibold"
                 >
                   <Plus size={20} />
@@ -515,11 +622,11 @@ export default function TodoPage() {
                               </h3>
                             </div>
                             <div className="flex gap-2 mt-2">
-                              <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                              <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-bold capitalize tracking-wide">
                                 {task.category || 'General'}
                               </span>
                               {!task.completed && (
-                                <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${task.priority === 'high' ? 'bg-red-100 text-red-700' :
+                                <span className={`px-3 py-1 rounded-full text-xs font-bold capitalize tracking-wide ${task.priority === 'high' ? 'bg-red-100 text-red-700' :
                                   task.priority === 'medium' ? 'bg-orange-100 text-orange-700' :
                                     'bg-green-100 text-green-700'
                                   }`}>
@@ -529,39 +636,42 @@ export default function TodoPage() {
                             </div>
                           </div>
 
-                          {/* Stats Info (Similar to Employee Grid) */}
-                          <div className="flex justify-between items-center mt-auto border-t pt-4 border-gray-50">
-                            <div className="flex flex-col items-center flex-1 border-r border-gray-50">
-                              <p className="text-[9px] text-gray-400 uppercase font-bold tracking-widest">Due Date</p>
-                              <p className="text-xs font-bold text-gray-700 mt-1">{new Date(task.due_date).toLocaleDateString()}</p>
+                          {/* Footer Section */}
+                          <div className="mt-auto bg-gray-100 -mx-6 -mb-6 px-6 py-4 rounded-b-sm border-t border-gray-200">
+                            {/* Stats Info */}
+                            <div className="flex justify-between items-center mb-4">
+                              <div className="flex flex-col items-center flex-1 border-r border-gray-300">
+                                <p className="text-xs text-[#FF7B1D] capitalize font-bold tracking-wide">Due Date</p>
+                                <p className="text-sm font-bold text-gray-700 mt-1">{new Date(task.due_date).toLocaleDateString()}</p>
+                              </div>
+                              <div className="flex flex-col items-center flex-1">
+                                <p className="text-xs text-[#FF7B1D] capitalize font-bold tracking-wide">Status</p>
+                                <p className={`text-sm font-black mt-1 capitalize ${task.completed ? 'text-green-600' : 'text-gray-600'}`}>
+                                  {task.status || (task.completed ? 'Completed' : 'Active')}
+                                </p>
+                              </div>
                             </div>
-                            <div className="flex flex-col items-center flex-1">
-                              <p className="text-[9px] text-gray-400 uppercase font-bold tracking-widest">Status</p>
-                              <p className={`text-[9px] font-black mt-1 uppercase ${task.completed ? 'text-green-600' : 'text-orange-600'}`}>
-                                {task.completed ? 'Completed' : 'Active'}
-                              </p>
-                            </div>
-                          </div>
 
-                          {/* Progress/Action Bar */}
-                          {!task.completed && (
-                            <button
-                              onClick={(e) => { e.stopPropagation(); handleToggleStatus(task.id); }}
-                              className="mt-4 w-full py-2.5 bg-green-50 text-green-600 text-[10px] font-black uppercase tracking-widest rounded-sm border border-green-100 hover:bg-green-600 hover:text-white transition-all duration-300 flex items-center justify-center gap-2"
-                            >
-                              <Check size={14} strokeWidth={3} />
-                              Mark As Complete
-                            </button>
-                          )}
-                          {task.completed && (
-                            <button
-                              onClick={(e) => { e.stopPropagation(); handleToggleStatus(task.id); }}
-                              className="mt-4 w-full py-2.5 bg-gray-50 text-gray-500 text-[10px] font-black uppercase tracking-widest rounded-sm border border-gray-100 hover:bg-orange-50 hover:text-orange-600 transition-all duration-300 flex items-center justify-center gap-2"
-                            >
-                              <RotateCcw size={14} strokeWidth={3} />
-                              Undo Completion
-                            </button>
-                          )}
+                            {/* Progress/Action Bar */}
+                            {!task.completed && (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleToggleStatus(task.id); }}
+                                className="w-full py-2.5 bg-green-600 text-white text-xs font-bold capitalize tracking-wide rounded-sm border border-transparent hover:bg-green-700 shadow-sm transition-all duration-300 flex items-center justify-center gap-2 font-primary"
+                              >
+                                <Check size={16} strokeWidth={3} />
+                                Mark As Complete
+                              </button>
+                            )}
+                            {!!task.completed && (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleToggleStatus(task.id); }}
+                                className="w-full py-2.5 bg-white text-gray-700 text-xs font-bold capitalize tracking-wide rounded-sm border border-gray-200 hover:bg-gray-50 hover:text-orange-600 transition-all duration-300 flex items-center justify-center gap-2 font-primary shadow-sm"
+                              >
+                                <RotateCcw size={16} strokeWidth={3} />
+                                Undo Completion
+                              </button>
+                            )}
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -599,15 +709,15 @@ export default function TodoPage() {
                                     </div>
                                   </td>
                                   <td className="py-3 px-4 text-left whitespace-nowrap">
-                                    <div className="text-sm text-gray-600 font-medium uppercase tracking-tight">{task.category || 'General'}</div>
+                                    <div className="text-sm text-gray-600 font-medium capitalize tracking-tight">{task.category || 'General'}</div>
                                   </td>
                                   <td className="py-3 px-4 whitespace-nowrap text-left">
                                     {!task.completed && (
-                                      <span className={`px-2 py-0.5 rounded-sm text-[10px] font-bold uppercase ${task.priority === 'high' ? 'bg-red-50 text-red-600' : task.priority === 'medium' ? 'bg-orange-50 text-orange-600' : 'bg-green-50 text-green-600'}`}>
+                                      <span className={`px-2 py-0.5 rounded-sm text-xs font-bold capitalize ${task.priority === 'high' ? 'bg-red-50 text-red-600' : task.priority === 'medium' ? 'bg-orange-50 text-orange-600' : 'bg-green-50 text-green-600'}`}>
                                         {task.priority || 'Medium'}
                                       </span>
                                     )}
-                                    {!!task.completed && <span className="text-gray-400 font-bold text-[10px] uppercase">DONE</span>}
+                                    {!!task.completed && <span className="text-gray-400 font-bold text-xs capitalize">Done</span>}
                                   </td>
                                   <td className="py-3 px-4 whitespace-nowrap text-left">
                                     <div className="flex items-center gap-1.5 text-sm text-gray-600 font-medium">
@@ -622,9 +732,26 @@ export default function TodoPage() {
                                     </div>
                                   </td>
                                   <td className="py-3 px-4 whitespace-nowrap text-left">
-                                    <span className={`px-2.5 py-1 rounded-sm text-[10px] font-bold uppercase tracking-wider border ${task.completed ? 'bg-green-50 text-green-700 border-green-100' : 'bg-orange-50 text-orange-700 border-orange-100'}`}>
-                                      {task.completed ? 'Completed' : 'Active'}
-                                    </span>
+                                    <div className="relative inline-block">
+                                      <span className={`px-3 py-1 rounded-sm text-xs font-bold capitalize tracking-wider border block w-fit
+                                        ${(task.status === 'Completed' || task.completed) ? 'bg-green-50 text-green-700 border-green-100' :
+                                          task.status === 'Pending' ? 'bg-yellow-50 text-yellow-700 border-yellow-100' :
+                                            'bg-orange-50 text-orange-700 border-orange-100'
+                                        }`}
+                                      >
+                                        {task.status || (task.completed ? 'Completed' : 'Active')}
+                                      </span>
+                                      <select
+                                        value={task.status || (task.completed ? 'Completed' : 'Active')}
+                                        onChange={(e) => handleStatusChange(task, e.target.value)}
+                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer text-[11px]"
+                                        onClick={(e) => e.stopPropagation()}
+                                      >
+                                        <option value="Active">Active</option>
+                                        <option value="Pending">Pending</option>
+                                        <option value="Completed">Completed</option>
+                                      </select>
+                                    </div>
                                   </td>
                                   <td className="py-3 px-4 text-right">
                                     <div className="flex items-center justify-end gap-2">
@@ -678,87 +805,86 @@ export default function TodoPage() {
                         </div>
                       </div>
 
-                      {/* Pagination Section */}
-                      {tasks.length > 0 && (
-                        <div className="flex flex-col md:flex-row justify-between items-center mt-6 gap-4 bg-gray-50 p-4 rounded-sm border border-gray-200 shadow-sm">
-                          <p className="text-sm font-semibold text-gray-700">
-                            Showing <span className="text-orange-600">{(currentPage - 1) * itemsPerPage + 1}</span> to <span className="text-orange-600">{Math.min(currentPage * itemsPerPage, pagination.total)}</span> of <span className="text-orange-600">{pagination.total || 0}</span> Tasks
-                          </p>
 
-                          <div className="flex items-center gap-2">
-                            <button
-                              onClick={() => handlePageChange(currentPage > 1 ? currentPage - 1 : 1)}
-                              disabled={currentPage === 1}
-                              className={`px-4 py-2 rounded-sm font-bold transition flex items-center gap-1 ${currentPage === 1 ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"
-                                }`}
-                            >
-                              Previous
-                            </button>
-
-                            <div className="flex items-center gap-1">
-                              {Array.from({ length: pagination.totalPages }, (_, i) => (
-                                <button
-                                  key={i + 1}
-                                  onClick={() => handlePageChange(i + 1)}
-                                  className={`w-10 h-10 rounded-sm font-bold transition ${currentPage === i + 1 ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md border-orange-500" : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
-                                    }`}
-                                >
-                                  {i + 1}
-                                </button>
-                              ))}
-                            </div>
-
-                            <button
-                              onClick={() => handlePageChange(currentPage < pagination.totalPages ? currentPage + 1 : currentPage)}
-                              disabled={currentPage === pagination.totalPages || pagination.totalPages === 0}
-                              className={`px-4 py-2 rounded-sm font-bold transition flex items-center gap-1 ${currentPage === pagination.totalPages || pagination.totalPages === 0 ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"
-                                }`}
-                            >
-                              Next
-                            </button>
-                          </div>
-                        </div>
-                      )}
                     </div>
                   )}
-                </div>
-              ) : (
-                <div className="group relative">
-                  <div className="max-w-2xl mx-auto">
-                    <div className="bg-white rounded-lg p-16 text-center border-2 border-dashed border-gray-200">
-                      <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 bg-orange-100">
-                        <CheckCircle className="w-10 h-10 text-orange-500" strokeWidth={2} />
+
+                  {/* Pagination Section (Global for Grid/List) */}
+                  <div className="flex flex-col md:flex-row justify-between items-center mt-6 gap-4 bg-gray-50 p-4 rounded-sm border border-gray-200 shadow-sm">
+                    <p className="text-sm font-semibold text-gray-700">
+                      Showing <span className="text-orange-600">{(currentPage - 1) * itemsPerPage + 1}</span> to <span className="text-orange-600">{Math.min(currentPage * itemsPerPage, pagination.total || 0)}</span> of <span className="text-orange-600">{pagination.total || 0}</span> Tasks
+                    </p>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handlePageChange(currentPage > 1 ? currentPage - 1 : 1)}
+                        disabled={currentPage === 1}
+                        className={`px-4 py-2 rounded-sm font-bold transition flex items-center gap-1 ${currentPage === 1 ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"
+                          }`}
+                      >
+                        Previous
+                      </button>
+
+                      <div className="flex items-center gap-1">
+                        {Array.from({ length: pagination.totalPages || 1 }, (_, i) => (
+                          <button
+                            key={i + 1}
+                            onClick={() => handlePageChange(i + 1)}
+                            className={`w-10 h-10 rounded-sm font-bold transition ${currentPage === i + 1 ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md border-orange-500" : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+                              }`}
+                          >
+                            {i + 1}
+                          </button>
+                        ))}
                       </div>
 
-                      <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                        Master Your Day
-                      </h3>
-                      <p className="text-gray-500 max-w-md mx-auto mb-6 text-sm font-normal leading-relaxed">
-                        {searchTerm || filterPriority !== "all" || dateFilter !== "All"
-                          ? "We couldn't find any tasks matching your filters. Time for a broader view!"
-                          : "Your workspace is pristine. Ready to conquer your next big objective?"}
-                      </p>
-
-                      <div className="flex items-center justify-center gap-3">
-                        {searchTerm || filterPriority !== "all" || dateFilter !== "All" ? (
-                          <button
-                            onClick={clearAllFilters}
-                            className="px-6 py-2.5 bg-orange-500 text-white font-semibold rounded-md hover:bg-orange-600 transition-all text-sm"
-                          >
-                            Reset Filters
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => setIsAddModalOpen(true)}
-                            className="flex items-center gap-2 px-4 py-2 rounded-sm font-bold transition shadow-md text-sm active:scale-95 bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
-                          >
-                            <Plus size={18} />
-                            Add Task
-                          </button>
-                        )}
-                      </div>
+                      <button
+                        onClick={() => handlePageChange(currentPage < pagination.totalPages ? currentPage + 1 : currentPage)}
+                        disabled={currentPage === pagination.totalPages || pagination.totalPages === 0}
+                        className={`px-4 py-2 rounded-sm font-bold transition flex items-center gap-1 ${currentPage === pagination.totalPages || pagination.totalPages === 0 ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"
+                          }`}
+                      >
+                        Next
+                      </button>
                     </div>
                   </div>
+                </div>
+              ) : (
+                <div className="text-center py-24 bg-white rounded-sm border-2 border-dashed border-gray-100 mt-6">
+                  <div className="bg-gray-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <List className="w-10 h-10 text-gray-300" />
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-800 mb-2 font-primary">
+                    {hasActiveFilters ? "No matches found" : "No tasks found"}
+                  </h3>
+                  <p className="text-gray-500 max-w-xs mx-auto text-sm font-primary mb-6">
+                    {hasActiveFilters
+                      ? "We couldn't find any tasks matching your search or filters. Time for a broader view!"
+                      : "Your task list is currently empty. Start capturing your tasks today!"}
+                  </p>
+                  {hasActiveFilters ? (
+                    <button
+                      onClick={clearAllFilters}
+                      className="px-6 py-2 border-2 border-[#FF7B1D] text-[#FF7B1D] font-bold rounded-sm hover:bg-orange-50 transition-all text-xs uppercase tracking-wider"
+                    >
+                      Clear Filter
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        setNewTask("");
+                        setNewTaskPriority("medium");
+                        setNewTaskDate(new Date().toISOString().split("T")[0]);
+                        setNewTaskTime(new Date().toTimeString().slice(0, 5));
+                        setNewTaskCategory("General");
+                        setIsAddModalOpen(true);
+                      }}
+                      className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl inline-flex items-center gap-2 font-semibold"
+                    >
+                      <Plus size={20} />
+                      Create First Task
+                    </button>
+                  )}
                 </div>
               )}
             </>
@@ -767,7 +893,14 @@ export default function TodoPage() {
 
         <Modal
           isOpen={isAddModalOpen}
-          onClose={() => setIsAddModalOpen(false)}
+          onClose={() => {
+            setNewTask("");
+            setNewTaskPriority("medium");
+            setNewTaskDate(new Date().toISOString().split("T")[0]);
+            setNewTaskTime(new Date().toTimeString().slice(0, 5));
+            setNewTaskCategory("General");
+            setIsAddModalOpen(false);
+          }}
           headerVariant="orange"
           title="Create New Task"
           subtitle="Define your next milestone and stay organized"
@@ -776,8 +909,15 @@ export default function TodoPage() {
           footer={
             <div className="flex justify-end gap-3 w-full">
               <button
-                onClick={() => setIsAddModalOpen(false)}
-                className="px-8 py-2.5 rounded-sm border border-gray-300 text-gray-700 font-bold hover:bg-gray-50 transition-all text-sm"
+                onClick={() => {
+                  setNewTask("");
+                  setNewTaskPriority("medium");
+                  setNewTaskDate(new Date().toISOString().split("T")[0]);
+                  setNewTaskTime(new Date().toTimeString().slice(0, 5));
+                  setNewTaskCategory("General");
+                  setIsAddModalOpen(false);
+                }}
+                className="px-8 py-2.5 rounded-sm border-2 border-gray-300 text-gray-700 font-bold hover:bg-gray-50 transition-all text-sm"
               >
                 Cancel
               </button>
@@ -785,7 +925,7 @@ export default function TodoPage() {
                 onClick={addTask}
                 className="flex items-center justify-center gap-2 px-8 py-2.5 rounded-sm bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold hover:shadow-lg transform transition-all active:scale-95 text-sm"
               >
-                <Plus size={18} />
+
                 Create Task
               </button>
             </div>
@@ -802,8 +942,13 @@ export default function TodoPage() {
                 value={newTask}
                 onChange={(e) => setNewTask(e.target.value)}
                 placeholder="What needs to be done?"
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300"
+                className={`w-full px-4 py-3 border rounded-sm focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 ${newTask.length > 250 ? 'border-red-500 focus:border-red-500' : 'border-gray-200 focus:border-[#FF7B1D]'}`}
               />
+              <div className="flex justify-end mt-1">
+                <span className={`text-[10px] font-bold ${newTask.length > 250 ? 'text-red-500' : 'text-gray-400'}`}>
+                  {newTask.length}/250 characters
+                </span>
+              </div>
             </div>
 
             <div className="group">
@@ -816,7 +961,7 @@ export default function TodoPage() {
                   <button
                     key={p}
                     onClick={() => setNewTaskPriority(p)}
-                    className={`py-3 rounded-lg font-bold text-[11px] uppercase tracking-widest transition-all border-2
+                    className={`py-3 rounded-sm font-bold text-[11px] uppercase tracking-widest transition-all border
               ${newTaskPriority === p
                         ? p === "high"
                           ? "bg-red-500 text-white border-red-500 shadow-lg shadow-red-500/20"
@@ -842,7 +987,6 @@ export default function TodoPage() {
                 <input
                   type="date"
                   value={newTaskDate}
-                  min={new Date().toISOString().split('T')[0]}
                   onChange={(e) => {
                     const selectedDate = new Date(e.target.value);
                     const today = new Date();
@@ -854,7 +998,8 @@ export default function TodoPage() {
                     }
                     setNewTaskDate(e.target.value);
                   }}
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300"
+
+                  className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300"
                 />
               </div>
 
@@ -867,7 +1012,7 @@ export default function TodoPage() {
                   type="time"
                   value={newTaskTime}
                   onChange={(e) => setNewTaskTime(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300"
                 />
               </div>
             </div>
@@ -882,7 +1027,7 @@ export default function TodoPage() {
                 <select
                   value={newTaskCategory}
                   onChange={(e) => setNewTaskCategory(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 appearance-none"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 appearance-none"
                 >
                   {["General", "Work", "Personal", "Meeting", "Follow-up", "Documentation", "Research", "Development", "Design", "Testing", "Deployment"].map(
                     (cat) => (
@@ -915,7 +1060,7 @@ export default function TodoPage() {
             <div className="flex justify-end gap-3 w-full">
               <button
                 onClick={() => setIsEditModalOpen(false)}
-                className="px-8 py-2.5 rounded-sm border border-gray-300 text-gray-700 font-bold hover:bg-gray-50 transition-all text-sm"
+                className="px-8 py-2.5 rounded-sm border-2 border-gray-300 text-gray-700 font-bold hover:bg-gray-50 transition-all text-sm"
               >
                 Cancel
               </button>
@@ -939,8 +1084,13 @@ export default function TodoPage() {
                 value={newTask}
                 onChange={(e) => setNewTask(e.target.value)}
                 placeholder="What needs to be done?"
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300"
+                className={`w-full px-4 py-3 border rounded-sm focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 ${newTask.length > 250 ? 'border-red-500 focus:border-red-500' : 'border-gray-200 focus:border-[#FF7B1D]'}`}
               />
+              <div className="flex justify-end mt-1">
+                <span className={`text-[10px] font-bold ${newTask.length > 250 ? 'text-red-500' : 'text-gray-400'}`}>
+                  {newTask.length}/250 characters
+                </span>
+              </div>
             </div>
 
             <div className="group">
@@ -953,7 +1103,7 @@ export default function TodoPage() {
                   <button
                     key={p}
                     onClick={() => setNewTaskPriority(p)}
-                    className={`py-3 rounded-lg font-bold text-[11px] uppercase tracking-widest transition-all border-2
+                    className={`py-3 rounded-sm font-bold text-[11px] uppercase tracking-widest transition-all border
               ${newTaskPriority === p
                         ? p === "high"
                           ? "bg-red-500 text-white border-red-500 shadow-lg shadow-red-500/20"
@@ -980,7 +1130,7 @@ export default function TodoPage() {
                   type="date"
                   value={newTaskDate}
                   onChange={(e) => setNewTaskDate(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300"
                 />
               </div>
 
@@ -993,7 +1143,7 @@ export default function TodoPage() {
                   type="time"
                   value={newTaskTime}
                   onChange={(e) => setNewTaskTime(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300"
                 />
               </div>
             </div>
@@ -1008,7 +1158,7 @@ export default function TodoPage() {
                 <select
                   value={newTaskCategory}
                   onChange={(e) => setNewTaskCategory(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 appearance-none"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 appearance-none"
                 >
                   {["General", "Work", "Personal", "Meeting", "Follow-up", "Documentation", "Research", "Development", "Design", "Testing", "Deployment"].map(cat => (
                     <option key={cat} value={cat}>{cat}</option>
@@ -1092,89 +1242,56 @@ export default function TodoPage() {
           }
         >
           {taskToView && (
-            <div className="space-y-8 text-black bg-white font-primary py-4">
-              {/* Category Icons & Title Section */}
-              <div className="flex flex-col items-center border-b border-gray-100 pb-6">
-                <div className={`w-20 h-20 rounded-full flex items-center justify-center border-4 border-white shadow-md mb-4 ${taskToView.completed ? 'bg-green-100 text-green-600' : 'bg-orange-100 text-[#FF7B1D]'
-                  }`}>
-                  {taskToView.completed ? <CheckCircle size={36} /> : <Clock size={36} />}
+            <div className="space-y-6 text-black bg-white font-primary py-4">
+
+
+              {/* 2. Stats Grid (Moved to Top) */}
+              <div className="grid grid-cols-3 gap-4 border-b border-gray-100 pb-6 px-2">
+                {/* Date */}
+                <div className="bg-orange-50 p-3 rounded-sm border border-orange-100 flex flex-col items-center">
+                  <p className="text-xs text-[#FF7B1D] capitalize font-bold tracking-wide mb-1">Due Date</p>
+                  <p className="text-sm font-black text-gray-800">{new Date(taskToView.due_date).toLocaleDateString()}</p>
                 </div>
-                <h2 className="text-xl font-bold text-gray-900 text-center px-4 leading-tight">
-                  {!showFullTitle && taskToView.title.length > 120 ? `${taskToView.title.substring(0, 120)}...` : taskToView.title}
-                </h2>
-                {taskToView.title.length > 120 && (
-                  <button
-                    onClick={() => setShowFullTitle(!showFullTitle)}
-                    className="mt-2 text-[#FF7B1D] font-bold text-[10px] uppercase tracking-widest hover:text-orange-600 transition-all"
-                  >
-                    {showFullTitle ? 'Show Less' : 'Show More'}
-                  </button>
-                )}
-                <div className="flex gap-3 mt-4">
-                  <span className="px-4 py-1.5 bg-gray-100 text-gray-700 rounded-full text-[11px] font-black uppercase tracking-wider">
+                {/* Time */}
+                <div className="bg-blue-50 p-3 rounded-sm border border-blue-100 flex flex-col items-center">
+                  <p className="text-xs text-[#FF7B1D] capitalize font-bold tracking-wide mb-1">Due Time</p>
+                  <p className="text-sm font-black text-gray-800">{taskToView.due_time?.slice(0, 5) || '--:--'}</p>
+                </div>
+                {/* Status */}
+                <div className={`p-3 rounded-sm border flex flex-col items-center ${taskToView.completed ? 'bg-green-50 border-green-100' : 'bg-gray-50 border-gray-100'}`}>
+                  <p className="text-xs text-[#FF7B1D] capitalize font-bold tracking-wide mb-1">Status</p>
+                  <p className={`text-sm font-black capitalize ${taskToView.completed ? 'text-green-600' : 'text-gray-400'}`}>{taskToView.completed ? 'Completed' : 'Active'}</p>
+                </div>
+              </div>
+
+              {/* 3. Task Title Section with Label */}
+              <div className="space-y-3 px-2">
+                <label className="flex items-center gap-2 text-sm font-black text-gray-800 capitalize tracking-wide">
+                  <FileText size={16} className="text-[#FF7B1D]" />
+                  Task Title
+                </label>
+                <div className="bg-gray-50 p-5 rounded-sm border border-gray-100">
+                  <p className="text-sm font-medium text-gray-600 leading-relaxed max-h-[150px] overflow-y-auto custom-scrollbar">
+                    {taskToView.title}
+                  </p>
+                </div>
+              </div>
+
+              {/* 4. Tags and Timestamp */}
+              <div className="flex flex-col items-center gap-3 pt-2">
+                <div className="flex justify-center gap-2">
+                  <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-bold capitalize tracking-wide border border-gray-200">
                     {taskToView.category || 'General'}
                   </span>
-                  <span className={`px-4 py-1.5 rounded-full text-[11px] font-black uppercase tracking-wider ${taskToView.priority === 'high' ? 'bg-red-100 text-red-700' :
-                    taskToView.priority === 'medium' ? 'bg-orange-100 text-orange-700' :
-                      'bg-green-100 text-green-700'
+                  <span className={`px-3 py-1 rounded-full text-xs font-bold capitalize tracking-wide border ${taskToView.priority === 'high' ? 'bg-red-50 text-red-700 border-red-100' :
+                    taskToView.priority === 'medium' ? 'bg-orange-50 text-orange-700 border-orange-100' :
+                      'bg-green-50 text-green-700 border-green-100'
                     }`}>
                     {taskToView.priority || 'Medium'} Priority
                   </span>
                 </div>
-              </div>
 
-              {/* Stats Grid - Mirroring Notes/Employee theme */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="bg-orange-50 p-4 rounded-sm border border-orange-100 flex flex-col items-center">
-                  <div className="bg-[#FF7B1D] p-2 rounded-sm text-white mb-2 shadow-sm">
-                    <Calendar size={18} />
-                  </div>
-                  <p className="text-xs text-gray-400 uppercase font-bold tracking-widest mb-1">Due Date</p>
-                  <p className="text-base font-black text-gray-800">
-                    {new Date(taskToView.due_date).toLocaleDateString()}
-                  </p>
-                </div>
-
-                <div className="bg-blue-50 p-4 rounded-sm border border-blue-100 flex flex-col items-center">
-                  <div className="bg-blue-600 p-2 rounded-sm text-white mb-2 shadow-sm">
-                    <Clock size={18} />
-                  </div>
-                  <p className="text-xs text-gray-400 uppercase font-bold tracking-widest mb-1">Due Time</p>
-                  <p className="text-base font-black text-gray-800">
-                    {taskToView.due_time?.slice(0, 5) || '--:--'}
-                  </p>
-                </div>
-
-                <div className={`p-4 rounded-sm border flex flex-col items-center transition-all ${taskToView.completed ? 'bg-green-50 border-green-100' : 'bg-gray-50 border-gray-100'
-                  }`}>
-                  <div className={`p-2 rounded-sm text-white mb-2 shadow-sm ${taskToView.completed ? 'bg-green-600' : 'bg-gray-600'
-                    }`}>
-                    <CheckCircle size={18} />
-                  </div>
-                  <p className="text-xs text-gray-400 uppercase font-bold tracking-widest mb-1">Status</p>
-                  <p className={`text-base font-black uppercase ${taskToView.completed ? 'text-green-600' : 'text-gray-400'
-                    }`}>
-                    {taskToView.completed ? 'Completed' : 'Active'}
-                  </p>
-                </div>
-              </div>
-
-              {/* Narrative Content Placeholder */}
-              <div className="bg-gray-50 p-6 rounded-sm border border-gray-100">
-                <h4 className="flex items-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">
-                  <AlertCircle size={14} className="text-orange-500" />
-                  Task Roadmap & Brief
-                </h4>
-                <p className="text-sm text-gray-700 leading-relaxed font-medium">
-                  This task entails completing the outlined objectives by the scheduled deadline.
-                  Maintaining focus on the <span className="text-orange-600 font-bold uppercase tracking-tight">{taskToView.priority}</span> priority
-                  milestone is essential for optimal workflow efficiency.
-                </p>
-              </div>
-
-              {/* Timestamp Info */}
-              <div className="flex items-center justify-center gap-6 text-[10px] text-gray-400 font-black uppercase tracking-widest pt-4 border-t border-gray-50">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">
                   <Clock size={12} />
                   Last Updated: {new Date(taskToView.updated_at || taskToView.created_at).toLocaleString()}
                 </div>

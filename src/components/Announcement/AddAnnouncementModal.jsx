@@ -52,6 +52,16 @@ const AddAnnouncementModal = ({ isOpen, onClose }) => {
             return;
         }
 
+        if (title.length > 100) {
+            toast.error("Title exceeds 100 characters limit");
+            return;
+        }
+
+        if (content.length > 1000) {
+            toast.error("Content exceeds 1000 characters limit");
+            return;
+        }
+
         try {
             await createAnnouncement({ title, content, author, category, date }).unwrap();
             toast.success("Announcement published successfully!");
@@ -120,9 +130,7 @@ const AddAnnouncementModal = ({ isOpen, onClose }) => {
             >
                 {isLoading ? (
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                ) : (
-                    <Send size={18} />
-                )}
+                ) : null}
                 {isLoading ? "Publishing..." : "Publish Announcement"}
             </button>
         </>
@@ -149,9 +157,14 @@ const AddAnnouncementModal = ({ isOpen, onClose }) => {
                         type="text"
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
-                        className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300"
+                        className={`w-full px-4 py-3 border rounded-sm outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 ${title.length > 100 ? "border-red-500 focus:border-red-500" : "border-gray-200 focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20"}`}
                         placeholder="Enter announcement title"
                     />
+                    <div className="flex justify-end mt-1">
+                        <span className={`text-xs font-bold ${title.length > 100 ? "text-red-500" : "text-gray-400"}`}>
+                            {title.length}/100
+                        </span>
+                    </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -165,7 +178,8 @@ const AddAnnouncementModal = ({ isOpen, onClose }) => {
                             type="text"
                             value={author}
                             onChange={(e) => setAuthor(e.target.value)}
-                            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300"
+                            disabled
+                            className="w-full px-4 py-3 border border-gray-200 rounded-sm outline-none transition-all text-sm text-gray-500 bg-gray-100 cursor-not-allowed"
                             placeholder="e.g. HR Department"
                         />
                     </div>
@@ -304,9 +318,14 @@ const AddAnnouncementModal = ({ isOpen, onClose }) => {
                         rows="6"
                         value={content}
                         onChange={(e) => setContent(e.target.value)}
-                        className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 resize-none"
+                        className={`w-full px-4 py-3 border rounded-sm outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 resize-none ${content.length > 1000 ? "border-red-500 focus:border-red-500" : "border-gray-200 focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20"}`}
                         placeholder="Write your announcement content here..."
                     ></textarea>
+                    <div className="flex justify-end mt-1">
+                        <span className={`text-xs font-bold ${content.length > 1000 ? "text-red-500" : "text-gray-400"}`}>
+                            {content.length}/1000
+                        </span>
+                    </div>
                 </div>
             </div>
         </Modal>

@@ -757,7 +757,7 @@ export default function QuotationPage() {
                 </h1>
                 <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
                   <Home className="text-gray-700" size={14} />
-                  <span className="text-gray-400"></span> CRM /{" "}
+                  <span className="text-gray-400"></span> Additional /{" "}
                   <span className="text-[#FF7B1D] font-medium">
                     All Quotations
                   </span>

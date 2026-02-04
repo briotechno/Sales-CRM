@@ -45,9 +45,9 @@ const ViewExpenseModal = ({ isOpen, onClose, expense }) => {
         >
             <div className="flex flex-col h-full">
                 {/* Header Summary Card */}
-                <div className="bg-gradient-to-r from-orange-50 to-white p-6 rounded-xl border border-orange-100 mb-6 flex items-start justify-between">
+                <div className="bg-gradient-to-r from-orange-50 to-white p-6 rounded-sm border border-orange-100 mb-6 flex items-start justify-between">
                     <div>
-                        <h3 className="text-xl font-bold text-gray-800 mb-1">{expense.title}</h3>
+                        <h3 className="text-xl font-bold text-gray-800 mb-1">Expense Summary</h3>
                         <div className="flex items-center gap-3 text-gray-500 text-sm">
                             <span className="flex items-center gap-1">
                                 <Calendar size={14} />
@@ -69,11 +69,24 @@ const ViewExpenseModal = ({ isOpen, onClose, expense }) => {
                     </div>
                 </div>
 
+                {/* Description Section */}
+                <div className="mb-6 p-4 bg-gray-50 rounded-sm border border-gray-100">
+                    <h4 className="text-sm font-semibold text-gray-500 mb-2 flex items-center gap-2">
+                        <FileText size={16} />
+                        Description
+                    </h4>
+                    <div className="max-h-24 overflow-y-auto pr-2 custom-scrollbar">
+                        <p className="text-gray-800 text-base leading-relaxed font-normal whitespace-pre-wrap">
+                            {expense.title}
+                        </p>
+                    </div>
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                     {/* Category Card */}
-                    <div className="p-4 bg-white border border-gray-100 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                    <div className="p-4 bg-white border border-gray-100 rounded-sm shadow-sm hover:shadow-md transition-shadow">
                         <div className="flex items-center gap-3 mb-2">
-                            <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
+                            <div className="p-2 bg-blue-50 text-blue-600 rounded-sm">
                                 <Tag size={20} />
                             </div>
                             <span className="text-sm font-medium text-gray-500">Category</span>
@@ -82,9 +95,9 @@ const ViewExpenseModal = ({ isOpen, onClose, expense }) => {
                     </div>
 
                     {/* Created Date Card */}
-                    <div className="p-4 bg-white border border-gray-100 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                    <div className="p-4 bg-white border border-gray-100 rounded-sm shadow-sm hover:shadow-md transition-shadow">
                         <div className="flex items-center gap-3 mb-2">
-                            <div className="p-2 bg-purple-50 text-purple-600 rounded-lg">
+                            <div className="p-2 bg-purple-50 text-purple-600 rounded-sm">
                                 <Clock size={20} />
                             </div>
                             <span className="text-sm font-medium text-gray-500">Created At</span>
@@ -95,9 +108,9 @@ const ViewExpenseModal = ({ isOpen, onClose, expense }) => {
                     </div>
 
                     {/* Receipt Status Card */}
-                    <div className="p-4 bg-white border border-gray-100 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                    <div className="p-4 bg-white border border-gray-100 rounded-sm shadow-sm hover:shadow-md transition-shadow">
                         <div className="flex items-center gap-3 mb-2">
-                            <div className="p-2 bg-green-50 text-green-600 rounded-lg">
+                            <div className="p-2 bg-green-50 text-green-600 rounded-sm">
                                 <Receipt size={20} />
                             </div>
                             <span className="text-sm font-medium text-gray-500">Receipt</span>
@@ -127,7 +140,7 @@ const ViewExpenseModal = ({ isOpen, onClose, expense }) => {
                         )}
                     </div>
 
-                    <div className="bg-gray-50 rounded-xl border border-gray-200 overflow-hidden min-h-[200px] flex items-center justify-center relative group">
+                    <div className="bg-gray-50 rounded-sm border border-gray-200 overflow-hidden min-h-[200px] flex items-center justify-center relative group">
                         {expense.receipt_full_url ? (
                             expense.receipt_full_url.toLowerCase().endsWith('.pdf') ? (
                                 <iframe
@@ -140,7 +153,7 @@ const ViewExpenseModal = ({ isOpen, onClose, expense }) => {
                                     <img
                                         src={expense.receipt_full_url}
                                         alt="Receipt"
-                                        className="max-h-[400px] max-w-full object-contain shadow-sm rounded-md"
+                                        className="max-h-[400px] max-w-full object-contain shadow-sm rounded-sm"
                                     />
                                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors pointer-events-none" />
                                 </div>

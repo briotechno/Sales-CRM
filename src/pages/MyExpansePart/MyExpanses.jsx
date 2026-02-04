@@ -26,6 +26,7 @@ export default function ExpensePage() {
   const [categoryFilter, setCategoryFilter] = useState("All");
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
+  const [tempCategory, setTempCategory] = useState("All");
   const [isDateFilterOpen, setIsDateFilterOpen] = useState(false);
   const [isCategoryFilterOpen, setIsCategoryFilterOpen] = useState(false);
   const dateDropdownRef = useRef(null);
@@ -162,6 +163,7 @@ export default function ExpensePage() {
                       if (hasActiveFilters) {
                         clearAllFilters();
                       } else {
+                        setTempCategory(categoryFilter);
                         setIsCategoryFilterOpen(!isCategoryFilterOpen);
                       }
                     }}
@@ -174,78 +176,59 @@ export default function ExpensePage() {
                   </button>
 
                   {isCategoryFilterOpen && (
-                    <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-xl z-50 animate-fadeIn overflow-hidden">
-                      <div className="p-3 border-b border-gray-100 bg-gray-50">
-                        <span className="text-sm font-bold text-gray-700 tracking-wide">Categories</span>
-                      </div>
-                      <div className="py-1">
-                        {["All", "Meals", "Travel", "Supplies", "Training", "Software", "Other"].map((option) => (
-                          <button
-                            key={option}
-                            onClick={() => {
-                              setCategoryFilter(option);
-                              setIsCategoryFilterOpen(false);
-                              setCurrentPage(1);
-                            }}
-                            className={`block w-full text-left px-4 py-2 text-sm transition-colors ${categoryFilter === option
-                              ? "bg-orange-50 text-orange-600 font-bold"
-                              : "text-gray-700 hover:bg-gray-50"
-                              }`}
-                          >
-                            {option}
-                          </button>
-                        ))}
+                    <div className="absolute right-0 mt-2 w-[350px] bg-white border border-gray-200 rounded-sm shadow-2xl z-50 animate-fadeIn overflow-hidden">
+                      {/* Header */}
+                      <div className="p-4 bg-gray-50 border-b flex justify-between items-center">
+                        <span className="text-sm font-bold text-gray-800">Filter Options</span>
+                        <button
+                          onClick={() => {
+                            setTempCategory("All");
+                          }}
+                          className="text-[10px] font-bold text-orange-600 hover:underline hover:text-orange-700 capitalize"
+                        >
+                          Reset all
+                        </button>
                       </div>
 
-                      <div className="p-3 border-t border-b border-gray-100 bg-gray-50">
-                        <span className="text-sm font-bold text-gray-700 tracking-wide">Date Range</span>
-                      </div>
-                      <div className="py-1">
-                        {["All", "Today", "Yesterday", "Last 7 Days", "This Month", "Custom"].map((option) => (
-                          <div key={option}>
-                            <button
-                              key={option}
-                              onClick={() => {
-                                setDateFilter(option);
-                                if (option !== "Custom") {
-                                  setIsCategoryFilterOpen(false);
-                                  setCurrentPage(1);
-                                }
-                              }}
-                              className={`block w-full text-left px-4 py-2 text-sm transition-colors ${dateFilter === option
-                                ? "bg-orange-50 text-orange-600 font-bold"
-                                : "text-gray-700 hover:bg-gray-50"
-                                }`}
+                      <div className="p-5">
+                        {/* Column: Category */}
+                        <div className="space-y-4">
+                          <span className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-2 border-b pb-1">Category</span>
+                          <div className="relative">
+                            <select
+                              value={tempCategory}
+                              onChange={(e) => setTempCategory(e.target.value)}
+                              className="w-full px-3 py-2.5 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-1 focus:ring-orange-500/20 outline-none transition-all text-xs font-semibold text-gray-700 bg-gray-50 hover:bg-white"
                             >
-                              {option}
-                            </button>
-                            {option === "Custom" && dateFilter === "Custom" && (
-                              <div className="px-4 py-3 space-y-2 border-t border-gray-50 bg-gray-50/50">
-                                <input
-                                  type="date"
-                                  value={customStart}
-                                  onChange={(e) => setCustomStart(e.target.value)}
-                                  className="w-full px-2 py-2 border border-gray-300 rounded-sm text-xs focus:outline-none focus:ring-1 focus:ring-orange-500"
-                                />
-                                <input
-                                  type="date"
-                                  value={customEnd}
-                                  onChange={(e) => setCustomEnd(e.target.value)}
-                                  className="w-full px-2 py-2 border border-gray-300 rounded-sm text-xs focus:outline-none focus:ring-1 focus:ring-orange-500"
-                                />
-                                <button
-                                  onClick={() => {
-                                    setIsCategoryFilterOpen(false);
-                                    setCurrentPage(1);
-                                  }}
-                                  className="w-full bg-orange-500 text-white text-[10px] font-bold py-2 rounded-sm uppercase tracking-wider"
-                                >
-                                  Apply
-                                </button>
-                              </div>
-                            )}
+                              <option value="All">All Categories</option>
+                              {["Meals", "Travel", "Supplies", "Training", "Software", "Other"].map((cat) => (
+                                <option key={cat} value={cat}>
+                                  {cat}
+                                </option>
+                              ))}
+                            </select>
                           </div>
-                        ))}
+                        </div>
+                      </div>
+
+                      {/* Filter Actions */}
+                      <div className="p-4 bg-gray-50 border-t flex gap-3">
+                        <button
+                          onClick={() => setIsCategoryFilterOpen(false)}
+                          className="flex-1 py-2.5 text-[11px] font-bold text-gray-500 capitalize tracking-wider hover:bg-gray-200 transition-colors rounded-sm border border-gray-200 bg-white"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={() => {
+                            setCategoryFilter(tempCategory);
+                            setCurrentPage(1);
+                            setIsCategoryFilterOpen(false);
+                          }}
+                          className="flex-1 py-2.5 text-[11px] font-bold text-white capitalize tracking-wider bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 transition-all rounded-sm shadow-sm"
+                        >
+                          Apply Filters
+                        </button>
                       </div>
                     </div>
                   )}
@@ -305,11 +288,11 @@ export default function ExpensePage() {
               <table className="w-full border-collapse">
                 <thead>
                   <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm">
-                    <th className="py-3 px-4 font-semibold text-left">Date</th>
                     <th className="py-3 px-4 font-semibold text-left">Description</th>
                     <th className="py-3 px-4 font-semibold text-left">Category</th>
                     <th className="py-3 px-4 font-semibold text-left">Amount</th>
                     <th className="py-3 px-4 font-semibold text-left">Receipt</th>
+                    <th className="py-3 px-4 font-semibold text-left">Date</th>
                     <th className="py-3 px-4 font-semibold text-right">Actions</th>
                   </tr>
                 </thead>
@@ -331,16 +314,10 @@ export default function ExpensePage() {
                           }`}
                       >
                         <td className="px-4 py-3 text-left">
-                          <div className="flex items-center gap-2 text-gray-600 text-sm font-medium whitespace-nowrap">
-                            <Calendar size={14} className="text-orange-500" />
-                            {new Date(expense.date).toLocaleDateString()}
-                          </div>
+                          <div className="text-base font-normal text-gray-900 truncate max-w-xs capitalize">{expense.title}</div>
                         </td>
                         <td className="px-4 py-3 text-left">
-                          <div className="text-base font-normal text-gray-900 truncate max-w-xs">{expense.title}</div>
-                        </td>
-                        <td className="px-4 py-3 text-left">
-                          <div className="text-sm text-gray-600 font-medium whitespace-nowrap">
+                          <div className="text-sm text-gray-600 font-medium whitespace-nowrap capitalize">
                             {expense.category}
                           </div>
                         </td>
@@ -351,16 +328,22 @@ export default function ExpensePage() {
                         </td>
                         <td className="px-4 py-3 text-left">
                           {expense.receipt_url ? (
-                            <span className="text-green-600 font-medium flex items-center gap-1 text-sm whitespace-nowrap">
+                            <span className="text-green-600 font-medium flex items-center gap-1 text-sm whitespace-nowrap capitalize">
                               <Receipt size={14} />
                               Yes
                             </span>
                           ) : (
-                            <span className="text-red-500 font-medium flex items-center gap-1 text-sm whitespace-nowrap">
+                            <span className="text-red-500 font-medium flex items-center gap-1 text-sm whitespace-nowrap capitalize">
                               <X size={14} />
                               No
                             </span>
                           )}
+                        </td>
+                        <td className="px-4 py-3 text-left">
+                          <div className="flex items-center gap-2 text-gray-600 text-sm font-medium whitespace-nowrap">
+                            <Calendar size={14} className="text-orange-500" />
+                            {new Date(expense.date).toLocaleDateString()}
+                          </div>
                         </td>
                         <td className="px-4 py-3 text-right">
                           <div className="flex items-center justify-end gap-3">
@@ -391,16 +374,34 @@ export default function ExpensePage() {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="6" className="text-center py-10">
-                        <div className="bg-orange-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3">
-                          <Receipt size={32} className="text-orange-500" />
+                      <td colSpan="6" className="text-center py-16">
+                        <div className="flex flex-col items-center gap-3">
+                          <Receipt size={48} className="text-gray-200" />
+                          <h3 className="text-lg font-bold text-gray-800 mb-1">
+                            {hasActiveFilters ? "No expenses found" : "No expenses recorded"}
+                          </h3>
+                          <p className="text-gray-500 text-sm mb-4">
+                            {hasActiveFilters
+                              ? "No expenses match your filters. Try clearing them to see all data."
+                              : "Start tracking your spending by adding your first expense."}
+                          </p>
+                          {hasActiveFilters ? (
+                            <button
+                              onClick={clearAllFilters}
+                              className="px-6 py-2 border-2 border-[#FF7B1D] text-[#FF7B1D] font-bold rounded-sm hover:bg-orange-50 transition-all text-xs uppercase tracking-wider"
+                            >
+                              Clear Filter
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => setIsAddModalOpen(true)}
+                              className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl inline-flex items-center gap-2 font-semibold"
+                            >
+                              <Plus size={20} />
+                              Create First Expense
+                            </button>
+                          )}
                         </div>
-                        <h3 className="text-lg font-bold text-gray-800 mb-1">
-                          No expenses found
-                        </h3>
-                        <p className="text-gray-500 text-sm">
-                          {hasActiveFilters ? "No expenses match your filters" : "Add your first expense to start tracking"}
-                        </p>
                       </td>
                     </tr>
                   )}

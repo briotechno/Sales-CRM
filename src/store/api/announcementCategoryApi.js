@@ -1,4 +1,5 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { announcementApi } from './announcementApi';
 
 export const announcementCategoryApi = createApi({
     reducerPath: 'announcementCategoryApi',
@@ -42,6 +43,15 @@ export const announcementCategoryApi = createApi({
                 url: `/${id}`,
                 method: 'DELETE',
             }),
+            async onQueryStarted(id, { dispatch, queryFulfilled }) {
+                try {
+                    await queryFulfilled;
+                    // Invalidate Announcement tag from announcementApi to refresh the main table
+                    dispatch(announcementApi.util.invalidateTags(['Announcement']));
+                } catch (err) {
+                    console.error('Failed to invalidate Announcement tag:', err);
+                }
+            },
             invalidatesTags: ['AnnouncementCategory'],
         }),
     }),

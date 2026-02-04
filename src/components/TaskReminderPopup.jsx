@@ -38,17 +38,39 @@ export default function TaskReminderPopup() {
     });
 
     // Filter pending tasks
-    const pendingTasks =
-        data?.tasks?.filter((t) => {
+    // Filter pending tasks
+    const pendingTasks = (data?.tasks || [])
+        .filter((t) => {
             if (t.completed) return false;
-            if (!t.due_date) return true;
+            if (!t.due_date) return false;
 
-            const due = new Date(t.due_date);
-            const end = new Date(endDate);
-            end.setHours(23, 59, 59, 999);
+            const now = new Date();
+            const dueDate = new Date(t.due_date);
 
-            return due <= end;
-        }) || [];
+            // Compare Dates (Day level)
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            const taskDate = new Date(dueDate);
+            taskDate.setHours(0, 0, 0, 0);
+
+            if (taskDate < today) return true; // Overdue
+            if (taskDate > today) return false; // Future Date
+
+            // If Today, check time
+            if (!t.due_time) return true; // No time set = Due sometime today -> Show
+
+            const [hours, minutes] = t.due_time.split(":").map(Number);
+            const dueTime = new Date();
+            dueTime.setHours(hours, minutes, 0, 0);
+
+            return dueTime <= now; // Show if due time has passed
+        })
+        .sort((a, b) => {
+            const dateA = new Date(`${a.due_date}T${a.due_time || "00:00"}`);
+            const dateB = new Date(`${b.due_date}T${b.due_time || "00:00"}`);
+            return dateA - dateB;
+        });
 
     // Play notification sound
     const playNotificationSound = (isHigh) => {
