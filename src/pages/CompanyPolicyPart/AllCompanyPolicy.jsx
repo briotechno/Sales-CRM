@@ -105,6 +105,7 @@ const DeletePolicyModal = ({ isOpen, onClose, onConfirm, isLoading, policyTitle 
 };
 
 export default function CompanyPolicy() {
+  const today = new Date().toISOString().split('T')[0];
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
@@ -190,16 +191,15 @@ export default function CompanyPolicy() {
     "Equal Opportunity & Diversity"
   ];
 
-  const statuses = ["Active", "Under Review", "Archived"];
+  const statuses = ["Active", "Inactive"];
 
   // Calculate stats
   const getStats = () => {
-    if (!policiesData) return { total: 0, active: 0, underReview: 0, archived: 0 };
+    if (!policiesData) return { total: 0, active: 0, inactive: 0 };
     return {
       total: policiesData.length,
       active: policiesData.filter((p) => p.status === "Active").length,
-      underReview: policiesData.filter((p) => p.status === "Under Review").length,
-      archived: policiesData.filter((p) => p.status === "Archived").length,
+      inactive: policiesData.filter((p) => p.status === "Inactive").length,
     };
   };
 
@@ -458,7 +458,7 @@ export default function CompanyPolicy() {
                         <span className="text-sm font-bold text-gray-700 tracking-wide">status</span>
                       </div>
                       <div className="py-1">
-                        {["All", "Active", "Under Review", "Archived"].map((status) => (
+                        {["All", "Active", "Inactive"].map((status) => (
                           <button
                             key={status}
                             onClick={() => {
@@ -506,7 +506,7 @@ export default function CompanyPolicy() {
 
         <div className="max-w-8xl mx-auto p-4 pt-0 mt-2">
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-3">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
             <NumberCard
               title={"Total Policies"}
               number={stats.total || "0"}
@@ -522,18 +522,11 @@ export default function CompanyPolicy() {
               lineBorderClass={"border-green-500"}
             />
             <NumberCard
-              title={"Under Review"}
-              number={stats.underReview || "0"}
-              icon={<View className="text-orange-600" size={24} />}
-              iconBgColor={"bg-orange-100"}
-              lineBorderClass={"border-orange-500"}
-            />
-            <NumberCard
-              title={"Archived"}
-              number={stats.archived || "0"}
-              icon={<Archive className="text-purple-600" size={24} />}
-              iconBgColor={"bg-purple-100"}
-              lineBorderClass={"border-purple-500"}
+              title={"Inactive"}
+              number={stats.inactive || "0"}
+              icon={<Archive className="text-red-600" size={24} />}
+              iconBgColor={"bg-red-100"}
+              lineBorderClass={"border-red-500"}
             />
           </div>
 
@@ -617,9 +610,7 @@ export default function CompanyPolicy() {
                         <span
                           className={`px-3 py-1 rounded-sm text-[10px] font-bold border uppercase tracking-wider ${policy.status === "Active"
                             ? "bg-green-50 text-green-700 border-green-200"
-                            : policy.status === "Under Review"
-                              ? "bg-yellow-50 text-yellow-700 border-yellow-200"
-                              : "bg-red-50 text-red-700 border-red-200"
+                            : "bg-red-50 text-red-700 border-red-200"
                             }`}
                         >
                           {policy.status}
@@ -777,6 +768,7 @@ export default function CompanyPolicy() {
                       <input
                         type="date"
                         value={formData.effective_date}
+                        min={today}
                         onChange={(e) => setFormData({ ...formData, effective_date: e.target.value })}
                         className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 shadow-sm font-medium"
                       />
@@ -788,6 +780,7 @@ export default function CompanyPolicy() {
                       <input
                         type="date"
                         value={formData.review_date}
+                        min={today}
                         onChange={(e) => setFormData({ ...formData, review_date: e.target.value })}
                         className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 shadow-sm font-medium"
                       />
@@ -811,8 +804,8 @@ export default function CompanyPolicy() {
                       <input
                         type="text"
                         value={formData.author}
-                        onChange={(e) => setFormData({ ...formData, author: e.target.value })}
-                        className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 shadow-sm font-medium"
+                        disabled
+                        className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-gray-100 cursor-not-allowed shadow-sm font-medium"
                         placeholder="Department or author name"
                       />
                     </div>
@@ -907,6 +900,7 @@ export default function CompanyPolicy() {
                       <input
                         type="date"
                         value={formData.effective_date}
+                        min={today}
                         onChange={(e) => setFormData({ ...formData, effective_date: e.target.value })}
                         className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 shadow-sm font-medium"
                       />
@@ -918,6 +912,7 @@ export default function CompanyPolicy() {
                       <input
                         type="date"
                         value={formData.review_date}
+                        min={today}
                         onChange={(e) => setFormData({ ...formData, review_date: e.target.value })}
                         className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 shadow-sm font-medium"
                       />
@@ -957,8 +952,8 @@ export default function CompanyPolicy() {
                       <input
                         type="text"
                         value={formData.author}
-                        onChange={(e) => setFormData({ ...formData, author: e.target.value })}
-                        className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 shadow-sm font-medium"
+                        disabled
+                        className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-gray-100 cursor-not-allowed shadow-sm font-medium"
                         placeholder="Department or author name"
                       />
                     </div>

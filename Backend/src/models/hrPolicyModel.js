@@ -50,7 +50,7 @@ const HRPolicy = {
         let query = `UPDATE hr_policies SET 
             title = ?, category = ?, description = ?, effective_date = ?, review_date = ?, 
             version = ?, department = ?, applicable_to = ?, status = ?`;
-        let params = [title, category, description, effective_date, review_date, version, department, applicable_to, status];
+        let params = [title, category, description, effective_date, review_date, version, department, applicable_to, status || 'Active'];
 
         if (document_path) {
             query += ', document_path = ?';

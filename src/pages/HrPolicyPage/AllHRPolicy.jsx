@@ -110,7 +110,7 @@ const DeleteHrModal = ({ isOpen, onClose, onConfirm, isLoading, policyTitle }) =
 };
 
 export default function HRPolicy() {
-  const [activeTab, setActiveTab] = useState("All");
+  const today = new Date().toISOString().split('T')[0];
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
@@ -173,7 +173,7 @@ export default function HRPolicy() {
     isError,
   } = useGetHRPoliciesQuery({
     category: filterCategory,
-    status: filterStatus === "All" ? activeTab : filterStatus,
+    status: filterStatus,
     search: searchTerm,
     department: filterDepartment,
   });
@@ -206,25 +206,22 @@ export default function HRPolicy() {
     "Equal Opportunity & Diversity"
   ];
 
-  const statuses = ["Active", "Under Review", "Archived"];
+  const statuses = ["Active", "Inactive"];
 
   // Calculate stats
   const getStats = () => {
-    if (!policiesData) return { total: 0, active: 0, underReview: 0, archived: 0 };
+    if (!policiesData) return { total: 0, active: 0, inactive: 0 };
     return {
       total: policiesData.length,
       active: policiesData.filter((p) => p.status === "Active").length,
-      underReview: policiesData.filter((p) => p.status === "Under Review").length,
-      archived: policiesData.filter((p) => p.status === "Archived").length,
+      inactive: policiesData.filter((p) => p.status === "Inactive").length,
     };
   };
 
   const stats = getStats();
 
-  // Filter policies based on active tab
-  const filteredPolicies = policiesData
-    ? policiesData.filter((p) => activeTab === "All" || p.status === activeTab)
-    : [];
+  // Filter policies based on status
+  const filteredPolicies = policiesData || [];
 
   // Pagination
   const totalPages = Math.ceil(filteredPolicies.length / itemsPerPage);
@@ -645,7 +642,7 @@ export default function HRPolicy() {
 
         <div className="max-w-8xl mx-auto p-4 pt-0 mt-2">
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-3">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
             <NumberCard
               title={"Total Policies"}
               number={stats.total || "0"}
@@ -661,38 +658,12 @@ export default function HRPolicy() {
               lineBorderClass={"border-green-500"}
             />
             <NumberCard
-              title={"Under Review"}
-              number={stats.underReview || "0"}
-              icon={<View className="text-orange-600" size={24} />}
-              iconBgColor={"bg-orange-100"}
-              lineBorderClass={"border-orange-500"}
+              title={"Inactive"}
+              number={stats.inactive || "0"}
+              icon={<Archive className="text-red-600" size={24} />}
+              iconBgColor={"bg-red-100"}
+              lineBorderClass={"border-red-500"}
             />
-            <NumberCard
-              title={"Archived"}
-              number={stats.archived || "0"}
-              icon={<Archive className="text-purple-600" size={24} />}
-              iconBgColor={"bg-purple-100"}
-              lineBorderClass={"border-purple-500"}
-            />
-          </div>
-
-          {/* Tabs */}
-          <div className="flex gap-8 mb-4 border-b border-gray-200">
-            {["All", "Active", "Under Review", "Archived"].map((tab) => (
-              <button
-                key={tab}
-                onClick={() => {
-                  setActiveTab(tab);
-                  setCurrentPage(1);
-                }}
-                className={`pb-3 font-bold transition-colors text-sm ${activeTab === tab
-                  ? "text-orange-500 border-b-2 border-orange-500"
-                  : "text-gray-500 hover:text-gray-900"
-                  }`}
-              >
-                {tab}
-              </button>
-            ))}
           </div>
 
           {/* Table */}
@@ -775,9 +746,7 @@ export default function HRPolicy() {
                         <span
                           className={`px-3 py-1 rounded-sm text-[10px] font-bold border uppercase tracking-wider ${policy.status === "Active"
                             ? "bg-green-50 text-green-700 border-green-200"
-                            : policy.status === "Under Review"
-                              ? "bg-yellow-50 text-yellow-700 border-yellow-200"
-                              : "bg-red-50 text-red-700 border-red-200"
+                            : "bg-red-50 text-red-700 border-red-200"
                             }`}
                         >
                           {policy.status}
@@ -938,6 +907,7 @@ export default function HRPolicy() {
                         <input
                           type="date"
                           value={formData.effective_date}
+                          min={today}
                           onChange={(e) => setFormData({ ...formData, effective_date: e.target.value })}
                           className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 shadow-sm font-medium"
                         />
@@ -949,6 +919,7 @@ export default function HRPolicy() {
                         <input
                           type="date"
                           value={formData.review_date}
+                          min={today}
                           onChange={(e) => setFormData({ ...formData, review_date: e.target.value })}
                           className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 shadow-sm font-medium"
                         />
@@ -972,8 +943,8 @@ export default function HRPolicy() {
                         <input
                           type="text"
                           value={formData.author}
-                          onChange={(e) => setFormData({ ...formData, author: e.target.value })}
-                          className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 shadow-sm font-medium"
+                          disabled
+                          className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-gray-100 cursor-not-allowed shadow-sm font-medium"
                           placeholder="Department or author name"
                         />
                       </div>
@@ -1145,6 +1116,7 @@ export default function HRPolicy() {
                         <input
                           type="date"
                           value={formData.effective_date}
+                          min={today}
                           onChange={(e) => setFormData({ ...formData, effective_date: e.target.value })}
                           className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 shadow-sm font-medium"
                         />
@@ -1156,6 +1128,7 @@ export default function HRPolicy() {
                         <input
                           type="date"
                           value={formData.review_date}
+                          min={today}
                           onChange={(e) => setFormData({ ...formData, review_date: e.target.value })}
                           className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 shadow-sm font-medium"
                         />
@@ -1195,8 +1168,8 @@ export default function HRPolicy() {
                         <input
                           type="text"
                           value={formData.author}
-                          onChange={(e) => setFormData({ ...formData, author: e.target.value })}
-                          className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 shadow-sm font-medium"
+                          disabled
+                          className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-gray-100 cursor-not-allowed shadow-sm font-medium"
                           placeholder="Department or author name"
                         />
                       </div>
@@ -1378,9 +1351,9 @@ export default function HRPolicy() {
 
                       <div className="bg-green-50 p-4 rounded-sm border border-green-100 flex flex-col items-center text-center group hover:shadow-md transition-shadow">
                         <div className="bg-green-600 p-2 rounded-sm text-white mb-2 group-hover:scale-110 transition-transform">
-                          {selectedPolicy.status === "Active" ? <CheckCircle size={20} /> : <AlertTriangle size={20} />}
+                          {selectedPolicy.status === "Active" ? <CheckCircle size={20} /> : <X size={20} />}
                         </div>
-                        <span className={`text-lg font-bold ${selectedPolicy.status === "Active" ? "text-green-900" : "text-yellow-900"}`}>
+                        <span className={`text-lg font-bold ${selectedPolicy.status === "Active" ? "text-green-900" : "text-red-900"}`}>
                           {selectedPolicy.status}
                         </span>
                         <span className="text-xs font-semibold text-green-600 uppercase tracking-widest mt-1">Status</span>

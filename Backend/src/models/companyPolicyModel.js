@@ -47,7 +47,7 @@ const CompanyPolicy = {
             title = ?, category = ?, effective_date = ?, review_date = ?, 
             version = ?, description = ?, author = ?, status = ? 
             WHERE id = ? AND user_id = ?`,
-            [title, category, effective_date, review_date, version, description, author, status, id, userId]
+            [title, category, effective_date, review_date, version, description, author, status || 'Active', id, userId]
         );
     },
 
