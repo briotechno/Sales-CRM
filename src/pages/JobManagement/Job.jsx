@@ -951,7 +951,17 @@ export default function JobManagement() {
                               <option value="text">Text Input</option>
                               <option value="textarea">Multi-line Text</option>
                               <option value="number">Number</option>
+                              <option value="email">Email Address</option>
+                              <option value="tel">Phone Number</option>
+                              <option value="url">Website URL</option>
+                              <option value="password">Password</option>
                               <option value="date">Date Picker</option>
+                              <option value="time">Time Picker</option>
+                              <option value="datetime-local">Date & Time</option>
+                              <option value="file">File Upload</option>
+                              <option value="checkbox">Checkbox</option>
+                              <option value="color">Color Picker</option>
+                              <option value="range">Range Slider</option>
                             </select>
                           </div>
                           <div className="flex items-end">
