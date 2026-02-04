@@ -55,6 +55,9 @@ import usePermission from "../../hooks/usePermission";
 import ViewCatalogModal from "./ViewCatalogModal";
 import { useGetBusinessInfoQuery } from "../../store/api/businessApi";
 
+const DESC_LIMIT = 1500;
+const CAT_LIMIT = 100;
+
 export default function CatalogsPage() {
   const navigate = useNavigate();
   const [showAddModal, setShowAddModal] = useState(false);
@@ -124,7 +127,9 @@ export default function CatalogsPage() {
   });
 
   const handleInputChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    if (name === 'description' && value.length > DESC_LIMIT) return;
+    setFormData({ ...formData, [name]: value });
   };
 
   const handleImageChange = (e) => {
@@ -186,6 +191,11 @@ export default function CatalogsPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (formData.description.length > DESC_LIMIT) {
+      toast.error(`Description cannot exceed ${DESC_LIMIT} characters`);
+      return;
+    }
+
     try {
       const data = new FormData();
 
@@ -409,9 +419,6 @@ export default function CatalogsPage() {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsFilterOpen(false);
       }
-      if (dateDropdownRef.current && !dateDropdownRef.current.contains(event.target)) {
-        setIsDateFilterOpen(false);
-      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -427,6 +434,11 @@ export default function CatalogsPage() {
   }, []);
 
   const handleAddNewCategory = async () => {
+    if (newCategoryName.length > CAT_LIMIT) {
+      toast.error(`Category name cannot exceed ${CAT_LIMIT} characters`);
+      return;
+    }
+
     if (!newCategoryName.trim()) {
       toast.error("Category name cannot be empty");
       return;
@@ -457,6 +469,18 @@ export default function CatalogsPage() {
     } catch (err) {
       toast.error("Error deleting category: " + (err?.data?.message || err.message));
     }
+  };
+
+  const formatCurrencyShorthand = (value) => {
+    const num = Number(value);
+    if (isNaN(num) || num === 0) return "0";
+
+    if (num >= 10000000) { // 1 Crore = 10,000,000
+      return (num / 10000000).toLocaleString(undefined, { maximumFractionDigits: 2 }) + " Cr";
+    } else if (num >= 100000) { // 1 Lakh = 100,000
+      return (num / 100000).toLocaleString(undefined, { maximumFractionDigits: 2 }) + " Lakh";
+    }
+    return num.toLocaleString();
   };
 
   const indexOfFirstItem = (currentPage - 1) * itemsPerPage;
@@ -720,11 +744,22 @@ export default function CatalogsPage() {
                         {(currentPage - 1) * itemsPerPage + index + 1}
                       </td>
                       <td className="py-3 px-4 text-left">
-                        <img
-                          src={catalog.image}
-                          alt={catalog.name}
-                          className="w-12 h-12 rounded-md border object-cover shadow-sm"
-                        />
+                        <div className="w-12 h-12 rounded-md border border-gray-100 object-cover shadow-sm overflow-hidden flex items-center justify-center bg-gray-50">
+                          {catalog.image ? (
+                            <img
+                              src={catalog.image}
+                              alt={catalog.name}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.style.display = 'none';
+                                e.target.parentNode.innerHTML = '<div class="w-full h-full flex items-center justify-center text-gray-400"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-package"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg></div>';
+                              }}
+                            />
+                          ) : (
+                            <Package size={20} className="text-gray-400" />
+                          )}
+                        </div>
                       </td>
                       <td className="py-3 px-4 font-medium text-orange-600 text-left">{catalog.catalog_id}</td>
                       <td className="py-3 px-4 font-semibold text-gray-800 text-left max-w-sm">
@@ -736,10 +771,10 @@ export default function CatalogsPage() {
                         {catalog.category || "General"}
                       </td>
                       <td className="py-3 px-4 font-medium text-gray-600 text-left">
-                        {catalog.minPrice ? `₹${catalog.minPrice.toLocaleString()}` : "N/A"}
+                        {catalog.minPrice ? `₹${formatCurrencyShorthand(catalog.minPrice)}` : "N/A"}
                       </td>
                       <td className="py-3 px-4 font-medium text-gray-600 text-left">
-                        {catalog.maxPrice ? `₹${catalog.maxPrice.toLocaleString()}` : "N/A"}
+                        {catalog.maxPrice ? `₹${formatCurrencyShorthand(catalog.maxPrice)}` : "N/A"}
                       </td>
                       <td className="py-3 px-4 font-medium text-gray-600 text-left truncate max-w-[100px]" title={catalog.deliveryTime}>
                         {catalog.deliveryTime || "TBD"}
@@ -929,14 +964,25 @@ export default function CatalogsPage() {
 
                       {isAddingCategory ? (
                         <div className="flex gap-2">
-                          <input
-                            type="text"
-                            value={newCategoryName}
-                            onChange={(e) => setNewCategoryName(e.target.value)}
-                            className="flex-1 px-4 py-3 border border-[#FF7B1D] rounded-sm focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white"
-                            placeholder="Enter new category name"
-                            autoFocus
-                          />
+                          <div className="flex-1 space-y-1">
+                            <input
+                              type="text"
+                              value={newCategoryName}
+                              onChange={(e) => {
+                                if (e.target.value.length <= CAT_LIMIT) {
+                                  setNewCategoryName(e.target.value);
+                                }
+                              }}
+                              className={`w-full px-4 py-3 border rounded-sm focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white ${newCategoryName.length >= CAT_LIMIT ? 'border-red-500' : 'border-[#FF7B1D]'}`}
+                              placeholder="Enter new category name"
+                              autoFocus
+                            />
+                            <div className="flex justify-end">
+                              <span className={`text-[10px] font-bold ${newCategoryName.length >= CAT_LIMIT ? 'text-red-500' : 'text-gray-400'}`}>
+                                {newCategoryName.length}/{CAT_LIMIT}
+                              </span>
+                            </div>
+                          </div>
                           <button
                             type="button"
                             onClick={handleAddNewCategory}
@@ -1091,15 +1137,22 @@ export default function CatalogsPage() {
                       <FileText size={16} className="text-[#FF7B1D]" />
                       Description <span className="text-red-500">*</span>
                     </label>
-                    <textarea
-                      name="description"
-                      value={formData.description}
-                      onChange={handleInputChange}
-                      rows="3"
-                      className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 resize-none"
-                      required
-                      placeholder="Describe your catalog..."
-                    />
+                    <div className="space-y-1">
+                      <textarea
+                        name="description"
+                        value={formData.description}
+                        onChange={handleInputChange}
+                        rows="3"
+                        className={`w-full px-4 py-3 border rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 resize-none ${formData.description.length >= DESC_LIMIT ? 'border-red-500' : 'border-gray-200'}`}
+                        required
+                        placeholder="Describe your catalog..."
+                      />
+                      <div className="flex justify-end">
+                        <span className={`text-[10px] font-bold ${formData.description.length >= DESC_LIMIT ? 'text-red-500' : 'text-gray-400'}`}>
+                          {formData.description.length}/{DESC_LIMIT}
+                        </span>
+                      </div>
+                    </div>
                   </div>
 
                   {/* Price Range */}
