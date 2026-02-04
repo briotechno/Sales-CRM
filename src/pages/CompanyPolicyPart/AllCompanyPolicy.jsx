@@ -486,112 +486,118 @@ export default function CompanyPolicy() {
                   </button>
 
                   {showFilters && (
-                    <div className="absolute right-0 mt-2 w-72 bg-white border border-gray-200 rounded-xl shadow-2xl z-50 animate-fadeIn overflow-hidden">
-                      <div className="max-h-[32rem] overflow-y-auto">
+                    <div className="absolute right-0 mt-2 w-[450px] bg-white border border-gray-200 rounded-sm shadow-2xl z-50 animate-fadeIn overflow-hidden">
+                      <div className="p-4 bg-gray-50 border-b flex justify-between items-center">
+                        <span className="text-sm font-bold text-gray-800">Filter Options</span>
+                        <button
+                          onClick={handleClearFilters}
+                          className="text-[10px] font-bold text-orange-600 hover:underline hover:text-orange-700 capitalize"
+                        >
+                          Reset all
+                        </button>
+                      </div>
+
+                      <div className="p-5 grid grid-cols-2 gap-6">
                         {/* Status Section */}
-                        <div className="p-3 border-b border-gray-100 bg-gray-50">
-                          <span className="text-sm font-bold text-gray-700 tracking-wide uppercase">status</span>
-                        </div>
-                        <div className="p-2 grid grid-cols-2 gap-2">
-                          {["All", ...statuses].map((status) => (
-                            <button
-                              key={status}
-                              onClick={() => {
-                                setFilterStatus(status);
-                                setCurrentPage(1);
-                              }}
-                              className={`px-3 py-2 text-xs font-bold rounded-sm border transition-colors ${filterStatus === status
-                                ? "bg-orange-500 text-white border-orange-500"
-                                : "text-gray-700 hover:bg-gray-50 border-gray-200"
-                                }`}
-                            >
-                              {status}
-                            </button>
-                          ))}
-                        </div>
-
-                        {/* Category Section */}
-                        <div className="p-3 border-t border-b border-gray-100 bg-gray-50">
-                          <span className="text-sm font-bold text-gray-700 tracking-wide uppercase">category</span>
-                        </div>
-                        <div className="p-2">
-                          <select
-                            value={filterCategory}
-                            onChange={(e) => {
-                              setFilterCategory(e.target.value);
-                              setCurrentPage(1);
-                            }}
-                            className="w-full px-3 py-2 border border-gray-200 rounded-sm text-sm focus:outline-none focus:border-orange-500"
-                          >
-                            <option value="All">All Categories</option>
-                            {categories.map((cat) => (
-                              <option key={cat} value={cat}>{cat}</option>
+                        <div className="space-y-4 border-r border-gray-100 pr-4">
+                          <span className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-2 border-b pb-1">Select Status</span>
+                          <div className="space-y-2">
+                            {["All", ...statuses].map((status) => (
+                              <label key={status} className="flex items-center group cursor-pointer">
+                                <div className="relative flex items-center">
+                                  <input
+                                    type="radio"
+                                    name="status_filter"
+                                    checked={filterStatus === status}
+                                    onChange={() => setFilterStatus(status)}
+                                    className="peer h-4 w-4 cursor-pointer appearance-none rounded-full border-2 border-gray-200 transition-all checked:border-[#FF7B1D] checked:border-[5px] hover:border-orange-300"
+                                  />
+                                </div>
+                                <span className={`ml-3 text-sm font-medium transition-colors ${filterStatus === status ? "text-[#FF7B1D] font-bold" : "text-gray-600 group-hover:text-gray-900"}`}>
+                                  {status}
+                                </span>
+                              </label>
                             ))}
-                          </select>
+                          </div>
                         </div>
 
-                        {/* Author Section */}
-                        <div className="p-3 border-t border-b border-gray-100 bg-gray-50">
-                          <span className="text-sm font-bold text-gray-700 tracking-wide uppercase">author</span>
-                        </div>
-                        <div className="p-2">
-                          <input
-                            type="text"
-                            value={filterAuthor}
-                            onChange={(e) => {
-                              setFilterAuthor(e.target.value);
-                              setCurrentPage(1);
-                            }}
-                            placeholder="Search by author..."
-                            className="w-full px-3 py-2 border border-gray-200 rounded-sm text-sm focus:outline-none focus:border-orange-500"
-                          />
+                        {/* Filters Right Section */}
+                        <div className="space-y-4">
+                          <span className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-2 border-b pb-1">Filters</span>
+                          
+                          <div className="space-y-3">
+                            <div>
+                              <label className="text-[10px] font-bold text-gray-400 uppercase mb-1 block">Category</label>
+                              <select
+                                value={filterCategory}
+                                onChange={(e) => setFilterCategory(e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-1 focus:ring-orange-500/20 outline-none transition-all text-xs font-semibold text-gray-700 bg-gray-50 hover:bg-white"
+                              >
+                                <option value="All">All Categories</option>
+                                {categories.map((cat) => (
+                                  <option key={cat} value={cat}>{cat}</option>
+                                ))}
+                              </select>
+                            </div>
+
+                            <div>
+                              <label className="text-[10px] font-bold text-gray-400 uppercase mb-1 block">Author</label>
+                              <input
+                                type="text"
+                                value={filterAuthor}
+                                onChange={(e) => setFilterAuthor(e.target.value)}
+                                placeholder="Search author..."
+                                className="w-full px-3 py-2 border border-gray-200 rounded-sm text-xs font-semibold focus:outline-none focus:border-orange-500 bg-gray-50 hover:bg-white"
+                              />
+                            </div>
+                          </div>
                         </div>
 
                         {/* Date Range Section */}
-                        <div className="p-3 border-t border-b border-gray-100 bg-gray-50">
-                          <span className="text-sm font-bold text-gray-700 tracking-wide uppercase">date range</span>
-                        </div>
-                        <div className="p-3 space-y-2">
-                          <div>
-                            <label className="text-[10px] font-bold text-gray-400 uppercase">From</label>
-                            <input
-                              type="date"
-                              value={startDate}
-                              onChange={(e) => {
-                                setStartDate(e.target.value);
-                                setCurrentPage(1);
-                              }}
-                              className="w-full px-3 py-2 border border-gray-200 rounded-sm text-sm focus:outline-none focus:border-orange-500"
-                            />
-                          </div>
-                          <div>
-                            <label className="text-[10px] font-bold text-gray-400 uppercase">To</label>
-                            <input
-                              type="date"
-                              value={endDate}
-                              onChange={(e) => {
-                                setEndDate(e.target.value);
-                                setCurrentPage(1);
-                              }}
-                              className="w-full px-3 py-2 border border-gray-200 rounded-sm text-sm focus:outline-none focus:border-orange-500"
-                            />
+                        <div className="col-span-2 space-y-4 pt-2 border-t border-gray-100">
+                          <span className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-2">Effective Date Range</span>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="relative">
+                              <Calendar className="absolute left-3 top-2.5 text-gray-400" size={14} />
+                              <input
+                                type="date"
+                                value={startDate}
+                                onChange={(e) => setStartDate(e.target.value)}
+                                className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-sm text-xs focus:outline-none focus:border-orange-500 bg-gray-50"
+                              />
+                              <span className="absolute -top-2 left-2 bg-white px-1 text-[9px] text-gray-400 font-bold uppercase">From</span>
+                            </div>
+                            <div className="relative">
+                              <Calendar className="absolute left-3 top-2.5 text-gray-400" size={14} />
+                              <input
+                                type="date"
+                                value={endDate}
+                                onChange={(e) => setEndDate(e.target.value)}
+                                className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-sm text-xs focus:outline-none focus:border-orange-500 bg-gray-50"
+                              />
+                              <span className="absolute -top-2 left-2 bg-white px-1 text-[9px] text-gray-400 font-bold uppercase">To</span>
+                            </div>
                           </div>
                         </div>
+                      </div>
 
-                        <div className="p-3 border-t bg-gray-50 flex gap-2">
-                          <button
-                            onClick={handleClearFilters}
-                            className="flex-1 px-3 py-2 text-xs font-bold text-gray-600 bg-white border border-gray-300 rounded-sm hover:bg-gray-50"
-                          >
-                            RESET
-                          </button>
-                          <button
-                            onClick={() => setShowFilters(false)}
-                            className="flex-1 px-3 py-2 text-xs font-bold text-white bg-orange-50 rounded-sm hover:bg-orange-600 shadow-sm"
-                          >
-                            DONE
-                          </button>
-                        </div>
+                      {/* Filter Actions */}
+                      <div className="p-4 bg-gray-50 border-t flex gap-3">
+                        <button
+                          onClick={() => setShowFilters(false)}
+                          className="flex-1 py-2.5 text-[11px] font-bold text-gray-500 capitalize tracking-wider hover:bg-gray-200 transition-colors rounded-sm border border-gray-200 bg-white"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={() => {
+                            setShowFilters(false);
+                            setCurrentPage(1);
+                          }}
+                          className="flex-1 py-2.5 text-[11px] font-bold text-white capitalize tracking-wider bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 transition-all rounded-sm shadow-md active:scale-95"
+                        >
+                          Apply filters
+                        </button>
                       </div>
                     </div>
                   )}

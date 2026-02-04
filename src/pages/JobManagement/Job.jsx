@@ -460,36 +460,30 @@ export default function JobManagement() {
           </div>
 
           {/* Jobs Table */}
-          <div className="bg-white rounded-sm shadow-md overflow-hidden">
+          <div className="bg-white rounded-sm shadow-sm border border-gray-200 overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full table-fixed">
-                <thead className="bg-gradient-to-r from-orange-500 to-orange-600">
-                  <tr>
-                    <th className="px-6 py-4 text-left text-sm font-bold text-white whitespace-nowrap w-40">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm">
+                    <th className="px-6 py-4 font-semibold text-white whitespace-nowrap w-[25%] transition-all">
                       Job Title
                     </th>
-                    <th className="px-6 py-4 text-left text-sm font-bold text-white whitespace-nowrap w-32">
+                    <th className="px-6 py-4 font-semibold text-white whitespace-nowrap w-[15%]">
                       Department
                     </th>
-                    <th className="px-6 py-4 text-left text-sm font-bold text-white whitespace-nowrap w-32">
-                      Location
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-bold text-white whitespace-nowrap w-24">
+                    <th className="px-6 py-4 font-semibold text-white whitespace-nowrap w-[12%]">
                       Type
                     </th>
-                    <th className="px-6 py-4 text-left text-sm font-bold text-white whitespace-nowrap w-24">
-                      Positions
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-bold text-white whitespace-nowrap w-28">
+                    <th className="px-6 py-4 font-semibold text-white whitespace-nowrap w-[10%]">
                       Applicants
                     </th>
-                    <th className="px-6 py-4 text-left text-sm font-bold text-white whitespace-nowrap w-32">
+                    <th className="px-6 py-4 font-semibold text-white whitespace-nowrap w-[12%]">
                       Posted Date
                     </th>
-                    <th className="px-6 py-4 text-left text-sm font-bold text-white whitespace-nowrap w-24">
+                    <th className="px-6 py-4 font-semibold text-white whitespace-nowrap w-[10%]">
                       Status
                     </th>
-                    <th className="px-6 py-4 text-center text-sm font-bold text-white whitespace-nowrap w-28">
+                    <th className="px-6 py-4 font-semibold text-center text-white whitespace-nowrap w-[16%]">
                       Actions
                     </th>
                   </tr>
@@ -502,9 +496,7 @@ export default function JobManagement() {
                       <tr key={index} className="bg-white animate-pulse">
                         <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-32"></div></td>
                         <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-24"></div></td>
-                        <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-24"></div></td>
                         <td className="px-6 py-4"><div className="h-6 bg-gray-200 rounded w-20"></div></td>
-                        <td className="px-6 py-4"><div className="h-6 bg-gray-200 rounded w-10"></div></td>
                         <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-16"></div></td>
                         <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-24"></div></td>
                         <td className="px-6 py-4"><div className="h-6 bg-gray-200 rounded w-20"></div></td>
@@ -512,67 +504,66 @@ export default function JobManagement() {
                       </tr>
                     ))
                   ) : isError ? (
-                    <tr><td colSpan="9" className="text-center py-8 text-red-500">Error loading data</td></tr>
+                    <tr><td colSpan="7" className="text-center py-12 text-red-500 font-medium">Error loading jobs. Please try again later.</td></tr>
                   ) : jobsData?.jobs?.length === 0 ? (
-                    <tr><td colSpan="9" className="text-center py-8 text-gray-500">No jobs found</td></tr>
+                    <tr><td colSpan="7" className="text-center py-12 text-gray-500 font-medium">No active job postings found</td></tr>
                   ) : (
                     jobsData?.jobs.map((job, index) => (
                       <tr
                         key={job.id}
-                        className={`hover:bg-orange-50 transition-colors whitespace-nowrap ${index % 2 === 0 ? "bg-white" : "bg-gray-50"
-                          }`}
+                        className="hover:bg-orange-50/50 transition-colors duration-200 group border-b border-gray-100 last:border-0"
                       >
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center gap-3">
-                            <div className="bg-gradient-to-br from-orange-400 to-orange-600 p-2 rounded-sm">
-                              <Briefcase className="text-white" size={18} />
+                        <td className="px-6 py-4">
+                          <div className="flex items-start gap-3 min-w-[200px] max-w-[300px]">
+                            <div className="w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300 mt-1">
+                              <Briefcase size={16} />
                             </div>
-                            <span className="font-semibold text-gray-800 whitespace-nowrap">
-                              {job.title}
-                            </span>
+                            <div className="flex-1 min-w-0">
+                              <span className="font-semibold text-gray-800 block text-sm group-hover:text-orange-600 transition-colors leading-tight break-words">
+                                {job.title}
+                              </span>
+                              <div className="flex flex-wrap items-center gap-1 text-xs text-gray-500 mt-1 leading-normal">
+                                <MapPin size={10} className="flex-shrink-0" />
+                                <span className="break-words">{job.location}</span>
+                                <span className="flex-shrink-0">•</span>
+                                <span className="font-medium text-orange-500 flex-shrink-0">{job.positions} Positions</span>
+                              </div>
+                            </div>
                           </div>
                         </td>
 
-                        <td className="px-6 py-4 text-gray-700 font-medium whitespace-nowrap">
-                          {job.department}
-                        </td>
-
-                        <td className="px-6 py-4 text-gray-700 whitespace-nowrap">
-                          {job.location}
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className="text-sm font-medium text-gray-600 bg-gray-100 px-2.5 py-1 rounded-sm border border-gray-200">
+                            {job.department}
+                          </span>
                         </td>
 
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="px-3 py-1 bg-blue-100 text-blue-700 text-sm font-semibold rounded-sm">
+                          <span className="text-xs font-semibold px-2 py-1 rounded-sm bg-blue-50 text-blue-700 border border-blue-100">
                             {job.type}
                           </span>
                         </td>
 
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="bg-orange-100 text-orange-700 font-bold px-3 py-1 rounded-sm text-sm">
-                            {job.positions}
-                          </span>
-                        </td>
-
-                        <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center gap-2">
-                            <Users size={16} className="text-orange-500" />
-                            <span className="font-bold text-gray-800">
+                            <Users size={14} className="text-gray-400" />
+                            <span className="text-sm font-bold text-gray-700">
                               {job.applicants}
                             </span>
                           </div>
                         </td>
 
-                        <td className="px-6 py-4 text-gray-700 whitespace-nowrap">
+                        <td className="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
                           {new Date(job.posted_date).toLocaleDateString()}
                         </td>
 
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span
-                            className={`px-3 py-1 text-sm font-semibold rounded-sm ${job.status === "Active"
-                              ? "bg-green-100 text-green-700"
+                            className={`px-3 py-1 text-xs font-bold rounded-sm border uppercase tracking-wide ${job.status === "Active"
+                              ? "bg-green-50 text-green-700 border-green-200"
                               : job.status === "On Hold"
-                                ? "bg-yellow-100 text-yellow-700"
-                                : "bg-gray-100 text-gray-700"
+                                ? "bg-yellow-50 text-yellow-700 border-yellow-200"
+                                : "bg-gray-100 text-gray-600 border-gray-200"
                               }`}
                           >
                             {job.status}
@@ -580,39 +571,39 @@ export default function JobManagement() {
                         </td>
 
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center justify-center gap-2">
+                          <div className="flex items-center justify-center gap-1">
                             <button
                               onClick={() => {
                                 const link = `${window.location.origin}/apply/${job.application_link}`;
                                 navigator.clipboard.writeText(link);
                                 toast.success("Application link copied!");
                               }}
-                              className="p-2 hover:bg-orange-100 rounded-sm transition-all"
+                              className="p-1.5 hover:bg-orange-50 text-gray-400 hover:text-orange-600 rounded-sm transition-all"
                               title="Copy Application Link"
                             >
-                              <LinkIcon size={18} className="text-orange-600" />
+                              <LinkIcon size={16} />
                             </button>
                             {read && (
                               <button
                                 onClick={() => handleViewJob(job)}
-                                className="p-2 hover:bg-blue-100 rounded-sm transition-all"
+                                className="p-1.5 hover:bg-blue-50 text-gray-400 hover:text-blue-600 rounded-sm transition-all"
                                 title="View Job Details"
                               >
-                                <Eye size={18} className="text-blue-600" />
+                                <Eye size={16} />
                               </button>
                             )}
                             {update && (
                               <button
                                 onClick={() => handleEditJob(job)}
-                                className="p-2 hover:bg-green-100 rounded-sm transition-all">
-                                <Edit size={18} className="text-green-600" />
+                                className="p-1.5 hover:bg-green-50 text-gray-400 hover:text-green-600 rounded-sm transition-all">
+                                <Edit size={16} />
                               </button>
                             )}
                             {remove && (
                               <button
                                 onClick={() => handleDelete(job)}
-                                className="p-2 hover:bg-red-100 rounded-sm transition-all">
-                                <Trash2 size={18} className="text-red-600" />
+                                className="p-1.5 hover:bg-red-50 text-gray-400 hover:text-red-600 rounded-sm transition-all">
+                                <Trash2 size={16} />
                               </button>
                             )}
                           </div>
