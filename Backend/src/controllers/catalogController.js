@@ -22,8 +22,8 @@ const catalogController = {
 
     getCatalogs: async (req, res) => {
         try {
-            const { page, limit, status, search } = req.query;
-            const data = await Catalog.findAll(req.user.id, page, limit, status, search);
+            const { page, limit, status, category, search } = req.query;
+            const data = await Catalog.findAll(req.user.id, page, limit, status, category, search);
             res.status(200).json(data);
         } catch (error) {
             res.status(500).json({ message: error.message });
@@ -79,8 +79,8 @@ const catalogController = {
     getPublicCatalogs: async (req, res) => {
         try {
             const { userId } = req.params;
-            const { page, limit, status, search } = req.query;
-            const data = await Catalog.findAll(userId, page, limit, status || 'Active', search);
+            const { page, limit, status, category, search } = req.query;
+            const data = await Catalog.findAll(userId, page, limit, status || 'Active', category, search);
             res.status(200).json(data);
         } catch (error) {
             res.status(500).json({ message: error.message });

@@ -116,10 +116,10 @@ const CompanyProfile = () => {
         <div className="min-h-screen bg-white font-primary antialiased text-gray-800 mt-16">
             <Navbar business={business} logoUrl={logoUrl} />
             {/* Content Container */}
-            <div className="bg-[#f8f9fa] py-8 px-4 sm:px-6 lg:px-8">
-                <div className="max-w-[1400px] mx-auto">
+            <div className="bg-[#f8f9fa] py-4 px-4 sm:px-4 lg:px-4">
+                <div className="max-w-full mx-auto">
                     {/* Header Card (Setup View Style) */}
-                    <div className="bg-white rounded-sm shadow-md p-6 mb-6 border border-gray-100">
+                    <div className="bg-white rounded-sm shadow-md p-6 mb-3 border border-gray-100">
                         <div className="flex flex-col md:flex-row items-center md:items-start gap-8">
                             {/* Logo */}
                             <div className="flex-shrink-0">
@@ -185,7 +185,7 @@ const CompanyProfile = () => {
                     </div>
 
                     {/* FULL WIDTH - Business Overview (Strategic Placement First) */}
-                    <div className="bg-white rounded-sm shadow-md p-8 md:p-10 border border-gray-100 mb-8">
+                    <div className="bg-white rounded-sm shadow-md p-8 md:p-10 border border-gray-100 mb-3">
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
                             <div>
                                 <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-3">
@@ -207,7 +207,7 @@ const CompanyProfile = () => {
                             </div>
                             <div className="bg-gray-50/50 p-5 rounded-sm border border-gray-100 hover:border-orange-200 transition-colors group">
                                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 group-hover:text-[#FF7B1D] transition-colors">Registration Number</p>
-                                <p className="text-gray-900 font-bold text-sm tracking-widest font-mono break-all leading-relaxed">{business.registration_number || "N/A"}</p>
+                                <p className="text-gray-900 font-bold text-sm tracking-widest  break-all leading-relaxed">{business.registration_number || "N/A"}</p>
                             </div>
                             <div className="bg-gray-50/50 p-5 rounded-sm border border-gray-100 hover:border-orange-200 transition-colors group">
                                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 group-hover:text-[#FF7B1D] transition-colors">Business Type & Industry</p>
@@ -232,9 +232,9 @@ const CompanyProfile = () => {
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
                         {/* Left Column - Main Info (2/3) */}
-                        <div className="lg:col-span-2 space-y-6">
+                        <div className="lg:col-span-2 space-y-3">
                             {/* Company Description Card */}
                             {business.company_description && (
                                 <div className="bg-white rounded-sm shadow-md p-8 border border-gray-100">
@@ -303,42 +303,41 @@ const CompanyProfile = () => {
                                         >
                                             {catalogs.map((catalog) => (
                                                 <SwiperSlide key={catalog.id}>
-                                                    <div className="group bg-white border border-gray-200 rounded-sm overflow-hidden hover:shadow-xl transition-all duration-300 h-full flex flex-col">
-                                                        <div className="aspect-video relative overflow-hidden bg-gray-50">
+                                                    <div className="group bg-white border border-gray-100 rounded-sm overflow-hidden hover:shadow-xl transition-all duration-300 h-[420px] flex flex-col shadow-sm">
+                                                        <div className="h-48 relative overflow-hidden bg-gray-50 flex-shrink-0">
                                                             <img
                                                                 src={catalog.image}
                                                                 alt={catalog.name}
                                                                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                                                             />
                                                             <div className="absolute top-2 right-2">
-                                                                <span className="bg-white/95 backdrop-blur-sm text-[#FF7B1D] text-[9px] font-black px-2 py-1 rounded-sm shadow-sm border border-orange-50 uppercase tracking-widest">
+                                                                <span className="bg-[#FF7B1D] text-white text-[9px] font-black px-2 py-1 rounded-sm shadow-sm uppercase tracking-widest">
                                                                     {catalog.category}
                                                                 </span>
                                                             </div>
                                                         </div>
 
-                                                        <div className="p-4 flex-1 flex flex-col">
-                                                            <h3 className="text-base font-bold text-gray-900 mb-2 truncate">
+                                                        <div className="p-5 flex-1 flex flex-col bg-white">
+                                                            <h3 className="text-base font-bold text-gray-900 mb-2 group-hover:text-[#FF7B1D] transition-colors line-clamp-1">
                                                                 {catalog.name}
                                                             </h3>
-                                                            <p className="text-xs text-gray-500 line-clamp-2 mb-4 leading-relaxed h-8">
-                                                                {catalog.description}
+                                                            <p className="text-xs text-gray-500 line-clamp-3 leading-relaxed">
+                                                                {catalog.description?.length > 120 ? `${catalog.description.substring(0, 120)}...` : (catalog.description || "No specific description provided for this catalog item.")}
                                                             </p>
+                                                        </div>
 
-                                                            <div className="flex items-center justify-between pt-3 border-t border-gray-100 mt-auto">
-                                                                <div>
-                                                                    <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Price Range</p>
-                                                                    <p className="text-base font-bold text-gray-900">₹{catalog.maxPrice?.toLocaleString()}</p>
-                                                                </div>
-                                                                <a
-                                                                    href={`/catalog/view/${catalog.catalog_id}`}
-                                                                    target="_blank"
-                                                                    rel="noopener noreferrer"
-                                                                    className="w-9 h-9 rounded-sm bg-orange-50 text-[#FF7B1D] flex items-center justify-center hover:bg-[#FF7B1D] hover:text-white transition-all border border-orange-100"
-                                                                >
-                                                                    <ExternalLink size={16} />
-                                                                </a>
+                                                        <div className="bg-[#111111] p-5 flex items-center justify-between border-t-2 border-[#FF7B1D]/20 mt-auto flex-shrink-0">
+                                                            <div>
+                                                                <p className="text-lg font-black text-white tracking-tight">₹{(catalog.maxPrice || 0).toLocaleString()}</p>
                                                             </div>
+                                                            <a
+                                                                href={`/catalog/view/${catalog.catalog_id}`}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="w-10 h-10 rounded-sm bg-white/10 text-white flex items-center justify-center hover:bg-[#FF7B1D] hover:border-[#FF7B1D] transition-all border border-white/10 group/link shadow-lg"
+                                                            >
+                                                                <ExternalLink size={18} className="group-hover:scale-110 transition-transform" />
+                                                            </a>
                                                         </div>
                                                     </div>
                                                 </SwiperSlide>
@@ -417,7 +416,7 @@ const CompanyProfile = () => {
                         </div>
 
                         {/* Right Column - Sidebar (1/3) */}
-                        <div className="space-y-6">
+                        <div className="space-y-3">
                             {/* Verification Badge */}
                             <div className="bg-white rounded-sm shadow-md p-6 border border-gray-100">
                                 <h3 className="text-lg font-bold text-gray-800 mb-5 flex items-center gap-2">

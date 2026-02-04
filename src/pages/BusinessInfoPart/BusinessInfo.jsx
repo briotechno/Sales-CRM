@@ -48,6 +48,7 @@ export default function BusinessInfoPage() {
 
   const [isEditing, setIsEditing] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [expandedSections, setExpandedSections] = useState({ vision: false, mission: false });
   const [formData, setFormData] = useState({
     company_name: "",
     legal_name: "",
@@ -276,7 +277,7 @@ export default function BusinessInfoPage() {
 
   return (
     <DashboardLayout>
-      <div className="p-0 bg-gradient-to-br from-gray-0 to-gray-100 ml-4 mr-4 min-h-screen">
+      <div className="p-0 bg-gradient-to-br from-gray-0 to-gray-100 ml-4 mr-4 pb-10 min-h-screen">
         {/* Header */}
         <div className="bg-white border-b ">
           <div className="max-w-8xl mx-auto ml-2 px-0 py-4">
@@ -731,6 +732,79 @@ export default function BusinessInfoPage() {
                 </div>
               </div>
 
+              {/* Vision & Mission */}
+              <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-sm shadow-md p-6 border border-orange-200">
+                <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                  <Award className="text-orange-500" size={24} />
+                  Vision & Mission
+                </h2>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Vision
+                    </label>
+                    {isEditing ? (
+                      <textarea
+                        name="vision"
+                        value={formData.vision}
+                        onChange={handleInputChange}
+                        rows="2"
+                        placeholder="Your company's long-term vision..."
+                        className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                      ></textarea>
+                    ) : (
+                      <p className="text-gray-800 italic leading-relaxed text-sm break-words">
+                        "
+                        {formData.vision?.length > 400 && !expandedSections.vision
+                          ? `${formData.vision.slice(0, 400)}...`
+                          : formData.vision}
+                        "
+                        {formData.vision?.length > 400 && (
+                          <button
+                            onClick={() => setExpandedSections(prev => ({ ...prev, vision: !prev.vision }))}
+                            className="text-orange-600 font-bold ml-2 hover:underline focus:outline-none"
+                          >
+                            {expandedSections.vision ? "Read Less" : "Read More"}
+                          </button>
+                        )}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Mission
+                    </label>
+                    {isEditing ? (
+                      <textarea
+                        name="mission"
+                        value={formData.mission}
+                        onChange={handleInputChange}
+                        rows="2"
+                        placeholder="Your company's immediate mission..."
+                        className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                      ></textarea>
+                    ) : (
+                      <p className="text-gray-800 italic leading-relaxed text-sm break-words">
+                        "
+                        {formData.mission?.length > 400 && !expandedSections.mission
+                          ? `${formData.mission.slice(0, 400)}...`
+                          : formData.mission}
+                        "
+                        {formData.mission?.length > 400 && (
+                          <button
+                            onClick={() => setExpandedSections(prev => ({ ...prev, mission: !prev.mission }))}
+                            className="text-orange-600 font-bold ml-2 hover:underline focus:outline-none"
+                          >
+                            {expandedSections.mission ? "Read Less" : "Read More"}
+                          </button>
+                        )}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
               {/* Social Presence View Mode - Dynamic (Now below Banking Information) */}
               {!isEditing && (
                 <div className="bg-white rounded-sm shadow-md p-6">
@@ -854,9 +928,9 @@ export default function BusinessInfoPage() {
               )}
 
               {/* EDIT FIELDS */}
-              <div className="bg-white rounded-sm shadow-md p-6">
-                {isEditing && (
-                  <div className="space-y-6 mt-8">
+              {isEditing && (
+                <div className="bg-white rounded-sm shadow-md p-6">
+                  <div className="space-y-6">
                     <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
                       <Share2 className="text-orange-500" size={20} />
                       Dynamic Social Links
@@ -933,8 +1007,8 @@ export default function BusinessInfoPage() {
                       Add Social Link
                     </button>
                   </div>
-                )}
-              </div>
+                </div>
+              )}
             </div>
 
             {/* Right Column - Contact & Vision */}
@@ -1210,57 +1284,6 @@ export default function BusinessInfoPage() {
                   </div>
                 </div>
               </div>
-
-              {/* Vision & Mission */}
-              <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-sm shadow-md p-6 border border-orange-200">
-                <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                  <Award className="text-orange-500" size={24} />
-                  Vision & Mission
-                </h2>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Vision
-                    </label>
-                    {isEditing ? (
-                      <textarea
-                        name="vision"
-                        value={formData.vision}
-                        onChange={handleInputChange}
-                        rows="2"
-                        placeholder="Your company's long-term vision..."
-                        className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-                      ></textarea>
-                    ) : (
-                      <p className="text-gray-800 italic leading-relaxed text-sm break-words">
-                        "{formData.vision}"
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Mission
-                    </label>
-                    {isEditing ? (
-                      <textarea
-                        name="mission"
-                        value={formData.mission}
-                        onChange={handleInputChange}
-                        rows="2"
-                        placeholder="Your company's immediate mission..."
-                        className="w-full px-4 py-2 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-                      ></textarea>
-                    ) : (
-                      <p className="text-gray-800 italic leading-relaxed text-sm break-words">
-                        "{formData.mission}"
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-
 
               {/* Verification Status */}
               <div className="bg-white rounded-sm shadow-md p-6">

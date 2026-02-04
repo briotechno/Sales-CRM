@@ -95,16 +95,14 @@ const Modal = ({
                 )}
 
                 {/* Body */}
-                <div className={`p-6 ${headerVariant === 'simple' && !title ? 'pt-8' : ''}`}>
+                <div className={`overflow-y-auto overflow-x-hidden max-h-[70vh] custom-scrollbar p-6 ${headerVariant === 'simple' && !title ? 'pt-8' : ''}`}>
                     {headerVariant === 'simple' && title && (
                         <h2 className="text-2xl font-bold text-gray-800 mb-2">{title}</h2>
                     )}
                     {headerVariant === 'simple' && subtitle && (
                         <p className="text-gray-600 mb-6">{subtitle}</p>
                     )}
-                    <div className="max-h-[70vh] overflow-y-auto overflow-x-hidden custom-scrollbar">
-                        {children}
-                    </div>
+                    {children}
                 </div>
 
                 {/* Footer */}
@@ -135,7 +133,7 @@ const Modal = ({
                 }
                 
                 .custom-scrollbar::-webkit-scrollbar {
-                    width: 6px;
+                    width: 4px;
                 }
                 .custom-scrollbar::-webkit-scrollbar-track {
                     background: #f1f1f1;

@@ -38,7 +38,7 @@ const Catalog = {
         return result.insertId;
     },
 
-    findAll: async (userId, page = 1, limit = 10, status = null, search = '') => {
+    findAll: async (userId, page = 1, limit = 10, status = null, category = null, search = '') => {
         const offset = (page - 1) * limit;
         let query = 'SELECT * FROM catalogs WHERE user_id = ?';
         let countQuery = 'SELECT COUNT(*) as total FROM catalogs WHERE user_id = ?';
@@ -50,6 +50,13 @@ const Catalog = {
             countQuery += ' AND status = ?';
             queryParams.push(status);
             countParams.push(status);
+        }
+
+        if (category && category !== 'All') {
+            query += ' AND category = ?';
+            countQuery += ' AND category = ?';
+            queryParams.push(category);
+            countParams.push(category);
         }
 
         if (search) {
