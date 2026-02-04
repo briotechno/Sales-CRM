@@ -46,6 +46,12 @@ export default function NotesPage() {
   const [customEnd, setCustomEnd] = useState("");
   const [page, setPage] = useState(1);
   const [showFullNoteContent, setShowFullNoteContent] = useState(false);
+
+  // Temp states for filter
+  const [tempCategory, setTempCategory] = useState("All");
+  const [tempDateFilter, setTempDateFilter] = useState("All");
+  const [tempCustomStart, setTempCustomStart] = useState("");
+  const [tempCustomEnd, setTempCustomEnd] = useState("");
   const itemsPerPage = 8;
   const dropdownRef = useRef(null);
   const dateDropdownRef = useRef(null);
@@ -94,7 +100,7 @@ export default function NotesPage() {
 
   const { data, isLoading, isFetching, refetch } = useGetNotesQuery({
     page,
-    limit: 12,
+    limit: 7,
     category: selectedCategory,
     search: searchTerm,
     dateFrom,
@@ -125,6 +131,16 @@ export default function NotesPage() {
     e.preventDefault();
     if (!formData.title.trim() || !formData.content.trim()) {
       toast.error("Title and content are required");
+      return;
+    }
+
+    if (formData.title.length > 250) {
+      toast.error("Note title cannot exceed 250 characters");
+      return;
+    }
+
+    if (formData.content.length > 10000) {
+      toast.error("Note content cannot exceed 10000 characters");
       return;
     }
 
@@ -194,6 +210,10 @@ export default function NotesPage() {
     setDateFilter("All");
     setCustomStart("");
     setCustomEnd("");
+    setTempCategory("All");
+    setTempDateFilter("All");
+    setTempCustomStart("");
+    setTempCustomEnd("");
   };
 
   const hasActiveFilters =
@@ -225,6 +245,10 @@ export default function NotesPage() {
                       if (hasActiveFilters) {
                         clearAllFilters();
                       } else {
+                        setTempCategory(selectedCategory);
+                        setTempDateFilter(dateFilter);
+                        setTempCustomStart(customStart);
+                        setTempCustomEnd(customEnd);
                         setIsFilterOpen(!isFilterOpen);
                       }
                     }}
@@ -237,75 +261,104 @@ export default function NotesPage() {
                   </button>
 
                   {isFilterOpen && (
-                    <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-sm shadow-xl z-50 animate-fadeIn overflow-hidden">
-                      <div className="p-3 border-b border-gray-100 bg-gray-50">
-                        <span className="text-sm font-bold text-gray-700 tracking-wide">Categories</span>
-                      </div>
-                      <div className="py-1">
-                        {categories.map((cat) => (
-                          <button
-                            key={cat}
-                            onClick={() => {
-                              setSelectedCategory(cat);
-                              setIsFilterOpen(false);
-                            }}
-                            className={`block w-full text-left px-4 py-2 text-sm transition-colors ${selectedCategory === cat
-                              ? "bg-orange-50 text-orange-600 font-bold"
-                              : "text-gray-700 hover:bg-gray-50"
-                              }`}
-                          >
-                            {cat}
-                          </button>
-                        ))}
+                    <div className="absolute right-0 mt-2 w-[400px] bg-white border border-gray-200 rounded-sm shadow-2xl z-50 animate-fadeIn overflow-hidden">
+                      <div className="p-4 bg-gray-50 border-b flex justify-between items-center">
+                        <span className="text-sm font-bold text-gray-800">Filter Options</span>
+                        <button
+                          onClick={() => {
+                            setTempCategory("All");
+                            setTempDateFilter("All");
+                            setTempCustomStart("");
+                            setTempCustomEnd("");
+                          }}
+                          className="text-[10px] font-bold text-orange-600 hover:underline hover:text-orange-700 capitalize"
+                        >
+                          Reset all
+                        </button>
                       </div>
 
-                      <div className="p-3 border-t border-b border-gray-100 bg-gray-50">
-                        <span className="text-sm font-bold text-gray-700 tracking-wide">Date Range</span>
-                      </div>
-                      <div className="py-1">
-                        {["All", "Today", "Yesterday", "Last 7 Days", "This Month", "Custom"].map((option) => (
-                          <div key={option}>
-                            <button
-                              key={option}
-                              onClick={() => {
-                                setDateFilter(option);
-                                if (option !== "Custom") {
-                                  setIsFilterOpen(false);
-                                }
-                              }}
-                              className={`block w-full text-left px-4 py-2 text-sm transition-colors ${dateFilter === option
-                                ? "bg-orange-50 text-orange-600 font-bold"
-                                : "text-gray-700 hover:bg-gray-50"
-                                }`}
+                      <div className="p-5 grid grid-cols-2 gap-6">
+                        {/* Category Section */}
+                        <div className="space-y-4">
+                          <span className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-2 border-b pb-1">Category</span>
+                          <div className="relative">
+                            <select
+                              value={tempCategory}
+                              onChange={(e) => setTempCategory(e.target.value)}
+                              className="w-full px-3 py-2.5 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-1 focus:ring-orange-500/20 outline-none transition-all text-xs font-semibold text-gray-700 bg-gray-50 hover:bg-white"
                             >
-                              {option}
-                            </button>
-                            {option === "Custom" && dateFilter === "Custom" && (
-                              <div className="px-4 py-3 space-y-2 border-t border-gray-50 bg-gray-50/50">
-                                <input
-                                  type="date"
-                                  value={customStart}
-                                  onChange={(e) => setCustomStart(e.target.value)}
-                                  className="w-full px-2 py-2 border border-gray-300 rounded-sm text-xs focus:outline-none focus:ring-1 focus:ring-orange-500"
-                                />
-                                <input
-                                  type="date"
-                                  value={customEnd}
-                                  onChange={(e) => setCustomEnd(e.target.value)}
-                                  className="w-full px-2 py-2 border border-gray-300 rounded-sm text-xs focus:outline-none focus:ring-1 focus:ring-orange-500"
-                                />
-                                <button
-                                  onClick={() => {
-                                    setIsFilterOpen(false);
-                                  }}
-                                  className="w-full bg-orange-500 text-white text-[10px] font-bold py-2 rounded-sm uppercase tracking-wider"
-                                >
-                                  Apply
-                                </button>
-                              </div>
-                            )}
+                              {categories.map((cat) => (
+                                <option key={cat} value={cat}>
+                                  {cat}
+                                </option>
+                              ))}
+                            </select>
                           </div>
-                        ))}
+                        </div>
+
+                        {/* Date Range Section */}
+                        <div className="space-y-4">
+                          <span className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-2 border-b pb-1">Date Range</span>
+                          <div className="space-y-2">
+                            {["All", "Today", "Yesterday", "Last 7 Days", "This Month", "Custom"].map((option) => (
+                              <div key={option}>
+                                <label className="flex items-center group cursor-pointer">
+                                  <div className="relative flex items-center">
+                                    <input
+                                      type="radio"
+                                      name="date_filter"
+                                      checked={tempDateFilter === option}
+                                      onChange={() => setTempDateFilter(option)}
+                                      className="peer h-4 w-4 cursor-pointer appearance-none rounded-full border-2 border-gray-200 transition-all checked:border-[#FF7B1D] checked:border-[5px] hover:border-orange-300"
+                                    />
+                                  </div>
+                                  <span className={`ml-3 text-sm font-medium transition-colors ${tempDateFilter === option ? "text-[#FF7B1D] font-bold" : "text-gray-600 group-hover:text-gray-900"}`}>
+                                    {option}
+                                  </span>
+                                </label>
+                                {option === "Custom" && tempDateFilter === "Custom" && (
+                                  <div className="mt-2 pl-7 space-y-2">
+                                    <input
+                                      type="date"
+                                      value={tempCustomStart}
+                                      onChange={(e) => setTempCustomStart(e.target.value)}
+                                      className="w-full px-2 py-1.5 border border-gray-200 rounded-sm text-xs focus:border-[#FF7B1D] outline-none bg-gray-50"
+                                    />
+                                    <input
+                                      type="date"
+                                      value={tempCustomEnd}
+                                      onChange={(e) => setTempCustomEnd(e.target.value)}
+                                      className="w-full px-2 py-1.5 border border-gray-200 rounded-sm text-xs focus:border-[#FF7B1D] outline-none bg-gray-50"
+                                    />
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Filter Actions */}
+                      <div className="p-4 bg-gray-50 border-t flex gap-3">
+                        <button
+                          onClick={() => setIsFilterOpen(false)}
+                          className="flex-1 py-2.5 text-[11px] font-bold text-gray-500 capitalize tracking-wider hover:bg-gray-200 transition-colors rounded-sm border border-gray-200 bg-white"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSelectedCategory(tempCategory);
+                            setDateFilter(tempDateFilter);
+                            setCustomStart(tempCustomStart);
+                            setCustomEnd(tempCustomEnd);
+                            setIsFilterOpen(false);
+                            setPage(1);
+                          }}
+                          className="flex-1 py-2.5 text-[11px] font-bold text-white capitalize tracking-wider bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 transition-all rounded-sm shadow-md active:scale-95"
+                        >
+                          Apply filters
+                        </button>
                       </div>
                     </div>
                   )}
@@ -431,7 +484,7 @@ export default function NotesPage() {
                     <div className="w-16 h-16 rounded-full bg-orange-50 flex items-center justify-center text-[#FF7B1D] border-4 border-white shadow-sm group-hover:shadow-md transition-all">
                       <FileText size={28} />
                     </div>
-                    <h3 className="text-base font-bold text-gray-900 mt-3 text-center line-clamp-2 px-2 h-12 flex items-center justify-center">
+                    <h3 className="text-base font-bold text-gray-900 mt-3 text-center line-clamp-2 px-2 min-h-[3rem]">
                       {note.title}
                     </h3>
                     <span className={`mt-2 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${note.category === 'Meeting' ? 'bg-orange-100 text-orange-700' :
@@ -446,32 +499,27 @@ export default function NotesPage() {
                   {/* Content Section */}
                   <div className="flex-1 mt-2 border-t pt-4 border-gray-50">
                     <div className="relative">
-                      <p className={`text-gray-600 text-xs font-normal leading-relaxed transition-all duration-300 ${!showFullNoteContent && note.content?.length > 120 ? 'line-clamp-4' : ''}`}>
+                      <p className="text-gray-600 text-sm font-normal leading-relaxed transition-all duration-300 line-clamp-4">
                         {note.content}
                       </p>
                       {note.content?.length > 120 && (
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            if (viewNote?.id === note.id) {
-                              setShowFullNoteContent(!showFullNoteContent);
-                            } else {
-                              handleView(note);
-                              setShowFullNoteContent(true);
-                            }
+                            handleView(note);
                           }}
                           className="mt-2 text-[#FF7B1D] font-bold text-[10px] uppercase tracking-widest hover:text-orange-600 transition-all"
                         >
-                          {showFullNoteContent && viewNote?.id === note.id ? 'Show Less' : 'Show More'}
+                          Show More
                         </button>
                       )}
                     </div>
                   </div>
 
                   {/* Footer Section */}
-                  <div className="mt-4 pt-4 border-t border-gray-100 flex justify-between items-center text-[10px] text-gray-400 font-bold uppercase tracking-widest">
+                  <div className="mt-6 -mx-6 -mb-6 px-6 py-4 bg-gray-50 border-t border-gray-200 rounded-b-sm flex justify-between items-center text-[10px] text-gray-600 font-bold uppercase tracking-widest">
                     <div className="flex items-center gap-1">
-                      <Clock size={12} className="text-gray-300" />
+                      <Clock size={12} className="text-gray-500" />
                       {new Date(note.created_at).toLocaleDateString()}
                     </div>
                     <button
@@ -620,20 +668,28 @@ export default function NotesPage() {
               <h3 className="text-xl font-bold text-gray-800 mb-2 font-primary">
                 No notes found
               </h3>
-              <p className="text-gray-500 max-w-xs mx-auto text-sm font-primary">
-                {searchTerm || selectedCategory !== "All"
+              <p className="text-gray-500 max-w-xs mx-auto text-sm font-primary mb-6">
+                {hasActiveFilters
                   ? "We couldn't find any notes matching your search or category filter. Try refining your criteria."
                   : "Your note collection is currently empty. Start capturing your thoughts and tasks today!"}
               </p>
-              {(searchTerm || selectedCategory !== "All") && (
+              {hasActiveFilters ? (
                 <button
-                  onClick={() => {
-                    setSearchTerm("");
-                    setSelectedCategory("All");
-                  }}
-                  className="mt-6 px-6 py-2 border-2 border-[#FF7B1D] text-[#FF7B1D] font-bold rounded-sm hover:bg-orange-50 transition-all text-xs uppercase tracking-wider"
+                  onClick={clearAllFilters}
+                  className="px-6 py-2 border-2 border-[#FF7B1D] text-[#FF7B1D] font-bold rounded-sm hover:bg-orange-50 transition-all text-xs uppercase tracking-wider"
                 >
                   Clear Filter
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    resetForm();
+                    setIsAdding(true);
+                  }}
+                  className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl inline-flex items-center gap-2 font-semibold"
+                >
+                  <Plus size={20} />
+                  Create First Note
                 </button>
               )}
             </div>
@@ -658,7 +714,7 @@ export default function NotesPage() {
                     </div>
                     <button
                       onClick={() => setIsAdding(false)}
-                      className="text-white hover:bg-white/20 p-2 rounded-full transition-colors"
+                      className="text-white hover:bg-white/20 p-2  transition-colors"
                     >
                       <X size={20} />
                     </button>
@@ -678,12 +734,11 @@ export default function NotesPage() {
                         value={formData.title}
                         onChange={handleInputChange}
                         required
-                        maxLength={250}
                         placeholder="e.g., Meeting Notes, Ideas, Tasks..."
-                        className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm hover:border-gray-300"
+                        className={`w-full px-4 py-3 border rounded-sm focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm hover:border-gray-300 ${formData.title.length > 250 ? 'border-red-500 focus:border-red-500' : 'border-gray-200 focus:border-[#FF7B1D]'}`}
                       />
                       <div className="flex justify-end mt-1">
-                        <span className={`text-[10px] font-bold ${formData.title.length > 240 ? 'text-red-500' : 'text-gray-400'}`}>
+                        <span className={`text-[10px] font-bold ${formData.title.length > 250 ? 'text-red-500' : 'text-gray-400'}`}>
                           {formData.title.length}/250 characters
                         </span>
                       </div>
@@ -718,12 +773,11 @@ export default function NotesPage() {
                         value={formData.content}
                         onChange={handleInputChange}
                         required
-                        maxLength={10000}
                         placeholder="Write your note content here..."
-                        className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm resize-none hover:border-gray-300"
+                        className={`w-full px-4 py-3 border rounded-sm focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm resize-none hover:border-gray-300 ${formData.content.length > 10000 ? 'border-red-500 focus:border-red-500' : 'border-gray-200 focus:border-[#FF7B1D]'}`}
                       ></textarea>
                       <div className="flex justify-end mt-1">
-                        <span className={`text-[10px] font-bold ${formData.content.length > 9500 ? 'text-red-500' : 'text-gray-400'}`}>
+                        <span className={`text-[10px] font-bold ${formData.content.length > 10000 ? 'text-red-500' : 'text-gray-400'}`}>
                           {formData.content.length}/10000 characters
                         </span>
                       </div>
@@ -814,36 +868,20 @@ export default function NotesPage() {
                 {/* Details Section */}
                 <div className="space-y-4">
                   <div>
-                    <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-                      <FileText size={14} className="text-[#FF7B1D]" />
-                      Note Content Narrative
+                    <h3 className="text-sm font-bold text-gray-800  mb-3 flex  items-center gap-2">
+                      <FileText size={16} className="text-[#FF7B1D]" />
+                      Note Content
                     </h3>
                     <div className="relative">
-                      <div className={`text-gray-700 leading-relaxed bg-gray-50 p-5 rounded-sm border border-gray-100 whitespace-pre-line text-sm transition-all duration-300 ${!showFullNoteContent && viewNote.content?.length > 250 ? 'line-clamp-[6]' : ''}`}>
-                        {showFullNoteContent ? viewNote.content : (viewNote.content?.length > 250 ? viewNote.content.substring(0, 250) : viewNote.content || "Detailed note content is currently unavailable.")}
-                        {!showFullNoteContent && viewNote.content?.length > 250 && (
-                          <span
-                            onClick={() => setShowFullNoteContent(true)}
-                            className="text-[#FF7B1D] font-bold cursor-pointer hover:underline ml-1"
-                          >
-                            ... Show More
-                          </span>
-                        )}
+                      <div className="text-gray-700 leading-relaxed bg-gray-50 p-5 rounded-sm border border-gray-100 whitespace-pre-line text-sm max-h-60 overflow-y-auto custom-scrollbar">
+                        {viewNote.content || "Detailed note content is currently unavailable."}
                       </div>
-                      {showFullNoteContent && viewNote.content?.length > 250 && (
-                        <button
-                          onClick={() => setShowFullNoteContent(false)}
-                          className="mt-3 text-[#FF7B1D] font-bold text-[10px] uppercase tracking-widest hover:text-orange-600 flex items-center gap-1 transition-all"
-                        >
-                          Show Less
-                        </button>
-                      )}
                     </div>
                   </div>
 
                   {/* Footer info */}
-                  <div className="pt-4 border-t border-gray-100 flex items-center gap-2 text-gray-500 italic text-sm">
-                    <Calendar size={16} />
+                  <div className="pt-4 border-t border-gray-100 flex items-center gap-2 text-gray-800 italic text-base">
+                    <Calendar size={18} />
                     <span>
                       Created on{" "}
                       {new Date(viewNote.created_at).toLocaleDateString("en-US", {

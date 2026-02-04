@@ -69,7 +69,7 @@ const Expense = {
         };
 
         // 3. Get paginated results
-        const listQuery = `SELECT * FROM expenses ${whereClause} ORDER BY date DESC, id DESC LIMIT ? OFFSET ?`;
+        const listQuery = `SELECT * FROM expenses ${whereClause} ORDER BY id DESC LIMIT ? OFFSET ?`;
         const [rows] = await pool.query(listQuery, [...queryParams, parseInt(limit), parseInt(offset)]);
 
         return {

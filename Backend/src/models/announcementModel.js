@@ -11,7 +11,7 @@ const Announcement = {
         return result.insertId;
     },
 
-    findAll: async (userId, page = 1, limit = 10, category = 'All', search = '') => {
+    findAll: async (userId, page = 1, limit = 10, category = 'All', search = '', title = '', author = '') => {
         const offset = (page - 1) * limit;
         let query = 'SELECT * FROM announcements WHERE user_id = ?';
         let countQuery = 'SELECT COUNT(*) as total FROM announcements WHERE user_id = ?';
@@ -31,6 +31,22 @@ const Announcement = {
             countQuery += ' AND (title LIKE ? OR content LIKE ? OR author LIKE ?)';
             queryParams.push(searchPattern, searchPattern, searchPattern);
             countParams.push(searchPattern, searchPattern, searchPattern);
+        }
+
+        if (title) {
+            const titlePattern = `%${title}%`;
+            query += ' AND title LIKE ?';
+            countQuery += ' AND title LIKE ?';
+            queryParams.push(titlePattern);
+            countParams.push(titlePattern);
+        }
+
+        if (author) {
+            const authorPattern = `%${author}%`;
+            query += ' AND author LIKE ?';
+            countQuery += ' AND author LIKE ?';
+            queryParams.push(authorPattern);
+            countParams.push(authorPattern);
         }
 
         query += ' ORDER BY date DESC, id DESC LIMIT ? OFFSET ?';

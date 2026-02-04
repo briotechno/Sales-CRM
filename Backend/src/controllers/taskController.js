@@ -14,17 +14,32 @@ const taskController = {
 
     getTasks: async (req, res) => {
         try {
+            // Get paginated tasks
             const tasks = await Task.findAll(req.user.id, req.query);
 
-            // Calculate summary statistics from filtered tasks
-            const summary = {
-                total: tasks.length,
-                highPriority: tasks.filter(t => t.priority === 'high').length,
-                active: tasks.filter(t => !t.completed).length,
-                completed: tasks.filter(t => t.completed).length
-            };
+            // Get global summary stats (for stats cards and total counts)
+            const summary = await Task.getSummary(req.user.id, req.query);
 
-            res.status(200).json({ tasks, summary });
+            // Pagination metadata
+            const page = parseInt(req.query.page) || 1;
+            const limit = parseInt(req.query.limit) || 10;
+            const totalPages = Math.ceil((summary?.total || 0) / limit);
+
+            res.status(200).json({
+                tasks,
+                summary: {
+                    total: summary?.total || 0,
+                    highPriority: summary?.highPriority || 0,
+                    active: summary?.active || 0,
+                    completed: summary?.completed || 0
+                },
+                pagination: {
+                    currentPage: page,
+                    totalPages,
+                    totalItems: summary?.total || 0,
+                    itemsPerPage: limit
+                }
+            });
         } catch (error) {
             console.error('Error in getTasks:', error);
             res.status(500).json({ message: 'Error fetching tasks', error: error.message });
@@ -65,8 +80,9 @@ const taskController = {
                 return res.status(404).json({ message: 'Task not found or unauthorized' });
             }
             const newStatus = task.completed ? 0 : 1;
-            await Task.update(req.params.id, { completed: newStatus }, req.user.id);
-            res.status(200).json({ message: `Task marked as ${newStatus ? 'completed' : 'active'}`, status: newStatus });
+            const statusText = newStatus ? 'Completed' : 'Active';
+            await Task.update(req.params.id, { completed: newStatus, status: statusText }, req.user.id);
+            res.status(200).json({ message: `Task marked as ${newStatus ? 'completed' : 'active'}`, status: newStatus, statusText });
         } catch (error) {
             console.error('Error in toggleTaskStatus:', error);
             res.status(500).json({ message: 'Error toggling task status', error: error.message });

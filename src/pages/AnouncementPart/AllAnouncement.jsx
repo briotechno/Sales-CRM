@@ -37,9 +37,17 @@ export default function AnnouncementPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [categoryFilter, setCategoryFilter] = useState("All");
+  const [titleFilter, setTitleFilter] = useState("");
+  const [authorFilter, setAuthorFilter] = useState("");
   const [dateFilter, setDateFilter] = useState("All");
   const [customStartDate, setCustomStartDate] = useState("");
   const [customEndDate, setCustomEndDate] = useState("");
+
+  // Temp states for filter modal
+  const [tempCategory, setTempCategory] = useState("All");
+  const [tempTitle, setTempTitle] = useState("");
+  const [tempAuthor, setTempAuthor] = useState("");
+
   const [viewMode, setViewMode] = useState("table");
   const itemsPerPage = 8;
 
@@ -72,6 +80,8 @@ export default function AnnouncementPage() {
     limit: itemsPerPage,
     category: categoryFilter,
     search: searchTerm,
+    title: titleFilter,
+    author: authorFilter,
   });
 
   const announcements = data?.announcements || [];
@@ -214,13 +224,15 @@ export default function AnnouncementPage() {
   // Clear all filters function
   const clearAllFilters = () => {
     setCategoryFilter("All");
+    setTitleFilter("");
+    setAuthorFilter("");
     setDateFilter("All");
     setCustomStartDate("");
     setCustomEndDate("");
     setCurrentPage(1);
   };
 
-  const hasActiveFilters = categoryFilter !== "All" || dateFilter !== "All";
+  const hasActiveFilters = categoryFilter !== "All" || dateFilter !== "All" || titleFilter !== "" || authorFilter !== "";
 
 
 
@@ -253,6 +265,9 @@ export default function AnnouncementPage() {
                       if (hasActiveFilters) {
                         clearAllFilters();
                       } else {
+                        setTempCategory(categoryFilter);
+                        setTempTitle(titleFilter);
+                        setTempAuthor(authorFilter);
                         setIsFilterOpen(!isFilterOpen);
                       }
                     }}
@@ -265,90 +280,78 @@ export default function AnnouncementPage() {
                   </button>
 
                   {isFilterOpen && (
-                    <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-xl z-50 animate-fadeIn">
-                      <div className="p-3 border-b border-gray-100 bg-gray-50">
-                        <span className="text-sm font-bold text-gray-700 tracking-wide">category</span>
+                    <div className="absolute right-0 mt-2 w-[350px] bg-white border border-gray-200 rounded-sm shadow-xl z-50 animate-fadeIn">
+                      <div className="p-4 border-b border-gray-100 bg-gray-50">
+                        <span className="text-sm font-bold text-gray-800 tracking-wide">Filter Announcements</span>
                       </div>
-                      <div className="py-1 max-h-48 overflow-y-auto custom-scrollbar border-b border-gray-100">
-                        <button
-                          onClick={() => {
-                            setCategoryFilter("All");
-                            setIsFilterOpen(false);
-                            setCurrentPage(1);
-                          }}
-                          className={`block w-full text-left px-4 py-2 text-sm transition-colors ${categoryFilter === "All"
-                            ? "bg-orange-50 text-orange-600 font-bold"
-                            : "text-gray-700 hover:bg-gray-50"
-                            }`}
-                        >
-                          All Categories
-                        </button>
-                        {categories.map((cat) => (
-                          <button
-                            key={cat.id}
-                            onClick={() => {
-                              setCategoryFilter(cat.name);
-                              setIsFilterOpen(false);
-                              setCurrentPage(1);
-                            }}
-                            className={`block w-full text-left px-4 py-2 text-sm transition-colors ${categoryFilter === cat.name
-                              ? "bg-orange-50 text-orange-600 font-bold"
-                              : "text-gray-700 hover:bg-gray-50"
-                              }`}
+                      <div className="p-5 space-y-4 max-h-[400px] overflow-y-auto custom-scrollbar">
+                        {/* Title Filter */}
+                        <div className="space-y-2">
+                          <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">Title</label>
+                          <div className="relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+                            <input
+                              type="text"
+                              value={tempTitle}
+                              onChange={(e) => setTempTitle(e.target.value)}
+                              placeholder="Search by title..."
+                              className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-sm text-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Author Filter */}
+                        <div className="space-y-2">
+                          <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">Author</label>
+                          <div className="relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+                            <input
+                              type="text"
+                              value={tempAuthor}
+                              onChange={(e) => setTempAuthor(e.target.value)}
+                              placeholder="Search by author..."
+                              className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-sm text-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Category Filter */}
+                        <div className="space-y-2">
+                          <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">Category</label>
+                          <select
+                            value={tempCategory}
+                            onChange={(e) => setTempCategory(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-200 rounded-sm text-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none bg-white"
                           >
-                            {cat.name}
-                          </button>
-                        ))}
+                            <option value="All">All Categories</option>
+                            {categories.map((cat) => (
+                              <option key={cat.id} value={cat.name}>
+                                {cat.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
                       </div>
 
-                      <div className="p-3 border-b border-gray-100 bg-gray-50">
-                        <span className="text-sm font-bold text-gray-700 tracking-wide">dateCreated</span>
-                      </div>
-                      <div className="py-1">
-                        {["All", "Today", "This Week", "This Month", "Custom"].map((option) => (
-                          <div key={option}>
-                            <button
-                              onClick={() => {
-                                setDateFilter(option);
-                                if (option !== "Custom") {
-                                  setIsFilterOpen(false);
-                                  setCurrentPage(1);
-                                }
-                              }}
-                              className={`block w-full text-left px-4 py-2 text-sm transition-colors ${dateFilter === option
-                                ? "bg-orange-50 text-orange-600 font-bold"
-                                : "text-gray-700 hover:bg-gray-50"
-                                }`}
-                            >
-                              {option}
-                            </button>
-                            {option === "Custom" && dateFilter === "Custom" && (
-                              <div className="px-4 py-3 space-y-2 border-t border-gray-50 bg-gray-50/50">
-                                <input
-                                  type="date"
-                                  value={customStartDate}
-                                  onChange={(e) => setCustomStartDate(e.target.value)}
-                                  className="w-full px-2 py-2 border border-gray-300 rounded-sm text-xs focus:outline-none focus:ring-1 focus:ring-orange-500"
-                                />
-                                <input
-                                  type="date"
-                                  value={customEndDate}
-                                  onChange={(e) => setCustomEndDate(e.target.value)}
-                                  className="w-full px-2 py-2 border border-gray-300 rounded-sm text-xs focus:outline-none focus:ring-1 focus:ring-orange-500"
-                                />
-                                <button
-                                  onClick={() => {
-                                    setIsFilterOpen(false);
-                                    setCurrentPage(1);
-                                  }}
-                                  className="w-full bg-orange-500 text-white text-[10px] font-bold py-2 rounded-sm uppercase tracking-wider"
-                                >
-                                  Apply
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                        ))}
+                      <div className="p-4 bg-gray-50 border-t flex gap-3">
+                        <button
+                          onClick={() => setIsFilterOpen(false)}
+                          className="flex-1 py-2 text-xs font-bold text-gray-600 bg-white border border-gray-300 rounded-sm hover:bg-gray-50"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={() => {
+                            setCategoryFilter(tempCategory);
+                            setTitleFilter(tempTitle);
+                            setAuthorFilter(tempAuthor);
+                            setCurrentPage(1);
+                            setIsFilterOpen(false);
+                          }}
+                          className="flex-1 py-2 text-xs font-bold text-white bg-gradient-to-r from-orange-500 to-orange-600 rounded-sm hover:from-orange-600 hover:to-orange-700 shadow-sm"
+                        >
+                          Apply Filters
+                        </button>
                       </div>
                     </div>
                   )}
@@ -425,19 +428,30 @@ export default function AnnouncementPage() {
                   <Megaphone className="text-gray-300" size={40} />
                 </div>
                 <h3 className="text-xl font-bold text-gray-800 mb-2">
-                  No announcements found
+                  {hasActiveFilters ? "No announcements found" : "No announcements recorded"}
                 </h3>
                 <p className="text-gray-500 max-w-sm mx-auto mb-6">
-                  {searchTerm || categoryFilter !== "All"
+                  {hasActiveFilters
                     ? "Try adjusting your search or filters to find what you're looking for."
                     : "Create your first announcement to share updates with the team."}
                 </p>
-                {hasActiveFilters && (
+                {hasActiveFilters ? (
                   <button
                     onClick={clearAllFilters}
                     className="px-6 py-2 border-2 border-[#FF7B1D] text-[#FF7B1D] font-bold rounded-sm hover:bg-orange-50 transition-all text-xs uppercase tracking-wider"
                   >
                     Clear All Filters
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      setSelectedAnnouncement(null);
+                      setShowAddModal(true);
+                    }}
+                    className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl inline-flex items-center gap-2 font-semibold"
+                  >
+                    <Plus size={20} />
+                    Create First Announcement
                   </button>
                 )}
               </div>
@@ -446,7 +460,7 @@ export default function AnnouncementPage() {
                 {filteredAnnouncements.map((announcement) => (
                   <div
                     key={announcement.id}
-                    className="bg-white border border-gray-200 rounded-sm shadow-sm hover:shadow-md transition-all p-6 relative group flex flex-col h-full"
+                    className="bg-white border border-gray-200 rounded-sm shadow-sm hover:shadow-md transition-all relative group flex flex-col h-full overflow-hidden"
                   >
                     {/* Action Icons - Top Right (Hidden by default, shown on hover) */}
                     <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
@@ -473,8 +487,8 @@ export default function AnnouncementPage() {
                       </button>
                     </div>
 
-                    {/* Content Section */}
-                    <div className="flex flex-col items-center mt-4 flex-1">
+                    {/* Body Section */}
+                    <div className="p-6 pb-4 flex-1 flex flex-col items-center mt-2">
                       {/* Icon/Avatar */}
                       <div className="relative">
                         <div className="w-20 h-20 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-bold text-2xl border-4 border-gray-100">
@@ -484,20 +498,20 @@ export default function AnnouncementPage() {
                       </div>
 
                       {/* Title */}
-                      <h3 className="text-lg font-bold text-gray-800 mt-3 text-center line-clamp-2 min-h-[56px]">
+                      <h3 className="text-lg font-bold text-gray-800 mt-4 text-center line-clamp-2 min-h-[56px] capitalize">
                         {announcement.title}
                       </h3>
 
                       {/* Category Badge */}
                       <p
-                        className={`text-xs font-semibold px-3 py-1 rounded-full mt-2 ${getCategoryColor(announcement.category)}`}
+                        className={`text-xs font-bold px-4 py-1.5 rounded-sm mt-3 border capitalize ${getCategoryColor(announcement.category)}`}
                       >
                         {announcement.category}
                       </p>
 
                       {/* Date */}
-                      <p className="text-xs text-gray-500 mt-1 uppercase tracking-wider font-medium flex items-center gap-1">
-                        <Calendar size={12} className="text-orange-500" />
+                      <p className="text-xs text-gray-500 mt-3 font-semibold flex items-center gap-1">
+                        <Calendar size={13} className="text-orange-500" />
                         {new Date(announcement.date).toLocaleDateString("en-IN", {
                           month: "short",
                           day: "numeric",
@@ -506,69 +520,67 @@ export default function AnnouncementPage() {
                       </p>
 
                       {/* Content Preview */}
-                      <p className="text-xs text-gray-600 leading-relaxed line-clamp-3 mt-4 text-center px-2">
+                      <p className="text-sm text-gray-600 leading-relaxed line-clamp-3 mt-4 text-center px-2 capitalize">
                         {announcement.content}
                       </p>
                     </div>
 
-                    {/* Stats Section */}
-                    <div className="flex justify-between items-center mt-6 text-center border-t pt-4">
-                      <div>
-                        <p className="text-[10px] text-gray-500 uppercase">Likes</p>
-                        <p className="text-sm font-bold text-gray-800">
-                          {(announcement.likes || 0) + (mockStats[announcement.id]?.likes || 0)}
-                        </p>
+                    {/* Footer Section */}
+                    <div className="bg-gray-100 p-6 space-y-5 border-t border-gray-200 mt-auto">
+                      {/* Stats Section */}
+                      <div className="flex justify-between items-center text-center border-b border-gray-300 pb-4">
+                        <div className="flex-1 border-r border-gray-300">
+                          <p className="text-xs text-[#FF7B1D] capitalize font-bold tracking-wide">Likes</p>
+                          <p className="text-base font-bold text-gray-800 mt-1">
+                            {(announcement.likes || 0) + (mockStats[announcement.id]?.likes || 0)}
+                          </p>
+                        </div>
+                        <div className="flex-1 border-r border-gray-300">
+                          <p className="text-xs text-[#FF7B1D] capitalize font-bold tracking-wide">Dislikes</p>
+                          <p className="text-base font-bold text-gray-800 mt-1">
+                            {(announcement.dislikes || 0) + (mockStats[announcement.id]?.dislikes || 0)}
+                          </p>
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-xs text-[#FF7B1D] capitalize font-bold tracking-wide">Views</p>
+                          <p className="text-base font-bold text-gray-800 mt-1">
+                            {(announcement.views || 0) + (mockStats[announcement.id]?.views || 0)}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-[10px] text-gray-500 uppercase">Dislikes</p>
-                        <p className="text-sm font-bold text-gray-800">
-                          {(announcement.dislikes || 0) + (mockStats[announcement.id]?.dislikes || 0)}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-[10px] text-gray-500 uppercase">Views</p>
-                        <p className="text-sm font-bold text-gray-800">
-                          {(announcement.views || 0) + (mockStats[announcement.id]?.views || 0)}
-                        </p>
-                      </div>
-                    </div>
 
-                    {/* Author & Interactions Section */}
-                    <div className="mt-4 pt-4 border-t border-gray-100 flex flex-col gap-3">
                       {/* Author Info */}
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full flex items-center justify-center text-white font-bold text-[10px] shadow-sm">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full flex items-center justify-center text-white font-bold text-xs shadow-md">
                           {announcement.author ? announcement.author.charAt(0) : "A"}
                         </div>
-                        <span className="text-xs text-gray-700 font-semibold truncate">
+                        <span className="text-sm text-gray-700 font-semibold truncate capitalize tracking-wide">
                           {(announcement.author || "System").split("-")[0].trim()}
                         </span>
                       </div>
 
                       {/* Like/Dislike Buttons */}
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-3">
                         <button
                           onClick={() => handleLike(announcement.id)}
-                          className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-sm border transition-all ${mockStats[announcement.id]?.userLiked
-                            ? 'bg-green-50 border-green-200 text-green-600'
-                            : 'bg-white border-gray-200 text-gray-600 hover:bg-green-50 hover:border-green-200'
+                          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-sm border transition-all ${mockStats[announcement.id]?.userLiked
+                            ? 'bg-green-600 border-green-600 text-white shadow-lg shadow-green-900/20'
+                            : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
                             }`}
-                          title="Like"
                         >
-                          <ThumbsUp size={14} className={mockStats[announcement.id]?.userLiked ? 'fill-current' : ''} />
-                          <span className="text-[10px] font-bold">Like</span>
+                          <ThumbsUp size={16} className={mockStats[announcement.id]?.userLiked ? 'fill-current' : ''} />
+                          <span className="text-xs font-bold capitalize">Like</span>
                         </button>
 
                         <button
                           onClick={() => handleDislike(announcement.id)}
-                          className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-sm border transition-all ${mockStats[announcement.id]?.userDisliked
-                            ? 'bg-red-50 border-red-200 text-red-600'
-                            : 'bg-white border-gray-200 text-gray-600 hover:bg-red-50 hover:border-red-200'
+                          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-sm border transition-all ${mockStats[announcement.id]?.userDisliked
+                            ? 'bg-red-600 border-red-600 text-white shadow-lg shadow-red-900/20'
+                            : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
                             }`}
-                          title="Dislike"
                         >
-                          <ThumbsDown size={14} className={mockStats[announcement.id]?.userDisliked ? 'fill-current' : ''} />
-                          <span className="text-[10px] font-bold">Dislike</span>
+                          <ThumbsDown size={16} className={mockStats[announcement.id]?.userDisliked ? 'fill-current' : ''} />
+                          <span className="text-xs font-bold capitalize">Dislike</span>
                         </button>
                       </div>
                     </div>
@@ -739,6 +751,7 @@ export default function AnnouncementPage() {
           setSelectedAnnouncement(null);
         }}
         announcement={selectedAnnouncement}
+        stats={mockStats[selectedAnnouncement?.id]}
       />
 
       <DeleteAnnouncementModal
@@ -748,6 +761,6 @@ export default function AnnouncementPage() {
           setSelectedAnnouncement(null);
         }}
       />
-    </DashboardLayout>
+    </DashboardLayout >
   );
 }

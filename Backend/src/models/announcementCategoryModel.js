@@ -73,6 +73,16 @@ const AnnouncementCategory = {
     },
 
     delete: async (id, userId) => {
+        // 1. Get the category details first
+        const [categoryRows] = await pool.query('SELECT name FROM announcement_categories WHERE id = ? AND user_id = ?', [id, userId]);
+        if (categoryRows.length === 0) return false;
+
+        const categoryName = categoryRows[0].name;
+
+        // 2. Delete all announcements associated with this category
+        await pool.query('DELETE FROM announcements WHERE category = ? AND user_id = ?', [categoryName, userId]);
+
+        // 3. Delete the category itself
         const [result] = await pool.query('DELETE FROM announcement_categories WHERE id = ? AND user_id = ?', [id, userId]);
         return result.affectedRows > 0;
     }

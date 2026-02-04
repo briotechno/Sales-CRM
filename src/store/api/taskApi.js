@@ -23,6 +23,7 @@ export const taskApi = createApi({
                     priority: params?.priority || 'all',
                     category: params?.category || 'All',
                     search: params?.search || '',
+                    status: params?.status || 'All',
                     timeframe: params?.timeframe || '',
                     dateFrom: params?.dateFrom || '',
                     dateTo: params?.dateTo || '',

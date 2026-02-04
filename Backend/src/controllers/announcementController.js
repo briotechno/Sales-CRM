@@ -17,8 +17,8 @@ const announcementController = {
 
     getAnnouncements: async (req, res) => {
         try {
-            const { page, limit, category, search } = req.query;
-            const data = await Announcement.findAll(req.user.id, page, limit, category, search);
+            const { page, limit, category, search, title, author } = req.query;
+            const data = await Announcement.findAll(req.user.id, page, limit, category, search, title, author);
             res.status(200).json(data);
         } catch (error) {
             res.status(500).json({ message: error.message });

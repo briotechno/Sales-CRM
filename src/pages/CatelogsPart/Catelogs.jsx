@@ -836,11 +836,30 @@ export default function CatalogsPage() {
                     >
                       <div className="flex flex-col items-center gap-3">
                         <Package size={48} className="text-gray-200" />
-                        <p>
+                        <p className="mb-4">
                           {hasActiveFilters
                             ? "No catalogs found matching your filter criteria. Try clearing filters."
-                            : "No catalogs available."}
+                            : "Your catalog collection is currently empty. Start showcasing your products today!"}
                         </p>
+                        {hasActiveFilters ? (
+                          <button
+                            onClick={clearAllFilters}
+                            className="px-6 py-2 border-2 border-[#FF7B1D] text-[#FF7B1D] font-bold rounded-sm hover:bg-orange-50 transition-all text-xs uppercase tracking-wider"
+                          >
+                            Clear Filter
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => {
+                              resetForm();
+                              setShowAddModal(true);
+                            }}
+                            className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl inline-flex items-center gap-2 font-semibold"
+                          >
+                            <Plus size={20} />
+                            Create First Catalog
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
