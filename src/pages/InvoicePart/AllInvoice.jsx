@@ -643,19 +643,6 @@ export default function AllInvoicePage() {
                 </div>
 
                 {/* Search Bar */}
-                <div className="relative group w-[350px]">
-                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#FF7B1D] transition-colors" size={18} />
-                  <input
-                    type="text"
-                    placeholder="Search invoice number, client..."
-                    value={searchTerm}
-                    onChange={(e) => {
-                      setSearchTerm(e.target.value);
-                      setCurrentPage(1);
-                    }}
-                    className="w-full pl-10 pr-4 py-3 bg-white border border-gray-300 rounded-sm focus:border-[#FF7B1D] focus:ring-4 focus:ring-orange-500/10 transition-all outline-none text-sm font-semibold text-gray-700 placeholder-gray-400 shadow-sm"
-                  />
-                </div>
 
                 <button
                   onClick={handleExportExcel}

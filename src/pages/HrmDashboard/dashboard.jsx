@@ -13,6 +13,7 @@ import {
   Loader2,
   AlertCircle,
   RefreshCw,
+  Warehouse,
 } from "lucide-react";
 import {
   BarChart,
