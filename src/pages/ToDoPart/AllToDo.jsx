@@ -369,7 +369,7 @@ export default function TodoPage() {
                   </button>
 
                   {isPriorityFilterOpen && (
-                    <div className="absolute right-0 mt-2 w-[650px] bg-white border border-gray-200 rounded-sm shadow-2xl z-50 animate-fadeIn overflow-hidden">
+                    <div className="absolute right-0 mt-2 w-[700px] bg-white border border-gray-200 rounded-sm shadow-2xl z-50 animate-fadeIn overflow-hidden">
                       {/* Header */}
                       <div className="p-4 bg-gray-50 border-b flex justify-between items-center">
                         <span className="text-sm font-bold text-gray-800">Filter Options</span>
@@ -388,11 +388,11 @@ export default function TodoPage() {
                         </button>
                       </div>
 
-                      <div className="p-5 grid grid-cols-3 gap-6">
+                      <div className="p-5 grid grid-cols-2 gap-x-10 gap-y-8">
                         {/* Column 1: Priority */}
                         <div className="space-y-4">
                           <span className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-2 border-b pb-1">Priority</span>
-                          <div className="space-y-2">
+                          <div className="grid grid-cols-2 gap-2">
                             {["all", "high", "medium", "low"].map((p) => (
                               <label key={p} className="flex items-center group cursor-pointer">
                                 <div className="relative flex items-center">
@@ -405,34 +405,17 @@ export default function TodoPage() {
                                   />
                                 </div>
                                 <span className={`ml-3 text-sm font-medium transition-colors capitalize ${tempPriority === p ? "text-[#FF7B1D] font-bold" : "text-gray-600 group-hover:text-gray-900"}`}>
-                                  {p === "all" ? "All Priorities" : p}
+                                  {p === "all" ? "All" : p}
                                 </span>
                               </label>
                             ))}
                           </div>
                         </div>
 
-                        {/* Column 2: Category */}
-                        <div className="space-y-4">
-                          <span className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-2 border-b pb-1">Category</span>
-                          <div className="relative">
-                            <select
-                              value={tempCategory}
-                              onChange={(e) => setTempCategory(e.target.value)}
-                              className="w-full px-3 py-2.5 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-1 focus:ring-orange-500/20 outline-none transition-all text-xs font-semibold text-gray-700 bg-gray-50 hover:bg-white"
-                            >
-                              <option value="All">All Categories</option>
-                              {["General", "Work", "Personal", "Meeting", "Follow-up", "Documentation", "Research", "Development", "Design", "Testing", "Deployment"].map((cat) => (
-                                <option key={cat} value={cat}>
-                                  {cat}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                        </div>
+                        {/* Column 2: Status */}
                         <div className="space-y-4">
                           <span className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-2 border-b pb-1">Status</span>
-                          <div className="space-y-2">
+                          <div className="grid grid-cols-2 gap-2">
                             {["All", "Active", "Pending", "Completed"].map((s) => (
                               <label key={s} className="flex items-center group cursor-pointer">
                                 <div className="relative flex items-center">
@@ -452,6 +435,63 @@ export default function TodoPage() {
                           </div>
                         </div>
 
+                        {/* Column 3: Category */}
+                        <div className="space-y-4">
+                          <span className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-2 border-b pb-1">Category</span>
+                          <div className="relative">
+                            <select
+                              value={tempCategory}
+                              onChange={(e) => setTempCategory(e.target.value)}
+                              className="w-full px-3 py-2.5 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-1 focus:ring-orange-500/20 outline-none transition-all text-xs font-semibold text-gray-700 bg-gray-50 hover:bg-white"
+                            >
+                              <option value="All">All Categories</option>
+                              {["General", "Work", "Personal", "Meeting", "Follow-up", "Documentation", "Research", "Development", "Design", "Testing", "Deployment"].map((cat) => (
+                                <option key={cat} value={cat}>
+                                  {cat}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+
+                        {/* Column 4: Date Range */}
+                        <div className="space-y-4">
+                          <span className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-2 border-b pb-1">Date Period</span>
+                          <div className="space-y-3">
+                            <select
+                              value={tempDateFilter}
+                              onChange={(e) => setTempDateFilter(e.target.value)}
+                              className="w-full px-3 py-2.5 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-1 focus:ring-orange-500/20 outline-none transition-all text-xs font-semibold text-gray-700 bg-gray-50 hover:bg-white"
+                            >
+                              {["All", "Today", "Yesterday", "Last 7 Days", "This Month", "Custom"].map((range) => (
+                                <option key={range} value={range}>{range}</option>
+                              ))}
+                            </select>
+
+                            {tempDateFilter === "Custom" && (
+                              <div className="grid grid-cols-2 gap-2 animate-fadeIn">
+                                <div className="space-y-1">
+                                  <label className="text-[9px] font-bold text-gray-400 uppercase">From</label>
+                                  <input
+                                    type="date"
+                                    value={tempCustomStart}
+                                    onChange={(e) => setTempCustomStart(e.target.value)}
+                                    className="w-full px-2 py-1.5 border border-gray-200 rounded-sm text-[10px] outline-none focus:border-orange-500"
+                                  />
+                                </div>
+                                <div className="space-y-1">
+                                  <label className="text-[9px] font-bold text-gray-400 uppercase">To</label>
+                                  <input
+                                    type="date"
+                                    value={tempCustomEnd}
+                                    onChange={(e) => setTempCustomEnd(e.target.value)}
+                                    className="w-full px-2 py-1.5 border border-gray-200 rounded-sm text-[10px] outline-none focus:border-orange-500"
+                                  />
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
                       </div>
 
                       {/* Filter Actions */}

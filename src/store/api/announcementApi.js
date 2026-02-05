@@ -19,6 +19,18 @@ export const announcementApi = createApi({
                 url: '/',
                 params,
             }),
+            transformResponse: (response) => {
+                const baseUrl = import.meta.env.VITE_API_BASE_URL.replace('/api/', '');
+                return {
+                    ...response,
+                    announcements: response.announcements.map(announcement => ({
+                        ...announcement,
+                        author_profile_picture_url: announcement.author_profile_picture
+                            ? `${baseUrl}${announcement.author_profile_picture}`
+                            : null
+                    }))
+                };
+            },
             providesTags: ['Announcement'],
         }),
         createAnnouncement: builder.mutation({

@@ -74,7 +74,7 @@ const Task = {
             }
         }
 
-        query += ' ORDER BY completed DESC, due_date ASC, due_time ASC';
+        query += ' ORDER BY completed ASC, id DESC';
 
         const offset = (parseInt(page) - 1) * parseInt(limit);
         query += ' LIMIT ? OFFSET ?';

@@ -321,9 +321,9 @@ export default function CreateInvoiceModal({
                                     name="invoiceNo"
                                     value={formData.invoiceNo}
                                     onChange={handleInputChange}
-                                    className={`${inputStyles} ${formData.id ? "bg-gray-50 text-gray-400 cursor-not-allowed border-gray-100" : ""}`}
+                                    className={`${inputStyles} bg-gray-50 text-gray-500 cursor-not-allowed border-gray-200 select-none shadow-none`}
                                     placeholder="INV-2024-001"
-                                    disabled={!!formData.id}
+                                    readOnly={true}
                                 />
                             </div>
                             <div>

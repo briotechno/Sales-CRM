@@ -641,12 +641,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           <div className="flex-1 overflow-y-auto px-3 pb-4 custom-scrollbar">
             {filteredMenuItems.map((section, idx) => (
               <div key={idx} className="mb-8 last:mb-0">
-                <div className="flex items-center gap-3 px-3 mb-4">
-                  <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
-                    {section.section}
-                  </h3>
-                  <div className="h-px flex-1 bg-gray-100 opacity-50" />
-                </div>
+
 
                 <div className="space-y-[2px]">
                   {section.items.map((item) => {

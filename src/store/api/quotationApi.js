@@ -20,10 +20,12 @@ export const quotationApi = createApi({
                 params: {
                     page: params?.page || 1,
                     limit: params?.limit || 10,
-                    status: params?.status !== 'All' ? params?.status : undefined,
+                    status: params?.status && params.status !== 'all' ? params.status : undefined,
                     search: params?.search || undefined,
                     dateFrom: params?.dateFrom || undefined,
                     dateTo: params?.dateTo || undefined,
+                    customer_type: params?.customer_type && params.customer_type !== 'all' ? params.customer_type : undefined,
+                    tax_type: params?.tax_type && params.tax_type !== 'all' ? params.tax_type : undefined,
                 },
             }),
             providesTags: ['Quotation'],

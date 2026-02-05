@@ -51,14 +51,14 @@ const User = {
 
     findById: async (id) => {
         const [rows] = await pool.query(
-            'SELECT id, firstName, lastName, email, mobileNumber, businessName, businessType, gst, address, role, created_at FROM users WHERE id = ?',
+            'SELECT id, firstName, lastName, profile_picture, email, mobileNumber, businessName, businessType, gst, address, role, created_at FROM users WHERE id = ?',
             [id]
         );
         return rows[0];
     },
 
     update: async (id, data) => {
-        const allowedFields = ['firstName', 'lastName', 'mobileNumber', 'businessName', 'businessType', 'gst', 'address'];
+        const allowedFields = ['firstName', 'lastName', 'profile_picture', 'mobileNumber', 'businessName', 'businessType', 'gst', 'address'];
         const fields = Object.keys(data).filter(key => allowedFields.includes(key));
 
         if (fields.length === 0) return false;
