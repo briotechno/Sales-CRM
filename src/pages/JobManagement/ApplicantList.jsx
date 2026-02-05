@@ -31,7 +31,7 @@ import {
     useDeleteApplicantMutation,
     useGetApplicantStatsQuery
 } from "../../store/api/applicantApi";
-import { useLazyGetJobByIdQuery } from "../../store/api/jobApi";
+import { useLazyGetJobByIdQuery, useGetJobsQuery } from "../../store/api/jobApi";
 import toast from 'react-hot-toast';
 import Modal from "../../components/common/Modal";
 
@@ -94,6 +94,7 @@ const ApplicantList = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [search, setSearch] = useState("");
     const [selectedStatus, setSelectedStatus] = useState("All");
+    const [selectedJobTitle, setSelectedJobTitle] = useState("All");
     const [showViewModal, setShowViewModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -112,12 +113,19 @@ const ApplicantList = () => {
 
     const itemsPerPage = 10;
 
+
     const { data: applicantsData, isLoading, isError } = useGetApplicantsQuery({
         page: currentPage,
         limit: itemsPerPage,
         search,
-        status: selectedStatus
+        status: selectedStatus,
+        job_title: selectedJobTitle
     });
+
+    // Fetch jobs for filter dropdown
+    const { data: jobsData } = useGetJobsQuery({ page: 1, limit: 100 });
+    const jobTitles = jobsData?.jobs?.map(job => job.title) || [];
+    const uniqueJobTitles = [...new Set(jobTitles)];
 
     const { data: statsData } = useGetApplicantStatsQuery();
     const [updateStatus] = useUpdateApplicantStatusMutation();
@@ -300,6 +308,18 @@ const ApplicantList = () => {
                                     <option value="Selected">Selected</option>
                                     <option value="Rejected">Rejected</option>
                                     <option value="Offer Sent">Offer Sent</option>
+
+                                </select>
+
+                                <select
+                                    value={selectedJobTitle}
+                                    onChange={(e) => setSelectedJobTitle(e.target.value)}
+                                    className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 outline-none bg-white font-medium text-gray-700 md:w-48"
+                                >
+                                    <option value="All">All Jobs</option>
+                                    {uniqueJobTitles.map((title, index) => (
+                                        <option key={index} value={title}>{title}</option>
+                                    ))}
                                 </select>
                             </div>
                         </div>
@@ -423,7 +443,7 @@ const ApplicantList = () => {
             </div>
 
             {/* View Applicant Details Modal */}
-            <Modal
+            < Modal
                 isOpen={showViewModal}
                 onClose={() => {
                     setShowViewModal(false);
@@ -431,7 +451,7 @@ const ApplicantList = () => {
                 }}
                 title="Applicant Details"
                 maxWidth="max-w-5xl"
-                icon={<User size={24} />}
+                icon={< User size={24} />}
             >
                 {selectedApplicant && (
                     <div className="">
@@ -626,15 +646,15 @@ const ApplicantList = () => {
                         </div>
                     </div>
                 )}
-            </Modal>
+            </Modal >
 
             {/* Edit Applicant Modal */}
-            <Modal
+            < Modal
                 isOpen={showEditModal}
                 onClose={() => setShowEditModal(false)}
                 title="Edit Applicant & Rounds"
                 maxWidth="max-w-4xl"
-                icon={<Edit size={24} />}
+                icon={< Edit size={24} />}
             >
                 {selectedApplicant && (
                     <div className="space-y-6">
@@ -827,7 +847,7 @@ const ApplicantList = () => {
                         </div>
                     </div>
                 )}
-            </Modal>
+            </Modal >
 
             <DeleteApplicantModal
                 isOpen={showDeleteModal}
@@ -836,7 +856,7 @@ const ApplicantList = () => {
                 isLoading={deleteLoading}
                 title={applicantToDelete?.name || ""}
             />
-        </DashboardLayout>
+        </DashboardLayout >
     );
 };
 

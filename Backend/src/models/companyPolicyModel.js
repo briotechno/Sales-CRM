@@ -13,7 +13,7 @@ const CompanyPolicy = {
     },
 
     findAll: async (userId, filters = {}) => {
-        const { category, status, search } = filters;
+        const { category, status, search, author, startDate, endDate } = filters;
         let query = 'SELECT * FROM company_policies WHERE user_id = ?';
         let queryParams = [userId];
 
@@ -24,6 +24,20 @@ const CompanyPolicy = {
         if (status && status !== 'All') {
             query += ' AND status = ?';
             queryParams.push(status);
+        }
+        if (author) {
+            query += ' AND author LIKE ?';
+            queryParams.push(`%${author}%`);
+        }
+        if (startDate && endDate) {
+            query += ' AND effective_date BETWEEN ? AND ?';
+            queryParams.push(startDate, endDate);
+        } else if (startDate) {
+            query += ' AND effective_date >= ?';
+            queryParams.push(startDate);
+        } else if (endDate) {
+            query += ' AND effective_date <= ?';
+            queryParams.push(endDate);
         }
         if (search) {
             query += ' AND (title LIKE ? OR description LIKE ?)';
@@ -47,7 +61,7 @@ const CompanyPolicy = {
             title = ?, category = ?, effective_date = ?, review_date = ?, 
             version = ?, description = ?, author = ?, status = ? 
             WHERE id = ? AND user_id = ?`,
-            [title, category, effective_date, review_date, version, description, author, status, id, userId]
+            [title, category, effective_date, review_date, version, description, author, status || 'Active', id, userId]
         );
     },
 
