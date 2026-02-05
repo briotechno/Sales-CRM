@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useLocation } from "react-router-dom";
 import * as XLSX from "xlsx";
 import DashboardLayout from "../../components/DashboardLayout";
@@ -60,10 +60,19 @@ export default function AllInvoicePage() {
   const itemsPerPage = 8;
 
   const [dateFilter, setDateFilter] = useState("All");
+  const [filterCustomerType, setFilterCustomerType] = useState("all");
+  const [filterTaxType, setFilterTaxType] = useState("all");
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
-  const [isDateFilterOpen, setIsDateFilterOpen] = useState(false);
-  const [isStatusFilterOpen, setIsStatusFilterOpen] = useState(false);
+
+  const [tempStatus, setTempStatus] = useState("all");
+  const [tempCustomerType, setTempCustomerType] = useState("all");
+  const [tempTaxType, setTempTaxType] = useState("all");
+  const [tempDateFilter, setTempDateFilter] = useState("All");
+  const [tempCustomStart, setTempCustomStart] = useState("");
+  const [tempCustomEnd, setTempCustomEnd] = useState("");
+
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   const dateDropdownRef = useRef(null);
   const statusDropdownRef = useRef(null);
@@ -332,14 +341,18 @@ export default function AllInvoicePage() {
 
   const { dateFrom, dateTo } = getDateRange();
 
-  const { data: invoicesResponse, isLoading, refetch, isFetching } = useGetInvoicesQuery({
+  const queryParams = useMemo(() => ({
     status: filterStatus,
+    customer_type: filterCustomerType,
+    tax_type: filterTaxType,
     search: searchTerm,
     page: currentPage,
     limit: itemsPerPage,
     dateFrom,
     dateTo
-  });
+  }), [filterStatus, filterCustomerType, filterTaxType, searchTerm, currentPage, itemsPerPage, dateFrom, dateTo]);
+
+  const { data: invoicesResponse, isLoading, refetch, isFetching } = useGetInvoicesQuery(queryParams);
 
   const invoices = invoicesResponse?.invoices || [];
   const summary = invoicesResponse?.summary || {};
@@ -347,11 +360,8 @@ export default function AllInvoicePage() {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (dateDropdownRef.current && !dateDropdownRef.current.contains(event.target)) {
-        setIsDateFilterOpen(false);
-      }
       if (statusDropdownRef.current && !statusDropdownRef.current.contains(event.target)) {
-        setIsStatusFilterOpen(false);
+        setIsFilterOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -361,13 +371,15 @@ export default function AllInvoicePage() {
   const clearAllFilters = () => {
     setSearchTerm("");
     setFilterStatus("all");
+    setFilterCustomerType("all");
+    setFilterTaxType("all");
     setDateFilter("All");
     setCustomStart("");
     setCustomEnd("");
     setCurrentPage(1);
   };
 
-  const hasActiveFilters = searchTerm || filterStatus !== "all" || dateFilter !== "All";
+  const hasActiveFilters = searchTerm || filterStatus !== "all" || filterCustomerType !== "all" || filterTaxType !== "all" || dateFilter !== "All";
 
   const handleExportExcel = () => {
     try {
@@ -455,10 +467,16 @@ export default function AllInvoicePage() {
                       if (hasActiveFilters) {
                         clearAllFilters();
                       } else {
-                        setIsStatusFilterOpen(!isStatusFilterOpen);
+                        setTempStatus(filterStatus);
+                        setTempCustomerType(filterCustomerType);
+                        setTempTaxType(filterTaxType);
+                        setTempDateFilter(dateFilter);
+                        setTempCustomStart(customStart);
+                        setTempCustomEnd(customEnd);
+                        setIsFilterOpen(!isFilterOpen);
                       }
                     }}
-                    className={`px-3 py-3 rounded-sm border transition shadow-sm ${isStatusFilterOpen || hasActiveFilters
+                    className={`px-3 py-3 rounded-sm border transition shadow-sm ${isFilterOpen || hasActiveFilters
                       ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
                       : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
                       }`}
@@ -466,83 +484,165 @@ export default function AllInvoicePage() {
                     {hasActiveFilters ? <X size={18} /> : <Filter size={18} />}
                   </button>
 
-                  {isStatusFilterOpen && (
-                    <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-xl z-50 animate-fadeIn overflow-hidden">
-                      <div className="p-3 border-b border-gray-100 bg-gray-50">
-                        <span className="text-sm font-bold text-gray-700 tracking-wide">Statuses</span>
-                      </div>
-                      <div className="py-1">
-                        {["all", "Draft", "Sent", "Partial", "Paid", "Unpaid", "Cancelled"].map((status) => (
-                          <button
-                            key={status}
-                            onClick={() => {
-                              setFilterStatus(status);
-                              setIsStatusFilterOpen(false);
-                              setCurrentPage(1);
-                            }}
-                            className={`block w-full text-left px-4 py-2 text-sm transition-colors ${filterStatus === status
-                              ? "bg-orange-50 text-orange-600 font-bold"
-                              : "text-gray-700 hover:bg-gray-50"
-                              }`}
-                          >
-                            {status === "all" ? "All Invoices" : status}
-                          </button>
-                        ))}
+                  {isFilterOpen && (
+                    <div className="absolute right-0 mt-2 w-[700px] bg-white border border-gray-200 rounded-sm shadow-2xl z-50 animate-fadeIn overflow-hidden">
+                      {/* Header */}
+                      <div className="p-4 bg-gray-50 border-b flex justify-between items-center">
+                        <span className="text-sm font-bold text-gray-800 tracking-wide uppercase">Advanced Filters</span>
+                        <button
+                          onClick={() => {
+                            setTempStatus("all");
+                            setTempCustomerType("all");
+                            setTempTaxType("all");
+                            setTempDateFilter("All");
+                            setTempCustomStart("");
+                            setTempCustomEnd("");
+                          }}
+                          className="text-[10px] font-bold text-orange-600 hover:underline hover:text-orange-700 capitalize"
+                        >
+                          Reset all
+                        </button>
                       </div>
 
-                      <div className="p-3 border-t border-b border-gray-100 bg-gray-50">
-                        <span className="text-sm font-bold text-gray-700 tracking-wide">Date Range</span>
-                      </div>
-                      <div className="py-1">
-                        {["All", "Today", "Yesterday", "Last 7 Days", "This Month", "Custom"].map((option) => (
-                          <div key={option}>
-                            <button
-                              key={option}
-                              onClick={() => {
-                                setDateFilter(option);
-                                if (option !== "Custom") {
-                                  setIsStatusFilterOpen(false);
-                                  setCurrentPage(1);
-                                }
-                              }}
-                              className={`block w-full text-left px-4 py-2 text-sm transition-colors ${dateFilter === option
-                                ? "bg-orange-50 text-orange-600 font-bold"
-                                : "text-gray-700 hover:bg-gray-50"
-                                }`}
+                      <div className="p-5 grid grid-cols-2 gap-x-10 gap-y-8">
+                        {/* Column 1: Status */}
+                        <div className="space-y-4">
+                          <span className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-2 border-b pb-1">Payment Status</span>
+                          <div className="grid grid-cols-2 gap-2">
+                            {["all", "Draft", "Sent", "Partial", "Paid", "Unpaid", "Cancelled"].map((s) => (
+                              <label key={s} className="flex items-center group cursor-pointer">
+                                <div className="relative flex items-center">
+                                  <input
+                                    type="radio"
+                                    name="status_filter"
+                                    checked={tempStatus === s}
+                                    onChange={() => setTempStatus(s)}
+                                    className="peer h-4 w-4 cursor-pointer appearance-none rounded-full border-2 border-gray-200 transition-all checked:border-[#FF7B1D] checked:border-[5px] hover:border-orange-300"
+                                  />
+                                </div>
+                                <span className={`ml-3 text-xs font-medium transition-colors capitalize ${tempStatus === s ? "text-[#FF7B1D] font-bold" : "text-gray-600 group-hover:text-gray-900"}`}>
+                                  {s === "all" ? "All" : s}
+                                </span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Column 2: Date Period */}
+                        <div className="space-y-4">
+                          <span className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-2 border-b pb-1">Date Period</span>
+                          <div className="space-y-3">
+                            <select
+                              value={tempDateFilter}
+                              onChange={(e) => setTempDateFilter(e.target.value)}
+                              className="w-full px-3 py-2.5 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-1 focus:ring-orange-500/20 outline-none transition-all text-xs font-semibold text-gray-700 bg-gray-50 hover:bg-white"
                             >
-                              {option}
-                            </button>
-                            {option === "Custom" && dateFilter === "Custom" && (
-                              <div className="px-4 py-3 space-y-2 border-t border-gray-50 bg-gray-50/50">
-                                <input
-                                  type="date"
-                                  value={customStart}
-                                  onChange={(e) => setCustomStart(e.target.value)}
-                                  className="w-full px-2 py-2 border border-gray-300 rounded-sm text-xs focus:outline-none focus:ring-1 focus:ring-orange-500"
-                                />
-                                <input
-                                  type="date"
-                                  value={customEnd}
-                                  onChange={(e) => setCustomEnd(e.target.value)}
-                                  className="w-full px-2 py-2 border border-gray-300 rounded-sm text-xs focus:outline-none focus:ring-1 focus:ring-orange-500"
-                                />
-                                <button
-                                  onClick={() => {
-                                    setIsStatusFilterOpen(false);
-                                    setCurrentPage(1);
-                                  }}
-                                  className="w-full bg-orange-500 text-white text-[10px] font-bold py-2 rounded-sm uppercase tracking-wider"
-                                >
-                                  Apply
-                                </button>
+                              {["All", "Today", "Yesterday", "Last 7 Days", "This Month", "Custom"].map((range) => (
+                                <option key={range} value={range}>{range}</option>
+                              ))}
+                            </select>
+
+                            {tempDateFilter === "Custom" && (
+                              <div className="grid grid-cols-2 gap-2 animate-fadeIn">
+                                <div className="space-y-1">
+                                  <label className="text-[9px] font-bold text-gray-400 uppercase">From</label>
+                                  <input
+                                    type="date"
+                                    value={tempCustomStart}
+                                    onChange={(e) => setTempCustomStart(e.target.value)}
+                                    className="w-full px-2 py-1.5 border border-gray-200 rounded-sm text-[10px] outline-none focus:border-orange-500"
+                                  />
+                                </div>
+                                <div className="space-y-1">
+                                  <label className="text-[9px] font-bold text-gray-400 uppercase">To</label>
+                                  <input
+                                    type="date"
+                                    value={tempCustomEnd}
+                                    onChange={(e) => setTempCustomEnd(e.target.value)}
+                                    className="w-full px-2 py-1.5 border border-gray-200 rounded-sm text-[10px] outline-none focus:border-orange-500"
+                                  />
+                                </div>
                               </div>
                             )}
                           </div>
-                        ))}
+                        </div>
+
+                        {/* Column 3: Customer Type */}
+                        <div className="space-y-4">
+                          <span className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-2 border-b pb-1">Customer Type</span>
+                          <div className="grid grid-cols-2 gap-2">
+                            {["all", "Individual", "Business"].map((ct) => (
+                              <label key={ct} className="flex items-center group cursor-pointer">
+                                <div className="relative flex items-center">
+                                  <input
+                                    type="radio"
+                                    name="customer_type_filter"
+                                    checked={tempCustomerType === ct}
+                                    onChange={() => setTempCustomerType(ct)}
+                                    className="peer h-4 w-4 cursor-pointer appearance-none rounded-full border-2 border-gray-200 transition-all checked:border-[#FF7B1D] checked:border-[5px] hover:border-orange-300"
+                                  />
+                                </div>
+                                <span className={`ml-3 text-xs font-medium transition-colors capitalize ${tempCustomerType === ct ? "text-[#FF7B1D] font-bold" : "text-gray-600 group-hover:text-gray-900"}`}>
+                                  {ct === "all" ? "All" : ct}
+                                </span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Column 4: Invoice (Tax) Type */}
+                        <div className="space-y-4">
+                          <span className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-2 border-b pb-1">Invoice Type</span>
+                          <div className="grid grid-cols-2 gap-2">
+                            {["all", "GST", "Non-GST"].map((tt) => (
+                              <label key={tt} className="flex items-center group cursor-pointer">
+                                <div className="relative flex items-center">
+                                  <input
+                                    type="radio"
+                                    name="tax_type_filter"
+                                    checked={tempTaxType === tt}
+                                    onChange={() => setTempTaxType(tt)}
+                                    className="peer h-4 w-4 cursor-pointer appearance-none rounded-full border-2 border-gray-200 transition-all checked:border-[#FF7B1D] checked:border-[5px] hover:border-orange-300"
+                                  />
+                                </div>
+                                <span className={`ml-3 text-xs font-medium transition-colors capitalize ${tempTaxType === tt ? "text-[#FF7B1D] font-bold" : "text-gray-600 group-hover:text-gray-900"}`}>
+                                  {tt === "all" ? "All" : tt}
+                                </span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Filter Actions */}
+                      <div className="p-4 bg-gray-50 border-t flex gap-3">
+                        <button
+                          onClick={() => setIsFilterOpen(false)}
+                          className="flex-1 py-2.5 text-[11px] font-bold text-gray-500 capitalize tracking-wider hover:bg-gray-200 transition-colors rounded-sm border border-gray-200 bg-white"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={() => {
+                            setFilterStatus(tempStatus);
+                            setFilterCustomerType(tempCustomerType);
+                            setFilterTaxType(tempTaxType);
+                            setDateFilter(tempDateFilter);
+                            setCustomStart(tempCustomStart);
+                            setCustomEnd(tempCustomEnd);
+                            setIsFilterOpen(false);
+                            setCurrentPage(1);
+                          }}
+                          className="flex-1 py-2.5 text-[11px] font-bold text-white capitalize tracking-wider bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 transition-all rounded-sm shadow-md active:scale-95"
+                        >
+                          Apply filters
+                        </button>
                       </div>
                     </div>
                   )}
                 </div>
+
+                {/* Search Bar */}
 
                 <button
                   onClick={handleExportExcel}
@@ -552,24 +652,6 @@ export default function AllInvoicePage() {
                   <Download size={18} className="text-gray-700 transition-transform group-hover:scale-110" />
                   Export
                 </button>
-
-                {dateFilter === "Custom" && (
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="date"
-                      value={customStart}
-                      onChange={(e) => setCustomStart(e.target.value)}
-                      className="px-3 py-3 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-orange-500 text-xs shadow-sm"
-                    />
-                    <span className="text-gray-400 text-[10px] font-bold uppercase">to</span>
-                    <input
-                      type="date"
-                      value={customEnd}
-                      onChange={(e) => setCustomEnd(e.target.value)}
-                      className="px-3 py-3 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-orange-500 text-xs shadow-sm"
-                    />
-                  </div>
-                )}
 
 
                 <button
@@ -647,15 +729,15 @@ export default function AllInvoicePage() {
             <div className="overflow-x-auto">
               <table className="w-full border-collapse">
                 <thead>
-                  <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm">
-                    <th className="py-3 px-4 font-semibold text-left">Date</th>
-                    <th className="py-3 px-4 font-semibold text-left">Invoice ID</th>
-                    <th className="py-3 px-4 font-semibold text-left">Client Name</th>
-                    <th className="py-3 px-4 font-semibold text-left">Status</th>
-                    <th className="py-3 px-4 font-semibold text-right">Total Amount</th>
-                    <th className="py-3 px-4 font-semibold text-right">Received Amount</th>
-                    <th className="py-3 px-4 font-semibold text-right">Pending Amount</th>
-                    <th className="py-3 px-4 font-semibold text-right">Actions</th>
+                  <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-xs tracking-wide">
+                    <th className="py-4 px-4 font-bold text-left w-[200px]">Invoice ID</th>
+                    <th className="py-4 px-4 font-bold text-left">Client Name</th>
+                    <th className="py-4 px-4 font-bold text-left w-[180px]">Date</th>
+                    <th className="py-4 px-4 font-bold text-center w-[180px]">Status</th>
+                    <th className="py-4 px-4 font-bold text-right w-[180px]">Total Amount</th>
+                    <th className="py-4 px-4 font-bold text-right w-[180px]">Received</th>
+                    <th className="py-4 px-4 font-bold text-right w-[180px]">Pending</th>
+                    <th className="py-4 px-4 font-bold text-right w-[110px]">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
@@ -674,32 +756,32 @@ export default function AllInvoicePage() {
                         key={invoice.id}
                         className={`border-b border-gray-100 hover:bg-orange-50/20 transition-colors ${index % 2 === 0 ? "bg-white" : "bg-gray-50/30"}`}
                       >
-                        <td className="py-3 px-4 text-gray-600 text-sm font-medium">
-                          <div className="flex items-center gap-2">
+                        <td className="py-4 px-4 font-bold text-gray-900 text-xs tracking-tight">
+                          {invoice.invoice_number}
+                        </td>
+                        <td className="py-4 px-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-full bg-blue-50 flex items-center justify-center text-blue-500 shrink-0 border border-blue-100 shadow-sm">
+                              <User size={16} />
+                            </div>
+                            <div className="min-w-0">
+                              <div className="text-sm font-bold text-gray-900 truncate leading-tight">{invoice.client_name}</div>
+                              <div className="text-[10px] font-semibold text-gray-400 truncate uppercase mt-0.5 tracking-tighter">{invoice.client_email}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-4 px-4 text-gray-600 text-xs font-bold">
+                          <div className="flex items-center gap-2 text-xs">
                             <Calendar size={14} className="text-orange-500" />
                             {new Date(invoice.invoice_date).toLocaleDateString('en-GB')}
                           </div>
                         </td>
-                        <td className="py-3 px-4 font-bold text-gray-900 text-sm italic">
-                          {invoice.invoice_number}
-                        </td>
-                        <td className="py-3 px-4">
-                          <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-500 shrink-0">
-                              <User size={14} />
-                            </div>
-                            <div className="min-w-0">
-                              <div className="text-sm font-bold text-gray-900 truncate">{invoice.client_name}</div>
-                              <div className="text-[10px] font-medium text-gray-400 truncate uppercase mt-0.5">{invoice.client_email}</div>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="py-3 px-4">
-                          <div className="flex items-center gap-2">
+                        <td className="py-4 px-4 text-center">
+                          <div className="inline-flex items-center justify-center relative min-w-[120px]">
                             <select
                               value={invoice.status}
                               onChange={(e) => handleStatusUpdate(invoice, e.target.value)}
-                              className={`px-2.5 py-1 rounded-sm text-[10px] font-bold border uppercase tracking-wider outline-none cursor-pointer transition-all ${invoice.status === 'Paid' ? 'bg-green-50 text-green-700 border-green-200' :
+                              className={`w-full px-2.5 py-1.5 rounded-sm text-[10px] font-bold border uppercase tracking-widest outline-none cursor-pointer transition-all shadow-sm ${invoice.status === 'Paid' ? 'bg-green-50 text-green-700 border-green-200' :
                                 invoice.status === 'Partial' ? 'bg-blue-50 text-blue-700 border-blue-200' :
                                   invoice.status === 'Unpaid' ? 'bg-red-50 text-red-700 border-red-200' :
                                     invoice.status === 'Draft' ? 'bg-gray-50 text-gray-700 border-gray-200' :
@@ -717,56 +799,56 @@ export default function AllInvoicePage() {
                             {invoice.status === "Partial" && (
                               <button
                                 onClick={() => handleStatusUpdate(invoice, "Partial")}
-                                className="p-1.5 bg-orange-50 text-[#FF7B1D] rounded-full hover:bg-orange-100 transition-colors shadow-sm"
+                                className="absolute -right-8 p-1.5 bg-orange-50 text-[#FF7B1D] rounded-full hover:bg-orange-100 transition-colors shadow-sm border border-orange-100"
                                 title="Edit Partial Payment"
                               >
-                                <Edit2 size={12} strokeWidth={3} />
+                                <Edit2 size={11} strokeWidth={3} />
                               </button>
                             )}
                           </div>
                         </td>
-                        <td className="py-3 px-4 text-right">
-                          <div className="text-sm font-bold text-gray-900">₹{(invoice.total_amount || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
+                        <td className="py-4 px-4 text-right">
+                          <div className="text-sm font-bold text-gray-900 whitespace-nowrap">₹{(invoice.total_amount || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
                         </td>
-                        <td className="py-3 px-4 text-right">
-                          <div className="text-sm font-bold text-green-600">₹{(invoice.paid_amount || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
+                        <td className="py-4 px-4 text-right">
+                          <div className="text-sm font-bold text-green-600 whitespace-nowrap">₹{(invoice.paid_amount || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
                         </td>
-                        <td className="py-3 px-4 text-right">
-                          <div className={`text-sm font-bold ${(invoice.balance_amount || 0) > 0 ? "text-red-500" : "text-green-600"}`}>
+                        <td className="py-4 px-4 text-right">
+                          <div className={`text-sm font-bold whitespace-nowrap ${(invoice.balance_amount || 0) > 0 ? "text-red-500" : "text-green-600"}`}>
                             ₹{(invoice.balance_amount || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                           </div>
                           {(invoice.balance_amount || 0) === 0 && (
-                            <div className="text-[9px] font-black text-green-500 uppercase tracking-tighter mt-0.5 animate-pulse">CLEARED</div>
+                            <div className="text-[9px] font-bold text-green-500 uppercase tracking-tighter mt-1 animate-pulse">CLEARED</div>
                           )}
                         </td>
-                        <td className="py-3 px-4">
-                          <div className="flex items-center justify-end gap-3 text-gray-400">
+                        <td className="py-4 px-4 text-right">
+                          <div className="flex items-center justify-end gap-2.5">
                             <button
                               onClick={() => {
                                 setSelectedInvoice(invoice);
                                 setShowViewModal(true);
                               }}
-                              className="p-1 hover:bg-orange-100 rounded-sm text-blue-500 hover:text-blue-700 transition-all"
+                              className="p-1.5 hover:bg-blue-50 rounded-sm text-blue-500 hover:text-blue-700 transition-all border border-transparent hover:border-blue-100"
                               title="View Invoice"
                             >
-                              <Eye size={18} />
+                              <Eye size={16} />
                             </button>
                             <button
                               onClick={() => handleEdit(invoice)}
-                              className="p-1 hover:bg-orange-100 rounded-sm text-green-500 hover:text-green-700 transition-all"
+                              className="p-1.5 hover:bg-green-50 rounded-sm text-green-500 hover:text-green-700 transition-all border border-transparent hover:border-green-100"
                               title="Edit"
                             >
-                              <Edit size={18} />
+                              <Edit size={16} />
                             </button>
                             <button
                               onClick={() => {
                                 setSelectedInvoice(invoice);
                                 setShowDeleteModal(true);
                               }}
-                              className="p-1 hover:bg-orange-100 rounded-sm text-red-500 hover:text-red-700 transition-all shadow-sm"
+                              className="p-1.5 hover:bg-red-50 rounded-sm text-red-500 hover:text-red-700 transition-all border border-transparent hover:border-red-100 shadow-sm"
                               title="Delete"
                             >
-                              <Trash2 size={18} />
+                              <Trash2 size={16} />
                             </button>
                           </div>
                         </td>
@@ -774,16 +856,68 @@ export default function AllInvoicePage() {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="8" className="text-center py-10">
-                        <div className="bg-orange-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3">
-                          <FileText size={32} className="text-orange-500" />
+                      <td colSpan="8" className="py-20 text-center">
+                        <div className="flex flex-col items-center justify-center gap-4 max-w-[600px] mx-auto">
+                          <div className="w-20 h-20 bg-orange-50 rounded-full flex items-center justify-center mb-2">
+                            <FileText size={40} className="text-orange-400" />
+                          </div>
+                          <div className="space-y-2">
+                            <h3 className="text-xl font-bold text-gray-900 tracking-tight">
+                              {hasActiveFilters ? "No Invoices Found" : "No Invoices Yet"}
+                            </h3>
+                            <p className="text-gray-500 font-medium leading-relaxed">
+                              {hasActiveFilters
+                                ? "We couldn't find any invoices matching your current filter criteria. Try adjusting your filters or search term to find what you're looking for."
+                                : "Your invoice management system is ready. Start by creating your first professional invoice to track payments and grow your business."}
+                            </p>
+                          </div>
+
+                          <div className="mt-4">
+                            {hasActiveFilters ? (
+                              <button
+                                onClick={clearAllFilters}
+                                className="px-6 py-2.5 border-2 border-orange-500 text-orange-600 font-bold rounded-sm hover:bg-orange-50 transition-all text-xs uppercase tracking-widest flex items-center gap-2"
+                              >
+                                <X size={16} />
+                                Clear All Filters
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => {
+                                  setFormData({
+                                    invoiceNo: `INV-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
+                                    clientName: "",
+                                    email: "",
+                                    phone: "",
+                                    address: "",
+                                    invoiceDate: new Date().toISOString().split("T")[0],
+                                    dueDate: "",
+                                    lineItems: [],
+                                    subtotal: 0,
+                                    tax: 0,
+                                    discount: 0,
+                                    totalAmount: 0,
+                                    paidAmount: 0,
+                                    balanceAmount: 0,
+                                    status: "Draft",
+                                    notes: "",
+                                    tax_type: "GST",
+                                    client_gstin: "",
+                                    place_of_supply: "",
+                                    business_gstin: "",
+                                    pan_number: "",
+                                    terms_and_conditions: ""
+                                  });
+                                  setShowModal(true);
+                                }}
+                                className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-8 py-3.5 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl inline-flex items-center gap-2 font-bold tracking-wide"
+                              >
+                                <Plus size={20} />
+                                Create First Invoice
+                              </button>
+                            )}
+                          </div>
                         </div>
-                        <h3 className="text-lg font-bold text-gray-800 mb-1 uppercase tracking-tight">
-                          No Invoices Found
-                        </h3>
-                        <p className="text-gray-500 text-sm font-medium italic">
-                          {hasActiveFilters ? "No invoices match your selected filters" : "Start by creating your first client invoice"}
-                        </p>
                       </td>
                     </tr>
                   )}

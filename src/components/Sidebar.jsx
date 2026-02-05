@@ -274,6 +274,12 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       section: "CRM",
       items: [
         {
+          name: "CRM Dashboard",
+          icon: <LayoutDashboard size={22} />,
+          path: "/crm/dashboard",
+          permission: "CRM Dashboard"
+        },
+        {
           name: "Leads Management",
           icon: <Users size={22} />,
           path: "/crm/leads",
@@ -337,6 +343,12 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
     {
       section: "HRM",
       items: [
+        {
+          name: "HRM Dashboard",
+          icon: <LayoutDashboard size={22} />,
+          path: "/hrm/dashboard",
+          permission: "HRM Dashboard"
+        },
         {
           name: "Team Management",
           icon: <Users size={22} />,
@@ -522,6 +534,9 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         return false;
       }
 
+      // Show Dashboard section only when in the main Dashboard rail
+      if (section.section === "Dashboard") return activeModule === "dashboard";
+
       // Module-wise filtering
       const currentModule = availableModules.find(m => m.id === activeModule);
       return currentModule?.section === section.section;
@@ -631,8 +646,12 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             </h2>
             <div className="flex items-center gap-2 mt-1">
               <div className="w-1.5 h-1.5 rounded-full bg-[#FF7B1D] animate-pulse" />
-              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-[0.15em]">
-                CRM SALES SYSTEM
+              <p className="text-[9px] text-gray-400 font-bold uppercase tracking-wider whitespace-nowrap">
+                {activeModule === "crm" ? "Sales & Leads Management" :
+                  activeModule === "hrm" ? "Human Resource System" :
+                    activeModule === "superadmin" ? "Platform Administration" :
+                      activeModule === "settings" ? "System Configuration" :
+                        "Additional Modules"}
               </p>
             </div>
           </div>
@@ -641,12 +660,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           <div className="flex-1 overflow-y-auto px-3 pb-4 custom-scrollbar">
             {filteredMenuItems.map((section, idx) => (
               <div key={idx} className="mb-8 last:mb-0">
-                <div className="flex items-center gap-3 px-3 mb-4">
-                  <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
-                    {section.section}
-                  </h3>
-                  <div className="h-px flex-1 bg-gray-100 opacity-50" />
-                </div>
+
 
                 <div className="space-y-[2px]">
                   {section.items.map((item) => {

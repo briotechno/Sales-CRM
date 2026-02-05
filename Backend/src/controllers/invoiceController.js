@@ -13,9 +13,9 @@ const invoiceController = {
 
     getAllInvoices: async (req, res) => {
         try {
-            const { status, search, page, limit, dateFrom, dateTo } = req.query;
+            const { status, search, page, limit, dateFrom, dateTo, customer_type, tax_type } = req.query;
             const result = await Invoice.findAll(req.user.id,
-                { status, search, dateFrom, dateTo },
+                { status, search, dateFrom, dateTo, customer_type, tax_type },
                 { page, limit }
             );
             res.json({ success: true, ...result });

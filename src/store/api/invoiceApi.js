@@ -24,6 +24,8 @@ export const invoiceApi = createApi({
                     limit: params?.limit || 10,
                     dateFrom: params?.dateFrom || undefined,
                     dateTo: params?.dateTo || undefined,
+                    customer_type: params?.customer_type && params.customer_type !== 'all' ? params.customer_type : undefined,
+                    tax_type: params?.tax_type && params.tax_type !== 'all' ? params.tax_type : undefined,
                 },
             }),
             providesTags: ['Invoice'],

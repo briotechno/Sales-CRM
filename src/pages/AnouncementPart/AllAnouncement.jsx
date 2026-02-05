@@ -551,8 +551,18 @@ export default function AnnouncementPage() {
 
                       {/* Author Info */}
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full flex items-center justify-center text-white font-bold text-xs shadow-md">
-                          {announcement.author ? announcement.author.charAt(0) : "A"}
+                        <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center shadow-md border border-gray-200 bg-gray-50">
+                          {announcement.author_profile_picture_url ? (
+                            <img
+                              src={announcement.author_profile_picture_url}
+                              alt={announcement.author}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-gradient-to-r from-orange-500 to-orange-600 flex items-center justify-center text-white font-bold text-xs">
+                              {announcement.author ? announcement.author.charAt(0) : "A"}
+                            </div>
+                          )}
                         </div>
                         <span className="text-sm text-gray-700 font-semibold truncate capitalize tracking-wide">
                           {(announcement.author || "System").split("-")[0].trim()}
@@ -625,8 +635,18 @@ export default function AnnouncementPage() {
                           </td>
                           <td className="py-3 px-4 whitespace-nowrap text-left">
                             <div className="flex items-center gap-2">
-                              <div className="w-7 h-7 bg-orange-100/80 rounded-full flex items-center justify-center text-orange-600 font-bold text-[11px] border border-orange-200">
-                                {announcement.author ? announcement.author.charAt(0) : "A"}
+                              <div className="w-7 h-7 rounded-full overflow-hidden flex items-center justify-center border border-orange-200 bg-orange-50">
+                                {announcement.author_profile_picture_url ? (
+                                  <img
+                                    src={announcement.author_profile_picture_url}
+                                    alt={announcement.author}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full bg-orange-100/80 flex items-center justify-center text-orange-600 font-bold text-[11px]">
+                                    {announcement.author ? announcement.author.charAt(0) : "A"}
+                                  </div>
+                                )}
                               </div>
                               <span className="text-sm text-gray-700 font-medium">
                                 {(announcement.author || "System").split("-")[0].trim()}

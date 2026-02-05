@@ -54,6 +54,8 @@ import toast from "react-hot-toast";
 import usePermission from "../../hooks/usePermission";
 import { useGetDepartmentsQuery } from "../../store/api/departmentApi";
 import Modal from "../../components/common/Modal";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 const DeleteHrModal = ({ isOpen, onClose, onConfirm, isLoading, policyTitle }) => {
   return (
@@ -110,17 +112,21 @@ const DeleteHrModal = ({ isOpen, onClose, onConfirm, isLoading, policyTitle }) =
 };
 
 export default function HRPolicy() {
-  const [activeTab, setActiveTab] = useState("All");
+  const today = new Date().toISOString().split('T')[0];
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const [selectedPolicy, setSelectedPolicy] = useState(null);
   const [policyToDelete, setPolicyToDelete] = useState(null);
   const [filterCategory, setFilterCategory] = useState("All");
   const [filterStatus, setFilterStatus] = useState("All");
   const [filterDepartment, setFilterDepartment] = useState("All");
+  const [filterAuthor, setFilterAuthor] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
@@ -173,9 +179,12 @@ export default function HRPolicy() {
     isError,
   } = useGetHRPoliciesQuery({
     category: filterCategory,
-    status: filterStatus === "All" ? activeTab : filterStatus,
+    status: filterStatus,
     search: searchTerm,
     department: filterDepartment,
+    author: filterAuthor,
+    startDate: startDate,
+    endDate: endDate,
   });
 
   const [createPolicy] = useCreateHRPolicyMutation();
@@ -206,25 +215,22 @@ export default function HRPolicy() {
     "Equal Opportunity & Diversity"
   ];
 
-  const statuses = ["Active", "Under Review", "Archived"];
+  const statuses = ["Active", "Inactive"];
 
   // Calculate stats
   const getStats = () => {
-    if (!policiesData) return { total: 0, active: 0, underReview: 0, archived: 0 };
+    if (!policiesData) return { total: 0, active: 0, inactive: 0 };
     return {
       total: policiesData.length,
       active: policiesData.filter((p) => p.status === "Active").length,
-      underReview: policiesData.filter((p) => p.status === "Under Review").length,
-      archived: policiesData.filter((p) => p.status === "Archived").length,
+      inactive: policiesData.filter((p) => p.status === "Inactive").length,
     };
   };
 
   const stats = getStats();
 
-  // Filter policies based on active tab
-  const filteredPolicies = policiesData
-    ? policiesData.filter((p) => activeTab === "All" || p.status === activeTab)
-    : [];
+  // Filter policies based on status
+  const filteredPolicies = policiesData || [];
 
   // Pagination
   const totalPages = Math.ceil(filteredPolicies.length / itemsPerPage);
@@ -422,34 +428,54 @@ export default function HRPolicy() {
   };
 
   const handleExport = () => {
-    const csvContent = [
-      ["Policy Title", "Category", "Effective Date", "Review Date", "Version", "Status", "Department", "Applicable To"],
-      ...filteredPolicies.map((p) => [
+    const doc = new jsPDF();
+
+    // Add title
+    doc.setFontSize(18);
+    doc.text("HR Policies Report", 14, 22);
+    doc.setFontSize(11);
+    doc.setTextColor(100);
+
+    // Add date
+    const date = new Date().toLocaleDateString();
+    doc.text(`Generated on: ${date}`, 14, 30);
+
+    const tableColumn = ["Policy Title", "Category", "Effective Date", "Review Date", "Version", "Status", "Department"];
+    const tableRows = [];
+
+    filteredPolicies.forEach(p => {
+      const policyData = [
         p.title,
         p.category,
-        p.effective_date,
-        p.review_date,
+        new Date(p.effective_date).toLocaleDateString(),
+        new Date(p.review_date).toLocaleDateString(),
         p.version,
         p.status,
-        p.department || "",
-        p.applicable_to || "all",
-      ]),
-    ]
-      .map((row) => row.join(","))
-      .join("\n");
+        p.department || "All Departments"
+      ];
+      tableRows.push(policyData);
+    });
 
-    const blob = new Blob([csvContent], { type: "text/csv" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "hr_policies.csv";
-    a.click();
+    autoTable(doc, {
+      head: [tableColumn],
+      body: tableRows,
+      startY: 35,
+      theme: 'grid',
+      headStyles: { fillColor: [255, 123, 29], textColor: [255, 255, 255] },
+      alternateRowStyles: { fillColor: [250, 250, 250] },
+      margin: { top: 35 }
+    });
+
+    doc.save("hr_policies.pdf");
   };
 
   const handleClearFilters = () => {
     setFilterCategory("All");
     setFilterStatus("All");
     setFilterDepartment("All");
+    setFilterAuthor("");
+    setStartDate("");
+    setEndDate("");
     setSearchTerm("");
     setCurrentPage(1);
     setShowFilters(false);
@@ -515,104 +541,179 @@ export default function HRPolicy() {
                 <div className="relative">
                   <button
                     onClick={() => {
-                      if (filterCategory !== "All" || filterStatus !== "All" || filterDepartment !== "All") {
+                      if (filterCategory !== "All" || filterStatus !== "All" || filterDepartment !== "All" || filterAuthor !== "" || startDate !== "" || endDate !== "") {
                         handleClearFilters();
                       } else {
                         setShowFilters(!showFilters);
                       }
                     }}
-                    className={`px-3 py-3 rounded-sm border transition shadow-sm ${showFilters || filterCategory !== "All" || filterStatus !== "All" || filterDepartment !== "All"
+                    className={`px-3 py-3 rounded-sm border transition shadow-sm ${showFilters || filterCategory !== "All" || filterStatus !== "All" || filterDepartment !== "All" || filterAuthor !== "" || startDate !== "" || endDate !== ""
                       ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
                       : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
                       }`}
                   >
-                    {filterCategory !== "All" || filterStatus !== "All" || filterDepartment !== "All" ? <X size={18} /> : <Filter size={18} />}
+                    {filterCategory !== "All" || filterStatus !== "All" || filterDepartment !== "All" || filterAuthor !== "" || startDate !== "" || endDate !== "" ? <X size={18} /> : <Filter size={18} />}
                   </button>
 
                   {showFilters && (
-                    <div className="absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-xl shadow-2xl z-50 animate-fadeIn overflow-hidden">
-                      <div className="max-h-96 overflow-y-auto">
-                        {/* Status Section */}
-                        <div className="p-3 border-b border-gray-100 bg-gray-50">
-                          <span className="text-sm font-bold text-gray-700 tracking-wide">status</span>
-                        </div>
-                        <div className="py-1">
-                          {["All", ...statuses].map((status) => (
-                            <button
-                              key={status}
-                              onClick={() => {
-                                setFilterStatus(status);
-                                setShowFilters(false);
-                                setCurrentPage(1);
-                              }}
-                              className={`block w-full text-left px-4 py-2 text-sm transition-colors ${filterStatus === status
-                                ? "bg-orange-50 text-orange-600 font-bold"
-                                : "text-gray-700 hover:bg-gray-50"
-                                }`}
-                            >
-                              {status}
-                            </button>
-                          ))}
+                    <div className="absolute right-0 mt-2 w-[450px] bg-white border border-gray-200 rounded-sm shadow-2xl z-50 animate-fadeIn">
+                      <div className="p-4 bg-gray-50 border-b flex justify-between items-center">
+                        <span className="text-sm font-bold text-gray-800">Filter Options</span>
+                        <button
+                          onClick={handleClearFilters}
+                          className="text-[10px] font-bold text-orange-600 hover:underline hover:text-orange-700 capitalize"
+                        >
+                          Reset all
+                        </button>
+                      </div>
+
+                      <div className="p-5 flex flex-col gap-6">
+                        <div className="grid grid-cols-2 gap-6">
+                          {/* Status Section */}
+                          <div className="space-y-4 border-r border-gray-100 pr-4">
+                            <span className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-2 border-b pb-1">Select Status</span>
+                            <div className="space-y-2">
+                              {["All", ...statuses].map((status) => (
+                                <label key={status} className="flex items-center group cursor-pointer">
+                                  <div className="relative flex items-center">
+                                    <input
+                                      type="radio"
+                                      name="status_filter"
+                                      checked={filterStatus === status}
+                                      onChange={() => setFilterStatus(status)}
+                                      className="peer h-4 w-4 cursor-pointer appearance-none rounded-full border-2 border-gray-200 transition-all checked:border-[#FF7B1D] checked:border-[5px] hover:border-orange-300"
+                                    />
+                                  </div>
+                                  <span className={`ml-3 text-sm font-medium transition-colors ${filterStatus === status ? "text-[#FF7B1D] font-bold" : "text-gray-600 group-hover:text-gray-900"}`}>
+                                    {status}
+                                  </span>
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Filters Top Right */}
+                          <div className="space-y-4">
+                            <span className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-2 border-b pb-1">Quick Filters</span>
+                            <div className="space-y-3">
+                              <div>
+                                <label className="text-[10px] font-bold text-gray-400 uppercase mb-1 block">Department</label>
+                                <select
+                                  value={filterDepartment}
+                                  onChange={(e) => setFilterDepartment(e.target.value)}
+                                  className="w-full px-3 py-2 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-1 focus:ring-orange-500/20 outline-none transition-all text-xs font-semibold text-gray-700 bg-gray-50 hover:bg-white"
+                                >
+                                  <option value="All">All Departments</option>
+                                  {departments.map((dept) => (
+                                    <option key={dept.id} value={dept.department_name}>{dept.department_name}</option>
+                                  ))}
+                                </select>
+                              </div>
+
+                              <div>
+                                <label className="text-[10px] font-bold text-gray-400 uppercase mb-1 block">Author</label>
+                                <input
+                                  type="text"
+                                  value={filterAuthor}
+                                  onChange={(e) => setFilterAuthor(e.target.value)}
+                                  placeholder="Search author..."
+                                  className="w-full px-3 py-2 border border-gray-200 rounded-sm text-xs font-semibold focus:outline-none focus:border-orange-500 bg-gray-50 hover:bg-white"
+                                />
+                              </div>
+                            </div>
+                          </div>
                         </div>
 
                         {/* Category Section */}
-                        <div className="p-3 border-t border-b border-gray-100 bg-gray-50">
-                          <span className="text-sm font-bold text-gray-700 tracking-wide">category</span>
-                        </div>
-                        <div className="py-1">
-                          {["All", ...categories].map((cat) => (
+                        <div className="pt-2 border-t border-gray-100">
+                          <label className="text-[10px] font-bold text-gray-400 uppercase mb-1 block">Policy Category</label>
+                          <div className="relative">
                             <button
-                              key={cat}
-                              onClick={() => {
-                                setFilterCategory(cat);
-                                setShowFilters(false);
-                                setCurrentPage(1);
-                              }}
-                              className={`block w-full text-left px-4 py-2 text-sm transition-colors ${filterCategory === cat
-                                ? "bg-orange-50 text-orange-600 font-bold"
-                                : "text-gray-700 hover:bg-gray-50"
-                                }`}
+                              type="button"
+                              onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
+                              className="w-full px-3 py-2 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-1 focus:ring-orange-500/20 outline-none transition-all text-xs font-semibold text-gray-700 bg-gray-50 hover:bg-white flex items-center justify-between"
                             >
-                              {cat}
+                              <span>{filterCategory === "All" ? "All Categories" : filterCategory}</span>
+                              <svg className={`w-4 h-4 transition-transform ${showCategoryDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                              </svg>
                             </button>
-                          ))}
+
+                            {showCategoryDropdown && (
+                              <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-sm shadow-lg max-h-60 overflow-y-auto">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setFilterCategory("All");
+                                    setShowCategoryDropdown(false);
+                                  }}
+                                  className={`w-full text-left px-3 py-2 text-xs font-semibold transition-colors ${filterCategory === "All" ? "bg-orange-50 text-orange-600" : "text-gray-700 hover:bg-gray-50"}`}
+                                >
+                                  All Categories
+                                </button>
+                                {categories.map((cat) => (
+                                  <button
+                                    key={cat}
+                                    type="button"
+                                    onClick={() => {
+                                      setFilterCategory(cat);
+                                      setShowCategoryDropdown(false);
+                                    }}
+                                    className={`w-full text-left px-3 py-2 text-xs font-semibold transition-colors ${filterCategory === cat ? "bg-orange-50 text-orange-600" : "text-gray-700 hover:bg-gray-50"}`}
+                                  >
+                                    {cat}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
                         </div>
 
-                        {/* Department Section */}
-                        <div className="p-3 border-t border-b border-gray-100 bg-gray-50">
-                          <span className="text-sm font-bold text-gray-700 tracking-wide">department</span>
+                        {/* Date Range Section */}
+                        <div className="space-y-4 pt-2 border-t border-gray-100">
+                          <span className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-2">Effective Date Range</span>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="relative">
+                              <Calendar className="absolute left-3 top-2.5 text-gray-400" size={14} />
+                              <input
+                                type="date"
+                                value={startDate}
+                                onChange={(e) => setStartDate(e.target.value)}
+                                className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-sm text-xs focus:outline-none focus:border-orange-500 bg-gray-50 hover:bg-white"
+                              />
+                              <span className="absolute -top-2 left-2 bg-white px-1 text-[9px] text-gray-400 font-bold uppercase">From</span>
+                            </div>
+                            <div className="relative">
+                              <Calendar className="absolute left-3 top-2.5 text-gray-400" size={14} />
+                              <input
+                                type="date"
+                                value={endDate}
+                                onChange={(e) => setEndDate(e.target.value)}
+                                className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-sm text-xs focus:outline-none focus:border-orange-500 bg-gray-50 hover:bg-white"
+                              />
+                              <span className="absolute -top-2 left-2 bg-white px-1 text-[9px] text-gray-400 font-bold uppercase">To</span>
+                            </div>
+                          </div>
                         </div>
-                        <div className="py-1">
-                          <button
-                            onClick={() => {
-                              setFilterDepartment("All");
-                              setShowFilters(false);
-                              setCurrentPage(1);
-                            }}
-                            className={`block w-full text-left px-4 py-2 text-sm transition-colors ${filterDepartment === "All"
-                              ? "bg-orange-50 text-orange-600 font-bold"
-                              : "text-gray-700 hover:bg-gray-50"
-                              }`}
-                          >
-                            All Departments
-                          </button>
-                          {departments.map((dept) => (
-                            <button
-                              key={dept.id}
-                              onClick={() => {
-                                setFilterDepartment(dept.department_name);
-                                setShowFilters(false);
-                                setCurrentPage(1);
-                              }}
-                              className={`block w-full text-left px-4 py-2 text-sm transition-colors ${filterDepartment === dept.department_name
-                                ? "bg-orange-50 text-orange-600 font-bold"
-                                : "text-gray-700 hover:bg-gray-50"
-                                }`}
-                            >
-                              {dept.department_name}
-                            </button>
-                          ))}
-                        </div>
+                      </div>
+
+                      {/* Filter Actions */}
+                      <div className="p-4 bg-gray-50 border-t flex gap-3">
+                        <button
+                          onClick={() => setShowFilters(false)}
+                          className="flex-1 py-2.5 text-[11px] font-bold text-gray-500 capitalize tracking-wider hover:bg-gray-200 transition-colors rounded-sm border border-gray-200 bg-white"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={() => {
+                            setShowFilters(false);
+                            setCurrentPage(1);
+                          }}
+                          className="flex-1 py-2.5 text-[11px] font-bold text-white capitalize tracking-wider bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 transition-all rounded-sm shadow-md active:scale-95"
+                        >
+                          Apply filters
+                        </button>
                       </div>
                     </div>
                   )}
@@ -645,7 +746,7 @@ export default function HRPolicy() {
 
         <div className="max-w-8xl mx-auto p-4 pt-0 mt-2">
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-3">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
             <NumberCard
               title={"Total Policies"}
               number={stats.total || "0"}
@@ -661,38 +762,12 @@ export default function HRPolicy() {
               lineBorderClass={"border-green-500"}
             />
             <NumberCard
-              title={"Under Review"}
-              number={stats.underReview || "0"}
-              icon={<View className="text-orange-600" size={24} />}
-              iconBgColor={"bg-orange-100"}
-              lineBorderClass={"border-orange-500"}
+              title={"Inactive"}
+              number={stats.inactive || "0"}
+              icon={<Archive className="text-red-600" size={24} />}
+              iconBgColor={"bg-red-100"}
+              lineBorderClass={"border-red-500"}
             />
-            <NumberCard
-              title={"Archived"}
-              number={stats.archived || "0"}
-              icon={<Archive className="text-purple-600" size={24} />}
-              iconBgColor={"bg-purple-100"}
-              lineBorderClass={"border-purple-500"}
-            />
-          </div>
-
-          {/* Tabs */}
-          <div className="flex gap-8 mb-4 border-b border-gray-200">
-            {["All", "Active", "Under Review", "Archived"].map((tab) => (
-              <button
-                key={tab}
-                onClick={() => {
-                  setActiveTab(tab);
-                  setCurrentPage(1);
-                }}
-                className={`pb-3 font-bold transition-colors text-sm ${activeTab === tab
-                  ? "text-orange-500 border-b-2 border-orange-500"
-                  : "text-gray-500 hover:text-gray-900"
-                  }`}
-              >
-                {tab}
-              </button>
-            ))}
           </div>
 
           {/* Table */}
@@ -775,9 +850,7 @@ export default function HRPolicy() {
                         <span
                           className={`px-3 py-1 rounded-sm text-[10px] font-bold border uppercase tracking-wider ${policy.status === "Active"
                             ? "bg-green-50 text-green-700 border-green-200"
-                            : policy.status === "Under Review"
-                              ? "bg-yellow-50 text-yellow-700 border-yellow-200"
-                              : "bg-red-50 text-red-700 border-red-200"
+                            : "bg-red-50 text-red-700 border-red-200"
                             }`}
                         >
                           {policy.status}
@@ -938,6 +1011,7 @@ export default function HRPolicy() {
                         <input
                           type="date"
                           value={formData.effective_date}
+                          min={today}
                           onChange={(e) => setFormData({ ...formData, effective_date: e.target.value })}
                           className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 shadow-sm font-medium"
                         />
@@ -949,6 +1023,7 @@ export default function HRPolicy() {
                         <input
                           type="date"
                           value={formData.review_date}
+                          min={today}
                           onChange={(e) => setFormData({ ...formData, review_date: e.target.value })}
                           className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 shadow-sm font-medium"
                         />
@@ -972,8 +1047,8 @@ export default function HRPolicy() {
                         <input
                           type="text"
                           value={formData.author}
-                          onChange={(e) => setFormData({ ...formData, author: e.target.value })}
-                          className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 shadow-sm font-medium"
+                          disabled
+                          className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-gray-100 cursor-not-allowed shadow-sm font-medium"
                           placeholder="Department or author name"
                         />
                       </div>
@@ -1145,6 +1220,7 @@ export default function HRPolicy() {
                         <input
                           type="date"
                           value={formData.effective_date}
+                          min={today}
                           onChange={(e) => setFormData({ ...formData, effective_date: e.target.value })}
                           className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 shadow-sm font-medium"
                         />
@@ -1156,6 +1232,7 @@ export default function HRPolicy() {
                         <input
                           type="date"
                           value={formData.review_date}
+                          min={today}
                           onChange={(e) => setFormData({ ...formData, review_date: e.target.value })}
                           className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 shadow-sm font-medium"
                         />
@@ -1195,8 +1272,8 @@ export default function HRPolicy() {
                         <input
                           type="text"
                           value={formData.author}
-                          onChange={(e) => setFormData({ ...formData, author: e.target.value })}
-                          className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 shadow-sm font-medium"
+                          disabled
+                          className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-gray-100 cursor-not-allowed shadow-sm font-medium"
                           placeholder="Department or author name"
                         />
                       </div>
@@ -1378,9 +1455,9 @@ export default function HRPolicy() {
 
                       <div className="bg-green-50 p-4 rounded-sm border border-green-100 flex flex-col items-center text-center group hover:shadow-md transition-shadow">
                         <div className="bg-green-600 p-2 rounded-sm text-white mb-2 group-hover:scale-110 transition-transform">
-                          {selectedPolicy.status === "Active" ? <CheckCircle size={20} /> : <AlertTriangle size={20} />}
+                          {selectedPolicy.status === "Active" ? <CheckCircle size={20} /> : <X size={20} />}
                         </div>
-                        <span className={`text-lg font-bold ${selectedPolicy.status === "Active" ? "text-green-900" : "text-yellow-900"}`}>
+                        <span className={`text-lg font-bold ${selectedPolicy.status === "Active" ? "text-green-900" : "text-red-900"}`}>
                           {selectedPolicy.status}
                         </span>
                         <span className="text-xs font-semibold text-green-600 uppercase tracking-widest mt-1">Status</span>

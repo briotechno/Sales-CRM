@@ -13,13 +13,17 @@ const Announcement = {
 
     findAll: async (userId, page = 1, limit = 10, category = 'All', search = '', title = '', author = '') => {
         const offset = (page - 1) * limit;
-        let query = 'SELECT * FROM announcements WHERE user_id = ?';
+        let query = `
+            SELECT a.*, u.profile_picture as author_profile_picture 
+            FROM announcements a 
+            LEFT JOIN users u ON a.user_id = u.id 
+            WHERE a.user_id = ?`;
         let countQuery = 'SELECT COUNT(*) as total FROM announcements WHERE user_id = ?';
         let queryParams = [userId];
         let countParams = [userId];
 
         if (category && category !== 'All') {
-            query += ' AND category = ?';
+            query += ' AND a.category = ?';
             countQuery += ' AND category = ?';
             queryParams.push(category);
             countParams.push(category);
@@ -27,7 +31,7 @@ const Announcement = {
 
         if (search) {
             const searchPattern = `%${search}%`;
-            query += ' AND (title LIKE ? OR content LIKE ? OR author LIKE ?)';
+            query += ' AND (a.title LIKE ? OR a.content LIKE ? OR a.author LIKE ?)';
             countQuery += ' AND (title LIKE ? OR content LIKE ? OR author LIKE ?)';
             queryParams.push(searchPattern, searchPattern, searchPattern);
             countParams.push(searchPattern, searchPattern, searchPattern);
@@ -35,7 +39,7 @@ const Announcement = {
 
         if (title) {
             const titlePattern = `%${title}%`;
-            query += ' AND title LIKE ?';
+            query += ' AND a.title LIKE ?';
             countQuery += ' AND title LIKE ?';
             queryParams.push(titlePattern);
             countParams.push(titlePattern);
@@ -43,13 +47,13 @@ const Announcement = {
 
         if (author) {
             const authorPattern = `%${author}%`;
-            query += ' AND author LIKE ?';
+            query += ' AND a.author LIKE ?';
             countQuery += ' AND author LIKE ?';
             queryParams.push(authorPattern);
             countParams.push(authorPattern);
         }
 
-        query += ' ORDER BY date DESC, id DESC LIMIT ? OFFSET ?';
+        query += ' ORDER BY a.date DESC, a.id DESC LIMIT ? OFFSET ?';
         queryParams.push(parseInt(limit), parseInt(offset));
 
         const [totalRows] = await pool.query(countQuery, countParams);
@@ -69,7 +73,11 @@ const Announcement = {
     },
 
     findById: async (id, userId) => {
-        const [rows] = await pool.query('SELECT * FROM announcements WHERE id = ? AND user_id = ?', [id, userId]);
+        const [rows] = await pool.query(`
+            SELECT a.*, u.profile_picture as author_profile_picture 
+            FROM announcements a 
+            LEFT JOIN users u ON a.user_id = u.id 
+            WHERE a.id = ? AND a.user_id = ?`, [id, userId]);
         return rows[0];
     },
 

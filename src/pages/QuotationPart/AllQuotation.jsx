@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import DashboardLayout from "../../components/DashboardLayout";
@@ -42,13 +42,22 @@ export default function QuotationPage() {
   const [selectedQuotationId, setSelectedQuotationId] = useState(null);
   const [selectedQuote, setSelectedQuote] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState("All");
+  const [filterStatus, setFilterStatus] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
-  const [isStatusFilterOpen, setIsStatusFilterOpen] = useState(false);
   const [dateFilter, setDateFilter] = useState("All");
-  const [isDateFilterOpen, setIsDateFilterOpen] = useState(false);
+  const [filterCustomerType, setFilterCustomerType] = useState("all");
+  const [filterTaxType, setFilterTaxType] = useState("all");
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
+
+  const [tempStatus, setTempStatus] = useState("all");
+  const [tempCustomerType, setTempCustomerType] = useState("all");
+  const [tempTaxType, setTempTaxType] = useState("all");
+  const [tempDateFilter, setTempDateFilter] = useState("All");
+  const [tempCustomStart, setTempCustomStart] = useState("");
+  const [tempCustomEnd, setTempCustomEnd] = useState("");
+
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const dateDropdownRef = useRef(null);
   const statusDropdownRef = useRef(null);
   const itemsPerPage = 8;
@@ -86,14 +95,18 @@ export default function QuotationPage() {
 
   const { dateFrom, dateTo } = getDateRange();
 
-  const { data, isLoading, error, refetch } = useGetQuotationsQuery({
+  const queryParams = useMemo(() => ({
     page: currentPage,
     limit: itemsPerPage,
     status: filterStatus,
+    customer_type: filterCustomerType,
+    tax_type: filterTaxType,
     search: searchTerm,
     dateFrom,
     dateTo
-  });
+  }), [currentPage, itemsPerPage, filterStatus, filterCustomerType, filterTaxType, searchTerm, dateFrom, dateTo]);
+
+  const { data, isLoading, error, refetch } = useGetQuotationsQuery(queryParams);
 
   const { data: businessInfo } = useGetBusinessInfoQuery();
 
@@ -106,11 +119,13 @@ export default function QuotationPage() {
   const pagination = data?.pagination || { total: 0, totalPages: 1 };
   const summary = data?.summary || { total: 0, approved: 0, pending: 0, totalValue: 0 };
 
-  const hasActiveFilters = searchTerm || filterStatus !== "All" || dateFilter !== "All";
+  const hasActiveFilters = searchTerm || filterStatus !== "all" || filterCustomerType !== "all" || filterTaxType !== "all" || dateFilter !== "All";
 
   const clearAllFilters = () => {
     setSearchTerm("");
-    setFilterStatus("All");
+    setFilterStatus("all");
+    setFilterCustomerType("all");
+    setFilterTaxType("all");
     setDateFilter("All");
     setCustomStart("");
     setCustomEnd("");
@@ -773,10 +788,16 @@ export default function QuotationPage() {
                       if (hasActiveFilters) {
                         clearAllFilters();
                       } else {
-                        setIsStatusFilterOpen(!isStatusFilterOpen);
+                        setTempStatus(filterStatus);
+                        setTempCustomerType(filterCustomerType);
+                        setTempTaxType(filterTaxType);
+                        setTempDateFilter(dateFilter);
+                        setTempCustomStart(customStart);
+                        setTempCustomEnd(customEnd);
+                        setIsFilterOpen(!isFilterOpen);
                       }
                     }}
-                    className={`px-3 py-3 rounded-sm border transition shadow-sm ${isStatusFilterOpen || hasActiveFilters
+                    className={`px-3 py-3 rounded-sm border transition shadow-sm ${isFilterOpen || hasActiveFilters
                       ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
                       : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
                       }`}
@@ -784,83 +805,164 @@ export default function QuotationPage() {
                     {hasActiveFilters ? <X size={18} /> : <Filter size={18} />}
                   </button>
 
-                  {isStatusFilterOpen && (
-                    <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-xl z-50 animate-fadeIn overflow-hidden">
-                      <div className="p-3 border-b border-gray-100 bg-gray-50">
-                        <span className="text-sm font-bold text-gray-700 tracking-wide">Statuses</span>
-                      </div>
-                      <div className="py-1">
-                        {["All", "Pending", "Approved", "Rejected", "Draft"].map((status) => (
-                          <button
-                            key={status}
-                            onClick={() => {
-                              setFilterStatus(status);
-                              setIsStatusFilterOpen(false);
-                              setCurrentPage(1);
-                            }}
-                            className={`block w-full text-left px-4 py-2 text-sm transition-colors ${filterStatus === status
-                              ? "bg-orange-50 text-orange-600 font-bold"
-                              : "text-gray-700 hover:bg-gray-50"
-                              }`}
-                          >
-                            {status}
-                          </button>
-                        ))}
+                  {isFilterOpen && (
+                    <div className="absolute right-0 mt-2 w-[700px] bg-white border border-gray-200 rounded-sm shadow-2xl z-50 animate-fadeIn overflow-hidden text-left">
+                      {/* Header */}
+                      <div className="p-4 bg-gray-50 border-b flex justify-between items-center">
+                        <span className="text-sm font-bold text-gray-800 tracking-wide uppercase">Advanced Filters</span>
+                        <button
+                          onClick={() => {
+                            setTempStatus("all");
+                            setTempCustomerType("all");
+                            setTempTaxType("all");
+                            setTempDateFilter("All");
+                            setTempCustomStart("");
+                            setTempCustomEnd("");
+                          }}
+                          className="text-[10px] font-bold text-orange-600 hover:underline hover:text-orange-700 capitalize"
+                        >
+                          Reset all
+                        </button>
                       </div>
 
-                      <div className="p-3 border-t border-b border-gray-100 bg-gray-50">
-                        <span className="text-sm font-bold text-gray-700 tracking-wide">Date Range</span>
-                      </div>
-                      <div className="py-1">
-                        {["All", "Today", "Yesterday", "Last 7 Days", "This Month", "Custom"].map((option) => (
-                          <div key={option}>
-                            <button
-                              key={option}
-                              onClick={() => {
-                                setDateFilter(option);
-                                if (option !== "Custom") {
-                                  setIsStatusFilterOpen(false);
-                                  setCurrentPage(1);
-                                }
-                              }}
-                              className={`block w-full text-left px-4 py-2 text-sm transition-colors ${dateFilter === option
-                                ? "bg-orange-50 text-orange-600 font-bold"
-                                : "text-gray-700 hover:bg-gray-50"
-                                }`}
+                      <div className="p-5 grid grid-cols-2 gap-x-10 gap-y-8">
+                        {/* Column 1: Status */}
+                        <div className="space-y-4">
+                          <span className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-2 border-b pb-1">Quotation Status</span>
+                          <div className="grid grid-cols-2 gap-2">
+                            {["all", "Draft", "Pending", "Approved", "Rejected"].map((s) => (
+                              <label key={s} className="flex items-center group cursor-pointer">
+                                <div className="relative flex items-center">
+                                  <input
+                                    type="radio"
+                                    name="status_filter"
+                                    checked={tempStatus === s}
+                                    onChange={() => setTempStatus(s)}
+                                    className="peer h-4 w-4 cursor-pointer appearance-none rounded-full border-2 border-gray-200 transition-all checked:border-[#FF7B1D] checked:border-[5px] hover:border-orange-300"
+                                  />
+                                </div>
+                                <span className={`ml-3 text-xs font-medium transition-colors capitalize ${tempStatus === s ? "text-[#FF7B1D] font-bold" : "text-gray-600 group-hover:text-gray-900"}`}>
+                                  {s === "all" ? "All Status" : s}
+                                </span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Column 2: Date Period */}
+                        <div className="space-y-4">
+                          <span className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-2 border-b pb-1">Date Period</span>
+                          <div className="space-y-3">
+                            <select
+                              value={tempDateFilter}
+                              onChange={(e) => setTempDateFilter(e.target.value)}
+                              className="w-full px-3 py-2.5 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-1 focus:ring-orange-500/20 outline-none transition-all text-xs font-semibold text-gray-700 bg-gray-50 hover:bg-white"
                             >
-                              {option}
-                            </button>
-                            {option === "Custom" && dateFilter === "Custom" && (
-                              <div className="px-4 py-3 space-y-2 border-t border-gray-50 bg-gray-50/50">
-                                <input
-                                  type="date"
-                                  value={customStart}
-                                  onChange={(e) => setCustomStart(e.target.value)}
-                                  className="w-full px-2 py-2 border border-gray-300 rounded-sm text-xs focus:outline-none focus:ring-1 focus:ring-orange-500"
-                                />
-                                <input
-                                  type="date"
-                                  value={customEnd}
-                                  onChange={(e) => setCustomEnd(e.target.value)}
-                                  className="w-full px-2 py-2 border border-gray-300 rounded-sm text-xs focus:outline-none focus:ring-1 focus:ring-orange-500"
-                                />
-                                <button
-                                  onClick={() => {
-                                    setIsStatusFilterOpen(false);
-                                    setCurrentPage(1);
-                                  }}
-                                  className="w-full bg-orange-500 text-white text-[10px] font-bold py-2 rounded-sm uppercase tracking-wider"
-                                >
-                                  Apply
-                                </button>
+                              {["All", "Today", "Yesterday", "Last 7 Days", "This Month", "Custom"].map((range) => (
+                                <option key={range} value={range}>{range}</option>
+                              ))}
+                            </select>
+
+                            {tempDateFilter === "Custom" && (
+                              <div className="grid grid-cols-2 gap-2 animate-fadeIn">
+                                <div className="space-y-1">
+                                  <label className="text-[9px] font-bold text-gray-400 uppercase">From</label>
+                                  <input
+                                    type="date"
+                                    value={tempCustomStart}
+                                    onChange={(e) => setTempCustomStart(e.target.value)}
+                                    className="w-full px-2 py-1.5 border border-gray-200 rounded-sm text-[10px] outline-none focus:border-orange-500"
+                                  />
+                                </div>
+                                <div className="space-y-1">
+                                  <label className="text-[9px] font-bold text-gray-400 uppercase">To</label>
+                                  <input
+                                    type="date"
+                                    value={tempCustomEnd}
+                                    onChange={(e) => setTempCustomEnd(e.target.value)}
+                                    className="w-full px-2 py-1.5 border border-gray-200 rounded-sm text-[10px] outline-none focus:border-orange-500"
+                                  />
+                                </div>
                               </div>
                             )}
                           </div>
-                        ))}
+                        </div>
+
+                        {/* Column 3: Customer Type */}
+                        <div className="space-y-4">
+                          <span className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-2 border-b pb-1">Customer Classification</span>
+                          <div className="grid grid-cols-2 gap-2">
+                            {["all", "Individual", "Business"].map((ct) => (
+                              <label key={ct} className="flex items-center group cursor-pointer">
+                                <div className="relative flex items-center">
+                                  <input
+                                    type="radio"
+                                    name="customer_type_filter"
+                                    checked={tempCustomerType === ct}
+                                    onChange={() => setTempCustomerType(ct)}
+                                    className="peer h-4 w-4 cursor-pointer appearance-none rounded-full border-2 border-gray-200 transition-all checked:border-[#FF7B1D] checked:border-[5px] hover:border-orange-300"
+                                  />
+                                </div>
+                                <span className={`ml-3 text-xs font-medium transition-colors capitalize ${tempCustomerType === ct ? "text-[#FF7B1D] font-bold" : "text-gray-600 group-hover:text-gray-900"}`}>
+                                  {ct === "all" ? "All Types" : ct}
+                                </span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Column 4: Quotation Type */}
+                        <div className="space-y-4">
+                          <span className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-2 border-b pb-1">Sales Type</span>
+                          <div className="grid grid-cols-2 gap-2">
+                            {["all", "GST", "Non-GST"].map((tt) => (
+                              <label key={tt} className="flex items-center group cursor-pointer">
+                                <div className="relative flex items-center">
+                                  <input
+                                    type="radio"
+                                    name="tax_type_filter"
+                                    checked={tempTaxType === tt}
+                                    onChange={() => setTempTaxType(tt)}
+                                    className="peer h-4 w-4 cursor-pointer appearance-none rounded-full border-2 border-gray-200 transition-all checked:border-[#FF7B1D] checked:border-[5px] hover:border-orange-300"
+                                  />
+                                </div>
+                                <span className={`ml-3 text-xs font-medium transition-colors capitalize ${tempTaxType === tt ? "text-[#FF7B1D] font-bold" : "text-gray-600 group-hover:text-gray-900"}`}>
+                                  {tt === "all" ? "All Taxes" : tt}
+                                </span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Filter Actions */}
+                      <div className="p-4 bg-gray-50 border-t flex gap-3">
+                        <button
+                          onClick={() => setIsFilterOpen(false)}
+                          className="flex-1 py-2.5 text-[11px] font-bold text-gray-500 capitalize tracking-wider hover:bg-gray-200 transition-colors rounded-sm border border-gray-200 bg-white"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={() => {
+                            setFilterStatus(tempStatus);
+                            setFilterCustomerType(tempCustomerType);
+                            setFilterTaxType(tempTaxType);
+                            setDateFilter(tempDateFilter);
+                            setCustomStart(tempCustomStart);
+                            setCustomEnd(tempCustomEnd);
+                            setIsFilterOpen(false);
+                            setCurrentPage(1);
+                          }}
+                          className="flex-1 py-2.5 text-[11px] font-bold text-white capitalize tracking-wider bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 transition-all rounded-sm shadow-md active:scale-95"
+                        >
+                          Apply Filters
+                        </button>
                       </div>
                     </div>
                   )}
                 </div>
+
 
 
 
@@ -926,19 +1028,20 @@ export default function QuotationPage() {
           <div className="overflow-x-auto border border-gray-200 rounded-sm shadow-sm bg-white">
             <table className="w-full border-collapse">
               <thead>
-                <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm">
-                  <th className="py-3 px-4 font-semibold text-left">ID</th>
-                  <th className="py-3 px-4 font-semibold text-left">Company</th>
-                  <th className="py-3 px-4 font-semibold text-left">Date</th>
-                  <th className="py-3 px-4 font-semibold text-left">Amount</th>
-                  <th className="py-3 px-4 font-semibold text-left">Status</th>
-                  <th className="py-3 px-4 font-semibold text-right">Actions</th>
+                <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-xs tracking-wide">
+                  <th className="py-4 px-4 font-bold text-left w-[180px]">Quotation ID</th>
+                  <th className="py-4 px-4 font-bold text-left">Company / Client</th>
+                  <th className="py-4 px-4 font-bold text-left w-[160px]">Date</th>
+                  <th className="py-4 px-4 font-bold text-left w-[160px]">Valid Until</th>
+                  <th className="py-4 px-4 font-bold text-right w-[180px]">Total Amount</th>
+                  <th className="py-4 px-4 font-bold text-center w-[160px]">Status</th>
+                  <th className="py-4 px-4 font-bold text-right w-[120px]">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {isLoading ? (
                   <tr>
-                    <td colSpan="6" className="py-20 text-center">
+                    <td colSpan="7" className="py-20 text-center">
                       <div className="flex justify-center flex-col items-center gap-4">
                         <div className="w-12 h-12 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin"></div>
                         <p className="text-gray-500 font-semibold animate-pulse">Loading quotations...</p>
@@ -947,24 +1050,77 @@ export default function QuotationPage() {
                   </tr>
                 ) : error ? (
                   <tr>
-                    <td colSpan="6" className="py-16 text-center text-red-500 font-medium">
+                    <td colSpan="7" className="py-16 text-center text-red-500 font-medium">
                       Error loading quotations. Please try again.
+                    </td>
+                  </tr>
+                ) : quotations.length === 0 ? (
+                  <tr>
+                    <td colSpan="7" className="py-20 text-center border-b border-gray-100">
+                      <div className="flex flex-col items-center justify-center gap-4 max-w-[600px] mx-auto">
+                        <div className="w-20 h-20 bg-orange-50 rounded-full flex items-center justify-center mb-2">
+                          <FileText size={40} className="text-orange-400" />
+                        </div>
+                        <div className="space-y-2">
+                          <h3 className="text-xl font-bold text-gray-900 tracking-tight">
+                            {hasActiveFilters ? "No Quotations Found" : "No Quotations Yet"}
+                          </h3>
+                          <p className="text-gray-500 font-medium leading-relaxed">
+                            {hasActiveFilters
+                              ? "We couldn't find any quotations matching your current filter criteria. Try adjusting your filters or search term to find what you're looking for."
+                              : "Your quotation history is empty. Start by creating a professional quote to win more business and track your potential sales."}
+                          </p>
+                        </div>
+
+                        <div className="mt-4">
+                          {hasActiveFilters ? (
+                            <button
+                              onClick={clearAllFilters}
+                              className="px-6 py-2.5 border-2 border-orange-500 text-orange-600 font-bold rounded-sm hover:bg-orange-50 transition-all text-xs uppercase tracking-widest flex items-center gap-2"
+                            >
+                              <X size={16} />
+                              Clear All Filters
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => {
+                                resetForm();
+                                setShowModal(true);
+                              }}
+                              className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-8 py-3.5 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl inline-flex items-center gap-2 font-bold tracking-wide"
+                            >
+                              <Plus size={20} />
+                              Create First Quotation
+                            </button>
+                          )}
+                        </div>
+                      </div>
                     </td>
                   </tr>
                 ) : quotations.length > 0 ? (
                   quotations.map((quote) => (
-                    <tr key={quote.id} className="hover:bg-gray-50 transition-colors group">
-                      <td className="py-3 px-4 font-bold text-orange-600 text-left">{quote.quotation_id}</td>
-                      <td className="py-3 px-4 font-medium text-gray-800 text-left">{quote.company_name}</td>
-                      <td className="py-3 px-4 text-gray-600 text-sm text-left">{new Date(quote.quotation_date).toLocaleDateString()}</td>
-                      <td className="py-3 px-4 text-left font-bold text-gray-900">
-                        {quote.currency === "INR" ? "₹" : "$"} {quote.total_amount.toLocaleString()}
+                    <tr key={quote.id} className="hover:bg-gray-50/50 transition-colors border-b border-gray-50 group">
+                      <td className="py-4 px-4 font-bold text-gray-900 text-xs tracking-tight">{quote.quotation_id}</td>
+                      <td className="py-4 px-4">
+                        <div className="font-bold text-sm text-gray-900 leading-tight mb-0.5">{quote.company_name}</div>
+                        <div className="text-[10px] font-semibold text-gray-400 truncate uppercase mt-0.5 tracking-tighter">{quote.email || "No Email"}</div>
                       </td>
-                      <td className="py-3 px-4 text-left">
+                      <td className="py-4 px-4 text-gray-600 text-xs font-bold whitespace-nowrap">
+                        {new Date(quote.quotation_date).toLocaleDateString('en-GB')}
+                      </td>
+                      <td className="py-4 px-4 text-gray-600 text-xs font-bold whitespace-nowrap">
+                        {quote.valid_until ? new Date(quote.valid_until).toLocaleDateString('en-GB') : "N/A"}
+                      </td>
+                      <td className="py-4 px-4 text-right">
+                        <div className="text-sm font-bold text-gray-900 whitespace-nowrap">
+                          {quote.currency === "INR" ? "₹" : "$"} {quote.total_amount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                        </div>
+                      </td>
+                      <td className="py-4 px-4 text-center">
                         <select
                           value={quote.status}
                           onChange={(e) => handleStatusChange(quote.id, e.target.value)}
-                          className={`px-3 py-1 rounded-sm text-[10px] font-bold border uppercase tracking-wider cursor-pointer shadow-sm outline-none transition-all ${quote.status === "Approved" ? "bg-green-50 text-green-700 border-green-200" :
+                          className={`w-full max-w-[120px] px-2.5 py-1.5 rounded-sm text-[10px] font-bold border uppercase tracking-widest outline-none cursor-pointer transition-all shadow-sm mx-auto ${quote.status === "Approved" ? "bg-green-50 text-green-700 border-green-200" :
                             quote.status === "Pending" ? "bg-orange-50 text-orange-700 border-orange-200" :
                               quote.status === "Rejected" ? "bg-red-50 text-red-700 border-red-200" :
                                 "bg-gray-50 text-gray-700 border-gray-200"
@@ -976,59 +1132,44 @@ export default function QuotationPage() {
                           <option value="Rejected">Rejected</option>
                         </select>
                       </td>
-                      <td className="py-3 px-4">
-                        <div className="flex justify-end gap-2">
+                      <td className="py-4 px-4 text-right">
+                        <div className="flex items-center justify-end gap-2.5">
                           <button
                             onClick={() => handleView(quote)}
-                            className="p-1 hover:bg-orange-100 rounded text-blue-500 hover:text-blue-700 transition-all"
-                            title="View"
+                            className="p-1.5 hover:bg-blue-50 rounded-sm text-blue-500 hover:text-blue-700 transition-all border border-transparent hover:border-blue-100"
+                            title="View Quotation"
                           >
-                            <Eye size={18} />
+                            <Eye size={16} />
                           </button>
                           <button
                             onClick={() => handleEdit(quote)}
-                            className="p-1 hover:bg-orange-100 rounded text-green-500 hover:text-green-700 transition-all"
+                            className="p-1.5 hover:bg-green-50 rounded-sm text-green-500 hover:text-green-700 transition-all border border-transparent hover:border-green-100"
                             title="Edit"
                           >
-                            <Edit size={18} />
+                            <Edit size={16} />
                           </button>
                           <button
                             onClick={() => handleDownload(quote)}
-                            className="p-1 hover:bg-orange-100 rounded text-orange-500 hover:text-orange-700 transition-all"
+                            className="p-1.5 hover:bg-orange-50 rounded-sm text-[#FF7B1D] hover:text-orange-700 transition-all border border-transparent hover:border-orange-100"
                             title="Download PDF"
                           >
-                            <Download size={18} />
+                            <Download size={16} />
                           </button>
                           <button
                             onClick={() => {
                               setSelectedQuotationId(quote.id);
                               setIsDeleteModalOpen(true);
                             }}
-                            className="p-1 hover:bg-orange-100 rounded text-red-500 hover:text-red-700 transition-all shadow-sm"
+                            className="p-1.5 hover:bg-red-50 rounded-sm text-red-500 hover:text-red-700 transition-all border border-transparent hover:border-red-100 shadow-sm"
                             title="Delete"
                           >
-                            <Trash2 size={18} />
+                            <Trash2 size={16} />
                           </button>
                         </div>
                       </td>
                     </tr>
                   ))
-                ) : (
-                  <tr>
-                    <td colSpan="6" className="py-16 text-center text-gray-500">
-                      <div className="flex flex-col items-center gap-3">
-                        <FileText size={48} className="text-gray-200" />
-                        <p className="font-medium">No quotations found.</p>
-                        <button
-                          onClick={() => { resetForm(); setShowModal(true); }}
-                          className="text-orange-600 underline font-semibold mt-2"
-                        >
-                          Create your first quotation
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                )}
+                ) : null}
               </tbody>
             </table>
           </div>

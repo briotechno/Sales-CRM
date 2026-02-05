@@ -4,6 +4,7 @@ import {
     Bell,
     Calendar,
     Clock,
+    RefreshCw,
 } from "lucide-react";
 import { useGetTasksQuery } from "../store/api/taskApi";
 
@@ -111,15 +112,102 @@ export default function TaskReminderPopup() {
         }
     };
 
+    const notifiedTasksRef = useRef(new Set());
+    const [notificationPermission, setNotificationPermission] = useState(
+        "Notification" in window ? Notification.permission : "unsupported"
+    );
+
+    // Debug Notification state
+    useEffect(() => {
+        console.log("Current Notification Permission:", notificationPermission);
+    }, [notificationPermission]);
+
+    // Request notification permission via user gesture
+    const requestPermission = async () => {
+        console.log("Requesting notification permission...");
+        if (!("Notification" in window)) {
+            console.error("Notifications not supported in this browser.");
+            return;
+        }
+
+        try {
+            const permission = await Notification.requestPermission();
+            console.log("Permission response:", permission);
+            setNotificationPermission(permission);
+            if (permission === "granted") {
+                // Immediately try a test notification to confirm it works
+                new Notification("CRM: Notifications Enabled!", {
+                    body: "You will now receive task reminders here.",
+                    icon: "/favicon.ico"
+                });
+            }
+        } catch (err) {
+            console.error("Permission request error:", err);
+        }
+    };
+
+    // Send Browser Notification
+    const sendBrowserNotification = (tasks) => {
+        if (!("Notification" in window)) return;
+
+        if (Notification.permission !== "granted") {
+            console.warn("Cannot send notification: Permission is", Notification.permission);
+            return;
+        }
+
+        // Filter out tasks we've already notified about in this session
+        const unnotified = tasks.filter(t => !notifiedTasksRef.current.has(t.id));
+        if (unnotified.length === 0) return;
+
+        // Add to notified set
+        unnotified.forEach(t => notifiedTasksRef.current.add(t.id));
+
+        const hasHigh = unnotified.some(isHighPriorityToday);
+        const title = hasHigh ? "🚨 CRM: High Priority!" : "📋 CRM: Task Reminder";
+
+        let body = "";
+        if (unnotified.length === 1) {
+            body = `Task: ${unnotified[0].title}`;
+        } else {
+            body = `You have ${unnotified.length} pending tasks waiting.`;
+        }
+
+        try {
+            console.log("Attempting to show notification:", title);
+            const notification = new Notification(title, {
+                body,
+                tag: "crm-task-reminder",
+                requireInteraction: hasHigh,
+                icon: "/favicon.ico"
+            });
+
+            notification.onclick = () => {
+                window.focus();
+                setIsVisible(true);
+                notification.close();
+            };
+
+            notification.onerror = (err) => {
+                console.error("Notification object error:", err);
+            };
+        } catch (err) {
+            console.error("Notification Constructor Error:", err);
+        }
+    };
+
     // Show popup after 6 seconds if there are pending tasks
     useEffect(() => {
         if (!pendingTasks.length) return;
 
-        const hasHighToday = pendingTasks.some(isHighPriorityToday);
+        // Check if there are ANY tasks that haven't been notified yet
+        const unnotified = pendingTasks.filter(t => !notifiedTasksRef.current.has(t.id));
+        if (unnotified.length === 0) return;
 
         const timer = setTimeout(() => {
             setIsVisible(true);
-            playNotificationSound(hasHighToday);
+            const hasHigh = unnotified.some(isHighPriorityToday);
+            playNotificationSound(hasHigh);
+            sendBrowserNotification(pendingTasks);
         }, 6000);
 
         return () => clearTimeout(timer);
@@ -146,11 +234,29 @@ export default function TaskReminderPopup() {
                             </div>
                             <div>
                                 <h3 className="text-white font-bold text-base">Task Reminder</h3>
-                                <p className="text-white text-xs opacity-90">
-                                    {pendingTasks.some((t) => isHighPriorityToday(t))
-                                        ? "🚨 HIGH PRIORITY TASK DUE TODAY!"
-                                        : "Pending tasks ⏰"}
-                                </p>
+                                <div className="flex items-center gap-2">
+                                    <p className="text-white text-[10px] opacity-90 leading-none">
+                                        {pendingTasks.some((t) => isHighPriorityToday(t))
+                                            ? "🚨 HIGH PRIORITY"
+                                            : "System Alert"}
+                                    </p>
+
+                                    {notificationPermission === "default" ? (
+                                        <button
+                                            onClick={requestPermission}
+                                            className="bg-white text-[#FF7B1D] text-[9px] font-bold px-2 py-0.5 rounded shadow-sm hover:bg-orange-50 transition-all active:scale-95 whitespace-nowrap uppercase tracking-tighter"
+                                        >
+                                            Allow Push Alerts
+                                        </button>
+                                    ) : notificationPermission === "granted" ? (
+                                        <button
+                                            onClick={() => sendBrowserNotification(pendingTasks)}
+                                            className="bg-white/20 hover:bg-white/30 text-[9px] text-white px-1.5 py-0.5 rounded border border-white/30 flex items-center gap-1 transition-all whitespace-nowrap"
+                                        >
+                                            <RefreshCw size={10} className="animate-spin-slow" /> Test Alert
+                                        </button>
+                                    ) : null}
+                                </div>
                             </div>
                         </div>
                         <button

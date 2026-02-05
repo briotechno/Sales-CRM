@@ -93,13 +93,23 @@ const ViewAnnouncementModal = ({ isOpen, onClose, announcement, stats }) => {
                             <h1 className="text-2xl font-black text-gray-900 leading-tight capitalize">
                                 {announcement.title}
                             </h1>
-                            <div className="flex items-center gap-2 pt-2">
-                                <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full flex items-center justify-center text-white font-bold text-xs shadow-sm">
-                                    {announcement.author ? announcement.author.charAt(0) : "A"}
+                            <div className="flex items-center gap-3 pt-2">
+                                <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center border-2 border-white shadow-md bg-gray-50">
+                                    {announcement.author_profile_picture_url ? (
+                                        <img
+                                            src={announcement.author_profile_picture_url}
+                                            alt={announcement.author}
+                                            className="w-full h-full object-cover"
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full bg-gradient-to-r from-orange-500 to-orange-600 flex items-center justify-center text-white font-bold text-sm">
+                                            {announcement.author ? announcement.author.charAt(0) : "A"}
+                                        </div>
+                                    )}
                                 </div>
-                                <div>
-                                    <p className="text-xs text-gray-400 font-medium">Published by</p>
-                                    <p className="text-sm font-bold text-gray-800 capitalize">{announcement.author || "System Administrative"}</p>
+                                <div className="flex flex-col">
+                                    <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest leading-none mb-1">Published by</p>
+                                    <p className="text-sm font-black text-gray-800 capitalize tracking-tight">{announcement.author || "System Administrative"}</p>
                                 </div>
                             </div>
                         </div>

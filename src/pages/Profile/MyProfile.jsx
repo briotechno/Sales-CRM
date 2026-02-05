@@ -5,7 +5,7 @@ import { useGetUserProfileQuery, useUpdateUserProfileMutation } from "../../stor
 import {
     User, Mail, Phone, MapPin, Calendar, CreditCard, Users,
     GraduationCap, Briefcase, ChevronDown, Edit, MessageSquare,
-    CheckCircle, Loader2, Save, Shield, Heart, Globe
+    CheckCircle, Loader2, Save, Shield, Heart, Globe, Upload, Building2, LayoutGrid
 } from "lucide-react";
 import toast from "react-hot-toast";
 import FormSection from "../../components/Employee/FormSection";
@@ -135,6 +135,7 @@ export default function MyProfile() {
             } else {
                 setFormData({
                     ...profileData,
+                    profilePicPreview: profileData.profile_picture_url || "",
                     languages: Array.isArray(profileData.languages)
                         ? profileData.languages
                         : (typeof profileData.languages === 'string' ? JSON.parse(profileData.languages || '[]') : []),
@@ -151,13 +152,45 @@ export default function MyProfile() {
     };
 
     const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setFormData((prev) => ({ ...prev, [name]: value }));
+        const { name, value, type, files } = e.target;
+        if (type === 'file') {
+            const file = files[0];
+            if (file) {
+                setFormData(prev => ({
+                    ...prev,
+                    [name]: file,
+                    [`${name}Preview`]: URL.createObjectURL(file)
+                }));
+            }
+        } else {
+            setFormData((prev) => ({ ...prev, [name]: value }));
+        }
     };
 
     const handleSave = async () => {
         try {
-            await updateProfile(formData).unwrap();
+            const data = new FormData();
+
+            // Fields to exclude from FormData for Admin
+            const excludeFields = [
+                'profile_picture', 'profile_picture_url', 'id', 'role', 'created_at',
+                'profilePicPreview', 'languages', 'permissions', 'profilePic'
+            ];
+
+            Object.keys(formData).forEach(key => {
+                if (excludeFields.includes(key)) return;
+
+                if (formData[key] !== null && formData[key] !== undefined) {
+                    data.append(key, formData[key]);
+                }
+            });
+
+            // Specifically handle profile picture
+            if (formData.profilePic instanceof File) {
+                data.append('profile_picture', formData.profilePic);
+            }
+
+            await updateProfile(data).unwrap();
             toast.success("Profile updated successfully");
             setEditMode(false);
             refetch();
@@ -181,124 +214,221 @@ export default function MyProfile() {
     if (user?.role !== 'Employee') {
         return (
             <DashboardLayout>
-                <div className="min-h-screen ml-6 p-6">
-                    <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-md overflow-hidden">
-                        <div className="bg-gradient-to-r from-orange-500 to-amber-500 p-6 flex justify-between items-center">
-                            <div className="flex items-center gap-4 text-white">
-                                <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center text-2xl font-bold">
-                                    {profileData?.firstName?.[0]}
+                <div className="min-h-screen p-4 sm:p-6 lg:p-8 font-primary bg-gray-50/30">
+                    <div className="max-w-6xl mx-auto bg-white rounded-sm shadow-md overflow-hidden border border-gray-100">
+                        {/* Header Section - Inspired by BusinessInfo Gradient */}
+                        <div className="bg-white border-b border-gray-100 p-8 sm:p-10 flex flex-col sm:flex-row justify-between items-center gap-6">
+                            <div className="flex items-center gap-6 w-full sm:w-auto">
+                                <div className="relative group shrink-0">
+                                    <div className="w-24 h-24 bg-gray-50 rounded-sm flex items-center justify-center text-3xl font-bold overflow-hidden border border-gray-200 shadow-sm transition-all duration-300 group-hover:border-orange-300">
+                                        {formData.profilePicPreview ? (
+                                            <img src={formData.profilePicPreview} alt="Profile" className="w-full h-full object-cover" />
+                                        ) : (
+                                            <span className="text-gray-400 font-bold uppercase tracking-tighter">
+                                                {profileData?.firstName?.[0]}{profileData?.lastName?.[0]}
+                                            </span>
+                                        )}
+                                    </div>
+                                    {editMode && (
+                                        <label className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 cursor-pointer transition-all duration-300 rounded-sm">
+                                            <Upload size={20} className="text-white" />
+                                            <input
+                                                type="file"
+                                                name="profilePic"
+                                                accept="image/*"
+                                                onChange={handleInputChange}
+                                                className="hidden"
+                                            />
+                                        </label>
+                                    )}
                                 </div>
-                                <div>
-                                    <h1 className="text-2xl font-bold">{profileData?.firstName} {profileData?.lastName}</h1>
-                                    <p className="opacity-90">{profileData?.role}</p>
+                                <div className="text-center sm:text-left">
+                                    <h1 className="text-3xl font-bold text-gray-800 tracking-tight">
+                                        {profileData?.firstName} {profileData?.lastName}
+                                    </h1>
+                                    <div className="flex items-center justify-center sm:justify-start gap-2 mt-1.5">
+                                        <span className="px-2.5 py-1 bg-orange-50 text-orange-600 rounded-sm text-[10px] font-black tracking-widest uppercase border border-orange-100">
+                                            {profileData?.role}
+                                        </span>
+                                        <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse ring-4 ring-green-50"></div>
+                                    </div>
                                 </div>
                             </div>
-                            {!editMode ? (
-                                <button
-                                    onClick={() => setEditMode(true)}
-                                    className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-md flex items-center gap-2 transition"
-                                >
-                                    <Edit size={16} /> Edit Profile
-                                </button>
-                            ) : (
-                                <div className="flex gap-2">
+
+                            <div className="flex flex-wrap justify-center gap-3">
+                                {!editMode ? (
                                     <button
-                                        onClick={() => setEditMode(false)}
-                                        className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-md transition"
+                                        onClick={() => setEditMode(true)}
+                                        className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-sm flex items-center gap-2.5 font-bold transition-all shadow-lg hover:shadow-orange-200 active:scale-95 text-sm"
                                     >
-                                        Cancel
+                                        <Edit size={18} />
+                                        EDIT PROFILE
                                     </button>
-                                    <button
-                                        onClick={handleSave}
-                                        className="bg-white text-orange-600 px-4 py-2 rounded-md flex items-center gap-2 font-bold transition"
-                                    >
-                                        <Save size={16} /> Save
-                                    </button>
-                                </div>
-                            )}
+                                ) : (
+                                    <div className="flex gap-3">
+                                        <button
+                                            onClick={() => setEditMode(false)}
+                                            className="px-6 py-3 border border-gray-300 rounded-sm text-gray-700 font-bold transition-all active:scale-95 text-sm hover:bg-gray-50"
+                                        >
+                                            CANCEL
+                                        </button>
+                                        <button
+                                            onClick={handleSave}
+                                            disabled={isUpdating}
+                                            className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-7 py-3 rounded-sm flex items-center gap-2.5 font-bold transition-all shadow-lg hover:shadow-orange-200 active:scale-95 text-sm disabled:opacity-50"
+                                        >
+                                            {isUpdating ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
+                                            SAVE CHANGES
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
-                        <div className="p-8">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
-                                    <input
-                                        type="text"
-                                        name="firstName"
-                                        value={formData.firstName || ''}
-                                        onChange={handleInputChange}
-                                        disabled={!editMode}
-                                        className={`w-full p-2 border rounded-md ${editMode ? 'border-orange-300 ring-2 ring-orange-100' : 'bg-gray-50 border-gray-200'}`}
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
-                                    <input
-                                        type="text"
-                                        name="lastName"
-                                        value={formData.lastName || ''}
-                                        onChange={handleInputChange}
-                                        disabled={!editMode}
-                                        className={`w-full p-2 border rounded-md ${editMode ? 'border-orange-300 ring-2 ring-orange-100' : 'bg-gray-50 border-gray-200'}`}
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                                    <input
-                                        type="email"
-                                        name="email"
-                                        value={formData.email || ''}
-                                        onChange={handleInputChange}
-                                        disabled={!editMode} // Usually email shouldn't be editable easily
-                                        className={`w-full p-2 border rounded-md ${editMode ? 'border-orange-300 ring-2 ring-orange-100' : 'bg-gray-50 border-gray-200'}`}
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Mobile Number</label>
-                                    <input
-                                        type="text"
-                                        name="mobileNumber"
-                                        value={formData.mobileNumber || ''}
-                                        onChange={handleInputChange}
-                                        disabled={!editMode}
-                                        className={`w-full p-2 border rounded-md ${editMode ? 'border-orange-300 ring-2 ring-orange-100' : 'bg-gray-50 border-gray-200'}`}
-                                    />
-                                </div>
-                                <div className="md:col-span-2">
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
-                                    <textarea
-                                        name="address"
-                                        value={formData.address || ''}
-                                        onChange={handleInputChange}
-                                        disabled={!editMode}
-                                        rows={3}
-                                        className={`w-full p-2 border rounded-md ${editMode ? 'border-orange-300 ring-2 ring-orange-100' : 'bg-gray-50 border-gray-200'}`}
-                                    />
-                                </div>
+                        {/* Form Content - Mirroring BusinessInfo/AddTeam Structure */}
+                        <div className="p-8 sm:p-12 space-y-10">
+                            <div>
+                                <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2.5 border-b border-gray-100 pb-4">
+                                    <User className="text-orange-500" size={22} />
+                                    Personal Information
+                                </h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    {/* First Name */}
+                                    <div className="space-y-2">
+                                        <label className="flex items-center gap-2 text-xs font-bold text-gray-600 uppercase tracking-widest">
+                                            <LayoutGrid size={14} className="text-orange-500" />
+                                            First Name <span className="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            name="firstName"
+                                            value={formData.firstName || ''}
+                                            onChange={handleInputChange}
+                                            disabled={!editMode}
+                                            placeholder="Enter first name"
+                                            className={`w-full px-4 py-3 border transition-all duration-200 font-medium text-sm outline-none rounded-sm ${editMode
+                                                ? "border-gray-200 bg-white focus:border-orange-500 focus:ring-2 focus:ring-orange-50 shadow-sm"
+                                                : "border-gray-50 bg-gray-50/50 text-gray-700 cursor-not-allowed"}`}
+                                        />
+                                    </div>
 
-                                <h3 className="md:col-span-2 text-lg font-bold text-gray-800 mt-4 border-b pb-2">Business Information</h3>
+                                    {/* Last Name */}
+                                    <div className="space-y-2">
+                                        <label className="flex items-center gap-2 text-xs font-bold text-gray-600 uppercase tracking-widest">
+                                            <LayoutGrid size={14} className="text-orange-500" />
+                                            Last Name <span className="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            name="lastName"
+                                            value={formData.lastName || ''}
+                                            onChange={handleInputChange}
+                                            disabled={!editMode}
+                                            placeholder="Enter last name"
+                                            className={`w-full px-4 py-3 border transition-all duration-200 font-medium text-sm outline-none rounded-sm ${editMode
+                                                ? "border-gray-200 bg-white focus:border-orange-500 focus:ring-2 focus:ring-orange-50 shadow-sm"
+                                                : "border-gray-50 bg-gray-50/50 text-gray-700 cursor-not-allowed"}`}
+                                        />
+                                    </div>
 
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Business Name</label>
-                                    <input
-                                        type="text"
-                                        name="businessName"
-                                        value={formData.businessName || ''}
-                                        onChange={handleInputChange}
-                                        disabled={!editMode}
-                                        className={`w-full p-2 border rounded-md ${editMode ? 'border-orange-300 ring-2 ring-orange-100' : 'bg-gray-50 border-gray-200'}`}
-                                    />
+                                    {/* Email */}
+                                    <div className="space-y-2">
+                                        <label className="flex items-center gap-2 text-xs font-bold text-gray-600 uppercase tracking-widest">
+                                            <Mail size={14} className="text-orange-500" />
+                                            Email Address
+                                        </label>
+                                        <input
+                                            type="email"
+                                            name="email"
+                                            value={formData.email || ''}
+                                            disabled={true}
+                                            className="w-full px-4 py-3 border border-gray-50 bg-gray-50/50 text-gray-500 font-medium text-sm rounded-sm cursor-not-allowed italic"
+                                        />
+                                    </div>
+
+                                    {/* Mobile */}
+                                    <div className="space-y-2">
+                                        <label className="flex items-center gap-2 text-xs font-bold text-gray-600 uppercase tracking-widest">
+                                            <Phone size={14} className="text-orange-500" />
+                                            Mobile Number
+                                        </label>
+                                        <input
+                                            type="text"
+                                            name="mobileNumber"
+                                            value={formData.mobileNumber || ''}
+                                            onChange={handleInputChange}
+                                            disabled={!editMode}
+                                            placeholder="Enter mobile number"
+                                            className={`w-full px-4 py-3 border transition-all duration-200 font-medium text-sm outline-none rounded-sm ${editMode
+                                                ? "border-gray-200 bg-white focus:border-orange-500 focus:ring-2 focus:ring-orange-50 shadow-sm"
+                                                : "border-gray-50 bg-gray-50/50 text-gray-700 cursor-not-allowed"}`}
+                                        />
+                                    </div>
+
+                                    {/* Address */}
+                                    <div className="space-y-2 md:col-span-2">
+                                        <label className="flex items-center gap-2 text-xs font-bold text-gray-600 uppercase tracking-widest">
+                                            <MapPin size={14} className="text-orange-500" />
+                                            Complete Address
+                                        </label>
+                                        <textarea
+                                            name="address"
+                                            value={formData.address || ''}
+                                            onChange={handleInputChange}
+                                            disabled={!editMode}
+                                            rows={2}
+                                            placeholder="Enter full residential address"
+                                            className={`w-full px-4 py-3 border transition-all duration-200 font-medium text-sm outline-none rounded-sm resize-none ${editMode
+                                                ? "border-gray-200 bg-white focus:border-orange-500 focus:ring-2 focus:ring-orange-50 shadow-sm"
+                                                : "border-gray-50 bg-gray-50/50 text-gray-700 cursor-not-allowed"}`}
+                                        />
+                                    </div>
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">GST Number</label>
-                                    <input
-                                        type="text"
-                                        name="gst"
-                                        value={formData.gst || ''}
-                                        onChange={handleInputChange}
-                                        disabled={!editMode}
-                                        className={`w-full p-2 border rounded-md ${editMode ? 'border-orange-300 ring-2 ring-orange-100' : 'bg-gray-50 border-gray-200'}`}
-                                    />
+                            </div>
+
+                            <div>
+                                <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2.5 border-b border-gray-100 pb-4">
+                                    <Building2 className="text-orange-500" size={22} />
+                                    Business Details
+                                </h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    {/* Business Name */}
+                                    <div className="space-y-2">
+                                        <label className="flex items-center gap-2 text-xs font-bold text-gray-600 uppercase tracking-widest">
+                                            <Shield size={14} className="text-orange-500" />
+                                            Business / Firm Name
+                                        </label>
+                                        <input
+                                            type="text"
+                                            name="businessName"
+                                            value={formData.businessName || ''}
+                                            onChange={handleInputChange}
+                                            disabled={!editMode}
+                                            placeholder="Enter business name"
+                                            className={`w-full px-4 py-3 border transition-all duration-200 font-medium text-sm outline-none rounded-sm ${editMode
+                                                ? "border-gray-200 bg-white focus:border-orange-500 focus:ring-2 focus:ring-orange-50 shadow-sm"
+                                                : "border-gray-50 bg-gray-50/50 text-gray-700 cursor-not-allowed"}`}
+                                        />
+                                    </div>
+
+                                    {/* GST */}
+                                    <div className="space-y-2">
+                                        <label className="flex items-center gap-2 text-xs font-bold text-gray-600 uppercase tracking-widest">
+                                            <CreditCard size={14} className="text-orange-500" />
+                                            GST Identification Number
+                                        </label>
+                                        <input
+                                            type="text"
+                                            name="gst"
+                                            value={formData.gst || ''}
+                                            onChange={handleInputChange}
+                                            disabled={!editMode}
+                                            placeholder="Enter GST number"
+                                            className={`w-full px-4 py-3 border transition-all duration-200 font-medium text-sm outline-none rounded-sm ${editMode
+                                                ? "border-gray-200 bg-white focus:border-orange-500 focus:ring-2 focus:ring-orange-50 shadow-sm"
+                                                : "border-gray-50 bg-gray-50/50 text-gray-700 cursor-not-allowed"}`}
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         </div>
