@@ -15,8 +15,8 @@ export const offerLetterApi = createApi({
     tagTypes: ['OfferLetter'],
     endpoints: (builder) => ({
         getOfferLetters: builder.query({
-            query: ({ page = 1, limit = 10, search = '', status = 'All' }) =>
-                `offer-letters?page=${page}&limit=${limit}&search=${search}&status=${status}`,
+            query: ({ page = 1, limit = 10, search = '', status = 'All', department = '', designation = '', employment_type = '', salary_model = '' }) =>
+                `offer-letters?page=${page}&limit=${limit}&search=${search}&status=${status}&department=${department}&designation=${designation}&employment_type=${employment_type}&salary_model=${salary_model}`,
             providesTags: ['OfferLetter'],
         }),
         getOfferLetterById: builder.query({

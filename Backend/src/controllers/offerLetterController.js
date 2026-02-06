@@ -14,8 +14,8 @@ const createOfferLetter = async (req, res) => {
 const getOfferLetters = async (req, res) => {
     try {
         const userId = req.user.id;
-        const { page, limit, search, status } = req.query;
-        const result = await OfferLetter.findAll(userId, { page, limit, search, status });
+        const { page, limit, search, status, department, designation, employment_type, salary_model } = req.query;
+        const result = await OfferLetter.findAll(userId, { page, limit, search, status, department, designation, employment_type, salary_model });
         res.status(200).json(result);
     } catch (error) {
         res.status(500).json({ message: error.message });
