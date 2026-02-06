@@ -397,7 +397,7 @@ export default function AnnouncementPage() {
         </div>
 
         <div className="max-w-8xl mx-auto p-4 pt-0 mt-2">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-3">
             <NumberCard
               title={"Total Announcements"}
               number={pagination.total}
@@ -411,6 +411,20 @@ export default function AnnouncementPage() {
               icon={<Filter className="text-orange-600" size={24} />}
               iconBgColor={"bg-orange-100"}
               lineBorderClass={"border-orange-500"}
+            />
+            <NumberCard
+              title={"This Week"}
+              number={stats.thisWeek}
+              icon={<Calendar className="text-green-600" size={24} />}
+              iconBgColor={"bg-green-100"}
+              lineBorderClass={"border-green-500"}
+            />
+            <NumberCard
+              title={"Total Categories"}
+              number={categories.length}
+              icon={<Package className="text-purple-600" size={24} />}
+              iconBgColor={"bg-purple-100"}
+              lineBorderClass={"border-purple-500"}
             />
           </div>
 

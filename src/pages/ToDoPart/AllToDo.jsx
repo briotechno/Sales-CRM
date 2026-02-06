@@ -22,6 +22,7 @@ import {
   List,
   RotateCcw,
   FileText,
+  ChevronDown,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import NumberCard from "../../components/NumberCard";
@@ -768,18 +769,19 @@ export default function TodoPage() {
                                   <td className="py-3 px-4 whitespace-nowrap text-left">
                                     <div className="flex items-center gap-1.5 text-sm text-gray-600 font-medium">
                                       <Clock size={14} className="text-orange-500" />
-                                      {task.due_time ? task.due_time.slice(0, 5) : "--:--"}
+                                      {task.due_time ? new Date(`1970-01-01T${task.due_time}`).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }) : "--:--"}
                                     </div>
                                   </td>
                                   <td className="py-3 px-4 whitespace-nowrap text-left">
                                     <div className="relative inline-block">
-                                      <span className={`px-3 py-1 rounded-sm text-xs font-bold capitalize tracking-wider border block w-fit
+                                      <span className={`px-3 py-1 rounded-sm text-xs font-bold capitalize tracking-wider border w-fit flex items-center gap-2
                                         ${(task.status === 'Completed' || task.completed) ? 'bg-green-50 text-green-700 border-green-100' :
                                           task.status === 'Pending' ? 'bg-yellow-50 text-yellow-700 border-yellow-100' :
                                             'bg-orange-50 text-orange-700 border-orange-100'
                                         }`}
                                       >
                                         {task.status || (task.completed ? 'Completed' : 'Active')}
+                                        <ChevronDown size={12} strokeWidth={3} />
                                       </span>
                                       <select
                                         value={task.status || (task.completed ? 'Completed' : 'Active')}

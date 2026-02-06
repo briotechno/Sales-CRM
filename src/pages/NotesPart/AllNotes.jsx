@@ -517,7 +517,7 @@ export default function NotesPage() {
                   </div>
 
                   {/* Footer Section */}
-                  <div className="mt-6 -mx-6 -mb-6 px-6 py-4 bg-gray-50 border-t border-gray-200 rounded-b-sm flex justify-between items-center text-[10px] text-gray-600 font-bold uppercase tracking-widest">
+                  <div className="mt-6 -mx-6 -mb-6 px-6 py-4 bg-gray-100 border-t border-gray-200 rounded-b-sm flex justify-between items-center text-[10px] text-gray-600 font-bold uppercase tracking-widest">
                     <div className="flex items-center gap-1">
                       <Clock size={12} className="text-gray-500" />
                       {new Date(note.created_at).toLocaleDateString()}
