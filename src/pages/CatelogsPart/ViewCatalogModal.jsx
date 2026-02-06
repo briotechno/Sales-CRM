@@ -173,39 +173,43 @@ const ViewCatalogModal = ({ isOpen, onClose, catalog, businessInfo }) => {
                         </div>
                     </div>
 
-                    <div className="text-left md:text-right bg-white p-5 rounded-xl border border-orange-100 shadow-sm min-w-[200px] w-full md:w-auto border-t-4 border-t-[#FF7B1D]">
-                        <p className="text-sm font-semibold text-[#FF7B1D] capitalize tracking-wider mb-2">Price Range</p>
-                        <div className="flex flex-wrap items-baseline md:justify-end gap-1 text-gray-900 overflow-hidden">
-                            <span className="text-sm font-bold shrink-0">₹</span>
-                            <p className="text-xl md:text-2xl font-semibold tabular-nums break-words whitespace-normal leading-tight">
-                                {catalog.minPrice && catalog.maxPrice && catalog.minPrice !== catalog.maxPrice ? (
-                                    <>
-                                        {formatCurrencyShorthand(catalog.minPrice)} - {formatCurrencyShorthand(catalog.maxPrice)}
-                                    </>
-                                ) : (
-                                    formatCurrencyShorthand(catalog.maxPrice || catalog.minPrice || 0)
-                                )}
-                            </p>
+                    {(Number(catalog.minPrice) > 0 || Number(catalog.maxPrice) > 0) && (
+                        <div className="text-left md:text-right bg-white p-5 rounded-xl border border-orange-100 shadow-sm min-w-[200px] w-full md:w-auto border-t-4 border-t-[#FF7B1D]">
+                            <p className="text-sm font-semibold text-[#FF7B1D] capitalize tracking-wider mb-2">Price Range</p>
+                            <div className="flex flex-wrap items-baseline md:justify-end gap-1 text-gray-900 overflow-hidden">
+                                <span className="text-sm font-bold shrink-0">₹</span>
+                                <p className="text-xl md:text-2xl font-semibold tabular-nums break-words whitespace-normal leading-tight">
+                                    {catalog.minPrice && catalog.maxPrice && catalog.minPrice !== catalog.maxPrice ? (
+                                        <>
+                                            {formatCurrencyShorthand(catalog.minPrice)} - {formatCurrencyShorthand(catalog.maxPrice)}
+                                        </>
+                                    ) : (
+                                        formatCurrencyShorthand(catalog.maxPrice || catalog.minPrice || 0)
+                                    )}
+                                </p>
+                            </div>
+                            <p className="text-[9px] text-gray-400 font-bold mt-1 uppercase tracking-tighter">Approximate Market Value</p>
                         </div>
-                        <p className="text-[9px] text-gray-400 font-bold mt-1 uppercase tracking-tighter">Approximate Market Value</p>
-                    </div>
+                    )}
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="p-5 bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow-md transition-all group border-l-4 border-l-blue-500">
-                        <div className="flex items-center gap-3 mb-3">
-                            <div className="p-2 bg-blue-50 text-blue-600 rounded-lg group-hover:scale-110 transition-transform">
-                                <Clock size={20} />
+                <div className={`grid grid-cols-1 ${hasValue(catalog.deliveryTime) ? 'md:grid-cols-2' : ''} gap-4`}>
+                    {hasValue(catalog.deliveryTime) && (
+                        <div className="p-4 bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow-md transition-all group border-l-4 border-l-blue-500">
+                            <div className="flex items-center gap-3 mb-2">
+                                <div className="p-2 bg-blue-50 text-blue-600 rounded-lg group-hover:scale-110 transition-transform">
+                                    <Clock size={20} />
+                                </div>
+                                <span className="text-sm font-semibold text-gray-600 capitalize tracking-wider">Delivery Time</span>
                             </div>
-                            <span className="text-sm font-semibold text-gray-600 capitalize tracking-wider">Delivery Time</span>
+                            <p className="text-base font-semibold text-gray-900 ml-1">
+                                {catalog.deliveryTime}
+                            </p>
                         </div>
-                        <p className="text-base font-semibold text-gray-900 ml-1">
-                            {catalog.deliveryTime || "TBD"}
-                        </p>
-                    </div>
+                    )}
 
-                    <div className="p-5 bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow-md transition-all group border-l-4 border-l-green-500">
-                        <div className="flex items-center gap-3 mb-3">
+                    <div className="p-4 bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow-md transition-all group border-l-4 border-l-green-500">
+                        <div className="flex items-center gap-3 mb-2">
                             <div className="p-2 bg-green-50 text-green-600 rounded-lg group-hover:scale-110 transition-transform">
                                 <Building2 size={20} />
                             </div>
@@ -221,68 +225,68 @@ const ViewCatalogModal = ({ isOpen, onClose, catalog, businessInfo }) => {
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
                     <div className="md:col-span-12 space-y-6">
                         {/* Description Box */}
-                        <div className="bg-gray-50/50 p-6 rounded-xl border border-gray-100">
-                            <h4 className="flex items-center gap-2 text-sm font-semibold capitalize tracking-wider mb-4 text-[#FF7B1D]">
-                                <FileText size={18} /> Description
-                            </h4>
-                            <div className={`transition-all duration-300 ${isDescriptionExpanded ? "max-h-[200px] overflow-y-auto pr-2 custom-scrollbar" : ""}`}>
-                                <p className="text-base text-gray-600 leading-relaxed font-medium">
-                                    {displayDescription || "Comprehensive product description pending update."}
-                                    {isLongDescription && (
-                                        <button
-                                            onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
-                                            className="ml-2 text-[#FF7B1D] font-bold hover:underline focus:outline-none inline-block align-baseline text-sm"
-                                        >
-                                            {isDescriptionExpanded ? "Read Less" : "Read More"}
-                                        </button>
-                                    )}
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            {/* Features */}
-                            <div>
-                                <h4 className="flex items-center gap-2 text-sm font-semibold capitalize tracking-wider text-gray-800 mb-5 px-1 border-b pb-2 border-gray-100">
-                                    <Tag size={18} className="text-[#FF7B1D]" /> Key Features
+                        {hasValue(catalog.description) && (
+                            <div className="bg-gray-50/50 p-6 rounded-xl border border-gray-100">
+                                <h4 className="flex items-center gap-2 text-sm font-semibold capitalize tracking-wider mb-4 text-[#FF7B1D]">
+                                    <FileText size={18} /> Description
                                 </h4>
-                                <div className="space-y-3">
-                                    {catalog.features?.length > 0 ? (
-                                        catalog.features.map((feature, idx) => (
-                                            <div key={idx} className="flex items-center gap-4 p-4 bg-white rounded-xl border border-gray-50 shadow-sm hover:border-[#FF7B1D]/30 transition-all group">
-                                                <div className="w-8 h-8 shrink-0 rounded-full bg-orange-50 flex items-center justify-center text-[#FF7B1D] group-hover:scale-110 transition-transform">
-                                                    <CheckCircle size={16} />
-                                                </div>
-                                                <p className="text-sm font-semibold text-gray-700 leading-tight capitalize">{feature}</p>
-                                            </div>
-                                        ))
-                                    ) : (
-                                        <p className="text-gray-400 italic text-xs px-1">No specific features listed</p>
-                                    )}
+                                <div className={`transition-all duration-300 ${isDescriptionExpanded ? "max-h-[200px] overflow-y-auto pr-2 custom-scrollbar" : ""}`}>
+                                    <p className="text-base text-gray-600 leading-relaxed font-medium">
+                                        {displayDescription}
+                                        {isLongDescription && (
+                                            <button
+                                                onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
+                                                className="ml-2 text-[#FF7B1D] font-bold hover:underline focus:outline-none inline-block align-baseline text-sm"
+                                            >
+                                                {isDescriptionExpanded ? "Read Less" : "Read More"}
+                                            </button>
+                                        )}
+                                    </p>
                                 </div>
                             </div>
+                        )}
+
+                        <div className={`grid grid-cols-1 ${(catalog.features?.length > 0 && catalog.specifications && Object.keys(catalog.specifications).length > 0) ? 'md:grid-cols-2' : 'md:grid-cols-1'} gap-8`}>
+                            {/* Features */}
+                            {catalog.features?.length > 0 && (
+                                <div>
+                                    <h4 className="flex items-center gap-2 text-sm font-semibold capitalize tracking-wider text-gray-800 mb-5 px-1 border-b pb-2 border-gray-100">
+                                        <Tag size={18} className="text-[#FF7B1D]" /> Key Features
+                                    </h4>
+                                    <div className="space-y-3">
+                                        {catalog.features.map((feature, idx) => (
+                                            feature && (
+                                                <div key={idx} className="flex items-center gap-4 p-4 bg-white rounded-xl border border-gray-50 shadow-sm hover:border-[#FF7B1D]/30 transition-all group">
+                                                    <div className="w-8 h-8 shrink-0 rounded-full bg-orange-50 flex items-center justify-center text-[#FF7B1D] group-hover:scale-110 transition-transform">
+                                                        <CheckCircle size={16} />
+                                                    </div>
+                                                    <p className="text-sm font-semibold text-gray-700 leading-tight capitalize">{feature}</p>
+                                                </div>
+                                            )
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Specs */}
-                            <div>
-                                <h4 className="flex items-center gap-2 text-sm font-semibold capitalize tracking-wider text-gray-800 mb-5 px-1 border-b pb-2 border-gray-100">
-                                    <ShieldCheck size={18} className="text-[#FF7B1D]" /> Specifications
-                                </h4>
-                                <div className="space-y-3">
-                                    {catalog.specifications && Object.keys(catalog.specifications).length > 0 ? (
-                                        Object.entries(catalog.specifications).map(([key, value], idx) => (
-                                            <div key={idx} className="flex items-center justify-between p-4 bg-white border border-gray-50 rounded-xl shadow-sm hover:border-[#FF7B1D]/30 transition-all group">
-                                                <div className="flex items-center gap-3">
+                            {catalog.specifications && Object.keys(catalog.specifications).length > 0 && (
+                                <div>
+                                    <h4 className="flex items-center gap-2 text-sm font-semibold capitalize tracking-wider text-gray-800 mb-5 px-1 border-b pb-2 border-gray-100">
+                                        <ShieldCheck size={18} className="text-[#FF7B1D]" /> Specifications
+                                    </h4>
+                                    <div className="space-y-3">
+                                        {Object.entries(catalog.specifications).map(([key, value], idx) => (
+                                            <div key={idx} className="flex flex-col items-start gap-1 p-4 bg-white border border-gray-50 rounded-xl shadow-sm hover:border-[#FF7B1D]/30 transition-all group">
+                                                <div className="flex items-center gap-2 w-full">
                                                     <div className="w-2 h-2 rounded-full bg-[#FF7B1D] group-hover:scale-125 transition-all"></div>
-                                                    <span className="text-sm font-semibold text-gray-500 capitalize tracking-wide">{key}</span>
+                                                    <span className="text-xs font-semibold text-gray-500 capitalize tracking-wide">{key}</span>
                                                 </div>
-                                                <span className="text-sm font-bold text-gray-900 capitalize">{String(value)}</span>
+                                                <span className="text-sm font-bold text-gray-900 capitalize pl-4">{String(value)}</span>
                                             </div>
-                                        ))
-                                    ) : (
-                                        <p className="text-gray-400 italic text-xs px-1">No technical specs available</p>
-                                    )}
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
+                            )}
                         </div>
                     </div>
                 </div>

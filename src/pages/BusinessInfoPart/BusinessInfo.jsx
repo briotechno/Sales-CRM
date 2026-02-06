@@ -277,111 +277,86 @@ export default function BusinessInfoPage() {
 
   return (
     <DashboardLayout>
-      <div className="p-0 bg-gradient-to-br from-gray-0 to-gray-100 ml-4 mr-4 pb-10 min-h-screen">
-        {/* Header - Synchronized with PublicJobForm Layout */}
-        <div className="flex flex-col">
-          {/* Top Branding Header */}
-          <div className="bg-white border-b mb-3">
-            <div className="max-w-8xl mx-auto px-6 py-3">
-              <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-                <div className="flex flex-col md:flex-row items-center gap-6">
-                  {/* Logo */}
-                  <div className="flex-shrink-0">
-                    <div className="w-14 h-14 bg-gray-50 border border-gray-100 rounded-sm flex items-center justify-center p-2 shadow-sm overflow-hidden text-center">
-                      {businessInfo?.logo_url ? (
-                        <img
-                          src={`${import.meta.env.VITE_API_BASE_URL.replace('/api/', '')}${businessInfo.logo_url}`}
-                          alt={businessInfo.company_name}
-                          className="w-full h-full object-contain"
-                        />
-                      ) : (
-                        <Building2 size={32} className="text-[#FF7B1D]" />
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Info */}
-                  <div className="text-center md:text-left">
-                    <h1 className="text-2xl font-bold text-gray-900 leading-tight">
-                      {businessInfo?.company_name || "Company Name"}
-                    </h1>
-                    <p className="text-xs font-bold text-[#FF7B1D] uppercase tracking-widest mt-1">
-                      {businessInfo?.industry || "Manufacturing"}
-                    </p>
+      <div className="min-h-screen bg-white">
+        {/* Header - Synchronized with AllToDo Structure */}
+        <div className="bg-white sticky top-0 z-30">
+          <div className="max-w-8xl mx-auto px-4 py-4 border-b">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+              <div className="flex flex-col md:flex-row items-center gap-6">
+                {/* Logo */}
+                <div className="flex-shrink-0">
+                  <div className="w-14 h-14 bg-gray-50 border border-gray-100 rounded-sm flex items-center justify-center p-2 shadow-sm overflow-hidden text-center">
+                    {businessInfo?.logo_url ? (
+                      <img
+                        src={`${import.meta.env.VITE_API_BASE_URL.replace('/api/', '')}${businessInfo.logo_url}`}
+                        alt={businessInfo.company_name}
+                        className="w-full h-full object-contain"
+                      />
+                    ) : (
+                      <Building2 size={32} className="text-[#FF7B1D]" />
+                    )}
                   </div>
                 </div>
 
-                {/* Top Action Buttons */}
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => {
-                      if (!businessInfo?.id) {
-                        toast.error("Please save your business information first to enable sharing.");
-                        return;
-                      }
-                      setIsShareModalOpen(true);
-                    }}
-                    className="px-5 py-3 border border-gray-300 rounded-sm hover:bg-gray-50 font-semibold text-gray-700 flex items-center gap-2"
-                  >
-                    <Share2 size={18} />
-                    Share
-                  </button>
-
-                  {!isEditing ? (
-                    <button
-                      onClick={() => setIsEditing(true)}
-                      className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-2 font-semibold"
-                    >
-                      <Edit2 size={20} />
-                      Edit Information
-                    </button>
-                  ) : (
-                    <div className="flex gap-3">
-                      <button
-                        onClick={() => setIsEditing(false)}
-                        className="px-6 py-3 border border-gray-300 rounded-sm hover:bg-gray-50 font-semibold text-gray-700"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        onClick={handleSave}
-                        disabled={isUpdating}
-                        className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg flex items-center gap-2 font-semibold disabled:opacity-50"
-                      >
-                        <Save size={20} />
-                        {isUpdating ? "Saving..." : "Save Changes"}
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Secondary Breadcrumb Header */}
-          <div className="bg-white border-b mb-6 transition-all">
-            <div className="max-w-8xl mx-auto px-6 py-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-500 flex items-center gap-2">
-                    <FiHome className="text-gray-700 text-sm" />
-                    <span className="text-gray-400">Settings /</span>{" "}
-                    <span className="text-[#FF7B1D] font-medium italic">
-                      All Information
-                    </span>
+                {/* Info */}
+                <div className="text-center md:text-left">
+                  <h1 className="text-2xl font-bold text-gray-900 leading-tight">
+                    {businessInfo?.company_name || "Company Name"}
+                  </h1>
+                  <p className="text-xs font-bold text-[#FF7B1D] uppercase tracking-widest mt-1">
+                    {businessInfo?.industry || "Manufacturing"}
                   </p>
                 </div>
-                <div className="hidden md:flex items-center gap-3">
-                  <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">
-                    Enterprise Control Dashboard
-                  </span>
-                </div>
+              </div>
+
+              {/* Top Action Buttons */}
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => {
+                    if (!businessInfo?.id) {
+                      toast.error("Please save your business information first to enable sharing.");
+                      return;
+                    }
+                    setIsShareModalOpen(true);
+                  }}
+                  className="px-5 py-3 border border-gray-300 rounded-sm hover:bg-gray-50 font-semibold text-gray-700 flex items-center gap-2"
+                >
+                  <Share2 size={18} />
+                  Share
+                </button>
+
+                {!isEditing ? (
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-2 font-semibold"
+                  >
+                    <Edit2 size={20} />
+                    Edit Information
+                  </button>
+                ) : (
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => setIsEditing(false)}
+                      className="px-6 py-3 border border-gray-300 rounded-sm hover:bg-gray-50 font-semibold text-gray-700"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleSave}
+                      disabled={isUpdating}
+                      className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg flex items-center gap-2 font-semibold disabled:opacity-50"
+                    >
+                      <Save size={20} />
+                      {isUpdating ? "Saving..." : "Save Changes"}
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </div>
 
-        <div className="max-w-8xl mx-auto px-0 py-0 mt-2">
+        <div className="max-w-8xl mx-auto px-4 pb-4 pt-2 mt-0 font-primary w-full flex-1">
           {/* Stats Cards - Dynamic with NumberCard Component */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-6">
             <NumberCard

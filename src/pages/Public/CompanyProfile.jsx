@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { useGetPublicBusinessInfoQuery } from "../../store/api/businessApi";
 import { useGetPublicCatalogsQuery } from "../../store/api/catalogApi";
@@ -36,6 +36,7 @@ import 'swiper/css/pagination';
 import Navbar from "./Navbar";
 import HeroSection from "./HeroSection";
 import Footer from "./Footer";
+import toast from 'react-hot-toast';
 
 const CompanyProfile = () => {
     const { id } = useParams();
@@ -50,6 +51,57 @@ const CompanyProfile = () => {
     const [showFullMission, setShowFullMission] = useState(false);
     const DESCRIPTION_LIMIT = 300;
     const VISION_MISSION_LIMIT = 200;
+
+    const logoUrl = business?.logo_url
+        ? `${import.meta.env.VITE_API_BASE_URL.replace("/api/", "")}${business.logo_url}`
+        : null;
+
+    useEffect(() => {
+        if (business) {
+            // Set Page Title
+            document.title = `${business.company_name} | Business Profile`;
+
+            // Set Favicon
+            if (logoUrl) {
+                const link = document.querySelector("link[rel~='icon']") || document.createElement('link');
+                link.type = 'image/x-icon';
+                link.rel = 'shortcut icon';
+                link.href = logoUrl;
+                document.getElementsByTagName('head')[0].appendChild(link);
+            }
+        }
+    }, [business, logoUrl]);
+
+    const handleShare = async () => {
+        if (!business) return;
+        const shareData = {
+            title: business.company_name,
+            text: `Check out the business profile of ${business.company_name}`,
+            url: window.location.href,
+        };
+
+        if (navigator.share) {
+            try {
+                await navigator.share(shareData);
+            } catch (err) {
+                console.log("Error sharing:", err);
+            }
+        } else {
+            try {
+                await navigator.clipboard.writeText(window.location.href);
+                toast.success('Profile URL copied to clipboard!', {
+                    icon: '📋',
+                    style: {
+                        borderRadius: '4px',
+                        background: '#333',
+                        color: '#fff',
+                    },
+                });
+            } catch (err) {
+                toast.error('Failed to copy URL');
+            }
+        }
+    };
 
     if (isLoading) {
         return (
@@ -79,9 +131,7 @@ const CompanyProfile = () => {
         );
     }
 
-    const logoUrl = business.logo_url
-        ? `${import.meta.env.VITE_API_BASE_URL.replace("/api/", "")}${business.logo_url}`
-        : null;
+
 
     const getSocialIcon = (platform) => {
         switch (platform.toLowerCase()) {
@@ -111,6 +161,8 @@ const CompanyProfile = () => {
             default: return "hover:bg-[#FF7B1D] hover:text-white text-[#FF7B1D] bg-orange-50 border-orange-100";
         }
     };
+
+
 
     return (
         <div className="min-h-screen bg-white font-primary antialiased text-gray-800 mt-16">
@@ -175,7 +227,10 @@ const CompanyProfile = () => {
                                             Visit Website
                                         </a>
                                     )}
-                                    <button className="bg-gray-50 border border-gray-200 text-gray-600 px-6 py-2.5 rounded-sm font-bold text-sm hover:bg-gray-100 transition-all flex items-center gap-2">
+                                    <button
+                                        onClick={handleShare}
+                                        className="bg-gray-50 border border-gray-200 text-gray-600 px-6 py-2.5 rounded-sm font-bold text-sm hover:bg-gray-100 transition-all flex items-center gap-2"
+                                    >
                                         <Share2 size={16} />
                                         Share Profile
                                     </button>
