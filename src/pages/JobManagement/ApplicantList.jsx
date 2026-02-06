@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import DashboardLayout from "../../components/DashboardLayout";
 import {
     Users,
@@ -42,48 +42,37 @@ const DeleteApplicantModal = ({ isOpen, onClose, onConfirm, isLoading, title }) 
             onClose={onClose}
             headerVariant="simple"
             maxWidth="max-w-md"
+            cleanLayout={true}
             footer={
-                <div className="flex gap-4 w-full">
+                <div className="flex gap-4 w-full px-6 py-4 border-t">
                     <button
                         onClick={onClose}
-                        className="flex-1 px-6 py-3 border border-gray-200 text-gray-700 font-bold rounded-sm hover:bg-gray-100 shadow-sm transition-all"
+                        className="flex-1 px-6 py-3 border border-gray-200 text-gray-700 font-bold rounded-sm hover:bg-gray-100 transition-all font-primary text-xs uppercase tracking-widest"
                     >
                         Cancel
                     </button>
-
                     <button
                         onClick={onConfirm}
                         disabled={isLoading}
-                        className="flex-1 px-6 py-3 bg-red-600 text-white font-bold rounded-sm hover:bg-red-700 shadow-md hover:shadow-lg disabled:opacity-50 flex items-center justify-center gap-2 transition-all"
+                        className="flex-1 px-6 py-3 bg-red-600 text-white font-bold rounded-sm hover:bg-red-700 transition-all shadow-lg flex items-center justify-center gap-2 font-primary text-xs uppercase tracking-widest disabled:opacity-50"
                     >
-                        {isLoading ? (
-                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        ) : (
-                            <Trash2 size={20} />
-                        )}
-                        {isLoading ? "Deleting..." : "Delete Now"}
+                        {isLoading ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Trash2 size={18} />}
+                        Delete Now
                     </button>
                 </div>
             }
         >
-            <div className="flex flex-col items-center text-center p-6">
-                <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mb-6 animate-bounce">
-                    <AlertTriangle size={48} className="text-red-600" />
+            <div className="flex flex-col items-center text-center text-black font-primary p-6">
+                <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mb-6">
+                    <AlertTriangle size={48} className="text-[#d00000] drop-shadow-sm" />
                 </div>
-
-                <h2 className="text-2xl font-bold text-gray-800 mb-2">
-                    Confirm Delete
-                </h2>
-
-                <p className="text-gray-600 mb-2 leading-relaxed">
-                    Are you sure you want to delete applicant Management{" "}
-                    <span className="font-bold text-gray-800">"{title}"</span>?
+                <h2 className="text-2xl font-bold text-gray-800 mb-2">Confirm Delete</h2>
+                <p className="text-gray-600 mb-6 leading-relaxed">
+                    Are you sure you want to delete applicant <span className="font-bold text-gray-900">"{title}"</span>?
                 </p>
-
-                <p className="text-sm text-red-500 italic mb-6">
-                    This action cannot be undone. All associated data will be permanently removed.
-                </p>
-
+                <div className="bg-red-50 px-4 py-2 rounded-lg inline-block">
+                    <p className="text-xs text-red-600 font-bold tracking-wide italic uppercase">Irreversible Action</p>
+                </div>
             </div>
         </Modal>
     );
@@ -91,15 +80,56 @@ const DeleteApplicantModal = ({ isOpen, onClose, onConfirm, isLoading, title }) 
 
 const ApplicantList = () => {
     const navigate = useNavigate();
+    const location = useLocation();
+    const initialJobTitle = location.state?.jobTitle || "All";
+
     const [currentPage, setCurrentPage] = useState(1);
     const [search, setSearch] = useState("");
     const [selectedStatus, setSelectedStatus] = useState("All");
-    const [selectedJobTitle, setSelectedJobTitle] = useState("All");
+    const [selectedJobTitle, setSelectedJobTitle] = useState(initialJobTitle);
+    const [selectedApplicant, setSelectedApplicant] = useState(null);
+    const [applicantToDelete, setApplicantToDelete] = useState(null);
+
+    // Filter states
+    const [isFilterOpen, setIsFilterOpen] = useState(false);
+    const [tempFilters, setTempFilters] = useState({
+        status: "All",
+        jobTitle: initialJobTitle
+    });
+    const dropdownRef = React.useRef(null);
+    const hasActiveFilters = selectedStatus !== "All" || selectedJobTitle !== "All";
+
+    const clearAllFilters = () => {
+        setSelectedStatus("All");
+        setSelectedJobTitle("All");
+        setSearch("");
+        setTempFilters({
+            status: "All",
+            jobTitle: "All"
+        });
+        setCurrentPage(1);
+    };
+
+    const handleApplyFilters = () => {
+        setSelectedStatus(tempFilters.status);
+        setSelectedJobTitle(tempFilters.jobTitle);
+        setCurrentPage(1);
+        setIsFilterOpen(false);
+    };
+
+    React.useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setIsFilterOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
     const [showViewModal, setShowViewModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
-    const [selectedApplicant, setSelectedApplicant] = useState(null);
-    const [applicantToDelete, setApplicantToDelete] = useState(null);
+
     const [editFormData, setEditFormData] = useState({
         name: "",
         email: "",
@@ -270,63 +300,108 @@ const ApplicantList = () => {
 
     return (
         <DashboardLayout>
-            <div className="min-h-screen bg-gray-50/50 p-0 ">
-                <div className="max-w-8xl mx-auto">
-                    {/* Header */}
-                    <div className="bg-white rounded-sm p-4 mb-4 border-b shadow-sm">
+            <div className="min-h-screen bg-gradient-to-br from-orange-0 via-white to-orange-100">
+                <div className="bg-white sticky top-0 z-30">
+                    <div className="max-w-8xl mx-auto px-4 py-4 border-b">
                         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                            <div>
-                                <h1 className="text-2xl font-bold text-gray-900">Applicant Management</h1>
-                                <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
-                                    <FiHome className="text-gray-400" />
-                                    <span>HRM / Recruitment / </span>
-                                    <span className="text-orange-500 font-medium">Applicants</span>
-                                </p>
+                            <div className="flex items-center gap-6">
+                                <div>
+                                    <h1 className="text-2xl font-bold text-gray-900">Applicant Management</h1>
+                                    <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
+                                        <FiHome className="text-gray-400" />
+                                        <span>HRM / Recruitment / </span>
+                                        <span className="text-orange-500 font-medium">Applicants</span>
+                                    </p>
+                                </div>
                             </div>
-                            <div className="flex items-center gap-3 w-full md:w-auto">
-                                {/* <div className="relative flex-1 md:w-64">
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                                    <input
-                                        type="text"
-                                        placeholder="Search applicants..."
-                                        value={search}
-                                        onChange={(e) => setSearch(e.target.value)}
-                                        className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 outline-none transition-all bg-white"
-                                    />
-                                </div> */}
-                                <select
-                                    value={selectedStatus}
-                                    onChange={(e) => setSelectedStatus(e.target.value)}
-                                    className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 outline-none bg-white font-medium text-gray-700"
-                                >
-                                    <option value="All">All Status</option>
-                                    <option value="Applied">Applied</option>
-                                    <option value="Screening">Screening</option>
-                                    <option value="Technical">Technical</option>
-                                    <option value="HR">HR</option>
-                                    <option value="Final">Final</option>
-                                    <option value="Selected">Selected</option>
-                                    <option value="Rejected">Rejected</option>
-                                    <option value="Offer Sent">Offer Sent</option>
 
-                                </select>
+                            <div className="flex items-center gap-3">
+                                <div className="relative" ref={dropdownRef}>
+                                    <button
+                                        onClick={() => setIsFilterOpen(!isFilterOpen)}
+                                        className={`p-3 rounded-sm border transition shadow-sm ${isFilterOpen || hasActiveFilters
+                                            ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-orange-500"
+                                            : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
+                                            }`}
+                                    >
+                                        {hasActiveFilters && !isFilterOpen ? <X size={18} onClick={(e) => { e.stopPropagation(); clearAllFilters(); }} /> : <Filter size={18} />}
+                                    </button>
 
-                                <select
-                                    value={selectedJobTitle}
-                                    onChange={(e) => setSelectedJobTitle(e.target.value)}
-                                    className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 outline-none bg-white font-medium text-gray-700 md:w-48"
-                                >
-                                    <option value="All">All Jobs</option>
-                                    {uniqueJobTitles.map((title, index) => (
-                                        <option key={index} value={title}>{title}</option>
-                                    ))}
-                                </select>
+                                    {isFilterOpen && (
+                                        <div className="absolute right-0 mt-2 w-[450px] bg-white border border-gray-200 rounded-sm shadow-2xl z-50 animate-fadeIn overflow-hidden">
+                                            <div className="p-4 bg-gray-50 border-b flex justify-between items-center">
+                                                <span className="text-sm font-bold text-gray-800 tracking-tight capitalize font-primary">Filter Applicants</span>
+                                                <button
+                                                    onClick={clearAllFilters}
+                                                    className="text-[10px] font-bold text-orange-600 hover:text-orange-700 hover:underline capitalize font-primary"
+                                                >
+                                                    Reset all
+                                                </button>
+                                            </div>
+
+                                            <div className="p-6">
+                                                <div className="space-y-6">
+                                                    {/* Status Filter */}
+                                                    <div className="space-y-3">
+                                                        <span className="text-[11px] font-bold text-gray-700 capitalize tracking-wider block font-primary">Application Status</span>
+                                                        <div className="grid grid-cols-3 gap-2">
+                                                            {['All', 'Applied', 'Screening', 'Technical', 'HR', 'Final', 'Selected', 'Rejected', 'Offer Sent'].map((s) => (
+                                                                <button
+                                                                    key={s}
+                                                                    onClick={() => setTempFilters({ ...tempFilters, status: s })}
+                                                                    className={`px-2 py-2 rounded-sm text-[10px] font-bold transition-all border font-primary ${tempFilters.status === s
+                                                                        ? "bg-orange-500 text-white border-orange-500 shadow-md"
+                                                                        : "bg-white text-gray-600 border-gray-100 hover:border-orange-200"
+                                                                        }`}
+                                                                >
+                                                                    {s}
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Job Title Filter */}
+                                                    <div className="space-y-2">
+                                                        <span className="text-[11px] font-bold text-gray-700 capitalize tracking-wider block font-primary">Filter By Job</span>
+                                                        <select
+                                                            value={tempFilters.jobTitle}
+                                                            onChange={(e) => setTempFilters({ ...tempFilters, jobTitle: e.target.value })}
+                                                            className="w-full bg-gray-50 border border-gray-100 rounded-sm px-4 py-2.5 text-xs font-semibold focus:border-orange-500 focus:bg-white outline-none transition-all font-primary"
+                                                        >
+                                                            <option value="All">All Job Posts</option>
+                                                            {uniqueJobTitles.map((title, index) => (
+                                                                <option key={index} value={title}>{title}</option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+                                                </div>
+
+                                                <div className="mt-8 flex gap-3">
+                                                    <button
+                                                        onClick={() => setIsFilterOpen(false)}
+                                                        className="flex-1 py-3 border border-gray-200 text-gray-500 font-bold rounded-sm hover:bg-gray-50 transition-all text-[10px] uppercase tracking-widest font-primary"
+                                                    >
+                                                        Close
+                                                    </button>
+                                                    <button
+                                                        onClick={handleApplyFilters}
+                                                        className="flex-1 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold rounded-sm shadow-lg hover:opacity-90 transition-all text-[10px] uppercase tracking-widest font-primary"
+                                                    >
+                                                        Apply filters
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </div>
+                </div>
 
+                <div className="max-w-8xl mx-auto p-4 pt-0 mt-2">
                     {/* Stats */}
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6 px-4">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
                         <NumberCard
                             title="Total Applicants"
                             number={statsData?.total_applicants || 0}
@@ -358,7 +433,7 @@ const ApplicantList = () => {
                     </div>
 
                     {/* Table */}
-                    <div className="bg-white rounded-sm shadow-md overflow-hidden mx-4">
+                    <div className="bg-white rounded-sm shadow-md overflow-hidden">
                         <div className="overflow-x-auto">
                             <table className="w-full">
                                 <thead className="bg-gradient-to-r from-orange-500 to-orange-600">

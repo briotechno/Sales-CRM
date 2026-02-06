@@ -35,31 +35,31 @@ const DeleteOfferLetterModal = ({ isOpen, onClose, onConfirm, isLoading, title }
                 <div className="flex gap-4 w-full px-6 py-4 border-t">
                     <button
                         onClick={onClose}
-                        className="flex-1 px-6 py-3 border border-gray-200 text-gray-700 font-bold rounded-sm hover:bg-gray-100 transition-all text-xs tracking-wide"
+                        className="flex-1 px-6 py-3 border border-gray-200 text-gray-700 font-bold rounded-sm hover:bg-gray-100 transition-all font-primary text-xs uppercase tracking-widest"
                     >
                         Cancel
                     </button>
                     <button
                         onClick={onConfirm}
                         disabled={isLoading}
-                        className="flex-1 px-6 py-3 bg-red-600 text-white font-bold rounded-sm hover:bg-red-700 shadow-[0_4px_10px_rgba(220,38,38,0.2)] disabled:opacity-50 flex items-center justify-center gap-2 transition-all text-xs tracking-wide"
+                        className="flex-1 px-6 py-3 bg-red-600 text-white font-bold rounded-sm hover:bg-red-700 transition-all shadow-lg flex items-center justify-center gap-2 font-primary text-xs uppercase tracking-widest disabled:opacity-50"
                     >
-                        {isLoading ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Trash2 size={16} />}
-                        Delete
+                        {isLoading ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Trash2 size={18} />}
+                        Delete Now
                     </button>
                 </div>
             }
         >
-            <div className="flex flex-col items-center text-center p-6">
-                <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mb-6 animate-bounce">
-                    <AlertTriangle size={48} className="text-red-500" />
+            <div className="flex flex-col items-center text-center text-black font-primary p-6">
+                <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mb-6">
+                    <AlertTriangle size={48} className="text-[#d00000] drop-shadow-sm" />
                 </div>
-                <h2 className="text-xl font-bold text-gray-800 mb-2 tracking-tight">Security Check</h2>
-                <p className="text-sm text-gray-500 leading-relaxed mb-4 px-4">
-                    Are you absolutely sure you want to delete the offer letter for <span className="text-gray-900 font-bold">"{title}"</span>? This action is irreversible.
+                <h2 className="text-2xl font-bold text-gray-800 mb-2">Confirm Delete</h2>
+                <p className="text-gray-600 mb-6 leading-relaxed">
+                    Are you sure you want to delete the offer letter for <span className="font-bold text-gray-900">"{title}"</span>?
                 </p>
-                <div className="bg-red-50 px-4 py-2 rounded-lg">
-                    <p className="text-xs text-red-600 font-bold tracking-wide">Permanent Deletion Warning</p>
+                <div className="bg-red-50 px-4 py-2 rounded-lg inline-block">
+                    <p className="text-xs text-red-600 font-bold tracking-wide italic uppercase">Irreversible Action</p>
                 </div>
             </div>
         </Modal>
@@ -431,17 +431,7 @@ export default function OfferLetterList() {
                                     )}
                                 </div>
 
-                                {/* Search Bar */}
-                                <div className="relative group min-w-[300px]">
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold group-focus-within:text-orange-500 transition-colors" size={18} />
-                                    <input
-                                        type="text"
-                                        placeholder="Search by candidate, ref no..."
-                                        value={search}
-                                        onChange={(e) => setSearch(e.target.value)}
-                                        className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-sm focus:bg-white focus:border-orange-500 focus:ring-4 focus:ring-orange-500/5 outline-none transition-all text-sm font-semibold text-gray-700 shadow-sm"
-                                    />
-                                </div>
+
 
                                 <button
                                     onClick={() => { }}

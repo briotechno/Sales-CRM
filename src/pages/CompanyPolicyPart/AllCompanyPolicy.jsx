@@ -60,47 +60,37 @@ const DeletePolicyModal = ({ isOpen, onClose, onConfirm, isLoading, policyTitle 
       onClose={onClose}
       headerVariant="simple"
       maxWidth="max-w-md"
+      cleanLayout={true}
       footer={
-        <div className="flex gap-4 w-full">
+        <div className="flex gap-4 w-full px-6 py-4 border-t">
           <button
             onClick={onClose}
-            className="flex-1 px-6 py-3 border border-gray-200 text-gray-700 font-bold rounded-sm hover:bg-gray-100 shadow-sm transition-all"
+            className="flex-1 px-6 py-3 border border-gray-200 text-gray-700 font-bold rounded-sm hover:bg-gray-100 transition-all font-primary text-xs uppercase tracking-widest"
           >
             Cancel
           </button>
-
           <button
             onClick={onConfirm}
             disabled={isLoading}
-            className="flex-1 px-6 py-3 bg-red-600 text-white font-bold rounded-sm hover:bg-red-700 shadow-md hover:shadow-lg disabled:opacity-50 flex items-center justify-center gap-2 transition-all"
+            className="flex-1 px-6 py-3 bg-red-600 text-white font-bold rounded-sm hover:bg-red-700 transition-all shadow-lg flex items-center justify-center gap-2 font-primary text-xs uppercase tracking-widest disabled:opacity-50"
           >
-            {isLoading ? (
-              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            ) : (
-              <Trash2 size={20} />
-            )}
-            {isLoading ? "Deleting..." : "Delete Now"}
+            {isLoading ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Trash2 size={18} />}
+            Delete Now
           </button>
         </div>
       }
     >
-      <div className="flex flex-col items-center text-center">
-        <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mb-6 animate-bounce">
-          <AlertTriangle size={48} className="text-red-600" />
+      <div className="flex flex-col items-center text-center text-black font-primary p-6">
+        <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mb-6">
+          <AlertTriangle size={48} className="text-[#d00000] drop-shadow-sm" />
         </div>
-
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">
-          Confirm Delete
-        </h2>
-
-        <p className="text-gray-600 mb-2 leading-relaxed">
-          Are you sure you want to delete policy{" "}
-          <span className="font-bold text-gray-800">"{policyTitle}"</span>?
+        <h2 className="text-2xl font-bold text-gray-800 mb-2">Confirm Delete</h2>
+        <p className="text-gray-600 mb-6 leading-relaxed">
+          Are you sure you want to delete the policy <span className="font-bold text-gray-900">"{policyTitle}"</span>?
         </p>
-
-        <p className="text-sm text-red-500 italic">
-          This action cannot be undone. All associated data will be permanently removed.
-        </p>
+        <div className="bg-red-50 px-4 py-2 rounded-lg inline-block">
+          <p className="text-xs text-red-600 font-bold tracking-wide italic uppercase">Irreversible Action</p>
+        </div>
       </div>
     </Modal>
   );
@@ -138,6 +128,17 @@ export default function CompanyPolicy() {
   const allPolicies = allPoliciesDataForCheck || [];
 
   const { user } = useSelector((state) => state.auth);
+
+  const hasActiveFilters = filterCategory !== "All" || filterStatus !== "All" || filterAuthor !== "" || startDate !== "" || endDate !== "" || searchTerm !== "";
+
+  const clearAllFilters = () => {
+    setFilterCategory("All");
+    setFilterStatus("All");
+    setFilterAuthor("");
+    setStartDate("");
+    setEndDate("");
+    setSearchTerm("");
+  };
   const { create, read, update, delete: remove } = usePermission("Company Policy");
 
 
@@ -308,8 +309,8 @@ export default function CompanyPolicy() {
     setFormData({
       title: policy.title,
       category: policy.category,
-      effective_date: policy.effective_date,
-      review_date: policy.review_date,
+      effective_date: policy.effective_date ? new Date(policy.effective_date).toISOString().split('T')[0] : "",
+      review_date: policy.review_date ? new Date(policy.review_date).toISOString().split('T')[0] : "",
       version: policy.version,
       description: policy.description || "",
       author: policy.author || "",
@@ -360,17 +361,17 @@ export default function CompanyPolicy() {
 
   const handleExport = () => {
     const doc = new jsPDF();
-    
+
     // Add title
     doc.setFontSize(18);
     doc.text("Company Policies Report", 14, 22);
     doc.setFontSize(11);
     doc.setTextColor(100);
-    
+
     // Add date
     const date = new Date().toLocaleDateString();
     doc.text(`Generated on: ${date}`, 14, 30);
-    
+
     const tableColumn = ["Policy Title", "Category", "Effective Date", "Review Date", "Version", "Status", "Author"];
     const tableRows = [];
 
@@ -524,7 +525,7 @@ export default function CompanyPolicy() {
                         {/* Filters Right Section */}
                         <div className="space-y-4">
                           <span className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-2 border-b pb-1">Filters</span>
-                          
+
                           <div className="space-y-3">
                             <div>
                               <label className="text-[10px] font-bold text-gray-400 uppercase mb-1 block">Category</label>
@@ -773,8 +774,54 @@ export default function CompanyPolicy() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="7" className="px-6 py-12 text-center text-gray-500">
-                      No policies found matching the current filters
+                    <td colSpan="7" className="py-20 text-center">
+                      <div className="flex flex-col items-center justify-center gap-4 max-w-[600px] mx-auto animate-fadeIn">
+                        <div className="w-24 h-24 bg-orange-50 rounded-full flex items-center justify-center mb-4 relative">
+                          <div className="absolute inset-0 bg-orange-200 rounded-full animate-ping opacity-20"></div>
+                          <FileText size={48} className="text-orange-500 relative z-10" />
+                        </div>
+                        <div className="space-y-3 text-center">
+                          <h3 className="text-2xl font-bold text-gray-900 tracking-tight">
+                            {hasActiveFilters ? "No Policies Found" : "Create Your First Policy"}
+                          </h3>
+                          <p className="text-gray-500 font-medium leading-relaxed px-4">
+                            {hasActiveFilters
+                              ? "We couldn't find any policies matching your criteria. Start by creating a new policy or clear your current filters."
+                              : "You haven't created any company policies yet. Set guidelines and standards to keep your organization aligned."}
+                          </p>
+                        </div>
+
+                        {hasActiveFilters ? (
+                          <button
+                            onClick={clearAllFilters}
+                            className="mt-6 px-10 py-3 border-2 border-orange-500 text-orange-600 font-bold rounded-sm hover:bg-orange-50 transition-all text-xs uppercase tracking-widest shadow-sm active:scale-95"
+                          >
+                            Reset All Filters
+                          </button>
+                        ) : (
+                          create && (
+                            <button
+                              onClick={() => {
+                                setFormData({
+                                  title: "",
+                                  category: "IT & Data Security",
+                                  description: "",
+                                  effective_date: "",
+                                  review_date: "",
+                                  version: "1.0",
+                                  status: "Active",
+                                  author: user.firstName ? `${user.firstName} ${user.lastName}` : user.email,
+                                });
+                                setShowAddModal(true);
+                              }}
+                              className="mt-6 px-12 py-3.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-[0_10px_25px_rgba(255,123,29,0.3)] inline-flex items-center gap-3 group text-sm active:scale-95"
+                            >
+                              <Plus size={20} className="group-hover:rotate-90 transition-transform duration-300" />
+                              Create First Policy
+                            </button>
+                          )
+                        )}
+                      </div>
                     </td>
                   </tr>
                 )}
@@ -1146,7 +1193,7 @@ export default function CompanyPolicy() {
                         <Briefcase size={20} />
                       </div>
                       <span className="text-lg font-bold text-blue-900 line-clamp-1">{selectedPolicy.category}</span>
-                      <span className="text-xs font-semibold text-blue-600 uppercase tracking-widest mt-1">Category</span>
+                      <span className="text-sm font-bold text-blue-600 capitalize tracking-wide mt-1">Category</span>
                     </div>
 
                     <div className="bg-purple-50 p-4 rounded-sm border border-purple-100 flex flex-col items-center text-center group hover:shadow-md transition-shadow">
@@ -1154,7 +1201,7 @@ export default function CompanyPolicy() {
                         <Layers size={20} />
                       </div>
                       <span className="text-lg font-bold text-purple-900">{selectedPolicy.version}</span>
-                      <span className="text-xs font-semibold text-purple-600 uppercase tracking-widest mt-1">Version</span>
+                      <span className="text-sm font-bold text-purple-600 capitalize tracking-wide mt-1">Version</span>
                     </div>
 
                     <div className="bg-green-50 p-4 rounded-sm border border-green-100 flex flex-col items-center text-center group hover:shadow-md transition-shadow">
@@ -1164,7 +1211,7 @@ export default function CompanyPolicy() {
                       <span className={`text-lg font-bold ${selectedPolicy.status === "Active" ? "text-green-900" : "text-yellow-900"}`}>
                         {selectedPolicy.status}
                       </span>
-                      <span className="text-xs font-semibold text-green-600 uppercase tracking-widest mt-1">Status</span>
+                      <span className="text-sm font-bold text-green-600 capitalize tracking-wide mt-1">Status</span>
                     </div>
                   </div>
 
@@ -1175,7 +1222,7 @@ export default function CompanyPolicy() {
                         <Calendar size={18} />
                       </div>
                       <div>
-                        <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">Effective Date</p>
+                        <p className="text-sm font-bold text-gray-600 capitalize tracking-wide">Effective Date</p>
                         <p className="text-sm font-semibold text-gray-700">{new Date(selectedPolicy.effective_date).toLocaleDateString()}</p>
                       </div>
                     </div>
@@ -1184,7 +1231,7 @@ export default function CompanyPolicy() {
                         <Calendar size={18} />
                       </div>
                       <div>
-                        <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">Review Date</p>
+                        <p className="text-sm font-bold text-gray-600 capitalize tracking-wide">Review Date</p>
                         <p className="text-sm font-semibold text-gray-700">{new Date(selectedPolicy.review_date).toLocaleDateString()}</p>
                       </div>
                     </div>
@@ -1193,7 +1240,7 @@ export default function CompanyPolicy() {
                         <User size={18} />
                       </div>
                       <div>
-                        <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">Author</p>
+                        <p className="text-sm font-bold text-gray-600 capitalize tracking-wide">Author</p>
                         <p className="text-sm font-semibold text-gray-700">{selectedPolicy.author || "N/A"}</p>
                       </div>
                     </div>
@@ -1202,10 +1249,10 @@ export default function CompanyPolicy() {
                   {/* Description */}
                   {selectedPolicy.description && (
                     <div>
-                      <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                      <h3 className="text-sm font-bold text-gray-600 capitalize tracking-wide mb-3 flex items-center gap-2">
                         <AlignLeft size={16} /> Description
                       </h3>
-                      <p className="text-gray-700 leading-relaxed bg-gray-50 p-4 rounded-sm border border-gray-200 break-words whitespace-pre-wrap text-sm">
+                      <p className="text-gray-700 leading-relaxed bg-gray-50 p-4 rounded-sm border border-gray-200 break-words whitespace-pre-wrap text-sm max-h-48 overflow-y-auto">
                         {selectedPolicy.description}
                       </p>
                     </div>

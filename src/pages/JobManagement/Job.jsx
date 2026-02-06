@@ -21,8 +21,8 @@ import {
   AlignLeft,
   Calendar,
   Layers,
-
-
+  Search,
+  ArrowRight
 } from "lucide-react";
 import { FiHome } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
@@ -46,48 +46,37 @@ const DeleteJobModal = ({ isOpen, onClose, onConfirm, isLoading, title }) => {
       onClose={onClose}
       headerVariant="simple"
       maxWidth="max-w-md"
+      cleanLayout={true}
       footer={
-        <div className="flex gap-4 w-full">
+        <div className="flex gap-4 w-full px-6 py-4 border-t">
           <button
             onClick={onClose}
-            className="flex-1 px-6 py-3 border border-gray-200 text-gray-700 font-bold rounded-sm hover:bg-gray-100 shadow-sm transition-all"
+            className="flex-1 px-6 py-3 border border-gray-200 text-gray-700 font-bold rounded-sm hover:bg-gray-100 transition-all font-primary text-xs uppercase tracking-widest outline-none shadow-sm"
           >
             Cancel
           </button>
-
           <button
             onClick={onConfirm}
             disabled={isLoading}
-            className="flex-1 px-6 py-3 bg-red-600 text-white font-bold rounded-sm hover:bg-red-700 shadow-md hover:shadow-lg disabled:opacity-50 flex items-center justify-center gap-2 transition-all"
+            className="flex-1 px-6 py-3 bg-red-600 text-white font-bold rounded-sm hover:bg-red-700 transition-all shadow-lg flex items-center justify-center gap-2 font-primary text-xs uppercase tracking-widest disabled:opacity-50 outline-none active:scale-95"
           >
-            {isLoading ? (
-              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            ) : (
-              <Trash2 size={20} />
-            )}
-            {isLoading ? "Deleting..." : "Delete Now"}
+            {isLoading ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Trash2 size={18} />}
+            Delete Now
           </button>
         </div>
       }
     >
-      <div className="flex flex-col items-center text-center p-6">
-        <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mb-6 animate-bounce">
-          <AlertTriangle size={48} className="text-red-600" />
+      <div className="flex flex-col items-center text-center text-black font-primary p-6">
+        <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mb-6">
+          <AlertTriangle size={48} className="text-[#d00000] drop-shadow-sm" />
         </div>
-
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">
-          Confirm Delete
-        </h2>
-
-        <p className="text-gray-600 mb-2 leading-relaxed">
-          Are you sure you want to delete job Management{" "}
-          <span className="font-bold text-gray-800">"{title}"</span>?
+        <h2 className="text-2xl font-bold text-gray-800 mb-2">Confirm Delete</h2>
+        <p className="text-gray-600 mb-6 leading-relaxed">
+          Are you sure you want to delete the job posting <span className="font-bold text-gray-900">"{title}"</span>?
         </p>
-
-        <p className="text-sm text-red-500 italic mb-6">
-          This action cannot be undone. All associated data will be permanently removed.
-        </p>
-
+        <div className="bg-red-50 px-4 py-2 rounded-lg inline-block">
+          <p className="text-xs text-red-600 font-bold tracking-wide italic uppercase">Irreversible Action</p>
+        </div>
       </div>
     </Modal>
   );
@@ -96,19 +85,32 @@ const DeleteJobModal = ({ isOpen, onClose, onConfirm, isLoading, title }) => {
 // Main Component
 export default function JobManagement() {
   const [showAddModal, setShowAddModal] = useState(false);
-  const [selectedFilter, setSelectedFilter] = useState("All");
   const [showViewModal, setShowViewModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [isNavOpen, setIsNavOpen] = useState(false);
-  const dropdownRef = useRef(null);
-  const navRef = useRef(null);
-  const navigate = useNavigate();
   const [selectedJob, setSelectedJob] = useState(null);
   const [jobToDelete, setJobToDelete] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [editingJobId, setEditingJobId] = useState(null);
+  const [search, setSearch] = useState("");
   const itemsPerPage = 8;
+
+  const [isNavOpen, setIsNavOpen] = useState(false);
+  const dropdownRef = useRef(null);
+  const navRef = useRef(null);
+  const navigate = useNavigate();
+
+  // Filter states
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState("All");
+  const [selectedDept, setSelectedDept] = useState("");
+  const [selectedType, setSelectedType] = useState("");
+  const [tempFilters, setTempFilters] = useState({
+    status: "All",
+    department: "",
+    type: ""
+  });
+
+  const hasActiveFilters = selectedStatus !== "All" || selectedDept !== "" || selectedType !== "";
 
   // Input states for dynamic arrays
   const [responsibilityInput, setResponsibilityInput] = useState("");
@@ -144,11 +146,17 @@ export default function JobManagement() {
   } = useGetJobsQuery({
     page: currentPage,
     limit: itemsPerPage,
-    status: selectedFilter
+    status: selectedStatus,
+    department: selectedDept,
+    type: selectedType,
+    search: search
   }, { refetchOnMountOrArgChange: true });
 
   const { data: statsData } = useGetJobStatsQuery(undefined, { refetchOnMountOrArgChange: true });
   const { data: departmentsData } = useGetDepartmentsQuery({ page: 1, limit: 100 });
+
+  const totalJobs = jobsData?.pagination?.totalItems || 0;
+  const totalPages = jobsData?.pagination?.totalPages || 1;
 
   const [createJob] = useCreateJobMutation();
   const [updateJob] = useUpdateJobMutation();
@@ -236,8 +244,29 @@ export default function JobManagement() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const clearAllFilters = () => {
+    setSelectedStatus("All");
+    setSelectedDept("");
+    setSelectedType("");
+    setSearch("");
+    setTempFilters({
+      status: "All",
+      department: "",
+      type: ""
+    });
+    setCurrentPage(1);
+  };
+
+  const handleApplyFilters = () => {
+    setSelectedStatus(tempFilters.status);
+    setSelectedDept(tempFilters.department);
+    setSelectedType(tempFilters.type);
+    setCurrentPage(1);
+    setIsFilterOpen(false);
+  };
+
   const handleNext = () => {
-    if (currentPage < (jobsData?.pagination?.totalPages || 1)) {
+    if (currentPage < totalPages) {
       setCurrentPage((prev) => prev + 1);
     }
   };
@@ -352,85 +381,151 @@ export default function JobManagement() {
   };
 
   const filterOptions = ["All", "Active", "On Hold", "Closed"];
-  const totalPages = jobsData?.pagination?.totalPages || 1;
-  const totalJobs = jobsData?.pagination?.total || 0;
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen bg-gradient-to-br from-orange-0 via-white to-orange-0 p-0 ml-4 mr-4">
-        <div className="max-w-8xl mx-auto">
-          {/* Header */}
-          <div className="bg-white rounded-sm p-3 mb-2 border-b">
-            <div className="flex justify-between items-center">
+      <div className="min-h-screen bg-gradient-to-br from-orange-0 via-white to-orange-100">
+        <div className="bg-white sticky top-0 z-30">
+          <div className="max-w-8xl mx-auto px-4 py-4 border-b">
+            <div className="flex justify-between items-center gap-4">
               <div>
                 <h1 className="text-2xl font-bold text-gray-900 whitespace-nowrap">
                   Job Management
                 </h1>
                 <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
-                  <FiHome className="text-gray-700 text-sm" />
-                  <span className="text-gray-400"></span> HRM /{" "}
-                  <span className="text-[#FF7B1D] font-medium">
-                    All Job Management
-                  </span>
+                  <FiHome className="text-gray-400" />
+                  <span>HRM / Recruitment / </span>
+                  <span className="text-orange-500 font-medium">Job Posts</span>
                 </p>
               </div>
-              <div className="flex items-center gap-4">
-                {/* Filter Dropdown */}
+
+              <div className="flex items-center gap-3">
                 <div className="relative" ref={dropdownRef}>
                   <button
-                    onClick={() => setIsFilterOpen(!isFilterOpen)}
-                    className={`p-2 rounded-sm border transition shadow-sm ${isFilterOpen || selectedFilter !== "All"
-                      ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
-                      : "bg-white text-black border-gray-300 hover:bg-gray-100"
+                    onClick={() => {
+                      if (hasActiveFilters && !isFilterOpen) {
+                        clearAllFilters();
+                      } else {
+                        setTempFilters({
+                          status: selectedStatus,
+                          department: selectedDept,
+                          type: selectedType
+                        });
+                        setIsFilterOpen(!isFilterOpen);
+                      }
+                    }}
+                    className={`px-3 py-3 rounded-sm border transition shadow-sm ${isFilterOpen || hasActiveFilters
+                      ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-orange-500"
+                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
                       }`}
-                    title={selectedFilter === "All" ? "Filter" : `Filter: ${selectedFilter}`}
                   >
-                    <Filter size={20} />
+                    {hasActiveFilters && !isFilterOpen ? <X size={18} /> : <Filter size={18} />}
                   </button>
 
                   {isFilterOpen && (
-                    <div className="absolute left-0 mt-2 w-40 bg-white border border-gray-200 rounded-sm shadow-xl z-50 animate-fadeIn">
-                      <div className="py-1">
-                        {filterOptions.map((filter) => (
+                    <div className="absolute right-0 mt-2 w-[550px] bg-white border border-gray-200 rounded-sm shadow-2xl z-50 animate-fadeIn overflow-hidden">
+                      <div className="p-4 bg-gray-50 border-b flex justify-between items-center font-primary">
+                        <span className="text-sm font-bold text-gray-800 tracking-tight capitalize">Filter Options</span>
+                        <button
+                          onClick={clearAllFilters}
+                          className="text-[10px] font-bold text-orange-600 hover:text-orange-700 hover:underline capitalize font-primary"
+                        >
+                          Reset all
+                        </button>
+                      </div>
+
+                      <div className="p-6">
+                        <div className="grid grid-cols-2 gap-x-8 gap-y-8">
+                          {/* Row 1: Status */}
+                          <div className="col-span-2">
+                            <span className="text-[11px] font-bold text-gray-700 capitalize tracking-wider block mb-3 font-primary">Job Status</span>
+                            <div className="grid grid-cols-4 gap-2">
+                              {filterOptions.map((s) => (
+                                <button
+                                  key={s}
+                                  onClick={() => setTempFilters({ ...tempFilters, status: s })}
+                                  className={`px-2 py-2.5 rounded-sm text-[10px] font-bold transition-all border font-primary ${tempFilters.status === s
+                                    ? "bg-orange-500 text-white border-orange-500 shadow-md"
+                                    : "bg-white text-gray-600 border-gray-100 hover:border-orange-200"
+                                    }`}
+                                >
+                                  {s}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Row 2: Department */}
+                          <div className="space-y-2">
+                            <span className="text-[11px] font-bold text-gray-700 capitalize tracking-wider block mb-2 font-primary">Department</span>
+                            <select
+                              value={tempFilters.department}
+                              onChange={(e) => setTempFilters({ ...tempFilters, department: e.target.value })}
+                              className="w-full bg-gray-50 border border-gray-100 rounded-sm px-4 py-2.5 text-xs font-semibold focus:border-orange-500 focus:bg-white outline-none transition-all font-primary"
+                            >
+                              <option value="">All Departments</option>
+                              {departmentsData?.departments?.map(d => (
+                                <option key={d.id} value={d.department_name}>{d.department_name}</option>
+                              ))}
+                            </select>
+                          </div>
+
+                          {/* Row 3: Job Type */}
+                          <div className="space-y-2">
+                            <span className="text-[11px] font-bold text-gray-700 capitalize tracking-wider block mb-2 font-primary">Job Type</span>
+                            <select
+                              value={tempFilters.type}
+                              onChange={(e) => setTempFilters({ ...tempFilters, type: e.target.value })}
+                              className="w-full bg-gray-50 border border-gray-100 rounded-sm px-4 py-2.5 text-xs font-semibold focus:border-orange-500 focus:bg-white outline-none transition-all font-primary"
+                            >
+                              <option value="">All Types</option>
+                              <option>Full-Time Employee</option>
+                              <option>Part-Time Employee</option>
+                              <option>Contract Employee</option>
+                              <option>Temporary Employee</option>
+                              <option>Intern / Trainee</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <div className="mt-10 flex gap-3">
                           <button
-                            key={filter}
-                            onClick={() => {
-                              setSelectedFilter(filter);
-                              setIsFilterOpen(false);
-                              setCurrentPage(1);
-                            }}
-                            className={`block w-full text-left px-4 py-2.5 text-sm transition-colors ${selectedFilter === filter
-                              ? "bg-orange-50 text-orange-600 font-bold"
-                              : "text-gray-700 hover:bg-gray-50"
-                              }`}
+                            onClick={() => setIsFilterOpen(false)}
+                            className="flex-1 py-3 border border-gray-200 text-gray-500 font-bold rounded-sm hover:bg-gray-50 transition-all text-[10px] uppercase tracking-widest font-primary"
                           >
-                            {filter}
+                            Close
                           </button>
-                        ))}
+                          <button
+                            onClick={handleApplyFilters}
+                            className="flex-1 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold rounded-sm shadow-lg hover:opacity-90 transition-all text-[10px] uppercase tracking-widest font-primary"
+                          >
+                            Apply filters
+                          </button>
+                        </div>
                       </div>
                     </div>
                   )}
                 </div>
 
-                {/* Add New Job Button */}
                 <button
                   onClick={() => {
                     resetForm();
                     setShowAddModal(true);
                   }}
                   disabled={!create}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-sm font-semibold transition ml-2 ${create
-                    ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 hover:opacity-90"
+                  className={`flex items-center gap-2 px-6 py-3 rounded-sm font-semibold transition shadow-lg hover:shadow-xl font-primary text-sm ${create
+                    ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
                     : "bg-gray-300 text-gray-500 cursor-not-allowed"
                     }`}
                 >
-                  <Plus size={18} />
+                  <Plus size={20} />
                   Add New Job
                 </button>
               </div>
             </div>
           </div>
-
+        </div>
+        <div className="max-w-8xl mx-auto p-4 pt-0 mt-2">
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6 ">
             <NumberCard
@@ -506,7 +601,48 @@ export default function JobManagement() {
                   ) : isError ? (
                     <tr><td colSpan="7" className="text-center py-12 text-red-500 font-medium">Error loading jobs. Please try again later.</td></tr>
                   ) : jobsData?.jobs?.length === 0 ? (
-                    <tr><td colSpan="7" className="text-center py-12 text-gray-500 font-medium">No active job postings found</td></tr>
+                    <tr>
+                      <td colSpan="7" className="py-20 text-center">
+                        <div className="flex flex-col items-center justify-center gap-4 max-w-[600px] mx-auto animate-fadeIn">
+                          <div className="w-24 h-24 bg-orange-50 rounded-full flex items-center justify-center mb-4 relative">
+                            <div className="absolute inset-0 bg-orange-200 rounded-full animate-ping opacity-20"></div>
+                            <Briefcase size={48} className="text-orange-500 relative z-10" />
+                          </div>
+                          <div className="space-y-3 text-center">
+                            <h3 className="text-2xl font-bold text-gray-900 tracking-tight">
+                              {hasActiveFilters ? "No Job Posts Found" : "Start Hiring Top Talent"}
+                            </h3>
+                            <p className="text-gray-500 font-medium leading-relaxed px-4">
+                              {hasActiveFilters
+                                ? "We couldn't find any job posts matching your criteria. Start by creating a new job post or clear your current filters."
+                                : "You haven't created any job posts yet. Create detailed job descriptions, manage requirements, and start receiving applications."}
+                            </p>
+                          </div>
+
+                          {hasActiveFilters ? (
+                            <button
+                              onClick={clearAllFilters}
+                              className="mt-6 px-10 py-3 border-2 border-orange-500 text-orange-600 font-bold rounded-sm hover:bg-orange-50 transition-all text-xs uppercase tracking-widest shadow-sm active:scale-95"
+                            >
+                              Reset All Filters
+                            </button>
+                          ) : (
+                            create && (
+                              <button
+                                onClick={() => {
+                                  resetForm();
+                                  setShowAddModal(true);
+                                }}
+                                className="mt-6 px-12 py-3.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-[0_10px_25px_rgba(255,123,29,0.3)] inline-flex items-center gap-3 group text-sm active:scale-95"
+                              >
+                                <Plus size={20} className="group-hover:rotate-90 transition-transform duration-300" />
+                                Create First Job
+                              </button>
+                            )
+                          )}
+                        </div>
+                      </td>
+                    </tr>
                   ) : (
                     jobsData?.jobs.map((job, index) => (
                       <tr
@@ -545,12 +681,17 @@ export default function JobManagement() {
                         </td>
 
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center gap-2">
-                            <Users size={14} className="text-gray-400" />
-                            <span className="text-sm font-bold text-gray-700">
+                          <button
+                            onClick={() => navigate('/hrm/applicants', { state: { jobTitle: job.title } })}
+                            className="flex items-center gap-2 hover:bg-orange-50 px-3 py-1.5 rounded-sm transition-all group/count border border-transparent hover:border-orange-100"
+                            title="View Job Applicants"
+                          >
+                            <Users size={14} className="text-gray-400 group-hover/count:text-orange-500" />
+                            <span className="text-sm font-black text-gray-700 group-hover/count:text-orange-600">
                               {job.applicants}
                             </span>
-                          </div>
+                            <ArrowRight size={12} className="text-gray-300 group-hover/count:text-orange-400 opacity-0 group-hover/count:opacity-100 transition-all translate-x-[-4px] group-hover/count:translate-x-0" />
+                          </button>
                         </td>
 
                         <td className="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
@@ -578,7 +719,7 @@ export default function JobManagement() {
                                 navigator.clipboard.writeText(link);
                                 toast.success("Application link copied!");
                               }}
-                              className="p-1.5 hover:bg-orange-50 text-gray-400 hover:text-orange-600 rounded-sm transition-all"
+                              className="p-1.5 hover:bg-orange-50 text-orange-500 hover:text-orange-700 transition-all border border-transparent hover:border-orange-100"
                               title="Copy Application Link"
                             >
                               <LinkIcon size={16} />
@@ -586,7 +727,7 @@ export default function JobManagement() {
                             {read && (
                               <button
                                 onClick={() => handleViewJob(job)}
-                                className="p-1.5 hover:bg-blue-50 text-gray-400 hover:text-blue-600 rounded-sm transition-all"
+                                className="p-1.5 hover:bg-blue-50 text-blue-500 hover:text-blue-700 transition-all border border-transparent hover:border-blue-100"
                                 title="View Job Details"
                               >
                                 <Eye size={16} />
@@ -595,14 +736,18 @@ export default function JobManagement() {
                             {update && (
                               <button
                                 onClick={() => handleEditJob(job)}
-                                className="p-1.5 hover:bg-green-50 text-gray-400 hover:text-green-600 rounded-sm transition-all">
+                                className="p-1.5 hover:bg-green-50 text-green-500 hover:text-green-700 transition-all border border-transparent hover:border-green-100"
+                                title="Edit Job"
+                              >
                                 <Edit size={16} />
                               </button>
                             )}
                             {remove && (
                               <button
                                 onClick={() => handleDelete(job)}
-                                className="p-1.5 hover:bg-red-50 text-gray-400 hover:text-red-600 rounded-sm transition-all">
+                                className="p-1.5 hover:bg-red-50 text-red-500 hover:text-red-700 transition-all border border-transparent hover:border-red-100 shadow-sm"
+                                title="Delete Job"
+                              >
                                 <Trash2 size={16} />
                               </button>
                             )}

@@ -224,22 +224,38 @@ const ViewOfferLetterModal = ({ isOpen, onClose, offer }) => {
             doc.text(disclaimerLines, 20, y + 6);
 
             y += 40;
-            doc.setDrawColor(230, 230, 230);
+            doc.setDrawColor(220, 220, 220);
             doc.line(15, y, 80, y);
             doc.line(pageWidth - 80, y, pageWidth - 15, y);
 
             doc.setFontSize(8);
-            doc.setTextColor(100, 100, 100);
+            doc.setTextColor(150, 150, 150);
             doc.setFont('helvetica', 'bold');
             doc.text('Authorized Representative', 15, y + 5);
             doc.text('Candidate Acceptance', pageWidth - 15, y + 5, { align: 'right' });
 
+            doc.setTextColor(...darkColor);
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Business HR / MD', 15, y + 12);
+
+            doc.setTextColor(200, 200, 200);
+            doc.setFont('helvetica', 'italic');
+            doc.text('(Digital Signature Placeholder)', pageWidth - 15, y + 12, { align: 'right' });
+
             // Footer
-            doc.setFillColor(15, 23, 42);
-            doc.rect(0, pageHeight - 12, pageWidth, 12, 'F');
+            doc.setFillColor(248, 250, 252);
+            doc.rect(0, pageHeight - 20, pageWidth, 20, 'F');
+
             doc.setTextColor(150, 150, 150);
+            doc.setFontSize(8);
+            doc.setFont('helvetica', 'bold');
+            doc.text(`Branded By ${offer.company_info?.name}`, pageWidth / 2, pageHeight - 12, { align: 'center' });
+
             doc.setFontSize(7);
-            doc.text(`This is a computer generated document. Branded by ${offer.company_info?.name}`, pageWidth / 2, pageHeight - 5, { align: 'center' });
+            doc.setFont('helvetica', 'normal');
+            const footerInfo = `${offer.company_info?.website || ""}   •   ${offer.company_info?.contact || ""}`;
+            doc.text(footerInfo, pageWidth / 2, pageHeight - 6, { align: 'center' });
 
             doc.save(`Offer_Letter_${offer.candidate_details?.name.replace(/\s+/g, '_')}.pdf`);
             toast.success("Offer Letter downloaded!");

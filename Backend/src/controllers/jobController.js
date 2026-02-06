@@ -45,12 +45,14 @@ const createJob = async (req, res) => {
 
 const getJobs = async (req, res) => {
     try {
-        const { page, limit, search, status } = req.query;
+        const { page, limit, search, status, department, type } = req.query;
         const data = await Job.findAll(req.user.id, {
             page,
             limit,
             search,
-            status
+            status,
+            department,
+            type
         });
         res.json(data);
     } catch (error) {
