@@ -30,8 +30,9 @@ const DeleteOfferLetterModal = ({ isOpen, onClose, onConfirm, isLoading, title }
             onClose={onClose}
             headerVariant="simple"
             maxWidth="max-w-md"
+            cleanLayout={true}
             footer={
-                <div className="flex gap-4 w-full px-6 pb-6">
+                <div className="flex gap-4 w-full px-6 py-4 border-t">
                     <button
                         onClick={onClose}
                         className="flex-1 px-6 py-3 border border-gray-200 text-gray-700 font-bold rounded-sm hover:bg-gray-100 transition-all text-xs tracking-wide"

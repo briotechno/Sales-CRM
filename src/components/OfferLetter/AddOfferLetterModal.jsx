@@ -304,27 +304,27 @@ const AddOfferLetterModal = ({ isOpen, onClose, onSubmit, loading, initialData }
             cleanLayout={true}
             icon={<div className="bg-orange-500 p-2 rounded-xl text-white shadow-lg"><FileSignature size={22} /></div>}
             footer={
-                <div className="flex justify-between items-center w-full bg-gray-50 px-6 py-4 border-t">
+                <div className="flex justify-between items-center w-full bg-gray-50 px-6 py-3 border-t">
                     <div className="flex gap-2">
                         {activeTab > 1 && (
-                            <button onClick={() => setActiveTab(activeTab - 1)} className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-gray-600 hover:bg-gray-200 rounded-sm transition-all">
+                            <button onClick={() => setActiveTab(activeTab - 1)} className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-gray-600 hover:bg-gray-200 rounded-sm transition-all focus:outline-none">
                                 <ChevronLeft size={18} /> Prev
                             </button>
                         )}
                         {activeTab < 5 && (
-                            <button onClick={() => setActiveTab(activeTab + 1)} className="flex items-center gap-2 px-6 py-2 text-sm font-bold bg-gray-800 text-white hover:bg-black rounded-sm shadow-md transition-all">
+                            <button onClick={() => setActiveTab(activeTab + 1)} className="flex items-center gap-2 px-6 py-2 text-sm font-bold bg-gray-800 text-white hover:bg-black rounded-sm shadow-md transition-all focus:outline-none">
                                 Next <ChevronRight size={18} />
                             </button>
                         )}
                     </div>
                     <div className="flex gap-3">
-                        <button onClick={onClose} className="px-6 py-2.5 rounded-sm border border-gray-300 text-gray-700 font-bold hover:bg-white hover:shadow-sm transition-all text-sm">
+                        <button onClick={onClose} className="px-6 py-2 rounded-sm border border-gray-300 text-gray-700 font-bold hover:bg-white hover:shadow-sm transition-all text-sm focus:outline-none">
                             Dismiss
                         </button>
                         <button
                             onClick={handleSave}
                             disabled={loading}
-                            className="px-10 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm flex items-center gap-2 font-bold shadow-[0_4px_15px_rgba(255,123,29,0.3)] hover:from-orange-600 hover:to-orange-700 transition-all disabled:opacity-50 text-sm"
+                            className="px-10 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm flex items-center gap-2 font-bold shadow-[0_4px_15px_rgba(255,123,29,0.3)] hover:from-orange-600 hover:to-orange-700 transition-all disabled:opacity-50 text-sm focus:outline-none active:scale-95"
                         >
                             {loading ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Save size={18} />}
                             {initialData ? "Sync Changes" : "Finish & Create"}

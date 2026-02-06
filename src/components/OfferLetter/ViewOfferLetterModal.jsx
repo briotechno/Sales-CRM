@@ -5,11 +5,249 @@ import {
     CheckCircle2, Globe, Phone, FileSignature, Layout
 } from "lucide-react";
 import Modal from "../common/Modal";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import { toast } from "react-hot-toast";
 
 const ViewOfferLetterModal = ({ isOpen, onClose, offer }) => {
     const printRef = useRef();
 
     if (!offer) return null;
+
+    const handleDownload = async () => {
+        try {
+            const doc = new jsPDF('p', 'mm', 'a4');
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const pageHeight = doc.internal.pageSize.getHeight();
+
+            // Fetch Logo
+            let logoData = null;
+            const logoSrc = getLogoSrc();
+            if (logoSrc) {
+                try {
+                    const response = await fetch(logoSrc);
+                    const blob = await response.blob();
+                    const reader = new FileReader();
+                    logoData = await new Promise((resolve) => {
+                        reader.onload = () => resolve(reader.result);
+                        reader.readAsDataURL(blob);
+                    });
+                } catch (e) {
+                    console.error("Logo fetch failed", e);
+                }
+            }
+
+            // Colors
+            const brandColor = [255, 123, 29]; // Orange
+            const darkColor = [15, 23, 42];  // Slate 900
+            const lightColor = [71, 85, 105]; // Gray 600
+
+            // Background Header
+            doc.setFillColor(248, 250, 252);
+            doc.rect(0, 0, pageWidth, 50, 'F');
+
+            // Header Elements
+            if (logoData) {
+                try {
+                    const format = logoData.includes('png') ? 'PNG' : 'JPEG';
+                    doc.addImage(logoData, format, 15, 10, 25, 15);
+                } catch (e) {
+                    doc.setFillColor(...brandColor);
+                    doc.rect(15, 10, 10, 10, 'F');
+                }
+            }
+
+            doc.setTextColor(...darkColor);
+            doc.setFontSize(16);
+            doc.setFont('helvetica', 'bold');
+            doc.text(offer.company_info?.name || 'Company Name', 15, 38);
+
+            doc.setTextColor(...brandColor);
+            doc.setFontSize(22);
+            doc.text('OFFER LETTER', pageWidth - 15, 25, { align: 'right' });
+
+            doc.setTextColor(...darkColor);
+            doc.setFontSize(8);
+            doc.text(`REF: ${offer.reference_no}`, pageWidth - 15, 32, { align: 'right' });
+            doc.text(`Date: ${new Date(offer.offer_date).toLocaleDateString()}`, pageWidth - 15, 37, { align: 'right' });
+
+            // Body
+            let y = 65;
+
+            // Employment Recipient
+            doc.setFillColor(...brandColor);
+            doc.rect(15, y, 2, 8, 'F');
+            doc.setTextColor(...darkColor);
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Employment Recipient', 20, y + 6);
+
+            y += 15;
+            doc.setFillColor(248, 250, 252);
+            doc.roundedRect(15, y, pageWidth - 30, 35, 1, 1, 'F');
+
+            doc.setFontSize(8);
+            doc.setTextColor(150, 150, 150);
+            doc.text('Candidate Name', 20, y + 8);
+            doc.setTextColor(...darkColor);
+            doc.setFontSize(12);
+            doc.text(offer.candidate_details?.name || '-', 20, y + 15);
+
+            doc.setFontSize(8);
+            doc.setTextColor(150, 150, 150);
+            doc.text('Email Address', 20, y + 25);
+            doc.setTextColor(...darkColor);
+            doc.setFontSize(10);
+            doc.text(offer.candidate_details?.email || '-', 20, y + 31);
+
+            doc.setFontSize(8);
+            doc.setTextColor(150, 150, 150);
+            doc.text('Residential Address', pageWidth / 2 + 5, y + 8);
+            doc.setTextColor(...darkColor);
+            doc.setFontSize(9);
+            const addr = doc.splitTextToSize(offer.candidate_details?.address || '-', 80);
+            doc.text(addr, pageWidth / 2 + 5, y + 14);
+
+            // Position Framework
+            y += 50;
+            doc.setFillColor(...brandColor);
+            doc.rect(15, y, 2, 8, 'F');
+            doc.setTextColor(...darkColor);
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Position Framework', 20, y + 6);
+
+            y += 12;
+            const posData = [
+                ['Designation', offer.designation || '-'],
+                ['Department', offer.department || '-'],
+                ['Employment Type', offer.candidate_details?.employment_type || '-'],
+                ['Work Location', offer.candidate_details?.location || '-'],
+                ['Date of Joining', new Date(offer.joining_date).toLocaleDateString()]
+            ];
+
+            autoTable(doc, {
+                startY: y,
+                body: posData,
+                theme: 'plain',
+                styles: { fontSize: 9, cellPadding: 2 },
+                columnStyles: { 0: { fontStyle: 'bold', cellWidth: 40, textColor: [100, 100, 100] } },
+                margin: { left: 15 }
+            });
+
+            y = doc.lastAutoTable.finalY + 15;
+
+            // Remuneration Strategy
+            doc.setFillColor(...brandColor);
+            doc.rect(15, y, 2, 8, 'F');
+            doc.setTextColor(...darkColor);
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Remuneration Strategy', 20, y + 6);
+
+            y += 12;
+            doc.setFillColor(15, 23, 42);
+            doc.roundedRect(15, y, pageWidth - 30, 25, 1, 1, 'F');
+            doc.setTextColor(200, 200, 200);
+            doc.setFontSize(8);
+            doc.text('Annual Compensation (CTC)', 25, y + 8);
+            doc.setFontSize(14);
+            doc.setTextColor(255, 255, 255);
+            doc.text(`INR ${Number(offer.annual_ctc || 0).toLocaleString('en-IN')}`, 25, y + 18);
+
+            doc.setFontSize(8);
+            doc.setTextColor(200, 200, 200);
+            doc.text('Monthly Net', pageWidth - 60, y + 8);
+            doc.setFontSize(12);
+            doc.setTextColor(...brandColor);
+            doc.text(`INR ${Number(offer.net_salary || 0).toLocaleString('en-IN')}`, pageWidth - 60, y + 18);
+
+            // Salary Structure Table
+            if (offer.salary_model === 'Structured') {
+                y += 35;
+                const salHead = [['Component', 'Monthly Amount']];
+                const salBody = [
+                    ['Basic Salary', `INR ${Number(offer.salary_structure?.basic || 0).toLocaleString()}`],
+                    ['HRA', `INR ${Number(offer.salary_structure?.hra || 0).toLocaleString()}`]
+                ];
+                (offer.salary_structure?.allowances || []).forEach(al => {
+                    salBody.push([al.name, `INR ${Number(al.amount || 0).toLocaleString()}`]);
+                });
+
+                autoTable(doc, {
+                    startY: y,
+                    head: salHead,
+                    body: salBody,
+                    theme: 'striped',
+                    headStyles: { fillColor: [15, 23, 42], fontSize: 9 },
+                    styles: { fontSize: 8 },
+                    margin: { left: 15, right: 15 }
+                });
+                y = doc.lastAutoTable.finalY + 15;
+            } else {
+                y += 40;
+            }
+
+            // Roles
+            if (offer.roles_responsibilities?.summary) {
+                doc.setFillColor(...brandColor);
+                doc.rect(15, y, 2, 8, 'F');
+                doc.setTextColor(...darkColor);
+                doc.setFontSize(11);
+                doc.setFont('helvetica', 'bold');
+                doc.text('Operational Context', 20, y + 6);
+
+                y += 12;
+                doc.setFontSize(8);
+                doc.setFont('helvetica', 'italic');
+                doc.setTextColor(...lightColor);
+                const summaryLines = doc.splitTextToSize(offer.roles_responsibilities.summary, pageWidth - 40);
+                doc.text(summaryLines, 20, y);
+                y += summaryLines.length * 4 + 15;
+            }
+
+            // Compliance
+            doc.setFillColor(...brandColor);
+            doc.rect(15, y, 2, 8, 'F');
+            doc.setTextColor(...darkColor);
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Compliance & Legal Guard', 20, y + 6);
+
+            y += 12;
+            doc.setFillColor(248, 250, 252);
+            doc.rect(15, y, pageWidth - 30, 15, 'F');
+            doc.setFontSize(7);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(150, 150, 150);
+            const disclaimerLines = doc.splitTextToSize(offer.legal_disclaimer?.statement || "This offer is contingent upon successful background verification.", pageWidth - 40);
+            doc.text(disclaimerLines, 20, y + 6);
+
+            y += 40;
+            doc.setDrawColor(230, 230, 230);
+            doc.line(15, y, 80, y);
+            doc.line(pageWidth - 80, y, pageWidth - 15, y);
+
+            doc.setFontSize(8);
+            doc.setTextColor(100, 100, 100);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Authorized Representative', 15, y + 5);
+            doc.text('Candidate Acceptance', pageWidth - 15, y + 5, { align: 'right' });
+
+            // Footer
+            doc.setFillColor(15, 23, 42);
+            doc.rect(0, pageHeight - 12, pageWidth, 12, 'F');
+            doc.setTextColor(150, 150, 150);
+            doc.setFontSize(7);
+            doc.text(`This is a computer generated document. Branded by ${offer.company_info?.name}`, pageWidth / 2, pageHeight - 5, { align: 'center' });
+
+            doc.save(`Offer_Letter_${offer.candidate_details?.name.replace(/\s+/g, '_')}.pdf`);
+            toast.success("Offer Letter downloaded!");
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to generate PDF");
+        }
+    };
 
     const handlePrint = () => {
         window.print();
@@ -40,28 +278,28 @@ const ViewOfferLetterModal = ({ isOpen, onClose, offer }) => {
             cleanLayout={true}
             icon={<div className="bg-orange-500 p-2 rounded-xl text-white shadow-lg"><FileSignature size={22} /></div>}
             footer={
-                <div className="flex justify-between items-center w-full bg-gray-50 px-6 py-4 border-t">
+                <div className="flex justify-between items-center w-full bg-gray-50 px-6 py-3 border-t">
                     <div className="flex items-center gap-2">
-                        <span className={`px-3 py-1 rounded-full text-xs font-bold capitalize border ${offer.status === 'Accepted' ? 'bg-green-50 text-green-600 border-green-200' :
+                        <span className={`px-3 py-0.5 rounded-full text-[10px] font-bold capitalize border ${offer.status === 'Accepted' ? 'bg-green-50 text-green-600 border-green-200' :
                             offer.status === 'Sent' ? 'bg-orange-50 text-orange-600 border-orange-200' :
                                 'bg-gray-50 text-gray-600 border-gray-200'
                             }`}>
                             {offer.status || 'Draft'}
                         </span>
-                        <span className="text-xs font-bold text-gray-400 capitalize font-primary">
+                        <span className="text-[10px] font-bold text-gray-400 capitalize font-primary">
                             Version {offer.version_number || 1}.0
                         </span>
                     </div>
                     <div className="flex gap-3">
-                        <button onClick={onClose} className="px-6 py-2.5 rounded-sm border border-gray-300 text-gray-700 font-bold hover:bg-white hover:shadow-sm transition-all text-sm">
+                        <button onClick={onClose} className="px-6 py-2 rounded-sm border border-gray-300 text-gray-700 font-bold hover:bg-white hover:shadow-sm transition-all text-sm focus:outline-none">
                             Close
                         </button>
                         <button
-                            onClick={handlePrint}
-                            className="px-8 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm flex items-center gap-2 font-bold shadow-[0_4px_15px_rgba(255,123,29,0.3)] hover:from-orange-600 hover:to-orange-700 transition-all text-sm"
+                            onClick={handleDownload}
+                            className="px-8 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm flex items-center gap-2 font-bold shadow-[0_4px_15px_rgba(255,123,29,0.3)] hover:from-orange-600 hover:to-orange-700 transition-all text-sm focus:outline-none active:scale-95"
                         >
-                            <Printer size={18} />
-                            Print / PDF
+                            <Download size={18} />
+                            Download PDF
                         </button>
                     </div>
                 </div>

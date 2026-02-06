@@ -109,7 +109,7 @@ const Modal = ({
 
                 {/* Footer */}
                 {footer && (
-                    <div className="bg-gray-50 px-6 py-4 rounded-b-lg border-t border-gray-200 flex justify-end gap-3">
+                    <div className={cleanLayout ? "w-full" : "bg-gray-50 px-6 py-4 rounded-b-lg border-t border-gray-200 flex justify-end gap-3"}>
                         {footer}
                     </div>
                 )}
