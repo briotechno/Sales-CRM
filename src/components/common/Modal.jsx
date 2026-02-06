@@ -27,7 +27,9 @@ const Modal = ({
     maxWidth = "max-w-2xl",
     zIndex = "z-50",
     showCloseButton = true,
-    headerVariant = "orange"
+    headerVariant = "orange",
+    bodyClassName = "",
+    cleanLayout = false
 }) => {
     // Close on Escape key
     useEffect(() => {
@@ -95,7 +97,7 @@ const Modal = ({
                 )}
 
                 {/* Body */}
-                <div className={`overflow-y-auto overflow-x-hidden max-h-[70vh] custom-scrollbar p-6 ${headerVariant === 'simple' && !title ? 'pt-8' : ''}`}>
+                <div className={cleanLayout ? "" : `overflow-y-auto overflow-x-hidden max-h-[70vh] custom-scrollbar p-6 ${headerVariant === 'simple' && !title ? 'pt-8' : ''} ${bodyClassName}`}>
                     {headerVariant === 'simple' && title && (
                         <h2 className="text-2xl font-bold text-gray-800 mb-2">{title}</h2>
                     )}
@@ -107,7 +109,7 @@ const Modal = ({
 
                 {/* Footer */}
                 {footer && (
-                    <div className="bg-gray-50 px-6 py-4 rounded-b-lg border-t border-gray-200 flex justify-end gap-3">
+                    <div className={cleanLayout ? "w-full" : "bg-gray-50 px-6 py-4 rounded-b-lg border-t border-gray-200 flex justify-end gap-3"}>
                         {footer}
                     </div>
                 )}

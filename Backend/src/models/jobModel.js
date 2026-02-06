@@ -44,29 +44,58 @@ class Job {
         return result.insertId;
     }
 
-    static async findAll(userId, { page = 1, limit = 10, search = '', status = 'All' }) {
+    static async findAll(userId, { page = 1, limit = 10, search = '', status = 'All', department = '', type = '' }) {
         const offset = (page - 1) * limit;
-        let query = `SELECT * FROM jobs WHERE user_id = ?`;
+        let query = `
+            SELECT j.*, 
+                   (SELECT COUNT(*) FROM applicants WHERE job_id = j.id) as applicants 
+            FROM jobs j 
+            WHERE j.user_id = ?
+        `;
         const params = [userId];
 
         if (search) {
-            query += ` AND (title LIKE ? OR department LIKE ? OR location LIKE ?)`;
+            query += ` AND (j.title LIKE ? OR j.department LIKE ? OR j.location LIKE ?)`;
             params.push(`%${search}%`, `%${search}%`, `%${search}%`);
         }
 
         if (status !== 'All') {
-            query += ` AND status = ?`;
+            query += ` AND j.status = ?`;
             params.push(status);
         }
 
+        if (department) {
+            query += ` AND j.department = ?`;
+            params.push(department);
+        }
+
+        if (type) {
+            query += ` AND j.type = ?`;
+            params.push(type);
+        }
+
         // Count query for pagination
-        const countQuery = query.replace('SELECT *', 'SELECT COUNT(*) as total');
-        const [countResult] = await pool.execute(countQuery, params);
+        const countQuery = `
+            SELECT COUNT(*) as total 
+            FROM jobs 
+            WHERE user_id = ? 
+            ${search ? ` AND (title LIKE ? OR department LIKE ? OR location LIKE ?)` : ''} 
+            ${status !== 'All' ? ` AND status = ?` : ''}
+            ${department ? ` AND department = ?` : ''}
+            ${type ? ` AND type = ?` : ''}
+        `;
+        const countParams = [userId];
+        if (search) countParams.push(`%${search}%`, `%${search}%`, `%${search}%`);
+        if (status !== 'All') countParams.push(status);
+        if (department) countParams.push(department);
+        if (type) countParams.push(type);
+
+        const [countResult] = await pool.execute(countQuery, countParams);
         const total = countResult[0].total;
         const totalPages = Math.ceil(total / limit);
 
         // Add ordering and pagination
-        query += ` ORDER BY created_at DESC LIMIT ? OFFSET ?`;
+        query += ` ORDER BY j.created_at DESC LIMIT ? OFFSET ?`;
         params.push(limit.toString(), offset.toString());
 
         const [rows] = await pool.execute(query, params);
@@ -95,10 +124,22 @@ class Job {
         let query;
         let params;
         if (userId) {
-            query = `SELECT * FROM jobs WHERE id = ? AND user_id = ?`;
+            query = `
+                SELECT j.*, COUNT(a.id) as applicants 
+                FROM jobs j 
+                LEFT JOIN applicants a ON j.id = a.job_id 
+                WHERE j.id = ? AND j.user_id = ?
+                GROUP BY j.id
+            `;
             params = [id, userId];
         } else {
-            query = `SELECT * FROM jobs WHERE id = ?`;
+            query = `
+                SELECT j.*, COUNT(a.id) as applicants 
+                FROM jobs j 
+                LEFT JOIN applicants a ON j.id = a.job_id 
+                WHERE j.id = ?
+                GROUP BY j.id
+            `;
             params = [id];
         }
         const [rows] = await pool.execute(query, params);
@@ -115,7 +156,14 @@ class Job {
     }
 
     static async findByLink(link) {
-        const query = `SELECT * FROM jobs WHERE application_link = ?`;
+        const query = `
+            SELECT j.*, 
+                   b.company_name, b.logo_url, b.industry, b.city as business_city, b.country as business_country, b.email as business_email,
+                   (SELECT COUNT(*) FROM applicants WHERE job_id = j.id) as applicants 
+            FROM jobs j 
+            LEFT JOIN business_info b ON j.user_id = b.user_id
+            WHERE j.application_link = ?
+        `;
         const [rows] = await pool.execute(query, [link]);
         if (!rows[0]) return null;
 

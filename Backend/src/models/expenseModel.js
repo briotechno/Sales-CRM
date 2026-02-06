@@ -13,7 +13,7 @@ const Expense = {
     },
 
     findAll: async (userId, filters = {}, pagination = {}) => {
-        const { search, category, status, dateFrom, dateTo } = filters;
+        const { search, category, status, dateFrom, dateTo, hasReceipt, minAmount, maxAmount } = filters;
         const { page = 1, limit = 10 } = pagination;
         const offset = (page - 1) * limit;
 
@@ -38,6 +38,26 @@ const Expense = {
         if (dateFrom && dateTo) {
             whereClause += ' AND date BETWEEN ? AND ?';
             queryParams.push(dateFrom, dateTo);
+        }
+
+        if (hasReceipt !== undefined) {
+            // Handle boolean or string inputs from query
+            const isReceiptRequested = hasReceipt === 'true' || hasReceipt === true;
+            if (isReceiptRequested) {
+                whereClause += ' AND receipt_url IS NOT NULL AND receipt_url != ""';
+            } else {
+                whereClause += ' AND (receipt_url IS NULL OR receipt_url = "")';
+            }
+        }
+
+        if (minAmount) {
+            whereClause += ' AND amount >= ?';
+            queryParams.push(minAmount);
+        }
+
+        if (maxAmount) {
+            whereClause += ' AND amount <= ?';
+            queryParams.push(maxAmount);
         }
 
         // 1. Get total count for pagination

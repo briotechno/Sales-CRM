@@ -777,7 +777,7 @@ export default function CatalogsPage() {
                         {catalog.maxPrice ? `₹${formatCurrencyShorthand(catalog.maxPrice)}` : "N/A"}
                       </td>
                       <td className="py-3 px-4 font-medium text-gray-600 text-left truncate max-w-[100px]" title={catalog.deliveryTime}>
-                        {catalog.deliveryTime || "TBD"}
+                        {catalog.deliveryTime || "--"}
                       </td>
                       <td className="py-3 px-4 text-gray-600 text-xs text-left">{new Date(catalog.created_at).toLocaleDateString()}</td>
                       <td className="py-3 px-4 text-left">

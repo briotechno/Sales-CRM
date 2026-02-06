@@ -277,27 +277,40 @@ export default function BusinessInfoPage() {
 
   return (
     <DashboardLayout>
-      <div className="p-0 bg-gradient-to-br from-gray-0 to-gray-100 ml-4 mr-4 pb-10 min-h-screen">
-        {/* Header */}
-        <div className="bg-white border-b ">
-          <div className="max-w-8xl mx-auto ml-2 px-0 py-4">
-            <div className="flex items-center justify-between">
-              {/* Left Side */}
-              <div>
-                <h1 className="text-2xl font-bold text-gray-800">
-                  Business Information
-                </h1>
-                <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
-                  <FiHome className="text-gray-700 text-sm" />
-                  <span className="text-gray-400"></span> Settings /{" "}
-                  <span className="text-[#FF7B1D] font-medium">
-                    All Information
-                  </span>
-                </p>
+      <div className="min-h-screen bg-white">
+        {/* Header - Synchronized with AllToDo Structure */}
+        <div className="bg-white sticky top-0 z-30">
+          <div className="max-w-8xl mx-auto px-4 py-4 border-b">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+              <div className="flex flex-col md:flex-row items-center gap-6">
+                {/* Logo */}
+                <div className="flex-shrink-0">
+                  <div className="w-14 h-14 bg-gray-50 border border-gray-100 rounded-sm flex items-center justify-center p-2 shadow-sm overflow-hidden text-center">
+                    {businessInfo?.logo_url ? (
+                      <img
+                        src={`${import.meta.env.VITE_API_BASE_URL.replace('/api/', '')}${businessInfo.logo_url}`}
+                        alt={businessInfo.company_name}
+                        className="w-full h-full object-contain"
+                      />
+                    ) : (
+                      <Building2 size={32} className="text-[#FF7B1D]" />
+                    )}
+                  </div>
+                </div>
+
+                {/* Info */}
+                <div className="text-center md:text-left">
+                  <h1 className="text-2xl font-bold text-gray-900 leading-tight">
+                    {businessInfo?.company_name || "Company Name"}
+                  </h1>
+                  <p className="text-xs font-bold text-[#FF7B1D] uppercase tracking-widest mt-1">
+                    {businessInfo?.industry || "Manufacturing"}
+                  </p>
+                </div>
               </div>
 
-              {/* Right Side – Added Share Button */}
-              <div className="flex items-center mr- gap-3">
+              {/* Top Action Buttons */}
+              <div className="flex items-center gap-3">
                 <button
                   onClick={() => {
                     if (!businessInfo?.id) {
@@ -315,7 +328,7 @@ export default function BusinessInfoPage() {
                 {!isEditing ? (
                   <button
                     onClick={() => setIsEditing(true)}
-                    className="mr-0 bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-2 font-semibold"
+                    className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-2 font-semibold"
                   >
                     <Edit2 size={20} />
                     Edit Information
@@ -343,7 +356,7 @@ export default function BusinessInfoPage() {
           </div>
         </div>
 
-        <div className="max-w-8xl mx-auto px-0 py-0 mt-2">
+        <div className="max-w-8xl mx-auto px-4 pb-4 pt-2 mt-0 font-primary w-full flex-1">
           {/* Stats Cards - Dynamic with NumberCard Component */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-6">
             <NumberCard

@@ -58,6 +58,16 @@ export const applicantApi = createApi({
                 body: formData,
             }),
             invalidatesTags: ['Applicant'],
+            async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+                try {
+                    await queryFulfilled;
+                    // Invalidate jobApi's 'Job' tag to update applicant counts
+                    const { jobApi } = await import('./jobApi');
+                    dispatch(jobApi.util.invalidateTags(['Job']));
+                } catch (error) {
+                    // Fail silently or handle error
+                }
+            }
         }),
     }),
 });

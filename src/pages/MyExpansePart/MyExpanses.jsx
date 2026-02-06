@@ -24,9 +24,15 @@ export default function ExpensePage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [dateFilter, setDateFilter] = useState("All");
   const [categoryFilter, setCategoryFilter] = useState("All");
+  const [receiptFilter, setReceiptFilter] = useState("All");
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
   const [tempCategory, setTempCategory] = useState("All");
+  const [tempReceipt, setTempReceipt] = useState("All");
+  const [tempMinPrice, setTempMinPrice] = useState("");
+  const [tempMaxPrice, setTempMaxPrice] = useState("");
   const [isDateFilterOpen, setIsDateFilterOpen] = useState(false);
   const [isCategoryFilterOpen, setIsCategoryFilterOpen] = useState(false);
   const dateDropdownRef = useRef(null);
@@ -80,6 +86,9 @@ export default function ExpensePage() {
     limit: itemsPerPage,
     search: searchTerm,
     category: categoryFilter !== "All" ? categoryFilter : undefined,
+    hasReceipt: receiptFilter === "All" ? undefined : receiptFilter === "With Receipt",
+    minAmount: minPrice || undefined,
+    maxAmount: maxPrice || undefined,
     dateFrom,
     dateTo
   });
@@ -105,12 +114,19 @@ export default function ExpensePage() {
     setSearchTerm("");
     setDateFilter("All");
     setCategoryFilter("All");
+    setReceiptFilter("All");
+    setMinPrice("");
+    setMaxPrice("");
     setCustomStart("");
     setCustomEnd("");
+    setTempCategory("All");
+    setTempReceipt("All");
+    setTempMinPrice("");
+    setTempMaxPrice("");
     setCurrentPage(1);
   };
 
-  const hasActiveFilters = searchTerm || dateFilter !== "All" || categoryFilter !== "All";
+  const hasActiveFilters = searchTerm || dateFilter !== "All" || categoryFilter !== "All" || receiptFilter !== "All" || minPrice || maxPrice;
 
   const handlePageChange = (page) => setCurrentPage(page);
 
@@ -164,6 +180,9 @@ export default function ExpensePage() {
                         clearAllFilters();
                       } else {
                         setTempCategory(categoryFilter);
+                        setTempReceipt(receiptFilter);
+                        setTempMinPrice(minPrice);
+                        setTempMaxPrice(maxPrice);
                         setIsCategoryFilterOpen(!isCategoryFilterOpen);
                       }
                     }}
@@ -183,6 +202,9 @@ export default function ExpensePage() {
                         <button
                           onClick={() => {
                             setTempCategory("All");
+                            setTempReceipt("All");
+                            setTempMinPrice("");
+                            setTempMaxPrice("");
                           }}
                           className="text-[10px] font-bold text-orange-600 hover:underline hover:text-orange-700 capitalize"
                         >
@@ -209,6 +231,44 @@ export default function ExpensePage() {
                             </select>
                           </div>
                         </div>
+
+                        {/* Column: Receipt */}
+                        <div className="space-y-4 mt-4">
+                          <span className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-2 border-b pb-1">Receipt Status</span>
+                          <div className="relative">
+                            <select
+                              value={tempReceipt}
+                              onChange={(e) => setTempReceipt(e.target.value)}
+                              className="w-full px-3 py-2.5 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-1 focus:ring-orange-500/20 outline-none transition-all text-xs font-semibold text-gray-700 bg-gray-50 hover:bg-white"
+                            >
+                              <option value="All">All Expenses</option>
+                              <option value="With Receipt">With Receipt</option>
+                              <option value="Without Receipt">Without Receipt</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        {/* Column: Price Range */}
+                        <div className="space-y-4 mt-4">
+                          <span className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-2 border-b pb-1">Price Range</span>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="number"
+                              placeholder="Min"
+                              value={tempMinPrice}
+                              onChange={(e) => setTempMinPrice(e.target.value)}
+                              className="w-full px-3 py-2.5 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-1 focus:ring-orange-500/20 outline-none transition-all text-xs font-semibold text-gray-700 bg-gray-50 hover:bg-white"
+                            />
+                            <span className="text-gray-400">-</span>
+                            <input
+                              type="number"
+                              placeholder="Max"
+                              value={tempMaxPrice}
+                              onChange={(e) => setTempMaxPrice(e.target.value)}
+                              className="w-full px-3 py-2.5 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-1 focus:ring-orange-500/20 outline-none transition-all text-xs font-semibold text-gray-700 bg-gray-50 hover:bg-white"
+                            />
+                          </div>
+                        </div>
                       </div>
 
                       {/* Filter Actions */}
@@ -222,6 +282,9 @@ export default function ExpensePage() {
                         <button
                           onClick={() => {
                             setCategoryFilter(tempCategory);
+                            setReceiptFilter(tempReceipt);
+                            setMinPrice(tempMinPrice);
+                            setMaxPrice(tempMaxPrice);
                             setCurrentPage(1);
                             setIsCategoryFilterOpen(false);
                           }}
