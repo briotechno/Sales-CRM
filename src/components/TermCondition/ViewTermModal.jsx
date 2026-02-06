@@ -77,8 +77,8 @@ const ViewTermModal = ({ isOpen, onClose, term }) => {
 
         {/* Description */}
         <div className="space-y-4">
-          <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
-            <FileText size={16} /> Term Description
+          <h3 className="text-sm font-bold text-gray-700 uppercase tracking-widest flex items-center gap-2">
+            <FileText size={16} className="text-orange-500" /> Term Description
           </h3>
 
           <p className="text-gray-700 leading-relaxed bg-gray-50 p-4 rounded-sm border border-gray-100 break-words whitespace-pre-wrap">
