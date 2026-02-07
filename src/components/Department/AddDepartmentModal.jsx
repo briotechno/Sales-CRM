@@ -19,6 +19,11 @@ const AddDepartmentModal = ({ isOpen, onClose, refetchDashboard }) => {
   const handleIconChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      if (file.size > 1024 * 1024) {
+        toast.error("Image size must be less than 1MB");
+        e.target.value = null;
+        return;
+      }
       setDepartmentIcon(file);
       setIconPreview(URL.createObjectURL(file));
     }
@@ -138,9 +143,13 @@ const AddDepartmentModal = ({ isOpen, onClose, refetchDashboard }) => {
               type="text"
               value={departmentName}
               onChange={(e) => setDepartmentName(e.target.value)}
+              maxLength={50}
               placeholder="e.g., Human Resources, Engineering, Marketing..."
               className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300"
             />
+            <div className="text-[10px] text-gray-400 mt-1 flex justify-end font-medium">
+              <span>{departmentName.length}/50 characters</span>
+            </div>
           </div>
 
           {/* Department Description */}
@@ -152,13 +161,14 @@ const AddDepartmentModal = ({ isOpen, onClose, refetchDashboard }) => {
             <textarea
               value={departmentDescription}
               onChange={(e) => setDepartmentDescription(e.target.value)}
+              maxLength={500}
               placeholder="Describe the department's role and responsibilities..."
               rows="5"
               className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 resize-none"
             />
-            <div className="text-xs text-gray-500 mt-1 flex justify-between">
+            <div className="text-[10px] text-gray-400 mt-1 flex justify-between font-medium">
               <span>Optional: Add details about this department</span>
-              <span>{departmentDescription.length} characters</span>
+              <span>{departmentDescription.length}/500 characters</span>
             </div>
           </div>
 
@@ -176,8 +186,8 @@ const AddDepartmentModal = ({ isOpen, onClose, refetchDashboard }) => {
                   onChange={handleIconChange}
                   className="block w-full text-sm text-gray-900 px-4 py-3 border border-gray-200 rounded-sm cursor-pointer focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all bg-white hover:border-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-sm file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100"
                 />
-                <p className="text-xs text-gray-500 mt-2">
-                  Recommended: 512px × 512px or smaller
+                <p className="text-[10px] text-gray-400 mt-2 font-medium">
+                  Recommended: 512px × 512px or smaller (Max: 1MB)
                 </p>
               </div>
               {iconPreview && (
