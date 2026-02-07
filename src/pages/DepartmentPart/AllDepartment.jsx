@@ -14,10 +14,18 @@ import GenericGridView from "../../components/common/GenericGridView";
 
 const AllDepartment = () => {
   const [currentPage, setCurrentPage] = useState(1);
+  // Applied filter states (used for API calls)
   const [statusFilter, setStatusFilter] = useState("All");
   const [dateFilter, setDateFilter] = useState("All");
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
+
+  // Temporary filter states (used in filter modal)
+  const [tempStatusFilter, setTempStatusFilter] = useState("All");
+  const [tempDateFilter, setTempDateFilter] = useState("All");
+  const [tempCustomStart, setTempCustomStart] = useState("");
+  const [tempCustomEnd, setTempCustomEnd] = useState("");
+
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const dropdownRef = useRef(null);
   const [viewMode, setViewMode] = useState("list");
@@ -43,12 +51,36 @@ const AllDepartment = () => {
   const departments = data?.departments || [];
   const totalPages = data?.pagination?.totalPages || 1;
 
-  const clearAllFilters = () => {
-    setStatusFilter("All");
-    setDateFilter("All");
-    setCustomStart("");
-    setCustomEnd("");
+  // Open filter modal - sync temp states with applied states
+  const openFilterModal = () => {
+    setTempStatusFilter(statusFilter);
+    setTempDateFilter(dateFilter);
+    setTempCustomStart(customStart);
+    setTempCustomEnd(customEnd);
+    setIsFilterOpen(true);
+  };
+
+  // Apply filters - copy temp states to applied states
+  const applyFilters = () => {
+    setStatusFilter(tempStatusFilter);
+    setDateFilter(tempDateFilter);
+    setCustomStart(tempCustomStart);
+    setCustomEnd(tempCustomEnd);
     setCurrentPage(1);
+    setIsFilterOpen(false);
+  };
+
+  // Cancel - just close modal (temp states will be reset on next open)
+  const cancelFilters = () => {
+    setIsFilterOpen(false);
+  };
+
+  // Reset all filters (both temp and applied)
+  const clearAllFilters = () => {
+    setTempStatusFilter("All");
+    setTempDateFilter("All");
+    setTempCustomStart("");
+    setTempCustomEnd("");
   };
 
   const hasActiveFilters = statusFilter !== "All" || dateFilter !== "All";
@@ -99,9 +131,13 @@ const AllDepartment = () => {
                   <button
                     onClick={() => {
                       if (hasActiveFilters) {
-                        clearAllFilters();
+                        setStatusFilter("All");
+                        setDateFilter("All");
+                        setCustomStart("");
+                        setCustomEnd("");
+                        setCurrentPage(1);
                       } else {
-                        setIsFilterOpen(!isFilterOpen);
+                        openFilterModal();
                       }
                     }}
                     className={`px-3 py-3 rounded-sm border transition shadow-sm ${isFilterOpen || hasActiveFilters
@@ -113,74 +149,114 @@ const AllDepartment = () => {
                   </button>
 
                   {isFilterOpen && (
-                    <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-xl z-50 animate-fadeIn overflow-hidden">
-                      <div className="p-3 border-b border-gray-100 bg-gray-50">
-                        <span className="text-sm font-bold text-gray-700 tracking-wide">Statuses</span>
-                      </div>
-                      <div className="py-1">
-                        {["All", "Active", "Inactive"].map((status) => (
-                          <button
-                            key={status}
-                            onClick={() => {
-                              setStatusFilter(status);
-                              setIsFilterOpen(false);
-                              setCurrentPage(1);
-                            }}
-                            className={`block w-full text-left px-4 py-2 text-sm transition-colors ${statusFilter === status
-                              ? "bg-orange-50 text-orange-600 font-bold"
-                              : "text-gray-700 hover:bg-gray-50"
-                              }`}
-                          >
-                            {status}
-                          </button>
-                        ))}
+                    <div className="absolute right-0 mt-2 w-[480px] bg-white border border-gray-200 rounded-lg shadow-2xl z-50 overflow-hidden">
+                      {/* Header */}
+                      <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+                        <h3 className="text-base font-bold text-gray-800">Filter Options</h3>
+                        <button
+                          onClick={clearAllFilters}
+                          className="text-sm font-semibold text-orange-500 hover:text-orange-600 transition-colors"
+                        >
+                          Reset All
+                        </button>
                       </div>
 
-                      <div className="p-3 border-t border-b border-gray-100 bg-gray-50">
-                        <span className="text-sm font-bold text-gray-700 tracking-wide">Date Filter</span>
-                      </div>
-                      <div className="py-1">
-                        {["All", "Today", "Yesterday", "Last 7 Days", "Custom"].map((option) => (
-                          <div key={option}>
-                            <button
-                              onClick={() => {
-                                setDateFilter(option);
-                                if (option !== "Custom") {
-                                  setIsFilterOpen(false);
-                                  setCurrentPage(1);
-                                }
-                              }}
-                              className={`block w-full text-left px-4 py-2 text-sm transition-colors ${dateFilter === option
-                                ? "bg-orange-50 text-orange-600 font-bold"
-                                : "text-gray-700 hover:bg-gray-50"
-                                }`}
-                            >
-                              {option}
-                            </button>
-                            {option === "Custom" && dateFilter === "Custom" && (
-                              <div className="px-4 py-3 space-y-2 border-t border-gray-50 bg-gray-50/50">
+                      {/* Body - Two Column Layout */}
+                      <div className="grid grid-cols-2 gap-8 p-5">
+                        {/* Status Column */}
+                        <div>
+                          <label className="text-sm font-medium text-gray-500 mb-4 block">Status</label>
+                          <div className="space-y-3">
+                            {["All", "Inactive", "Active"].map((status) => (
+                              <label key={status} className="flex items-center gap-3 cursor-pointer group">
                                 <input
-                                  type="date"
-                                  value={customStart}
-                                  onChange={(e) => setCustomStart(e.target.value)}
-                                  className="w-full px-2 py-2 border border-gray-300 rounded-sm text-xs focus:ring-1 focus:ring-orange-500 outline-none"
+                                  type="radio"
+                                  name="status"
+                                  checked={tempStatusFilter === status}
+                                  onChange={() => setTempStatusFilter(status)}
+                                  className="w-4 h-4 text-orange-500 border-gray-300 focus:ring-orange-500 accent-orange-500"
                                 />
-                                <input
-                                  type="date"
-                                  value={customEnd}
-                                  onChange={(e) => setCustomEnd(e.target.value)}
-                                  className="w-full px-2 py-2 border border-gray-300 rounded-sm text-xs focus:ring-1 focus:ring-orange-500 outline-none"
-                                />
-                                <button
-                                  onClick={() => { setIsFilterOpen(false); setCurrentPage(1); }}
-                                  className="w-full bg-orange-500 text-white text-[10px] font-bold py-2 rounded-sm"
-                                >
-                                  Apply
-                                </button>
-                              </div>
-                            )}
+                                <span className={`text-sm ${tempStatusFilter === status ? "text-orange-500 font-semibold" : "text-gray-700 group-hover:text-gray-900"}`}>
+                                  {status}
+                                </span>
+                              </label>
+                            ))}
+                            {/* Custom Date Range in Status column */}
+                            <label className="flex items-center gap-3 cursor-pointer group">
+                              <input
+                                type="radio"
+                                name="dateFilter"
+                                checked={tempDateFilter === "Custom"}
+                                onChange={() => setTempDateFilter("Custom")}
+                                className="w-4 h-4 text-orange-500 border-gray-300 focus:ring-orange-500 accent-orange-500"
+                              />
+                              <span className={`text-sm ${tempDateFilter === "Custom" ? "text-orange-500 font-semibold" : "text-gray-700 group-hover:text-gray-900"}`}>
+                                Custom Date Range
+                              </span>
+                            </label>
                           </div>
-                        ))}
+                        </div>
+
+                        {/* Date Period Column */}
+                        <div>
+                          <label className="text-sm font-medium text-gray-500 mb-4 block">Date Period</label>
+                          <div className="space-y-3">
+                            {["All", "Today", "Yesterday", "Last 7 Days"].map((option) => (
+                              <label key={option} className="flex items-center gap-3 cursor-pointer group">
+                                <input
+                                  type="radio"
+                                  name="dateFilter"
+                                  checked={tempDateFilter === option}
+                                  onChange={() => setTempDateFilter(option)}
+                                  className="w-4 h-4 text-orange-500 border-gray-300 focus:ring-orange-500 accent-orange-500"
+                                />
+                                <span className={`text-sm ${tempDateFilter === option ? "text-orange-500 font-semibold" : "text-gray-700 group-hover:text-gray-900"}`}>
+                                  {option}
+                                </span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Custom Date Range Inputs - Only show when Custom is selected */}
+                        {tempDateFilter === "Custom" && (
+                          <div className="col-span-2 grid grid-cols-2 gap-3">
+                            <div>
+                              <label className="text-xs text-gray-500 mb-1 block">Start Date</label>
+                              <input
+                                type="date"
+                                value={tempCustomStart}
+                                onChange={(e) => setTempCustomStart(e.target.value)}
+                                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-xs text-gray-500 mb-1 block">End Date</label>
+                              <input
+                                type="date"
+                                value={tempCustomEnd}
+                                onChange={(e) => setTempCustomEnd(e.target.value)}
+                                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none"
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Footer */}
+                      <div className="flex items-center gap-3 px-5 py-4 border-t border-gray-100 bg-gray-50">
+                        <button
+                          onClick={cancelFilters}
+                          className="flex-1 px-4 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={applyFilters}
+                          className="flex-1 px-4 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-orange-500 to-orange-600 rounded-md hover:from-orange-600 hover:to-orange-700 transition-all shadow-md"
+                        >
+                          Apply Filters
+                        </button>
                       </div>
                     </div>
                   )}
