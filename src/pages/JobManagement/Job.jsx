@@ -790,7 +790,7 @@ export default function JobManagement() {
             <GenericGridView
               data={jobsData?.jobs || []}
               renderItem={(job) => (
-                <div key={job.id} className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all p-5 flex flex-col h-full relative group">
+                <div key={job.id} className="bg-white border border-gray-200 rounded-sm shadow-sm hover:shadow-md transition-all relative group flex flex-col h-full overflow-hidden">
                   <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
                     <button
                       onClick={() => {
@@ -832,61 +832,59 @@ export default function JobManagement() {
                     )}
                   </div>
 
-                  <div className="flex items-start gap-4 mb-4">
-                    <div className="w-12 h-12 rounded-full bg-orange-50 flex items-center justify-center text-orange-600 flex-shrink-0">
-                      <Briefcase size={24} />
+                  <div className="p-6 pb-4 flex-1 flex flex-col items-center mt-2 text-center">
+                    <div className="w-16 h-16 rounded-full bg-orange-50 flex items-center justify-center text-orange-600 flex-shrink-0 border-4 border-orange-100 shadow-inner">
+                      <Briefcase size={28} />
                     </div>
-                    <div>
-                      <h3 className="font-bold text-gray-800 text-lg leading-tight line-clamp-2" title={job.title}>
+                    <div className="mt-4">
+                      <h3 className="font-bold text-gray-800 text-lg leading-tight line-clamp-2 min-h-[48px]" title={job.title}>
                         {job.title}
                       </h3>
-                      <div className="flex items-center gap-2 mt-1 text-sm text-gray-500">
-                        <MapPin size={14} />
+                      <div className="flex items-center justify-center gap-2 mt-2 text-xs font-bold text-gray-400 uppercase tracking-widest bg-gray-50 px-3 py-1 rounded-full border border-gray-100">
+                        <MapPin size={12} className="text-orange-500" />
                         <span className="truncate max-w-[150px]">{job.location}</span>
                       </div>
                     </div>
+                    
+                    <p className="text-sm text-gray-500 mt-4 line-clamp-3 min-h-[60px] leading-relaxed capitalize">
+                      {job.description || "Exciting job opportunity. Join our growing team and make an impact!"}
+                    </p>
                   </div>
 
-                  <div className="space-y-3 flex-1">
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-gray-500">Department</span>
-                      <span className="font-semibold text-gray-700">{job.department}</span>
+                  <div className="bg-gray-50 p-5 space-y-4 border-t border-gray-100 mt-auto">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="text-center p-2 bg-white rounded-lg border border-gray-200 shadow-sm">
+                        <p className="text-[9px] text-gray-400 font-black uppercase tracking-tighter">Positions</p>
+                        <p className="text-base font-black text-gray-800">{job.positions}</p>
+                      </div>
+                      <div className="text-center p-2 bg-white rounded-lg border border-gray-200 shadow-sm">
+                        <p className="text-[9px] text-gray-400 font-black uppercase tracking-tighter">Applicants</p>
+                        <button
+                          onClick={() => navigate('/hrm/applicants', { state: { jobTitle: job.title } })}
+                          className="text-base font-black text-orange-600 hover:text-orange-700 flex items-center justify-center gap-1 mx-auto"
+                        >
+                          <Users size={12} />
+                          {job.applicants}
+                        </button>
+                      </div>
                     </div>
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-gray-500">Type</span>
-                      <span className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded-sm text-xs font-semibold">
-                        {job.type}
+
+                    <div className="flex justify-between items-center px-1 pt-1">
+                      <div className="flex flex-col">
+                        <span className="text-[9px] text-gray-400 font-black uppercase">Posted Date</span>
+                        <span className="text-[11px] font-bold text-gray-600">{new Date(job.posted_date).toLocaleDateString()}</span>
+                      </div>
+                      <span
+                        className={`px-3 py-1 text-[10px] font-black rounded-full uppercase tracking-widest border shadow-sm ${job.status === "Active"
+                          ? "bg-green-50 text-green-700 border-green-200"
+                          : job.status === "On Hold"
+                            ? "bg-yellow-50 text-yellow-700 border-yellow-200"
+                            : "bg-gray-100 text-gray-600 border-gray-200"
+                          }`}
+                      >
+                        {job.status}
                       </span>
                     </div>
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-gray-500">Positions</span>
-                      <span className="font-semibold text-gray-700">{job.positions}</span>
-                    </div>
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-gray-500">Applicants</span>
-                      <button
-                        onClick={() => navigate('/hrm/applicants', { state: { jobTitle: job.title } })}
-                        className="flex items-center gap-1 font-bold text-orange-600 hover:underline"
-                      >
-                        {job.applicants} <Users size={14} />
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="mt-5 pt-4 border-t border-gray-100 flex justify-between items-center">
-                    <span className="text-xs text-gray-400">
-                      Posted: {new Date(job.posted_date).toLocaleDateString()}
-                    </span>
-                    <span
-                      className={`px-3 py-1 text-xs font-bold rounded-full uppercase ${job.status === "Active"
-                        ? "bg-green-100 text-green-700"
-                        : job.status === "On Hold"
-                          ? "bg-yellow-100 text-yellow-700"
-                          : "bg-gray-100 text-gray-600"
-                        }`}
-                    >
-                      {job.status}
-                    </span>
                   </div>
                 </div>
               )}

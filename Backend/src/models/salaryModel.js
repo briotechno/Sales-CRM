@@ -33,7 +33,7 @@ class Salary {
         return result.insertId;
     }
 
-    static async findAll(userId, { page = 1, limit = 10, search = '', department = 'all' }) {
+    static async findAll(userId, { page = 1, limit = 10, search = '', department = 'all', designation = 'all', status = 'all', startDate = '', endDate = '' }) {
         const offset = (page - 1) * limit;
         
         // Base query starting from employees to ensure all employees are included
@@ -82,21 +82,49 @@ class Salary {
             params.push(`%${search}%`, `%${search}%`, `%${search}%`);
         }
 
-        if (department !== 'all') {
+        if (department !== 'all' && department !== '') {
             query += ` AND dept.department_name = ?`;
             params.push(department);
         }
 
+        if (designation !== 'all' && designation !== '') {
+            query += ` AND deg.designation_name = ?`;
+            params.push(designation);
+        }
+
+        if (status !== 'all' && status !== '') {
+            query += ` AND COALESCE(s.status, 'pending') = ?`;
+            params.push(status);
+        }
+
+        if (startDate && endDate) {
+            query += ` AND s.pay_date BETWEEN ? AND ?`;
+            params.push(startDate, endDate);
+        }
+
         // Count query for pagination
-        const countQuery = `SELECT COUNT(*) as total FROM employees e 
+        const countQuery = `SELECT COUNT(*) as total 
+                           FROM employees e 
+                           LEFT JOIN (
+                                SELECT s1.* FROM salaries s1
+                                INNER JOIN (SELECT employee_id, MAX(created_at) as max_created FROM salaries WHERE user_id = ? GROUP BY employee_id) s2 ON s1.employee_id = s2.employee_id AND s1.created_at = s2.max_created
+                                WHERE s1.user_id = ?
+                           ) s ON e.id = s.employee_id
                            LEFT JOIN departments dept ON e.department_id = dept.id
+                           LEFT JOIN designations deg ON e.designation_id = deg.id
                            WHERE e.user_id = ? AND e.status = 'Active' 
-                           ${search ? ' AND (e.employee_name LIKE ? OR dept.department_name LIKE ?)' : ''}
-                           ${department !== 'all' ? ' AND dept.department_name = ?' : ''}`;
+                           ${search ? ' AND (e.employee_name LIKE ? OR deg.designation_name LIKE ? OR dept.department_name LIKE ?)' : ''}
+                           ${department !== 'all' && department !== '' ? ' AND dept.department_name = ?' : ''}
+                           ${designation !== 'all' && designation !== '' ? ' AND deg.designation_name = ?' : ''}
+                           ${status !== 'all' && status !== '' ? ' AND COALESCE(s.status, \'pending\') = ?' : ''}
+                           ${startDate && endDate ? ' AND s.pay_date BETWEEN ? AND ?' : ''}`;
         
-        const countParams = [userId];
-        if (search) countParams.push(`%${search}%`, `%${search}%`);
-        if (department !== 'all') countParams.push(department);
+        const countParams = [userId, userId, userId];
+        if (search) countParams.push(`%${search}%`, `%${search}%`, `%${search}%`);
+        if (department !== 'all' && department !== '') countParams.push(department);
+        if (designation !== 'all' && designation !== '') countParams.push(designation);
+        if (status !== 'all' && status !== '') countParams.push(status);
+        if (startDate && endDate) countParams.push(startDate, endDate);
 
         const [countResult] = await pool.execute(countQuery, countParams);
         const total = countResult[0].total;
@@ -107,6 +135,38 @@ class Salary {
         params.push(limit.toString(), offset.toString());
 
         const [rows] = await pool.execute(query, params);
+
+        // Aggregate stats for the filtered set (ignoring pagination)
+        const statsQuery = `
+            SELECT 
+                SUM(s.net_salary) as total_payroll,
+                SUM(CASE WHEN COALESCE(s.status, 'pending') = 'paid' THEN s.net_salary ELSE 0 END) as total_paid,
+                SUM(CASE WHEN COALESCE(s.status, 'pending') != 'paid' THEN s.net_salary ELSE 0 END) as total_pending
+            FROM employees e
+            LEFT JOIN (
+                SELECT s1.* FROM salaries s1
+                INNER JOIN (SELECT employee_id, MAX(created_at) as max_created FROM salaries WHERE user_id = ? GROUP BY employee_id) s2 ON s1.employee_id = s2.employee_id AND s1.created_at = s2.max_created
+                WHERE s1.user_id = ?
+            ) s ON e.id = s.employee_id
+            LEFT JOIN departments dept ON e.department_id = dept.id
+            LEFT JOIN designations deg ON e.designation_id = deg.id
+            WHERE e.user_id = ? AND e.status = 'Active'
+            ${search ? ' AND (e.employee_name LIKE ? OR deg.designation_name LIKE ? OR dept.department_name LIKE ?)' : ''}
+            ${department !== 'all' && department !== '' ? ' AND dept.department_name = ?' : ''}
+            ${designation !== 'all' && designation !== '' ? ' AND deg.designation_name = ?' : ''}
+            ${status !== 'all' && status !== '' ? ' AND COALESCE(s.status, \'pending\') = ?' : ''}
+            ${startDate && endDate ? ' AND s.pay_date BETWEEN ? AND ?' : ''}
+        `;
+        
+        const statsParams = [userId, userId, userId];
+        if (search) statsParams.push(`%${search}%`, `%${search}%`, `%${search}%`);
+        if (department !== 'all' && department !== '') statsParams.push(department);
+        if (designation !== 'all' && designation !== '') statsParams.push(designation);
+        if (status !== 'all' && status !== '') statsParams.push(status);
+        if (startDate && endDate) statsParams.push(startDate, endDate);
+
+        const [statsResult] = await pool.execute(statsQuery, statsParams);
+        const stats = statsResult[0];
 
         // Map the results to match expected frontend structure
         const mappedRows = rows.map(row => ({
@@ -121,6 +181,11 @@ class Salary {
 
         return {
             salaries: mappedRows,
+            stats: {
+                total_payroll: Number(stats.total_payroll) || 0,
+                total_paid: Number(stats.total_paid) || 0,
+                total_pending: Number(stats.total_pending) || 0
+            },
             pagination: {
                 page: Number(page),
                 limit: Number(limit),

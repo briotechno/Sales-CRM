@@ -56,14 +56,17 @@ const createSalary = async (req, res) => {
 };
 
 const getSalaries = async (req, res) => {
-    console.log(req)
     try {
-        const { page, limit, search, department } = req.query;
+        const { page, limit, search, department, designation, status, startDate, endDate } = req.query;
         const data = await Salary.findAll(req.user.id, {
             page,
             limit,
             search,
-            department
+            department,
+            designation,
+            status,
+            startDate,
+            endDate
         });
         res.json(data);
     } catch (error) {
