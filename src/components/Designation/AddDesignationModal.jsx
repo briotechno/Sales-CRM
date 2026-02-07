@@ -22,6 +22,11 @@ const AddDesignationModal = ({ isOpen, onClose, refetchDashboard }) => {
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      if (file.size > 1024 * 1024) {
+        toast.error("Image size must be less than 1MB");
+        e.target.value = ""; // Clear the file input
+        return;
+      }
       setDesignationImage(file);
       setImagePreview(URL.createObjectURL(file));
     }
@@ -189,10 +194,16 @@ const AddDesignationModal = ({ isOpen, onClose, refetchDashboard }) => {
             </label>
             <input
               value={designationName}
-              onChange={(e) => setDesignationName(e.target.value)}
+              onChange={(e) => setDesignationName(e.target.value.slice(0, 100))}
+              maxLength={100}
               placeholder="e.g., Software Engineer, Manager, Executive..."
               className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300"
             />
+            <div className="flex justify-end mt-1">
+              <span className="text-[10px] text-gray-400 font-medium">
+                {designationName.length}/100
+              </span>
+            </div>
           </div>
 
           {/* Designation Image */}
@@ -232,11 +243,17 @@ const AddDesignationModal = ({ isOpen, onClose, refetchDashboard }) => {
             </label>
             <textarea
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={(e) => setDescription(e.target.value.slice(0, 500))}
+              maxLength={500}
               placeholder="Describe the role's responsibilities and requirements..."
               rows="4"
               className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 resize-none"
             />
+            <div className="flex justify-end mt-1">
+              <span className="text-[10px] text-gray-400 font-medium">
+                {description.length}/500
+              </span>
+            </div>
           </div>
         </div>
       </div>

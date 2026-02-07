@@ -48,6 +48,11 @@ const EditDesignationModal = ({ isOpen, onClose, designation, refetchDashboard }
     const handleImageChange = (e) => {
         const file = e.target.files[0];
         if (file) {
+            if (file.size > 1024 * 1024) {
+                toast.error("Image size must be less than 1MB");
+                e.target.value = ""; // Clear the file input
+                return;
+            }
             setDesignationImage(file);
             setImagePreview(URL.createObjectURL(file));
         }
@@ -205,9 +210,15 @@ const EditDesignationModal = ({ isOpen, onClose, designation, refetchDashboard }
                         <input
                             type="text"
                             value={designationName}
-                            onChange={(e) => setDesignationName(e.target.value)}
+                            onChange={(e) => setDesignationName(e.target.value.slice(0, 100))}
+                            maxLength={100}
                             className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#FF7B1D] outline-none text-sm"
                         />
+                        <div className="flex justify-end mt-1">
+                            <span className="text-[10px] text-gray-400 font-medium">
+                                {designationName.length}/100
+                            </span>
+                        </div>
                     </div>
 
                     {/* Status */}
@@ -262,10 +273,16 @@ const EditDesignationModal = ({ isOpen, onClose, designation, refetchDashboard }
                         </label>
                         <textarea
                             value={description}
-                            onChange={(e) => setDescription(e.target.value)}
+                            onChange={(e) => setDescription(e.target.value.slice(0, 500))}
+                            maxLength={500}
                             rows="4"
                             className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#FF7B1D] outline-none text-sm bg-white"
                         />
+                        <div className="flex justify-end mt-1">
+                            <span className="text-[10px] text-gray-400 font-medium">
+                                {description.length}/500
+                            </span>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { FiHome } from "react-icons/fi";
-import { Edit, Trash2, Eye, Grid, FileDown, Plus, Target, Handshake, Warehouse, Users, Search, Filter, X, LayoutGrid, List } from "lucide-react";
+import { Edit, Trash2, Eye, Plus, Warehouse, Users, Filter, X, LayoutGrid, List, Target, Handshake } from "lucide-react";
 import DashboardLayout from "../../components/DashboardLayout";
 import AddDepartmentModal from "../../components/Department/AddDepartmentModal";
 import EditDepartmentModal from "../../components/Department/EditDepartmentModal";
@@ -39,7 +39,7 @@ const AllDepartment = () => {
 
   const { create, read, update, delete: remove } = usePermission("Department");
 
-  const { data, isLoading, isError } = useGetDepartmentsQuery({
+  const { data, isLoading } = useGetDepartmentsQuery({
     page: currentPage,
     limit: itemsPerPage,
     status: statusFilter,
@@ -49,6 +49,7 @@ const AllDepartment = () => {
   const summary = dashboardData?.data?.summary;
 
   const departments = data?.departments || [];
+  const totalItems = data?.pagination?.total || 0;
   const totalPages = data?.pagination?.totalPages || 1;
 
   // Open filter modal - sync temp states with applied states
@@ -83,7 +84,19 @@ const AllDepartment = () => {
     setTempCustomEnd("");
   };
 
-  const hasActiveFilters = statusFilter !== "All" || dateFilter !== "All";
+  const handleClearAll = () => {
+    setStatusFilter("All");
+    setDateFilter("All");
+    setCustomStart("");
+    setCustomEnd("");
+    setTempStatusFilter("All");
+    setTempDateFilter("All");
+    setTempCustomStart("");
+    setTempCustomEnd("");
+    setCurrentPage(1);
+  };
+
+  const hasActiveFilters = statusFilter !== "All" || dateFilter !== "All" || customStart || customEnd;
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -102,12 +115,7 @@ const AllDepartment = () => {
     setCurrentPage((prev) => (prev < totalPages ? prev + 1 : prev));
 
   const indexOfFirstItem = (currentPage - 1) * itemsPerPage;
-  const indexOfLastItem = Math.min(currentPage * itemsPerPage, data?.pagination?.total || 0);
-
-  const getStatusClass = (status) =>
-    status === "Active"
-      ? "bg-green-50 text-green-700 border-green-200"
-      : "bg-red-50 text-red-700 border-red-200";
+  const indexOfLastItem = Math.min(currentPage * itemsPerPage, totalItems);
 
   return (
     <DashboardLayout>
@@ -115,12 +123,12 @@ const AllDepartment = () => {
         {/* Header Section */}
         <div className="bg-white sticky top-0 z-30">
           <div className="max-w-8xl mx-auto px-4 py-4 border-b">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
-                <h1 className="text-2xl font-bold text-gray-800 transition-all duration-300">Department</h1>
-                <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
+                <h1 className="text-2xl font-bold text-gray-800 tracking-tight">Department</h1>
+                <p className="text-sm text-gray-500 mt-1 flex items-center gap-2 font-primary">
                   <FiHome className="text-gray-700" size={14} />
-                  <span className="text-gray-400"></span> HRM /{" "}
+                  <span className="text-gray-400">/</span> HRM <span className="text-gray-400">/</span>
                   <span className="text-[#FF7B1D] font-medium">All Department</span>
                 </p>
               </div>
@@ -131,129 +139,118 @@ const AllDepartment = () => {
                   <button
                     onClick={() => {
                       if (hasActiveFilters) {
-                        setStatusFilter("All");
-                        setDateFilter("All");
-                        setCustomStart("");
-                        setCustomEnd("");
-                        setCurrentPage(1);
+                        handleClearAll();
                       } else {
-                        openFilterModal();
+                        setIsFilterOpen(!isFilterOpen);
+                        if (!isFilterOpen) openFilterModal();
                       }
                     }}
                     className={`px-3 py-3 rounded-sm border transition shadow-sm ${isFilterOpen || hasActiveFilters
-                      ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
+                      ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D] shadow-orange-200"
                       : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
                       }`}
                   >
-                    {hasActiveFilters ? <X size={18} /> : <Filter size={18} />}
+                    {hasActiveFilters ? <X size={18} strokeWidth={3} /> : <Filter size={18} strokeWidth={2.5} />}
                   </button>
 
                   {isFilterOpen && (
-                    <div className="absolute right-0 mt-2 w-[480px] bg-white border border-gray-200 rounded-lg shadow-2xl z-50 overflow-hidden">
-                      {/* Header */}
-                      <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-                        <h3 className="text-base font-bold text-gray-800">Filter Options</h3>
+                    <div className="absolute right-0 mt-2 w-[550px] bg-white border border-gray-200 rounded-sm shadow-2xl z-50 animate-fadeIn overflow-hidden">
+                      {/* Filter Header */}
+                      <div className="p-4 bg-gray-50 border-b flex justify-between items-center px-6">
+                        <span className="text-xs font-black text-gray-800 uppercase tracking-widest">Filter Options</span>
                         <button
                           onClick={clearAllFilters}
-                          className="text-sm font-semibold text-orange-500 hover:text-orange-600 transition-colors"
+                          className="text-[10px] font-black text-orange-600 hover:underline hover:text-orange-700 uppercase tracking-widest"
                         >
                           Reset All
                         </button>
                       </div>
 
-                      {/* Body - Two Column Layout */}
-                      <div className="grid grid-cols-2 gap-8 p-5">
-                        {/* Status Column */}
-                        <div>
-                          <label className="text-sm font-medium text-gray-500 mb-4 block">Status</label>
-                          <div className="space-y-3">
-                            {["All", "Inactive", "Active"].map((status) => (
-                              <label key={status} className="flex items-center gap-3 cursor-pointer group">
-                                <input
-                                  type="radio"
-                                  name="status"
-                                  checked={tempStatusFilter === status}
-                                  onChange={() => setTempStatusFilter(status)}
-                                  className="w-4 h-4 text-orange-500 border-gray-300 focus:ring-orange-500 accent-orange-500"
-                                />
-                                <span className={`text-sm ${tempStatusFilter === status ? "text-orange-500 font-semibold" : "text-gray-700 group-hover:text-gray-900"}`}>
-                                  {status}
-                                </span>
-                              </label>
-                            ))}
-                            {/* Custom Date Range in Status column */}
-                            <label className="flex items-center gap-3 cursor-pointer group">
-                              <input
-                                type="radio"
-                                name="dateFilter"
-                                checked={tempDateFilter === "Custom"}
-                                onChange={() => setTempDateFilter("Custom")}
-                                className="w-4 h-4 text-orange-500 border-gray-300 focus:ring-orange-500 accent-orange-500"
-                              />
-                              <span className={`text-sm ${tempDateFilter === "Custom" ? "text-orange-500 font-semibold" : "text-gray-700 group-hover:text-gray-900"}`}>
-                                Custom Date Range
-                              </span>
-                            </label>
+                      <div className="p-6 space-y-8">
+                        <div className="grid grid-cols-2 gap-x-12">
+                          {/* Status */}
+                          <div className="space-y-4">
+                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-3 border-b pb-1">Filter by Status</span>
+                            <div className="flex flex-col gap-3">
+                              {["All", "Active", "Inactive"].map((status) => (
+                                <label key={status} className="flex items-center gap-3 cursor-pointer group w-fit">
+                                  <div className="relative flex items-center">
+                                    <input
+                                      type="radio"
+                                      name="status"
+                                      checked={tempStatusFilter === status}
+                                      onChange={() => setTempStatusFilter(status)}
+                                      className="peer appearance-none w-4 h-4 border-2 border-gray-300 rounded-full checked:border-orange-500 checked:border-[5px] transition-all cursor-pointer"
+                                    />
+                                  </div>
+                                  <span className={`text-sm font-bold transition-colors ${tempStatusFilter === status ? "text-orange-600" : "text-gray-600 group-hover:text-gray-900"}`}>
+                                    {status}
+                                  </span>
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Date Period */}
+                          <div className="space-y-4">
+                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-3 border-b pb-1">Creation Date</span>
+                            <div className="flex flex-col gap-3">
+                              {["All", "Today", "Yesterday", "Last 7 Days", "Custom"].map((period) => (
+                                <label key={period} className="flex items-center gap-3 cursor-pointer group w-fit">
+                                  <div className="relative flex items-center">
+                                    <input
+                                      type="radio"
+                                      name="datePeriod"
+                                      checked={tempDateFilter === period}
+                                      onChange={() => setTempDateFilter(period)}
+                                      className="peer appearance-none w-4 h-4 border-2 border-gray-300 rounded-full checked:border-orange-500 checked:border-[5px] transition-all cursor-pointer"
+                                    />
+                                  </div>
+                                  <span className={`text-sm font-bold transition-colors ${tempDateFilter === period ? "text-orange-600" : "text-gray-600 group-hover:text-gray-900"}`}>
+                                    {period === "Custom" ? "Custom Range" : period}
+                                  </span>
+                                </label>
+                              ))}
+                            </div>
                           </div>
                         </div>
 
-                        {/* Date Period Column */}
-                        <div>
-                          <label className="text-sm font-medium text-gray-500 mb-4 block">Date Period</label>
-                          <div className="space-y-3">
-                            {["All", "Today", "Yesterday", "Last 7 Days"].map((option) => (
-                              <label key={option} className="flex items-center gap-3 cursor-pointer group">
-                                <input
-                                  type="radio"
-                                  name="dateFilter"
-                                  checked={tempDateFilter === option}
-                                  onChange={() => setTempDateFilter(option)}
-                                  className="w-4 h-4 text-orange-500 border-gray-300 focus:ring-orange-500 accent-orange-500"
-                                />
-                                <span className={`text-sm ${tempDateFilter === option ? "text-orange-500 font-semibold" : "text-gray-700 group-hover:text-gray-900"}`}>
-                                  {option}
-                                </span>
-                              </label>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* Custom Date Range Inputs - Only show when Custom is selected */}
+                        {/* Custom Date Range Picker */}
                         {tempDateFilter === "Custom" && (
-                          <div className="col-span-2 grid grid-cols-2 gap-3">
-                            <div>
-                              <label className="text-xs text-gray-500 mb-1 block">Start Date</label>
+                          <div className="grid grid-cols-2 gap-4 bg-gray-50 p-4 rounded-sm border border-gray-200 animate-slideDown">
+                            <div className="space-y-1.5">
+                              <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest pl-1">Start Date</label>
                               <input
                                 type="date"
                                 value={tempCustomStart}
                                 onChange={(e) => setTempCustomStart(e.target.value)}
-                                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none"
+                                className="w-full px-4 py-2 text-xs font-bold border border-gray-200 rounded-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-200 outline-none hover:border-gray-300 transition-all bg-white"
                               />
                             </div>
-                            <div>
-                              <label className="text-xs text-gray-500 mb-1 block">End Date</label>
+                            <div className="space-y-1.5">
+                              <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest pl-1">End Date</label>
                               <input
                                 type="date"
                                 value={tempCustomEnd}
                                 onChange={(e) => setTempCustomEnd(e.target.value)}
-                                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none"
+                                className="w-full px-4 py-2 text-xs font-bold border border-gray-200 rounded-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-200 outline-none hover:border-gray-300 transition-all bg-white"
                               />
                             </div>
                           </div>
                         )}
                       </div>
 
-                      {/* Footer */}
-                      <div className="flex items-center gap-3 px-5 py-4 border-t border-gray-100 bg-gray-50">
+                      {/* Filter Footer */}
+                      <div className="p-4 bg-gray-50 border-t flex gap-3 px-6">
                         <button
                           onClick={cancelFilters}
-                          className="flex-1 px-4 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                          className="flex-1 py-3 text-[11px] font-black text-gray-500 uppercase tracking-widest hover:bg-gray-200 transition-all rounded-sm border border-gray-200 bg-white shadow-sm"
                         >
                           Cancel
                         </button>
                         <button
                           onClick={applyFilters}
-                          className="flex-1 px-4 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-orange-500 to-orange-600 rounded-md hover:from-orange-600 hover:to-orange-700 transition-all shadow-md"
+                          className="flex-1 py-3 text-[11px] font-black text-white uppercase tracking-widest bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 transition-all rounded-sm shadow-md active:scale-95"
                         >
                           Apply Filters
                         </button>
@@ -286,12 +283,12 @@ const AllDepartment = () => {
                 <button
                   onClick={() => setIsAddModalOpen(true)}
                   disabled={!create}
-                  className={`flex items-center gap-2 px-6 py-3 rounded-sm font-semibold transition shadow-lg hover:shadow-xl ${create
-                    ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
-                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  className={`flex items-center gap-2 px-6 py-3 rounded-sm font-semibold transition-all shadow-lg active:scale-95 ${create
+                    ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 hover:shadow-orange-200"
+                    : "bg-gray-300 text-gray-500 cursor-not-allowed shadow-none"
                     }`}
                 >
-                  <Plus size={20} />
+                  <Plus size={18} />
                   Add Department
                 </button>
               </div>
@@ -299,240 +296,330 @@ const AllDepartment = () => {
           </div>
         </div>
 
-        <div className="max-w-8xl mx-auto p-4 pt-0 mt-2">
+        <div className="max-w-8xl mx-auto p-4 pt-0 mt-6">
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
             <NumberCard
               title="Total Employees"
-              number={summary?.totalEmployees?.value || "-"}
-              icon={<Users className="text-blue-600" size={24} />}
-              iconBgColor="bg-blue-100"
+              number={summary?.totalEmployees?.value || "0"}
+              icon={<Users className="text-blue-600" size={24} strokeWidth={2.5} />}
+              iconBgColor="bg-blue-50"
               lineBorderClass="border-blue-500"
             />
             <NumberCard
               title="Departments"
-              number={summary?.totalDepartments?.value || "-"}
-              icon={<Warehouse className="text-green-600" size={24} />}
-              iconBgColor="bg-green-100"
+              number={summary?.totalDepartments?.value || "0"}
+              icon={<Warehouse className="text-green-600" size={24} strokeWidth={2.5} />}
+              iconBgColor="bg-green-50"
               lineBorderClass="border-green-500"
             />
             <NumberCard
               title="Designations"
-              number={summary?.totalDesignations?.value || "-"}
-              icon={<Handshake className="text-orange-600" size={24} />}
-              iconBgColor="bg-orange-100"
+              number={summary?.totalDesignations?.value || "0"}
+              icon={<Handshake className="text-orange-600" size={24} strokeWidth={2.5} />}
+              iconBgColor="bg-orange-50"
               lineBorderClass="border-orange-500"
             />
             <NumberCard
               title="Total Status"
               number={"2"}
-              icon={<Target className="text-purple-600" size={24} />}
-              iconBgColor="bg-purple-100"
+              icon={<Target className="text-purple-600" size={24} strokeWidth={2.5} />}
+              iconBgColor="bg-purple-50"
               lineBorderClass="border-purple-500"
             />
           </div>
 
           {viewMode === "list" ? (
-            <div className="overflow-x-auto border border-gray-200 rounded-sm shadow-sm mt-4">
-              <table className="w-full border-collapse text-left">
-                <thead>
-                  <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm">
-                    <th className="py-3 px-4 font-semibold text-left border-b border-orange-400">S.N</th>
-                    <th className="py-3 px-4 font-semibold text-center border-b border-orange-400">Icon</th>
-                    <th className="py-3 px-4 font-semibold text-left border-b border-orange-400">Dept ID</th>
-                    <th className="py-3 px-4 font-semibold text-left border-b border-orange-400">Department Name</th>
-                    <th className="py-3 px-4 font-semibold text-left border-b border-orange-400">Description</th>
-                    <th className="py-3 px-4 font-semibold text-center border-b border-orange-400">Employees</th>
-                    <th className="py-3 px-4 font-semibold text-center border-b border-orange-400">Status</th>
-                    <th className="py-3 px-4 font-semibold text-right border-b border-orange-400">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="text-sm">
-                  {isLoading ? (
-                    <tr>
-                      <td colSpan="8" className="py-20 text-center">
-                        <div className="flex justify-center flex-col items-center gap-4">
-                          <div className="w-12 h-12 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin"></div>
-                          <p className="text-gray-500 font-semibold">Loading departments...</p>
-                        </div>
-                      </td>
+            <div className="bg-white border border-gray-200 rounded-sm shadow-sm overflow-hidden font-primary">
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm">
+                      <th className="py-3 px-4 font-semibold text-left w-12">S.N</th>
+                      <th className="py-3 px-4 font-semibold text-center w-24">Icon</th>
+                      <th className="py-3 px-4 font-semibold text-left w-32">Dept ID</th>
+                      <th className="py-3 px-4 font-semibold text-left">Department Name</th>
+                      <th className="py-3 px-4 font-semibold text-left">Description</th>
+                      <th className="py-3 px-4 font-semibold text-center w-32">Employees</th>
+                      <th className="py-3 px-4 font-semibold text-center w-32">Status</th>
+                      <th className="py-3 px-4 font-semibold text-right w-24">Action</th>
                     </tr>
-                  ) : departments.length > 0 ? (
-                    departments.map((dept, index) => (
-                      <tr key={dept.id} className="border-t hover:bg-gray-50 transition-colors">
-                        <td className="py-3 px-4 text-gray-700">{indexOfFirstItem + index + 1}</td>
-                        <td className="py-3 px-4">
-                          <div className="flex justify-center">
-                            {dept.icon ? (
-                              <img
-                                src={`${import.meta.env.VITE_API_BASE_URL.replace('/api/', '')}${dept.icon}`}
-                                alt={dept.department_name}
-                                className="w-10 h-10 rounded-full border border-orange-200 object-cover shadow-sm"
-                              />
-                            ) : (
-                              <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-bold border border-orange-200 shadow-sm">
-                                {dept.department_name?.substring(0, 1)}
-                              </div>
-                            )}
-                          </div>
-                        </td>
-                        <td className="py-3 px-4 text-orange-600 font-bold">{dept.department_id}</td>
-                        <td className="py-3 px-4 text-gray-800 font-semibold">{dept.department_name}</td>
-                        <td className="py-3 px-4 text-gray-600">
-                          <div className="cursor-pointer" title={dept.description}>
-                            {dept.description && dept.description.length > 60
-                              ? dept.description.substring(0, 60) + "..."
-                              : dept.description || "---"}
-                          </div>
-                        </td>
-                        <td className="py-3 px-4 text-center font-bold text-gray-700">{dept.employee_count || 0}</td>
-                        <td className="py-3 px-4 text-center">
-                          <span className={`px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-sm border ${getStatusClass(dept.status)}`}>
-                            {dept.status}
-                          </span>
-                        </td>
-                        <td className="py-3 px-4 text-right">
-                          <div className="flex justify-end gap-2">
-                            <button
-                              onClick={() => { setSelectedDept(dept); setIsViewModalOpen(true); }}
-                              className="p-1 hover:bg-orange-100 rounded-sm text-blue-500 hover:text-blue-700 transition-all"
-                              title="View"
-                            >
-                              <Eye size={18} />
-                            </button>
-                            <button
-                              onClick={() => { setSelectedDept(dept); setIsEditModalOpen(true); }}
-                              disabled={!update}
-                              className={`p-1 hover:bg-orange-100 rounded-sm transition-all ${update ? "text-green-500 hover:text-green-700" : "text-gray-300 cursor-not-allowed"
-                                }`}
-                              title="Edit"
-                            >
-                              <Edit size={18} />
-                            </button>
-                            <button
-                              onClick={() => { setSelectedDept(dept); setIsDeleteModalOpen(true); }}
-                              disabled={!remove}
-                              className={`p-1 hover:bg-orange-100 rounded-sm transition-all ${remove ? "text-red-500 hover:text-red-700" : "text-gray-300 cursor-not-allowed"
-                                }`}
-                              title="Delete"
-                            >
-                              <Trash2 size={18} />
-                            </button>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {isLoading ? (
+                      <tr>
+                        <td colSpan="8" className="py-32 text-center bg-white italic">
+                          <div className="flex flex-col items-center justify-center gap-4">
+                            <div className="w-12 h-12 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin"></div>
+                            <p className="text-gray-500 font-bold animate-pulse tracking-wide">Fetching departments...</p>
                           </div>
                         </td>
                       </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="8" className="py-20 text-center flex flex-col items-center gap-3">
-                        <Warehouse size={48} className="text-gray-200" />
-                        <p className="text-gray-500 font-medium">No departments found.</p>
-                        <button
-                          onClick={() => setIsAddModalOpen(true)}
-                          className="px-6 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold rounded-sm shadow-lg hover:shadow-orange-200 transition-all active:scale-95"
-                        >
-                          Create first Department
-                        </button>
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+                    ) : departments.length > 0 ? (
+                      departments.map((dept, index) => (
+                        <tr key={dept.id} className={`${index % 2 === 0 ? "bg-white" : "bg-gray-50/30"} hover:bg-orange-50/50 transition-colors group`}>
+                          <td className="py-4 px-4 text-gray-500 font-semibold text-xs">{indexOfFirstItem + index + 1}</td>
+                          <td className="py-4 px-4">
+                            <div className="flex justify-center">
+                              {dept.icon ? (
+                                <img
+                                  src={`${import.meta.env.VITE_API_BASE_URL.replace('/api/', '')}${dept.icon}`}
+                                  alt={dept.department_name}
+                                  className="w-10 h-10 rounded-full border border-orange-100 object-cover shadow-sm group-hover:scale-110 transition-transform duration-300"
+                                />
+                              ) : (
+                                <div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center text-orange-500 font-bold border border-orange-100 shadow-sm group-hover:scale-110 transition-transform duration-300">
+                                  {dept.department_name?.substring(0, 1).toUpperCase()}
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                          <td className="py-4 px-4 text-orange-600 font-semibold text-sm tracking-tight">{dept.department_id}</td>
+                          <td className="py-4 px-4 text-gray-900 font-semibold text-base tracking-tight">{dept.department_name}</td>
+                          <td className="py-4 px-4 text-gray-600 max-w-xs">
+                            <div className="text-sm line-clamp-1 text-gray-500 font-medium group-hover:text-gray-700 transition-colors" title={dept.description}>
+                              {dept.description || "No description provided."}
+                            </div>
+                          </td>
+                          <td className="py-4 px-4 text-center">
+                            <div className="flex justify-center">
+                              <span className="w-8 h-8 flex items-center justify-center bg-gray-50 text-gray-700 rounded-full text-[11px] font-bold border border-gray-100 group-hover:bg-white group-hover:border-orange-200 transition-all shadow-sm">
+                                {dept.employee_count || 0}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="py-4 px-4 text-center">
+                            <div className="flex justify-center">
+                              <span className={`px-3.5 py-1.5 rounded-sm text-xs font-bold capitalize tracking-wide border flex items-center gap-2 w-fit shadow-sm
+                                ${dept.status === 'Active' ? 'bg-green-50 text-green-700 border-green-100' : 'bg-red-50 text-red-700 border-red-100'}
+                              `}>
+                                <div className={`w-2 h-2 rounded-full ${dept.status === 'Active' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]' : 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.4)]'}`}></div>
+                                {dept.status}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="py-4 px-4 text-right">
+                            <div className="flex justify-end gap-3 pr-2">
+                              <button
+                                onClick={() => { setSelectedDept(dept); setIsViewModalOpen(true); }}
+                                className="text-blue-500 hover:scale-110 transition-transform active:scale-90"
+                                title="View Details"
+                              >
+                                <Eye size={18} strokeWidth={2} />
+                              </button>
+                              {update && (
+                                <button
+                                  onClick={() => { setSelectedDept(dept); setIsEditModalOpen(true); }}
+                                  className="text-[#22C55E] hover:scale-110 transition-transform active:scale-90"
+                                  title="Edit Department"
+                                >
+                                  <Edit size={18} strokeWidth={2} />
+                                </button>
+                              )}
+                              {remove && (
+                                <button
+                                  onClick={() => { setSelectedDept(dept); setIsDeleteModalOpen(true); }}
+                                  className="text-red-500 hover:scale-110 transition-transform active:scale-90"
+                                  title="Delete Department"
+                                >
+                                  <Trash2 size={18} strokeWidth={2} />
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="8">
+                          <div className="text-center py-32 bg-white rounded-sm border-2 border-dashed border-gray-100 transition-all duration-500 hover:border-orange-200/50 group m-8">
+                            <div className="bg-gray-50 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-8 shadow-inner ring-8 ring-gray-50/50 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
+                              <Warehouse className="w-12 h-12 text-gray-300" strokeWidth={1} />
+                            </div>
+                            <h3 className="text-2xl font-black text-gray-800 mb-3 tracking-tighter uppercase font-primary">
+                              {hasActiveFilters ? "No matches found" : "No Departments found"}
+                            </h3>
+                            <p className="text-gray-400 max-w-sm mx-auto text-sm leading-relaxed mb-10 px-6 font-primary italic">
+                              {hasActiveFilters
+                                ? "We couldn't find any departments matching your current filter criteria. Try expanding your search or clearing filters!"
+                                : "Your department structure is empty. Start by creating your first business unit!"}
+                            </p>
+                            <div className="flex justify-center flex-wrap gap-4 px-6">
+                              {hasActiveFilters ? (
+                                <button
+                                  onClick={handleClearAll}
+                                  className="px-10 py-4 border-2 border-orange-500 text-orange-600 font-black rounded-sm hover:bg-orange-50 transition-all text-[11px] uppercase tracking-widest active:scale-95 shadow-md flex items-center gap-2"
+                                >
+                                  <X size={16} strokeWidth={3} />
+                                  Clear All Filters
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => setIsAddModalOpen(true)}
+                                  disabled={!create}
+                                  className={`flex items-center gap-3 px-10 py-4 rounded-sm font-black transition-all shadow-xl active:scale-95 text-[11px] uppercase tracking-widest ${create
+                                    ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 hover:shadow-orange-200"
+                                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                                    }`}
+                                >
+                                  <Plus size={18} strokeWidth={4} />
+                                  Create First Department
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           ) : (
-            <GenericGridView
-              data={departments}
-              renderItem={(dept) => (
-                <div key={dept.id} className="bg-white border border-gray-200 rounded-sm shadow-sm hover:shadow-md transition-all relative group flex flex-col h-full overflow-hidden">
-                  <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                    <button
-                      onClick={() => { setSelectedDept(dept); setIsViewModalOpen(true); }}
-                      className="p-1.5 text-blue-500 hover:bg-blue-50 rounded-sm bg-white shadow-sm border border-blue-100"
-                      title="View"
-                    >
-                      <Eye size={16} />
-                    </button>
-                    {update && (
-                      <button
-                        onClick={() => { setSelectedDept(dept); setIsEditModalOpen(true); }}
-                        className="p-1.5 text-green-500 hover:bg-green-50 rounded-sm bg-white shadow-sm border border-green-100"
-                        title="Edit"
-                      >
-                        <Edit size={16} />
-                      </button>
-                    )}
-                    {remove && (
-                      <button
-                        onClick={() => { setSelectedDept(dept); setIsDeleteModalOpen(true); }}
-                        className="p-1.5 text-red-500 hover:bg-red-50 rounded-sm bg-white shadow-sm border border-red-100"
-                        title="Delete"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    )}
-                  </div>
+            <div className="font-primary">
+              {isLoading ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 animate-pulse mt-4">
+                  {[...Array(8)].map((_, i) => (
+                    <div key={i} className="h-[320px] bg-gray-50 rounded-sm border border-gray-100 border-dashed"></div>
+                  ))}
+                </div>
+              ) : departments.length > 0 ? (
+                <GenericGridView
+                  data={departments}
+                  renderItem={(dept) => (
+                    <div key={dept.id} className="bg-white border-2 border-gray-100 rounded-sm shadow-sm hover:shadow-md transition-all p-6 relative group flex flex-col h-full">
+                      {/* Absolute Actions */}
+                      <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 z-10">
+                        <button
+                          onClick={() => { setSelectedDept(dept); setIsViewModalOpen(true); }}
+                          className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-sm bg-white shadow-sm border border-blue-100"
+                          title="View"
+                        >
+                          <Eye size={16} />
+                        </button>
+                        {update && (
+                          <button
+                            onClick={() => { setSelectedDept(dept); setIsEditModalOpen(true); }}
+                            className="p-1.5 text-green-600 hover:bg-green-50 rounded-sm bg-white shadow-sm border border-green-100"
+                            title="Edit"
+                          >
+                            <Edit size={16} />
+                          </button>
+                        )}
+                        {remove && (
+                          <button
+                            onClick={() => { setSelectedDept(dept); setIsDeleteModalOpen(true); }}
+                            className="p-1.5 text-red-600 hover:bg-red-50 rounded-sm bg-white shadow-sm border border-red-100"
+                            title="Delete"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        )}
+                      </div>
 
-                  <div className="p-6 pb-4 flex-1 flex flex-col items-center mt-2">
-                    <div className="w-20 h-20 rounded-full border-4 border-orange-50 flex items-center justify-center overflow-hidden bg-orange-100 flex-shrink-0 shadow-inner shadow-orange-200/50">
-                      {dept.icon ? (
-                        <img
-                          src={`${import.meta.env.VITE_API_BASE_URL.replace('/api/', '')}${dept.icon}`}
-                          alt={dept.department_name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-orange-600 font-bold text-3xl">
-                          {dept.department_name?.substring(0, 1)}
+                      {/* Icon Section */}
+                      <div className="flex flex-col items-center mb-6 transition-transform group-hover:scale-105 duration-300 mt-2">
+                        <div className="w-20 h-20 rounded-full flex items-center justify-center border-4 border-white shadow-sm group-hover:shadow-md transition-all overflow-hidden bg-orange-50">
+                          {dept.icon ? (
+                            <img
+                              src={`${import.meta.env.VITE_API_BASE_URL.replace('/api/', '')}${dept.icon}`}
+                              alt={dept.department_name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-orange-500 font-bold text-3xl">
+                              {dept.department_name?.substring(0, 1).toUpperCase()}
+                            </div>
+                          )}
                         </div>
-                      )}
+                        <div className="mt-4 text-center w-full px-2">
+                          <h3 className="text-base font-bold text-gray-900 tracking-tight line-clamp-1 break-words" title={dept.department_name}>
+                            {dept.department_name}
+                          </h3>
+                          <div className="flex justify-center mt-2">
+                            <span className="px-3 py-0.5 bg-orange-50 text-orange-600 rounded-full text-[10px] font-bold border border-orange-100 uppercase tracking-widest">
+                              {dept.department_id}
+                            </span>
+                          </div>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-4 line-clamp-2 min-h-[32px] px-4 text-center leading-relaxed break-words w-full overflow-hidden">
+                          {dept.description || "No specific mission or description defined for this unit yet."}
+                        </p>
+                      </div>
+
+                      {/* Footer Section */}
+                      <div className="mt-auto bg-gray-50 -mx-6 -mb-6 px-6 py-4 rounded-b-sm border-t border-gray-200">
+                        <div className="flex justify-between items-center mb-4">
+                          <div className="flex flex-col items-center flex-1 border-r border-gray-200">
+                            <p className="text-[10px] text-orange-600 font-bold uppercase tracking-wider">Total Staff</p>
+                            <p className="text-sm font-bold text-gray-800 mt-0.5">{dept.employee_count || 0}</p>
+                          </div>
+                          <div className="flex flex-col items-center flex-1">
+                            <p className="text-[10px] text-orange-600 font-bold uppercase tracking-wider">Positions</p>
+                            <p className="text-sm font-bold text-gray-800 mt-0.5">{dept.designation_count || 0}</p>
+                          </div>
+                        </div>
+
+                        <div className="flex justify-center pt-1">
+                          <span
+                            className={`px-4 py-1 text-[10px] font-bold rounded-full uppercase tracking-widest border shadow-sm transition-all ${dept.status === "Active"
+                              ? "bg-green-50 text-[#22C55E] border-green-100"
+                              : "bg-red-50 text-red-600 border-red-100"
+                              }`}
+                          >
+                            {dept.status}
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                    <div className="mt-4 text-center">
-                      <h3 className="font-bold text-gray-800 text-lg leading-tight line-clamp-1" title={dept.department_name}>
-                        {dept.department_name}
-                      </h3>
-                      <p className="text-orange-500 text-[10px] font-black mt-1 tracking-widest uppercase bg-orange-50 px-2 py-0.5 rounded-full inline-block border border-orange-100">
-                        {dept.department_id}
-                      </p>
-                    </div>
-                    
-                    <p className="text-sm text-gray-500 mt-4 line-clamp-2 min-h-[40px] px-2 text-center italic">
-                      {dept.description || "No description provided for this department."}
-                    </p>
+                  )}
+                />
+              ) : (
+                <div className="text-center py-32 bg-white rounded-sm border-2 border-dashed border-gray-100 mt-6 transition-all duration-500 hover:border-orange-200/50 group">
+                  <div className="bg-gray-50 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-8 shadow-inner ring-8 ring-gray-50/50 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
+                    <Warehouse className="w-12 h-12 text-gray-300" strokeWidth={1} />
                   </div>
-
-                  <div className="bg-gray-50 p-5 space-y-4 border-t border-gray-100 mt-auto">
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="text-center p-2 bg-white rounded-lg border border-gray-200 shadow-sm">
-                        <p className="text-[9px] text-gray-400 font-black uppercase tracking-tighter">Employees</p>
-                        <p className="text-lg font-black text-gray-800">{dept.employee_count || 0}</p>
-                      </div>
-                      <div className="text-center p-2 bg-white rounded-lg border border-gray-200 shadow-sm">
-                        <p className="text-[9px] text-gray-400 font-black uppercase tracking-tighter">Designations</p>
-                        <p className="text-lg font-black text-gray-800">{dept.designation_count || 0}</p>
-                      </div>
-                    </div>
-
-                    <div className="flex justify-center pt-1">
-                      <span
-                        className={`px-4 py-1 text-[10px] font-black rounded-full uppercase tracking-widest border shadow-sm ${dept.status === "Active"
-                          ? "bg-green-50 text-green-700 border-green-200"
-                          : "bg-red-50 text-red-700 border-red-200"
+                  <h3 className="text-2xl font-black text-gray-800 mb-3 tracking-tighter uppercase font-primary">
+                    {hasActiveFilters ? "No matches found" : "No Departments found"}
+                  </h3>
+                  <p className="text-gray-400 max-w-sm mx-auto text-sm leading-relaxed mb-10 px-6 font-primary italic">
+                    {hasActiveFilters
+                      ? "We couldn't find any departments matching your current filter criteria. Try expanding your search or clearing filters!"
+                      : "Your department structure is empty. Start by creating your first business unit!"}
+                  </p>
+                  <div className="flex justify-center flex-wrap gap-4 px-6 font-primary">
+                    {hasActiveFilters ? (
+                      <button
+                        onClick={handleClearAll}
+                        className="px-10 py-4 border-2 border-orange-500 text-orange-600 font-black rounded-sm hover:bg-orange-50 transition-all text-[11px] uppercase tracking-widest active:scale-95 shadow-md flex items-center gap-2"
+                      >
+                        <X size={16} strokeWidth={3} />
+                        Clear All Filters
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => setIsAddModalOpen(true)}
+                        disabled={!create}
+                        className={`flex items-center gap-3 px-10 py-4 rounded-sm font-black transition-all shadow-xl active:scale-95 text-[11px] uppercase tracking-widest ${create
+                          ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 hover:shadow-orange-200"
+                          : "bg-gray-300 text-gray-500 cursor-not-allowed"
                           }`}
                       >
-                        {dept.status}
-                      </span>
-                    </div>
+                        <Plus size={18} strokeWidth={4} />
+                        Create First Department
+                      </button>
+                    )}
                   </div>
                 </div>
               )}
-            />
+            </div>
           )}
 
           {/* Pagination */}
-          {totalPages > 0 && (
-            <div className="flex flex-col md:flex-row justify-between items-center mt-6 gap-4 bg-gray-50 p-4 rounded-sm border border-gray-200">
+          {totalPages > 0 && totalItems > 0 && (
+            <div className="flex flex-col md:flex-row justify-between items-center mt-6 gap-4 bg-gray-50 p-4 rounded-sm border border-gray-200 shadow-sm">
               <p className="text-sm font-semibold text-gray-700">
-                Showing <span className="text-orange-600 font-bold">{indexOfFirstItem + 1}</span> to <span className="text-orange-600 font-bold">{indexOfLastItem}</span> of <span className="text-orange-600 font-bold">{data?.pagination?.total || 0}</span> Departments
+                Showing <span className="text-orange-600">{indexOfFirstItem + 1}</span> to <span className="text-orange-600">{indexOfLastItem}</span> of <span className="text-orange-600">{totalItems}</span> Departments
               </p>
               <div className="flex items-center gap-2">
                 <button
@@ -567,7 +654,7 @@ const AllDepartment = () => {
                   disabled={currentPage === totalPages}
                   className={`px-4 py-2 rounded-sm font-bold transition flex items-center gap-1 ${currentPage === totalPages
                     ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                    : "bg-[#22C55E] text-white hover:opacity-90 shadow-md"
+                    : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"
                     }`}
                 >
                   Next
@@ -594,6 +681,7 @@ const AllDepartment = () => {
           isOpen={isDeleteModalOpen}
           onClose={() => { setIsDeleteModalOpen(false); setSelectedDept(null); }}
           departmentId={selectedDept?.id}
+          departmentName={selectedDept?.department_name}
           refetchDashboard={refetchDashboard}
         />
       </div>
