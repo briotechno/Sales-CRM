@@ -327,9 +327,10 @@ const EditTeamModal = ({ isOpen, onClose, onSubmit, isLoading: isUpdating, teamI
                                                             {rowIdx > 0 && (
                                                                 <button
                                                                     type="button" onClick={() => removeRowFromLevel(level.id, row.id)}
-                                                                    className="absolute -right-2 top-2 p-1 text-red-500 hover:bg-red-50 rounded transition-all"
+                                                                    className="absolute -right-3 top-2 w-6 h-6 flex items-center justify-center bg-red-50 text-red-500 border border-red-100 rounded-sm hover:bg-red-500 hover:text-white transition-all shadow-sm z-10 active:scale-95"
+                                                                    title="Remove row"
                                                                 >
-                                                                    <X size={14} />
+                                                                    <X size={12} strokeWidth={3} />
                                                                 </button>
                                                             )}
                                                             <div>
