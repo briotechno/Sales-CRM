@@ -16,8 +16,18 @@ export const salaryApi = createApi({
   tagTypes: ["Salaries"],
   endpoints: (builder) => ({
     getAllSalaries: builder.query({
-      query: () =>
-        `salaries`,
+      query: (params) => {
+        const queryParams = new URLSearchParams();
+        if (params?.department) queryParams.append('department', params.department);
+        if (params?.designation) queryParams.append('designation', params.designation);
+        if (params?.status) queryParams.append('status', params.status);
+        if (params?.startDate) queryParams.append('startDate', params.startDate);
+        if (params?.endDate) queryParams.append('endDate', params.endDate);
+        if (params?.search) queryParams.append('search', params.search);
+        if (params?.page) queryParams.append('page', params.page);
+        if (params?.limit) queryParams.append('limit', params.limit);
+        return `salaries?${queryParams.toString()}`;
+      },
       providesTags: ["Salaries"],
     }),
 

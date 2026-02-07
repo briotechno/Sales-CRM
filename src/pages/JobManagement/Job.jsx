@@ -22,7 +22,9 @@ import {
   Calendar,
   Layers,
   Search,
-  ArrowRight
+  ArrowRight,
+  LayoutGrid,
+  List
 } from "lucide-react";
 import { FiHome } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
@@ -38,6 +40,7 @@ import toast from 'react-hot-toast';
 import { useGetDepartmentsQuery } from "../../store/api/departmentApi";
 import usePermission from "../../hooks/usePermission";
 import Modal from "../../components/common/Modal";
+import GenericGridView from "../../components/common/GenericGridView";
 
 const DeleteJobModal = ({ isOpen, onClose, onConfirm, isLoading, title }) => {
   return (
@@ -92,7 +95,8 @@ export default function JobManagement() {
   const [currentPage, setCurrentPage] = useState(1);
   const [editingJobId, setEditingJobId] = useState(null);
   const [search, setSearch] = useState("");
-  const itemsPerPage = 8;
+  const [viewMode, setViewMode] = useState("list");
+  const itemsPerPage = viewMode === "list" ? 8 : 12;
 
   const [isNavOpen, setIsNavOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -507,6 +511,27 @@ export default function JobManagement() {
                   )}
                 </div>
 
+                <div className="flex items-center bg-gray-100 p-1 rounded-sm border border-gray-200 shadow-inner">
+                  <button
+                    onClick={() => { setViewMode("grid"); setCurrentPage(1); }}
+                    className={`p-2 rounded-sm transition-all duration-200 ${viewMode === "grid"
+                      ? "bg-white text-orange-600 shadow-sm border border-gray-100"
+                      : "text-gray-400 hover:text-gray-600"
+                      }`}
+                  >
+                    <LayoutGrid size={18} />
+                  </button>
+                  <button
+                    onClick={() => { setViewMode("list"); setCurrentPage(1); }}
+                    className={`p-2 rounded-sm transition-all duration-200 ${viewMode === "list"
+                      ? "bg-white text-orange-600 shadow-sm border border-gray-100"
+                      : "text-gray-400 hover:text-gray-600"
+                      }`}
+                  >
+                    <List size={18} />
+                  </button>
+                </div>
+
                 <button
                   onClick={() => {
                     resetForm();
@@ -554,212 +579,317 @@ export default function JobManagement() {
               lineBorderClass={"border-purple-500"} />
           </div>
 
-          {/* Jobs Table */}
-          <div className="bg-white rounded-sm shadow-sm border border-gray-200 overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm">
-                    <th className="px-6 py-4 font-semibold text-white whitespace-nowrap w-[25%] transition-all">
-                      Job Title
-                    </th>
-                    <th className="px-6 py-4 font-semibold text-white whitespace-nowrap w-[15%]">
-                      Department
-                    </th>
-                    <th className="px-6 py-4 font-semibold text-white whitespace-nowrap w-[12%]">
-                      Type
-                    </th>
-                    <th className="px-6 py-4 font-semibold text-white whitespace-nowrap w-[10%]">
-                      Applicants
-                    </th>
-                    <th className="px-6 py-4 font-semibold text-white whitespace-nowrap w-[12%]">
-                      Posted Date
-                    </th>
-                    <th className="px-6 py-4 font-semibold text-white whitespace-nowrap w-[10%]">
-                      Status
-                    </th>
-                    <th className="px-6 py-4 font-semibold text-center text-white whitespace-nowrap w-[16%]">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-
-                <tbody className="divide-y divide-gray-200">
-                  {isLoading ? (
-                    // Skeleton Loading
-                    Array.from({ length: 5 }).map((_, index) => (
-                      <tr key={index} className="bg-white animate-pulse">
-                        <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-32"></div></td>
-                        <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-24"></div></td>
-                        <td className="px-6 py-4"><div className="h-6 bg-gray-200 rounded w-20"></div></td>
-                        <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-16"></div></td>
-                        <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-24"></div></td>
-                        <td className="px-6 py-4"><div className="h-6 bg-gray-200 rounded w-20"></div></td>
-                        <td className="px-6 py-4"><div className="h-8 bg-gray-200 rounded w-24 mx-auto"></div></td>
-                      </tr>
-                    ))
-                  ) : isError ? (
-                    <tr><td colSpan="7" className="text-center py-12 text-red-500 font-medium">Error loading jobs. Please try again later.</td></tr>
-                  ) : jobsData?.jobs?.length === 0 ? (
-                    <tr>
-                      <td colSpan="7" className="py-20 text-center">
-                        <div className="flex flex-col items-center justify-center gap-4 max-w-[600px] mx-auto animate-fadeIn">
-                          <div className="w-24 h-24 bg-orange-50 rounded-full flex items-center justify-center mb-4 relative">
-                            <div className="absolute inset-0 bg-orange-200 rounded-full animate-ping opacity-20"></div>
-                            <Briefcase size={48} className="text-orange-500 relative z-10" />
-                          </div>
-                          <div className="space-y-3 text-center">
-                            <h3 className="text-2xl font-bold text-gray-900 tracking-tight">
-                              {hasActiveFilters ? "No Job Posts Found" : "Start Hiring Top Talent"}
-                            </h3>
-                            <p className="text-gray-500 font-medium leading-relaxed px-4">
-                              {hasActiveFilters
-                                ? "We couldn't find any job posts matching your criteria. Start by creating a new job post or clear your current filters."
-                                : "You haven't created any job posts yet. Create detailed job descriptions, manage requirements, and start receiving applications."}
-                            </p>
-                          </div>
-
-                          {hasActiveFilters ? (
-                            <button
-                              onClick={clearAllFilters}
-                              className="mt-6 px-10 py-3 border-2 border-orange-500 text-orange-600 font-bold rounded-sm hover:bg-orange-50 transition-all text-xs uppercase tracking-widest shadow-sm active:scale-95"
-                            >
-                              Reset All Filters
-                            </button>
-                          ) : (
-                            create && (
-                              <button
-                                onClick={() => {
-                                  resetForm();
-                                  setShowAddModal(true);
-                                }}
-                                className="mt-6 px-12 py-3.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-[0_10px_25px_rgba(255,123,29,0.3)] inline-flex items-center gap-3 group text-sm active:scale-95"
-                              >
-                                <Plus size={20} className="group-hover:rotate-90 transition-transform duration-300" />
-                                Create First Job
-                              </button>
-                            )
-                          )}
-                        </div>
-                      </td>
+          {/* Jobs Table/Grid */}
+          {viewMode === "list" ? (
+            <div className="bg-white rounded-sm shadow-sm border border-gray-200 overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm">
+                      <th className="px-6 py-4 font-semibold text-white whitespace-nowrap w-[25%] transition-all">
+                        Job Title
+                      </th>
+                      <th className="px-6 py-4 font-semibold text-white whitespace-nowrap w-[15%]">
+                        Department
+                      </th>
+                      <th className="px-6 py-4 font-semibold text-white whitespace-nowrap w-[12%]">
+                        Type
+                      </th>
+                      <th className="px-6 py-4 font-semibold text-white whitespace-nowrap w-[10%]">
+                        Applicants
+                      </th>
+                      <th className="px-6 py-4 font-semibold text-white whitespace-nowrap w-[12%]">
+                        Posted Date
+                      </th>
+                      <th className="px-6 py-4 font-semibold text-white whitespace-nowrap w-[10%]">
+                        Status
+                      </th>
+                      <th className="px-6 py-4 font-semibold text-center text-white whitespace-nowrap w-[16%]">
+                        Actions
+                      </th>
                     </tr>
-                  ) : (
-                    jobsData?.jobs.map((job, index) => (
-                      <tr
-                        key={job.id}
-                        className="hover:bg-orange-50/50 transition-colors duration-200 group border-b border-gray-100 last:border-0"
-                      >
-                        <td className="px-6 py-4">
-                          <div className="flex items-start gap-3 min-w-[200px] max-w-[300px]">
-                            <div className="w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300 mt-1">
-                              <Briefcase size={16} />
+                  </thead>
+
+                  <tbody className="divide-y divide-gray-200">
+                    {isLoading ? (
+                      // Skeleton Loading
+                      Array.from({ length: 5 }).map((_, index) => (
+                        <tr key={index} className="bg-white animate-pulse">
+                          <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-32"></div></td>
+                          <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-24"></div></td>
+                          <td className="px-6 py-4"><div className="h-6 bg-gray-200 rounded w-20"></div></td>
+                          <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-16"></div></td>
+                          <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-24"></div></td>
+                          <td className="px-6 py-4"><div className="h-6 bg-gray-200 rounded w-20"></div></td>
+                          <td className="px-6 py-4"><div className="h-8 bg-gray-200 rounded w-24 mx-auto"></div></td>
+                        </tr>
+                      ))
+                    ) : isError ? (
+                      <tr><td colSpan="7" className="text-center py-12 text-red-500 font-medium">Error loading jobs. Please try again later.</td></tr>
+                    ) : jobsData?.jobs?.length === 0 ? (
+                      <tr>
+                        <td colSpan="7" className="py-20 text-center">
+                          <div className="flex flex-col items-center justify-center gap-4 max-w-[600px] mx-auto animate-fadeIn">
+                            <div className="w-24 h-24 bg-orange-50 rounded-full flex items-center justify-center mb-4 relative">
+                              <div className="absolute inset-0 bg-orange-200 rounded-full animate-ping opacity-20"></div>
+                              <Briefcase size={48} className="text-orange-500 relative z-10" />
                             </div>
-                            <div className="flex-1 min-w-0">
-                              <span className="font-semibold text-gray-800 block text-sm group-hover:text-orange-600 transition-colors leading-tight break-words">
-                                {job.title}
-                              </span>
-                              <div className="flex flex-wrap items-center gap-1 text-xs text-gray-500 mt-1 leading-normal">
-                                <MapPin size={10} className="flex-shrink-0" />
-                                <span className="break-words">{job.location}</span>
-                                <span className="flex-shrink-0">•</span>
-                                <span className="font-medium text-orange-500 flex-shrink-0">{job.positions} Positions</span>
+                            <div className="space-y-3 text-center">
+                              <h3 className="text-2xl font-bold text-gray-900 tracking-tight">
+                                {hasActiveFilters ? "No Job Posts Found" : "Start Hiring Top Talent"}
+                              </h3>
+                              <p className="text-gray-500 font-medium leading-relaxed px-4">
+                                {hasActiveFilters
+                                  ? "We couldn't find any job posts matching your criteria. Start by creating a new job post or clear your current filters."
+                                  : "You haven't created any job posts yet. Create detailed job descriptions, manage requirements, and start receiving applications."}
+                              </p>
+                            </div>
+
+                            {hasActiveFilters ? (
+                              <button
+                                onClick={clearAllFilters}
+                                className="mt-6 px-10 py-3 border-2 border-orange-500 text-orange-600 font-bold rounded-sm hover:bg-orange-50 transition-all text-xs uppercase tracking-widest shadow-sm active:scale-95"
+                              >
+                                Reset All Filters
+                              </button>
+                            ) : (
+                              create && (
+                                <button
+                                  onClick={() => {
+                                    resetForm();
+                                    setShowAddModal(true);
+                                  }}
+                                  className="mt-6 px-12 py-3.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-[0_10px_25px_rgba(255,123,29,0.3)] inline-flex items-center gap-3 group text-sm active:scale-95"
+                                >
+                                  <Plus size={20} className="group-hover:rotate-90 transition-transform duration-300" />
+                                  Create First Job
+                                </button>
+                              )
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ) : (
+                      jobsData?.jobs.map((job, index) => (
+                        <tr
+                          key={job.id}
+                          className="hover:bg-orange-50/50 transition-colors duration-200 group border-b border-gray-100 last:border-0"
+                        >
+                          <td className="px-6 py-4">
+                            <div className="flex items-start gap-3 min-w-[200px] max-w-[300px]">
+                              <div className="w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300 mt-1">
+                                <Briefcase size={16} />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <span className="font-semibold text-gray-800 block text-sm group-hover:text-orange-600 transition-colors leading-tight break-words">
+                                  {job.title}
+                                </span>
+                                <div className="flex flex-wrap items-center gap-1 text-xs text-gray-500 mt-1 leading-normal">
+                                  <MapPin size={10} className="flex-shrink-0" />
+                                  <span className="break-words">{job.location}</span>
+                                  <span className="flex-shrink-0">•</span>
+                                  <span className="font-medium text-orange-500 flex-shrink-0">{job.positions} Positions</span>
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        </td>
+                          </td>
 
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="text-sm font-medium text-gray-600 bg-gray-100 px-2.5 py-1 rounded-sm border border-gray-200">
-                            {job.department}
-                          </span>
-                        </td>
-
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="text-xs font-semibold px-2 py-1 rounded-sm bg-blue-50 text-blue-700 border border-blue-100">
-                            {job.type}
-                          </span>
-                        </td>
-
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <button
-                            onClick={() => navigate('/hrm/applicants', { state: { jobTitle: job.title } })}
-                            className="flex items-center gap-2 hover:bg-orange-50 px-3 py-1.5 rounded-sm transition-all group/count border border-transparent hover:border-orange-100"
-                            title="View Job Applicants"
-                          >
-                            <Users size={14} className="text-gray-400 group-hover/count:text-orange-500" />
-                            <span className="text-sm font-black text-gray-700 group-hover/count:text-orange-600">
-                              {job.applicants}
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className="text-sm font-medium text-gray-600 bg-gray-100 px-2.5 py-1 rounded-sm border border-gray-200">
+                              {job.department}
                             </span>
-                            <ArrowRight size={12} className="text-gray-300 group-hover/count:text-orange-400 opacity-0 group-hover/count:opacity-100 transition-all translate-x-[-4px] group-hover/count:translate-x-0" />
-                          </button>
-                        </td>
+                          </td>
 
-                        <td className="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
-                          {new Date(job.posted_date).toLocaleDateString()}
-                        </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className="text-xs font-semibold px-2 py-1 rounded-sm bg-blue-50 text-blue-700 border border-blue-100">
+                              {job.type}
+                            </span>
+                          </td>
 
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span
-                            className={`px-3 py-1 text-xs font-bold rounded-sm border uppercase tracking-wide ${job.status === "Active"
-                              ? "bg-green-50 text-green-700 border-green-200"
-                              : job.status === "On Hold"
-                                ? "bg-yellow-50 text-yellow-700 border-yellow-200"
-                                : "bg-gray-100 text-gray-600 border-gray-200"
-                              }`}
-                          >
-                            {job.status}
-                          </span>
-                        </td>
-
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center justify-center gap-1">
+                          <td className="px-6 py-4 whitespace-nowrap">
                             <button
-                              onClick={() => {
-                                const link = `${window.location.origin}/apply/${job.application_link}`;
-                                navigator.clipboard.writeText(link);
-                                toast.success("Application link copied!");
-                              }}
-                              className="p-1.5 hover:bg-orange-50 text-orange-500 hover:text-orange-700 transition-all border border-transparent hover:border-orange-100"
-                              title="Copy Application Link"
+                              onClick={() => navigate('/hrm/applicants', { state: { jobTitle: job.title } })}
+                              className="flex items-center gap-2 hover:bg-orange-50 px-3 py-1.5 rounded-sm transition-all group/count border border-transparent hover:border-orange-100"
+                              title="View Job Applicants"
                             >
-                              <LinkIcon size={16} />
+                              <Users size={14} className="text-gray-400 group-hover/count:text-orange-500" />
+                              <span className="text-sm font-black text-gray-700 group-hover/count:text-orange-600">
+                                {job.applicants}
+                              </span>
+                              <ArrowRight size={12} className="text-gray-300 group-hover/count:text-orange-400 opacity-0 group-hover/count:opacity-100 transition-all translate-x-[-4px] group-hover/count:translate-x-0" />
                             </button>
-                            {read && (
+                          </td>
+
+                          <td className="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
+                            {new Date(job.posted_date).toLocaleDateString()}
+                          </td>
+
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span
+                              className={`px-3 py-1 text-xs font-bold rounded-sm border uppercase tracking-wide ${job.status === "Active"
+                                ? "bg-green-50 text-green-700 border-green-200"
+                                : job.status === "On Hold"
+                                  ? "bg-yellow-50 text-yellow-700 border-yellow-200"
+                                  : "bg-gray-100 text-gray-600 border-gray-200"
+                                }`}
+                            >
+                              {job.status}
+                            </span>
+                          </td>
+
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center justify-center gap-1">
                               <button
-                                onClick={() => handleViewJob(job)}
-                                className="p-1.5 hover:bg-blue-50 text-blue-500 hover:text-blue-700 transition-all border border-transparent hover:border-blue-100"
-                                title="View Job Details"
+                                onClick={() => {
+                                  const link = `${window.location.origin}/apply/${job.application_link}`;
+                                  navigator.clipboard.writeText(link);
+                                  toast.success("Application link copied!");
+                                }}
+                                className="p-1.5 hover:bg-orange-50 text-orange-500 hover:text-orange-700 transition-all border border-transparent hover:border-orange-100"
+                                title="Copy Application Link"
                               >
-                                <Eye size={16} />
+                                <LinkIcon size={16} />
                               </button>
-                            )}
-                            {update && (
-                              <button
-                                onClick={() => handleEditJob(job)}
-                                className="p-1.5 hover:bg-green-50 text-green-500 hover:text-green-700 transition-all border border-transparent hover:border-green-100"
-                                title="Edit Job"
-                              >
-                                <Edit size={16} />
-                              </button>
-                            )}
-                            {remove && (
-                              <button
-                                onClick={() => handleDelete(job)}
-                                className="p-1.5 hover:bg-red-50 text-red-500 hover:text-red-700 transition-all border border-transparent hover:border-red-100 shadow-sm"
-                                title="Delete Job"
-                              >
-                                <Trash2 size={16} />
-                              </button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+                              {read && (
+                                <button
+                                  onClick={() => handleViewJob(job)}
+                                  className="p-1.5 hover:bg-blue-50 text-blue-500 hover:text-blue-700 transition-all border border-transparent hover:border-blue-100"
+                                  title="View Job Details"
+                                >
+                                  <Eye size={16} />
+                                </button>
+                              )}
+                              {update && (
+                                <button
+                                  onClick={() => handleEditJob(job)}
+                                  className="p-1.5 hover:bg-green-50 text-green-500 hover:text-green-700 transition-all border border-transparent hover:border-green-100"
+                                  title="Edit Job"
+                                >
+                                  <Edit size={16} />
+                                </button>
+                              )}
+                              {remove && (
+                                <button
+                                  onClick={() => handleDelete(job)}
+                                  className="p-1.5 hover:bg-red-50 text-red-500 hover:text-red-700 transition-all border border-transparent hover:border-red-100 shadow-sm"
+                                  title="Delete Job"
+                                >
+                                  <Trash2 size={16} />
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
+          ) : (
+            <GenericGridView
+              data={jobsData?.jobs || []}
+              renderItem={(job) => (
+                <div key={job.id} className="bg-white border border-gray-200 rounded-sm shadow-sm hover:shadow-md transition-all relative group flex flex-col h-full overflow-hidden">
+                  <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                    <button
+                      onClick={() => {
+                        const link = `${window.location.origin}/apply/${job.application_link}`;
+                        navigator.clipboard.writeText(link);
+                        toast.success("Application link copied!");
+                      }}
+                      className="p-1.5 text-orange-500 hover:bg-orange-50 rounded-sm bg-white shadow-sm border border-orange-100"
+                      title="Copy Link"
+                    >
+                      <LinkIcon size={16} />
+                    </button>
+                    {read && (
+                      <button
+                        onClick={() => handleViewJob(job)}
+                        className="p-1.5 text-blue-500 hover:bg-blue-50 rounded-sm bg-white shadow-sm border border-blue-100"
+                        title="View Details"
+                      >
+                        <Eye size={16} />
+                      </button>
+                    )}
+                    {update && (
+                      <button
+                        onClick={() => handleEditJob(job)}
+                        className="p-1.5 text-green-500 hover:bg-green-50 rounded-sm bg-white shadow-sm border border-green-100"
+                        title="Edit"
+                      >
+                        <Edit size={16} />
+                      </button>
+                    )}
+                    {remove && (
+                      <button
+                        onClick={() => handleDelete(job)}
+                        className="p-1.5 text-red-500 hover:bg-red-50 rounded-sm bg-white shadow-sm border border-red-100"
+                        title="Delete"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="p-6 pb-4 flex-1 flex flex-col items-center mt-2 text-center">
+                    <div className="w-16 h-16 rounded-full bg-orange-50 flex items-center justify-center text-orange-600 flex-shrink-0 border-4 border-orange-100 shadow-inner">
+                      <Briefcase size={28} />
+                    </div>
+                    <div className="mt-4">
+                      <h3 className="font-bold text-gray-800 text-lg leading-tight line-clamp-2 min-h-[48px]" title={job.title}>
+                        {job.title}
+                      </h3>
+                      <div className="flex items-center justify-center gap-2 mt-2 text-xs font-bold text-gray-400 uppercase tracking-widest bg-gray-50 px-3 py-1 rounded-full border border-gray-100">
+                        <MapPin size={12} className="text-orange-500" />
+                        <span className="truncate max-w-[150px]">{job.location}</span>
+                      </div>
+                    </div>
+                    
+                    <p className="text-sm text-gray-500 mt-4 line-clamp-3 min-h-[60px] leading-relaxed capitalize">
+                      {job.description || "Exciting job opportunity. Join our growing team and make an impact!"}
+                    </p>
+                  </div>
+
+                  <div className="bg-gray-50 p-5 space-y-4 border-t border-gray-100 mt-auto">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="text-center p-2 bg-white rounded-lg border border-gray-200 shadow-sm">
+                        <p className="text-[9px] text-gray-400 font-black uppercase tracking-tighter">Positions</p>
+                        <p className="text-base font-black text-gray-800">{job.positions}</p>
+                      </div>
+                      <div className="text-center p-2 bg-white rounded-lg border border-gray-200 shadow-sm">
+                        <p className="text-[9px] text-gray-400 font-black uppercase tracking-tighter">Applicants</p>
+                        <button
+                          onClick={() => navigate('/hrm/applicants', { state: { jobTitle: job.title } })}
+                          className="text-base font-black text-orange-600 hover:text-orange-700 flex items-center justify-center gap-1 mx-auto"
+                        >
+                          <Users size={12} />
+                          {job.applicants}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-between items-center px-1 pt-1">
+                      <div className="flex flex-col">
+                        <span className="text-[9px] text-gray-400 font-black uppercase">Posted Date</span>
+                        <span className="text-[11px] font-bold text-gray-600">{new Date(job.posted_date).toLocaleDateString()}</span>
+                      </div>
+                      <span
+                        className={`px-3 py-1 text-[10px] font-black rounded-full uppercase tracking-widest border shadow-sm ${job.status === "Active"
+                          ? "bg-green-50 text-green-700 border-green-200"
+                          : job.status === "On Hold"
+                            ? "bg-yellow-50 text-yellow-700 border-yellow-200"
+                            : "bg-gray-100 text-gray-600 border-gray-200"
+                          }`}
+                      >
+                        {job.status}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            />
+          )}
 
           {/* Pagination */}
           <div className="flex justify-between items-center mt-6 bg-gray-50 p-4 rounded-sm border-t border-gray-200">

@@ -4,12 +4,12 @@ import { useDeleteTermMutation } from "../../store/api/termApi";
 import { toast } from "react-hot-toast";
 import Modal from "../common/Modal";
 
-const DeleteTermModal = ({ isOpen, onClose, termId }) => {
+const DeleteTermModal = ({ isOpen, onClose, term }) => {
   const [deleteTerm, { isLoading }] = useDeleteTermMutation();
 
   const handleDelete = async () => {
     try {
-      await deleteTerm(termId).unwrap();
+      await deleteTerm(term?.id).unwrap();
       toast.success("Term deleted successfully");
       onClose();
     } catch (err) {
@@ -21,14 +21,14 @@ const DeleteTermModal = ({ isOpen, onClose, termId }) => {
     <div className="flex gap-4 w-full">
       <button
         onClick={onClose}
-        className="flex-1 px-6 py-3 border-2 border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-100 transition-all"
+        className="flex-1 px-6 py-3 border-2 border-gray-200 text-gray-700 font-bold rounded-sm hover:bg-gray-100 transition-all font-primary text-xs uppercase tracking-widest"
       >
         Cancel
       </button>
       <button
         onClick={handleDelete}
         disabled={isLoading}
-        className="flex-1 px-6 py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition-all shadow-lg hover:shadow-red-200 flex items-center justify-center gap-2 disabled:opacity-50"
+        className="flex-1 px-6 py-3 bg-red-600 text-white font-bold rounded-sm hover:bg-red-700 transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 font-primary text-xs uppercase tracking-widest"
       >
         {isLoading ? (
           <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -48,8 +48,8 @@ const DeleteTermModal = ({ isOpen, onClose, termId }) => {
       maxWidth="max-w-md"
       footer={footer}
     >
-      <div className="flex flex-col items-center text-center text-black">
-        <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mb-6 animate-bounce">
+      <div className="flex flex-col items-center text-center text-black font-primary">
+        <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mb-6">
           <AlertCircle size={48} className="text-red-600" />
         </div>
 
@@ -58,11 +58,11 @@ const DeleteTermModal = ({ isOpen, onClose, termId }) => {
         </h2>
 
         <p className="text-gray-600 mb-2 leading-relaxed">
-          Are you sure you want to delete the term & condition{" "}
-          <span className="font-bold text-gray-800">"{termId}"</span>?
+          Are you sure you want to delete the policy{" "}
+          <span className="font-bold text-gray-800">"{term?.title}"</span>?
         </p>
 
-        <p className="text-sm text-red-500 italic">
+        <p className="text-xs text-red-500 italic">
           This action cannot be undone. All associated data will be permanently removed.
         </p>
       </div>

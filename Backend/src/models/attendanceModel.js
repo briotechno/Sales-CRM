@@ -106,9 +106,9 @@ const Attendance = {
         const [rows] = await pool.query(
             `SELECT 
                 COUNT(*) as total_days,
-                SUM(CASE WHEN status IN ('present', 'late', 'half-day') THEN 1 ELSE 0 END) as present_days,
-                SUM(CASE WHEN status = 'absent' THEN 1 ELSE 0 END) as absent_days,
-                SUM(CASE WHEN status = 'leave' THEN 1 ELSE 0 END) as leave_days
+                COALESCE(SUM(CASE WHEN status IN ('present', 'late', 'half-day') THEN 1 ELSE 0 END), 0) as present_days,
+                COALESCE(SUM(CASE WHEN status = 'absent' THEN 1 ELSE 0 END), 0) as absent_days,
+                COALESCE(SUM(CASE WHEN status = 'leave' THEN 1 ELSE 0 END), 0) as leave_days
              FROM attendance 
              WHERE employee_id = ? AND user_id = ?`,
             [employeeId, userId]

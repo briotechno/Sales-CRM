@@ -21,6 +21,8 @@ import {
   CheckCircle,
   MoreVertical,
   RotateCcw,
+  LayoutGrid,
+  List
 } from "lucide-react";
 import { FiHome } from "react-icons/fi";
 import NumberCard from "../../components/NumberCard";
@@ -40,6 +42,7 @@ import usePermission from "../../hooks/usePermission";
 import { useGetDepartmentsQuery } from "../../store/api/departmentApi";
 import { useGetDesignationsQuery } from "../../store/api/designationApi";
 import { useGetEmployeesQuery } from "../../store/api/employeeApi";
+import GenericGridView from "../../components/common/GenericGridView";
 
 export default function TeamManagement() {
   const [currentPage, setCurrentPage] = useState(1);
@@ -63,7 +66,8 @@ export default function TeamManagement() {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  const itemsPerPage = 10;
+  const [viewMode, setViewMode] = useState("list");
+  const itemsPerPage = viewMode === "list" ? 10 : 12;
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -426,6 +430,27 @@ export default function TeamManagement() {
                   )}
                 </div>
 
+                <div className="flex items-center bg-gray-100 p-1 rounded-sm border border-gray-200 shadow-inner">
+                  <button
+                    onClick={() => { setViewMode("grid"); setCurrentPage(1); }}
+                    className={`p-2 rounded-sm transition-all duration-200 ${viewMode === "grid"
+                      ? "bg-white text-orange-600 shadow-sm border border-gray-100"
+                      : "text-gray-400 hover:text-gray-600"
+                      }`}
+                  >
+                    <LayoutGrid size={18} />
+                  </button>
+                  <button
+                    onClick={() => { setViewMode("list"); setCurrentPage(1); }}
+                    className={`p-2 rounded-sm transition-all duration-200 ${viewMode === "list"
+                      ? "bg-white text-orange-600 shadow-sm border border-gray-100"
+                      : "text-gray-400 hover:text-gray-600"
+                      }`}
+                  >
+                    <List size={18} />
+                  </button>
+                </div>
+
                 <button
                   onClick={() => setShowAddModal(true)}
                   disabled={!create}
@@ -475,137 +500,227 @@ export default function TeamManagement() {
             />
           </div>
 
-          {/* Table */}
-          <div className="overflow-x-auto mt-4 border border-gray-200 rounded-sm shadow-sm">
-            <table className="w-full border-collapse text-left">
-              <thead>
-                <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm">
-                  <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[5%]">S.N</th>
-                  <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[15%]">Team ID</th>
-                  <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[25%]">Team Name</th>
-                  <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[15%]">Total Members</th>
-                  <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[15%]">Date Created</th>
-                  <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[15%]">Status</th>
-                  <th className="py-3 px-4 font-semibold text-right border-b border-orange-400 w-[10%]">Action</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {isLoading ? (
-                  <tr>
-                    <td colSpan="7" className="py-20 text-center">
-                      <div className="flex justify-center flex-col items-center gap-4">
-                        <div className="w-12 h-12 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin"></div>
-                        <p className="text-gray-500 font-semibold animate-pulse">Loading teams...</p>
-                      </div>
-                    </td>
+          {viewMode === "list" ? (
+            <div className="overflow-x-auto mt-4 border border-gray-200 rounded-sm shadow-sm">
+              <table className="w-full border-collapse text-left">
+                <thead>
+                  <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm">
+                    <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[5%]">S.N</th>
+                    <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[15%]">Team ID</th>
+                    <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[25%]">Team Name</th>
+                    <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[15%]">Total Members</th>
+                    <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[15%]">Date Created</th>
+                    <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[15%]">Status</th>
+                    <th className="py-3 px-4 font-semibold text-right border-b border-orange-400 w-[10%]">Action</th>
                   </tr>
-                ) : filteredTeams.length > 0 ? (
-                  filteredTeams.map((team, index) => (
-                    <tr
-                      key={team.id}
-                      className="border-t hover:bg-gray-50 transition-colors"
-                    >
-                      <td className="py-3 px-4 text-left">
-                        {(currentPage - 1) * itemsPerPage + index + 1}
-                      </td>
-                      <td className="py-3 px-4 font-medium text-orange-600 text-left">{team.team_id}</td>
-                      <td className="py-3 px-4 font-semibold text-gray-800 text-left transition-all duration-300">
-                        {team.team_name}
-                      </td>
-                      <td className="py-3 px-4 text-left">
-                        <button
-                          onClick={() => { setSelectedTeam(team); setShowMembersModal(true); }}
-                          className="flex items-center gap-2 group hover:bg-orange-50 p-1 pr-3 rounded-sm transition-all border border-transparent hover:border-orange-100"
-                        >
-                          <div className="w-8 h-8 rounded-sm bg-orange-100 flex items-center justify-center text-orange-600 shadow-sm border border-orange-200 group-hover:scale-110 transition-transform">
-                            <Users size={14} />
-                          </div>
-                          <span className="font-bold text-gray-700 group-hover:text-orange-600">{team.total_members || 0}</span>
-                        </button>
-                      </td>
-                      <td className="py-3 px-4 text-gray-600 text-sm text-left">
-                        {team.created_at ? new Date(team.created_at).toLocaleDateString() : 'N/A'}
-                      </td>
-                      <td className="py-3 px-4 text-left">
-                        <span
-                          className={`px-3 py-1 rounded-sm text-[10px] font-bold border uppercase tracking-wider ${team.status === "Active"
-                            ? "bg-green-50 text-green-700 border-green-200"
-                            : "bg-red-50 text-red-700 border-red-200"
-                            }`}
-                        >
-                          {team.status}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4 text-right">
-                        <div className="flex justify-end gap-2">
-                          <button
-                            onClick={() => { setSelectedTeam(team); setShowViewModal(true); }}
-                            className="p-1 hover:bg-orange-100 rounded-sm text-blue-500 hover:text-blue-700 transition-all"
-                            title="View"
-                          >
-                            <Eye size={18} />
-                          </button>
-                          <button
-                            onClick={() => { setSelectedTeam(team); setShowEditModal(true); }}
-                            disabled={!update}
-                            className={`p-1 hover:bg-orange-100 rounded-sm transition-all ${update ? "text-green-500 hover:text-green-700" : "text-gray-300 cursor-not-allowed"
-                              }`}
-                            title="Edit"
-                          >
-                            <Edit size={18} />
-                          </button>
-                          <button
-                            onClick={() => { setSelectedTeam(team); setShowDeleteModal(true); }}
-                            disabled={!canDelete}
-                            className={`p-1 hover:bg-orange-100 rounded-sm transition-all ${canDelete ? "text-red-500 hover:text-red-700" : "text-gray-300 cursor-not-allowed"
-                              }`}
-                            title="Delete"
-                          >
-                            <Trash2 size={18} />
-                          </button>
+                </thead>
+
+                <tbody>
+                  {isLoading ? (
+                    <tr>
+                      <td colSpan="7" className="py-20 text-center">
+                        <div className="flex justify-center flex-col items-center gap-4">
+                          <div className="w-12 h-12 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin"></div>
+                          <p className="text-gray-500 font-semibold animate-pulse">Loading teams...</p>
                         </div>
                       </td>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td
-                      colSpan="7"
-                      className="py-12 text-center text-gray-500 font-medium text-sm"
+                  ) : filteredTeams.length > 0 ? (
+                    filteredTeams.map((team, index) => (
+                      <tr
+                        key={team.id}
+                        className="border-t hover:bg-gray-50 transition-colors"
+                      >
+                        <td className="py-3 px-4 text-left">
+                          {(currentPage - 1) * itemsPerPage + index + 1}
+                        </td>
+                        <td className="py-3 px-4 font-medium text-orange-600 text-left">{team.team_id}</td>
+                        <td className="py-3 px-4 font-semibold text-gray-800 text-left transition-all duration-300">
+                          {team.team_name}
+                        </td>
+                        <td className="py-3 px-4 text-left">
+                          <button
+                            onClick={() => { setSelectedTeam(team); setShowMembersModal(true); }}
+                            className="flex items-center gap-2 group hover:bg-orange-50 p-1 pr-3 rounded-sm transition-all border border-transparent hover:border-orange-100"
+                          >
+                            <div className="w-8 h-8 rounded-sm bg-orange-100 flex items-center justify-center text-orange-600 shadow-sm border border-orange-200 group-hover:scale-110 transition-transform">
+                              <Users size={14} />
+                            </div>
+                            <span className="font-bold text-gray-700 group-hover:text-orange-600">{team.total_members || 0}</span>
+                          </button>
+                        </td>
+                        <td className="py-3 px-4 text-gray-600 text-sm text-left">
+                          {team.created_at ? new Date(team.created_at).toLocaleDateString() : 'N/A'}
+                        </td>
+                        <td className="py-3 px-4 text-left">
+                          <span
+                            className={`px-3 py-1 rounded-sm text-[10px] font-bold border uppercase tracking-wider ${team.status === "Active"
+                              ? "bg-green-50 text-green-700 border-green-200"
+                              : "bg-red-50 text-red-700 border-red-200"
+                              }`}
+                          >
+                            {team.status}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 text-right">
+                          <div className="flex justify-end gap-2">
+                            <button
+                              onClick={() => { setSelectedTeam(team); setShowViewModal(true); }}
+                              className="p-1 hover:bg-orange-100 rounded-sm text-blue-500 hover:text-blue-700 transition-all"
+                              title="View"
+                            >
+                              <Eye size={18} />
+                            </button>
+                            <button
+                              onClick={() => { setSelectedTeam(team); setShowEditModal(true); }}
+                              disabled={!update}
+                              className={`p-1 hover:bg-orange-100 rounded-sm transition-all ${update ? "text-green-500 hover:text-green-700" : "text-gray-300 cursor-not-allowed"
+                                }`}
+                              title="Edit"
+                            >
+                              <Edit size={18} />
+                            </button>
+                            <button
+                              onClick={() => { setSelectedTeam(team); setShowDeleteModal(true); }}
+                              disabled={!canDelete}
+                              className={`p-1 hover:bg-orange-100 rounded-sm transition-all ${canDelete ? "text-red-500 hover:text-red-700" : "text-gray-300 cursor-not-allowed"
+                                }`}
+                              title="Delete"
+                            >
+                              <Trash2 size={18} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td
+                        colSpan="7"
+                        className="py-12 text-center text-gray-500 font-medium text-sm"
+                      >
+                        <div className="flex flex-col items-center gap-3">
+                          <Users size={48} className="text-gray-200" />
+                          <p className="mb-4">
+                            {hasActiveFilters
+                              ? "No teams found matching your filter criteria. Try clearing filters."
+                              : "Your teams list is currently empty. Start building your team today!"}
+                          </p>
+                          {hasActiveFilters ? (
+                            <button
+                              onClick={clearAllFilters}
+                              className="px-6 py-2 border-2 border-[#FF7B1D] text-[#FF7B1D] font-bold rounded-sm hover:bg-orange-50 transition-all text-xs uppercase tracking-wider"
+                            >
+                              Clear Filter
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => {
+                                setShowAddModal(true);
+                              }}
+                              className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl inline-flex items-center gap-2 font-semibold"
+                            >
+                              <Plus size={20} />
+                              Create First Team
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <GenericGridView
+              data={filteredTeams}
+              renderItem={(team) => (
+                <div key={team.id} className="bg-white border border-gray-200 rounded-sm shadow-sm hover:shadow-md transition-all relative group flex flex-col h-full overflow-hidden">
+                  <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                    <button
+                      onClick={() => { setSelectedTeam(team); setShowViewModal(true); }}
+                      className="p-1.5 text-blue-500 hover:bg-blue-50 rounded-sm bg-white shadow-sm border border-blue-100"
+                      title="View"
                     >
-                      <div className="flex flex-col items-center gap-3">
-                        <Users size={48} className="text-gray-200" />
-                        <p className="mb-4">
-                          {hasActiveFilters
-                            ? "No teams found matching your filter criteria. Try clearing filters."
-                            : "Your teams list is currently empty. Start building your team today!"}
-                        </p>
-                        {hasActiveFilters ? (
-                          <button
-                            onClick={clearAllFilters}
-                            className="px-6 py-2 border-2 border-[#FF7B1D] text-[#FF7B1D] font-bold rounded-sm hover:bg-orange-50 transition-all text-xs uppercase tracking-wider"
-                          >
-                            Clear Filter
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => {
-                              setShowAddModal(true);
-                            }}
-                            className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl inline-flex items-center gap-2 font-semibold"
-                          >
-                            <Plus size={20} />
-                            Create First Team
-                          </button>
-                        )}
+                      <Eye size={16} />
+                    </button>
+                    {update && (
+                      <button
+                        onClick={() => { setSelectedTeam(team); setShowEditModal(true); }}
+                        className="p-1.5 text-green-500 hover:bg-green-50 rounded-sm bg-white shadow-sm border border-green-100"
+                        title="Edit"
+                      >
+                        <Edit size={16} />
+                      </button>
+                    )}
+                    {canDelete && (
+                      <button
+                        onClick={() => { setSelectedTeam(team); setShowDeleteModal(true); }}
+                        className="p-1.5 text-red-500 hover:bg-red-50 rounded-sm bg-white shadow-sm border border-red-100"
+                        title="Delete"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="p-6 pb-4 flex-1 flex flex-col items-center mt-2">
+                    <div className="w-20 h-20 rounded-full border-4 border-orange-50 flex items-center justify-center overflow-hidden bg-orange-100 flex-shrink-0 shadow-inner">
+                      <span className="text-orange-600 font-bold text-3xl">
+                        {team.team_name?.substring(0, 1)}
+                      </span>
+                    </div>
+                    <div className="mt-4 text-center">
+                      <h3 className="font-bold text-gray-800 text-lg leading-tight line-clamp-1" title={team.team_name}>
+                        {team.team_name}
+                      </h3>
+                      <p className="text-orange-500 text-[10px] font-black mt-1 tracking-widest uppercase bg-orange-50 px-2 py-0.5 rounded-full inline-block border border-orange-100">
+                        {team.team_id}
+                      </p>
+                    </div>
+                    
+                    <div className="flex flex-wrap justify-center gap-2 mt-4">
+                      {/* Optional: Add tags or badges for team types if available */}
+                      <span className="px-2 py-1 bg-blue-50 text-blue-600 text-[10px] font-bold rounded-sm border border-blue-100 uppercase tracking-tighter">Collaboration</span>
+                      <span className="px-2 py-1 bg-purple-50 text-purple-600 text-[10px] font-bold rounded-sm border border-purple-100 uppercase tracking-tighter">Strategic</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-gray-50 p-5 space-y-4 border-t border-gray-100 mt-auto">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="text-center p-2 bg-white rounded-lg border border-gray-200 shadow-sm">
+                        <p className="text-[9px] text-gray-400 font-black uppercase tracking-tighter">Members</p>
+                        <button
+                          onClick={() => { setSelectedTeam(team); setShowMembersModal(true); }}
+                          className="text-lg font-black text-blue-700 hover:text-blue-800 hover:underline flex items-center justify-center gap-1 mx-auto"
+                        >
+                          <Users size={14} className="text-blue-400" />
+                          {team.total_members || 0}
+                        </button>
                       </div>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                      <div className="text-center p-2 bg-white rounded-lg border border-gray-200 shadow-sm">
+                        <p className="text-[9px] text-gray-400 font-black uppercase tracking-tighter">Created On</p>
+                        <p className="text-[11px] font-bold text-gray-700 mt-1">
+                          {team.created_at ? new Date(team.created_at).toLocaleDateString() : 'N/A'}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-center pt-1">
+                      <span
+                        className={`px-4 py-1 text-[10px] font-black rounded-full uppercase tracking-widest border shadow-sm ${team.status === "Active"
+                          ? "bg-green-50 text-green-700 border-green-200"
+                          : "bg-red-50 text-red-700 border-red-200"
+                          }`}
+                      >
+                        {team.status}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            />
+          )}
 
           {/* Pagination */}
           {totalPages > 0 && (

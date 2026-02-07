@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { FiHome } from "react-icons/fi";
-import { Edit, Trash2, Eye, Grid, FileDown, Plus, Target, Handshake, Warehouse, Users, Search, Filter, X } from "lucide-react";
+import { Edit, Trash2, Eye, Grid, FileDown, Plus, Target, Handshake, Warehouse, Users, Search, Filter, X, LayoutGrid, List } from "lucide-react";
 import DashboardLayout from "../../components/DashboardLayout";
 import AddDepartmentModal from "../../components/Department/AddDepartmentModal";
 import EditDepartmentModal from "../../components/Department/EditDepartmentModal";
@@ -10,16 +10,26 @@ import NumberCard from "../../components/NumberCard";
 import { useGetDepartmentsQuery } from "../../store/api/departmentApi";
 import { useGetHRMDashboardDataQuery } from "../../store/api/hrmDashboardApi";
 import usePermission from "../../hooks/usePermission";
+import GenericGridView from "../../components/common/GenericGridView";
 
 const AllDepartment = () => {
   const [currentPage, setCurrentPage] = useState(1);
+  // Applied filter states (used for API calls)
   const [statusFilter, setStatusFilter] = useState("All");
   const [dateFilter, setDateFilter] = useState("All");
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
+
+  // Temporary filter states (used in filter modal)
+  const [tempStatusFilter, setTempStatusFilter] = useState("All");
+  const [tempDateFilter, setTempDateFilter] = useState("All");
+  const [tempCustomStart, setTempCustomStart] = useState("");
+  const [tempCustomEnd, setTempCustomEnd] = useState("");
+
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const dropdownRef = useRef(null);
-  const itemsPerPage = 6;
+  const [viewMode, setViewMode] = useState("list");
+  const itemsPerPage = viewMode === "list" ? 6 : 12;
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -41,12 +51,36 @@ const AllDepartment = () => {
   const departments = data?.departments || [];
   const totalPages = data?.pagination?.totalPages || 1;
 
-  const clearAllFilters = () => {
-    setStatusFilter("All");
-    setDateFilter("All");
-    setCustomStart("");
-    setCustomEnd("");
+  // Open filter modal - sync temp states with applied states
+  const openFilterModal = () => {
+    setTempStatusFilter(statusFilter);
+    setTempDateFilter(dateFilter);
+    setTempCustomStart(customStart);
+    setTempCustomEnd(customEnd);
+    setIsFilterOpen(true);
+  };
+
+  // Apply filters - copy temp states to applied states
+  const applyFilters = () => {
+    setStatusFilter(tempStatusFilter);
+    setDateFilter(tempDateFilter);
+    setCustomStart(tempCustomStart);
+    setCustomEnd(tempCustomEnd);
     setCurrentPage(1);
+    setIsFilterOpen(false);
+  };
+
+  // Cancel - just close modal (temp states will be reset on next open)
+  const cancelFilters = () => {
+    setIsFilterOpen(false);
+  };
+
+  // Reset all filters (both temp and applied)
+  const clearAllFilters = () => {
+    setTempStatusFilter("All");
+    setTempDateFilter("All");
+    setTempCustomStart("");
+    setTempCustomEnd("");
   };
 
   const hasActiveFilters = statusFilter !== "All" || dateFilter !== "All";
@@ -97,9 +131,13 @@ const AllDepartment = () => {
                   <button
                     onClick={() => {
                       if (hasActiveFilters) {
-                        clearAllFilters();
+                        setStatusFilter("All");
+                        setDateFilter("All");
+                        setCustomStart("");
+                        setCustomEnd("");
+                        setCurrentPage(1);
                       } else {
-                        setIsFilterOpen(!isFilterOpen);
+                        openFilterModal();
                       }
                     }}
                     className={`px-3 py-3 rounded-sm border transition shadow-sm ${isFilterOpen || hasActiveFilters
@@ -111,77 +149,138 @@ const AllDepartment = () => {
                   </button>
 
                   {isFilterOpen && (
-                    <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-xl z-50 animate-fadeIn overflow-hidden">
-                      <div className="p-3 border-b border-gray-100 bg-gray-50">
-                        <span className="text-sm font-bold text-gray-700 tracking-wide">Statuses</span>
-                      </div>
-                      <div className="py-1">
-                        {["All", "Active", "Inactive"].map((status) => (
-                          <button
-                            key={status}
-                            onClick={() => {
-                              setStatusFilter(status);
-                              setIsFilterOpen(false);
-                              setCurrentPage(1);
-                            }}
-                            className={`block w-full text-left px-4 py-2 text-sm transition-colors ${statusFilter === status
-                              ? "bg-orange-50 text-orange-600 font-bold"
-                              : "text-gray-700 hover:bg-gray-50"
-                              }`}
-                          >
-                            {status}
-                          </button>
-                        ))}
+                    <div className="absolute right-0 mt-2 w-[480px] bg-white border border-gray-200 rounded-lg shadow-2xl z-50 overflow-hidden">
+                      {/* Header */}
+                      <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+                        <h3 className="text-base font-bold text-gray-800">Filter Options</h3>
+                        <button
+                          onClick={clearAllFilters}
+                          className="text-sm font-semibold text-orange-500 hover:text-orange-600 transition-colors"
+                        >
+                          Reset All
+                        </button>
                       </div>
 
-                      <div className="p-3 border-t border-b border-gray-100 bg-gray-50">
-                        <span className="text-sm font-bold text-gray-700 tracking-wide">Date Filter</span>
-                      </div>
-                      <div className="py-1">
-                        {["All", "Today", "Yesterday", "Last 7 Days", "Custom"].map((option) => (
-                          <div key={option}>
-                            <button
-                              onClick={() => {
-                                setDateFilter(option);
-                                if (option !== "Custom") {
-                                  setIsFilterOpen(false);
-                                  setCurrentPage(1);
-                                }
-                              }}
-                              className={`block w-full text-left px-4 py-2 text-sm transition-colors ${dateFilter === option
-                                ? "bg-orange-50 text-orange-600 font-bold"
-                                : "text-gray-700 hover:bg-gray-50"
-                                }`}
-                            >
-                              {option}
-                            </button>
-                            {option === "Custom" && dateFilter === "Custom" && (
-                              <div className="px-4 py-3 space-y-2 border-t border-gray-50 bg-gray-50/50">
+                      {/* Body - Two Column Layout */}
+                      <div className="grid grid-cols-2 gap-8 p-5">
+                        {/* Status Column */}
+                        <div>
+                          <label className="text-sm font-medium text-gray-500 mb-4 block">Status</label>
+                          <div className="space-y-3">
+                            {["All", "Inactive", "Active"].map((status) => (
+                              <label key={status} className="flex items-center gap-3 cursor-pointer group">
                                 <input
-                                  type="date"
-                                  value={customStart}
-                                  onChange={(e) => setCustomStart(e.target.value)}
-                                  className="w-full px-2 py-2 border border-gray-300 rounded-sm text-xs focus:ring-1 focus:ring-orange-500 outline-none"
+                                  type="radio"
+                                  name="status"
+                                  checked={tempStatusFilter === status}
+                                  onChange={() => setTempStatusFilter(status)}
+                                  className="w-4 h-4 text-orange-500 border-gray-300 focus:ring-orange-500 accent-orange-500"
                                 />
-                                <input
-                                  type="date"
-                                  value={customEnd}
-                                  onChange={(e) => setCustomEnd(e.target.value)}
-                                  className="w-full px-2 py-2 border border-gray-300 rounded-sm text-xs focus:ring-1 focus:ring-orange-500 outline-none"
-                                />
-                                <button
-                                  onClick={() => { setIsFilterOpen(false); setCurrentPage(1); }}
-                                  className="w-full bg-orange-500 text-white text-[10px] font-bold py-2 rounded-sm"
-                                >
-                                  Apply
-                                </button>
-                              </div>
-                            )}
+                                <span className={`text-sm ${tempStatusFilter === status ? "text-orange-500 font-semibold" : "text-gray-700 group-hover:text-gray-900"}`}>
+                                  {status}
+                                </span>
+                              </label>
+                            ))}
+                            {/* Custom Date Range in Status column */}
+                            <label className="flex items-center gap-3 cursor-pointer group">
+                              <input
+                                type="radio"
+                                name="dateFilter"
+                                checked={tempDateFilter === "Custom"}
+                                onChange={() => setTempDateFilter("Custom")}
+                                className="w-4 h-4 text-orange-500 border-gray-300 focus:ring-orange-500 accent-orange-500"
+                              />
+                              <span className={`text-sm ${tempDateFilter === "Custom" ? "text-orange-500 font-semibold" : "text-gray-700 group-hover:text-gray-900"}`}>
+                                Custom Date Range
+                              </span>
+                            </label>
                           </div>
-                        ))}
+                        </div>
+
+                        {/* Date Period Column */}
+                        <div>
+                          <label className="text-sm font-medium text-gray-500 mb-4 block">Date Period</label>
+                          <div className="space-y-3">
+                            {["All", "Today", "Yesterday", "Last 7 Days"].map((option) => (
+                              <label key={option} className="flex items-center gap-3 cursor-pointer group">
+                                <input
+                                  type="radio"
+                                  name="dateFilter"
+                                  checked={tempDateFilter === option}
+                                  onChange={() => setTempDateFilter(option)}
+                                  className="w-4 h-4 text-orange-500 border-gray-300 focus:ring-orange-500 accent-orange-500"
+                                />
+                                <span className={`text-sm ${tempDateFilter === option ? "text-orange-500 font-semibold" : "text-gray-700 group-hover:text-gray-900"}`}>
+                                  {option}
+                                </span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Custom Date Range Inputs - Only show when Custom is selected */}
+                        {tempDateFilter === "Custom" && (
+                          <div className="col-span-2 grid grid-cols-2 gap-3">
+                            <div>
+                              <label className="text-xs text-gray-500 mb-1 block">Start Date</label>
+                              <input
+                                type="date"
+                                value={tempCustomStart}
+                                onChange={(e) => setTempCustomStart(e.target.value)}
+                                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-xs text-gray-500 mb-1 block">End Date</label>
+                              <input
+                                type="date"
+                                value={tempCustomEnd}
+                                onChange={(e) => setTempCustomEnd(e.target.value)}
+                                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none"
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Footer */}
+                      <div className="flex items-center gap-3 px-5 py-4 border-t border-gray-100 bg-gray-50">
+                        <button
+                          onClick={cancelFilters}
+                          className="flex-1 px-4 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={applyFilters}
+                          className="flex-1 px-4 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-orange-500 to-orange-600 rounded-md hover:from-orange-600 hover:to-orange-700 transition-all shadow-md"
+                        >
+                          Apply Filters
+                        </button>
                       </div>
                     </div>
                   )}
+                </div>
+
+                <div className="flex items-center bg-gray-100 p-1 rounded-sm border border-gray-200 shadow-inner">
+                  <button
+                    onClick={() => { setViewMode("grid"); setCurrentPage(1); }}
+                    className={`p-2 rounded-sm transition-all duration-200 ${viewMode === "grid"
+                      ? "bg-white text-orange-600 shadow-sm border border-gray-100"
+                      : "text-gray-400 hover:text-gray-600"
+                      }`}
+                  >
+                    <LayoutGrid size={18} />
+                  </button>
+                  <button
+                    onClick={() => { setViewMode("list"); setCurrentPage(1); }}
+                    className={`p-2 rounded-sm transition-all duration-200 ${viewMode === "list"
+                      ? "bg-white text-orange-600 shadow-sm border border-gray-100"
+                      : "text-gray-400 hover:text-gray-600"
+                      }`}
+                  >
+                    <List size={18} />
+                  </button>
                 </div>
 
                 <button
@@ -233,112 +332,201 @@ const AllDepartment = () => {
             />
           </div>
 
-          <div className="overflow-x-auto border border-gray-200 rounded-sm shadow-sm mt-4">
-            <table className="w-full border-collapse text-left">
-              <thead>
-                <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm">
-                  <th className="py-3 px-4 font-semibold text-left border-b border-orange-400">S.N</th>
-                  <th className="py-3 px-4 font-semibold text-center border-b border-orange-400">Icon</th>
-                  <th className="py-3 px-4 font-semibold text-left border-b border-orange-400">Dept ID</th>
-                  <th className="py-3 px-4 font-semibold text-left border-b border-orange-400">Department Name</th>
-                  <th className="py-3 px-4 font-semibold text-left border-b border-orange-400">Description</th>
-                  <th className="py-3 px-4 font-semibold text-center border-b border-orange-400">Employees</th>
-                  <th className="py-3 px-4 font-semibold text-center border-b border-orange-400">Status</th>
-                  <th className="py-3 px-4 font-semibold text-right border-b border-orange-400">Action</th>
-                </tr>
-              </thead>
-              <tbody className="text-sm">
-                {isLoading ? (
-                  <tr>
-                    <td colSpan="8" className="py-20 text-center">
-                      <div className="flex justify-center flex-col items-center gap-4">
-                        <div className="w-12 h-12 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin"></div>
-                        <p className="text-gray-500 font-semibold">Loading departments...</p>
-                      </div>
-                    </td>
+          {viewMode === "list" ? (
+            <div className="overflow-x-auto border border-gray-200 rounded-sm shadow-sm mt-4">
+              <table className="w-full border-collapse text-left">
+                <thead>
+                  <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm">
+                    <th className="py-3 px-4 font-semibold text-left border-b border-orange-400">S.N</th>
+                    <th className="py-3 px-4 font-semibold text-center border-b border-orange-400">Icon</th>
+                    <th className="py-3 px-4 font-semibold text-left border-b border-orange-400">Dept ID</th>
+                    <th className="py-3 px-4 font-semibold text-left border-b border-orange-400">Department Name</th>
+                    <th className="py-3 px-4 font-semibold text-left border-b border-orange-400">Description</th>
+                    <th className="py-3 px-4 font-semibold text-center border-b border-orange-400">Employees</th>
+                    <th className="py-3 px-4 font-semibold text-center border-b border-orange-400">Status</th>
+                    <th className="py-3 px-4 font-semibold text-right border-b border-orange-400">Action</th>
                   </tr>
-                ) : departments.length > 0 ? (
-                  departments.map((dept, index) => (
-                    <tr key={dept.id} className="border-t hover:bg-gray-50 transition-colors">
-                      <td className="py-3 px-4 text-gray-700">{indexOfFirstItem + index + 1}</td>
-                      <td className="py-3 px-4">
-                        <div className="flex justify-center">
-                          {dept.icon ? (
-                            <img
-                              src={`${import.meta.env.VITE_API_BASE_URL.replace('/api/', '')}${dept.icon}`}
-                              alt={dept.department_name}
-                              className="w-10 h-10 rounded-full border border-orange-200 object-cover shadow-sm"
-                            />
-                          ) : (
-                            <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-bold border border-orange-200 shadow-sm">
-                              {dept.department_name?.substring(0, 1)}
-                            </div>
-                          )}
-                        </div>
-                      </td>
-                      <td className="py-3 px-4 text-orange-600 font-bold">{dept.department_id}</td>
-                      <td className="py-3 px-4 text-gray-800 font-semibold">{dept.department_name}</td>
-                      <td className="py-3 px-4 text-gray-600">
-                        <div className="cursor-pointer" title={dept.description}>
-                          {dept.description && dept.description.length > 60
-                            ? dept.description.substring(0, 60) + "..."
-                            : dept.description || "---"}
-                        </div>
-                      </td>
-                      <td className="py-3 px-4 text-center font-bold text-gray-700">{dept.employee_count || 0}</td>
-                      <td className="py-3 px-4 text-center">
-                        <span className={`px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-sm border ${getStatusClass(dept.status)}`}>
-                          {dept.status}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4 text-right">
-                        <div className="flex justify-end gap-2">
-                          <button
-                            onClick={() => { setSelectedDept(dept); setIsViewModalOpen(true); }}
-                            className="p-1 hover:bg-orange-100 rounded-sm text-blue-500 hover:text-blue-700 transition-all"
-                            title="View"
-                          >
-                            <Eye size={18} />
-                          </button>
-                          <button
-                            onClick={() => { setSelectedDept(dept); setIsEditModalOpen(true); }}
-                            disabled={!update}
-                            className={`p-1 hover:bg-orange-100 rounded-sm transition-all ${update ? "text-green-500 hover:text-green-700" : "text-gray-300 cursor-not-allowed"
-                              }`}
-                            title="Edit"
-                          >
-                            <Edit size={18} />
-                          </button>
-                          <button
-                            onClick={() => { setSelectedDept(dept); setIsDeleteModalOpen(true); }}
-                            disabled={!remove}
-                            className={`p-1 hover:bg-orange-100 rounded-sm transition-all ${remove ? "text-red-500 hover:text-red-700" : "text-gray-300 cursor-not-allowed"
-                              }`}
-                            title="Delete"
-                          >
-                            <Trash2 size={18} />
-                          </button>
+                </thead>
+                <tbody className="text-sm">
+                  {isLoading ? (
+                    <tr>
+                      <td colSpan="8" className="py-20 text-center">
+                        <div className="flex justify-center flex-col items-center gap-4">
+                          <div className="w-12 h-12 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin"></div>
+                          <p className="text-gray-500 font-semibold">Loading departments...</p>
                         </div>
                       </td>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="8" className="py-20 text-center flex flex-col items-center gap-3">
-                      <Warehouse size={48} className="text-gray-200" />
-                      <p className="text-gray-500 font-medium">No departments found.</p>
+                  ) : departments.length > 0 ? (
+                    departments.map((dept, index) => (
+                      <tr key={dept.id} className="border-t hover:bg-gray-50 transition-colors">
+                        <td className="py-3 px-4 text-gray-700">{indexOfFirstItem + index + 1}</td>
+                        <td className="py-3 px-4">
+                          <div className="flex justify-center">
+                            {dept.icon ? (
+                              <img
+                                src={`${import.meta.env.VITE_API_BASE_URL.replace('/api/', '')}${dept.icon}`}
+                                alt={dept.department_name}
+                                className="w-10 h-10 rounded-full border border-orange-200 object-cover shadow-sm"
+                              />
+                            ) : (
+                              <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-bold border border-orange-200 shadow-sm">
+                                {dept.department_name?.substring(0, 1)}
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                        <td className="py-3 px-4 text-orange-600 font-bold">{dept.department_id}</td>
+                        <td className="py-3 px-4 text-gray-800 font-semibold">{dept.department_name}</td>
+                        <td className="py-3 px-4 text-gray-600">
+                          <div className="cursor-pointer" title={dept.description}>
+                            {dept.description && dept.description.length > 60
+                              ? dept.description.substring(0, 60) + "..."
+                              : dept.description || "---"}
+                          </div>
+                        </td>
+                        <td className="py-3 px-4 text-center font-bold text-gray-700">{dept.employee_count || 0}</td>
+                        <td className="py-3 px-4 text-center">
+                          <span className={`px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-sm border ${getStatusClass(dept.status)}`}>
+                            {dept.status}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 text-right">
+                          <div className="flex justify-end gap-2">
+                            <button
+                              onClick={() => { setSelectedDept(dept); setIsViewModalOpen(true); }}
+                              className="p-1 hover:bg-orange-100 rounded-sm text-blue-500 hover:text-blue-700 transition-all"
+                              title="View"
+                            >
+                              <Eye size={18} />
+                            </button>
+                            <button
+                              onClick={() => { setSelectedDept(dept); setIsEditModalOpen(true); }}
+                              disabled={!update}
+                              className={`p-1 hover:bg-orange-100 rounded-sm transition-all ${update ? "text-green-500 hover:text-green-700" : "text-gray-300 cursor-not-allowed"
+                                }`}
+                              title="Edit"
+                            >
+                              <Edit size={18} />
+                            </button>
+                            <button
+                              onClick={() => { setSelectedDept(dept); setIsDeleteModalOpen(true); }}
+                              disabled={!remove}
+                              className={`p-1 hover:bg-orange-100 rounded-sm transition-all ${remove ? "text-red-500 hover:text-red-700" : "text-gray-300 cursor-not-allowed"
+                                }`}
+                              title="Delete"
+                            >
+                              <Trash2 size={18} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="8" className="py-20 text-center flex flex-col items-center gap-3">
+                        <Warehouse size={48} className="text-gray-200" />
+                        <p className="text-gray-500 font-medium">No departments found.</p>
+                        <button
+                          onClick={() => setIsAddModalOpen(true)}
+                          className="px-6 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold rounded-sm shadow-lg hover:shadow-orange-200 transition-all active:scale-95"
+                        >
+                          Create first Department
+                        </button>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <GenericGridView
+              data={departments}
+              renderItem={(dept) => (
+                <div key={dept.id} className="bg-white border border-gray-200 rounded-sm shadow-sm hover:shadow-md transition-all relative group flex flex-col h-full overflow-hidden">
+                  <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                    <button
+                      onClick={() => { setSelectedDept(dept); setIsViewModalOpen(true); }}
+                      className="p-1.5 text-blue-500 hover:bg-blue-50 rounded-sm bg-white shadow-sm border border-blue-100"
+                      title="View"
+                    >
+                      <Eye size={16} />
+                    </button>
+                    {update && (
                       <button
-                        onClick={() => setIsAddModalOpen(true)}
-                        className="px-6 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold rounded-sm shadow-lg hover:shadow-orange-200 transition-all active:scale-95"
+                        onClick={() => { setSelectedDept(dept); setIsEditModalOpen(true); }}
+                        className="p-1.5 text-green-500 hover:bg-green-50 rounded-sm bg-white shadow-sm border border-green-100"
+                        title="Edit"
                       >
-                        Create first Department
+                        <Edit size={16} />
                       </button>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                    )}
+                    {remove && (
+                      <button
+                        onClick={() => { setSelectedDept(dept); setIsDeleteModalOpen(true); }}
+                        className="p-1.5 text-red-500 hover:bg-red-50 rounded-sm bg-white shadow-sm border border-red-100"
+                        title="Delete"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="p-6 pb-4 flex-1 flex flex-col items-center mt-2">
+                    <div className="w-20 h-20 rounded-full border-4 border-orange-50 flex items-center justify-center overflow-hidden bg-orange-100 flex-shrink-0 shadow-inner shadow-orange-200/50">
+                      {dept.icon ? (
+                        <img
+                          src={`${import.meta.env.VITE_API_BASE_URL.replace('/api/', '')}${dept.icon}`}
+                          alt={dept.department_name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-orange-600 font-bold text-3xl">
+                          {dept.department_name?.substring(0, 1)}
+                        </div>
+                      )}
+                    </div>
+                    <div className="mt-4 text-center">
+                      <h3 className="font-bold text-gray-800 text-lg leading-tight line-clamp-1" title={dept.department_name}>
+                        {dept.department_name}
+                      </h3>
+                      <p className="text-orange-500 text-[10px] font-black mt-1 tracking-widest uppercase bg-orange-50 px-2 py-0.5 rounded-full inline-block border border-orange-100">
+                        {dept.department_id}
+                      </p>
+                    </div>
+                    
+                    <p className="text-sm text-gray-500 mt-4 line-clamp-2 min-h-[40px] px-2 text-center italic">
+                      {dept.description || "No description provided for this department."}
+                    </p>
+                  </div>
+
+                  <div className="bg-gray-50 p-5 space-y-4 border-t border-gray-100 mt-auto">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="text-center p-2 bg-white rounded-lg border border-gray-200 shadow-sm">
+                        <p className="text-[9px] text-gray-400 font-black uppercase tracking-tighter">Employees</p>
+                        <p className="text-lg font-black text-gray-800">{dept.employee_count || 0}</p>
+                      </div>
+                      <div className="text-center p-2 bg-white rounded-lg border border-gray-200 shadow-sm">
+                        <p className="text-[9px] text-gray-400 font-black uppercase tracking-tighter">Designations</p>
+                        <p className="text-lg font-black text-gray-800">{dept.designation_count || 0}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-center pt-1">
+                      <span
+                        className={`px-4 py-1 text-[10px] font-black rounded-full uppercase tracking-widest border shadow-sm ${dept.status === "Active"
+                          ? "bg-green-50 text-green-700 border-green-200"
+                          : "bg-red-50 text-red-700 border-red-200"
+                          }`}
+                      >
+                        {dept.status}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            />
+          )}
 
           {/* Pagination */}
           {totalPages > 0 && (

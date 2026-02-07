@@ -27,8 +27,8 @@ const AddTermModal = ({ isOpen, onClose }) => {
   };
 
   const handleAdd = async () => {
-    if (!department || !designation || !title.trim() || !description.trim()) {
-      toast.error("All fields are required");
+    if (!title.trim() || !description.trim()) {
+      toast.error("Policy Title and Description fields are required");
       return;
     }
 
@@ -81,7 +81,7 @@ const AddTermModal = ({ isOpen, onClose }) => {
         <div>
           <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
             <Briefcase size={16} className="text-[#FF7B1D]" />
-            Department *
+            Department
           </label>
           <select
             value={department}
@@ -101,7 +101,7 @@ const AddTermModal = ({ isOpen, onClose }) => {
         <div>
           <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
             <User size={16} className="text-[#FF7B1D]" />
-            Designation *
+            Designation
           </label>
           <select
             value={designation}
@@ -127,22 +127,32 @@ const AddTermModal = ({ isOpen, onClose }) => {
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
+            maxLength={100}
+            placeholder="Enter policy title..."
             className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 shadow-sm font-medium"
           />
+          <p className={`text-[10px] mt-1 text-right font-bold tracking-tight ${title.length >= 100 ? 'text-red-500' : 'text-gray-400'}`}>
+            {title.length} / 100 characters
+          </p>
         </div>
 
         {/* Description */}
         <div>
           <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
             <AlignLeft size={16} className="text-[#FF7B1D]" />
-            Description
+            Description *
           </label>
           <textarea
             rows="4"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
+            maxLength={500}
+            placeholder="Enter policy description..."
             className="w-full px-4 py-3 border border-gray-200 rounded-sm resize-none focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 shadow-sm font-medium"
           />
+          <p className={`text-xs mt-1 text-right ${description.length >= 500 ? 'text-red-500' : description.length > 400 ? 'text-orange-500' : 'text-gray-500'}`}>
+            {description.length} / 500 characters
+          </p>
         </div>
       </div>
     </Modal>
