@@ -35,6 +35,16 @@ const AddTeamModal = ({ isOpen, onClose, onSubmit, isLoading }) => {
         return map;
     }, [formData.levels]);
 
+    const allSelectedEmployeeIds = useMemo(() => {
+        const ids = new Set();
+        formData.levels.forEach(level => {
+            level.rows.forEach(row => {
+                if (row.employeeId) ids.add(String(row.employeeId));
+            });
+        });
+        return ids;
+    }, [formData.levels]);
+
     const addLevel = () => {
         setFormData(prev => ({
             ...prev,
@@ -110,7 +120,11 @@ const AddTeamModal = ({ isOpen, onClose, onSubmit, isLoading }) => {
                 row.departmentId === "All" || emp.department_id === parseInt(row.departmentId);
             const matchesDesignation =
                 row.designationId === "All" || emp.designation_id === parseInt(row.designationId);
-            return matchesDepartment && matchesDesignation;
+
+            // Exclude if already selected elsewhere, BUT keep if it's the CURRENT row's selection
+            const isSelectedElsewhere = allSelectedEmployeeIds.has(String(emp.id)) && String(emp.id) !== String(row.employeeId);
+
+            return matchesDepartment && matchesDesignation && !isSelectedElsewhere;
         });
     };
 
@@ -137,13 +151,22 @@ const AddTeamModal = ({ isOpen, onClose, onSubmit, isLoading }) => {
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 font-primary text-left">
-            <div className="bg-white w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl custom-scrollbar rounded-lg">
-                <div className="sticky top-0 bg-[#FF7B1D] px-6 py-4 flex items-center justify-between z-50 rounded-t-lg shadow-md">
-                    <h2 className="text-xl font-bold text-white flex items-center gap-2 capitalize tracking-wide">
-                        <Users size={20} />
-                        Create New Team
-                    </h2>
-                    <button onClick={onClose} className="text-white hover:bg-white hover:bg-opacity-20 p-2 transition-all">
+            <div className="bg-white w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl custom-scrollbar rounded-sm">
+                <div className="sticky top-0 bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-4 flex items-center justify-between z-50 rounded-t-sm shadow-md">
+                    <div className="flex items-center gap-4">
+                        <div className="bg-white bg-opacity-20 p-2.5 rounded-sm">
+                            <Users size={24} className="text-white" />
+                        </div>
+                        <div>
+                            <h2 className="text-2xl font-bold text-white capitalize tracking-wide leading-tight">
+                                Create New Team
+                            </h2>
+                            <p className="text-xs text-orange-50 font-medium opacity-90">
+                                Build your organization hierarchy by adding levels and members
+                            </p>
+                        </div>
+                    </div>
+                    <button onClick={onClose} className="text-white hover:bg-white hover:bg-opacity-20 p-2 transition-all rounded-full">
                         <X size={24} />
                     </button>
                 </div>
@@ -151,7 +174,7 @@ const AddTeamModal = ({ isOpen, onClose, onSubmit, isLoading }) => {
                 <form onSubmit={handleSubmit} className="p-6 space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2 capitalize">
+                            <label className="flex items-center gap-2 text-[15px] font-semibold text-gray-700 mb-2 capitalize">
                                 <LayoutGrid size={14} className="text-[#FF7B1D]" />
                                 Team Name <span className="text-red-500">*</span>
                             </label>
@@ -164,7 +187,7 @@ const AddTeamModal = ({ isOpen, onClose, onSubmit, isLoading }) => {
                             />
                         </div>
                         <div>
-                            <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2 capitalize">
+                            <label className="flex items-center gap-2 text-[15px] font-semibold text-gray-700 mb-2 capitalize">
                                 <CheckCircle size={14} className="text-[#FF7B1D]" />
                                 Status
                             </label>
@@ -180,7 +203,7 @@ const AddTeamModal = ({ isOpen, onClose, onSubmit, isLoading }) => {
                     </div>
 
                     <div>
-                        <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2 capitalize">
+                        <label className="flex items-center gap-2 text-[15px] font-semibold text-gray-700 mb-2 capitalize">
                             <FileText size={14} className="text-[#FF7B1D]" />
                             Description
                         </label>
@@ -195,7 +218,7 @@ const AddTeamModal = ({ isOpen, onClose, onSubmit, isLoading }) => {
 
                     <div className="space-y-4">
                         <div className="flex items-center justify-between border-b pb-4">
-                            <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 capitalize tracking-wide">
+                            <label className="flex items-center gap-2 text-[15px] font-semibold text-gray-700 capitalize tracking-wide">
                                 <Settings size={18} className="text-[#FF7B1D]" />
                                 Team Structure (Levels) <span className="text-red-500">*</span>
                             </label>
@@ -223,7 +246,7 @@ const AddTeamModal = ({ isOpen, onClose, onSubmit, isLoading }) => {
                                                 <span className="w-8 h-8 rounded-full bg-[#FF7B1D] text-white text-xs font-black flex items-center justify-center shadow-md">
                                                     {levelIdx + 1}
                                                 </span>
-                                                <span className="text-xs font-black text-gray-800 capitalize tracking-widest">
+                                                <span className="text-sm font-black text-gray-800 capitalize tracking-widest">
                                                     Level {levelIdx + 1}
                                                 </span>
                                             </div>
@@ -257,13 +280,14 @@ const AddTeamModal = ({ isOpen, onClose, onSubmit, isLoading }) => {
                                                         {rowIdx > 0 && (
                                                             <button
                                                                 type="button" onClick={() => removeRowFromLevel(level.id, row.id)}
-                                                                className="absolute -right-2 top-2 p-1 text-red-500 hover:bg-red-50 rounded transition-all"
+                                                                className="absolute -right-3 top-2 w-6 h-6 flex items-center justify-center bg-red-50 text-red-500 border border-red-100 rounded-sm hover:bg-red-500 hover:text-white transition-all shadow-sm z-10 active:scale-95"
+                                                                title="Remove row"
                                                             >
-                                                                <X size={14} />
+                                                                <X size={12} strokeWidth={3} />
                                                             </button>
                                                         )}
                                                         <div>
-                                                            <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-700 capitalize mb-2">
+                                                            <label className="flex items-center gap-1.5 text-sm font-semibold text-gray-700 capitalize mb-2">
                                                                 <Building2 size={12} className="text-[#FF7B1D]" /> Department
                                                             </label>
                                                             <select
@@ -276,7 +300,7 @@ const AddTeamModal = ({ isOpen, onClose, onSubmit, isLoading }) => {
                                                             </select>
                                                         </div>
                                                         <div>
-                                                            <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-700 capitalize mb-2">
+                                                            <label className="flex items-center gap-1.5 text-sm font-semibold text-gray-700 capitalize mb-2">
                                                                 <Briefcase size={12} className="text-[#FF7B1D]" /> Designation
                                                             </label>
                                                             <select
@@ -289,7 +313,7 @@ const AddTeamModal = ({ isOpen, onClose, onSubmit, isLoading }) => {
                                                             </select>
                                                         </div>
                                                         <div>
-                                                            <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-700 capitalize mb-2">
+                                                            <label className="flex items-center gap-1.5 text-sm font-semibold text-gray-700 capitalize mb-2">
                                                                 <User size={12} className="text-[#FF7B1D]" /> Select Employee
                                                             </label>
                                                             <div className="space-y-1">
@@ -327,14 +351,14 @@ const AddTeamModal = ({ isOpen, onClose, onSubmit, isLoading }) => {
 
                     {/* Hierarchy Preview */}
                     {formData.levels.some(l => l.rows.some(r => r.employeeId)) && (
-                        <div className="bg-white rounded p-6 border border-gray-200 mt-10 shadow-sm">
-                            <h3 className="text-xs font-black text-gray-800 capitalize tracking-widest mb-8 flex items-center gap-2 border-b pb-4">
+                        <div className="bg-white rounded-sm p-6 border border-gray-200 mt-10 shadow-sm">
+                            <h3 className="text-sm font-black text-gray-800 capitalize tracking-widest mb-8 flex items-center gap-2 border-b pb-4">
                                 <Users size={18} className="text-[#FF7B1D]" /> Team Hierarchy Preview
                             </h3>
                             <div className="flex flex-col items-center">
                                 {formData.levels.filter(l => l.rows.some(r => r.employeeId)).map((level, idx, filtered) => (
                                     <React.Fragment key={level.id}>
-                                        <div className="w-full max-w-3xl bg-white border border-gray-100 p-4 rounded shadow-sm relative hover:border-orange-200 transition-all">
+                                        <div className="w-full max-w-3xl bg-white border border-gray-100 p-4 rounded-sm shadow-sm relative hover:border-orange-200 transition-all">
                                             <div className="absolute -left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-[#FF7B1D] text-white text-[11px] font-black flex items-center justify-center border-2 border-white shadow-lg z-10">
                                                 {idx + 1}
                                             </div>
@@ -346,7 +370,7 @@ const AddTeamModal = ({ isOpen, onClose, onSubmit, isLoading }) => {
                                                     const isDuplicateInternally = internalLevels.length > 1;
 
                                                     return (
-                                                        <div key={`${empId}-${rowIdx}`} className="flex flex-col gap-2 p-2 bg-gray-50 rounded border border-gray-100">
+                                                        <div key={`${empId}-${rowIdx}`} className="flex flex-col gap-2 p-2 bg-gray-50 rounded-sm border border-gray-100">
                                                             <div className="flex items-center gap-3">
                                                                 <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-[#FF7B1D] font-black text-xs">
                                                                     {emp?.employee_name?.charAt(0)}
@@ -361,13 +385,13 @@ const AddTeamModal = ({ isOpen, onClose, onSubmit, isLoading }) => {
                                                             {(otherTeam || isDuplicateInternally) && (
                                                                 <div className="space-y-1">
                                                                     {otherTeam && (
-                                                                        <div className="flex items-center gap-1.5 px-2 py-1 bg-red-50 text-red-600 rounded text-[9px] font-bold border border-red-100 uppercase tracking-tighter shadow-sm">
+                                                                        <div className="flex items-center gap-1.5 px-2 py-1 bg-red-50 text-red-600 rounded-sm text-[9px] font-bold border border-red-100 capitalize tracking-normal shadow-sm">
                                                                             <AlertCircle size={10} strokeWidth={3} />
                                                                             Already in Team: {otherTeam}
                                                                         </div>
                                                                     )}
                                                                     {isDuplicateInternally && (
-                                                                        <div className="flex items-center gap-1.5 px-2 py-1 bg-orange-50 text-orange-600 rounded text-[9px] font-bold border border-orange-100 uppercase tracking-tighter shadow-sm">
+                                                                        <div className="flex items-center gap-1.5 px-2 py-1 bg-orange-50 text-orange-600 rounded-sm text-[9px] font-bold border border-orange-100 capitalize tracking-normal shadow-sm">
                                                                             <Users size={10} strokeWidth={3} />
                                                                             Levels: {internalLevels.join(', ')}
                                                                         </div>
@@ -391,19 +415,19 @@ const AddTeamModal = ({ isOpen, onClose, onSubmit, isLoading }) => {
                         </div>
                     )}
 
-                    <div className="flex gap-4 pt-4 border-t border-gray-100">
+                    <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-end gap-3 -mx-6 -mb-6 mt-10 rounded-b-sm">
+                        <button
+                            type="button" onClick={onClose}
+                            className="px-8 py-2.5 rounded-sm border-2 border-gray-300 text-gray-700 font-bold hover:bg-gray-50 transition-all text-sm bg-white"
+                        >
+                            Cancel
+                        </button>
                         <button
                             type="submit"
                             disabled={isLoading || !formData.levels.some(l => l.rows.some(r => r.employeeId))}
-                            className="flex-1 bg-[#FF7B1D] text-white px-8 py-3.5 font-bold shadow-md hover:bg-[#e66a15] transition-all duration-300 disabled:opacity-50  text-xs capitalize tracking-widest"
+                            className="flex items-center justify-center gap-2 px-8 py-2.5 rounded-sm bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold hover:shadow-lg transform transition-all active:scale-95 disabled:opacity-50 text-sm"
                         >
                             {isLoading ? "Creating..." : "Create Team"}
-                        </button>
-                        <button
-                            type="button" onClick={onClose}
-                            className="px-8 py-3.5 border border-gray-300 font-bold text-gray-600 hover:bg-gray-50 transition-all  text-xs capitalize tracking-widest bg-white"
-                        >
-                            Cancel
                         </button>
                     </div>
                 </form>

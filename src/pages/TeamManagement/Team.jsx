@@ -16,8 +16,11 @@ import {
   ChevronDown,
   Calendar,
   AlertCircle,
-  LayoutGrid,
-  List
+  Search,
+  Layout,
+  CheckCircle,
+  MoreVertical,
+  RotateCcw,
 } from "lucide-react";
 import { FiHome } from "react-icons/fi";
 import NumberCard from "../../components/NumberCard";
@@ -31,26 +34,42 @@ import AddTeamModal from "../../components/Team/AddTeamModal";
 import EditTeamModal from "../../components/Team/EditTeamModal";
 import ViewTeamModal from "../../components/Team/ViewTeamModal";
 import DeleteTeamModal from "../../components/Team/DeleteTeamModal";
+import TeamMembersModal from "../../components/Team/TeamMembersModal";
 import { toast } from "react-hot-toast";
 import usePermission from "../../hooks/usePermission";
-import GenericGridView from "../../components/common/GenericGridView";
+import { useGetDepartmentsQuery } from "../../store/api/departmentApi";
+import { useGetDesignationsQuery } from "../../store/api/designationApi";
+import { useGetEmployeesQuery } from "../../store/api/employeeApi";
 
 export default function TeamManagement() {
   const [currentPage, setCurrentPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState("All");
   const [dateFilter, setDateFilter] = useState("All");
+  const [departmentFilter, setDepartmentFilter] = useState("All");
+  const [designationFilter, setDesignationFilter] = useState("All");
+  const [employeeFilter, setEmployeeFilter] = useState("All");
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const [tempStatus, setTempStatus] = useState("All");
+  const [tempDateFilter, setTempDateFilter] = useState("All");
+  const [tempDepartment, setTempDepartment] = useState("All");
+  const [tempDesignation, setTempDesignation] = useState("All");
+  const [tempEmployee, setTempEmployee] = useState("All");
+  const [tempCustomStart, setTempCustomStart] = useState("");
+  const [tempCustomEnd, setTempCustomEnd] = useState("");
+
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  const [viewMode, setViewMode] = useState("list");
-  const itemsPerPage = viewMode === "list" ? 10 : 12;
+  const itemsPerPage = 10;
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showMembersModal, setShowMembersModal] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState(null);
 
   const { create, read, update, delete: canDelete } = usePermission("Team Management");
@@ -92,12 +111,22 @@ export default function TeamManagement() {
   const { data, isLoading, isError, error, refetch } = useGetTeamsQuery({
     page: currentPage,
     limit: itemsPerPage,
-    // Note: status and date filters are handled on frontend if backend doesn't support them
-    // but we pass them anyway in case backend is updated or supports them
+    search: searchTerm,
     status: statusFilter !== "All" ? statusFilter : undefined,
+    department: departmentFilter !== "All" ? departmentFilter : undefined,
+    designation: designationFilter !== "All" ? designationFilter : undefined,
+    employee: employeeFilter !== "All" ? employeeFilter : undefined,
     dateFrom,
     dateTo,
   });
+
+  const { data: deptsData } = useGetDepartmentsQuery({ limit: 1000 });
+  const { data: desigsData } = useGetDesignationsQuery({ limit: 1000 });
+  const { data: empsData } = useGetEmployeesQuery({ limit: 1000, status: 'Active' });
+
+  const departments = deptsData?.departments || [];
+  const designations = desigsData?.designations || [];
+  const employees = empsData?.employees || [];
 
   const [createTeam, { isLoading: isCreating }] = useCreateTeamMutation();
   const [updateTeam, { isLoading: isUpdating }] = useUpdateTeamMutation();
@@ -105,27 +134,9 @@ export default function TeamManagement() {
 
   const teamsData = data?.teams || [];
 
-  // Frontend Filtering
-  const filteredTeams = teamsData.filter(team => {
-    let statusMatch = true;
-    if (statusFilter !== "All") {
-      statusMatch = team.status === statusFilter;
-    }
-
-    let dateMatch = true;
-    if (dateFilter !== "All" && (dateFrom || dateTo)) {
-      const teamDate = team.created_at ? new Date(team.created_at).toISOString().split('T')[0] : "";
-      if (dateFrom && dateTo) {
-        dateMatch = teamDate >= dateFrom && teamDate <= dateTo;
-      } else if (dateFrom) {
-        dateMatch = teamDate >= dateFrom;
-      } else if (dateTo) {
-        dateMatch = teamDate <= dateTo;
-      }
-    }
-
-    return statusMatch && dateMatch;
-  });
+  // Frontend Filtering - Only search if needed locally, but since we pass filters to backend,
+  // we can use the backend results directly.
+  const filteredTeams = teamsData; // Backend handles filtering now
 
   const totalItems = data?.pagination?.total || 0;
   const totalPages = data?.pagination?.totalPages || 1;
@@ -163,13 +174,23 @@ export default function TeamManagement() {
   const clearAllFilters = () => {
     setStatusFilter("All");
     setDateFilter("All");
+    setDepartmentFilter("All");
+    setDesignationFilter("All");
+    setEmployeeFilter("All");
     setCustomStart("");
     setCustomEnd("");
+    setSearchTerm("");
     setCurrentPage(1);
     setIsFilterOpen(false);
   };
 
-  const hasActiveFilters = statusFilter !== "All" || dateFilter !== "All";
+  const hasActiveFilters =
+    statusFilter !== "All" ||
+    dateFilter !== "All" ||
+    departmentFilter !== "All" ||
+    designationFilter !== "All" ||
+    employeeFilter !== "All" ||
+    searchTerm !== "";
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -199,8 +220,12 @@ export default function TeamManagement() {
                 </p>
               </div>
 
-              {/* Buttons */}
+              {/* Buttons and Search */}
               <div className="flex flex-wrap items-center gap-3">
+                {/* Search Bar */}
+
+
+
                 {/* Unified Filter */}
                 <div className="relative" ref={dropdownRef}>
                   <button
@@ -208,6 +233,13 @@ export default function TeamManagement() {
                       if (hasActiveFilters) {
                         clearAllFilters();
                       } else {
+                        setTempStatus(statusFilter);
+                        setTempDateFilter(dateFilter);
+                        setTempDepartment(departmentFilter);
+                        setTempDesignation(designationFilter);
+                        setTempEmployee(employeeFilter);
+                        setTempCustomStart(customStart);
+                        setTempCustomEnd(customEnd);
                         setIsFilterOpen(!isFilterOpen);
                       }
                     }}
@@ -220,106 +252,184 @@ export default function TeamManagement() {
                   </button>
 
                   {isFilterOpen && (
-                    <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-xl z-50 animate-fadeIn overflow-hidden">
-                      {/* Status Section */}
-                      <div className="p-3 border-b border-gray-100 bg-gray-50">
-                        <span className="text-sm font-bold text-gray-700 tracking-wide">Status</span>
-                      </div>
-                      <div className="py-1">
-                        {["All", "Active", "Inactive"].map((status) => (
-                          <button
-                            key={status}
-                            onClick={() => {
-                              setStatusFilter(status);
-                              setIsFilterOpen(false);
-                              setCurrentPage(1);
-                            }}
-                            className={`block w-full text-left px-4 py-2 text-sm transition-colors ${statusFilter === status
-                              ? "bg-orange-50 text-orange-600 font-bold"
-                              : "text-gray-700 hover:bg-gray-50"
-                              }`}
-                          >
-                            {status}
-                          </button>
-                        ))}
+                    <div className="absolute right-0 mt-2 w-[400px] bg-white border border-gray-200 rounded-sm shadow-2xl z-50 animate-fadeIn overflow-hidden">
+                      {/* Header */}
+                      <div className="p-4 bg-gray-50 border-b flex justify-between items-center">
+                        <span className="text-sm font-bold text-gray-800">Filter Options</span>
+                        <button
+                          onClick={() => {
+                            setTempStatus("All");
+                            setTempDateFilter("All");
+                            setTempDepartment("All");
+                            setTempDesignation("All");
+                            setTempEmployee("All");
+                            setCustomStart("");
+                            setCustomEnd("");
+                          }}
+                          className="text-[10px] font-bold text-orange-600 hover:underline hover:text-orange-700 capitalize"
+                        >
+                          Reset all
+                        </button>
                       </div>
 
-                      {/* Date Range Section */}
-                      <div className="p-3 border-t border-b border-gray-100 bg-gray-50">
-                        <span className="text-sm font-bold text-gray-700 tracking-wide">Date Created</span>
-                      </div>
-                      <div className="py-1">
-                        {["All", "Today", "Yesterday", "Last 7 Days", "This Month", "Custom"].map((option) => (
-                          <div key={option}>
-                            <button
-                              onClick={() => {
-                                setDateFilter(option);
-                                if (option !== "Custom") {
-                                  setIsFilterOpen(false);
-                                  setCurrentPage(1);
-                                }
-                              }}
-                              className={`block w-full text-left px-4 py-2 text-sm transition-colors ${dateFilter === option
-                                ? "bg-orange-50 text-orange-600 font-bold"
-                                : "text-gray-700 hover:bg-gray-50"
-                                }`}
-                            >
-                              {option}
-                            </button>
-                            {option === "Custom" && dateFilter === "Custom" && (
-                              <div className="px-4 py-3 space-y-2 border-t border-gray-50 bg-gray-50/50">
-                                <input
-                                  type="date"
-                                  value={customStart}
-                                  onChange={(e) => setCustomStart(e.target.value)}
-                                  className="w-full px-2 py-2 border border-gray-300 rounded-sm text-xs focus:ring-1 focus:ring-orange-500 outline-none"
-                                />
-                                <input
-                                  type="date"
-                                  value={customEnd}
-                                  onChange={(e) => setCustomEnd(e.target.value)}
-                                  className="w-full px-2 py-2 border border-gray-300 rounded-sm text-xs focus:ring-1 focus:ring-orange-500 outline-none"
-                                />
-                                <button
-                                  onClick={() => { setIsFilterOpen(false); setCurrentPage(1); }}
-                                  className="w-full bg-[#FF7B1D] text-white text-[10px] font-bold py-2 rounded-sm uppercase"
-                                >
-                                  Apply
-                                </button>
-                              </div>
-                            )}
+                      <div className="p-5 grid grid-cols-2 gap-x-10 gap-y-8">
+                        {/* Column 1: Status Selection */}
+                        <div className="space-y-4">
+                          <span className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-2 border-b pb-1">Team Status</span>
+                          <div className="grid grid-cols-2 gap-4">
+                            {["All", "Active", "Inactive"].map((s) => (
+                              <label key={s} className="flex items-center group cursor-pointer">
+                                <div className="relative flex items-center">
+                                  <input
+                                    type="radio"
+                                    name="status_filter"
+                                    checked={tempStatus === s}
+                                    onChange={() => setTempStatus(s)}
+                                    className="peer h-4 w-4 cursor-pointer appearance-none rounded-full border-2 border-gray-200 transition-all checked:border-[#FF7B1D] checked:border-[5px] hover:border-orange-300"
+                                  />
+                                </div>
+                                <span className={`ml-3 text-sm font-medium transition-colors capitalize ${tempStatus === s ? "text-[#FF7B1D] font-bold" : "text-gray-600 group-hover:text-gray-900"}`}>
+                                  {s}
+                                </span>
+                              </label>
+                            ))}
                           </div>
-                        ))}
+                        </div>
+
+                        {/* Column 2: Team Member */}
+                        <div className="space-y-4">
+                          <span className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-2 border-b pb-1">Team Member</span>
+                          <div className="relative">
+                            <select
+                              value={tempEmployee}
+                              onChange={(e) => setTempEmployee(e.target.value)}
+                              className="w-full px-3 py-2.5 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-1 focus:ring-orange-500/20 outline-none transition-all text-xs font-semibold text-gray-700 bg-gray-50 hover:bg-white"
+                            >
+                              <option value="All">All Members</option>
+                              {employees.map((emp) => (
+                                <option key={emp.id} value={emp.id}>
+                                  {emp.employee_name}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+
+                        {/* Column 3: Department */}
+                        <div className="space-y-4">
+                          <span className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-2 border-b pb-1">Department</span>
+                          <div className="relative">
+                            <select
+                              value={tempDepartment}
+                              onChange={(e) => setTempDepartment(e.target.value)}
+                              className="w-full px-3 py-2.5 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-1 focus:ring-orange-500/20 outline-none transition-all text-xs font-semibold text-gray-700 bg-gray-50 hover:bg-white"
+                            >
+                              <option value="All">All Departments</option>
+                              {departments.map((dept) => (
+                                <option key={dept.id} value={dept.id}>
+                                  {dept.department_name}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+
+                        {/* Column 4: Designation */}
+                        <div className="space-y-4">
+                          <span className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-2 border-b pb-1">Designation</span>
+                          <div className="relative">
+                            <select
+                              value={tempDesignation}
+                              onChange={(e) => setTempDesignation(e.target.value)}
+                              className="w-full px-3 py-2.5 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-1 focus:ring-orange-500/20 outline-none transition-all text-xs font-semibold text-gray-700 bg-gray-50 hover:bg-white"
+                            >
+                              <option value="All">All Designations</option>
+                              {designations.map((desig) => (
+                                <option key={desig.id} value={desig.id}>
+                                  {desig.designation_name}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+
+                        {/* Column 5: Date Created */}
+                        <div className="space-y-4">
+                          <span className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-2 border-b pb-1">Date Created</span>
+                          <div className="space-y-3">
+                            <select
+                              value={tempDateFilter}
+                              onChange={(e) => setTempDateFilter(e.target.value)}
+                              className="w-full px-3 py-2.5 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-1 focus:ring-orange-500/20 outline-none transition-all text-xs font-semibold text-gray-700 bg-gray-50 hover:bg-white"
+                            >
+                              {["All", "Today", "Yesterday", "Last 7 Days", "This Month", "Custom"].map((option) => (
+                                <option key={option} value={option}>{option}</option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+
+                        {/* Column 6: Custom Date Range (if Custom selected) */}
+                        {tempDateFilter === "Custom" && (
+                          <div className="space-y-4">
+                            <span className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-2 border-b pb-1">Custom Range</span>
+                            <div className="grid grid-cols-2 gap-2 animate-fadeIn">
+                              <div className="space-y-1">
+                                <label className="text-[9px] font-bold text-gray-400 uppercase">From</label>
+                                <input
+                                  type="date"
+                                  value={tempCustomStart}
+                                  onChange={(e) => setTempCustomStart(e.target.value)}
+                                  className="w-full px-2 py-1.5 border border-gray-200 rounded-sm text-[10px] outline-none focus:border-orange-500"
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <label className="text-[9px] font-bold text-gray-400 uppercase">To</label>
+                                <input
+                                  type="date"
+                                  value={tempCustomEnd}
+                                  onChange={(e) => setTempCustomEnd(e.target.value)}
+                                  className="w-full px-2 py-1.5 border border-gray-200 rounded-sm text-[10px] outline-none focus:border-orange-500"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Filter Actions */}
+                      <div className="p-4 bg-gray-50 border-t flex gap-3">
+                        <button
+                          onClick={() => setIsFilterOpen(false)}
+                          className="flex-1 py-2.5 text-[11px] font-bold text-gray-500 capitalize tracking-wider hover:bg-gray-200 transition-colors rounded-sm border border-gray-200 bg-white"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={() => {
+                            setStatusFilter(tempStatus);
+                            setDateFilter(tempDateFilter);
+                            setDepartmentFilter(tempDepartment);
+                            setDesignationFilter(tempDesignation);
+                            setEmployeeFilter(tempEmployee);
+                            setCustomStart(tempCustomStart);
+                            setCustomEnd(tempCustomEnd);
+                            setIsFilterOpen(false);
+                            setCurrentPage(1);
+                          }}
+                          className="flex-1 py-2.5 text-[11px] font-bold text-white capitalize tracking-wider bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 transition-all rounded-sm shadow-md active:scale-95"
+                        >
+                          Apply filters
+                        </button>
                       </div>
                     </div>
                   )}
                 </div>
 
-                <div className="flex items-center bg-gray-100 p-1 rounded-sm border border-gray-200 shadow-inner">
-                  <button
-                    onClick={() => { setViewMode("grid"); setCurrentPage(1); }}
-                    className={`p-2 rounded-sm transition-all duration-200 ${viewMode === "grid"
-                      ? "bg-white text-orange-600 shadow-sm border border-gray-100"
-                      : "text-gray-400 hover:text-gray-600"
-                      }`}
-                  >
-                    <LayoutGrid size={18} />
-                  </button>
-                  <button
-                    onClick={() => { setViewMode("list"); setCurrentPage(1); }}
-                    className={`p-2 rounded-sm transition-all duration-200 ${viewMode === "list"
-                      ? "bg-white text-orange-600 shadow-sm border border-gray-100"
-                      : "text-gray-400 hover:text-gray-600"
-                      }`}
-                  >
-                    <List size={18} />
-                  </button>
-                </div>
-
                 <button
                   onClick={() => setShowAddModal(true)}
                   disabled={!create}
-                  className={`flex items-center gap-2 px-6 py-3 rounded-sm font-semibold transition shadow-lg hover:shadow-xl ${create
+                  className={`flex items-center gap-2 px-6 py-3 rounded-sm font-bold transition shadow-lg hover:shadow-xl ${create
                     ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
                     : "bg-gray-300 text-gray-500 cursor-not-allowed"
                     }`}
@@ -365,189 +475,137 @@ export default function TeamManagement() {
             />
           </div>
 
-          {viewMode === "list" ? (
-            <div className="overflow-x-auto mt-4 border border-gray-200 rounded-sm shadow-sm">
-              <table className="w-full border-collapse text-left">
-                <thead>
-                  <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm">
-                    <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[5%]">S.N</th>
-                    <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[15%]">Team ID</th>
-                    <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[25%]">Team Name</th>
-                    <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[15%]">Total Members</th>
-                    <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[15%]">Date Created</th>
-                    <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[15%]">Status</th>
-                    <th className="py-3 px-4 font-semibold text-right border-b border-orange-400 w-[10%]">Action</th>
+          {/* Table */}
+          <div className="overflow-x-auto mt-4 border border-gray-200 rounded-sm shadow-sm">
+            <table className="w-full border-collapse text-left">
+              <thead>
+                <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm">
+                  <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[5%]">S.N</th>
+                  <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[15%]">Team ID</th>
+                  <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[25%]">Team Name</th>
+                  <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[15%]">Total Members</th>
+                  <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[15%]">Date Created</th>
+                  <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[15%]">Status</th>
+                  <th className="py-3 px-4 font-semibold text-right border-b border-orange-400 w-[10%]">Action</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {isLoading ? (
+                  <tr>
+                    <td colSpan="7" className="py-20 text-center">
+                      <div className="flex justify-center flex-col items-center gap-4">
+                        <div className="w-12 h-12 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin"></div>
+                        <p className="text-gray-500 font-semibold animate-pulse">Loading teams...</p>
+                      </div>
+                    </td>
                   </tr>
-                </thead>
-
-                <tbody>
-                  {isLoading ? (
-                    <tr>
-                      <td colSpan="7" className="py-20 text-center">
-                        <div className="flex justify-center flex-col items-center gap-4">
-                          <div className="w-12 h-12 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin"></div>
-                          <p className="text-gray-500 font-semibold animate-pulse">Loading teams...</p>
-                        </div>
-                      </td>
-                    </tr>
-                  ) : filteredTeams.length > 0 ? (
-                    filteredTeams.map((team, index) => (
-                      <tr
-                        key={team.id}
-                        className="border-t hover:bg-gray-50 transition-colors"
-                      >
-                        <td className="py-3 px-4 text-left">
-                          {(currentPage - 1) * itemsPerPage + index + 1}
-                        </td>
-                        <td className="py-3 px-4 font-medium text-orange-600 text-left">{team.team_id}</td>
-                        <td className="py-3 px-4 font-semibold text-gray-800 text-left">
-                          {team.team_name}
-                        </td>
-                        <td className="py-3 px-4 text-left">
-                          <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-sm bg-orange-100 flex items-center justify-center text-orange-600 shadow-sm border border-orange-200">
-                              <Users size={14} />
-                            </div>
-                            <span className="font-bold text-gray-700">{team.total_members || 0}</span>
-                          </div>
-                        </td>
-                        <td className="py-3 px-4 text-gray-600 text-sm text-left">
-                          {team.created_at ? new Date(team.created_at).toLocaleDateString() : 'N/A'}
-                        </td>
-                        <td className="py-3 px-4 text-left">
-                          <span
-                            className={`px-3 py-1 rounded-sm text-[10px] font-bold border uppercase tracking-wider ${team.status === "Active"
-                              ? "bg-green-50 text-green-700 border-green-200"
-                              : "bg-red-50 text-red-700 border-red-200"
-                              }`}
-                          >
-                            {team.status}
-                          </span>
-                        </td>
-                        <td className="py-3 px-4 text-right">
-                          <div className="flex justify-end gap-2">
-                            <button
-                              onClick={() => { setSelectedTeam(team); setShowViewModal(true); }}
-                              className="p-1 hover:bg-orange-100 rounded-sm text-blue-500 hover:text-blue-700 transition-all"
-                              title="View"
-                            >
-                              <Eye size={18} />
-                            </button>
-                            <button
-                              onClick={() => { setSelectedTeam(team); setShowEditModal(true); }}
-                              disabled={!update}
-                              className={`p-1 hover:bg-orange-100 rounded-sm transition-all ${update ? "text-green-500 hover:text-green-700" : "text-gray-300 cursor-not-allowed"
-                                }`}
-                              title="Edit"
-                            >
-                              <Edit size={18} />
-                            </button>
-                            <button
-                              onClick={() => { setSelectedTeam(team); setShowDeleteModal(true); }}
-                              disabled={!canDelete}
-                              className={`p-1 hover:bg-orange-100 rounded-sm transition-all ${canDelete ? "text-red-500 hover:text-red-700" : "text-gray-300 cursor-not-allowed"
-                                }`}
-                              title="Delete"
-                            >
-                              <Trash2 size={18} />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td
-                        colSpan="7"
-                        className="py-12 text-gray-500 font-medium text-sm text-center"
-                      >
-                        <div className="flex flex-col items-center gap-3">
-                          <Users size={48} className="text-gray-200" />
-                          <p>No teams found matches your criteria.</p>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <GenericGridView
-              data={filteredTeams}
-              renderItem={(team) => (
-                <div key={team.id} className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all p-5 flex flex-col h-full relative group text-center">
-                  <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                    <button
-                      onClick={() => { setSelectedTeam(team); setShowViewModal(true); }}
-                      className="p-1.5 text-blue-500 hover:bg-blue-50 rounded-sm bg-white shadow-sm border border-blue-100"
-                      title="View"
+                ) : filteredTeams.length > 0 ? (
+                  filteredTeams.map((team, index) => (
+                    <tr
+                      key={team.id}
+                      className="border-t hover:bg-gray-50 transition-colors"
                     >
-                      <Eye size={16} />
-                    </button>
-                    {update && (
-                      <button
-                        onClick={() => { setSelectedTeam(team); setShowEditModal(true); }}
-                        className="p-1.5 text-green-500 hover:bg-green-50 rounded-sm bg-white shadow-sm border border-green-100"
-                        title="Edit"
-                      >
-                        <Edit size={16} />
-                      </button>
-                    )}
-                    {canDelete && (
-                      <button
-                        onClick={() => { setSelectedTeam(team); setShowDeleteModal(true); }}
-                        className="p-1.5 text-red-500 hover:bg-red-50 rounded-sm bg-white shadow-sm border border-red-100"
-                        title="Delete"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    )}
-                  </div>
-
-                  <div className="flex flex-col items-center gap-3 mb-4 mt-2">
-                    <div className="w-16 h-16 rounded-full border-4 border-orange-50 flex items-center justify-center overflow-hidden bg-orange-100">
-                      <span className="text-orange-600 font-bold text-2xl">
-                        {team.team_name?.substring(0, 1)}
-                      </span>
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-gray-800 text-lg leading-tight line-clamp-1" title={team.team_name}>
+                      <td className="py-3 px-4 text-left">
+                        {(currentPage - 1) * itemsPerPage + index + 1}
+                      </td>
+                      <td className="py-3 px-4 font-medium text-orange-600 text-left">{team.team_id}</td>
+                      <td className="py-3 px-4 font-semibold text-gray-800 text-left transition-all duration-300">
                         {team.team_name}
-                      </h3>
-                      <p className="text-orange-500 text-xs font-bold mt-1 tracking-wide">{team.team_id}</p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3 flex-1 px-2">
-                    <div className="flex justify-between items-center text-sm border-b border-dashed border-gray-100 pb-2">
-                      <span className="text-gray-500">Total Members</span>
-                      <span className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full text-xs font-bold flex items-center gap-1">
-                        <Users size={12} />
-                        {team.total_members || 0}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-gray-500">Created On</span>
-                      <span className="text-gray-700 font-semibold text-xs">
+                      </td>
+                      <td className="py-3 px-4 text-left">
+                        <button
+                          onClick={() => { setSelectedTeam(team); setShowMembersModal(true); }}
+                          className="flex items-center gap-2 group hover:bg-orange-50 p-1 pr-3 rounded-sm transition-all border border-transparent hover:border-orange-100"
+                        >
+                          <div className="w-8 h-8 rounded-sm bg-orange-100 flex items-center justify-center text-orange-600 shadow-sm border border-orange-200 group-hover:scale-110 transition-transform">
+                            <Users size={14} />
+                          </div>
+                          <span className="font-bold text-gray-700 group-hover:text-orange-600">{team.total_members || 0}</span>
+                        </button>
+                      </td>
+                      <td className="py-3 px-4 text-gray-600 text-sm text-left">
                         {team.created_at ? new Date(team.created_at).toLocaleDateString() : 'N/A'}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="mt-5 pt-4 border-t border-gray-100 flex justify-center">
-                    <span
-                      className={`px-4 py-1 text-xs font-bold rounded-full uppercase tracking-wider ${team.status === "Active"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-red-100 text-red-700"
-                        }`}
+                      </td>
+                      <td className="py-3 px-4 text-left">
+                        <span
+                          className={`px-3 py-1 rounded-sm text-[10px] font-bold border uppercase tracking-wider ${team.status === "Active"
+                            ? "bg-green-50 text-green-700 border-green-200"
+                            : "bg-red-50 text-red-700 border-red-200"
+                            }`}
+                        >
+                          {team.status}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-right">
+                        <div className="flex justify-end gap-2">
+                          <button
+                            onClick={() => { setSelectedTeam(team); setShowViewModal(true); }}
+                            className="p-1 hover:bg-orange-100 rounded-sm text-blue-500 hover:text-blue-700 transition-all"
+                            title="View"
+                          >
+                            <Eye size={18} />
+                          </button>
+                          <button
+                            onClick={() => { setSelectedTeam(team); setShowEditModal(true); }}
+                            disabled={!update}
+                            className={`p-1 hover:bg-orange-100 rounded-sm transition-all ${update ? "text-green-500 hover:text-green-700" : "text-gray-300 cursor-not-allowed"
+                              }`}
+                            title="Edit"
+                          >
+                            <Edit size={18} />
+                          </button>
+                          <button
+                            onClick={() => { setSelectedTeam(team); setShowDeleteModal(true); }}
+                            disabled={!canDelete}
+                            className={`p-1 hover:bg-orange-100 rounded-sm transition-all ${canDelete ? "text-red-500 hover:text-red-700" : "text-gray-300 cursor-not-allowed"
+                              }`}
+                            title="Delete"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td
+                      colSpan="7"
+                      className="py-12 text-center text-gray-500 font-medium text-sm"
                     >
-                      {team.status}
-                    </span>
-                  </div>
-                </div>
-              )}
-            />
-          )}
+                      <div className="flex flex-col items-center gap-3">
+                        <Users size={48} className="text-gray-200" />
+                        <p className="mb-4">
+                          {hasActiveFilters
+                            ? "No teams found matching your filter criteria. Try clearing filters."
+                            : "Your teams list is currently empty. Start building your team today!"}
+                        </p>
+                        {hasActiveFilters ? (
+                          <button
+                            onClick={clearAllFilters}
+                            className="px-6 py-2 border-2 border-[#FF7B1D] text-[#FF7B1D] font-bold rounded-sm hover:bg-orange-50 transition-all text-xs uppercase tracking-wider"
+                          >
+                            Clear Filter
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => {
+                              setShowAddModal(true);
+                            }}
+                            className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl inline-flex items-center gap-2 font-semibold"
+                          >
+                            <Plus size={20} />
+                            Create First Team
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
 
           {/* Pagination */}
           {totalPages > 0 && (
@@ -629,6 +687,15 @@ export default function TeamManagement() {
         }}
         teamId={selectedTeam?.id}
         teamName={selectedTeam?.team_name}
+      />
+
+      <TeamMembersModal
+        isOpen={showMembersModal}
+        onClose={() => {
+          setShowMembersModal(false);
+          setSelectedTeam(null);
+        }}
+        teamId={selectedTeam?.id}
       />
     </DashboardLayout>
   );

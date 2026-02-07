@@ -15,10 +15,19 @@ export const teamApi = createApi({
     tagTypes: ['Team'],
     endpoints: (builder) => ({
         getTeams: builder.query({
-            query: ({ page = 1, limit = 10, search = '' }) => ({
-                url: `teams?page=${page}&limit=${limit}&search=${search}`,
-                method: 'GET',
-            }),
+            query: ({ page = 1, limit = 10, search = '', status = '', department = '', designation = '', employee = '', dateFrom = '', dateTo = '' }) => {
+                let url = `teams?page=${page}&limit=${limit}&search=${search}`;
+                if (status) url += `&status=${status}`;
+                if (department) url += `&department=${department}`;
+                if (designation) url += `&designation=${designation}`;
+                if (employee) url += `&employee=${employee}`;
+                if (dateFrom) url += `&dateFrom=${dateFrom}`;
+                if (dateTo) url += `&dateTo=${dateTo}`;
+                return {
+                    url,
+                    method: 'GET',
+                };
+            },
             providesTags: ['Team'],
         }),
         getTeamById: builder.query({
