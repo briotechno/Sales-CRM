@@ -461,19 +461,19 @@ const EditTeamModal = ({ isOpen, onClose, onSubmit, isLoading: isUpdating, teamI
                             </div>
                         )}
 
-                        <div className="flex gap-4 pt-4 border-t border-gray-100">
+                        <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-end gap-3 -mx-6 -mb-6 mt-10 rounded-b-sm">
+                            <button
+                                type="button" onClick={onClose}
+                                className="px-8 py-2.5 rounded-sm border-2 border-gray-300 text-gray-700 font-bold hover:bg-gray-50 transition-all text-sm bg-white"
+                            >
+                                Cancel
+                            </button>
                             <button
                                 type="submit"
                                 disabled={isUpdating || !formData.levels.some(l => l.rows.some(r => r.employeeId))}
-                                className="flex-1 bg-[#FF7B1D] text-white px-8 py-3.5 font-bold shadow-md hover:bg-[#e66a15] transition-all duration-300 disabled:opacity-50 rounded-sm text-xs capitalize tracking-widest"
+                                className="flex items-center justify-center gap-2 px-8 py-2.5 rounded-sm bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold hover:shadow-lg transform transition-all active:scale-95 disabled:opacity-50 text-sm"
                             >
                                 {isUpdating ? "Updating..." : "Update Team"}
-                            </button>
-                            <button
-                                type="button" onClick={onClose}
-                                className="px-8 py-3.5 border border-gray-300 font-bold text-gray-600 hover:bg-gray-50 transition-all rounded-sm text-xs capitalize tracking-widest bg-white"
-                            >
-                                Cancel
                             </button>
                         </div>
                     </form>

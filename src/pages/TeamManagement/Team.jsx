@@ -34,6 +34,7 @@ import AddTeamModal from "../../components/Team/AddTeamModal";
 import EditTeamModal from "../../components/Team/EditTeamModal";
 import ViewTeamModal from "../../components/Team/ViewTeamModal";
 import DeleteTeamModal from "../../components/Team/DeleteTeamModal";
+import TeamMembersModal from "../../components/Team/TeamMembersModal";
 import { toast } from "react-hot-toast";
 import usePermission from "../../hooks/usePermission";
 import { useGetDepartmentsQuery } from "../../store/api/departmentApi";
@@ -68,6 +69,7 @@ export default function TeamManagement() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showMembersModal, setShowMembersModal] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState(null);
 
   const { create, read, update, delete: canDelete } = usePermission("Team Management");
@@ -512,12 +514,15 @@ export default function TeamManagement() {
                         {team.team_name}
                       </td>
                       <td className="py-3 px-4 text-left">
-                        <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-sm bg-orange-100 flex items-center justify-center text-orange-600 shadow-sm border border-orange-200">
+                        <button
+                          onClick={() => { setSelectedTeam(team); setShowMembersModal(true); }}
+                          className="flex items-center gap-2 group hover:bg-orange-50 p-1 pr-3 rounded-sm transition-all border border-transparent hover:border-orange-100"
+                        >
+                          <div className="w-8 h-8 rounded-sm bg-orange-100 flex items-center justify-center text-orange-600 shadow-sm border border-orange-200 group-hover:scale-110 transition-transform">
                             <Users size={14} />
                           </div>
-                          <span className="font-bold text-gray-700">{team.total_members || 0}</span>
-                        </div>
+                          <span className="font-bold text-gray-700 group-hover:text-orange-600">{team.total_members || 0}</span>
+                        </button>
                       </td>
                       <td className="py-3 px-4 text-gray-600 text-sm text-left">
                         {team.created_at ? new Date(team.created_at).toLocaleDateString() : 'N/A'}
@@ -682,6 +687,15 @@ export default function TeamManagement() {
         }}
         teamId={selectedTeam?.id}
         teamName={selectedTeam?.team_name}
+      />
+
+      <TeamMembersModal
+        isOpen={showMembersModal}
+        onClose={() => {
+          setShowMembersModal(false);
+          setSelectedTeam(null);
+        }}
+        teamId={selectedTeam?.id}
       />
     </DashboardLayout>
   );

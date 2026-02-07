@@ -12,12 +12,14 @@ const ViewTermModal = ({ isOpen, onClose, term }) => {
   if (!term) return null;
 
   const footer = (
-    <button
-      onClick={onClose}
-      className="px-8 py-3 bg-white border border-gray-200 text-gray-700 font-bold rounded-sm hover:bg-gray-100 transition-all shadow-sm font-sans"
-    >
-      Close Details
-    </button>
+    <div className="flex gap-4 w-full">
+      <button
+        onClick={onClose}
+        className="flex-1 px-6 py-3 border-2 border-gray-200 text-gray-700 font-bold rounded-sm hover:bg-gray-100 transition text-xs uppercase tracking-widest font-primary"
+      >
+        Close Details
+      </button>
+    </div>
   );
 
   const icon = (
