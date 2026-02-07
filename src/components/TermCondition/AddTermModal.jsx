@@ -127,8 +127,13 @@ const AddTermModal = ({ isOpen, onClose }) => {
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
+            maxLength={100}
+            placeholder="Enter policy title..."
             className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 shadow-sm font-medium"
           />
+          <p className={`text-[10px] mt-1 text-right font-bold tracking-tight ${title.length >= 100 ? 'text-red-500' : 'text-gray-400'}`}>
+            {title.length} / 100 characters
+          </p>
         </div>
 
         {/* Description */}

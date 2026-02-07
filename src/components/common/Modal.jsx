@@ -66,10 +66,10 @@ const Modal = ({
                                         {icon}
                                     </div>
                                 )}
-                                <div className="min-w-0 flex-1">
-                                    {title && <h2 className="text-xl font-bold truncate" title={title}>{title}</h2>}
+                                <div className="min-w-0 flex-1 pr-4">
+                                    {title && <h2 className="text-xl font-bold leading-tight" title={title}>{title}</h2>}
                                     {subtitle && (
-                                        <p className="text-sm text-white text-opacity-90 mt-1 truncate">
+                                        <p className="text-xs text-white text-opacity-80 mt-1 leading-relaxed">
                                             {subtitle}
                                         </p>
                                     )}

@@ -5,6 +5,10 @@ import AddTermModal from "../../components/TermCondition/AddTermModal";
 import ViewTermModal from "../../components/TermCondition/ViewTermModal";
 import EditTermModal from "../../components/TermCondition/EditTermModal";
 import {
+  Search,
+  LayoutGrid,
+  List,
+  ChevronDown,
   Edit,
   Trash2,
   Eye,
@@ -33,6 +37,9 @@ const TermsAndCondition = () => {
   const [filterDept, setFilterDept] = useState("");
   const [filterDesig, setFilterDesig] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [tempDept, setTempDept] = useState("");
+  const [tempDesig, setTempDesig] = useState("");
+  const [tempSearch, setTempSearch] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
@@ -41,7 +48,7 @@ const TermsAndCondition = () => {
   const [selectedTermId, setSelectedTermId] = useState(null);
   const [selectedTerm, setSelectedTerm] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+  const itemsPerPage = 8;
 
   const [formData, setFormData] = useState({
     department: "",
@@ -130,7 +137,21 @@ const TermsAndCondition = () => {
     setFilterDept("");
     setFilterDesig("");
     setSearchTerm("");
+    setTempDept("");
+    setTempDesig("");
+    setTempSearch("");
+    setCurrentPage(1);
   };
+
+  const handleApplyFilters = () => {
+    setFilterDept(tempDept);
+    setFilterDesig(tempDesig);
+    setSearchTerm(tempSearch);
+    setShowFilters(false);
+    setCurrentPage(1);
+  };
+
+  const hasActiveFilters = filterDept || filterDesig || searchTerm;
 
   const formatDate = (dateString) => {
     if (!dateString) return "-";
@@ -177,70 +198,65 @@ const TermsAndCondition = () => {
                 <div className="relative">
                   <button
                     onClick={() => {
-                      if (filterDept || filterDesig || searchTerm) {
+                      if (hasActiveFilters) {
                         handleClearFilters();
                       } else {
+                        setTempDept(filterDept);
+                        setTempDesig(filterDesig);
+                        setTempSearch(searchTerm);
                         setShowFilters(!showFilters);
                       }
                     }}
-                    className={`px-3 py-3 rounded-sm border transition shadow-sm ${showFilters || filterDept || filterDesig || searchTerm
+                    className={`px-3 py-3 rounded-sm border transition shadow-sm ${showFilters || hasActiveFilters
                       ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
                       : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
                       }`}
                   >
-                    {filterDept || filterDesig || searchTerm ? <X size={18} /> : <Filter size={18} />}
+                    {hasActiveFilters ? <X size={18} /> : <Filter size={18} />}
                   </button>
 
                   {showFilters && (
-                    <div className="absolute right-0 mt-2 w-[500px] bg-white border border-gray-200 rounded-lg shadow-2xl z-50 overflow-hidden">
+                    <div className="absolute right-0 mt-2 w-[600px] bg-white border border-gray-200 rounded-sm shadow-2xl z-50 animate-fadeIn overflow-hidden">
                       {/* Header */}
-                      <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-                        <h3 className="text-base font-bold text-gray-800">Filter Options</h3>
+                      <div className="p-4 bg-gray-50 border-b flex justify-between items-center">
+                        <span className="text-sm font-bold text-gray-800 tracking-tight">Filter Options</span>
                         <button
-                          onClick={handleClearFilters}
-                          className="text-sm font-semibold text-orange-500 hover:text-orange-600 transition-colors"
+                          onClick={() => {
+                            setTempDept("");
+                            setTempDesig("");
+                            setTempSearch("");
+                          }}
+                          className="text-[10px] font-bold text-orange-600 hover:underline hover:text-orange-700 capitalize tracking-wider"
                         >
                           Reset All
                         </button>
                       </div>
 
-                      {/* Body - Two Column Layout */}
-                      <div className="grid grid-cols-2 gap-6 p-5">
-                        {/* Department Column */}
-                        <div>
-                          <label className="text-sm font-medium text-gray-500 mb-3 block">Department</label>
-                          <div className="space-y-2">
-                            <label className="flex items-center gap-3 cursor-pointer group">
-                              <input
-                                type="radio"
-                                name="department"
-                                checked={filterDept === ""}
-                                onChange={() => setFilterDept("")}
-                                className="w-4 h-4 text-orange-500 border-gray-300 focus:ring-orange-500 accent-orange-500"
-                              />
-                              <span className={`text-sm ${filterDept === "" ? "text-orange-500 font-semibold" : "text-gray-700 group-hover:text-gray-900"}`}>
-                                All
-                              </span>
-                            </label>
-                            {departments.slice(0, 4).map((dept) => (
-                              <label key={dept.id} className="flex items-center gap-3 cursor-pointer group">
-                                <input
-                                  type="radio"
-                                  name="department"
-                                  checked={filterDept === dept.department_name}
-                                  onChange={() => setFilterDept(dept.department_name)}
-                                  className="w-4 h-4 text-orange-500 border-gray-300 focus:ring-orange-500 accent-orange-500"
-                                />
-                                <span className={`text-sm ${filterDept === dept.department_name ? "text-orange-500 font-semibold" : "text-gray-700 group-hover:text-gray-900"}`}>
-                                  {dept.department_name}
-                                </span>
-                              </label>
-                            ))}
-                            {departments.length > 4 && (
+                      <div className="p-5 space-y-6">
+                        {/* Search Input */}
+                        <div className="group">
+                          <label className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-2 border-b pb-1">Search Terms</label>
+                          <div className="relative">
+                            <input
+                              type="text"
+                              value={tempSearch}
+                              onChange={(e) => setTempSearch(e.target.value)}
+                              placeholder="Search by title or description..."
+                              className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500/20 outline-none transition-all text-xs font-semibold text-gray-700 bg-gray-50 hover:bg-white"
+                            />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-x-10">
+                          {/* Column 1: Department */}
+                          <div className="space-y-4">
+                            <span className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-2 border-b pb-1">Department</span>
+                            <div className="relative">
                               <select
-                                value={filterDept}
-                                onChange={(e) => setFilterDept(e.target.value)}
-                                className="mt-2 w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none bg-white"
+                                value={tempDept}
+                                onChange={(e) => setTempDept(e.target.value)}
+                                className="w-full px-4 py-2.5 border border-gray-200 rounded-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500/20 outline-none transition-all text-xs font-semibold text-gray-700 bg-gray-50 hover:bg-white appearance-none cursor-pointer"
                               >
                                 <option value="">All Departments</option>
                                 {departments.map((dept) => (
@@ -249,45 +265,18 @@ const TermsAndCondition = () => {
                                   </option>
                                 ))}
                               </select>
-                            )}
+                              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
+                            </div>
                           </div>
-                        </div>
 
-                        {/* Designation Column */}
-                        <div>
-                          <label className="text-sm font-medium text-gray-500 mb-3 block">Designation</label>
-                          <div className="space-y-2">
-                            <label className="flex items-center gap-3 cursor-pointer group">
-                              <input
-                                type="radio"
-                                name="designation"
-                                checked={filterDesig === ""}
-                                onChange={() => setFilterDesig("")}
-                                className="w-4 h-4 text-orange-500 border-gray-300 focus:ring-orange-500 accent-orange-500"
-                              />
-                              <span className={`text-sm ${filterDesig === "" ? "text-orange-500 font-semibold" : "text-gray-700 group-hover:text-gray-900"}`}>
-                                All
-                              </span>
-                            </label>
-                            {designations.slice(0, 4).map((desig) => (
-                              <label key={desig.id} className="flex items-center gap-3 cursor-pointer group">
-                                <input
-                                  type="radio"
-                                  name="designation"
-                                  checked={filterDesig === desig.designation_name}
-                                  onChange={() => setFilterDesig(desig.designation_name)}
-                                  className="w-4 h-4 text-orange-500 border-gray-300 focus:ring-orange-500 accent-orange-500"
-                                />
-                                <span className={`text-sm ${filterDesig === desig.designation_name ? "text-orange-500 font-semibold" : "text-gray-700 group-hover:text-gray-900"}`}>
-                                  {desig.designation_name}
-                                </span>
-                              </label>
-                            ))}
-                            {designations.length > 4 && (
+                          {/* Column 2: Designation */}
+                          <div className="space-y-4">
+                            <span className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-2 border-b pb-1">Designation</span>
+                            <div className="relative">
                               <select
-                                value={filterDesig}
-                                onChange={(e) => setFilterDesig(e.target.value)}
-                                className="mt-2 w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none bg-white"
+                                value={tempDesig}
+                                onChange={(e) => setTempDesig(e.target.value)}
+                                className="w-full px-4 py-2.5 border border-gray-200 rounded-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500/20 outline-none transition-all text-xs font-semibold text-gray-700 bg-gray-50 hover:bg-white appearance-none cursor-pointer"
                               >
                                 <option value="">All Designations</option>
                                 {designations.map((desig) => (
@@ -296,22 +285,23 @@ const TermsAndCondition = () => {
                                   </option>
                                 ))}
                               </select>
-                            )}
+                              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
+                            </div>
                           </div>
                         </div>
                       </div>
 
-                      {/* Footer */}
-                      <div className="flex items-center gap-3 px-5 py-4 border-t border-gray-100 bg-gray-50">
+                      {/* Filter Actions */}
+                      <div className="p-4 bg-gray-50 border-t flex gap-3">
                         <button
                           onClick={() => setShowFilters(false)}
-                          className="flex-1 px-4 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                          className="flex-1 py-2.5 text-[11px] font-bold text-gray-500 capitalize tracking-wider hover:bg-gray-200 transition-colors rounded-sm border border-gray-200 bg-white shadow-sm"
                         >
                           Cancel
                         </button>
                         <button
-                          onClick={() => setShowFilters(false)}
-                          className="flex-1 px-4 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-orange-500 to-orange-600 rounded-md hover:from-orange-600 hover:to-orange-700 transition-all shadow-md"
+                          onClick={handleApplyFilters}
+                          className="flex-1 py-2.5 text-[11px] font-bold text-white capitalize tracking-wider bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 transition-all rounded-sm shadow-md active:scale-95"
                         >
                           Apply Filters
                         </button>
@@ -369,39 +359,40 @@ const TermsAndCondition = () => {
             />
           </div>
 
-          {/* TABLE */}
-          <div className="overflow-x-auto mt-4 border border-gray-200 rounded-sm shadow-sm">
-            <table className="w-full border-collapse text-left">
-              <thead>
-                <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm">
-                  <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[5%]">S.N</th>
-                  <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[25%]">Title</th>
-                  <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[45%]">Description</th>
-                  <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[15%]">Created</th>
-                  <th className="py-3 px-4 font-semibold text-right border-b border-orange-400 w-[10%]">Actions</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {isLoading ? (
-                  <tr>
-                    <td colSpan="8" className="text-center py-10">
-                      Loading...
-                    </td>
+          {/* TABLE SECTION */}
+          {isLoading ? (
+            <div className="flex justify-center flex-col items-center gap-4 py-32 mt-4 border border-gray-200 rounded-sm">
+              <div className="w-12 h-12 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin"></div>
+              <p className="text-gray-500 font-semibold animate-pulse">Loading terms...</p>
+            </div>
+          ) : terms.length > 0 ? (
+            <div className="overflow-x-auto mt-4 border border-gray-200 rounded-sm shadow-sm">
+              <table className="w-full border-collapse text-left">
+                <thead>
+                  <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm">
+                    <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[5%]">S.N</th>
+                    <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[40%]">Title</th>
+                    <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[25%]">Description</th>
+                    <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[20%]">Created</th>
+                    <th className="py-3 px-4 font-semibold text-right border-b border-orange-400 w-[10%]">Actions</th>
                   </tr>
-                ) : terms.length ? (
-                  terms.map((term, index) => (
+                </thead>
+
+                <tbody>
+                  {terms.map((term, index) => (
                     <tr key={term.id} className="border-t hover:bg-gray-50 transition-colors">
-                      <td className="py-3 px-4">
+                      <td className="py-3 px-4 text-sm font-medium text-gray-500">
                         {(currentPage - 1) * itemsPerPage + index + 1}
                       </td>
-                      <td className="py-3 px-4 font-medium text-gray-800">{term.title}</td>
+                      <td className="py-3 px-4 font-medium text-gray-800">
+                        <div className="truncate w-full max-w-lg overflow-hidden text-ellipsis whitespace-nowrap" title={term.title}>
+                          {term.title}
+                        </div>
+                      </td>
 
                       <td className="py-3 px-4 text-gray-600 text-left">
-                        <div className="cursor-pointer" title={term.description}>
-                          {term.description && term.description.length > 100
-                            ? term.description.substring(0, 100) + "..."
-                            : term.description || "---"}
+                        <div className="cursor-pointer text-sm truncate w-full max-w-sm overflow-hidden text-ellipsis whitespace-nowrap" title={term.description}>
+                          {term.description || "---"}
                         </div>
                       </td>
 
@@ -409,10 +400,10 @@ const TermsAndCondition = () => {
                         <div className="flex flex-col gap-1">
                           <div className="flex items-center gap-1.5">
                             <Calendar size={14} className="text-orange-500" />
-                            <span>{formatDate(term.created_at)}</span>
+                            <span className="font-medium">{formatDate(term.created_at)}</span>
                           </div>
-                          <div className="flex items-center gap-1.5">
-                            <Clock size={14} className="text-blue-500" />
+                          <div className="flex items-center gap-1.5 text-[11px] text-gray-400">
+                            <Clock size={12} className="text-blue-500" />
                             <span>{formatTime(term.created_at)}</span>
                           </div>
                         </div>
@@ -425,7 +416,7 @@ const TermsAndCondition = () => {
                               setSelectedTerm(term);
                               setIsViewModalOpen(true);
                             }}
-                            className="p-1 hover:bg-orange-100 rounded-sm text-blue-500 hover:text-blue-700 transition-all"
+                            className="p-1.5 hover:bg-blue-50 rounded-sm text-blue-500 hover:text-blue-700 transition-all border border-transparent hover:border-blue-100"
                             title="View"
                           >
                             <Eye size={18} />
@@ -436,18 +427,18 @@ const TermsAndCondition = () => {
                               setIsEditModalOpen(true);
                             }}
                             disabled={!update}
-                            className={`p-1 hover:bg-orange-100 rounded-sm transition-all ${update ? "text-green-500 hover:text-green-700" : "text-gray-300 cursor-not-allowed text-opacity-50"}`}
+                            className={`p-1.5 hover:bg-green-50 rounded-sm transition-all border border-transparent ${update ? "text-green-500 hover:text-green-700 hover:border-green-100" : "text-gray-300 cursor-not-allowed text-opacity-50"}`}
                             title="Edit"
                           >
                             <Edit size={18} />
                           </button>
                           <button
                             onClick={() => {
-                              setSelectedTermId(term.id);
+                              setSelectedTerm(term);
                               setIsDeleteModalOpen(true);
                             }}
                             disabled={!remove}
-                            className={`p-1 hover:bg-orange-100 rounded-sm transition-all ${remove ? "text-red-500 hover:text-red-700" : "text-gray-300 cursor-not-allowed text-opacity-50"}`}
+                            className={`p-1.5 hover:bg-red-50 rounded-sm transition-all border border-transparent ${remove ? "text-red-500 hover:text-red-700 hover:border-red-100" : "text-gray-300 cursor-not-allowed text-opacity-50"}`}
                             title="Delete"
                           >
                             <Trash2 size={18} />
@@ -455,18 +446,42 @@ const TermsAndCondition = () => {
                         </div>
                       </td>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="8" className="text-center py-10">
-                      No Terms & Conditions found
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-
-          </div>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="text-center py-24 bg-white rounded-sm border-2 border-dashed border-gray-100 mt-6 font-primary">
+              <div className="bg-gray-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <FileText className="w-10 h-10 text-gray-300" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-800 mb-2">
+                {hasActiveFilters ? "No matches found" : "No Terms & Conditions found"}
+              </h3>
+              <p className="text-gray-500 max-w-xs mx-auto text-sm mb-6">
+                {hasActiveFilters
+                  ? "We couldn't find any terms matching your current filters. Try adjusting your search."
+                  : "Your Terms & Conditions list is currently empty. Start by adding your first policy!"}
+              </p>
+              {hasActiveFilters ? (
+                <button
+                  onClick={handleClearFilters}
+                  className="px-6 py-2 border-2 border-[#FF7B1D] text-[#FF7B1D] font-bold rounded-sm hover:bg-orange-50 transition-all text-xs uppercase tracking-wider"
+                >
+                  Clear Filters
+                </button>
+              ) : (
+                <button
+                  onClick={() => setIsModalOpen(true)}
+                  disabled={!create}
+                  className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl inline-flex items-center gap-2 font-semibold"
+                >
+                  <Plus size={20} />
+                  Add First Term
+                </button>
+              )}
+            </div>
+          )}
 
           {/* PAGINATION */}
           {pagination.totalPages > 0 && (
@@ -550,9 +565,9 @@ const TermsAndCondition = () => {
           isOpen={isDeleteModalOpen}
           onClose={() => {
             setIsDeleteModalOpen(false);
-            setSelectedTermId(null);
+            setSelectedTerm(null);
           }}
-          termId={selectedTermId}
+          term={selectedTerm}
         />
       </div>
     </DashboardLayout>
