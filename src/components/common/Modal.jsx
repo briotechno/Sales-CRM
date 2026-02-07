@@ -53,7 +53,7 @@ const Modal = ({
     return (
         <div className={`fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex justify-center items-center ${zIndex} animate-fadeIn p-4`}>
             <div
-                className={`bg-white rounded-lg shadow-2xl w-full ${maxWidth} relative transform transition-all animate-slideUp overflow-hidden`}
+                className={`bg-white rounded-sm shadow-2xl w-full ${maxWidth} relative transform transition-all animate-slideUp overflow-hidden`}
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
@@ -109,7 +109,7 @@ const Modal = ({
 
                 {/* Footer */}
                 {footer && (
-                    <div className={cleanLayout ? "w-full" : "bg-gray-50 px-6 py-4 rounded-b-lg border-t border-gray-200 flex justify-end gap-3"}>
+                    <div className={cleanLayout ? "w-full" : "bg-gray-50 px-6 py-4 rounded-b-sm border-t border-gray-200 flex justify-end gap-3"}>
                         {footer}
                     </div>
                 )}

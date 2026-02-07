@@ -14,9 +14,31 @@ const teamController = {
 
     getAllTeams: async (req, res) => {
         try {
-            const { page = 1, limit = 10, search = '' } = req.query;
+            const {
+                page = 1,
+                limit = 10,
+                search = '',
+                status = '',
+                department = '',
+                designation = '',
+                employee = '',
+                dateFrom = '',
+                dateTo = ''
+            } = req.query;
+
             // userId from token
-            const data = await Team.findAll(req.user.id, page, limit, search);
+            const data = await Team.findAll(
+                req.user.id,
+                page,
+                limit,
+                search,
+                status,
+                department,
+                designation,
+                employee,
+                dateFrom,
+                dateTo
+            );
             res.status(200).json(data);
         } catch (error) {
             res.status(500).json({ message: error.message });

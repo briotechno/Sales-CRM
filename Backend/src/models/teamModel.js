@@ -45,19 +45,59 @@ const Team = {
         }
     },
 
-    findAll: async (userId, page = 1, limit = 10, search = '') => {
+    findAll: async (userId, page = 1, limit = 10, search = '', status = '', departmentId = '', designationId = '', employeeId = '', dateFrom = '', dateTo = '') => {
         const offset = (page - 1) * limit;
 
-        let searchCondition = '';
+        let conditions = ['t.user_id = ?'];
         const queryParams = [userId];
 
         if (search) {
-            searchCondition = ' AND (team_name LIKE ? OR description LIKE ?)';
-            queryParams.push(`%${search}%`, `%${search}%`);
+            conditions.push('(t.team_name LIKE ? OR t.description LIKE ? OR t.team_id LIKE ?)');
+            queryParams.push(`%${search}%`, `%${search}%`, `%${search}%`);
         }
 
+        if (status) {
+            conditions.push('t.status = ?');
+            queryParams.push(status);
+        }
+
+        if (dateFrom && dateTo) {
+            conditions.push('DATE(t.created_at) BETWEEN ? AND ?');
+            queryParams.push(dateFrom, dateTo);
+        } else if (dateFrom) {
+            conditions.push('DATE(t.created_at) >= ?');
+            queryParams.push(dateFrom);
+        } else if (dateTo) {
+            conditions.push('DATE(t.created_at) <= ?');
+            queryParams.push(dateTo);
+        }
+
+        if (departmentId || designationId || employeeId) {
+            let memberConditions = ['tm.team_id = t.id'];
+            if (departmentId) {
+                memberConditions.push('e.department_id = ?');
+                queryParams.push(departmentId);
+            }
+            if (designationId) {
+                memberConditions.push('e.designation_id = ?');
+                queryParams.push(designationId);
+            }
+            if (employeeId) {
+                memberConditions.push('tm.employee_id = ?');
+                queryParams.push(employeeId);
+            }
+
+            conditions.push(`EXISTS (
+                SELECT 1 FROM team_members tm 
+                JOIN employees e ON tm.employee_id = e.id 
+                WHERE ${memberConditions.join(' AND ')}
+            )`);
+        }
+
+        const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
         // Get total count
-        const countQuery = `SELECT COUNT(*) as total FROM teams WHERE user_id = ? ${searchCondition}`;
+        const countQuery = `SELECT COUNT(*) as total FROM teams t ${whereClause}`;
         const [totalRows] = await pool.query(countQuery, queryParams);
         const total = totalRows[0].total;
 
@@ -66,14 +106,12 @@ const Team = {
             SELECT t.*, 
             (SELECT COUNT(*) FROM team_members tm WHERE tm.team_id = t.id) as total_members
             FROM teams t
-            WHERE t.user_id = ? ${searchCondition}
+            ${whereClause}
             ORDER BY t.id DESC
             LIMIT ? OFFSET ?
         `;
 
-        // Add limit and offset to params for data query
         const dataParams = [...queryParams, parseInt(limit), parseInt(offset)];
-
         const [rows] = await pool.query(dataQuery, dataParams);
 
         return {
