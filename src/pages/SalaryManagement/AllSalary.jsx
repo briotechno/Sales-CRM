@@ -67,7 +67,7 @@ export default function SalaryManagement() {
   const queryParams = useMemo(() => {
     let startDate = "";
     let endDate = "";
-    
+
     if (dateRange.state !== "All") {
       const today = new Date();
       const formatDate = (date) => date.toISOString().split('T')[0];
@@ -315,7 +315,7 @@ export default function SalaryManagement() {
 
               <div className="flex flex-wrap items-center gap-3">
                 {/* Search Bar */}
-                <div className="relative">
+                {/* <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                   <input
                     type="text"
@@ -324,7 +324,7 @@ export default function SalaryManagement() {
                     placeholder="Search employee..."
                     className="pl-10 pr-4 py-3 border border-gray-300 rounded-sm w-64 focus:border-orange-500 outline-none text-sm font-medium transition-all"
                   />
-                </div>
+                </div> */}
 
                 {/* Unified Filter Dropdown */}
                 <div className="relative" ref={dropdownRef}>
