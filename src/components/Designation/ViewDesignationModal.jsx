@@ -24,7 +24,7 @@ const ViewDesignationModal = ({ isOpen, onClose, designation }) => {
         <Modal
             isOpen={isOpen}
             onClose={onClose}
-            title={designation.designation_name}
+            title={designation.designation_name?.slice(0, 50) + "..."}
             subtitle={designation.designation_id}
             icon={icon}
             footer={footer}
@@ -60,12 +60,20 @@ const ViewDesignationModal = ({ isOpen, onClose, designation }) => {
                 {/* Details Section */}
                 <div className="space-y-6">
                     <div>
-                        <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-                            <FileText size={16} /> Job Description
+                        <h3 className="text-base font-bold text-gray-800 flex items-center gap-2 mb-3 tracking-wide">
+                            <FileText size={18} className="text-[#FF7B1D]" />
+                            <span>Description</span>
                         </h3>
-                        <p className="text-gray-700 leading-relaxed bg-gray-50 p-4 rounded-sm border border-gray-100">
-                            {designation.description || "No description provided for this role."}
-                        </p>
+                        <div className="bg-white rounded-sm border-2 border-gray-100 shadow-inner overflow-hidden">
+                            <div className="h-[200px] overflow-y-auto p-4 custom-scrollbar text-sm text-gray-700 leading-relaxed font-sans ">
+                                {designation.description || (
+                                    <div className="flex flex-col items-center justify-center h-full text-gray-400 italic">
+                                        <FileText size={40} className="mb-2 opacity-20" />
+                                        <p>No description provided for this role.</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
                     </div>
 
                     <div className="pt-4 border-t border-gray-100 flex items-center gap-2 text-gray-500 italic text-sm">
