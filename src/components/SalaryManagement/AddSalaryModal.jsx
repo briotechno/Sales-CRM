@@ -10,11 +10,11 @@ import { useGetEmployeeAttendanceQuery } from "../../store/api/attendanceApi";
 import { useGetLeaveRequestsQuery } from "../../store/api/leaveApi";
 import { useGetAllSalariesQuery } from "../../store/api/salaryApi";
 
-const AddSalaryModal = ({ isOpen, onClose, onSubmit, loading }) => {
+const AddSalaryModal = ({ isOpen, onClose, onSubmit, loading, initialSalary }) => {
   const [formData, setFormData] = useState({
-    Employee: "",
-    designation: "",
-    department: "",
+    Employee: initialSalary?.Employee || "",
+    designation: initialSalary?.designation || "",
+    department: initialSalary?.department || "",
     basic_salary: "",
     allowances: "0",
     deductions: "0",
@@ -25,6 +25,17 @@ const AddSalaryModal = ({ isOpen, onClose, onSubmit, loading }) => {
     present_days: "0",
     leave_days: "0",
   });
+
+  useEffect(() => {
+    if (isOpen) {
+      setFormData(prev => ({
+        ...prev,
+        Employee: initialSalary?.Employee || "",
+        designation: initialSalary?.designation || prev.designation,
+        department: initialSalary?.department || prev.department,
+      }));
+    }
+  }, [isOpen, initialSalary]);
 
   const { data: employeeData, isLoading: loadingEmployees } = useGetEmployeesQuery({ limit: 1000 });
   const { data: departmentData } = useGetDepartmentsQuery({ limit: 100 });
@@ -40,6 +51,20 @@ const AddSalaryModal = ({ isOpen, onClose, onSubmit, loading }) => {
   // Fetch attendance and leaves
   const { data: attendanceData } = useGetEmployeeAttendanceQuery(formData.Employee, { skip: !formData.Employee });
   const { data: leaveData } = useGetLeaveRequestsQuery({ search: employeeData?.employees?.find(e => e.id == formData.Employee)?.employee_name || "", status: 'Approved' }, { skip: !formData.Employee });
+
+  // Auto-fill from Employee Data
+  useEffect(() => {
+    if (formData.Employee && employeeData?.employees) {
+      const selectedEmp = employeeData.employees.find(e => e.id == formData.Employee);
+      if (selectedEmp) {
+        setFormData(prev => ({
+          ...prev,
+          department: selectedEmp.department_name || prev.department,
+          designation: selectedEmp.designation_name || prev.designation,
+        }));
+      }
+    }
+  }, [formData.Employee, employeeData]);
 
   // Auto-fill from Offer Letter
   useEffect(() => {
@@ -270,15 +295,30 @@ const AddSalaryModal = ({ isOpen, onClose, onSubmit, loading }) => {
             <div className="col-span-2 grid grid-cols-3 gap-2 mt-2 pt-3 border-t border-gray-200">
               <div className="text-center">
                 <div className="text-[10px] font-bold text-gray-400 uppercase">Working</div>
-                <div className="text-lg font-black text-gray-700">{formData.working_days}</div>
+                <input
+                  type="number"
+                  value={formData.working_days}
+                  onChange={(e) => setFormData({ ...formData, working_days: e.target.value })}
+                  className="w-full text-center text-lg font-black text-gray-700 bg-transparent border-none outline-none focus:ring-0"
+                />
               </div>
               <div className="text-center border-l border-gray-200">
                 <div className="text-[10px] font-bold text-green-500 uppercase tracking-wide">Present</div>
-                <div className="text-lg font-black text-green-600">{formData.present_days}</div>
+                <input
+                  type="number"
+                  value={formData.present_days}
+                  onChange={(e) => setFormData({ ...formData, present_days: e.target.value })}
+                  className="w-full text-center text-lg font-black text-green-600 bg-transparent border-none outline-none focus:ring-0"
+                />
               </div>
               <div className="text-center border-l border-gray-200">
                 <div className="text-[10px] font-bold text-rose-500 uppercase tracking-wide">Leaves</div>
-                <div className="text-lg font-black text-rose-600">{formData.leave_days}</div>
+                <input
+                  type="number"
+                  value={formData.leave_days}
+                  onChange={(e) => setFormData({ ...formData, leave_days: e.target.value })}
+                  className="w-full text-center text-lg font-black text-rose-600 bg-transparent border-none outline-none focus:ring-0"
+                />
               </div>
             </div>
           </div>

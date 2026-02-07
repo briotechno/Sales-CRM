@@ -36,8 +36,8 @@ const EmployeeGridView = ({ employees, onEdit, onDelete, onView }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-0 p-0 ml-6">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+    <div className="min-h-screen bg-gray-0 p-0">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 mt-4">
         {employees.map((emp) => {
           const essentialFields = [
             'gender', 'father_name', 'mother_name', 'marital_status',

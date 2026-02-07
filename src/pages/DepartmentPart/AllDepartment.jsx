@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { FiHome } from "react-icons/fi";
-import { Edit, Trash2, Eye, Grid, FileDown, Plus, Target, Handshake, Warehouse, Users, Search, Filter, X } from "lucide-react";
+import { Edit, Trash2, Eye, Grid, FileDown, Plus, Target, Handshake, Warehouse, Users, Search, Filter, X, LayoutGrid, List } from "lucide-react";
 import DashboardLayout from "../../components/DashboardLayout";
 import AddDepartmentModal from "../../components/Department/AddDepartmentModal";
 import EditDepartmentModal from "../../components/Department/EditDepartmentModal";
@@ -10,6 +10,7 @@ import NumberCard from "../../components/NumberCard";
 import { useGetDepartmentsQuery } from "../../store/api/departmentApi";
 import { useGetHRMDashboardDataQuery } from "../../store/api/hrmDashboardApi";
 import usePermission from "../../hooks/usePermission";
+import GenericGridView from "../../components/common/GenericGridView";
 
 const AllDepartment = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -19,7 +20,8 @@ const AllDepartment = () => {
   const [customEnd, setCustomEnd] = useState("");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const dropdownRef = useRef(null);
-  const itemsPerPage = 6;
+  const [viewMode, setViewMode] = useState("list");
+  const itemsPerPage = viewMode === "list" ? 6 : 12;
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -184,6 +186,27 @@ const AllDepartment = () => {
                   )}
                 </div>
 
+                <div className="flex items-center bg-gray-100 p-1 rounded-sm border border-gray-200 shadow-inner">
+                  <button
+                    onClick={() => { setViewMode("grid"); setCurrentPage(1); }}
+                    className={`p-2 rounded-sm transition-all duration-200 ${viewMode === "grid"
+                      ? "bg-white text-orange-600 shadow-sm border border-gray-100"
+                      : "text-gray-400 hover:text-gray-600"
+                      }`}
+                  >
+                    <LayoutGrid size={18} />
+                  </button>
+                  <button
+                    onClick={() => { setViewMode("list"); setCurrentPage(1); }}
+                    className={`p-2 rounded-sm transition-all duration-200 ${viewMode === "list"
+                      ? "bg-white text-orange-600 shadow-sm border border-gray-100"
+                      : "text-gray-400 hover:text-gray-600"
+                      }`}
+                  >
+                    <List size={18} />
+                  </button>
+                </div>
+
                 <button
                   onClick={() => setIsAddModalOpen(true)}
                   disabled={!create}
@@ -233,112 +256,197 @@ const AllDepartment = () => {
             />
           </div>
 
-          <div className="overflow-x-auto border border-gray-200 rounded-sm shadow-sm mt-4">
-            <table className="w-full border-collapse text-left">
-              <thead>
-                <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm">
-                  <th className="py-3 px-4 font-semibold text-left border-b border-orange-400">S.N</th>
-                  <th className="py-3 px-4 font-semibold text-center border-b border-orange-400">Icon</th>
-                  <th className="py-3 px-4 font-semibold text-left border-b border-orange-400">Dept ID</th>
-                  <th className="py-3 px-4 font-semibold text-left border-b border-orange-400">Department Name</th>
-                  <th className="py-3 px-4 font-semibold text-left border-b border-orange-400">Description</th>
-                  <th className="py-3 px-4 font-semibold text-center border-b border-orange-400">Employees</th>
-                  <th className="py-3 px-4 font-semibold text-center border-b border-orange-400">Status</th>
-                  <th className="py-3 px-4 font-semibold text-right border-b border-orange-400">Action</th>
-                </tr>
-              </thead>
-              <tbody className="text-sm">
-                {isLoading ? (
-                  <tr>
-                    <td colSpan="8" className="py-20 text-center">
-                      <div className="flex justify-center flex-col items-center gap-4">
-                        <div className="w-12 h-12 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin"></div>
-                        <p className="text-gray-500 font-semibold">Loading departments...</p>
-                      </div>
-                    </td>
+          {viewMode === "list" ? (
+            <div className="overflow-x-auto border border-gray-200 rounded-sm shadow-sm mt-4">
+              <table className="w-full border-collapse text-left">
+                <thead>
+                  <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm">
+                    <th className="py-3 px-4 font-semibold text-left border-b border-orange-400">S.N</th>
+                    <th className="py-3 px-4 font-semibold text-center border-b border-orange-400">Icon</th>
+                    <th className="py-3 px-4 font-semibold text-left border-b border-orange-400">Dept ID</th>
+                    <th className="py-3 px-4 font-semibold text-left border-b border-orange-400">Department Name</th>
+                    <th className="py-3 px-4 font-semibold text-left border-b border-orange-400">Description</th>
+                    <th className="py-3 px-4 font-semibold text-center border-b border-orange-400">Employees</th>
+                    <th className="py-3 px-4 font-semibold text-center border-b border-orange-400">Status</th>
+                    <th className="py-3 px-4 font-semibold text-right border-b border-orange-400">Action</th>
                   </tr>
-                ) : departments.length > 0 ? (
-                  departments.map((dept, index) => (
-                    <tr key={dept.id} className="border-t hover:bg-gray-50 transition-colors">
-                      <td className="py-3 px-4 text-gray-700">{indexOfFirstItem + index + 1}</td>
-                      <td className="py-3 px-4">
-                        <div className="flex justify-center">
-                          {dept.icon ? (
-                            <img
-                              src={`${import.meta.env.VITE_API_BASE_URL.replace('/api/', '')}${dept.icon}`}
-                              alt={dept.department_name}
-                              className="w-10 h-10 rounded-full border border-orange-200 object-cover shadow-sm"
-                            />
-                          ) : (
-                            <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-bold border border-orange-200 shadow-sm">
-                              {dept.department_name?.substring(0, 1)}
-                            </div>
-                          )}
-                        </div>
-                      </td>
-                      <td className="py-3 px-4 text-orange-600 font-bold">{dept.department_id}</td>
-                      <td className="py-3 px-4 text-gray-800 font-semibold">{dept.department_name}</td>
-                      <td className="py-3 px-4 text-gray-600">
-                        <div className="cursor-pointer" title={dept.description}>
-                          {dept.description && dept.description.length > 60
-                            ? dept.description.substring(0, 60) + "..."
-                            : dept.description || "---"}
-                        </div>
-                      </td>
-                      <td className="py-3 px-4 text-center font-bold text-gray-700">{dept.employee_count || 0}</td>
-                      <td className="py-3 px-4 text-center">
-                        <span className={`px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-sm border ${getStatusClass(dept.status)}`}>
-                          {dept.status}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4 text-right">
-                        <div className="flex justify-end gap-2">
-                          <button
-                            onClick={() => { setSelectedDept(dept); setIsViewModalOpen(true); }}
-                            className="p-1 hover:bg-orange-100 rounded-sm text-blue-500 hover:text-blue-700 transition-all"
-                            title="View"
-                          >
-                            <Eye size={18} />
-                          </button>
-                          <button
-                            onClick={() => { setSelectedDept(dept); setIsEditModalOpen(true); }}
-                            disabled={!update}
-                            className={`p-1 hover:bg-orange-100 rounded-sm transition-all ${update ? "text-green-500 hover:text-green-700" : "text-gray-300 cursor-not-allowed"
-                              }`}
-                            title="Edit"
-                          >
-                            <Edit size={18} />
-                          </button>
-                          <button
-                            onClick={() => { setSelectedDept(dept); setIsDeleteModalOpen(true); }}
-                            disabled={!remove}
-                            className={`p-1 hover:bg-orange-100 rounded-sm transition-all ${remove ? "text-red-500 hover:text-red-700" : "text-gray-300 cursor-not-allowed"
-                              }`}
-                            title="Delete"
-                          >
-                            <Trash2 size={18} />
-                          </button>
+                </thead>
+                <tbody className="text-sm">
+                  {isLoading ? (
+                    <tr>
+                      <td colSpan="8" className="py-20 text-center">
+                        <div className="flex justify-center flex-col items-center gap-4">
+                          <div className="w-12 h-12 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin"></div>
+                          <p className="text-gray-500 font-semibold">Loading departments...</p>
                         </div>
                       </td>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="8" className="py-20 text-center flex flex-col items-center gap-3">
-                      <Warehouse size={48} className="text-gray-200" />
-                      <p className="text-gray-500 font-medium">No departments found.</p>
+                  ) : departments.length > 0 ? (
+                    departments.map((dept, index) => (
+                      <tr key={dept.id} className="border-t hover:bg-gray-50 transition-colors">
+                        <td className="py-3 px-4 text-gray-700">{indexOfFirstItem + index + 1}</td>
+                        <td className="py-3 px-4">
+                          <div className="flex justify-center">
+                            {dept.icon ? (
+                              <img
+                                src={`${import.meta.env.VITE_API_BASE_URL.replace('/api/', '')}${dept.icon}`}
+                                alt={dept.department_name}
+                                className="w-10 h-10 rounded-full border border-orange-200 object-cover shadow-sm"
+                              />
+                            ) : (
+                              <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-bold border border-orange-200 shadow-sm">
+                                {dept.department_name?.substring(0, 1)}
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                        <td className="py-3 px-4 text-orange-600 font-bold">{dept.department_id}</td>
+                        <td className="py-3 px-4 text-gray-800 font-semibold">{dept.department_name}</td>
+                        <td className="py-3 px-4 text-gray-600">
+                          <div className="cursor-pointer" title={dept.description}>
+                            {dept.description && dept.description.length > 60
+                              ? dept.description.substring(0, 60) + "..."
+                              : dept.description || "---"}
+                          </div>
+                        </td>
+                        <td className="py-3 px-4 text-center font-bold text-gray-700">{dept.employee_count || 0}</td>
+                        <td className="py-3 px-4 text-center">
+                          <span className={`px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-sm border ${getStatusClass(dept.status)}`}>
+                            {dept.status}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 text-right">
+                          <div className="flex justify-end gap-2">
+                            <button
+                              onClick={() => { setSelectedDept(dept); setIsViewModalOpen(true); }}
+                              className="p-1 hover:bg-orange-100 rounded-sm text-blue-500 hover:text-blue-700 transition-all"
+                              title="View"
+                            >
+                              <Eye size={18} />
+                            </button>
+                            <button
+                              onClick={() => { setSelectedDept(dept); setIsEditModalOpen(true); }}
+                              disabled={!update}
+                              className={`p-1 hover:bg-orange-100 rounded-sm transition-all ${update ? "text-green-500 hover:text-green-700" : "text-gray-300 cursor-not-allowed"
+                                }`}
+                              title="Edit"
+                            >
+                              <Edit size={18} />
+                            </button>
+                            <button
+                              onClick={() => { setSelectedDept(dept); setIsDeleteModalOpen(true); }}
+                              disabled={!remove}
+                              className={`p-1 hover:bg-orange-100 rounded-sm transition-all ${remove ? "text-red-500 hover:text-red-700" : "text-gray-300 cursor-not-allowed"
+                                }`}
+                              title="Delete"
+                            >
+                              <Trash2 size={18} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="8" className="py-20 text-center flex flex-col items-center gap-3">
+                        <Warehouse size={48} className="text-gray-200" />
+                        <p className="text-gray-500 font-medium">No departments found.</p>
+                        <button
+                          onClick={() => setIsAddModalOpen(true)}
+                          className="px-6 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold rounded-sm shadow-lg hover:shadow-orange-200 transition-all active:scale-95"
+                        >
+                          Create first Department
+                        </button>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <GenericGridView
+              data={departments}
+              renderItem={(dept) => (
+                <div key={dept.id} className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all p-5 flex flex-col h-full relative group">
+                  <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                    <button
+                      onClick={() => { setSelectedDept(dept); setIsViewModalOpen(true); }}
+                      className="p-1.5 text-blue-500 hover:bg-blue-50 rounded-sm bg-white shadow-sm border border-blue-100"
+                      title="View"
+                    >
+                      <Eye size={16} />
+                    </button>
+                    {update && (
                       <button
-                        onClick={() => setIsAddModalOpen(true)}
-                        className="px-6 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold rounded-sm shadow-lg hover:shadow-orange-200 transition-all active:scale-95"
+                        onClick={() => { setSelectedDept(dept); setIsEditModalOpen(true); }}
+                        className="p-1.5 text-green-500 hover:bg-green-50 rounded-sm bg-white shadow-sm border border-green-100"
+                        title="Edit"
                       >
-                        Create first Department
+                        <Edit size={16} />
                       </button>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                    )}
+                    {remove && (
+                      <button
+                        onClick={() => { setSelectedDept(dept); setIsDeleteModalOpen(true); }}
+                        className="p-1.5 text-red-500 hover:bg-red-50 rounded-sm bg-white shadow-sm border border-red-100"
+                        title="Delete"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col items-center text-center gap-3 mb-4 mt-2">
+                    <div className="w-16 h-16 rounded-full border-4 border-orange-50 flex items-center justify-center overflow-hidden bg-orange-100 flex-shrink-0 shadow-inner">
+                      {dept.icon ? (
+                        <img
+                          src={`${import.meta.env.VITE_API_BASE_URL.replace('/api/', '')}${dept.icon}`}
+                          alt={dept.department_name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-orange-600 font-bold text-2xl">
+                          {dept.department_name?.substring(0, 1)}
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-gray-800 text-lg leading-tight line-clamp-1" title={dept.department_name}>
+                        {dept.department_name}
+                      </h3>
+                      <p className="text-orange-500 text-xs font-bold mt-1 tracking-widest uppercase">{dept.department_id}</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3 flex-1 px-2 border-t border-gray-50 pt-4">
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-gray-500 font-medium">Employees</span>
+                      <span className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-xs font-black border border-blue-100">
+                        {dept.employee_count || 0}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-gray-500 font-medium">Designations</span>
+                      <span className="bg-purple-50 text-purple-700 px-3 py-1 rounded-full text-xs font-black border border-purple-100">
+                        {dept.designation_count || 0}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="mt-5 pt-4 border-t border-gray-100 flex justify-center">
+                    <span
+                      className={`px-4 py-1 text-[10px] font-black rounded-full uppercase tracking-widest border ${dept.status === "Active"
+                        ? "bg-green-50 text-green-700 border-green-200"
+                        : "bg-red-50 text-red-700 border-red-200"
+                        }`}
+                    >
+                      {dept.status}
+                    </span>
+                  </div>
+                </div>
+              )}
+            />
+          )}
 
           {/* Pagination */}
           {totalPages > 0 && (

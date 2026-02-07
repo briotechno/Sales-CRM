@@ -37,7 +37,7 @@ const AllEmployee = () => {
   const dropdownRef = useRef(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [viewMode, setViewMode] = useState("list");
-  const itemsPerPage = viewMode === "list" ? 7 : 8;
+  const itemsPerPage = viewMode === "list" ? 7 : 12;
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);

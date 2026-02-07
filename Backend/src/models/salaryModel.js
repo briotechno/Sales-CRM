@@ -35,38 +35,92 @@ class Salary {
 
     static async findAll(userId, { page = 1, limit = 10, search = '', department = 'all' }) {
         const offset = (page - 1) * limit;
+        
+        // Base query starting from employees to ensure all employees are included
         let query = `
-      SELECT s.*, e.employee_name, e.profile_picture 
-      FROM salaries s
-      LEFT JOIN employees e ON s.employee_id = e.id
-      WHERE s.user_id = ?
-    `;
-        const params = [userId];
+            SELECT 
+                e.id as employee_id,
+                e.employee_name,
+                e.profile_picture,
+                e.designation_id,
+                e.department_id,
+                deg.designation_name as emp_designation,
+                dept.department_name as emp_department,
+                s.id,
+                s.basic_salary,
+                s.allowances,
+                s.deductions,
+                s.net_salary,
+                COALESCE(s.status, 'pending') as status,
+                s.pay_date,
+                s.start_date,
+                s.end_date,
+                s.working_days,
+                s.present_days,
+                s.created_at
+            FROM employees e
+            LEFT JOIN (
+                SELECT s1.*
+                FROM salaries s1
+                INNER JOIN (
+                    SELECT employee_id, MAX(created_at) as max_created
+                    FROM salaries
+                    WHERE user_id = ?
+                    GROUP BY employee_id
+                ) s2 ON s1.employee_id = s2.employee_id AND s1.created_at = s2.max_created
+                WHERE s1.user_id = ?
+            ) s ON e.id = s.employee_id
+            LEFT JOIN designations deg ON e.designation_id = deg.id
+            LEFT JOIN departments dept ON e.department_id = dept.id
+            WHERE e.user_id = ? AND e.status = 'Active'
+        `;
+        
+        const params = [userId, userId, userId];
 
         if (search) {
-            query += ` AND (e.employee_name LIKE ? OR s.designation LIKE ? OR s.department LIKE ?)`;
+            query += ` AND (e.employee_name LIKE ? OR deg.designation_name LIKE ? OR dept.department_name LIKE ?)`;
             params.push(`%${search}%`, `%${search}%`, `%${search}%`);
         }
 
         if (department !== 'all') {
-            query += ` AND s.department = ?`;
+            query += ` AND dept.department_name = ?`;
             params.push(department);
         }
 
         // Count query for pagination
-        const countQuery = query.replace('SELECT s.*, e.employee_name, e.profile_picture', 'SELECT COUNT(*) as total');
-        const [countResult] = await pool.execute(countQuery, params);
+        const countQuery = `SELECT COUNT(*) as total FROM employees e 
+                           LEFT JOIN departments dept ON e.department_id = dept.id
+                           WHERE e.user_id = ? AND e.status = 'Active' 
+                           ${search ? ' AND (e.employee_name LIKE ? OR dept.department_name LIKE ?)' : ''}
+                           ${department !== 'all' ? ' AND dept.department_name = ?' : ''}`;
+        
+        const countParams = [userId];
+        if (search) countParams.push(`%${search}%`, `%${search}%`);
+        if (department !== 'all') countParams.push(department);
+
+        const [countResult] = await pool.execute(countQuery, countParams);
         const total = countResult[0].total;
         const totalPages = Math.ceil(total / limit);
 
         // Add ordering and pagination
-        query += ` ORDER BY s.created_at DESC LIMIT ? OFFSET ?`;
+        query += ` ORDER BY e.employee_name ASC LIMIT ? OFFSET ?`;
         params.push(limit.toString(), offset.toString());
 
         const [rows] = await pool.execute(query, params);
 
+        // Map the results to match expected frontend structure
+        const mappedRows = rows.map(row => ({
+            ...row,
+            designation: row.designation || row.emp_designation,
+            department: row.department || row.emp_department,
+            basic_salary: row.basic_salary || 0,
+            allowances: row.allowances || 0,
+            deductions: row.deductions || 0,
+            net_salary: row.net_salary || 0
+        }));
+
         return {
-            salaries: rows,
+            salaries: mappedRows,
             pagination: {
                 page: Number(page),
                 limit: Number(limit),

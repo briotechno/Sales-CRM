@@ -447,7 +447,7 @@ export default function SalaryManagement() {
                 </thead>
                 <tbody className="text-sm">
                   {salaries.map((salary, index) => (
-                    <tr key={salary.id} className="border-t hover:bg-gray-50 transition-colors">
+                    <tr key={salary.employee_id} className="border-t hover:bg-gray-50 transition-colors">
                       <td className="py-3 px-4 text-gray-700 font-medium">{index + 1}</td>
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-3">
@@ -476,57 +476,75 @@ export default function SalaryManagement() {
                       <td className="py-3 px-4 text-center text-gray-700 font-medium">{formatDate(salary.pay_date)}</td>
                       <td className="py-3 px-4 text-right">
                         <div className="flex justify-end gap-1">
-                          {salary.status === "pending" && update && (
-                            <button
-                              onClick={() => handleMarkAsPaid(salary.id)}
-                              className="p-1 hover:bg-orange-100 rounded-sm text-green-500 hover:text-green-700 transition-all font-medium"
-                              title="Mark as Paid"
-                            >
-                              <DollarSign size={18} />
-                            </button>
+                          {salary.id ? (
+                            <>
+                              {salary.status === "pending" && update && (
+                                <button
+                                  onClick={() => handleMarkAsPaid(salary.id)}
+                                  className="p-1 hover:bg-orange-100 rounded-sm text-green-500 hover:text-green-700 transition-all font-medium"
+                                  title="Mark as Paid"
+                                >
+                                  <DollarSign size={18} />
+                                </button>
+                              )}
+                              <button
+                                onClick={() => {
+                                  setSelectedSalary(salary);
+                                  setGenerateModalOpen(true);
+                                }}
+                                className="p-1 hover:bg-orange-100 rounded-sm text-orange-500 hover:text-orange-700 transition-all font-medium"
+                                title="Pay Slip"
+                              >
+                                <Calculator size={18} />
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setSelectedSalary(salary);
+                                  setViewModalOpen(true);
+                                }}
+                                className="p-1 hover:bg-orange-100 rounded-sm text-blue-500 hover:text-blue-700 transition-all font-medium"
+                                title="View"
+                              >
+                                <Eye size={18} />
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setSelectedSalary(salary);
+                                  setEditModalOpen(true);
+                                }}
+                                disabled={!update}
+                                className={`p-1 hover:bg-orange-100 rounded-sm transition-all ${update ? "text-green-500 hover:text-green-700" : "text-gray-300 cursor-not-allowed"}`}
+                                title="Edit"
+                              >
+                                <Edit size={18} />
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setSelectedSalaryId(salary.id);
+                                  setOpenDelete(true);
+                                }}
+                                disabled={!remove}
+                                className={`p-1 hover:bg-orange-100 rounded-sm transition-all ${remove ? "text-red-500 hover:text-red-700" : "text-gray-300 cursor-not-allowed"}`}
+                                title="Delete"
+                              >
+                                <Trash2 size={18} />
+                              </button>
+                            </>
+                          ) : (
+                            create && (
+                              <button
+                                onClick={() => {
+                                  // Passing selected employee to AddSalaryModal
+                                  // We might need to adjust AddSalaryModal to accept a pre-selected employee
+                                  setSelectedSalary({ ...salary, Employee: salary.employee_id });
+                                  setShowAddModal(true);
+                                }}
+                                className="flex items-center gap-1 px-3 py-1 bg-orange-500 text-white text-[10px] font-bold rounded-sm hover:bg-orange-600 transition-all"
+                              >
+                                <Plus size={12} /> ADD SALARY
+                              </button>
+                            )
                           )}
-                          <button
-                            onClick={() => {
-                              setSelectedSalary(salary);
-                              setGenerateModalOpen(true);
-                            }}
-                            className="p-1 hover:bg-orange-100 rounded-sm text-orange-500 hover:text-orange-700 transition-all font-medium"
-                            title="Pay Slip"
-                          >
-                            <Calculator size={18} />
-                          </button>
-                          <button
-                            onClick={() => {
-                              setSelectedSalary(salary);
-                              setViewModalOpen(true);
-                            }}
-                            className="p-1 hover:bg-orange-100 rounded-sm text-blue-500 hover:text-blue-700 transition-all font-medium"
-                            title="View"
-                          >
-                            <Eye size={18} />
-                          </button>
-                          <button
-                            onClick={() => {
-                              setSelectedSalary(salary);
-                              setEditModalOpen(true);
-                            }}
-                            disabled={!update}
-                            className={`p-1 hover:bg-orange-100 rounded-sm transition-all ${update ? "text-green-500 hover:text-green-700" : "text-gray-300 cursor-not-allowed"}`}
-                            title="Edit"
-                          >
-                            <Edit size={18} />
-                          </button>
-                          <button
-                            onClick={() => {
-                              setSelectedSalaryId(salary.id);
-                              setOpenDelete(true);
-                            }}
-                            disabled={!remove}
-                            className={`p-1 hover:bg-orange-100 rounded-sm transition-all ${remove ? "text-red-500 hover:text-red-700" : "text-gray-300 cursor-not-allowed"}`}
-                            title="Delete"
-                          >
-                            <Trash2 size={18} />
-                          </button>
                         </div>
                       </td>
                     </tr>
@@ -545,9 +563,13 @@ export default function SalaryManagement() {
           {/* Modals */}
           <AddSalaryModal
             isOpen={showAddModal}
-            onClose={() => setShowAddModal(false)}
+            onClose={() => {
+              setShowAddModal(false);
+              setSelectedSalary(null);
+            }}
             onSubmit={handleSubmitSalary}
             loading={creating}
+            initialSalary={selectedSalary}
           />
           <ViewSalaryModal
             isOpen={ViewModalOpen}
