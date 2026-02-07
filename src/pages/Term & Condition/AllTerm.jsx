@@ -11,6 +11,7 @@ import {
   Filter,
   FileText,
   Calendar,
+  Clock,
   Building,
   Plus,
   X,
@@ -141,6 +142,16 @@ const TermsAndCondition = () => {
     });
   };
 
+  const formatTime = (dateString) => {
+    if (!dateString) return "-";
+
+    return new Date(dateString).toLocaleTimeString("en-IN", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+  };
+
   /* ================= UI ================= */
   return (
     <DashboardLayout>
@@ -181,75 +192,129 @@ const TermsAndCondition = () => {
                   </button>
 
                   {showFilters && (
-                    <div className="absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-xl shadow-2xl z-50 animate-fadeIn overflow-hidden">
-                      <div className="max-h-96 overflow-y-auto">
-                        {/* Department Section */}
-                        <div className="p-3 border-b border-gray-100 bg-gray-50">
-                          <span className="text-sm font-bold text-gray-700 tracking-wide">department</span>
-                        </div>
-                        <div className="py-1">
-                          <button
-                            onClick={() => {
-                              setFilterDept("");
-                              setShowFilters(false);
-                            }}
-                            className={`block w-full text-left px-4 py-2 text-sm transition-colors ${filterDept === ""
-                              ? "bg-orange-50 text-orange-600 font-bold"
-                              : "text-gray-700 hover:bg-gray-50"
-                              }`}
-                          >
-                            All Departments
-                          </button>
-                          {departments.map((dept) => (
-                            <button
-                              key={dept.id}
-                              onClick={() => {
-                                setFilterDept(dept.department_name);
-                                setShowFilters(false);
-                              }}
-                              className={`block w-full text-left px-4 py-2 text-sm transition-colors ${filterDept === dept.department_name
-                                ? "bg-orange-50 text-orange-600 font-bold"
-                                : "text-gray-700 hover:bg-gray-50"
-                                }`}
-                            >
-                              {dept.department_name}
-                            </button>
-                          ))}
+                    <div className="absolute right-0 mt-2 w-[500px] bg-white border border-gray-200 rounded-lg shadow-2xl z-50 overflow-hidden">
+                      {/* Header */}
+                      <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+                        <h3 className="text-base font-bold text-gray-800">Filter Options</h3>
+                        <button
+                          onClick={handleClearFilters}
+                          className="text-sm font-semibold text-orange-500 hover:text-orange-600 transition-colors"
+                        >
+                          Reset All
+                        </button>
+                      </div>
+
+                      {/* Body - Two Column Layout */}
+                      <div className="grid grid-cols-2 gap-6 p-5">
+                        {/* Department Column */}
+                        <div>
+                          <label className="text-sm font-medium text-gray-500 mb-3 block">Department</label>
+                          <div className="space-y-2">
+                            <label className="flex items-center gap-3 cursor-pointer group">
+                              <input
+                                type="radio"
+                                name="department"
+                                checked={filterDept === ""}
+                                onChange={() => setFilterDept("")}
+                                className="w-4 h-4 text-orange-500 border-gray-300 focus:ring-orange-500 accent-orange-500"
+                              />
+                              <span className={`text-sm ${filterDept === "" ? "text-orange-500 font-semibold" : "text-gray-700 group-hover:text-gray-900"}`}>
+                                All
+                              </span>
+                            </label>
+                            {departments.slice(0, 4).map((dept) => (
+                              <label key={dept.id} className="flex items-center gap-3 cursor-pointer group">
+                                <input
+                                  type="radio"
+                                  name="department"
+                                  checked={filterDept === dept.department_name}
+                                  onChange={() => setFilterDept(dept.department_name)}
+                                  className="w-4 h-4 text-orange-500 border-gray-300 focus:ring-orange-500 accent-orange-500"
+                                />
+                                <span className={`text-sm ${filterDept === dept.department_name ? "text-orange-500 font-semibold" : "text-gray-700 group-hover:text-gray-900"}`}>
+                                  {dept.department_name}
+                                </span>
+                              </label>
+                            ))}
+                            {departments.length > 4 && (
+                              <select
+                                value={filterDept}
+                                onChange={(e) => setFilterDept(e.target.value)}
+                                className="mt-2 w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none bg-white"
+                              >
+                                <option value="">All Departments</option>
+                                {departments.map((dept) => (
+                                  <option key={dept.id} value={dept.department_name}>
+                                    {dept.department_name}
+                                  </option>
+                                ))}
+                              </select>
+                            )}
+                          </div>
                         </div>
 
-                        {/* Designation Section */}
-                        <div className="p-3 border-t border-b border-gray-100 bg-gray-50">
-                          <span className="text-sm font-bold text-gray-700 tracking-wide">designation</span>
+                        {/* Designation Column */}
+                        <div>
+                          <label className="text-sm font-medium text-gray-500 mb-3 block">Designation</label>
+                          <div className="space-y-2">
+                            <label className="flex items-center gap-3 cursor-pointer group">
+                              <input
+                                type="radio"
+                                name="designation"
+                                checked={filterDesig === ""}
+                                onChange={() => setFilterDesig("")}
+                                className="w-4 h-4 text-orange-500 border-gray-300 focus:ring-orange-500 accent-orange-500"
+                              />
+                              <span className={`text-sm ${filterDesig === "" ? "text-orange-500 font-semibold" : "text-gray-700 group-hover:text-gray-900"}`}>
+                                All
+                              </span>
+                            </label>
+                            {designations.slice(0, 4).map((desig) => (
+                              <label key={desig.id} className="flex items-center gap-3 cursor-pointer group">
+                                <input
+                                  type="radio"
+                                  name="designation"
+                                  checked={filterDesig === desig.designation_name}
+                                  onChange={() => setFilterDesig(desig.designation_name)}
+                                  className="w-4 h-4 text-orange-500 border-gray-300 focus:ring-orange-500 accent-orange-500"
+                                />
+                                <span className={`text-sm ${filterDesig === desig.designation_name ? "text-orange-500 font-semibold" : "text-gray-700 group-hover:text-gray-900"}`}>
+                                  {desig.designation_name}
+                                </span>
+                              </label>
+                            ))}
+                            {designations.length > 4 && (
+                              <select
+                                value={filterDesig}
+                                onChange={(e) => setFilterDesig(e.target.value)}
+                                className="mt-2 w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none bg-white"
+                              >
+                                <option value="">All Designations</option>
+                                {designations.map((desig) => (
+                                  <option key={desig.id} value={desig.designation_name}>
+                                    {desig.designation_name}
+                                  </option>
+                                ))}
+                              </select>
+                            )}
+                          </div>
                         </div>
-                        <div className="py-1">
-                          <button
-                            onClick={() => {
-                              setFilterDesig("");
-                              setShowFilters(false);
-                            }}
-                            className={`block w-full text-left px-4 py-2 text-sm transition-colors ${filterDesig === ""
-                              ? "bg-orange-50 text-orange-600 font-bold"
-                              : "text-gray-700 hover:bg-gray-50"
-                              }`}
-                          >
-                            All Designations
-                          </button>
-                          {designations.map((desig) => (
-                            <button
-                              key={desig.id}
-                              onClick={() => {
-                                setFilterDesig(desig.designation_name);
-                                setShowFilters(false);
-                              }}
-                              className={`block w-full text-left px-4 py-2 text-sm transition-colors ${filterDesig === desig.designation_name
-                                ? "bg-orange-50 text-orange-600 font-bold"
-                                : "text-gray-700 hover:bg-gray-50"
-                                }`}
-                            >
-                              {desig.designation_name}
-                            </button>
-                          ))}
-                        </div>
+                      </div>
+
+                      {/* Footer */}
+                      <div className="flex items-center gap-3 px-5 py-4 border-t border-gray-100 bg-gray-50">
+                        <button
+                          onClick={() => setShowFilters(false)}
+                          className="flex-1 px-4 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={() => setShowFilters(false)}
+                          className="flex-1 px-4 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-orange-500 to-orange-600 rounded-md hover:from-orange-600 hover:to-orange-700 transition-all shadow-md"
+                        >
+                          Apply Filters
+                        </button>
                       </div>
                     </div>
                   )}
@@ -310,11 +375,9 @@ const TermsAndCondition = () => {
               <thead>
                 <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm">
                   <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[5%]">S.N</th>
-                  <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[15%]">Department</th>
-                  <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[15%]">Designation</th>
-                  <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[20%]">Title</th>
-                  <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[25%]">Description</th>
-                  <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[10%]">Created</th>
+                  <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[25%]">Title</th>
+                  <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[45%]">Description</th>
+                  <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-[15%]">Created</th>
                   <th className="py-3 px-4 font-semibold text-right border-b border-orange-400 w-[10%]">Actions</th>
                 </tr>
               </thead>
@@ -332,20 +395,27 @@ const TermsAndCondition = () => {
                       <td className="py-3 px-4">
                         {(currentPage - 1) * itemsPerPage + index + 1}
                       </td>
-                      <td className="py-3 px-1 text-orange-600 font-medium">{term.department}</td>
-                      <td className="py-3 px-1 text-orange-600 font-medium">{term.designation}</td>
-                      <td>{term.title}</td>
+                      <td className="py-3 px-4 font-medium text-gray-800">{term.title}</td>
 
-                      <td className="py-3 px-4 text-gray-600 text-left max-w-xs overflow-hidden">
-                        <div className="truncate cursor-pointer" title={term.description}>
-                          {term.description && term.description.length > 60
-                            ? term.description.substring(0, 60) + "..."
+                      <td className="py-3 px-4 text-gray-600 text-left">
+                        <div className="cursor-pointer" title={term.description}>
+                          {term.description && term.description.length > 100
+                            ? term.description.substring(0, 100) + "..."
                             : term.description || "---"}
                         </div>
                       </td>
 
                       <td className="py-3 px-4 text-gray-700 text-sm">
-                        {formatDate(term.created_at)}
+                        <div className="flex flex-col gap-1">
+                          <div className="flex items-center gap-1.5">
+                            <Calendar size={14} className="text-orange-500" />
+                            <span>{formatDate(term.created_at)}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <Clock size={14} className="text-blue-500" />
+                            <span>{formatTime(term.created_at)}</span>
+                          </div>
+                        </div>
                       </td>
 
                       <td className="py-3 px-4 text-right">
