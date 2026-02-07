@@ -382,7 +382,7 @@ const AllDesignation = () => {
             <GenericGridView
               data={designations}
               renderItem={(dsg) => (
-                <div key={dsg.id} className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all p-5 flex flex-col h-full relative group text-center">
+                <div key={dsg.id} className="bg-white border border-gray-200 rounded-sm shadow-sm hover:shadow-md transition-all relative group flex flex-col h-full overflow-hidden">
                   <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
                     <button
                       onClick={() => handleView(dsg)}
@@ -411,46 +411,52 @@ const AllDesignation = () => {
                     )}
                   </div>
 
-                  <div className="flex flex-col items-center gap-3 mb-4 mt-2">
-                    <div className="w-16 h-16 rounded-full border-4 border-orange-50 flex items-center justify-center overflow-hidden">
+                  <div className="p-6 pb-4 flex-1 flex flex-col items-center mt-2">
+                    <div className="w-20 h-20 rounded-full border-4 border-orange-50 flex items-center justify-center overflow-hidden bg-orange-100 flex-shrink-0 shadow-inner">
                       {dsg.image_url ? (
                         <img src={dsg.image_url} alt="" className="w-full h-full object-cover" />
                       ) : (
-                        <div className="w-full h-full bg-orange-100 flex items-center justify-center text-orange-600 font-bold text-2xl">
+                        <div className="w-full h-full flex items-center justify-center text-orange-600 font-bold text-3xl">
                           {dsg.designation_name?.substring(0, 1)}
                         </div>
                       )}
                     </div>
-                    <div>
+                    <div className="mt-4 text-center">
                       <h3 className="font-bold text-gray-800 text-lg leading-tight line-clamp-1" title={dsg.designation_name}>
                         {dsg.designation_name}
                       </h3>
-                      <p className="text-orange-500 text-xs font-bold mt-1 tracking-wide">{dsg.designation_id}</p>
+                      <p className="text-orange-500 text-[10px] font-black mt-1 tracking-widest uppercase bg-orange-50 px-2 py-0.5 rounded-full inline-block border border-orange-100">
+                        {dsg.designation_id}
+                      </p>
                     </div>
+                    
+                    <p className="text-sm text-gray-500 mt-4 line-clamp-2 min-h-[40px] px-2 text-center italic">
+                      {dsg.description || "No description provided for this designation."}
+                    </p>
                   </div>
 
-                  <div className="space-y-3 flex-1 px-2">
-                    <div className="flex justify-between items-center text-sm border-b border-dashed border-gray-100 pb-2">
-                      <span className="text-gray-500">Department</span>
-                      <span className="font-semibold text-gray-700">{dsg.department_name}</span>
+                  <div className="bg-gray-50 p-5 space-y-4 border-t border-gray-100 mt-auto">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="text-center p-2 bg-white rounded-lg border border-gray-200 shadow-sm">
+                        <p className="text-[9px] text-gray-400 font-black uppercase tracking-tighter">Department</p>
+                        <p className="text-xs font-bold text-gray-800 truncate px-1">{dsg.department_name}</p>
+                      </div>
+                      <div className="text-center p-2 bg-white rounded-lg border border-gray-200 shadow-sm">
+                        <p className="text-[9px] text-gray-400 font-black uppercase tracking-tighter">Employees</p>
+                        <p className="text-lg font-black text-gray-800">{dsg.employee_count || 0}</p>
+                      </div>
                     </div>
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-gray-500">Employees</span>
-                      <span className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full text-xs font-bold">
-                        {dsg.employee_count}
+
+                    <div className="flex justify-center pt-1">
+                      <span
+                        className={`px-4 py-1 text-[10px] font-black rounded-full uppercase tracking-widest border shadow-sm ${dsg.status === "Active"
+                          ? "bg-green-50 text-green-700 border-green-200"
+                          : "bg-red-50 text-red-700 border-red-200"
+                          }`}
+                      >
+                        {dsg.status}
                       </span>
                     </div>
-                  </div>
-
-                  <div className="mt-5 pt-4 border-t border-gray-100 flex justify-center">
-                    <span
-                      className={`px-4 py-1 text-xs font-bold rounded-full uppercase tracking-wider ${dsg.status === "Active"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-red-100 text-red-700"
-                        }`}
-                    >
-                      {dsg.status}
-                    </span>
                   </div>
                 </div>
               )}

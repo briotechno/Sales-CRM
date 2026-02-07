@@ -443,7 +443,7 @@ const AllDepartment = () => {
             <GenericGridView
               data={departments}
               renderItem={(dept) => (
-                <div key={dept.id} className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all p-5 flex flex-col h-full relative group">
+                <div key={dept.id} className="bg-white border border-gray-200 rounded-sm shadow-sm hover:shadow-md transition-all relative group flex flex-col h-full overflow-hidden">
                   <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
                     <button
                       onClick={() => { setSelectedDept(dept); setIsViewModalOpen(true); }}
@@ -472,8 +472,8 @@ const AllDepartment = () => {
                     )}
                   </div>
 
-                  <div className="flex flex-col items-center text-center gap-3 mb-4 mt-2">
-                    <div className="w-16 h-16 rounded-full border-4 border-orange-50 flex items-center justify-center overflow-hidden bg-orange-100 flex-shrink-0 shadow-inner">
+                  <div className="p-6 pb-4 flex-1 flex flex-col items-center mt-2">
+                    <div className="w-20 h-20 rounded-full border-4 border-orange-50 flex items-center justify-center overflow-hidden bg-orange-100 flex-shrink-0 shadow-inner shadow-orange-200/50">
                       {dept.icon ? (
                         <img
                           src={`${import.meta.env.VITE_API_BASE_URL.replace('/api/', '')}${dept.icon}`}
@@ -481,43 +481,47 @@ const AllDepartment = () => {
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-orange-600 font-bold text-2xl">
+                        <div className="w-full h-full flex items-center justify-center text-orange-600 font-bold text-3xl">
                           {dept.department_name?.substring(0, 1)}
                         </div>
                       )}
                     </div>
-                    <div>
+                    <div className="mt-4 text-center">
                       <h3 className="font-bold text-gray-800 text-lg leading-tight line-clamp-1" title={dept.department_name}>
                         {dept.department_name}
                       </h3>
-                      <p className="text-orange-500 text-xs font-bold mt-1 tracking-widest uppercase">{dept.department_id}</p>
+                      <p className="text-orange-500 text-[10px] font-black mt-1 tracking-widest uppercase bg-orange-50 px-2 py-0.5 rounded-full inline-block border border-orange-100">
+                        {dept.department_id}
+                      </p>
                     </div>
+                    
+                    <p className="text-sm text-gray-500 mt-4 line-clamp-2 min-h-[40px] px-2 text-center italic">
+                      {dept.description || "No description provided for this department."}
+                    </p>
                   </div>
 
-                  <div className="space-y-3 flex-1 px-2 border-t border-gray-50 pt-4">
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-gray-500 font-medium">Employees</span>
-                      <span className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-xs font-black border border-blue-100">
-                        {dept.employee_count || 0}
-                      </span>
+                  <div className="bg-gray-50 p-5 space-y-4 border-t border-gray-100 mt-auto">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="text-center p-2 bg-white rounded-lg border border-gray-200 shadow-sm">
+                        <p className="text-[9px] text-gray-400 font-black uppercase tracking-tighter">Employees</p>
+                        <p className="text-lg font-black text-gray-800">{dept.employee_count || 0}</p>
+                      </div>
+                      <div className="text-center p-2 bg-white rounded-lg border border-gray-200 shadow-sm">
+                        <p className="text-[9px] text-gray-400 font-black uppercase tracking-tighter">Designations</p>
+                        <p className="text-lg font-black text-gray-800">{dept.designation_count || 0}</p>
+                      </div>
                     </div>
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-gray-500 font-medium">Designations</span>
-                      <span className="bg-purple-50 text-purple-700 px-3 py-1 rounded-full text-xs font-black border border-purple-100">
-                        {dept.designation_count || 0}
-                      </span>
-                    </div>
-                  </div>
 
-                  <div className="mt-5 pt-4 border-t border-gray-100 flex justify-center">
-                    <span
-                      className={`px-4 py-1 text-[10px] font-black rounded-full uppercase tracking-widest border ${dept.status === "Active"
-                        ? "bg-green-50 text-green-700 border-green-200"
-                        : "bg-red-50 text-red-700 border-red-200"
-                        }`}
-                    >
-                      {dept.status}
-                    </span>
+                    <div className="flex justify-center pt-1">
+                      <span
+                        className={`px-4 py-1 text-[10px] font-black rounded-full uppercase tracking-widest border shadow-sm ${dept.status === "Active"
+                          ? "bg-green-50 text-green-700 border-green-200"
+                          : "bg-red-50 text-red-700 border-red-200"
+                          }`}
+                      >
+                        {dept.status}
+                      </span>
+                    </div>
                   </div>
                 </div>
               )}
