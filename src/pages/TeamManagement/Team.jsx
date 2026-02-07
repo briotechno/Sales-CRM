@@ -16,6 +16,11 @@ import {
   ChevronDown,
   Calendar,
   AlertCircle,
+  Search,
+  Layout,
+  CheckCircle,
+  MoreVertical,
+  RotateCcw,
 } from "lucide-react";
 import { FiHome } from "react-icons/fi";
 import NumberCard from "../../components/NumberCard";
@@ -29,15 +34,32 @@ import AddTeamModal from "../../components/Team/AddTeamModal";
 import EditTeamModal from "../../components/Team/EditTeamModal";
 import ViewTeamModal from "../../components/Team/ViewTeamModal";
 import DeleteTeamModal from "../../components/Team/DeleteTeamModal";
+import TeamMembersModal from "../../components/Team/TeamMembersModal";
 import { toast } from "react-hot-toast";
 import usePermission from "../../hooks/usePermission";
+import { useGetDepartmentsQuery } from "../../store/api/departmentApi";
+import { useGetDesignationsQuery } from "../../store/api/designationApi";
+import { useGetEmployeesQuery } from "../../store/api/employeeApi";
 
 export default function TeamManagement() {
   const [currentPage, setCurrentPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState("All");
   const [dateFilter, setDateFilter] = useState("All");
+  const [departmentFilter, setDepartmentFilter] = useState("All");
+  const [designationFilter, setDesignationFilter] = useState("All");
+  const [employeeFilter, setEmployeeFilter] = useState("All");
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const [tempStatus, setTempStatus] = useState("All");
+  const [tempDateFilter, setTempDateFilter] = useState("All");
+  const [tempDepartment, setTempDepartment] = useState("All");
+  const [tempDesignation, setTempDesignation] = useState("All");
+  const [tempEmployee, setTempEmployee] = useState("All");
+  const [tempCustomStart, setTempCustomStart] = useState("");
+  const [tempCustomEnd, setTempCustomEnd] = useState("");
+
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -47,6 +69,7 @@ export default function TeamManagement() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showMembersModal, setShowMembersModal] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState(null);
 
   const { create, read, update, delete: canDelete } = usePermission("Team Management");
@@ -88,12 +111,22 @@ export default function TeamManagement() {
   const { data, isLoading, isError, error, refetch } = useGetTeamsQuery({
     page: currentPage,
     limit: itemsPerPage,
-    // Note: status and date filters are handled on frontend if backend doesn't support them
-    // but we pass them anyway in case backend is updated or supports them
+    search: searchTerm,
     status: statusFilter !== "All" ? statusFilter : undefined,
+    department: departmentFilter !== "All" ? departmentFilter : undefined,
+    designation: designationFilter !== "All" ? designationFilter : undefined,
+    employee: employeeFilter !== "All" ? employeeFilter : undefined,
     dateFrom,
     dateTo,
   });
+
+  const { data: deptsData } = useGetDepartmentsQuery({ limit: 1000 });
+  const { data: desigsData } = useGetDesignationsQuery({ limit: 1000 });
+  const { data: empsData } = useGetEmployeesQuery({ limit: 1000, status: 'Active' });
+
+  const departments = deptsData?.departments || [];
+  const designations = desigsData?.designations || [];
+  const employees = empsData?.employees || [];
 
   const [createTeam, { isLoading: isCreating }] = useCreateTeamMutation();
   const [updateTeam, { isLoading: isUpdating }] = useUpdateTeamMutation();
@@ -101,27 +134,9 @@ export default function TeamManagement() {
 
   const teamsData = data?.teams || [];
 
-  // Frontend Filtering
-  const filteredTeams = teamsData.filter(team => {
-    let statusMatch = true;
-    if (statusFilter !== "All") {
-      statusMatch = team.status === statusFilter;
-    }
-
-    let dateMatch = true;
-    if (dateFilter !== "All" && (dateFrom || dateTo)) {
-      const teamDate = team.created_at ? new Date(team.created_at).toISOString().split('T')[0] : "";
-      if (dateFrom && dateTo) {
-        dateMatch = teamDate >= dateFrom && teamDate <= dateTo;
-      } else if (dateFrom) {
-        dateMatch = teamDate >= dateFrom;
-      } else if (dateTo) {
-        dateMatch = teamDate <= dateTo;
-      }
-    }
-
-    return statusMatch && dateMatch;
-  });
+  // Frontend Filtering - Only search if needed locally, but since we pass filters to backend,
+  // we can use the backend results directly.
+  const filteredTeams = teamsData; // Backend handles filtering now
 
   const totalItems = data?.pagination?.total || 0;
   const totalPages = data?.pagination?.totalPages || 1;
@@ -159,13 +174,23 @@ export default function TeamManagement() {
   const clearAllFilters = () => {
     setStatusFilter("All");
     setDateFilter("All");
+    setDepartmentFilter("All");
+    setDesignationFilter("All");
+    setEmployeeFilter("All");
     setCustomStart("");
     setCustomEnd("");
+    setSearchTerm("");
     setCurrentPage(1);
     setIsFilterOpen(false);
   };
 
-  const hasActiveFilters = statusFilter !== "All" || dateFilter !== "All";
+  const hasActiveFilters =
+    statusFilter !== "All" ||
+    dateFilter !== "All" ||
+    departmentFilter !== "All" ||
+    designationFilter !== "All" ||
+    employeeFilter !== "All" ||
+    searchTerm !== "";
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -195,8 +220,12 @@ export default function TeamManagement() {
                 </p>
               </div>
 
-              {/* Buttons */}
+              {/* Buttons and Search */}
               <div className="flex flex-wrap items-center gap-3">
+                {/* Search Bar */}
+
+
+
                 {/* Unified Filter */}
                 <div className="relative" ref={dropdownRef}>
                   <button
@@ -204,6 +233,13 @@ export default function TeamManagement() {
                       if (hasActiveFilters) {
                         clearAllFilters();
                       } else {
+                        setTempStatus(statusFilter);
+                        setTempDateFilter(dateFilter);
+                        setTempDepartment(departmentFilter);
+                        setTempDesignation(designationFilter);
+                        setTempEmployee(employeeFilter);
+                        setTempCustomStart(customStart);
+                        setTempCustomEnd(customEnd);
                         setIsFilterOpen(!isFilterOpen);
                       }
                     }}
@@ -216,76 +252,175 @@ export default function TeamManagement() {
                   </button>
 
                   {isFilterOpen && (
-                    <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-xl z-50 animate-fadeIn overflow-hidden">
-                      {/* Status Section */}
-                      <div className="p-3 border-b border-gray-100 bg-gray-50">
-                        <span className="text-sm font-bold text-gray-700 tracking-wide">Status</span>
-                      </div>
-                      <div className="py-1">
-                        {["All", "Active", "Inactive"].map((status) => (
-                          <button
-                            key={status}
-                            onClick={() => {
-                              setStatusFilter(status);
-                              setIsFilterOpen(false);
-                              setCurrentPage(1);
-                            }}
-                            className={`block w-full text-left px-4 py-2 text-sm transition-colors ${statusFilter === status
-                              ? "bg-orange-50 text-orange-600 font-bold"
-                              : "text-gray-700 hover:bg-gray-50"
-                              }`}
-                          >
-                            {status}
-                          </button>
-                        ))}
+                    <div className="absolute right-0 mt-2 w-[400px] bg-white border border-gray-200 rounded-sm shadow-2xl z-50 animate-fadeIn overflow-hidden">
+                      {/* Header */}
+                      <div className="p-4 bg-gray-50 border-b flex justify-between items-center">
+                        <span className="text-sm font-bold text-gray-800">Filter Options</span>
+                        <button
+                          onClick={() => {
+                            setTempStatus("All");
+                            setTempDateFilter("All");
+                            setTempDepartment("All");
+                            setTempDesignation("All");
+                            setTempEmployee("All");
+                            setCustomStart("");
+                            setCustomEnd("");
+                          }}
+                          className="text-[10px] font-bold text-orange-600 hover:underline hover:text-orange-700 capitalize"
+                        >
+                          Reset all
+                        </button>
                       </div>
 
-                      {/* Date Range Section */}
-                      <div className="p-3 border-t border-b border-gray-100 bg-gray-50">
-                        <span className="text-sm font-bold text-gray-700 tracking-wide">Date Created</span>
-                      </div>
-                      <div className="py-1">
-                        {["All", "Today", "Yesterday", "Last 7 Days", "This Month", "Custom"].map((option) => (
-                          <div key={option}>
-                            <button
-                              onClick={() => {
-                                setDateFilter(option);
-                                if (option !== "Custom") {
-                                  setIsFilterOpen(false);
-                                  setCurrentPage(1);
-                                }
-                              }}
-                              className={`block w-full text-left px-4 py-2 text-sm transition-colors ${dateFilter === option
-                                ? "bg-orange-50 text-orange-600 font-bold"
-                                : "text-gray-700 hover:bg-gray-50"
-                                }`}
-                            >
-                              {option}
-                            </button>
-                            {option === "Custom" && dateFilter === "Custom" && (
-                              <div className="px-4 py-3 space-y-2 border-t border-gray-50 bg-gray-50/50">
-                                <input
-                                  type="date"
-                                  value={customStart}
-                                  onChange={(e) => setCustomStart(e.target.value)}
-                                  className="w-full px-2 py-2 border border-gray-300 rounded-sm text-xs focus:ring-1 focus:ring-orange-500 outline-none"
-                                />
-                                <input
-                                  type="date"
-                                  value={customEnd}
-                                  onChange={(e) => setCustomEnd(e.target.value)}
-                                  className="w-full px-2 py-2 border border-gray-300 rounded-sm text-xs focus:ring-1 focus:ring-orange-500 outline-none"
-                                />
-                                <button
-                                  onClick={() => { setIsFilterOpen(false); setCurrentPage(1); }}
-                                  className="w-full bg-[#FF7B1D] text-white text-[10px] font-bold py-2 rounded-sm uppercase"
-                                >
-                                  Apply
-                                </button>
-                              </div>
-                            )}
+                      <div className="p-5 grid grid-cols-2 gap-x-10 gap-y-8">
+                        {/* Column 1: Status Selection */}
+                        <div className="space-y-4">
+                          <span className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-2 border-b pb-1">Team Status</span>
+                          <div className="grid grid-cols-2 gap-4">
+                            {["All", "Active", "Inactive"].map((s) => (
+                              <label key={s} className="flex items-center group cursor-pointer">
+                                <div className="relative flex items-center">
+                                  <input
+                                    type="radio"
+                                    name="status_filter"
+                                    checked={tempStatus === s}
+                                    onChange={() => setTempStatus(s)}
+                                    className="peer h-4 w-4 cursor-pointer appearance-none rounded-full border-2 border-gray-200 transition-all checked:border-[#FF7B1D] checked:border-[5px] hover:border-orange-300"
+                                  />
+                                </div>
+                                <span className={`ml-3 text-sm font-medium transition-colors capitalize ${tempStatus === s ? "text-[#FF7B1D] font-bold" : "text-gray-600 group-hover:text-gray-900"}`}>
+                                  {s}
+                                </span>
+                              </label>
+                            ))}
                           </div>
-                        ))}
+                        </div>
+
+                        {/* Column 2: Team Member */}
+                        <div className="space-y-4">
+                          <span className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-2 border-b pb-1">Team Member</span>
+                          <div className="relative">
+                            <select
+                              value={tempEmployee}
+                              onChange={(e) => setTempEmployee(e.target.value)}
+                              className="w-full px-3 py-2.5 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-1 focus:ring-orange-500/20 outline-none transition-all text-xs font-semibold text-gray-700 bg-gray-50 hover:bg-white"
+                            >
+                              <option value="All">All Members</option>
+                              {employees.map((emp) => (
+                                <option key={emp.id} value={emp.id}>
+                                  {emp.employee_name}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+
+                        {/* Column 3: Department */}
+                        <div className="space-y-4">
+                          <span className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-2 border-b pb-1">Department</span>
+                          <div className="relative">
+                            <select
+                              value={tempDepartment}
+                              onChange={(e) => setTempDepartment(e.target.value)}
+                              className="w-full px-3 py-2.5 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-1 focus:ring-orange-500/20 outline-none transition-all text-xs font-semibold text-gray-700 bg-gray-50 hover:bg-white"
+                            >
+                              <option value="All">All Departments</option>
+                              {departments.map((dept) => (
+                                <option key={dept.id} value={dept.id}>
+                                  {dept.department_name}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+
+                        {/* Column 4: Designation */}
+                        <div className="space-y-4">
+                          <span className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-2 border-b pb-1">Designation</span>
+                          <div className="relative">
+                            <select
+                              value={tempDesignation}
+                              onChange={(e) => setTempDesignation(e.target.value)}
+                              className="w-full px-3 py-2.5 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-1 focus:ring-orange-500/20 outline-none transition-all text-xs font-semibold text-gray-700 bg-gray-50 hover:bg-white"
+                            >
+                              <option value="All">All Designations</option>
+                              {designations.map((desig) => (
+                                <option key={desig.id} value={desig.id}>
+                                  {desig.designation_name}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+
+                        {/* Column 5: Date Created */}
+                        <div className="space-y-4">
+                          <span className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-2 border-b pb-1">Date Created</span>
+                          <div className="space-y-3">
+                            <select
+                              value={tempDateFilter}
+                              onChange={(e) => setTempDateFilter(e.target.value)}
+                              className="w-full px-3 py-2.5 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-1 focus:ring-orange-500/20 outline-none transition-all text-xs font-semibold text-gray-700 bg-gray-50 hover:bg-white"
+                            >
+                              {["All", "Today", "Yesterday", "Last 7 Days", "This Month", "Custom"].map((option) => (
+                                <option key={option} value={option}>{option}</option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+
+                        {/* Column 6: Custom Date Range (if Custom selected) */}
+                        {tempDateFilter === "Custom" && (
+                          <div className="space-y-4">
+                            <span className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-2 border-b pb-1">Custom Range</span>
+                            <div className="grid grid-cols-2 gap-2 animate-fadeIn">
+                              <div className="space-y-1">
+                                <label className="text-[9px] font-bold text-gray-400 uppercase">From</label>
+                                <input
+                                  type="date"
+                                  value={tempCustomStart}
+                                  onChange={(e) => setTempCustomStart(e.target.value)}
+                                  className="w-full px-2 py-1.5 border border-gray-200 rounded-sm text-[10px] outline-none focus:border-orange-500"
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <label className="text-[9px] font-bold text-gray-400 uppercase">To</label>
+                                <input
+                                  type="date"
+                                  value={tempCustomEnd}
+                                  onChange={(e) => setTempCustomEnd(e.target.value)}
+                                  className="w-full px-2 py-1.5 border border-gray-200 rounded-sm text-[10px] outline-none focus:border-orange-500"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Filter Actions */}
+                      <div className="p-4 bg-gray-50 border-t flex gap-3">
+                        <button
+                          onClick={() => setIsFilterOpen(false)}
+                          className="flex-1 py-2.5 text-[11px] font-bold text-gray-500 capitalize tracking-wider hover:bg-gray-200 transition-colors rounded-sm border border-gray-200 bg-white"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={() => {
+                            setStatusFilter(tempStatus);
+                            setDateFilter(tempDateFilter);
+                            setDepartmentFilter(tempDepartment);
+                            setDesignationFilter(tempDesignation);
+                            setEmployeeFilter(tempEmployee);
+                            setCustomStart(tempCustomStart);
+                            setCustomEnd(tempCustomEnd);
+                            setIsFilterOpen(false);
+                            setCurrentPage(1);
+                          }}
+                          className="flex-1 py-2.5 text-[11px] font-bold text-white capitalize tracking-wider bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 transition-all rounded-sm shadow-md active:scale-95"
+                        >
+                          Apply filters
+                        </button>
                       </div>
                     </div>
                   )}
@@ -294,7 +429,7 @@ export default function TeamManagement() {
                 <button
                   onClick={() => setShowAddModal(true)}
                   disabled={!create}
-                  className={`flex items-center gap-2 px-6 py-3 rounded-sm font-semibold transition shadow-lg hover:shadow-xl ${create
+                  className={`flex items-center gap-2 px-6 py-3 rounded-sm font-bold transition shadow-lg hover:shadow-xl ${create
                     ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
                     : "bg-gray-300 text-gray-500 cursor-not-allowed"
                     }`}
@@ -375,16 +510,19 @@ export default function TeamManagement() {
                         {(currentPage - 1) * itemsPerPage + index + 1}
                       </td>
                       <td className="py-3 px-4 font-medium text-orange-600 text-left">{team.team_id}</td>
-                      <td className="py-3 px-4 font-semibold text-gray-800 text-left">
+                      <td className="py-3 px-4 font-semibold text-gray-800 text-left transition-all duration-300">
                         {team.team_name}
                       </td>
                       <td className="py-3 px-4 text-left">
-                        <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-sm bg-orange-100 flex items-center justify-center text-orange-600 shadow-sm border border-orange-200">
+                        <button
+                          onClick={() => { setSelectedTeam(team); setShowMembersModal(true); }}
+                          className="flex items-center gap-2 group hover:bg-orange-50 p-1 pr-3 rounded-sm transition-all border border-transparent hover:border-orange-100"
+                        >
+                          <div className="w-8 h-8 rounded-sm bg-orange-100 flex items-center justify-center text-orange-600 shadow-sm border border-orange-200 group-hover:scale-110 transition-transform">
                             <Users size={14} />
                           </div>
-                          <span className="font-bold text-gray-700">{team.total_members || 0}</span>
-                        </div>
+                          <span className="font-bold text-gray-700 group-hover:text-orange-600">{team.total_members || 0}</span>
+                        </button>
                       </td>
                       <td className="py-3 px-4 text-gray-600 text-sm text-left">
                         {team.created_at ? new Date(team.created_at).toLocaleDateString() : 'N/A'}
@@ -434,11 +572,33 @@ export default function TeamManagement() {
                   <tr>
                     <td
                       colSpan="7"
-                      className="py-12 text-gray-500 font-medium text-sm text-center"
+                      className="py-12 text-center text-gray-500 font-medium text-sm"
                     >
                       <div className="flex flex-col items-center gap-3">
                         <Users size={48} className="text-gray-200" />
-                        <p>No teams found matches your criteria.</p>
+                        <p className="mb-4">
+                          {hasActiveFilters
+                            ? "No teams found matching your filter criteria. Try clearing filters."
+                            : "Your teams list is currently empty. Start building your team today!"}
+                        </p>
+                        {hasActiveFilters ? (
+                          <button
+                            onClick={clearAllFilters}
+                            className="px-6 py-2 border-2 border-[#FF7B1D] text-[#FF7B1D] font-bold rounded-sm hover:bg-orange-50 transition-all text-xs uppercase tracking-wider"
+                          >
+                            Clear Filter
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => {
+                              setShowAddModal(true);
+                            }}
+                            className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl inline-flex items-center gap-2 font-semibold"
+                          >
+                            <Plus size={20} />
+                            Create First Team
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -527,6 +687,15 @@ export default function TeamManagement() {
         }}
         teamId={selectedTeam?.id}
         teamName={selectedTeam?.team_name}
+      />
+
+      <TeamMembersModal
+        isOpen={showMembersModal}
+        onClose={() => {
+          setShowMembersModal(false);
+          setSelectedTeam(null);
+        }}
+        teamId={selectedTeam?.id}
       />
     </DashboardLayout>
   );
