@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import ComingSoon from "./pages/ComingSoon";
 import CompanyProfile from "./pages/Public/CompanyProfile";
 import Dashboard from "./pages/Dashboard";
 // CRM Dashboard
@@ -92,6 +93,12 @@ import Messenger from "./pages/MessengerPart/Messenger";
 import Catelogs from "./pages/CatelogsPart/Catelogs";
 import CatalogView from "./pages/CatelogsPart/CatalogView";
 import CatalogCategory from "./pages/CatelogsPart/CatalogCategory";
+// Channel Integration
+import CRMFormPage from "./pages/ChannelIntegration/CRMForm";
+import GoogleDocsPage from "./pages/ChannelIntegration/GoogleDocs";
+import PublicForm from "./pages/Public/PublicForm";
+// Team Management
+
 // Team Management
 import TeamManagement from "./pages/TeamManagement/Team";
 // Auth Pages
@@ -128,6 +135,7 @@ import TaskReminderPopup from "./components/TaskReminderPopup.jsx";
 function App() {
   return (
     <Router>
+
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<LandingPage />} />
@@ -137,6 +145,8 @@ function App() {
         <Route path="/business/:id/:slug?" element={<CompanyProfile />} />
         <Route path="/catalog/view/:id" element={<CatalogView />} />
         <Route path="/apply/:link" element={<PublicJobForm />} />
+        <Route path="/public/form/:slug" element={<PublicForm />} />
+
 
         {/* Protected Routes */}
         <Route element={<ProtectedRoute />}>
@@ -196,7 +206,13 @@ function App() {
           <Route path="/settings/subscription" element={<ManageSubscription />} />
           <Route path="/settings/faq" element={<Faq />} />
           <Route path="/additional/messenger" element={<Messenger />} />
+          <Route path="/crm/channel/form" element={<CRMFormPage />} />
+          <Route path="/crm/channel/google-docs" element={<GoogleDocsPage />} />
+          <Route path="/crm/channel/meta" element={<ComingSoon title="Meta Integration" />} />
+          <Route path="/crm/channel/justdial" element={<ComingSoon title="Justdial Integration" />} />
+          <Route path="/crm/channel/indiamart" element={<ComingSoon title="Indiamart Integration" />} />
           <Route path="/additional/catelogs" element={<Catelogs />} />
+
           <Route path="/additional/catalog-categories" element={<CatalogCategory />} />
           <Route path="/hrm/teams" element={<TeamManagement />} />
 

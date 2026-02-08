@@ -66,6 +66,8 @@ app.use('/api/crm-dashboard', require('./routes/crmDashboardRoutes'));
 app.use('/api/main-dashboard', require('./routes/mainDashboardRoutes'));
 app.use('/api/messenger', require('./routes/messengerRoutes'));
 app.use('/api/offer-letters', require('./routes/offerLetterRoutes'));
+app.use('/api/integrations', require('./routes/integrationRoutes'));
+
 
 
 

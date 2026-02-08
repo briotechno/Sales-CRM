@@ -38,6 +38,8 @@ import { crmDashboardApi } from './api/crmDashboardApi';
 import { mainDashboardApi } from './api/mainDashboardApi';
 import { offerLetterApi } from './api/offerLetterApi';
 import { applicantApi } from './api/applicantApi';
+import { integrationApi } from './api/integrationApi';
+
 
 
 
@@ -81,6 +83,8 @@ export const store = configureStore({
         [mainDashboardApi.reducerPath]: mainDashboardApi.reducer,
         [offerLetterApi.reducerPath]: offerLetterApi.reducer,
         [applicantApi.reducerPath]: applicantApi.reducer,
+        [integrationApi.reducerPath]: integrationApi.reducer,
+
 
 
 
@@ -123,6 +127,8 @@ export const store = configureStore({
             mainDashboardApi.middleware,
             offerLetterApi.middleware,
             applicantApi.middleware,
+            integrationApi.middleware,
             limitErrorMiddleware
+
         ),
 });
