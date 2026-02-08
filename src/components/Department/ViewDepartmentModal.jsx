@@ -14,9 +14,11 @@ const ViewDepartmentModal = ({ isOpen, onClose, department }) => {
     );
 
     const icon = department.icon_url ? (
-        <img src={department.icon_url} alt="" className="w-12 h-12 object-cover rounded-lg" />
+        <img src={department.icon_url} alt="" className="w-12 h-12 object-cover rounded-lg border border-gray-100 shadow-sm" />
     ) : (
-        <Building2 size={24} />
+        <div className="w-12 h-12 rounded-lg bg-orange-50 flex items-center justify-center border border-orange-100">
+            <Building2 size={24} className="text-[#FF7B1D]" />
+        </div>
     );
 
     return (
@@ -30,7 +32,7 @@ const ViewDepartmentModal = ({ isOpen, onClose, department }) => {
         >
             <div className="space-y-8 text-black bg-white font-sans">
                 {/* Stats Grid */}
-                <div className="grid grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="bg-blue-50 p-4 rounded-sm border border-blue-100 flex flex-col items-center text-center group hover:shadow-md transition-shadow">
                         <div className="bg-blue-600 p-2 rounded-sm text-white mb-2 group-hover:scale-110 transition-transform">
                             <Users size={20} />
