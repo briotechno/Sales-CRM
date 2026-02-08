@@ -28,14 +28,13 @@ export default function LeadsListView({
                 className="w-4 h-4 cursor-pointer"
               />
             </th>
-            <th className="py-3 px-4 font-semibold">S.N</th>
+
             <th className="py-3 px-4 font-semibold">Lead ID</th>
             <th className="py-3 px-4 font-semibold">Full Name</th>
             <th className="py-3 px-4 font-semibold">Mobile Number</th>
             <th className="py-3 px-4 font-semibold">Email</th>
             <th className="py-3 px-4 font-semibold">Services</th>
-            <th className="py-3 px-4 font-semibold">Type</th>
-            <th className="py-3 px-4 font-semibold">Date</th>
+
             <th className="py-3 px-4 font-semibold">Status</th>
             <th className="py-3 px-4 font-semibold">Calls</th>
             <th className="py-3 px-4 font-semibold">Action</th>
@@ -58,9 +57,7 @@ export default function LeadsListView({
                   />
                 </td>
 
-                <td className="py-3 px-4">
-                  {(currentPage - 1) * itemsPerPage + index + 1}
-                </td>
+
 
                 <td
                   className="py-3 px-4 text-orange-600 hover:text-blue-800 cursor-pointer font-medium"
@@ -80,29 +77,18 @@ export default function LeadsListView({
                 <td className="py-3 px-4">{lead.email}</td>
 
                 <td className="py-3 px-4">
-                  <span className="px-3 py-1 text-xs font-semibold rounded-full bg-indigo-100 text-indigo-600">
-                    {lead.tag || lead.services || 'N/A'}
+                  <span className={`px-3 py-1 text-xs font-semibold rounded-full ${lead.interested_in ? "bg-green-100 text-green-700" : "bg-indigo-100 text-indigo-700"}`}>
+                    {lead.interested_in ? "Connected" : "Not Connected"}
                   </span>
                 </td>
 
-                <td className="py-3 px-4">
-                  <span
-                    className={`px-3 py-1 text-xs font-semibold rounded-full ${lead.type === "Organization"
-                      ? "bg-orange-100 text-orange-600"
-                      : "bg-blue-100 text-blue-600"
-                      }`}
-                  >
-                    {lead.type}
-                  </span>
-                </td>
 
-                <td className="py-3 px-4 text-xs">{lead.created_at ? new Date(lead.created_at).toLocaleDateString() : (lead.date || '-')}</td>
 
                 <td className="py-3 px-4">
                   <span
                     className={`px-3 py-1 text-xs font-semibold rounded-full ${lead.status === "Active"
-                        ? "bg-green-100 text-green-600"
-                        : "bg-red-100 text-red-600"
+                      ? "bg-green-100 text-green-600"
+                      : "bg-red-100 text-red-600"
                       }`}
                   >
                     {lead.status || "Inactive"}
@@ -141,7 +127,7 @@ export default function LeadsListView({
           ) : (
             <tr>
               <td
-                colSpan="12"
+                colSpan="9"
                 className="py-6 text-gray-500 font-medium text-sm"
               >
                 No leads found.

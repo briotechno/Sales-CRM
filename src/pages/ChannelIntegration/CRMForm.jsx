@@ -27,7 +27,10 @@ import {
     Search,
     PlusCircle,
     SearchX,
-    Eye
+
+    Eye,
+    RefreshCcw,
+    Users
 } from "lucide-react";
 import {
     useGetFormsQuery,
@@ -38,6 +41,7 @@ import {
 import { toast } from "react-hot-toast";
 import Modal from "../../components/common/Modal";
 import NumberCard from "../../components/NumberCard";
+import { useGetLogsQuery } from "../../store/api/integrationApi";
 
 const CRMForm = () => {
     const [currentPage, setCurrentPage] = useState(1);
@@ -46,7 +50,7 @@ const CRMForm = () => {
 
     const [filterStatus, setFilterStatus] = useState("All");
 
-    const { data: formsResponse, isLoading } = useGetFormsQuery({
+    const { data: formsResponse, isLoading, refetch: refetchForms } = useGetFormsQuery({
         page: currentPage,
         limit: itemsPerPage,
         search: searchTerm,
@@ -70,6 +74,16 @@ const CRMForm = () => {
     const [tempSearchTerm, setTempSearchTerm] = useState("");
     const [showViewModal, setShowViewModal] = useState(false);
     const [viewForm, setViewForm] = useState(null);
+    const [activeTab, setActiveTab] = useState("accounts");
+
+    const [currentLogPage, setCurrentLogPage] = useState(1);
+    const { data: logsResponse, refetch: refetchLogs } = useGetLogsQuery({
+        page: currentLogPage,
+        limit: itemsPerPage,
+        channel_type: 'crm_form'
+    });
+    const logs = logsResponse?.data || [];
+    const logsPagination = logsResponse?.pagination || { totalPages: 1, total: 0 };
 
     const [formData, setFormData] = useState({
         form_name: "",
@@ -188,7 +202,8 @@ const CRMForm = () => {
         total: forms?.length || 0,
         active: forms?.filter(f => f.status === 'active').length || 0,
         inactive: forms?.filter(f => f.status !== 'active').length || 0,
-        totalFields: forms?.reduce((acc, f) => acc + (typeof f.fields === 'string' ? JSON.parse(f.fields) : f.fields).length, 0) || 0
+        totalFields: forms?.reduce((acc, f) => acc + (typeof f.fields === 'string' ? JSON.parse(f.fields) : f.fields).length, 0) || 0,
+        totalLogs: logsPagination?.total || 0
     };
 
     const clearAllFilters = () => {
@@ -200,6 +215,7 @@ const CRMForm = () => {
 
     return (
         <DashboardLayout>
+
             <div className="min-h-screen bg-white font-primary">
                 {/* Header Section */}
                 <div className="bg-white sticky top-0 z-30">
@@ -305,6 +321,9 @@ const CRMForm = () => {
                                     )}
                                 </div>
 
+                                {/* Refresh Button */}
+
+
                                 {/* View Mode Toggle */}
                                 <div className="flex items-center bg-gray-100 p-1 rounded-sm border border-gray-200 shadow-inner">
                                     <button
@@ -364,238 +383,373 @@ const CRMForm = () => {
                             lineBorderClass="border-orange-500"
                         />
                         <NumberCard
-                            title="Total input fields"
-                            number={stats.totalFields}
-                            icon={<Settings className="text-purple-600" size={24} />}
+                            title="Submission history"
+                            number={stats.totalLogs}
+                            icon={<Clock className="text-purple-600" size={24} />}
                             iconBgColor="bg-purple-100"
                             lineBorderClass="border-purple-500"
                         />
+
                     </div>
-                    {isLoading ? (
-                        <div className="flex justify-center p-20">
-                            <div className="flex flex-col items-center gap-4">
-                                <div className="w-12 h-12 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin"></div>
-                                <p className="text-gray-500 font-semibold animate-pulse">Loading forms...</p>
-                            </div>
-                        </div>
-                    ) : filteredForms.length === 0 ? (
-                        forms?.length > 0 ? (
-                            <div className="flex flex-col items-center justify-center py-20 bg-white rounded-sm border border-gray-200 shadow-sm text-center">
-                                <div className="p-4 bg-orange-50 rounded-full mb-4">
-                                    <SearchX className="text-orange-400" size={40} />
+
+                    <div className="flex gap-4 mb-6">
+                        <button
+                            onClick={() => setActiveTab("accounts")}
+                            className={`px-6 py-2.5 rounded-sm font-bold transition-all capitalize text-sm border ${activeTab === 'accounts'
+                                ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D] shadow-md'
+                                : 'bg-white text-gray-600 hover:bg-gray-50 border-gray-200'}`}
+                        >
+                            Form List
+                        </button>
+                        <button
+                            onClick={() => setActiveTab("logs")}
+                            className={`px-6 py-2.5 rounded-sm font-bold transition-all capitalize text-sm border ${activeTab === 'logs'
+                                ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D] shadow-md'
+                                : 'bg-white text-gray-600 hover:bg-gray-50 border-gray-200'}`}
+                        >
+                            Submission History
+                        </button>
+                    </div>
+                    {activeTab === 'accounts' ? (
+                        isLoading ? (
+                            <div className="flex justify-center p-20">
+                                <div className="flex flex-col items-center gap-4">
+                                    <div className="w-12 h-12 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin"></div>
+                                    <p className="text-gray-500 font-semibold animate-pulse">Loading forms...</p>
                                 </div>
-                                <h3 className="text-lg font-bold text-gray-800 mb-2">No matching forms found</h3>
-                                <p className="text-gray-500 max-w-sm mb-6 text-sm">
-                                    We couldn't find any forms matching your current search or filters. Try adjusting your criteria.
-                                </p>
-                                <button
-                                    onClick={clearAllFilters}
-                                    className="px-6 py-2.5 border-2 border-orange-100 text-[#FF7B1D] hover:bg-orange-50 rounded-sm font-bold shadow-sm transition-all flex items-center gap-2 active:scale-95 text-sm"
-                                >
-                                    <X size={16} /> Clear Filters
-                                </button>
                             </div>
+                        ) : filteredForms.length === 0 ? (
+                            forms?.length > 0 ? (
+                                <div className="flex flex-col items-center justify-center py-20 bg-white rounded-sm border border-gray-200 shadow-sm text-center">
+                                    <div className="p-4 bg-orange-50 rounded-full mb-4">
+                                        <SearchX className="text-orange-400" size={40} />
+                                    </div>
+                                    <h3 className="text-lg font-bold text-gray-800 mb-2">No matching forms found</h3>
+                                    <p className="text-gray-500 max-w-sm mb-6 text-sm">
+                                        We couldn't find any forms matching your current search or filters. Try adjusting your criteria.
+                                    </p>
+                                    <button
+                                        onClick={clearAllFilters}
+                                        className="px-6 py-2.5 border-2 border-orange-100 text-[#FF7B1D] hover:bg-orange-50 rounded-sm font-bold shadow-sm transition-all flex items-center gap-2 active:scale-95 text-sm"
+                                    >
+                                        <X size={16} /> Clear Filters
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="flex flex-col items-center justify-center py-20 bg-white rounded-sm border border-gray-200 shadow-sm text-center">
+                                    <div className="p-4 bg-orange-50 rounded-full mb-4">
+                                        <FileText className="text-orange-400" size={40} />
+                                    </div>
+                                    <h3 className="text-lg font-bold text-gray-800 mb-2">No CRM Forms Found</h3>
+                                    <p className="text-gray-500 max-w-md mx-auto mb-6 text-sm">
+                                        You haven't created any lead forms yet. Create a form to start collecting leads from your website.
+                                    </p>
+                                    <button
+                                        onClick={() => { resetForm(); setShowModal(true); }}
+                                        className="px-6 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-sm font-bold shadow-lg transition-all flex items-center gap-2 active:scale-95"
+                                    >
+                                        <Plus size={18} /> Create First Form
+                                    </button>
+                                </div>
+                            )
                         ) : (
-                            <div className="flex flex-col items-center justify-center py-20 bg-white rounded-sm border border-gray-200 shadow-sm text-center">
-                                <div className="p-4 bg-orange-50 rounded-full mb-4">
-                                    <FileText className="text-orange-400" size={40} />
+                            viewMode === "grid" ? (
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                                    {filteredForms.map((form) => (
+                                        <div key={form.id} className="bg-white rounded-sm overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 border border-gray-200 group flex flex-col h-full relative">
+
+                                            {/* Action Icons - Top Right (Hidden by default, shown on hover) */}
+                                            <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                                                <button
+                                                    onClick={() => handleEdit(form)}
+                                                    className="p-1.5 text-green-600 hover:bg-green-50 rounded-sm bg-white shadow-sm border border-green-100"
+                                                    title="Edit"
+                                                >
+                                                    <SquarePen size={16} />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDelete(form)}
+                                                    className="p-1.5 text-red-600 hover:bg-red-50 rounded-sm bg-white shadow-sm border border-red-100"
+                                                    title="Delete"
+                                                >
+                                                    <Trash2 size={16} />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleView(form)}
+                                                    className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-sm bg-white shadow-sm border border-blue-100"
+                                                    title="View Details"
+                                                >
+                                                    <Eye size={16} />
+                                                </button>
+                                            </div>
+
+                                            <div className="p-6 pb-4 flex-1 flex flex-col items-center mt-2">
+                                                {/* Icon/Avatar */}
+                                                <div className="relative mb-4">
+                                                    <div className="w-20 h-20 rounded-full bg-orange-50 flex items-center justify-center text-orange-600 font-bold border-4 border-orange-100/50">
+                                                        <FileText size={32} className="text-[#FF7B1D]" />
+                                                    </div>
+                                                    <div className={`absolute bottom-1 right-1 w-4 h-4 rounded-full border-2 border-white ${form.status === 'active' ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                                                </div>
+
+                                                <h3 className="text-xl font-bold text-gray-800 mb-2 capitalize text-center line-clamp-2" title={form.form_name}>{form.form_name}</h3>
+
+                                                <div className="flex flex-col items-center gap-2 mb-4 w-full">
+                                                    <span className={`px-4 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${form.status === 'active' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-gray-50 text-gray-600 border-gray-200'}`}>
+                                                        {form.status}
+                                                    </span>
+                                                    <span className="text-xs font-semibold text-gray-500 flex items-center gap-1.5 bg-gray-50 px-3 py-1 rounded-sm border border-gray-100">
+                                                        <Settings size={12} className="text-orange-500" />
+                                                        {(typeof form.fields === 'string' ? JSON.parse(form.fields) : form.fields).length} Fields Configured
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <div className="bg-gray-100 p-4 border-t border-gray-200 mt-auto">
+                                                <div className="grid grid-cols-2 gap-3">
+                                                    <button
+                                                        onClick={() => setShowEmbedModal(form)}
+                                                        className="flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-gray-700 px-3 py-2.5 rounded-sm font-bold text-[11px] transition-all capitalize tracking-wider border border-gray-200 shadow-sm"
+                                                    >
+                                                        <Code size={14} /> Embed
+                                                    </button>
+                                                    <a
+                                                        href={getPublicUrl(form.form_slug)}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="flex items-center justify-center gap-2 bg-white hover:bg-orange-50 text-[#FF7B1D] px-3 py-2.5 rounded-sm font-bold text-[11px] transition-all capitalize tracking-wider border border-orange-100 shadow-sm"
+                                                    >
+                                                        <ExternalLink size={14} /> View
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
-                                <h3 className="text-lg font-bold text-gray-800 mb-2">No CRM Forms Found</h3>
-                                <p className="text-gray-500 max-w-md mx-auto mb-6 text-sm">
-                                    You haven't created any lead forms yet. Create a form to start collecting leads from your website.
-                                </p>
-                                <button
-                                    onClick={() => { resetForm(); setShowModal(true); }}
-                                    className="px-6 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-sm font-bold shadow-lg transition-all flex items-center gap-2 active:scale-95"
-                                >
-                                    <Plus size={18} /> Create First Form
-                                </button>
-                            </div>
+                            ) : (
+                                <>
+                                    <div className="bg-white rounded-sm border border-gray-200 shadow-sm overflow-hidden">
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full text-left">
+                                                <thead className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm font-bold capitalize tracking-wide">
+                                                    <tr>
+                                                        <th className="px-4 py-3">Form details</th>
+                                                        <th className="px-4 py-3">Form Field</th>
+                                                        <th className="px-4 py-3 text-center">Submissions</th>
+                                                        <th className="px-4 py-3">Status</th>
+                                                        <th className="px-4 py-3 text-center">Embed options</th>
+                                                        <th className="px-4 py-3 text-right">Actions</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="text-sm font-medium">
+                                                    {filteredForms.map((form) => (
+                                                        <tr key={form.id} className="border-t border-gray-100 hover:bg-orange-50/30 transition-colors group text-sm">
+                                                            <td className="px-6 py-4">
+                                                                <div className="flex items-center gap-3">
+                                                                    <div className="p-2 bg-orange-50 rounded-sm">
+                                                                        <FileText className="text-[#FF7B1D]" size={18} />
+                                                                    </div>
+                                                                    <div>
+                                                                        <div className="font-bold text-gray-800 capitalize leading-none text-base">{form.form_name}</div>
+                                                                        <div className="text-[11px] text-gray-400 font-mono mt-1">{form.form_slug}</div>
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                            <td className="px-6 py-4">
+                                                                <span className="text-xs font-semibold text-gray-600 bg-gray-50 px-3 py-1.5 rounded-sm border border-gray-200">
+                                                                    {(typeof form.fields === 'string' ? JSON.parse(form.fields) : form.fields).length} Fields
+                                                                </span>
+                                                            </td>
+                                                            <td className="px-6 py-4 text-center">
+                                                                <div className="inline-flex items-center justify-center px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-bold border border-blue-100 min-w-[30px]">
+                                                                    {form.submission_count || 0}
+                                                                </div>
+                                                            </td>
+                                                            <td className="px-6 py-4">
+                                                                <span className={`px-2 py-0.5 rounded-sm text-[11px] font-black capitalize tracking-wider border ${form.status === 'active' ? 'bg-green-50 text-green-700 border-green-100' : 'bg-gray-50 text-gray-600 border-gray-200'}`}>
+                                                                    {form.status}
+                                                                </span>
+                                                            </td>
+                                                            <td className="px-6 py-4">
+                                                                <div className="flex items-center justify-center gap-2">
+                                                                    <button
+                                                                        onClick={() => setShowEmbedModal(form)}
+                                                                        className="flex items-center gap-1.5 bg-gray-50 hover:bg-gray-100 text-gray-600 px-3 py-1.5 rounded-sm font-bold text-[11px] transition-all capitalize tracking-wider border border-gray-200 shadow-sm"
+                                                                    >
+                                                                        <Code size={14} /> Embed code
+                                                                    </button>
+                                                                    <a
+                                                                        href={getPublicUrl(form.form_slug)}
+                                                                        target="_blank"
+                                                                        rel="noopener noreferrer"
+                                                                        className="flex items-center gap-1.5 bg-orange-50 hover:bg-orange-100 text-[#FF7B1D] px-3 py-1.5 rounded-sm font-bold text-[11px] transition-all capitalize tracking-wider border border-orange-100 shadow-sm"
+                                                                    >
+                                                                        <ExternalLink size={14} /> Public view
+                                                                    </a>
+                                                                </div>
+                                                            </td>
+                                                            <td className="px-6 py-4 text-right">
+                                                                <div className="flex justify-end gap-2">
+                                                                    <button
+                                                                        onClick={() => { refetchForms(); refetchLogs(); toast.success("Refreshed data"); }}
+                                                                        className="p-1.5 text-orange-600 hover:bg-orange-50 rounded-sm transition-all"
+                                                                        title="Refresh Data"
+                                                                    >
+                                                                        <RefreshCcw size={18} />
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => handleView(form)}
+                                                                        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-sm transition-all"
+                                                                        title="View Details"
+                                                                    >
+                                                                        <Eye size={18} />
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => handleEdit(form)}
+                                                                        className="p-1.5 text-green-600 hover:bg-green-50 rounded-sm transition-all"
+                                                                        title="Edit"
+                                                                    >
+                                                                        <SquarePen size={18} />
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => handleDelete(form)}
+                                                                        className="p-1.5 text-red-600 hover:bg-red-50 rounded-sm transition-all"
+                                                                        title="Delete"
+                                                                    >
+                                                                        <Trash2 size={18} />
+                                                                    </button>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+
+                                        {/* Pagination Section */}
+
+                                    </div> {forms.length > 0 && (
+                                        <div className="border border-gray-200 flex flex-col md:flex-row justify-between items-center bg-gray-50 p-4 mt-6 rounded-sm shadow-sm">
+                                            <p className="text-sm font-semibold text-gray-700">
+                                                Showing <span className="text-orange-600">{(currentPage - 1) * itemsPerPage + 1}</span> to <span className="text-orange-600">{Math.min(currentPage * itemsPerPage, pagination.total || 0)}</span> of <span className="text-orange-600">{pagination.total || 0}</span> Forms
+                                            </p>
+
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                                    disabled={currentPage === 1}
+                                                    className={`px-4 py-2 rounded-sm font-bold transition flex items-center gap-1 ${currentPage === 1 ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"}`}
+                                                >
+                                                    Previous
+                                                </button>
+
+                                                <div className="flex items-center gap-1">
+                                                    {Array.from({ length: Math.min(pagination.totalPages || 1, 5) }, (_, i) => (
+                                                        <button
+                                                            key={i + 1}
+                                                            onClick={() => setCurrentPage(i + 1)}
+                                                            className={`w-10 h-10 rounded-sm font-bold transition ${currentPage === i + 1 ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md border-orange-500" : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"}`}
+                                                        >
+                                                            {i + 1}
+                                                        </button>
+                                                    ))}
+                                                </div>
+
+                                                <button
+                                                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, pagination.totalPages))}
+                                                    disabled={currentPage === pagination.totalPages || pagination.totalPages === 0}
+                                                    className={`px-4 py-2 rounded-sm font-bold transition flex items-center gap-1 ${currentPage === pagination.totalPages || pagination.totalPages === 0 ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"}`}
+                                                >
+                                                    Next
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </>
+                            )
                         )
                     ) : (
-                        viewMode === "grid" ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                                {filteredForms.map((form) => (
-                                    <div key={form.id} className="bg-white rounded-sm overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 border border-gray-200 group flex flex-col h-full relative">
-
-                                        {/* Action Icons - Top Right (Hidden by default, shown on hover) */}
-                                        <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                                            <button
-                                                onClick={() => handleEdit(form)}
-                                                className="p-1.5 text-green-600 hover:bg-green-50 rounded-sm bg-white shadow-sm border border-green-100"
-                                                title="Edit"
-                                            >
-                                                <SquarePen size={16} />
-                                            </button>
-                                            <button
-                                                onClick={() => handleDelete(form)}
-                                                className="p-1.5 text-red-600 hover:bg-red-50 rounded-sm bg-white shadow-sm border border-red-100"
-                                                title="Delete"
-                                            >
-                                                <Trash2 size={16} />
-                                            </button>
-                                            <button
-                                                onClick={() => handleView(form)}
-                                                className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-sm bg-white shadow-sm border border-blue-100"
-                                                title="View Details"
-                                            >
-                                                <Eye size={16} />
-                                            </button>
-                                        </div>
-
-                                        <div className="p-6 pb-4 flex-1 flex flex-col items-center mt-2">
-                                            {/* Icon/Avatar */}
-                                            <div className="relative mb-4">
-                                                <div className="w-20 h-20 rounded-full bg-orange-50 flex items-center justify-center text-orange-600 font-bold border-4 border-orange-100/50">
-                                                    <FileText size={32} className="text-[#FF7B1D]" />
-                                                </div>
-                                                <div className={`absolute bottom-1 right-1 w-4 h-4 rounded-full border-2 border-white ${form.status === 'active' ? 'bg-green-500' : 'bg-gray-400'}`}></div>
-                                            </div>
-
-                                            <h3 className="text-xl font-bold text-gray-800 mb-2 capitalize text-center line-clamp-2" title={form.form_name}>{form.form_name}</h3>
-
-                                            <div className="flex flex-col items-center gap-2 mb-4 w-full">
-                                                <span className={`px-4 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${form.status === 'active' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-gray-50 text-gray-600 border-gray-200'}`}>
-                                                    {form.status}
-                                                </span>
-                                                <span className="text-xs font-semibold text-gray-500 flex items-center gap-1.5 bg-gray-50 px-3 py-1 rounded-sm border border-gray-100">
-                                                    <Settings size={12} className="text-orange-500" />
-                                                    {(typeof form.fields === 'string' ? JSON.parse(form.fields) : form.fields).length} Fields Configured
-                                                </span>
-                                            </div>
-                                        </div>
-
-                                        <div className="bg-gray-100 p-4 border-t border-gray-200 mt-auto">
-                                            <div className="grid grid-cols-2 gap-3">
-                                                <button
-                                                    onClick={() => setShowEmbedModal(form)}
-                                                    className="flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-gray-700 px-3 py-2.5 rounded-sm font-bold text-[11px] transition-all capitalize tracking-wider border border-gray-200 shadow-sm"
-                                                >
-                                                    <Code size={14} /> Embed
-                                                </button>
-                                                <a
-                                                    href={getPublicUrl(form.form_slug)}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="flex items-center justify-center gap-2 bg-white hover:bg-orange-50 text-[#FF7B1D] px-3 py-2.5 rounded-sm font-bold text-[11px] transition-all capitalize tracking-wider border border-orange-100 shadow-sm"
-                                                >
-                                                    <ExternalLink size={14} /> View
-                                                </a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <div><div className="bg-white rounded-sm border border-gray-200 shadow-sm overflow-hidden">
-                                <div className="overflow-x-auto">
-                                    <table className="w-full text-left">
-                                        <thead className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm font-bold capitalize tracking-wide">
-                                            <tr>
-                                                <th className="px-4 py-3">Form details</th>
-                                                <th className="px-4 py-3">Fields count</th>
-                                                <th className="px-4 py-3">Status</th>
-                                                <th className="px-4 py-3 text-center">Embed options</th>
-                                                <th className="px-4 py-3 text-right">Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="text-sm font-medium">
-                                            {filteredForms.map((form) => (
-                                                <tr key={form.id} className="border-t border-gray-100 hover:bg-orange-50/30 transition-colors group text-sm">
+                        <div className="bg-white rounded-sm border border-gray-200 shadow-sm overflow-hidden">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left">
+                                    <thead className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm font-bold capitalize tracking-wide">
+                                        <tr>
+                                            <th className="px-4 py-3">Date & Time</th>
+                                            <th className="px-4 py-3">User Details</th>
+                                            <th className="px-4 py-3">Form Name</th>
+                                            <th className="px-4 py-3 text-center">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="text-sm font-medium">
+                                        {logs?.length > 0 ? logs.map((log) => {
+                                            const logData = typeof log.raw_data === 'string' ? JSON.parse(log.raw_data) : (log.raw_data || {});
+                                            const form = forms.find(f => f.id === log.reference_id);
+                                            return (
+                                                <tr key={log.id} className="border-t hover:bg-gray-50 transition-colors">
+                                                    <td className="px-6 py-4 text-gray-500 text-xs font-semibold">
+                                                        <div className="flex items-center gap-2">
+                                                            <Clock size={14} className="text-orange-400" />
+                                                            {new Date(log.created_at).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                                        </div>
+                                                    </td>
                                                     <td className="px-6 py-4">
-                                                        <div className="flex items-center gap-3">
-                                                            <div className="p-2 bg-orange-50 rounded-sm">
-                                                                <FileText className="text-[#FF7B1D]" size={18} />
+                                                        <div className="flex flex-col">
+                                                            <div className="flex items-center gap-2 font-bold text-gray-800 capitalize">
+                                                                <Users size={14} className="text-orange-500" />
+                                                                {logData.name || 'Unknown User'}
                                                             </div>
-                                                            <div>
-                                                                <div className="font-bold text-gray-800 capitalize leading-none text-base">{form.form_name}</div>
-                                                                <div className="text-[11px] text-gray-400 font-mono mt-1">{form.form_slug}</div>
-                                                            </div>
+                                                            <div className="text-[11px] text-gray-500 pl-5.5">{logData.email}</div>
+                                                            <div className="text-[10px] text-gray-400 pl-5.5 font-mono">{logData.mobile_number}</div>
                                                         </div>
                                                     </td>
                                                     <td className="px-6 py-4">
-                                                        <span className="text-sm font-bold text-gray-600 flex items-center gap-2">
-                                                            <div className="w-1.5 h-1.5 rounded-full bg-[#FF7B1D]"></div>
-                                                            {(typeof form.fields === 'string' ? JSON.parse(form.fields) : form.fields).length} fields
+                                                        <div className="flex items-center gap-2">
+                                                            <FileText size={14} className="text-blue-500" />
+                                                            <span className="font-semibold text-gray-700 text-xs">{form?.form_name || 'Unknown Form'}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-center">
+                                                        <span className={`px-2 py-1 rounded-sm text-[10px] font-bold uppercase tracking-widest border ${log.status === 'success'
+                                                            ? 'bg-green-50 text-green-700 border-green-100'
+                                                            : 'bg-red-50 text-red-700 border-red-100'}`}>
+                                                            {log.status}
                                                         </span>
-                                                    </td>
-                                                    <td className="px-6 py-4">
-                                                        <span className={`px-2 py-0.5 rounded-sm text-[11px] font-black capitalize tracking-wider border ${form.status === 'active' ? 'bg-green-50 text-green-700 border-green-100' : 'bg-gray-50 text-gray-600 border-gray-200'}`}>
-                                                            {form.status}
-                                                        </span>
-                                                    </td>
-                                                    <td className="px-6 py-4">
-                                                        <div className="flex items-center justify-center gap-2">
-                                                            <button
-                                                                onClick={() => setShowEmbedModal(form)}
-                                                                className="flex items-center gap-1.5 bg-gray-50 hover:bg-gray-100 text-gray-600 px-3 py-1.5 rounded-sm font-bold text-[11px] transition-all capitalize tracking-wider border border-gray-200 shadow-sm"
-                                                            >
-                                                                <Code size={14} /> Embed code
-                                                            </button>
-                                                            <a
-                                                                href={getPublicUrl(form.form_slug)}
-                                                                target="_blank"
-                                                                rel="noopener noreferrer"
-                                                                className="flex items-center gap-1.5 bg-orange-50 hover:bg-orange-100 text-[#FF7B1D] px-3 py-1.5 rounded-sm font-bold text-[11px] transition-all capitalize tracking-wider border border-orange-100 shadow-sm"
-                                                            >
-                                                                <ExternalLink size={14} /> Public view
-                                                            </a>
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-6 py-4 text-right">
-                                                        <div className="flex justify-end gap-2">
-                                                            <button
-                                                                onClick={() => handleView(form)}
-                                                                className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-sm transition-all"
-                                                                title="View Details"
-                                                            >
-                                                                <Eye size={18} />
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleEdit(form)}
-                                                                className="p-1.5 text-green-600 hover:bg-green-50 rounded-sm transition-all"
-                                                                title="Edit"
-                                                            >
-                                                                <SquarePen size={18} />
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleDelete(form)}
-                                                                className="p-1.5 text-red-600 hover:bg-red-50 rounded-sm transition-all"
-                                                                title="Delete"
-                                                            >
-                                                                <Trash2 size={18} />
-                                                            </button>
-                                                        </div>
                                                     </td>
                                                 </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
+                                            )
+                                        }) : (
+                                            <tr>
+                                                <td colSpan="4" className="px-6 py-12 text-center text-gray-400">
+                                                    No submission logs found.
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
 
-                                {/* Pagination Section */}
-
-                            </div> {forms.length > 0 && (
-                                <div className="border border-gray-200 flex flex-col md:flex-row justify-between items-center bg-gray-50 p-4 mt-6 rounded-sm shadow-sm">
+                            {/* Pagination Section for Logs */}
+                            {logs?.length > 0 && (
+                                <div className="flex flex-col md:flex-row justify-between items-center bg-gray-50 p-4 border-t border-gray-200">
                                     <p className="text-sm font-semibold text-gray-700">
-                                        Showing <span className="text-orange-600">{(currentPage - 1) * itemsPerPage + 1}</span> to <span className="text-orange-600">{Math.min(currentPage * itemsPerPage, pagination.total || 0)}</span> of <span className="text-orange-600">{pagination.total || 0}</span> Forms
+                                        Showing <span className="text-orange-600">{(currentLogPage - 1) * itemsPerPage + 1}</span> to <span className="text-orange-600">{Math.min(currentLogPage * itemsPerPage, logsPagination.total || 0)}</span> of <span className="text-orange-600">{logsPagination.total || 0}</span> Logs
                                     </p>
 
                                     <div className="flex items-center gap-2">
                                         <button
-                                            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                                            disabled={currentPage === 1}
-                                            className={`px-4 py-2 rounded-sm font-bold transition flex items-center gap-1 ${currentPage === 1 ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"}`}
+                                            onClick={() => setCurrentLogPage(prev => Math.max(prev - 1, 1))}
+                                            disabled={currentLogPage === 1}
+                                            className={`px-4 py-2 rounded-sm font-bold transition flex items-center gap-1 ${currentLogPage === 1 ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"}`}
                                         >
                                             Previous
                                         </button>
 
                                         <div className="flex items-center gap-1">
-                                            {Array.from({ length: Math.min(pagination.totalPages || 1, 5) }, (_, i) => (
+                                            {Array.from({ length: Math.min(logsPagination.totalPages || 1, 5) }, (_, i) => (
                                                 <button
                                                     key={i + 1}
-                                                    onClick={() => setCurrentPage(i + 1)}
-                                                    className={`w-10 h-10 rounded-sm font-bold transition ${currentPage === i + 1 ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md border-orange-500" : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"}`}
+                                                    onClick={() => setCurrentLogPage(i + 1)}
+                                                    className={`w-10 h-10 rounded-sm font-bold transition ${currentLogPage === i + 1 ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md border-orange-500" : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"}`}
                                                 >
                                                     {i + 1}
                                                 </button>
@@ -603,18 +757,18 @@ const CRMForm = () => {
                                         </div>
 
                                         <button
-                                            onClick={() => setCurrentPage(prev => Math.min(prev + 1, pagination.totalPages))}
-                                            disabled={currentPage === pagination.totalPages || pagination.totalPages === 0}
-                                            className={`px-4 py-2 rounded-sm font-bold transition flex items-center gap-1 ${currentPage === pagination.totalPages || pagination.totalPages === 0 ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"}`}
+                                            onClick={() => setCurrentLogPage(prev => Math.min(prev + 1, logsPagination.totalPages))}
+                                            disabled={currentLogPage === logsPagination.totalPages || logsPagination.totalPages === 0}
+                                            className={`px-4 py-2 rounded-sm font-bold transition flex items-center gap-1 ${currentLogPage === logsPagination.totalPages || logsPagination.totalPages === 0 ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"}`}
                                         >
                                             Next
                                         </button>
                                     </div>
                                 </div>
-                            )}</div>
-
-                        )
-                    )}
+                            )}
+                        </div>
+                    )
+                    }
 
 
                     {/* Modal for Create/Edit */}
@@ -678,14 +832,28 @@ const CRMForm = () => {
                                                         <div className="flex-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                                                             <div>
                                                                 <label className="text-xs font-bold text-gray-500 capitalize tracking-wide ml-1 mb-1 block">Label</label>
-                                                                <input
-                                                                    type="text"
-                                                                    className="w-full px-3 py-2 bg-white border border-gray-200 rounded-sm outline-none font-semibold text-sm focus:border-[#FF7B1D]"
+                                                                <select
+                                                                    className="w-full px-3 py-2 bg-white border border-gray-200 rounded-sm outline-none font-semibold text-sm focus:border-[#FF7B1D] cursor-pointer"
                                                                     value={field.label}
-                                                                    onChange={(e) => handleFieldChange(index, 'label', e.target.value)}
-                                                                    placeholder="e.g. Full name"
-                                                                    required
-                                                                />
+                                                                    onChange={(e) => {
+                                                                        handleFieldChange(index, 'label', e.target.value);
+                                                                        if (e.target.value === 'Services') {
+                                                                            handleFieldChange(index, 'type', 'select');
+                                                                        }
+                                                                    }}
+                                                                >
+                                                                    <option value="" disabled>Select Column</option>
+                                                                    <option value="Full Name">Name</option>
+                                                                    <option value="Email Address">Email</option>
+                                                                    <option value="Phone Number">Phone</option>
+                                                                    <option value="Alternative Number">Alternative Number</option>
+                                                                    <option value="Services">Services (Catalog)</option>
+                                                                    <option value="Description">Description</option>
+                                                                    <option value="City">City</option>
+                                                                    <option value="State">State</option>
+                                                                    <option value="Source">Source</option>
+                                                                    <option value="Company Name">Company Name</option>
+                                                                </select>
                                                             </div>
                                                             <div>
                                                                 <label className="text-xs font-bold text-gray-500 capitalize tracking-wide ml-1 mb-1 block">Type</label>
@@ -898,16 +1066,15 @@ const CRMForm = () => {
                     }}
                     form={viewForm}
                 />
-
-            </div >
+            </div>
             <style>{`
-        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #fff7ed; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #FF7B1D; border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #ea580c; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-fadeIn { animation: fadeIn 0.3s ease-out forwards; }
-      `}</style>
+                .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+                .custom-scrollbar::-webkit-scrollbar-track { background: #fff7ed; }
+                .custom-scrollbar::-webkit-scrollbar-thumb { background: #FF7B1D; border-radius: 10px; }
+                .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #ea580c; }
+                @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+                .animate-fadeIn { animation: fadeIn 0.3s ease-out forwards; }
+            `}</style>
         </DashboardLayout >
     );
 };

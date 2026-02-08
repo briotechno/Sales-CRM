@@ -49,7 +49,7 @@ export const integrationApi = createApi({
                 url: `forms/${id}`,
                 method: 'DELETE',
             }),
-            invalidatesTags: ['CRMForm'],
+            invalidatesTags: ['CRMForm', 'SyncLog'],
         }),
 
         // Google Sheets
@@ -102,7 +102,8 @@ export const integrationApi = createApi({
                 url: 'logs',
                 params: {
                     page: params?.page || 1,
-                    limit: params?.limit || 10
+                    limit: params?.limit || 10,
+                    channel_type: params?.channel_type || ''
                 }
             }),
             providesTags: ['SyncLog'],

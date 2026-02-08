@@ -15,6 +15,8 @@ const LeadService = {
         if (!leadData.email && leadData.Email) leadData.email = leadData.Email;
         if (!leadData.mobile_number && leadData.phone) leadData.mobile_number = leadData.phone;
         if (!leadData.mobile_number && leadData.Phone) leadData.mobile_number = leadData.Phone;
+        if (!leadData.interested_in && leadData.services) leadData.interested_in = leadData.services;
+        if (!leadData.interested_in && leadData.Services) leadData.interested_in = leadData.Services;
 
         const { email, mobile_number, name } = leadData;
 
