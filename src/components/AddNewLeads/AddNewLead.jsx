@@ -19,7 +19,7 @@ import { useGetEmployeesQuery } from "../../store/api/employeeApi";
 import { toast } from "react-hot-toast";
 
 const inputStyles =
-  "w-full px-4 py-3 border-2 border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300";
+  "w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300";
 
 export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
   const [createLead, { isLoading: isCreating }] = useCreateLeadMutation();
@@ -193,29 +193,29 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fadeIn">
-      <div className="bg-white rounded-sm shadow-sm w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col transform transition-all animate-slideUp">
+    <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-sm shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-slideUp">
         {/* Header with Gradient */}
-        <div className="bg-gradient-to-r from-orange-500 to-orange-600  text-white rounded-t-sm px-6 py-6">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-3">
-              <div className="bg-white bg-opacity-20 p-2 rounded-lg">
-                <User size={24} />
-              </div>
-              <div>
-                <h2 className="text-2xl font-bold">{leadToEdit ? "Edit Lead" : "Add New Lead"}</h2>
-                <p className="text-sm text-white text-opacity-90 mt-1">
-                  {leadToEdit ? "Update lead details" : "Create new lead for your organization"}
-                </p>
-              </div>
+        <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-4 flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="bg-white bg-opacity-20 p-2 rounded-sm text-white">
+              <User size={24} />
             </div>
-            <button
-              onClick={onClose}
-              className="text-white hover:bg-orange-700 p-1 rounded-sm transition-colors"
-            >
-              <X size={22} className="text-white" />
-            </button>
+            <div>
+              <h2 className="text-2xl font-bold text-white">
+                {leadToEdit ? "Edit Lead" : "Add New Lead"}
+              </h2>
+              <p className="text-sm text-white text-opacity-90 mt-0.5">
+                {leadToEdit ? "Update lead details" : "Create new lead for your organization"}
+              </p>
+            </div>
           </div>
+          <button
+            onClick={onClose}
+            className="text-white hover:bg-orange-700 p-1 rounded-sm transition-colors"
+          >
+            <X size={24} />
+          </button>
         </div>
 
         {/* Form Content */}
@@ -315,9 +315,9 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
           {/* Person Details */}
           {leadType === "Person" && (
             <div className="space-y-4">
-              <div className="flex items-center gap-2 pb-2 border-b-2 border-[#FF7B1D]">
+              <div className="flex items-center gap-2 pb-2 border-b border-gray-200">
                 <User size={20} className="text-[#FF7B1D]" />
-                <h3 className="text-lg font-bold text-gray-900">
+                <h3 className="text-lg font-bold text-gray-800 capitalize">
                   Person Details
                 </h3>
               </div>
@@ -494,9 +494,9 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
           {/* Organization Details */}
           {leadType === "Organization" && (
             <div className="space-y-4">
-              <div className="flex items-center gap-2 pb-2 border-b-2 border-[#FF7B1D]">
+              <div className="flex items-center gap-2 pb-2 border-b border-gray-200">
                 <Building2 size={20} className="text-[#FF7B1D]" />
-                <h3 className="text-lg font-bold text-gray-900">
+                <h3 className="text-lg font-bold text-gray-800 capitalize">
                   Organization Details
                 </h3>
               </div>
@@ -570,7 +570,7 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
               >
                 <option value="">Select Owner</option>
                 {employees.map(emp => (
-                  <option key={emp.id} value={emp.user_id || emp.id}>{emp.employee_name} 
+                  <option key={emp.id} value={emp.user_id || emp.id}>{emp.employee_name}
                   </option>
                 ))}
               </select>
@@ -625,13 +625,13 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
               {tags.map((tag, index) => (
                 <span
                   key={index}
-                  className="inline-flex items-center gap-1 px-3 py-1 bg-gradient-to-r from-[#FF7B1D] to-[#FF9A4D] text-white text-sm font-medium rounded-full"
+                  className="inline-flex items-center gap-1 px-3 py-1 bg-orange-100 text-[#FF7B1D] text-sm font-semibold rounded-sm"
                 >
                   {tag}
                   <button
                     type="button"
                     onClick={() => removeTag(tag)}
-                    className="ml-1 hover:bg-white hover:bg-opacity-20 rounded-full p-0.5"
+                    className="ml-1 hover:bg-orange-200 rounded-full p-0.5"
                   >
                     <X size={12} />
                   </button>
@@ -653,58 +653,14 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
             </div>
           </div>
 
-          {/* Status & Visibility */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="group">
-              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-                <Briefcase size={14} className="text-[#FF7B1D]" />
-                Status
-              </label>
-              <select
-                name="status"
-                value={formData.status}
-                onChange={handleChange}
-                className={inputStyles}
-              >
-                <option value="Active">Active</option>
-                <option value="Inactive">Inactive</option>
-              </select>
-            </div>
-
-            <div className="bg-orange-50 p-4 rounded-lg border border-orange-200 flex items-center gap-4">
-              <span className="text-sm font-semibold text-gray-800">Visibility:</span>
-              <label className="flex items-center cursor-pointer">
-                <input
-                  type="radio"
-                  name="visibility"
-                  value="Public"
-                  checked={visibility === "Public"}
-                  onChange={(e) => setVisibility(e.target.value)}
-                  className="w-4 h-4 text-[#FF7B1D]"
-                />
-                <span className="ml-2 text-sm text-gray-700">Public</span>
-              </label>
-              <label className="flex items-center cursor-pointer">
-                <input
-                  type="radio"
-                  name="visibility"
-                  value="Private"
-                  checked={visibility === "Private"}
-                  onChange={(e) => setVisibility(e.target.value)}
-                  className="w-4 h-4 text-[#FF7B1D]"
-                />
-                <span className="ml-2 text-sm text-gray-700">Private</span>
-              </label>
-            </div>
-          </div>
 
 
           {/* Footer */}
-          <div className="flex justify-end gap-3 px-6 py-4 border-t bg-gray-50 shadow-inner">
+          <div className="flex justify-end gap-3 px-6 py-4 border-t bg-gray-50 shrink-0">
             <button
               type="button"
               onClick={onClose}
-              className="px-6 py-2.5 text-sm font-semibold text-gray-700 bg-white border-2 border-gray-300 hover:bg-gray-100 hover:border-gray-400 rounded-sm transition-all"
+              className="px-6 py-2 border-2 border-gray-300 text-gray-700 rounded-sm hover:bg-gray-100 transition-all font-semibold capitalize"
             >
               Cancel
             </button>
@@ -712,9 +668,9 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
               type="button"
               onClick={handleSubmit}
               disabled={isCreating || isUpdating}
-              className="px-6 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-700 hover:to-orange-700 rounded-sm shadow-md hover:shadow-lg transition-all disabled:opacity-50"
+              className="px-6 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all font-semibold shadow-lg disabled:opacity-50 capitalize"
             >
-              {isCreating || isUpdating ? "Saving..." : leadToEdit ? "Update Lead" : "Add Lead"}
+              {isCreating || isUpdating ? "Saving..." : leadToEdit ? "Update Lead" : "Save Lead"}
             </button>
           </div>
         </div>

@@ -12,20 +12,25 @@ const CRMForm = {
 
     findAllByUserId: async (userId, { page = 1, limit = 10, search = '', status = '' } = {}) => {
         const offset = (page - 1) * limit;
-        let query = 'SELECT * FROM crm_forms WHERE user_id = ?';
+        let query = `
+            SELECT crm_forms.*, 
+            (SELECT COUNT(*) FROM lead_sync_logs WHERE channel_type = 'crm_form' AND reference_id = crm_forms.id) as submission_count 
+            FROM crm_forms 
+            WHERE crm_forms.user_id = ?
+        `;
         const params = [userId];
 
         if (search) {
-            query += ' AND form_name LIKE ?';
+            query += ' AND crm_forms.form_name LIKE ?';
             params.push(`%${search}%`);
         }
 
         if (status && status !== 'All') {
-            query += ' AND status = ?';
+            query += ' AND crm_forms.status = ?';
             params.push(status.toLowerCase());
         }
 
-        query += ' ORDER BY id DESC LIMIT ? OFFSET ?';
+        query += ' ORDER BY crm_forms.id DESC LIMIT ? OFFSET ?';
         params.push(parseInt(limit), parseInt(offset));
 
         const [rows] = await pool.query(query, params);

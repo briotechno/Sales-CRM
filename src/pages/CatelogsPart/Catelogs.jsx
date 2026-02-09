@@ -497,7 +497,7 @@ export default function CatalogsPage() {
                 <h1 className="text-2xl font-bold text-gray-800">Catalog Module</h1>
                 <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
                   <FiHome className="text-gray-700" size={14} />
-                  <span className="text-gray-400"></span> Additional /{" "}
+                  <span className="text-gray-400">Additional / </span>
                   <span className="text-[#FF7B1D] font-medium">
                     All Catalogs
                   </span>

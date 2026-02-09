@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import DashboardLayout from "../../components/DashboardLayout";
 import {
   Users,
@@ -13,10 +14,46 @@ import {
   ArrowDown,
   Menu,
   Home,
+  Server,
+  Loader2,
+  Phone,
+  Trash2,
+  Filter,
+  Upload,
 } from "lucide-react";
 import NumberCard from "../../components/NumberCard";
+import BulkUploadLeads from "../../components/AddNewLeads/BulkUpload";
+
+const leadCategories = [
+  { name: "All Leads", path: "/crm/leads/all", icon: <Users size={16} /> },
+  { name: "New Leads", path: "/crm/leads/new", icon: <UserPlus size={16} /> },
+  { name: "Not Connected", path: "/crm/leads/not-connected", icon: <Server size={16} /> },
+  { name: "Follow Up", path: "/crm/leads/follow-up", icon: <Loader2 size={16} /> },
+  { name: "Missed", path: "/crm/leads/missed", icon: <Phone size={16} /> },
+  { name: "Assigned", path: "/crm/leads/assigned", icon: <UserPlus size={16} /> },
+  { name: "Dropped", path: "/crm/leads/dropped", icon: <Trash2 size={16} /> },
+  { name: "Duplicates", path: "/crm/leads/duplicates", icon: <Trash2 size={16} /> },
+  { name: "Trending", path: "/crm/leads/trending", icon: <Users size={16} /> },
+  { name: "Won", path: "/crm/leads/won", icon: <UserPlus size={16} /> },
+  { name: "Analysis", path: "/crm/leads/analysis", icon: <Server size={16} /> },
+];
 
 export default function LeadDashboard() {
+  const navigate = useNavigate();
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [openLeadMenu, setOpenLeadMenu] = useState(false);
+  const [showBulkUploadPopup, setShowBulkUploadPopup] = useState(false);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsFilterOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const recentLeads = [
     {
@@ -95,31 +132,125 @@ export default function LeadDashboard() {
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen ">
-        {/* Header */}
-        <div className="bg-white border-b my-3">
-          <div className="max-w-7xl mx-auto px-0 ml-10 py-4">
-            <div className="flex items-center justify-between">
-              {/* Left Title Section */}
+      <div className="min-h-screen bg-white">
+        {/* Header Section */}
+        <div className="bg-white sticky top-0 z-30">
+          <div className="max-w-8xl mx-auto px-4 py-4 border-b">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
-                <h1 className="text-2xl font-bold text-gray-800">
-                  CRM Dashboard
-                </h1>
+                <h1 className="text-2xl font-bold text-gray-800 capitalize">Leads Management</h1>
                 <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
                   <Home className="text-gray-700" size={14} />
-                  <span className="text-gray-400"></span> CRM /{" "}
-                  <span className="text-gray-400 font-medium">
-                    Leads Management /{" "}
-                  </span>
-                  <span className="text-orange-500 font-medium">
-                    Lead Dashboard
+                  <span className="text-gray-400">CRM / </span>
+                  <span className="text-[#FF7B1D] font-medium">
+                    Dashboard
                   </span>
                 </p>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-wrap items-center gap-3">
+                {/* Filter - Icon Only */}
+                <div className="relative" ref={dropdownRef}>
+                  <button
+                    onClick={() => setIsFilterOpen(!isFilterOpen)}
+                    className={`p-2 border rounded-sm transition-all shadow-sm ${isFilterOpen
+                      ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-orange-500"
+                      : "bg-white border-gray-200 text-gray-400 hover:bg-gray-50"
+                      }`}
+                    title="Filters"
+                  >
+                    <Filter size={18} className={isFilterOpen ? "text-white" : "text-orange-500"} />
+                  </button>
+
+                  {isFilterOpen && (
+                    <div className="absolute right-0 mt-2 w-[480px] bg-white border border-gray-200 rounded-sm shadow-2xl z-50 animate-fadeIn overflow-hidden">
+                      {/* Header */}
+                      <div className="p-4 bg-gray-50 border-b flex justify-between items-center">
+                        <span className="text-sm font-bold text-gray-800 capitalize">Navigation Options</span>
+                      </div>
+
+                      {/* Content - Scrollable */}
+                      <div className="max-h-[75vh] overflow-y-auto p-5">
+                        <div className="space-y-6">
+                          {/* Navigation Section */}
+                          <div>
+                            <span className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-3 border-b pb-1">Lead Categories</span>
+                            <div className="grid grid-cols-2 gap-2">
+                              {leadCategories.map((cat) => (
+                                <button
+                                  key={cat.path}
+                                  onClick={() => navigate(cat.path)}
+                                  className={`flex items-center gap-3 px-3 py-2 rounded-sm text-sm transition-all text-left ${window.location.pathname === cat.path
+                                    ? "bg-orange-50 text-[#FF7B1D] font-bold"
+                                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                                    }`}
+                                >
+                                  <span className={window.location.pathname === cat.path ? "text-[#FF7B1D]" : "text-gray-400"}>
+                                    {cat.icon}
+                                  </span>
+                                  {cat.name}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Footer */}
+                      <div className="p-4 bg-gray-50 border-t flex gap-3">
+                        <button
+                          onClick={() => setIsFilterOpen(false)}
+                          className="flex-1 py-2.5 text-[11px] font-bold text-gray-500 capitalize tracking-wider hover:bg-gray-200 transition-colors rounded-sm border border-gray-200 bg-white"
+                        >
+                          Close
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="relative">
+                  <button
+                    onClick={() => setOpenLeadMenu(!openLeadMenu)}
+                    className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm font-semibold transition shadow-lg hover:shadow-xl hover:from-orange-600 hover:to-orange-700 capitalize"
+                  >
+                    <UserPlus size={20} />
+                    Add Lead
+                  </button>
+
+                  {openLeadMenu && (
+                    <div className="absolute top-full right-0 mt-2 w-48 bg-white border border-gray-200 shadow-xl rounded-sm z-50 overflow-hidden divide-y divide-gray-100">
+                      <button
+                        onClick={() => {
+                          setOpenLeadMenu(false);
+                          navigate("/crm/leads/all"); // Or show a popup
+                        }}
+                        className="w-full flex items-center gap-3 text-left px-4 py-3 hover:bg-orange-50 text-sm font-semibold text-gray-700 hover:text-orange-600 transition capitalize"
+                      >
+                        <UserPlus size={16} />
+                        Add Single Lead
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setOpenLeadMenu(false);
+                          setShowBulkUploadPopup(true);
+                        }}
+                        className="w-full flex items-center gap-3 text-left px-4 py-3 hover:bg-orange-50 text-sm font-semibold text-gray-700 hover:text-orange-600 transition capitalize"
+                      >
+                        <Upload size={16} />
+                        Bulk Upload
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
         </div>
-        <div className="p-0 ml-6">
+
+        <div className="max-w-8xl mx-auto p-4 pt-0 mt-2">
           {/* Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
 
@@ -196,13 +327,12 @@ export default function LeadDashboard() {
                     </div>
                     <div className="flex items-center space-x-3">
                       <span
-                        className={`px-3 py-1.5 rounded-full text-xs font-bold border ${
-                          lead.priority === "High"
-                            ? "bg-red-50 text-red-700 border-red-200"
-                            : lead.priority === "Medium"
+                        className={`px-3 py-1.5 rounded-full text-xs font-bold border ${lead.priority === "High"
+                          ? "bg-red-50 text-red-700 border-red-200"
+                          : lead.priority === "Medium"
                             ? "bg-orange-50 text-orange-700 border-orange-200"
                             : "bg-gray-50 text-gray-700 border-gray-200"
-                        }`}
+                          }`}
                       >
                         {lead.priority}
                       </span>
@@ -328,6 +458,7 @@ export default function LeadDashboard() {
             </div>
           </div>
         </div>
+        {showBulkUploadPopup && <BulkUploadLeads onClose={() => setShowBulkUploadPopup(false)} />}
       </div>
     </DashboardLayout>
   );

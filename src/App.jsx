@@ -11,10 +11,14 @@ import LeadDashboard from "./pages/LeadsManagement/dashboard";
 import AllLeads from "./pages/LeadsManagement/AllLeadPagePart/AllLaeds";
 import NewLeads from "./pages/LeadsManagement/NewLeads";
 import Assigned from "./pages/LeadsManagement/Assigned";
-import UnreadLeads from "./pages/LeadsManagement/UnreadLeads";
 import DroppedLeads from "./pages/LeadsManagement/DroppedLeads";
 import TrendingLeads from "./pages/LeadsManagement/Trending";
 import Analysis from "./pages/LeadsManagement/Analysis";
+import NotConnectedLeads from "./pages/LeadsManagement/NotConnectedLeads";
+import FollowUpLeads from "./pages/LeadsManagement/FollowUpLeads";
+import MissedLeads from "./pages/LeadsManagement/MissedLeads";
+import DuplicatesLeads from "./pages/LeadsManagement/DuplicatesLeads";
+import WonLeads from "./pages/LeadsManagement/WonLeads";
 
 import LeadProfile from "./pages/LeadsManagement/LeadProfilePageParts/LeadProfile";
 
@@ -158,9 +162,13 @@ function App() {
           <Route path="/crm/leads/all" element={<AllLeads />} />
           <Route path="/crm/leads/new" element={<NewLeads />} />
           <Route path="/crm/leads/assigned" element={<Assigned />} />
-          <Route path="/crm/leads/unread" element={<UnreadLeads />} />
+          <Route path="/crm/leads/not-connected" element={<NotConnectedLeads />} />
+          <Route path="/crm/leads/follow-up" element={<FollowUpLeads />} />
+          <Route path="/crm/leads/missed" element={<MissedLeads />} />
           <Route path="/crm/leads/dropped" element={<DroppedLeads />} />
+          <Route path="/crm/leads/duplicates" element={<DuplicatesLeads />} />
           <Route path="/crm/leads/trending" element={<TrendingLeads />} />
+          <Route path="/crm/leads/won" element={<WonLeads />} />
           <Route path="/crm/leads/analysis" element={<Analysis />} />
           <Route path="/crm/leads/profile/:id" element={<LeadProfile />} />
           <Route path="/crm/leads/add-notes" element={<AddNotes />} />

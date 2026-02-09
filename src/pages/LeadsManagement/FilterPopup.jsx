@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { X } from "lucide-react";
 
 export default function FilterPopup({
@@ -16,193 +16,223 @@ export default function FilterPopup({
   setFilterDateTo,
   filterSubtype,
   setFilterSubtype,
+  filterStatus,
+  setFilterStatus,
 }) {
+  const [tempFilters, setTempFilters] = useState({
+    type: filterType,
+    priority: filterPriority,
+    services: filterServices,
+    dateFrom: filterDateFrom,
+    dateTo: filterDateTo,
+    subtype: filterSubtype,
+    status: filterStatus || "All",
+  });
+
   if (!isOpen) return null;
 
   const handleApply = () => {
+    setFilterType(tempFilters.type);
+    setFilterPriority(tempFilters.priority);
+    setFilterServices(tempFilters.services);
+    setFilterDateFrom(tempFilters.dateFrom);
+    setFilterDateTo(tempFilters.dateTo);
+    setFilterSubtype(tempFilters.subtype);
+    if (setFilterStatus) setFilterStatus(tempFilters.status);
     onClose();
   };
 
   const handleReset = () => {
-    setFilterType("All");
-    setFilterPriority("All");
-    setFilterServices("All");
-    setFilterDateFrom("");
-    setFilterDateTo("");
-    setFilterSubtype("All");
+    const resetValues = {
+      type: "All",
+      priority: "All",
+      services: "All",
+      dateFrom: "",
+      dateTo: "",
+      subtype: "All",
+      status: "All",
+    };
+    setTempFilters(resetValues);
+  };
+
+  const handleChange = (field, value) => {
+    setTempFilters(prev => ({ ...prev, [field]: value }));
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-start justify-end z-50 p-6">
-      <div
-        className="bg-white rounded-sm shadow-2xl w-full max-w-sm h-auto mt-16 mr-4 flex flex-col animate-slideIn"
-        style={{
-          maxHeight: "calc(100vh - 120px)",
-          animation: "slideIn 0.3s ease-out",
-        }}
-      >
-        {/* Header */}
-        <div className="flex justify-between items-center px-5 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-bold text-gray-800">Filters</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition"
-          >
-            <X size={20} />
-          </button>
-        </div>
+    <div className="absolute right-0 mt-2 w-[450px] bg-white border border-gray-200 rounded-sm shadow-2xl z-50 animate-fadeIn overflow-hidden">
+      {/* Header */}
+      <div className="p-4 bg-gray-50 border-b flex justify-between items-center">
+        <span className="text-sm font-bold text-gray-800 capitalize">Filter Options</span>
+        <button
+          onClick={handleReset}
+          className="text-[10px] font-bold text-orange-600 hover:underline hover:text-orange-700 capitalize"
+        >
+          Reset all
+        </button>
+      </div>
 
-        {/* Content - Scrollable */}
-        <div className="flex-1 overflow-y-auto px-5 py-4">
-          <div className="space-y-5">
-            {/* Lead Type */}
-            <div>
-              <label className="block text-xs font-semibold mb-2 text-gray-600 uppercase">
-                Lead Type
-              </label>
-              <select
-                value={filterType}
-                onChange={(e) => setFilterType(e.target.value)}
-                className="w-full px-3 py-2.5 text-sm rounded-md bg-white text-gray-800 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-[#FF7B1D] focus:border-[#FF7B1D]"
-              >
-                <option value="All">All Types</option>
-                <option value="Person">Person</option>
-                <option value="Organization">Organization</option>
-              </select>
-            </div>
-
-            {/* Subtype Filter - Conditionally shown */}
-            {filterType !== "All" && (
-              <div>
-                <label className="block text-xs font-semibold mb-2 text-gray-600 uppercase">
-                  {filterType === "Person"
-                    ? "Person Type"
-                    : "Organization Type"}
+      {/* Content - Scrollable */}
+      <div className="max-h-[70vh] overflow-y-auto p-5">
+        <div className="grid grid-cols-2 gap-6">
+          {/* Status Section */}
+          <div className="space-y-4">
+            <span className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-2 border-b pb-1">Select Status</span>
+            <div className="space-y-2">
+              {["All", "Active", "Inactive"].map((status) => (
+                <label key={status} className="flex items-center group cursor-pointer">
+                  <div className="relative flex items-center">
+                    <input
+                      type="radio"
+                      name="status_filter"
+                      checked={tempFilters.status === status}
+                      onChange={() => handleChange("status", status)}
+                      className="peer h-4 w-4 cursor-pointer appearance-none rounded-full border-2 border-gray-200 transition-all checked:border-[#FF7B1D] checked:border-[5px] hover:border-orange-300"
+                    />
+                  </div>
+                  <span className={`ml-3 text-sm font-medium transition-colors ${tempFilters.status === status ? "text-[#FF7B1D] font-bold" : "text-gray-600 group-hover:text-gray-900"}`}>
+                    {status}
+                  </span>
                 </label>
-                <select
-                  value={filterSubtype}
-                  onChange={(e) => setFilterSubtype(e.target.value)}
-                  className="w-full px-3 py-2.5 text-sm rounded-md bg-white text-gray-800 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-[#FF7B1D] focus:border-[#FF7B1D]"
-                >
-                  <option value="All">All</option>
-                  {filterType === "Person" && (
-                    <>
-                      <option value="Employee">Employee</option>
-                      <option value="Founder">Founder</option>
-                      <option value="Freelancer">Freelancer</option>
-                    </>
-                  )}
-                  {filterType === "Organization" && (
-                    <>
-                      <option value="Startup">Startup</option>
-                      <option value="SMB">SMB</option>
-                      <option value="Enterprise">Enterprise</option>
-                    </>
-                  )}
-                </select>
-              </div>
-            )}
+              ))}
+            </div>
+          </div>
 
-            {/* Priority */}
-            <div>
-              <label className="block text-xs font-semibold mb-2 text-gray-600 uppercase">
-                Priority
+          {/* Lead Type */}
+          <div>
+            <label className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-2 border-b pb-1">
+              Lead Type
+            </label>
+            <select
+              value={tempFilters.type}
+              onChange={(e) => handleChange("type", e.target.value)}
+              className="w-full px-3 py-2.5 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-1 focus:ring-orange-500/20 outline-none transition-all text-xs font-semibold text-gray-700 bg-gray-50 hover:bg-white"
+            >
+              <option value="All">All Types</option>
+              <option value="Person">Person</option>
+              <option value="Organization">Organization</option>
+            </select>
+          </div>
+
+          {/* Priority */}
+          <div>
+            <label className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-2 border-b pb-1">
+              Priority
+            </label>
+            <select
+              value={tempFilters.priority}
+              onChange={(e) => handleChange("priority", e.target.value)}
+              className="w-full px-3 py-2.5 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-1 focus:ring-orange-500/20 outline-none transition-all text-xs font-semibold text-gray-700 bg-gray-50 hover:bg-white"
+            >
+              <option value="All">All Priorities</option>
+              <option value="High">High</option>
+              <option value="Medium">Medium</option>
+              <option value="Low">Low</option>
+            </select>
+          </div>
+
+          {/* Services/Interested In */}
+          <div>
+            <label className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-2 border-b pb-1">
+              Interested In
+            </label>
+            <select
+              value={tempFilters.services}
+              onChange={(e) => handleChange("services", e.target.value)}
+              className="w-full px-3 py-2.5 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-1 focus:ring-orange-500/20 outline-none transition-all text-xs font-semibold text-gray-700 bg-gray-50 hover:bg-white"
+            >
+              <option value="All">All Services</option>
+              <option value="Product Demo">Product Demo</option>
+              <option value="Pricing Info">Pricing Info</option>
+              <option value="Support">Support</option>
+              <option value="Partnership">Partnership</option>
+            </select>
+          </div>
+
+          {/* Subtype Filter */}
+          {tempFilters.type !== "All" && (
+            <div className="col-span-2">
+              <label className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-2 border-b pb-1">
+                {tempFilters.type === "Person"
+                  ? "Person Type"
+                  : "Organization Type"}
               </label>
               <select
-                value={filterPriority}
-                onChange={(e) => setFilterPriority(e.target.value)}
-                className="w-full px-3 py-2.5 text-sm rounded-md bg-white text-gray-800 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-[#FF7B1D] focus:border-[#FF7B1D]"
+                value={tempFilters.subtype}
+                onChange={(e) => handleChange("subtype", e.target.value)}
+                className="w-full px-3 py-2.5 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-1 focus:ring-orange-500/20 outline-none transition-all text-xs font-semibold text-gray-700 bg-gray-50 hover:bg-white"
               >
-                <option value="All">All Priorities</option>
-                <option value="High">High</option>
-                <option value="Medium">Medium</option>
-                <option value="Low">Low</option>
+                <option value="All">All</option>
+                {tempFilters.type === "Person" && (
+                  <>
+                    <option value="Employee">Employee</option>
+                    <option value="Founder">Founder</option>
+                    <option value="Freelancer">Freelancer</option>
+                  </>
+                )}
+                {tempFilters.type === "Organization" && (
+                  <>
+                    <option value="Startup">Startup</option>
+                    <option value="SMB">SMB</option>
+                    <option value="Enterprise">Enterprise</option>
+                  </>
+                )}
               </select>
             </div>
+          )}
 
-            {/* Services */}
-            <div>
-              <label className="block text-xs font-semibold mb-2 text-gray-600 uppercase">
-                Services
-              </label>
-              <select
-                value={filterServices}
-                onChange={(e) => setFilterServices(e.target.value)}
-                className="w-full px-3 py-2.5 text-sm rounded-md bg-white text-gray-800 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-[#FF7B1D] focus:border-[#FF7B1D]"
-              >
-                <option value="All">All Services</option>
-                <option value="Consulting">Consulting</option>
-                <option value="Development">Development</option>
-                <option value="Support">Support</option>
-              </select>
-            </div>
+          {/* Date Range Section */}
+          <div className="col-span-2 pt-2 border-t">
+            <label className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-4 border-b pb-1">
+              Date Range
+            </label>
 
-            {/* Date Range Section */}
-            <div className="border-t border-gray-200 pt-4">
-              <h3 className="text-xs font-semibold mb-3 text-gray-600 uppercase">
-                Date Range
-              </h3>
-
+            <div className="grid grid-cols-2 gap-3">
               {/* Date From */}
-              <div className="mb-4">
-                <label className="block text-xs font-medium mb-1.5 text-gray-500">
-                  From
+              <div>
+                <label className="block text-[10px] font-bold text-gray-500 mb-1 uppercase tracking-tight">
+                  From Date
                 </label>
                 <input
                   type="date"
-                  value={filterDateFrom}
-                  onChange={(e) => setFilterDateFrom(e.target.value)}
-                  className="w-full px-3 py-2.5 text-sm rounded-md bg-white text-gray-800 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-[#FF7B1D] focus:border-[#FF7B1D]"
+                  value={tempFilters.dateFrom}
+                  onChange={(e) => handleChange("dateFrom", e.target.value)}
+                  className="w-full px-2 py-2 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-1 focus:ring-orange-500/20 outline-none transition-all text-[11px] font-semibold text-gray-700 bg-gray-50 hover:bg-white"
                 />
               </div>
 
               {/* Date To */}
               <div>
-                <label className="block text-xs font-medium mb-1.5 text-gray-500">
-                  To
+                <label className="block text-[10px] font-bold text-gray-500 mb-1 uppercase tracking-tight">
+                  To Date
                 </label>
                 <input
                   type="date"
-                  value={filterDateTo}
-                  onChange={(e) => setFilterDateTo(e.target.value)}
-                  className="w-full px-3 py-2.5 text-sm rounded-md bg-white text-gray-800 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-[#FF7B1D] focus:border-[#FF7B1D]"
+                  value={tempFilters.dateTo}
+                  onChange={(e) => handleChange("dateTo", e.target.value)}
+                  className="w-full px-2 py-2 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-1 focus:ring-orange-500/20 outline-none transition-all text-[11px] font-semibold text-gray-700 bg-gray-50 hover:bg-white"
                 />
               </div>
             </div>
           </div>
         </div>
-
-        {/* Footer */}
-        <div className="px-5 py-4 border-t border-gray-200 bg-gray-50">
-          <div className="flex gap-2">
-            <button
-              onClick={handleReset}
-              className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 text-sm font-semibold rounded-sm hover:bg-gray-100 transition"
-            >
-              Clear
-            </button>
-            <button
-              onClick={handleApply}
-              className="flex-1 px-4 py-2.5 bg-[#FF7B1D] text-white text-sm font-semibold rounded-sm hover:bg-gray-800 transition"
-            >
-              Apply
-            </button>
-          </div>
-        </div>
       </div>
 
-      <style jsx>{`
-        @keyframes slideIn {
-          from {
-            transform: translateX(100%);
-            opacity: 0;
-          }
-          to {
-            transform: translateX(0);
-            opacity: 1;
-          }
-        }
-      `}</style>
+      {/* Footer */}
+      <div className="p-4 bg-gray-50 border-t flex gap-3">
+        <button
+          onClick={onClose}
+          className="flex-1 py-2.5 text-[11px] font-bold text-gray-500 capitalize tracking-wider hover:bg-gray-200 transition-colors rounded-sm border border-gray-200 bg-white"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={handleApply}
+          className="flex-1 py-2.5 text-[11px] font-bold text-white capitalize tracking-wider bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 transition-all rounded-sm shadow-md active:scale-95"
+        >
+          Apply Filters
+        </button>
+      </div>
     </div>
   );
 }

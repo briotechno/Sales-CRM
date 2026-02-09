@@ -112,6 +112,23 @@ const PublicForm = () => {
                                         required={field.required}
                                         placeholder={`Enter your ${field.label.toLowerCase()}...`}
                                     />
+                                ) : (field.type === 'select' || field.label.toLowerCase() === 'services' || field.name === 'interested_in') ? (
+                                    <select
+                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 focus:bg-white focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 rounded-sm outline-none text-sm font-medium transition-all cursor-pointer placeholder:text-gray-400"
+                                        value={formData[field.name] || ''}
+                                        onChange={(e) => {
+                                            const newFormData = { ...formData, [field.name]: e.target.value };
+                                            setFormData(newFormData);
+                                        }}
+                                        required={field.required}
+                                    >
+                                        <option value="">Select {field.label}</option>
+                                        {(formConfig.catalogs || []).map((catalog) => (
+                                            <option key={catalog.id} value={catalog.name}>
+                                                {catalog.name.length > 50 ? catalog.name.substring(0, 50) + '...' : catalog.name}
+                                            </option>
+                                        ))}
+                                    </select>
                                 ) : (
                                     <input
                                         type={field.type}

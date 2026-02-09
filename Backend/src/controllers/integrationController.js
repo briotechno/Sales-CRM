@@ -3,6 +3,7 @@ const GoogleSheetsConfig = require('../models/googleSheetsModel');
 const LeadSyncLog = require('../models/leadSyncLogModel');
 const LeadService = require('../services/leadService');
 const { google } = require('googleapis');
+const Catalog = require('../models/catalogModel');
 
 const integrationController = {
     // --- CRM Forms ---
@@ -37,11 +38,14 @@ const integrationController = {
     deleteForm: async (req, res) => {
         try {
             await CRMForm.delete(req.params.id, req.user.id);
+            await LeadSyncLog.deleteByReferenceId(req.user.id, req.params.id, 'crm_form');
             res.json({ message: 'CRM Form deleted successfully' });
         } catch (error) {
             res.status(500).json({ message: error.message });
         }
     },
+
+
 
     // Public Form Submission
     getPublicForm: async (req, res) => {
@@ -51,12 +55,25 @@ const integrationController = {
             if (!form || form.status !== 'active') {
                 return res.status(404).json({ message: 'Form not found or inactive' });
             }
+
+            // Check if we need to fetch catalogs
+            // Field name for services might be 'services' or 'interested_in'
+            const fields = typeof form.fields === 'string' ? JSON.parse(form.fields) : form.fields;
+            const needsCatalogs = fields.some(f => f.name === 'services' || f.name === 'interested_in' || f.label === 'Services');
+
+            let catalogs = [];
+            if (needsCatalogs) {
+                const catalogResult = await Catalog.findAll(form.user_id, 1, 1000, 'Active');
+                catalogs = catalogResult.catalogs.map(c => ({ id: c.id, name: c.name, minPrice: c.minPrice, maxPrice: c.maxPrice }));
+            }
+
             // Return only public fields
             res.json({
                 form_name: form.form_name,
                 fields: form.fields,
                 settings: form.settings,
-                form_slug: form.form_slug
+                form_slug: form.form_slug,
+                catalogs: catalogs
             });
         } catch (error) {
             res.status(500).json({ message: error.message });
@@ -219,8 +236,8 @@ const integrationController = {
 
     getLogs: async (req, res) => {
         try {
-            const { page, limit } = req.query;
-            const logs = await LeadSyncLog.findAllByUserId(req.user.id, { page, limit });
+            const { page, limit, channel_type } = req.query;
+            const logs = await LeadSyncLog.findAllByUserId(req.user.id, { page, limit, channel_type });
             res.json(logs);
         } catch (error) {
             res.status(500).json({ message: error.message });
