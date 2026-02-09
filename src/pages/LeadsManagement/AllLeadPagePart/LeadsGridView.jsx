@@ -109,7 +109,7 @@ export default function LeadsGridView({
 
         return (
           <div key={tag} className="flex flex-col">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-3">
+            <div className="bg-white rounded-sm shadow-sm border border-gray-200 p-4 mb-3">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <div className={`w-2 h-2 rounded-full ${tagColor.dot}`}></div>
@@ -134,10 +134,10 @@ export default function LeadsGridView({
                   return (
                     <div
                       key={lead.id}
-                      className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition"
+                      className="bg-white border border-gray-200 rounded-sm shadow-sm hover:shadow-md transition"
                     >
                       <div
-                        className={`h-1 ${tagColor.line} rounded-t-lg`}
+                        className={`h-1 ${tagColor.line} rounded-t-sm`}
                       ></div>
 
                       <div className="p-4 space-y-3">
@@ -223,7 +223,7 @@ export default function LeadsGridView({
                   );
                 })
               ) : (
-                <div className="text-center py-8 text-gray-400 text-sm bg-white rounded-lg border border-gray-200">
+                <div className="text-center py-8 text-gray-400 text-sm bg-white rounded-sm border border-gray-200">
                   No leads in this category
                 </div>
               )}

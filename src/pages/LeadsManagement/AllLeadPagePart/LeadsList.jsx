@@ -14,10 +14,10 @@ export default function LeadsListView({
 }) {
   return (
     <div className="overflow-x-auto border border-gray-200 rounded-sm shadow-sm bg-white">
-      <table className="w-full border-collapse text-center">
+      <table className="w-full border-collapse text-left">
         <thead>
-          <tr className="bg-[#FF7B1D] text-white text-sm">
-            <th className="py-3 px-4 font-semibold">
+          <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm">
+            <th className="py-3 px-4 font-semibold text-left border-b border-orange-400">
               <input
                 type="checkbox"
                 checked={
@@ -25,19 +25,19 @@ export default function LeadsListView({
                   currentLeads.length > 0
                 }
                 onChange={handleSelectAll}
-                className="w-4 h-4 cursor-pointer"
+                className="w-4 h-4 cursor-pointer accent-orange-500"
               />
             </th>
 
-            <th className="py-3 px-4 font-semibold">Lead ID</th>
-            <th className="py-3 px-4 font-semibold">Full Name</th>
-            <th className="py-3 px-4 font-semibold">Mobile Number</th>
-            <th className="py-3 px-4 font-semibold">Email</th>
-            <th className="py-3 px-4 font-semibold">Services</th>
+            <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 capitalize">Lead ID</th>
+            <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 capitalize">Full Name</th>
+            <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 capitalize">Mobile</th>
+            <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 capitalize">Email</th>
+            <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 capitalize">Contact</th>
 
-            <th className="py-3 px-4 font-semibold">Status</th>
-            <th className="py-3 px-4 font-semibold">Calls</th>
-            <th className="py-3 px-4 font-semibold">Action</th>
+            <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 capitalize">Status</th>
+            <th className="py-3 px-4 font-semibold border-b border-orange-400 capitalize text-center">Calls</th>
+            <th className="py-3 px-4 font-semibold text-right border-b border-orange-400 capitalize">Action</th>
           </tr>
         </thead>
 
@@ -48,73 +48,78 @@ export default function LeadsListView({
                 key={lead.id}
                 className="border-t hover:bg-gray-50 transition-colors"
               >
-                <td className="py-3 px-4">
+                <td className="py-3 px-4 text-left">
                   <input
                     type="checkbox"
                     checked={selectedLeads.includes(lead.id)}
                     onChange={() => handleSelectLead(lead.id)}
-                    className="w-4 h-4 cursor-pointer"
+                    className="w-4 h-4 cursor-pointer accent-orange-500"
                   />
                 </td>
 
-
-
                 <td
-                  className="py-3 px-4 text-orange-600 hover:text-blue-800 cursor-pointer font-medium"
+                  className="py-3 px-4 text-orange-600 hover:text-orange-800 cursor-pointer font-semibold text-sm text-left"
                   onClick={() => handleLeadClick(lead)}
                 >
-                  {lead.id} || {lead.lead_id}
+                  {lead.id}
                 </td>
 
                 <td
-                  className="py-3 px-4 text-orange-600 hover:text-blue-800 cursor-pointer font-medium"
+                  className="py-3 px-4 text-gray-800 hover:text-orange-600 cursor-pointer font-bold text-sm text-left"
                   onClick={() => handleLeadClick(lead)}
                 >
-                  {lead.name}
+                  <div className="line-clamp-1 truncate max-w-[150px]" title={lead.name}>
+                    {lead.name}
+                  </div>
                 </td>
 
-                <td className="py-3 px-4">{lead.mobile_number || lead.phone}</td>
-                <td className="py-3 px-4">{lead.email}</td>
+                <td className="py-3 px-4 text-gray-600 text-sm font-medium text-left truncate max-w-[120px]">
+                  {lead.mobile_number || lead.phone || "--"}
+                </td>
+                <td className="py-3 px-4 text-gray-600 text-sm font-medium text-left truncate max-w-[150px]" title={lead.email}>
+                  {lead.email || "--"}
+                </td>
 
-                <td className="py-3 px-4">
-                  <span className={`px-3 py-1 text-xs font-semibold rounded-full ${lead.interested_in ? "bg-green-100 text-green-700" : "bg-indigo-100 text-indigo-700"}`}>
+                <td className="py-3 px-4 text-left">
+                  <span className={`px-3 py-1 rounded-sm text-[10px] font-bold border capitalize tracking-wider ${lead.interested_in
+                    ? "bg-green-50 text-green-700 border-green-200"
+                    : "bg-orange-50 text-orange-700 border-orange-200"
+                    }`}>
                     {lead.interested_in ? "Connected" : "Not Connected"}
                   </span>
                 </td>
 
-
-
-                <td className="py-3 px-4">
+                <td className="py-3 px-4 text-left">
                   <span
-                    className={`px-3 py-1 text-xs font-semibold rounded-full ${lead.status === "Active"
-                      ? "bg-green-100 text-green-600"
-                      : "bg-red-100 text-red-600"
+                    className={`px-3 py-1 rounded-sm text-[10px] font-bold border capitalize tracking-wider ${lead.status === "Active"
+                      ? "bg-green-50 text-green-700 border-green-200"
+                      : "bg-red-50 text-red-700 border-red-200"
                       }`}
                   >
                     {lead.status || "Inactive"}
                   </span>
                 </td>
 
-                <td className="py-3 px-4 font-semibold">{lead.calls || 0}</td>
+                <td className="py-3 px-4 font-bold text-gray-700 text-center">{lead.calls || 0}</td>
 
                 <td className="py-3 px-4">
-                  <div className="flex justify-center gap-2">
+                  <div className="flex justify-end gap-2">
                     <button
-                      className="p-1 hover:bg-orange-100 rounded text-blue-500 hover:text-blue-700"
+                      className="p-1 hover:bg-orange-100 rounded-sm text-blue-500 hover:text-blue-700 transition-all"
                       onClick={() => handleLeadClick(lead)}
                       title="View"
                     >
                       <Eye size={18} />
                     </button>
                     <button
-                      className="p-1 hover:bg-orange-100 rounded text-green-500 hover:text-green-700"
+                      className="p-1 hover:bg-orange-100 rounded-sm text-green-500 hover:text-green-700 transition-all"
                       onClick={() => handleEditLead(lead)}
                       title="Edit"
                     >
                       <Edit size={18} />
                     </button>
                     <button
-                      className="p-1 hover:bg-orange-100 rounded text-red-500 hover:text-red-700"
+                      className="p-1 hover:bg-orange-100 rounded-sm text-red-500 hover:text-red-700 transition-all"
                       onClick={() => handleDeleteLead(lead.id)}
                       title="Delete"
                     >
@@ -128,7 +133,7 @@ export default function LeadsListView({
             <tr>
               <td
                 colSpan="9"
-                className="py-6 text-gray-500 font-medium text-sm"
+                className="py-12 text-center text-gray-500 font-medium text-sm"
               >
                 No leads found.
               </td>
