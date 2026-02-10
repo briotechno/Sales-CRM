@@ -12,7 +12,7 @@ export const leadApi = createApi({
             return headers;
         },
     }),
-    tagTypes: ['Lead'],
+    tagTypes: ['Lead', 'LeadAssignmentSettings', 'LeadAssignmentLogs'],
     endpoints: (builder) => ({
         getLeads: builder.query({
             query: ({
@@ -74,6 +74,45 @@ export const leadApi = createApi({
             }),
             invalidatesTags: ['Lead'],
         }),
+        hitCall: builder.mutation({
+            query: ({ id, status, next_call_at, drop_reason }) => ({
+                url: `leads/${id}/hit-call`,
+                method: 'POST',
+                body: { status, next_call_at, drop_reason },
+            }),
+            invalidatesTags: (result, error, { id }) => ['Lead', { type: 'Lead', id }],
+        }),
+        analyzeLead: builder.mutation({
+            query: (id) => ({
+                url: `leads/${id}/analyze`,
+                method: 'POST',
+            }),
+            invalidatesTags: (result, error, id) => ['Lead', { type: 'Lead', id }],
+        }),
+        getAssignmentSettings: builder.query({
+            query: () => 'lead-assignment/settings',
+            providesTags: ['LeadAssignmentSettings'],
+        }),
+        updateAssignmentSettings: builder.mutation({
+            query: (data) => ({
+                url: 'lead-assignment/settings',
+                method: 'POST',
+                body: data,
+            }),
+            invalidatesTags: ['LeadAssignmentSettings'],
+        }),
+        getAssignmentLogs: builder.query({
+            query: ({ page = 1, limit = 10 }) => `lead-assignment/logs?page=${page}&limit=${limit}`,
+            providesTags: ['LeadAssignmentLogs'],
+        }),
+        manualAssignLeads: builder.mutation({
+            query: (data) => ({
+                url: 'lead-assignment/assign-manual',
+                method: 'POST',
+                body: data,
+            }),
+            invalidatesTags: ['Lead'],
+        }),
     }),
 });
 
@@ -83,4 +122,10 @@ export const {
     useCreateLeadMutation,
     useUpdateLeadMutation,
     useDeleteLeadMutation,
+    useHitCallMutation,
+    useAnalyzeLeadMutation,
+    useGetAssignmentSettingsQuery,
+    useUpdateAssignmentSettingsMutation,
+    useGetAssignmentLogsQuery,
+    useManualAssignLeadsMutation,
 } = leadApi;

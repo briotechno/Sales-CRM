@@ -1,15 +1,26 @@
 const Lead = require('../models/leadModel');
+const leadAssignmentService = require('../services/leadAssignmentService');
+const LeadAssignmentLog = require('../models/leadAssignmentLogModel');
 
 const createLead = async (req, res) => {
     try {
-        const { name, mobile_number, pipeline_id, stage_id, value } = req.body;
-
-        if (!name) return res.status(400).json({ message: 'Lead Name is required' });
-        if (!mobile_number) return res.status(400).json({ message: 'Mobile Number is required' });
-        if (!pipeline_id) return res.status(400).json({ message: 'Pipeline is required' });
-        if (!stage_id) return res.status(400).json({ message: 'Stage is required' });
-
         const id = await Lead.create(req.body, req.user.id);
+
+        // Handle Auto-Assignment if enabled
+        await leadAssignmentService.autoAssign(id, req.user.id);
+
+        // If manual assignment was passed directly (owner/assigned_to)
+        if (req.body.owner || req.body.assigned_to) {
+            await LeadAssignmentLog.create({
+                user_id: req.user.id,
+                lead_id: id,
+                employee_id: req.body.owner || req.body.assigned_to,
+                assigned_by: req.user.username || 'admin',
+                assignment_type: 'manual',
+                reason: 'Initial Assignment'
+            });
+        }
+
         res.status(201).json({ status: true, message: 'Lead created successfully', id });
     } catch (error) {
         res.status(500).json({ status: false, message: error.message });
@@ -60,10 +71,35 @@ const deleteLead = async (req, res) => {
     }
 };
 
+const hitCall = async (req, res) => {
+    try {
+        const { status, next_call_at, drop_reason } = req.body;
+        const result = await Lead.hitCall(req.params.id, status, next_call_at, drop_reason, req.user.id);
+
+        // Auto-analyze after call
+        await Lead.analyzeLead(req.params.id, req.user.id);
+
+        res.status(200).json({ status: true, message: 'Call status updated', data: result });
+    } catch (error) {
+        res.status(500).json({ status: false, message: error.message });
+    }
+};
+
+const analyzeLead = async (req, res) => {
+    try {
+        await Lead.analyzeLead(req.params.id, req.user.id);
+        res.status(200).json({ status: true, message: 'Lead analysis completed' });
+    } catch (error) {
+        res.status(500).json({ status: false, message: error.message });
+    }
+};
+
 module.exports = {
     createLead,
     getLeads,
     getLeadById,
     updateLead,
-    deleteLead
+    deleteLead,
+    hitCall,
+    analyzeLead
 };

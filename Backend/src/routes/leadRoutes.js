@@ -5,7 +5,9 @@ const {
     getLeads,
     getLeadById,
     updateLead,
-    deleteLead
+    deleteLead,
+    hitCall,
+    analyzeLead
 } = require('../controllers/leadController');
 const { protect } = require('../middleware/authMiddleware');
 const { checkLimit } = require('../middleware/limitMiddleware');
@@ -15,5 +17,7 @@ router.get('/', protect, getLeads);
 router.get('/:id', protect, getLeadById);
 router.put('/:id', protect, updateLead);
 router.delete('/:id', protect, deleteLead);
+router.post('/:id/hit-call', protect, hitCall);
+router.post('/:id/analyze', protect, analyzeLead);
 
 module.exports = router;

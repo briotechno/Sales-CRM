@@ -3,6 +3,8 @@ const app = require('./app');
 const { connectDB } = require('./config/db');
 const initializeSocket = require('./socket');
 
+const leadAssignmentService = require('./services/leadAssignmentService');
+
 const server = http.createServer(app);
 const io = initializeSocket(server);
 
@@ -14,6 +16,11 @@ const startServer = async () => {
 
     server.listen(PORT, () => {
         console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+
+        // Start stale lead revert checker (Runs every 1 hour)
+        setInterval(() => {
+            leadAssignmentService.revertStaleLeads();
+        }, 1 * 60 * 60 * 1000);
     });
 };
 

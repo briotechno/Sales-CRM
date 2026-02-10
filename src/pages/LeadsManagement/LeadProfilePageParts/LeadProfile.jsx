@@ -1242,7 +1242,10 @@ import AddNoteModal from "../../../components/LeadManagement/LeadPipLineStatus/A
 import EditLeadModal from "../../../pages/LeadsManagement/EditLeadPopup";
 import LeadSidebar from "../../LeadsManagement/LeadProfilePageParts/LeadSidebar";
 import LeadTabs from "../../LeadsManagement/LeadProfilePageParts/LeadTable";
-import { Edit2, ChevronDown, Star, ArrowLeftCircle } from "lucide-react";
+import CallActionPopup from "../../../components/AddNewLeads/CallActionPopup";
+import { Edit2, ChevronDown, Star, ArrowLeftCircle, PhoneCall } from "lucide-react";
+import { useHitCallMutation } from "../../../store/api/leadApi";
+import { toast } from "react-hot-toast";
 import { FaWhatsapp } from "react-icons/fa";
 import {
   Calendar,
@@ -1269,6 +1272,7 @@ export default function CRMLeadDetail() {
   const [showEditLeadModal, setShowEditLeadModal] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [pipelineStage, setPipelineStage] = useState("Not Contacted");
+  const [callPopupData, setCallPopupData] = useState({ isOpen: false, lead: null });
 
   const [open, setOpen] = useState(false);
 
@@ -1348,6 +1352,26 @@ export default function CRMLeadDetail() {
     navigate(-1);
   };
 
+  const [hitCallMutation] = useHitCallMutation();
+
+  const handleHitCall = async (callData) => {
+    try {
+      await hitCallMutation({
+        id: callData.id,
+        status: callData.status,
+        next_call_at: callData.next_call_at,
+        drop_reason: callData.drop_reason
+      }).unwrap();
+      toast.success("Lead status updated based on call response");
+    } catch (err) {
+      toast.error(err?.data?.message || "Failed to update call status");
+    }
+  };
+
+  const openCallAction = () => {
+    setCallPopupData({ isOpen: true, lead: passedLead });
+  };
+
   return (
     <DashboardLayout>
       <div className="min-h-screen bg-gray-0 flex flex-col">
@@ -1372,6 +1396,7 @@ export default function CRMLeadDetail() {
             handleLeadUpdate={handleLeadUpdate}
             setShowEditLeadModal={setShowEditLeadModal}
             formatCurrency={formatCurrency}
+            handleHitCall={openCallAction}
           />
 
           {/* Main Content */}
@@ -1491,8 +1516,8 @@ export default function CRMLeadDetail() {
                 <button
                   onClick={() => setActiveTab("activities")}
                   className={`px-6 py-4 font-semibold flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${activeTab === "activities"
-                      ? "border-orange-500 text-orange-500"
-                      : "border-transparent text-gray-500 hover:text-gray-700"
+                    ? "border-orange-500 text-orange-500"
+                    : "border-transparent text-gray-500 hover:text-gray-700"
                     }`}
                 >
                   <Zap className="w-5 h-5" /> Activities
@@ -1500,8 +1525,8 @@ export default function CRMLeadDetail() {
                 <button
                   onClick={() => setActiveTab("notes")}
                   className={`px-6 py-4 font-semibold flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${activeTab === "notes"
-                      ? "border-orange-500 text-orange-500"
-                      : "border-transparent text-gray-500 hover:text-gray-700"
+                    ? "border-orange-500 text-orange-500"
+                    : "border-transparent text-gray-500 hover:text-gray-700"
                     }`}
                 >
                   <FileText className="w-5 h-5" /> Notes
@@ -1509,8 +1534,8 @@ export default function CRMLeadDetail() {
                 <button
                   onClick={() => setActiveTab("calls")}
                   className={`px-6 py-4 font-semibold flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${activeTab === "calls"
-                      ? "border-orange-500 text-orange-500"
-                      : "border-transparent text-gray-500 hover:text-gray-700"
+                    ? "border-orange-500 text-orange-500"
+                    : "border-transparent text-gray-500 hover:text-gray-700"
                     }`}
                 >
                   <Phone className="w-5 h-5" /> Calls
@@ -1518,8 +1543,8 @@ export default function CRMLeadDetail() {
                 <button
                   onClick={() => setActiveTab("files")}
                   className={`px-6 py-4 font-semibold flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${activeTab === "files"
-                      ? "border-orange-500 text-orange-500"
-                      : "border-transparent text-gray-500 hover:text-gray-700"
+                    ? "border-orange-500 text-orange-500"
+                    : "border-transparent text-gray-500 hover:text-gray-700"
                     }`}
                 >
                   <File className="w-5 h-5" /> Files
@@ -1527,8 +1552,8 @@ export default function CRMLeadDetail() {
                 <button
                   onClick={() => setActiveTab("email")}
                   className={`px-6 py-4 font-semibold flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${activeTab === "email"
-                      ? "border-orange-500 text-orange-500"
-                      : "border-transparent text-gray-500 hover:text-gray-700"
+                    ? "border-orange-500 text-orange-500"
+                    : "border-transparent text-gray-500 hover:text-gray-700"
                     }`}
                 >
                   <Mail className="w-5 h-5" /> Email
@@ -1536,15 +1561,15 @@ export default function CRMLeadDetail() {
                 <button
                   onClick={() => setActiveTab("whatsapp")}
                   className={`px-6 py-4 font-semibold flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${activeTab === "whatsapp"
-                      ? "border-orange-500 text-orange-500"
-                      : "border-transparent text-gray-500 hover:text-gray-700"
+                    ? "border-orange-500 text-orange-500"
+                    : "border-transparent text-gray-500 hover:text-gray-700"
                     }`}
                 >
                   <FaWhatsapp
                     size={22}
                     className={`${activeTab === "whatsapp"
-                        ? "text-grey-500"
-                        : "text-grey-400"
+                      ? "text-grey-500"
+                      : "text-grey-400"
                       }`}
                   />
                   WhatsApp
@@ -1552,8 +1577,8 @@ export default function CRMLeadDetail() {
                 <button
                   onClick={() => setActiveTab("meeting")}
                   className={`px-6 py-4 font-semibold flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${activeTab === "meeting"
-                      ? "border-orange-500 text-orange-500"
-                      : "border-transparent text-gray-500 hover:text-gray-700"
+                    ? "border-orange-500 text-orange-500"
+                    : "border-transparent text-gray-500 hover:text-gray-700"
                     }`}
                 >
                   <Users className="w-5 h-5" /> Meeting
@@ -1587,6 +1612,15 @@ export default function CRMLeadDetail() {
         leadData={leadData}
         onSave={handleLeadInfoSave}
       />
+
+      {callPopupData.isOpen && (
+        <CallActionPopup
+          isOpen={callPopupData.isOpen}
+          onClose={() => setCallPopupData({ isOpen: false, lead: null })}
+          lead={callPopupData.lead}
+          onHitCall={handleHitCall}
+        />
+      )}
     </DashboardLayout>
   );
 }

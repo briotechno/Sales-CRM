@@ -334,11 +334,12 @@ export default function TodoPage() {
           <div className="max-w-8xl mx-auto px-4 py-4 border-b">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
-                <h1 className="text-2xl font-bold text-gray-800">My Tasks</h1>
-                <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
-                  <FiHome className="text-gray-700" size={14} />
-                  <span className="text-gray-400"></span> Additional /{" "}
-                  <span className="text-[#FF7B1D] font-medium">
+                <h1 className="text-2xl font-bold text-gray-800 capitalize tracking-tight">My Tasks</h1>
+                <p className="text-[11px] text-gray-400 mt-1 flex items-center gap-2 font-bold capitalize tracking-wider">
+                  <FiHome className="text-gray-400" size={12} />
+                  <span>Additional</span>
+                  <span className="text-gray-300">/</span>
+                  <span className="text-[#FF7B1D]">
                     To-Do
                   </span>
                 </p>
@@ -365,6 +366,7 @@ export default function TodoPage() {
                       ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
                       : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
                       }`}
+                    title="Filters"
                   >
                     {hasActiveFilters ? <X size={18} /> : <Filter size={18} />}
                   </button>
@@ -557,7 +559,7 @@ export default function TodoPage() {
                     setNewTaskCategory("General");
                     setIsAddModalOpen(true);
                   }}
-                  className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-2 font-semibold"
+                  className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm text-[11px] font-bold transition shadow-lg hover:shadow-xl hover:from-orange-600 hover:to-orange-700 capitalize tracking-wider"
                 >
                   <Plus size={20} />
                   Add Task
@@ -663,11 +665,11 @@ export default function TodoPage() {
                               </h3>
                             </div>
                             <div className="flex gap-2 mt-2">
-                              <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-bold capitalize tracking-wide">
+                              <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-sm text-xs font-bold capitalize tracking-wide border border-gray-200">
                                 {task.category || 'General'}
                               </span>
                               {!task.completed && (
-                                <span className={`px-3 py-1 rounded-full text-xs font-bold capitalize tracking-wide ${task.priority === 'high' ? 'bg-red-100 text-red-700' :
+                                <span className={`px-3 py-1 rounded-sm text-xs font-bold capitalize tracking-wide ${task.priority === 'high' ? 'bg-red-100 text-red-700' :
                                   task.priority === 'medium' ? 'bg-orange-100 text-orange-700' :
                                     'bg-green-100 text-green-700'
                                   }`}>
@@ -921,7 +923,7 @@ export default function TodoPage() {
                         setNewTaskCategory("General");
                         setIsAddModalOpen(true);
                       }}
-                      className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl inline-flex items-center gap-2 font-semibold"
+                      className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm text-[11px] font-bold transition shadow-lg hover:shadow-xl hover:from-orange-600 hover:to-orange-700 capitalize tracking-wider"
                     >
                       <Plus size={20} />
                       Create First Task
@@ -1322,10 +1324,10 @@ export default function TodoPage() {
               {/* 4. Tags and Timestamp */}
               <div className="flex flex-col items-center gap-3 pt-2">
                 <div className="flex justify-center gap-2">
-                  <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-bold capitalize tracking-wide border border-gray-200">
+                  <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-sm text-xs font-bold capitalize tracking-wide border border-gray-200">
                     {taskToView.category || 'General'}
                   </span>
-                  <span className={`px-3 py-1 rounded-full text-xs font-bold capitalize tracking-wide border ${taskToView.priority === 'high' ? 'bg-red-50 text-red-700 border-red-100' :
+                  <span className={`px-3 py-1 rounded-sm text-xs font-bold capitalize tracking-wide border ${taskToView.priority === 'high' ? 'bg-red-50 text-red-700 border-red-100' :
                     taskToView.priority === 'medium' ? 'bg-orange-50 text-orange-700 border-orange-100' :
                       'bg-green-50 text-green-700 border-green-100'
                     }`}>

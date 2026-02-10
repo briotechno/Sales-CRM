@@ -19,6 +19,7 @@ import FollowUpLeads from "./pages/LeadsManagement/FollowUpLeads";
 import MissedLeads from "./pages/LeadsManagement/MissedLeads";
 import DuplicatesLeads from "./pages/LeadsManagement/DuplicatesLeads";
 import WonLeads from "./pages/LeadsManagement/WonLeads";
+import AssignmentSettings from "./pages/LeadsManagement/AssignmentSettings";
 
 import LeadProfile from "./pages/LeadsManagement/LeadProfilePageParts/LeadProfile";
 
@@ -170,6 +171,7 @@ function App() {
           <Route path="/crm/leads/trending" element={<TrendingLeads />} />
           <Route path="/crm/leads/won" element={<WonLeads />} />
           <Route path="/crm/leads/analysis" element={<Analysis />} />
+          <Route path="/crm/leads/assignment-settings" element={<AssignmentSettings />} />
           <Route path="/crm/leads/profile/:id" element={<LeadProfile />} />
           <Route path="/crm/leads/add-notes" element={<AddNotes />} />
           <Route path="/crm/leads/dashboard" element={<LeadDashboard />} />
