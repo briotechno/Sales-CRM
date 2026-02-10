@@ -20,6 +20,7 @@ import {
   Trash2,
   Filter,
   Upload,
+  PlusIcon,
 } from "lucide-react";
 import NumberCard from "../../components/NumberCard";
 import BulkUploadLeads from "../../components/AddNewLeads/BulkUpload";
@@ -138,11 +139,12 @@ export default function LeadDashboard() {
           <div className="max-w-8xl mx-auto px-4 py-4 border-b">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
-                <h1 className="text-2xl font-bold text-gray-800 capitalize">Leads Management</h1>
-                <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
-                  <Home className="text-gray-700" size={14} />
-                  <span className="text-gray-400">CRM / </span>
-                  <span className="text-[#FF7B1D] font-medium">
+                <h1 className="text-2xl font-bold text-gray-800 capitalize tracking-tight">Leads Management</h1>
+                <p className="text-[11px] text-gray-400 mt-1 flex items-center gap-2 font-bold capitalize tracking-wider">
+                  <Home className="text-gray-400" size={12} />
+                  <span>CRM</span>
+                  <span className="text-gray-300">/</span>
+                  <span className="text-[#FF7B1D]">
                     Dashboard
                   </span>
                 </p>
@@ -154,20 +156,20 @@ export default function LeadDashboard() {
                 <div className="relative" ref={dropdownRef}>
                   <button
                     onClick={() => setIsFilterOpen(!isFilterOpen)}
-                    className={`p-2 border rounded-sm transition-all shadow-sm ${isFilterOpen
-                      ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-orange-500"
-                      : "bg-white border-gray-200 text-gray-400 hover:bg-gray-50"
+                    className={`px-3 py-3 rounded-sm border transition shadow-sm ${isFilterOpen
+                      ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
+                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
                       }`}
                     title="Filters"
                   >
-                    <Filter size={18} className={isFilterOpen ? "text-white" : "text-orange-500"} />
+                    {isFilterOpen ? <Filter size={18} /> : <Filter size={18} />}
                   </button>
 
                   {isFilterOpen && (
                     <div className="absolute right-0 mt-2 w-[480px] bg-white border border-gray-200 rounded-sm shadow-2xl z-50 animate-fadeIn overflow-hidden">
                       {/* Header */}
-                      <div className="p-4 bg-gray-50 border-b flex justify-between items-center">
-                        <span className="text-sm font-bold text-gray-800 capitalize">Navigation Options</span>
+                      <div className="p-4 bg-gray-50 border-b flex justify-between items-center text-black">
+                        <span className="text-sm font-bold capitalize">Navigation Options</span>
                       </div>
 
                       {/* Content - Scrollable */}
@@ -213,9 +215,9 @@ export default function LeadDashboard() {
                 <div className="relative">
                   <button
                     onClick={() => setOpenLeadMenu(!openLeadMenu)}
-                    className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm font-semibold transition shadow-lg hover:shadow-xl hover:from-orange-600 hover:to-orange-700 capitalize"
+                    className="flex items-center gap-2 px-6 py-3 rounded-sm font-semibold transition shadow-lg hover:shadow-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
                   >
-                    <UserPlus size={20} />
+                    <PlusIcon size={20} />
                     Add Lead
                   </button>
 
@@ -226,7 +228,7 @@ export default function LeadDashboard() {
                           setOpenLeadMenu(false);
                           navigate("/crm/leads/all"); // Or show a popup
                         }}
-                        className="w-full flex items-center gap-3 text-left px-4 py-3 hover:bg-orange-50 text-sm font-semibold text-gray-700 hover:text-orange-600 transition capitalize"
+                        className="w-full flex items-center gap-3 text-left px-4 py-3 hover:bg-orange-50 text-[11px] font-bold text-gray-700 hover:text-orange-600 transition capitalize tracking-wider"
                       >
                         <UserPlus size={16} />
                         Add Single Lead
@@ -237,7 +239,7 @@ export default function LeadDashboard() {
                           setOpenLeadMenu(false);
                           setShowBulkUploadPopup(true);
                         }}
-                        className="w-full flex items-center gap-3 text-left px-4 py-3 hover:bg-orange-50 text-sm font-semibold text-gray-700 hover:text-orange-600 transition capitalize"
+                        className="w-full flex items-center gap-3 text-left px-4 py-3 hover:bg-orange-50 text-[11px] font-bold text-gray-700 hover:text-orange-600 transition capitalize tracking-wider"
                       >
                         <Upload size={16} />
                         Bulk Upload

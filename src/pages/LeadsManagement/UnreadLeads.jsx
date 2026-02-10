@@ -2,16 +2,18 @@ import React, { useState, useEffect, useRef } from "react";
 import { FiHome, FiGrid } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "../../components/DashboardLayout";
-import { Download, Upload, Filter, UserPlus, List, Trash2, Users, Server, Type, Phone, Loader2, ChevronLeft, ChevronRight, Mail } from "lucide-react";
+import { Download, Upload, Filter, UserPlus, List, Trash2, Users, Server, Type, Phone, Loader2, ChevronLeft, ChevronRight, Mail, AlertCircle } from "lucide-react";
+import Modal from "../../components/common/Modal";
 import AddLeadPopup from "../../components/AddNewLeads/AddNewLead";
 import BulkUploadLeads from "../../components/AddNewLeads/BulkUpload";
 import AssignLeadsModal from "../../pages/LeadsManagement/AllLeadPagePart/AssignLeadModal";
 import LeadsListView from "../../pages/LeadsManagement/AllLeadPagePart/LeadsList";
 import LeadsGridView from "../../pages/LeadsManagement/AllLeadPagePart/LeadsGridView";
 import NumberCard from "../../components/NumberCard";
-import { useGetLeadsQuery, useDeleteLeadMutation, useUpdateLeadMutation } from "../../store/api/leadApi";
+import { useGetLeadsQuery, useDeleteLeadMutation, useUpdateLeadMutation, useHitCallMutation } from "../../store/api/leadApi";
 import { useGetPipelinesQuery } from "../../store/api/pipelineApi";
 import { useGetEmployeesQuery } from "../../store/api/employeeApi";
+import CallActionPopup from "../../components/AddNewLeads/CallActionPopup";
 import { toast } from "react-hot-toast";
 
 export default function UnreadLeads() {
@@ -42,6 +44,9 @@ export default function UnreadLeads() {
   const itemsPerPage = 7;
   const [showBulkUploadPopup, setShowBulkUploadPopup] = useState(false);
   const [leadToEdit, setLeadToEdit] = useState(null);
+  const [callPopupData, setCallPopupData] = useState({ isOpen: false, lead: null });
+  const [leadToDelete, setLeadToDelete] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const dropdownRef = useRef(null);
 
   // Temporary filter states for the menu
@@ -189,33 +194,41 @@ export default function UnreadLeads() {
     setLeadToEdit(null);
   };
 
-  const handleDeleteLead = async (id) => {
-    if (window.confirm("Are you sure you want to delete this lead?")) {
-      try {
-        await deleteLead(id).unwrap();
+  const handleDeleteLead = (lead) => {
+    setLeadToDelete(lead);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!leadToDelete) return;
+
+    try {
+      if (Array.isArray(leadToDelete)) {
+        // Bulk delete
+        await Promise.all(leadToDelete.map(id => deleteLead(id).unwrap()));
+        toast.success("Selected leads deleted successfully");
+        setSelectedLeads([]);
+      } else {
+        // Single delete
+        await deleteLead(leadToDelete.id).unwrap();
         toast.success("Lead deleted successfully");
-        setSelectedLeads(selectedLeads.filter((leadId) => leadId !== id));
-      } catch (error) {
-        toast.error("Failed to delete lead");
-        console.error(error);
+        setSelectedLeads(selectedLeads.filter((leadId) => leadId !== leadToDelete.id));
       }
+      setShowDeleteModal(false);
+      setLeadToDelete(null);
+    } catch (error) {
+      toast.error(error?.data?.message || "Failed to delete lead");
+      console.error(error);
     }
   };
 
-  const handleDeleteSelected = async () => {
+  const handleDeleteSelected = () => {
     if (selectedLeads.length === 0) {
       toast.error("Please select leads to delete");
       return;
     }
-    if (window.confirm(`Are you sure you want to delete ${selectedLeads.length} lead(s)?`)) {
-      try {
-        await Promise.all(selectedLeads.map(id => deleteLead(id).unwrap()));
-        toast.success("Selected leads deleted successfully");
-        setSelectedLeads([]);
-      } catch (error) {
-        toast.error("Failed to delete some leads");
-      }
-    }
+    setLeadToDelete(selectedLeads);
+    setShowDeleteModal(true);
   };
 
   const handleSelectLead = (id) => {
@@ -267,6 +280,26 @@ export default function UnreadLeads() {
   const handlePrev = () => setCurrentPage((prev) => (prev > 1 ? prev - 1 : prev));
   const handleNext = () => setCurrentPage((prev) => (prev < totalPages ? prev + 1 : prev));
 
+  const [hitCallMutation] = useHitCallMutation();
+
+  const handleHitCall = async (callData) => {
+    try {
+      await hitCallMutation({
+        id: callData.id,
+        status: callData.status,
+        next_call_at: callData.next_call_at,
+        drop_reason: callData.drop_reason
+      }).unwrap();
+      toast.success("Lead status updated based on call response");
+    } catch (err) {
+      toast.error(err?.data?.message || "Failed to update call status");
+    }
+  };
+
+  const openCallAction = (lead) => {
+    setCallPopupData({ isOpen: true, lead });
+  };
+
   return (
     <DashboardLayout>
       <div className="min-h-screen bg-white">
@@ -275,11 +308,12 @@ export default function UnreadLeads() {
           <div className="max-w-8xl mx-auto px-4 py-4 border-b">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
-                <h1 className="text-2xl font-bold text-gray-800 capitalize">Leads Management</h1>
-                <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
-                  <FiHome className="text-gray-700" size={14} />
-                  <span className="text-gray-400">CRM / </span>
-                  <span className="text-[#FF7B1D] font-medium">
+                <h1 className="text-2xl font-bold text-gray-800 capitalize tracking-tight">Leads Management</h1>
+                <p className="text-[11px] text-gray-400 mt-1 flex items-center gap-2 font-bold capitalize tracking-wider">
+                  <FiHome className="text-gray-400" size={12} />
+                  <span>CRM</span>
+                  <span className="text-gray-300">/</span>
+                  <span className="text-[#FF7B1D]">
                     Unread
                   </span>
                 </p>
@@ -288,22 +322,24 @@ export default function UnreadLeads() {
               {/* Action Buttons */}
               <div className="flex flex-wrap items-center gap-3">
                 {/* View Toggles */}
-                <div className="flex p-1 bg-gray-100 rounded-sm">
+                <div className="flex p-1 bg-gray-50 border border-gray-200 rounded-sm shadow-sm">
                   <button
                     onClick={() => setView("list")}
                     className={`p-1.5 rounded-sm transition-all ${view === "list"
-                      ? "bg-white text-orange-600 shadow-sm"
-                      : "text-gray-500 hover:text-gray-700"
+                      ? "bg-white text-orange-600 shadow-sm border border-gray-100"
+                      : "text-gray-400 hover:text-gray-600"
                       }`}
+                    title="List View"
                   >
                     <List size={18} />
                   </button>
                   <button
                     onClick={() => setView("grid")}
                     className={`p-1.5 rounded-sm transition-all ${view === "grid"
-                      ? "bg-white text-orange-600 shadow-sm"
-                      : "text-gray-500 hover:text-gray-700"
+                      ? "bg-white text-orange-600 shadow-sm border border-gray-100"
+                      : "text-gray-400 hover:text-gray-600"
                       }`}
+                    title="Grid View"
                   >
                     <FiGrid size={18} />
                   </button>
@@ -312,26 +348,33 @@ export default function UnreadLeads() {
                 {/* Filter - Icon Only */}
                 <div className="relative" ref={dropdownRef}>
                   <button
-                    onClick={() => setIsFilterOpen(!isFilterOpen)}
-                    className={`p-2 border rounded-sm transition-all shadow-sm ${isFilterOpen
-                      ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-orange-500"
-                      : "bg-white border-gray-200 text-gray-400 hover:bg-gray-50"
+                    onClick={() => {
+                      if (filterStatus !== "All" || filterType !== "All" || filterPriority !== "All" || filterPipeline !== "" || filterCity !== "" || filterValue !== "" || filterDateFrom !== "" || filterDateTo !== "") {
+                        handleResetFilters();
+                        handleApplyFilters();
+                      } else {
+                        setIsFilterOpen(!isFilterOpen);
+                      }
+                    }}
+                    className={`px-3 py-3 rounded-sm border transition shadow-sm ${isFilterOpen || (filterStatus !== "All" || filterType !== "All" || filterPriority !== "All" || filterPipeline !== "" || filterCity !== "" || filterValue !== "" || filterDateFrom !== "" || filterDateTo !== "")
+                      ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
+                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
                       }`}
                     title="Filters"
                   >
-                    <Filter size={18} className={isFilterOpen ? "text-white" : "text-orange-500"} />
+                    {(filterStatus !== "All" || filterType !== "All" || filterPriority !== "All" || filterPipeline !== "" || filterCity !== "" || filterValue !== "" || filterDateFrom !== "" || filterDateTo !== "") ? <AlertCircle size={18} /> : <Filter size={18} />}
                   </button>
 
                   {isFilterOpen && (
                     <div className="absolute right-0 mt-2 w-[480px] bg-white border border-gray-200 rounded-sm shadow-2xl z-50 animate-fadeIn overflow-hidden">
                       {/* Header */}
-                      <div className="p-4 bg-gray-50 border-b flex justify-between items-center">
-                        <span className="text-sm font-bold text-gray-800 capitalize">Filter Options</span>
+                      <div className="p-4 bg-gray-50 border-b flex justify-between items-center text-black">
+                        <span className="text-sm font-bold capitalize">Filter Options</span>
                         <button
                           onClick={handleResetFilters}
-                          className="text-[10px] font-bold text-orange-600 hover:underline hover:text-orange-700 capitalize"
+                          className="text-[10px] font-bold text-orange-600 hover:underline hover:text-orange-700 capitalize tracking-tighter"
                         >
-                          Reset all
+                          Reset All
                         </button>
                       </div>
 
@@ -544,9 +587,9 @@ export default function UnreadLeads() {
                 {/* Export Button */}
                 <button
                   onClick={handleExport}
-                  className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-sm text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-all shadow-sm capitalize"
+                  className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-sm text-[11px] font-bold text-gray-700 hover:bg-gray-50 transition-all shadow-sm capitalize tracking-wider"
                 >
-                  <Download size={18} className="text-orange-500" />
+                  <Download size={18} className="text-[#FF7B1D]" />
                   Export
                 </button>
 
@@ -554,20 +597,20 @@ export default function UnreadLeads() {
                 <div className="relative">
                   <button
                     onClick={() => setOpenLeadMenu(!openLeadMenu)}
-                    className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm font-semibold transition shadow-lg hover:shadow-xl hover:from-orange-600 hover:to-orange-700 capitalize"
+                    className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm text-[11px] font-bold transition shadow-lg hover:shadow-xl hover:from-orange-600 hover:to-orange-700 capitalize tracking-wider"
                   >
                     <UserPlus size={20} />
                     Add Lead
                   </button>
 
                   {openLeadMenu && (
-                    <div className="absolute top-full right-0 mt-2 w-48 bg-white border border-gray-200 shadow-xl rounded-sm z-50 overflow-hidden divide-y divide-gray-100">
+                    <div className="absolute top-full right-0 mt-2 w-48 bg-white border border-gray-200 shadow-xl rounded-sm z-50 overflow-hidden divide-y divide-gray-100 animate-fadeIn">
                       <button
                         onClick={() => {
                           setOpenLeadMenu(false);
                           handleAddLead();
                         }}
-                        className="w-full flex items-center gap-3 text-left px-4 py-3 hover:bg-orange-50 text-sm font-semibold text-gray-700 hover:text-orange-600 transition capitalize"
+                        className="w-full flex items-center gap-3 text-left px-4 py-3 hover:bg-orange-50 text-[11px] font-bold text-gray-700 hover:text-orange-600 transition capitalize tracking-wider"
                       >
                         <UserPlus size={16} />
                         Add Single Lead
@@ -578,7 +621,7 @@ export default function UnreadLeads() {
                           setOpenLeadMenu(false);
                           setShowBulkUploadPopup(true);
                         }}
-                        className="w-full flex items-center gap-3 text-left px-4 py-3 hover:bg-orange-50 text-sm font-semibold text-gray-700 hover:text-orange-600 transition capitalize"
+                        className="w-full flex items-center gap-3 text-left px-4 py-3 hover:bg-orange-50 text-[11px] font-bold text-gray-700 hover:text-orange-600 transition capitalize tracking-wider"
                       >
                         <Upload size={16} />
                         Bulk Upload
@@ -632,23 +675,29 @@ export default function UnreadLeads() {
                     itemsPerPage={itemsPerPage}
                     handleDeleteLead={handleDeleteLead}
                     handleEditLead={handleEditLead}
+                    handleHitCall={openCallAction}
                   />
                 ) : (
-                  <LeadsGridView leadsData={leadsData} filterStatus={filterStatus} handleLeadClick={handleLeadClick} selectedLeads={selectedLeads} handleSelectLead={handleSelectLead} />
+                  <LeadsGridView leadsData={leadsData} filterStatus={filterStatus} handleLeadClick={handleLeadClick} selectedLeads={selectedLeads} handleSelectLead={handleSelectLead} handleHitCall={openCallAction} />
                 )}
 
                 {totalPages > 1 && (
-                  <div className="flex flex-col sm:flex-row justify-between items-center mt-6 bg-white p-4 rounded-sm border border-gray-200 gap-4">
-                    <p className="text-xs font-semibold text-gray-500 capitalize tracking-wider">
-                      Showing <span className="text-gray-800">{((currentPage - 1) * itemsPerPage) + 1}</span> to <span className="text-gray-800">{Math.min(currentPage * itemsPerPage, totalLeads)}</span> of <span className="text-gray-800">{totalLeads}</span> leads
+                  <div className="flex flex-col md:flex-row justify-between items-center mt-6 gap-4 bg-gray-50 p-4 rounded-sm border border-gray-200 shadow-sm animate-fadeIn">
+                    <p className="text-sm font-semibold text-gray-700">
+                      Showing <span className="text-orange-600">{((currentPage - 1) * itemsPerPage) + 1}</span> to <span className="text-orange-600">{Math.min(currentPage * itemsPerPage, totalLeads)}</span> of <span className="text-orange-600 font-bold">{totalLeads}</span> Leads
                     </p>
+
                     <div className="flex items-center gap-2">
                       <button
                         onClick={handlePrev}
                         disabled={currentPage === 1}
-                        className="p-2 border border-gray-200 rounded-sm hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed group"
+                        className={`px-4 py-2 rounded-sm font-bold transition flex items-center gap-1 text-[11px] uppercase tracking-wider ${currentPage === 1
+                          ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                          : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"
+                          }`}
                       >
-                        <ChevronLeft size={18} className="text-gray-600 group-hover:text-orange-500" />
+                        <ChevronLeft size={16} />
+                        Previous
                       </button>
 
                       <div className="flex items-center gap-1.5">
@@ -659,9 +708,9 @@ export default function UnreadLeads() {
                               {i > 0 && arr[i - 1] !== p - 1 && <span className="text-gray-400 px-1">...</span>}
                               <button
                                 onClick={() => handlePageChange(p)}
-                                className={`w-9 h-9 border rounded-sm text-xs font-bold transition-all ${currentPage === p
-                                  ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-orange-500 shadow-md"
-                                  : "bg-white text-gray-600 border-gray-200 hover:border-orange-200 hover:text-orange-600"
+                                className={`w-10 h-10 rounded-sm font-bold transition text-xs ${currentPage === p
+                                  ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md border-orange-500"
+                                  : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"
                                   }`}
                               >
                                 {p}
@@ -674,9 +723,13 @@ export default function UnreadLeads() {
                       <button
                         onClick={handleNext}
                         disabled={currentPage === totalPages}
-                        className="p-2 border border-gray-200 rounded-sm hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed group"
+                        className={`px-4 py-2 rounded-sm font-bold transition flex items-center gap-1 text-[11px] uppercase tracking-wider ${currentPage === totalPages
+                          ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                          : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"
+                          }`}
                       >
-                        <ChevronRight size={18} className="text-gray-600 group-hover:text-orange-500" />
+                        Next
+                        <ChevronRight size={16} />
                       </button>
                     </div>
                   </div>
@@ -689,6 +742,58 @@ export default function UnreadLeads() {
         <AssignLeadsModal isOpen={isAssignModalOpen} onClose={() => setIsAssignModalOpen(false)} selectedLeadsCount={selectedLeads.length} onAssign={handleAssign} />
         {isModalOpen && <AddLeadPopup isOpen={isModalOpen} onClose={handleCloseModal} leadToEdit={leadToEdit} />}
         {showBulkUploadPopup && <BulkUploadLeads onClose={() => setShowBulkUploadPopup(false)} />}
+        {callPopupData.isOpen && (
+          <CallActionPopup
+            isOpen={callPopupData.isOpen}
+            onClose={() => setCallPopupData({ isOpen: false, lead: null })}
+            lead={callPopupData.lead}
+            onHitCall={handleHitCall}
+          />
+        )}
+
+        {/* Delete Confirmation Modal */}
+        <Modal
+          isOpen={showDeleteModal}
+          onClose={() => {
+            setShowDeleteModal(false);
+            setLeadToDelete(null);
+          }}
+          headerVariant="simple"
+          maxWidth="max-w-md"
+          footer={
+            <div className="flex gap-4 w-full">
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setLeadToDelete(null);
+                }}
+                className="flex-1 px-6 py-3 border-2 border-gray-200 text-gray-700 font-bold rounded-sm hover:bg-gray-100 transition-all font-primary text-xs uppercase tracking-widest"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="flex-1 px-6 py-3 bg-red-600 text-white font-bold rounded-sm hover:bg-red-700 transition-all shadow-lg flex items-center justify-center gap-2 font-primary text-xs uppercase tracking-widest"
+              >
+                <Trash2 size={18} />
+                Delete Now
+              </button>
+            </div>
+          }
+        >
+          <div className="flex flex-col items-center text-center text-black font-primary">
+            <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mb-6">
+              <AlertCircle className="text-red-600" size={48} />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">Confirm Delete</h2>
+            <p className="text-gray-600 mb-2 leading-relaxed">
+              {Array.isArray(leadToDelete)
+                ? `Are you sure you want to delete ${leadToDelete.length} selected lead(s)?`
+                : <>Are you sure you want to delete the lead <span className="font-bold text-gray-800">"{leadToDelete?.name || leadToDelete?.full_name || "this lead"}"</span>?</>}
+            </p>
+            <p className="text-xs text-red-500 italic font-medium">This action cannot be undone. All associated data will be permanently removed.</p>
+          </div>
+        </Modal>
       </div>
     </DashboardLayout>
   );

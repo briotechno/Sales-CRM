@@ -297,6 +297,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             { name: "Trending", path: "/crm/leads/trending" },
             { name: "Won", path: "/crm/leads/won" },
             { name: "Analysis", path: "/crm/leads/analysis" },
+            { name: "Assignment Settings", path: "/crm/leads/assignment-settings" },
           ],
         },
         {

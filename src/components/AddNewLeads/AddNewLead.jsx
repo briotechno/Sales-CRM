@@ -140,14 +140,11 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
   };
 
   const handleSubmit = async () => {
-    // Validation
-    if (!formData.name) return toast.error("Lead Name is required");
-    if (leadType === 'Person' && !formData.mobile_number) return toast.error("Mobile Number is required for Person");
-    if (!formData.pipeline_id) return toast.error("Pipeline is required");
-    if (!formData.stage_id) return toast.error("Stage is required");
+    // Validation (No longer needed for pipeline/stage as backend handles defaults)
 
     const payload = {
       ...formData,
+      name: formData.name || (leadType === "Person" ? formData.full_name : formData.organization_name) || "Untitled Lead",
       type: leadType,
       tag: tags.join(','), // Assuming backend expects comma separated string
       visibility,
@@ -222,28 +219,13 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
         <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5 max-h-[70vh]">
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Lead Name */}
-            <div className="group col-span-2">
-              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-                <FileText size={16} className="text-[#FF7B1D]" />
-                Lead Name <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                name="name"
-                placeholder="Enter Lead Name"
-                className={inputStyles}
-                value={formData.name}
-                onChange={handleChange}
-                required
-              />
-            </div>
+
 
             {/* Pipeline */}
             <div className="group">
               <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
                 <Workflow size={16} className="text-[#FF7B1D]" />
-                Pipeline <span className="text-red-500">*</span>
+                Pipeline
               </label>
               <select
                 name="pipeline_id"
@@ -262,7 +244,7 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
             <div className="group">
               <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
                 <Layers size={16} className="text-[#FF7B1D]" />
-                Stage <span className="text-red-500">*</span>
+                Stage
               </label>
               <select
                 name="stage_id"
@@ -325,7 +307,7 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
                 <div className="group">
                   <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
                     <User size={14} className="text-[#FF7B1D]" />
-                    Full Name <span className="text-red-500">*</span>
+                    Full Name
                   </label>
                   <input
                     type="text"
@@ -357,7 +339,7 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
                 <div className="group">
                   <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
                     <Phone size={14} className="text-[#FF7B1D]" />
-                    Mobile Number <span className="text-red-500">*</span>
+                    Mobile Number
                   </label>
                   <input
                     type="text"
@@ -504,7 +486,7 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
                 <div className="group">
                   <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
                     <Building2 size={14} className="text-[#FF7B1D]" />
-                    Organization Name <span className="text-red-500">*</span>
+                    Organization Name
                   </label>
                   <input
                     type="text"

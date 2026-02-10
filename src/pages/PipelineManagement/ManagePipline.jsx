@@ -18,6 +18,7 @@ import {
   Filter,
   Loader,
   Layers,
+  ChevronDown,
 } from "lucide-react";
 import NumberCard from "../../components/NumberCard";
 import EditPipelineModal from "../../components/PiplineManagement/EditPipelineModal";
@@ -36,6 +37,7 @@ const PipelineList = () => {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [selectedPipeline, setSelectedPipeline] = useState(null);
+  const [tempSearch, setTempSearch] = useState("");
   const [isStatusFilterOpen, setIsStatusFilterOpen] = useState(false);
   const statusDropdownRef = useRef(null);
 
@@ -76,6 +78,21 @@ const PipelineList = () => {
     return matchesSearch && matchesStatus;
   });
 
+  const hasActiveFilters = filterStatus !== "all" || searchQuery !== "";
+
+  const handleClearFilters = () => {
+    setFilterStatus("all");
+    setSearchQuery("");
+    setTempSearch("");
+    setCurrentPage(1);
+  };
+
+  const handleApplyFilters = () => {
+    setSearchQuery(tempSearch);
+    setIsStatusFilterOpen(false);
+    setCurrentPage(1);
+  };
+
   // Pagination
   const totalPages = Math.ceil(filteredPipelines.length / rowsPerPage);
   const indexOfLastItem = currentPage * rowsPerPage;
@@ -91,39 +108,7 @@ const PipelineList = () => {
   const handleNext = () =>
     setCurrentPage((prev) => (prev < totalPages ? prev + 1 : prev));
 
-  const handleExport = () => {
-    const headers = [
-      "S.N",
-      "Pipeline Name",
-      "Stages",
-      "Total Deal Value",
-      "No of Deals",
-      "Created Date",
-      "Status",
-    ];
-    const csvContent = [
-      headers.join(","),
-      ...filteredPipelines.map((pipeline) =>
-        [
-          pipeline.sn,
-          `"${pipeline.name}"`,
-          Array.isArray(pipeline.stages) ? pipeline.stages.length : pipeline.stages,
-          pipeline.totalDealValue,
-          pipeline.noOfDeals,
-          `"${pipeline.createdDate}"`,
-          pipeline.status,
-        ].join(",")
-      ),
-    ].join("\n");
 
-    const blob = new Blob([csvContent], { type: "text/csv" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `pipelines_${new Date().toISOString().split("T")[0]}.csv`;
-    a.click();
-    window.URL.revokeObjectURL(url);
-  };
 
   if (isLoading) {
     return (
@@ -171,66 +156,95 @@ const PipelineList = () => {
                 <div className="relative" ref={statusDropdownRef}>
                   <button
                     onClick={() => {
-                      if (filterStatus !== "all") {
-                        setFilterStatus("all");
+                      if (hasActiveFilters) {
+                        handleClearFilters();
                       } else {
+                        setTempSearch(searchQuery);
                         setIsStatusFilterOpen(!isStatusFilterOpen);
                       }
                     }}
-                    className={`px-3 py-3 rounded-sm border transition shadow-sm ${isStatusFilterOpen || filterStatus !== "all"
+                    className={`px-3 py-3 rounded-sm border transition shadow-sm ${isStatusFilterOpen || hasActiveFilters
                       ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
                       : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
                       }`}
                   >
-                    {filterStatus !== "all" ? <X size={18} /> : <Filter size={18} />}
+                    {hasActiveFilters ? <X size={18} /> : <Filter size={18} />}
                   </button>
 
                   {isStatusFilterOpen && (
-                    <div className="absolute right-0 mt-2 w-[250px] bg-white border border-gray-200 rounded-sm shadow-2xl z-50 animate-fadeIn overflow-hidden">
+                    <div className="absolute right-0 mt-2 w-[500px] bg-white border border-gray-200 rounded-sm shadow-2xl z-50 animate-fadeIn overflow-hidden">
                       <div className="p-4 bg-gray-50 border-b flex justify-between items-center">
-                        <span className="text-sm font-bold text-gray-800">Filter Status</span>
+                        <span className="text-sm font-bold text-gray-800 tracking-tight">Filter Options</span>
                         <button
-                          onClick={() => setFilterStatus("all")}
-                          className="text-[10px] font-bold text-orange-600 hover:underline hover:text-orange-700 capitalize"
+                          onClick={() => {
+                            setTempSearch("");
+                            setFilterStatus("all");
+                          }}
+                          className="text-[10px] font-bold text-orange-600 hover:underline hover:text-orange-700 capitalize tracking-wider"
                         >
-                          Reset
+                          Reset All
                         </button>
                       </div>
 
-                      <div className="p-5 space-y-4">
-                        <div className="space-y-2">
-                          {[{ label: "All Status", value: "all" }, { label: "Active", value: "Active" }, { label: "Inactive", value: "Inactive" }].map((option) => (
-                            <label key={option.value} className="flex items-center group cursor-pointer">
-                              <div className="relative flex items-center">
-                                <input
-                                  type="radio"
-                                  name="status_filter"
-                                  checked={filterStatus === option.value}
-                                  onChange={() => {
-                                    setFilterStatus(option.value);
-                                    setIsStatusFilterOpen(false);
-                                  }}
-                                  className="peer h-4 w-4 cursor-pointer appearance-none rounded-full border-2 border-gray-200 transition-all checked:border-[#FF7B1D] checked:border-[5px] hover:border-orange-300"
-                                />
-                              </div>
-                              <span className={`ml-3 text-sm font-medium transition-colors ${filterStatus === option.value ? "text-[#FF7B1D] font-bold" : "text-gray-600 group-hover:text-gray-900"}`}>
-                                {option.label}
-                              </span>
-                            </label>
-                          ))}
+                      <div className="p-5 space-y-6">
+                        {/* Search Input */}
+                        <div className="group">
+                          <label className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-2 border-b pb-1">Search Pipeline</label>
+                          <div className="relative">
+                            <input
+                              type="text"
+                              value={tempSearch}
+                              onChange={(e) => setTempSearch(e.target.value)}
+                              placeholder="Search by pipeline name..."
+                              className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500/20 outline-none transition-all text-xs font-semibold text-gray-700 bg-gray-50 hover:bg-white"
+                            />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                          </div>
                         </div>
+
+                        <div className="space-y-4">
+                          <span className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-2 border-b pb-1">Select Status</span>
+                          <div className="space-y-2">
+                            {[{ label: "All Status", value: "all" }, { label: "Active", value: "Active" }, { label: "Inactive", value: "Inactive" }].map((option) => (
+                              <label key={option.value} className="flex items-center group cursor-pointer">
+                                <div className="relative flex items-center">
+                                  <input
+                                    type="radio"
+                                    name="status_filter"
+                                    checked={filterStatus === option.value}
+                                    onChange={() => setFilterStatus(option.value)}
+                                    className="peer h-4 w-4 cursor-pointer appearance-none rounded-full border-2 border-gray-200 transition-all checked:border-[#FF7B1D] checked:border-[5px] hover:border-orange-300"
+                                  />
+                                </div>
+                                <span className={`ml-3 text-sm font-medium transition-colors ${filterStatus === option.value ? "text-[#FF7B1D] font-bold" : "text-gray-600 group-hover:text-gray-900"}`}>
+                                  {option.label}
+                                </span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Filter Actions */}
+                      <div className="p-4 bg-gray-50 border-t flex gap-3">
+                        <button
+                          onClick={() => setIsStatusFilterOpen(false)}
+                          className="flex-1 py-2.5 text-[11px] font-bold text-gray-500 capitalize tracking-wider hover:bg-gray-200 transition-colors rounded-sm border border-gray-200 bg-white shadow-sm"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={handleApplyFilters}
+                          className="flex-1 py-2.5 text-[11px] font-bold text-white capitalize tracking-wider bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 transition-all rounded-sm shadow-md active:scale-95"
+                        >
+                          Apply Filters
+                        </button>
                       </div>
                     </div>
                   )}
                 </div>
 
-                <button
-                  onClick={handleExport}
-                  className="flex items-center gap-2 px-4 py-3 rounded-sm border border-gray-300 text-gray-700 font-semibold hover:bg-gray-100 transition shadow-sm"
-                >
-                  <Download size={18} />
-                  <span className="text-sm">Export</span>
-                </button>
+
 
                 <button
                   onClick={() => navigate("/crm/pipeline/stages")}
@@ -252,20 +266,7 @@ const PipelineList = () => {
           </div>
         </div>
 
-        <div className="max-w-8xl mx-auto p-4 pt-0 mt-6">
-          {/* Search Bar */}
-          <div className="mb-6 relative max-w-md">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-              <Search size={18} />
-            </span>
-            <input
-              type="text"
-              placeholder="Search pipelines by name..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-1 focus:ring-orange-500/20 outline-none transition-all text-sm font-medium text-gray-700 bg-white hover:shadow-sm"
-            />
-          </div>
+        <div className="max-w-8xl mx-auto p-4 pt-0 mt-2">
 
           {/* Statement Card */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-3">
@@ -419,22 +420,23 @@ const PipelineList = () => {
             </table>
           </div>
 
-          {/* 🔹 Pagination Section */}
-          {filteredPipelines.length > 0 && (
-            <div className="flex justify-between items-center bg-gray-50/50 p-4 rounded-sm border border-gray-200 mt-6 shadow-sm mb-10">
-              <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                Displaying {indexOfFirstItem + 1} - {Math.min(indexOfLastItem, filteredPipelines.length)} of {filteredPipelines.length} Pipelines
-              </div>
+          {/* Pagination Section */}
+          {totalPages > 0 && (
+            <div className="flex flex-col md:flex-row justify-between items-center mt-6 gap-4 bg-gray-50 p-4 rounded-sm border border-gray-200">
+              <p className="text-sm font-semibold text-gray-700">
+                Showing <span className="text-orange-600">{indexOfFirstItem + 1}</span> to <span className="text-orange-600">{Math.min(indexOfLastItem, filteredPipelines.length)}</span> of <span className="text-orange-600">{filteredPipelines.length}</span> Pipelines
+              </p>
+
               <div className="flex items-center gap-2">
                 <button
                   onClick={handlePrev}
                   disabled={currentPage === 1}
-                  className={`px-4 py-2 rounded-sm text-xs font-bold transition-all border ${currentPage === 1
-                    ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
-                    : "bg-white text-gray-700 border-gray-300 hover:border-orange-500 hover:text-orange-600"
+                  className={`px-4 py-2 rounded-sm font-bold transition flex items-center gap-1 ${currentPage === 1
+                    ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                    : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"
                     }`}
                 >
-                  Prev
+                  Previous
                 </button>
 
                 <div className="flex items-center gap-1">
@@ -442,9 +444,9 @@ const PipelineList = () => {
                     <button
                       key={i + 1}
                       onClick={() => handlePageChange(i + 1)}
-                      className={`w-8 h-8 rounded-sm text-xs font-bold transition-all flex items-center justify-center border ${currentPage === i + 1
-                        ? "bg-orange-500 text-white border-orange-500 shadow-lg"
-                        : "bg-white text-gray-600 border-gray-300 hover:border-orange-500"
+                      className={`w-10 h-10 rounded-sm font-bold transition ${currentPage === i + 1
+                        ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md"
+                        : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
                         }`}
                     >
                       {i + 1}
@@ -455,9 +457,9 @@ const PipelineList = () => {
                 <button
                   onClick={handleNext}
                   disabled={currentPage === totalPages}
-                  className={`px-4 py-2 rounded-sm text-xs font-bold transition-all border ${currentPage === totalPages
-                    ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
-                    : "bg-white text-gray-700 border-gray-300 hover:border-orange-500 hover:text-orange-600 font-bold"
+                  className={`px-4 py-2 rounded-sm font-bold transition flex items-center gap-1 ${currentPage === totalPages
+                    ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                    : "bg-[#22C55E] text-white hover:opacity-90 shadow-md"
                     }`}
                 >
                   Next

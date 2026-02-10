@@ -2,7 +2,7 @@ const { pool } = require('../config/db');
 
 const Lead = {
     create: async (data, userId) => {
-        const {
+        let {
             name, mobile_number, email, value, pipeline_id, stage_id,
             status, type, tag, location,
             lead_source, visibility,
@@ -12,6 +12,44 @@ const Lead = {
             primary_contact_name, primary_dob, designation, primary_mobile, primary_email,
             description, owner
         } = data;
+
+        // If pipeline_id or stage_id is missing, handle default
+        if (!pipeline_id || !stage_id) {
+            let [pipes] = await pool.query('SELECT id FROM pipelines WHERE user_id = ? ORDER BY id ASC LIMIT 1', [userId]);
+            let targetPipelineId = pipeline_id || (pipes.length > 0 ? pipes[0].id : null);
+
+            if (!targetPipelineId) {
+                // Create Default Pipeline
+                const [result] = await pool.query(
+                    'INSERT INTO pipelines (name, status, description, user_id) VALUES (?, ?, ?, ?)',
+                    ['Default Pipeline', 'Active', 'Automatically created default pipeline', userId]
+                );
+                targetPipelineId = result.insertId;
+
+                const stages = [
+                    ['New', 'Initial stage', 10, 0, 0],
+                    ['Contacted', 'Lead contacted', 30, 0, 1],
+                    ['Interested', 'Lead interested', 60, 0, 2],
+                    ['Won', 'Lead won', 100, 1, 3]
+                ];
+
+                const stageValues = stages.map(s => [targetPipelineId, ...s]);
+                await pool.query(
+                    'INSERT INTO pipeline_stages (pipeline_id, name, description, probability, is_final, stage_order) VALUES ?',
+                    [stageValues]
+                );
+            }
+
+            pipeline_id = targetPipelineId;
+
+            if (!stage_id) {
+                const [stgs] = await pool.query(
+                    'SELECT id FROM pipeline_stages WHERE pipeline_id = ? ORDER BY stage_order ASC LIMIT 1',
+                    [pipeline_id]
+                );
+                stage_id = stgs.length > 0 ? stgs[0].id : null;
+            }
+        }
 
         // Generate Lead ID (e.g. L001)
         const [rows] = await pool.query('SELECT lead_id FROM leads WHERE user_id = ? ORDER BY id DESC LIMIT 1', [userId]);
@@ -77,18 +115,26 @@ const Lead = {
         // Subview logic
         if (subview === 'new') {
             query += " AND (l.tag = 'Not Contacted' OR l.created_at >= DATE_SUB(NOW(), INTERVAL 2 DAY))";
+        } else if (subview === 'not-connected') {
+            query += " AND l.tag = 'Not Connected'";
+        } else if (subview === 'follow-up') {
+            query += " AND l.tag = 'Follow Up'";
+        } else if (subview === 'missed') {
+            query += " AND l.next_call_at < NOW() AND l.tag NOT IN ('Won', 'Lost', 'Closed')";
         } else if (subview === 'assigned') {
             query += " AND l.assigned_to IS NOT NULL";
-        } else if (subview === 'unread') {
-            query += " AND l.is_read = 0";
         } else if (subview === 'dropped') {
-            query += " AND l.tag = 'Lost'";
+            query += " AND l.tag IN ('Lost', 'Dropped', 'Lost Lead')";
         } else if (subview === 'trending') {
-            query += " AND l.priority = 'High'";
+            query += " AND (l.priority = 'High' OR l.is_trending = 1)";
+        } else if (subview === 'won') {
+            query += " AND (l.tag = 'Won' OR l.tag = 'Closed' OR s.name = 'Won')";
+        } else if (subview === 'duplicates') {
+            query += " AND l.mobile_number IN (SELECT mobile_number FROM leads GROUP BY mobile_number HAVING COUNT(*) > 1)";
         }
 
         // Count query construction
-        let countQuery = 'SELECT COUNT(*) as total FROM leads l WHERE l.user_id = ?';
+        let countQuery = 'SELECT COUNT(*) as total FROM leads l LEFT JOIN pipeline_stages s ON l.stage_id = s.id WHERE l.user_id = ?';
         const countParams = [userId];
 
         if (status && status !== 'All') { countQuery += ' AND l.status = ?'; countParams.push(status); }
@@ -105,11 +151,16 @@ const Lead = {
             const term = `%${search}%`;
             countParams.push(term, term, term);
         }
+
         if (subview === 'new') { countQuery += " AND (l.tag = 'Not Contacted' OR l.created_at >= DATE_SUB(NOW(), INTERVAL 2 DAY))"; }
+        else if (subview === 'not-connected') { countQuery += " AND l.tag = 'Not Connected'"; }
+        else if (subview === 'follow-up') { countQuery += " AND l.tag = 'Follow Up'"; }
+        else if (subview === 'missed') { countQuery += " AND l.next_call_at < NOW() AND l.tag NOT IN ('Won', 'Lost', 'Closed')"; }
         else if (subview === 'assigned') { countQuery += " AND l.assigned_to IS NOT NULL"; }
-        else if (subview === 'unread') { countQuery += " AND l.is_read = 0"; }
-        else if (subview === 'dropped') { countQuery += " AND l.tag = 'Lost'"; }
-        else if (subview === 'trending') { countQuery += " AND l.priority = 'High'"; }
+        else if (subview === 'dropped') { countQuery += " AND l.tag IN ('Lost', 'Dropped', 'Lost Lead')"; }
+        else if (subview === 'trending') { countQuery += " AND (l.priority = 'High' OR l.is_trending = 1)"; }
+        else if (subview === 'won') { countQuery += " AND (l.tag = 'Won' OR l.tag = 'Closed' OR s.name = 'Won')"; }
+        else if (subview === 'duplicates') { countQuery += " AND l.mobile_number IN (SELECT mobile_number FROM leads GROUP BY mobile_number HAVING COUNT(*) > 1)"; }
 
         const [totalRows] = await pool.query(countQuery, countParams);
         const totalFiltered = totalRows[0].total;
@@ -162,7 +213,9 @@ const Lead = {
             'organization_name', 'industry_type', 'website', 'company_email', 'company_phone', 'gst_pan_number',
             'org_address', 'org_city', 'org_state', 'org_pincode',
             'primary_contact_name', 'primary_dob', 'designation', 'primary_mobile', 'primary_email',
-            'description', 'assigned_to'
+            'description', 'assigned_to', 'last_call_at', 'next_call_at', 'call_count',
+            'not_connected_count', 'connected_count', 'drop_reason', 'call_success_rate',
+            'follow_up_frequency', 'response_quality', 'conversion_probability', 'is_trending'
         ];
         const updates = [];
         const values = [];
@@ -183,6 +236,75 @@ const Lead = {
         await pool.query(
             `UPDATE leads SET ${updates.join(', ')} WHERE id = ? AND user_id = ?`,
             values
+        );
+    },
+
+    hitCall: async (id, status, nextCallAt, dropReason, userId) => {
+        const [lead] = await pool.query('SELECT * FROM leads WHERE id = ? AND user_id = ?', [id, userId]);
+        if (!lead.length) throw new Error('Lead not found');
+
+        let { call_count, not_connected_count, connected_count, tag } = lead[0];
+        call_count++;
+
+        let updateData = {
+            call_count,
+            last_call_at: new Date(),
+            next_call_at: nextCallAt || null
+        };
+
+        if (status === 'connected') {
+            connected_count++;
+            updateData.connected_count = connected_count;
+            updateData.tag = 'Interested'; // Default if connected
+        } else if (status === 'not_connected') {
+            not_connected_count++;
+            updateData.not_connected_count = not_connected_count;
+            updateData.tag = 'Not Connected';
+
+            // Auto schedule if not connected (e.g. +2 hours)
+            if (!nextCallAt) {
+                const retryTime = new Date();
+                retryTime.setHours(retryTime.getHours() + 2);
+                updateData.next_call_at = retryTime;
+            }
+        } else if (status === 'dropped') {
+            updateData.tag = 'Lost';
+            updateData.drop_reason = dropReason;
+        } else if (status === 'follow_up') {
+            updateData.tag = 'Follow Up';
+            updateData.next_call_at = nextCallAt;
+        }
+
+        const updates = Object.keys(updateData).map(k => `${k} = ?`).join(', ');
+        const values = [...Object.values(updateData), id, userId];
+
+        await pool.query(`UPDATE leads SET ${updates} WHERE id = ? AND user_id = ?`, values);
+        return updateData;
+    },
+
+    analyzeLead: async (id, userId) => {
+        const [rows] = await pool.query('SELECT * FROM leads WHERE id = ? AND user_id = ?', [id, userId]);
+        if (!rows.length) return;
+        const lead = rows[0];
+
+        const totalCalls = lead.call_count || 0;
+        const connected = lead.connected_count || 0;
+        const successRate = totalCalls > 0 ? (connected / totalCalls) * 100 : 0;
+
+        // Simple conversion probability logic
+        let probability = successRate * 0.5;
+        if (lead.tag === 'Interested') probability += 20;
+        if (lead.tag === 'Follow Up') probability += 10;
+        if (lead.priority === 'High') probability += 10;
+
+        probability = Math.min(Math.max(probability, 0), 100);
+
+        const isTrending = probability > 70 ? 1 : 0;
+        const priority = probability > 70 ? 'High' : (probability > 40 ? 'Medium' : 'Low');
+
+        await pool.query(
+            'UPDATE leads SET call_success_rate = ?, conversion_probability = ?, is_trending = ?, priority = ? WHERE id = ?',
+            [successRate, probability, isTrending, priority, id]
         );
     },
 

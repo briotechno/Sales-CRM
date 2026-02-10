@@ -26,6 +26,7 @@ export default function LeadSidebar({
   setShowEditLeadModal,
   formatCurrency,
   setShowModal,
+  handleHitCall,
 }) {
   // Get initials for avatar
   const getInitials = (name) => {
@@ -287,11 +288,10 @@ export default function LeadSidebar({
           <div className="flex justify-between items-center pb-3  border-gray-200">
             <span className="text-sm text-gray-700 font-medium">Status</span>
             <span
-              className={`inline-block px-3 py-1 rounded text-xs font-semibold ${
-                leadData?.status === "Active"
+              className={`inline-block px-3 py-1 rounded text-xs font-semibold ${leadData?.status === "Active"
                   ? "bg-green-100 text-green-600"
                   : "bg-red-100 text-red-600"
-              }`}
+                }`}
             >
               {leadData?.status || "Active"}
             </span>
@@ -450,6 +450,14 @@ export default function LeadSidebar({
         >
           <Plus size={20} />
           Generate Quotation
+        </button>
+
+        <button
+          onClick={() => handleHitCall && handleHitCall()}
+          className="bg-orange-50 mt-3 border border-orange-200 text-orange-600 px-8 py-3 rounded-sm hover:bg-orange-500 hover:text-white transition-all shadow-sm flex items-center gap-2 font-semibold w-full justify-center"
+        >
+          <Phone size={20} />
+          Hit Call
         </button>
       </div>
     </div>
