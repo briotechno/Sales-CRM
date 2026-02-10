@@ -1,5 +1,9 @@
-import React, { useState } from "react";
-import { X, Users, UserPlus } from "lucide-react";
+import React, { useState, useMemo } from "react";
+import { X, Users, UserPlus, Building2, Briefcase, Star, Search, CheckCircle2 } from "lucide-react";
+import { useGetEmployeesQuery } from "../../../store/api/employeeApi";
+import { useGetTeamsQuery } from "../../../store/api/teamApi";
+import { useGetDepartmentsQuery } from "../../../store/api/departmentApi";
+import { useGetDesignationsQuery } from "../../../store/api/designationApi";
 
 export default function AssignLeadsModal({
   isOpen,
@@ -15,146 +19,29 @@ export default function AssignLeadsModal({
     department: "All",
     designation: "All",
     performance: "All",
+    search: "",
   });
 
-  const teamsData = [
-    {
-      id: "T001",
-      name: "Sales Team Alpha",
-      department: "Sales",
-      members: 8,
-      activeLeads: 45,
-      closedDeals: 23,
-      performance: "Excellent",
-    },
-    {
-      id: "T002",
-      name: "Marketing Champions",
-      department: "Marketing",
-      members: 6,
-      activeLeads: 32,
-      closedDeals: 18,
-      performance: "Good",
-    },
-    {
-      id: "T003",
-      name: "Support Squad",
-      department: "Support",
-      members: 10,
-      activeLeads: 28,
-      closedDeals: 15,
-      performance: "Good",
-    },
-    {
-      id: "T004",
-      name: "Sales Team Beta",
-      department: "Sales",
-      members: 5,
-      activeLeads: 20,
-      closedDeals: 12,
-      performance: "Average",
-    },
-    {
-      id: "T005",
-      name: "Development Team",
-      department: "Development",
-      members: 7,
-      activeLeads: 15,
-      closedDeals: 8,
-      performance: "Average",
-    },
-  ];
+  // Fetch dynamic data
+  const { data: teamsDataResponse, isLoading: teamsLoading } = useGetTeamsQuery({
+    limit: 1000,
+    status: 'Active',
+    department: teamFilter !== 'All' ? teamFilter : ''
+  });
 
-  const employeesData = [
-    {
-      id: "E001",
-      name: "John Doe",
-      email: "john.doe@company.com",
-      department: "Sales",
-      designation: "Senior Sales Executive",
-      activeLeads: 12,
-      closedDeals: 8,
-      performance: "Best Performer",
-      team: "Sales Team Alpha",
-    },
-    {
-      id: "E002",
-      name: "Jane Smith",
-      email: "jane.smith@company.com",
-      department: "Marketing",
-      designation: "Marketing Manager",
-      activeLeads: 10,
-      closedDeals: 6,
-      performance: "Good Performer",
-      team: "Marketing Champions",
-    },
-    {
-      id: "E003",
-      name: "Mike Johnson",
-      email: "mike.j@company.com",
-      department: "Support",
-      designation: "Support Lead",
-      activeLeads: 8,
-      closedDeals: 5,
-      performance: "Good Performer",
-      team: "Support Squad",
-    },
-    {
-      id: "E004",
-      name: "Sarah Williams",
-      email: "sarah.w@company.com",
-      department: "Sales",
-      designation: "Sales Executive",
-      activeLeads: 15,
-      closedDeals: 10,
-      performance: "Best Performer",
-      team: "Sales Team Alpha",
-    },
-    {
-      id: "E005",
-      name: "Robert Brown",
-      email: "robert.b@company.com",
-      department: "Sales",
-      designation: "Junior Sales Executive",
-      activeLeads: 6,
-      closedDeals: 3,
-      performance: "Average Performer",
-      team: "Sales Team Beta",
-    },
-    {
-      id: "E006",
-      name: "Emily Davis",
-      email: "emily.d@company.com",
-      department: "Marketing",
-      designation: "Content Strategist",
-      activeLeads: 7,
-      closedDeals: 4,
-      performance: "Good Performer",
-      team: "Marketing Champions",
-    },
-    {
-      id: "E007",
-      name: "David Wilson",
-      email: "david.w@company.com",
-      department: "Development",
-      designation: "Tech Lead",
-      activeLeads: 5,
-      closedDeals: 2,
-      performance: "Average Performer",
-      team: "Development Team",
-    },
-    {
-      id: "E008",
-      name: "Lisa Anderson",
-      email: "lisa.a@company.com",
-      department: "Support",
-      designation: "Customer Success Manager",
-      activeLeads: 9,
-      closedDeals: 7,
-      performance: "Best Performer",
-      team: "Support Squad",
-    },
-  ];
+  const { data: employeesDataResponse, isLoading: employeesLoading } = useGetEmployeesQuery({
+    limit: 1000,
+    status: 'Active',
+    search: employeeFilter.search
+  });
+
+  const { data: departmentsData } = useGetDepartmentsQuery({ limit: 1000 });
+  const { data: designationsData } = useGetDesignationsQuery({ limit: 1000 });
+
+  const teams = teamsDataResponse?.teams || [];
+  const employees = employeesDataResponse?.employees || [];
+  const departments = departmentsData?.departments || [];
+  const designations = designationsData?.designations || [];
 
   const handleToggleTeam = (teamId) => {
     setSelectedTeams((prev) =>
@@ -172,23 +59,23 @@ export default function AssignLeadsModal({
     );
   };
 
-  const filteredTeams = teamsData.filter((team) => {
-    if (teamFilter === "All") return true;
-    return team.department === teamFilter;
-  });
+  const filteredTeams = useMemo(() => {
+    // Backend already filters by department if passed
+    return teams;
+  }, [teams]);
 
-  const filteredEmployees = employeesData.filter((employee) => {
-    const matchesDepartment =
-      employeeFilter.department === "All" ||
-      employee.department === employeeFilter.department;
-    const matchesDesignation =
-      employeeFilter.designation === "All" ||
-      employee.designation === employeeFilter.designation;
-    const matchesPerformance =
-      employeeFilter.performance === "All" ||
-      employee.performance === employeeFilter.performance;
-    return matchesDepartment && matchesDesignation && matchesPerformance;
-  });
+  const filteredEmployees = useMemo(() => {
+    return employees.filter((employee) => {
+      const matchesDepartment =
+        employeeFilter.department === "All" ||
+        employee.department_id === parseInt(employeeFilter.department);
+      const matchesDesignation =
+        employeeFilter.designation === "All" ||
+        employee.designation_id === parseInt(employeeFilter.designation);
+
+      return matchesDepartment && matchesDesignation;
+    });
+  }, [employees, employeeFilter.department, employeeFilter.designation]);
 
   const handleAssign = () => {
     const totalRecipients = selectedTeams.length + selectedEmployees.length;
@@ -210,77 +97,82 @@ export default function AssignLeadsModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-sm shadow-lg w-full max-w-6xl h-[90vh] flex flex-col overflow-hidden">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 font-primary">
+      <div className="bg-white rounded-sm shadow-2xl w-full max-w-6xl h-[90vh] flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="flex justify-between items-center p-6 border-b border-gray-200 flex-shrink-0 bg-white">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-800">Assign Leads</h2>
-            <p className="text-sm text-gray-600 mt-1">
-              Assigning <strong>{selectedLeadsCount}</strong> lead(s)
-            </p>
+        <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-4 flex items-center justify-between z-10 flex-shrink-0 shadow-md">
+          <div className="flex items-center gap-4">
+            <div className="bg-white bg-opacity-20 p-2.5 rounded-sm">
+              <Users size={24} className="text-white" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-white capitalize tracking-wide leading-tight">
+                Assign Leads
+              </h2>
+              <p className="text-xs text-orange-50 font-medium opacity-90">
+                Assigning <strong className="text-white">{selectedLeadsCount}</strong> selected lead(s) to team members
+              </p>
+            </div>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 transition"
+            className="text-white hover:bg-white hover:bg-opacity-20 p-2 transition-all rounded-full"
           >
             <X size={24} />
           </button>
         </div>
 
         {/* View Toggle */}
-        <div className="flex border-b border-gray-200 flex-shrink-0 bg-white">
+        <div className="flex bg-gray-50 border-b border-gray-200 flex-shrink-0">
           <button
             onClick={() => setAssignView("teams")}
-            className={`flex-1 py-3 px-4 font-semibold transition ${
-              assignView === "teams"
-                ? "bg-[#FF7B1D] text-white"
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-            }`}
+            className={`flex-1 py-4 flex items-center justify-center gap-2 font-bold text-sm transition-all border-b-2 ${assignView === "teams"
+              ? "bg-white text-[#FF7B1D] border-[#FF7B1D]"
+              : "text-gray-500 border-transparent hover:text-gray-700 hover:bg-white"
+              }`}
           >
-            <Users className="inline mr-2" size={18} />
-            Teams ({selectedTeams.length} selected)
+            <Users size={18} />
+            TEAMS ({filteredTeams.length})
           </button>
 
           <button
             onClick={() => setAssignView("employees")}
-            className={`flex-1 py-3 px-4 font-semibold transition ${
-              assignView === "employees"
-                ? "bg-[#FF7B1D] text-white"
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-            }`}
+            className={`flex-1 py-4 flex items-center justify-center gap-2 font-bold text-sm transition-all border-b-2 ${assignView === "employees"
+              ? "bg-white text-[#FF7B1D] border-[#FF7B1D]"
+              : "text-gray-500 border-transparent hover:text-gray-700 hover:bg-white"
+              }`}
           >
-            <UserPlus className="inline mr-2" size={18} />
-            Employees ({selectedEmployees.length} selected)
+            <UserPlus size={18} />
+            EMPLOYEES ({filteredEmployees.length})
           </button>
         </div>
 
         {/* Content Area */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto bg-gray-50/50 custom-scrollbar">
           {assignView === "teams" ? (
-            <div>
+            <div className="p-6">
               {/* Team Filters */}
-              <div className="p-4 bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
-                <div className="flex gap-3 items-center">
-                  <label className="text-sm font-semibold text-gray-700">
-                    Department:
-                  </label>
-                  <select
-                    value={teamFilter}
-                    onChange={(e) => setTeamFilter(e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded-sm text-sm focus:outline-none focus:ring-2 focus:ring-[#FF7B1D]"
-                  >
-                    <option value="All">All Departments</option>
-                    <option value="Sales">Sales</option>
-                    <option value="Marketing">Marketing</option>
-                    <option value="Support">Support</option>
-                    <option value="Development">Development</option>
-                  </select>
+              <div className="mb-6 flex flex-wrap gap-4 items-center bg-white p-4 rounded-sm border border-gray-200 shadow-sm">
+                <div className="flex items-center gap-2">
+                  <Building2 size={18} className="text-[#FF7B1D]" />
+                  <span className="text-sm font-bold text-gray-700 uppercase tracking-tight">Department:</span>
                 </div>
+                <select
+                  value={teamFilter}
+                  onChange={(e) => setTeamFilter(e.target.value)}
+                  className="min-w-[200px] px-4 py-2 border border-gray-200 rounded-sm text-sm focus:outline-none focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 transition-all font-medium"
+                >
+                  <option value="All">All Departments</option>
+                  {departments.map(dept => (
+                    <option key={dept.id} value={dept.id}>{dept.department_name}</option>
+                  ))}
+                </select>
+
+                {teamsLoading && <span className="text-xs text-gray-400 animate-pulse">Loading teams...</span>}
               </div>
 
               {/* Teams List */}
-              <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {filteredTeams.map((team) => {
                   const isSelected = selectedTeams.includes(team.id);
 
@@ -288,241 +180,189 @@ export default function AssignLeadsModal({
                     <div
                       key={team.id}
                       onClick={() => handleToggleTeam(team.id)}
-                      className={`border rounded-lg p-4 cursor-pointer transition ${
-                        isSelected
-                          ? "border-[#FF7B1D] bg-orange-50 shadow-md"
-                          : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm"
-                      }`}
+                      className={`relative group bg-white border-2 rounded-sm p-5 cursor-pointer transition-all duration-200 ${isSelected
+                        ? "border-[#FF7B1D] shadow-md ring-1 ring-[#FF7B1D] ring-opacity-10"
+                        : "border-gray-100 hover:border-gray-300 hover:shadow-sm"
+                        }`}
                     >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <input
-                              type="checkbox"
-                              checked={isSelected}
-                              onChange={() => handleToggleTeam(team.id)}
-                              onClick={(e) => e.stopPropagation()}
-                              className="w-4 h-4 cursor-pointer"
-                            />
-                            <h3 className="font-bold text-gray-800 text-lg">
-                              {team.name}
-                            </h3>
-                          </div>
+                      {isSelected && (
+                        <div className="absolute top-3 right-3 text-[#FF7B1D]">
+                          <CheckCircle2 size={20} fill="currentColor" className="text-white fill-[#FF7B1D]" />
+                        </div>
+                      )}
 
-                          <div className="space-y-1 text-sm text-gray-600 ml-6">
-                            <p>
-                              <strong>Department:</strong> {team.department}
-                            </p>
-                            <p>
-                              <strong>Members:</strong> {team.members}
-                            </p>
-                            <p>
-                              <strong>Active Leads:</strong> {team.activeLeads}
-                            </p>
-                            <p>
-                              <strong>Closed Deals:</strong> {team.closedDeals}
-                            </p>
+                      <div className="flex flex-col h-full">
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className={`p-2 rounded-sm ${isSelected ? 'bg-orange-100 text-[#FF7B1D]' : 'bg-gray-100 text-gray-400'}`}>
+                            <Users size={20} />
+                          </div>
+                          <h3 className="font-bold text-gray-800 text-base leading-tight uppercase tracking-wide">
+                            {team.team_name}
+                          </h3>
+                        </div>
+
+                        <div className="space-y-3 flex-1">
+                          <div className="flex items-center gap-2 text-xs">
+                            <Users size={14} className="text-gray-400" />
+                            <span className="text-gray-500 font-semibold uppercase">Members:</span>
+                            <span className="text-gray-800 font-bold">{team.total_members || 0}</span>
                           </div>
                         </div>
 
-                        <span
-                          className={`px-2 py-1 text-xs font-semibold rounded ${
-                            team.performance === "Excellent"
-                              ? "bg-green-100 text-green-600"
-                              : team.performance === "Good"
-                              ? "bg-blue-100 text-blue-600"
-                              : "bg-yellow-100 text-yellow-600"
-                          }`}
-                        >
-                          {team.performance}
-                        </span>
+                        {team.description && (
+                          <p className="mt-4 text-[10px] text-gray-400 line-clamp-2 italic border-t border-gray-50 pt-2">
+                            {team.description}
+                          </p>
+                        )}
                       </div>
                     </div>
                   );
                 })}
               </div>
+
+              {!teamsLoading && filteredTeams.length === 0 && (
+                <div className="text-center py-20 bg-white rounded-sm border border-dashed border-gray-300">
+                  <Users size={40} className="mx-auto text-gray-300 mb-4" />
+                  <p className="text-gray-500 font-medium">No teams found matching your criteria</p>
+                </div>
+              )}
             </div>
           ) : (
-            <div>
+            <div className="p-6">
               {/* Employee Filters */}
-              <div className="p-4 bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">
-                      Department
-                    </label>
+              <div className="mb-6 bg-white p-5 rounded-sm border border-gray-200 shadow-sm space-y-4">
+                <div className="flex flex-wrap gap-4 items-center">
+                  <div className="flex-1 min-w-[200px] relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                    <input
+                      type="text"
+                      placeholder="SEARCH BY NAME OR EMAIL..."
+                      value={employeeFilter.search}
+                      onChange={(e) => setEmployeeFilter({ ...employeeFilter, search: e.target.value })}
+                      className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-sm text-xs focus:outline-none focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 transition-all font-bold uppercase tracking-wider"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Building2 size={16} className="text-[#FF7B1D]" />
                     <select
                       value={employeeFilter.department}
-                      onChange={(e) =>
-                        setEmployeeFilter({
-                          ...employeeFilter,
-                          department: e.target.value,
-                        })
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-sm text-sm focus:outline-none focus:ring-2 focus:ring-[#FF7B1D]"
+                      onChange={(e) => setEmployeeFilter({ ...employeeFilter, department: e.target.value })}
+                      className="px-3 py-2.5 border border-gray-200 rounded-sm text-xs focus:outline-none focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 transition-all font-bold uppercase"
                     >
-                      <option value="All">All</option>
-                      <option value="Sales">Sales</option>
-                      <option value="Marketing">Marketing</option>
-                      <option value="Support">Support</option>
-                      <option value="Development">Development</option>
+                      <option value="All">ALL DEPARTMENTS</option>
+                      {departments.map(dept => (
+                        <option key={dept.id} value={dept.id}>{dept.department_name}</option>
+                      ))}
                     </select>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">
-                      Designation
-                    </label>
+                  <div className="flex items-center gap-2">
+                    <Briefcase size={16} className="text-[#FF7B1D]" />
                     <select
                       value={employeeFilter.designation}
-                      onChange={(e) =>
-                        setEmployeeFilter({
-                          ...employeeFilter,
-                          designation: e.target.value,
-                        })
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-sm text-sm focus:outline-none focus:ring-2 focus:ring-[#FF7B1D]"
+                      onChange={(e) => setEmployeeFilter({ ...employeeFilter, designation: e.target.value })}
+                      className="px-3 py-2.5 border border-gray-200 rounded-sm text-xs focus:outline-none focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 transition-all font-bold uppercase"
                     >
-                      <option value="All">All Designations</option>
-                      <option value="Senior Sales Executive">
-                        Senior Sales Executive
-                      </option>
-                      <option value="Sales Executive">Sales Executive</option>
-                      <option value="Junior Sales Executive">
-                        Junior Sales Executive
-                      </option>
-                      <option value="Marketing Manager">
-                        Marketing Manager
-                      </option>
-                      <option value="Support Lead">Support Lead</option>
-                      <option value="Tech Lead">Tech Lead</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">
-                      Performance
-                    </label>
-                    <select
-                      value={employeeFilter.performance}
-                      onChange={(e) =>
-                        setEmployeeFilter({
-                          ...employeeFilter,
-                          performance: e.target.value,
-                        })
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-sm text-sm focus:outline-none focus:ring-2 focus:ring-[#FF7B1D]"
-                    >
-                      <option value="All">All</option>
-                      <option value="Best Performer">Best Performer</option>
-                      <option value="Good Performer">Good Performer</option>
-                      <option value="Average Performer">
-                        Average Performer
-                      </option>
+                      <option value="All">ALL DESIGNATIONS</option>
+                      {designations.map(desig => (
+                        <option key={desig.id} value={desig.id}>{desig.designation_name}</option>
+                      ))}
                     </select>
                   </div>
                 </div>
               </div>
 
               {/* Employees List */}
-              <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {filteredEmployees.map((employee) => {
                   const isSelected = selectedEmployees.includes(employee.id);
-                  const initials = employee.name
+                  const initials = employee.employee_name
                     .split(" ")
                     .map((n) => n[0])
                     .join("")
-                    .toUpperCase();
+                    .toUpperCase()
+                    .slice(0, 2);
 
                   return (
                     <div
                       key={employee.id}
                       onClick={() => handleToggleEmployee(employee.id)}
-                      className={`border rounded-lg p-4 cursor-pointer transition ${
-                        isSelected
-                          ? "border-[#FF7B1D] bg-orange-50 shadow-md"
-                          : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm"
-                      }`}
+                      className={`relative group bg-white border-2 rounded-sm p-4 cursor-pointer transition-all duration-200 ${isSelected
+                        ? "border-[#FF7B1D] shadow-md ring-1 ring-[#FF7B1D] ring-opacity-10"
+                        : "border-gray-100 hover:border-gray-300 hover:shadow-sm"
+                        }`}
                     >
-                      <div className="flex items-start gap-3">
-                        <input
-                          type="checkbox"
-                          checked={isSelected}
-                          onChange={() => handleToggleEmployee(employee.id)}
-                          onClick={(e) => e.stopPropagation()}
-                          className="w-4 h-4 mt-1 cursor-pointer"
-                        />
+                      {isSelected && (
+                        <div className="absolute top-3 right-3 text-[#FF7B1D] z-10">
+                          <CheckCircle2 size={18} fill="currentColor" className="text-white fill-[#FF7B1D]" />
+                        </div>
+                      )}
 
-                        <div className="w-10 h-10 bg-[#FF7B1D] text-white rounded-full flex items-center justify-center font-semibold">
+                      <div className="flex items-center gap-4">
+                        <div className={`w-12 h-12 rounded-sm flex items-center justify-center font-bold text-sm tracking-tighter transition-colors ${isSelected ? 'bg-orange-500 text-white' : 'bg-orange-100 text-[#FF7B1D]'}`}>
                           {initials}
                         </div>
 
-                        <div className="flex-1">
-                          <h3 className="font-bold text-gray-800">
-                            {employee.name}
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-bold text-gray-800 text-sm truncate uppercase tracking-tight">
+                            {employee.employee_name}
                           </h3>
-                          <p className="text-xs text-gray-500 truncate">
+                          <p className="text-[10px] text-gray-400 truncate mb-2">
                             {employee.email}
                           </p>
 
-                          <div className="mt-2 space-y-1 text-xs text-gray-600">
-                            <p>
-                              <strong>Department:</strong> {employee.department}
-                            </p>
-                            <p>
-                              <strong>Designation:</strong>{" "}
-                              {employee.designation}
-                            </p>
-                            <p>
-                              <strong>Team:</strong> {employee.team}
-                            </p>
-                            <p>
-                              <strong>Active Leads:</strong>{" "}
-                              {employee.activeLeads} | <strong>Closed:</strong>{" "}
-                              {employee.closedDeals}
-                            </p>
+                          <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-1.5 text-[9px]">
+                              <Building2 size={10} className="text-gray-400" />
+                              <span className="text-gray-500 font-bold uppercase">{employee.department_name}</span>
+                            </div>
+                            <div className="flex items-center gap-1.5 text-[9px]">
+                              <Briefcase size={10} className="text-gray-400" />
+                              <span className="text-gray-500 font-bold uppercase">{employee.designation_name}</span>
+                            </div>
                           </div>
-
-                          <span
-                            className={`inline-block mt-2 px-2 py-1 text-xs font-semibold rounded ${
-                              employee.performance === "Best Performer"
-                                ? "bg-green-100 text-green-600"
-                                : employee.performance === "Good Performer"
-                                ? "bg-blue-100 text-blue-600"
-                                : "bg-yellow-100 text-yellow-600"
-                            }`}
-                          >
-                            {employee.performance}
-                          </span>
                         </div>
                       </div>
                     </div>
                   );
                 })}
               </div>
+
+              {!employeesLoading && filteredEmployees.length === 0 && (
+                <div className="text-center py-20 bg-white rounded-sm border border-dashed border-gray-300">
+                  <UserPlus size={40} className="mx-auto text-gray-300 mb-4" />
+                  <p className="text-gray-500 font-medium">No employees found matching your criteria</p>
+                </div>
+              )}
             </div>
           )}
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t border-gray-200 bg-gray-50 flex-shrink-0">
-          <div className="flex justify-between items-center">
-            <div className="text-sm text-gray-600">
-              <strong>{selectedTeams.length + selectedEmployees.length}</strong>{" "}
-              recipient(s) selected
+        <div className="px-8 py-5 border-t border-gray-200 bg-white flex-shrink-0">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div className="flex items-center gap-3">
+              <div className="bg-orange-50 px-4 py-2 rounded-sm border border-orange-100">
+                <span className="text-[11px] font-black text-gray-500 uppercase tracking-widest mr-2">Selection:</span>
+                <span className="text-sm font-black text-[#FF7B1D]">
+                  {selectedTeams.length} TEAMS | {selectedEmployees.length} EMPLOYEES
+                </span>
+              </div>
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex gap-3 w-full sm:w-auto">
               <button
                 onClick={onClose}
-                className="px-6 py-2 border border-gray-300 text-gray-700 font-semibold rounded-sm hover:bg-gray-100 transition"
+                className="flex-1 sm:flex-none px-10 py-3 rounded-sm border-2 border-gray-200 text-gray-600 font-bold text-xs uppercase tracking-widest hover:bg-gray-50 hover:border-gray-300 transition-all active:scale-95"
               >
                 Cancel
               </button>
 
               <button
                 onClick={handleAssign}
-                className="px-6 py-2 bg-[#FF7B1D] text-white font-semibold rounded-sm hover:opacity-90 transition"
+                disabled={selectedTeams.length === 0 && selectedEmployees.length === 0}
+                className="flex-1 sm:flex-none px-10 py-3 rounded-sm bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold text-xs uppercase tracking-widest shadow-md hover:shadow-xl hover:from-orange-600 hover:to-orange-700 transition-all transform active:scale-95 disabled:opacity-50 disabled:grayscale disabled:pointer-events-none"
               >
                 Assign Leads
               </button>
