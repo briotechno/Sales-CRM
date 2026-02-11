@@ -24,7 +24,8 @@ const inputStyles =
 export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
   const [createLead, { isLoading: isCreating }] = useCreateLeadMutation();
   const [updateLead, { isLoading: isUpdating }] = useUpdateLeadMutation();
-  const { data: pipelines } = useGetPipelinesQuery();
+  const { data: pipelinesData } = useGetPipelinesQuery({ limit: 1000 });
+  const pipelines = pipelinesData?.pipelines || [];
   const { data: employeesData } = useGetEmployeesQuery({ limit: 100 });
 
   const employees = employeesData?.employees || [];
@@ -217,48 +218,6 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
 
         {/* Form Content */}
         <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5 max-h-[70vh]">
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-
-            {/* Pipeline */}
-            <div className="group">
-              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-                <Workflow size={16} className="text-[#FF7B1D]" />
-                Pipeline
-              </label>
-              <select
-                name="pipeline_id"
-                value={formData.pipeline_id}
-                onChange={handleChange}
-                className={inputStyles}
-              >
-                <option value="">Select Pipeline</option>
-                {pipelines?.map(p => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Stage */}
-            <div className="group">
-              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-                <Layers size={16} className="text-[#FF7B1D]" />
-                Stage
-              </label>
-              <select
-                name="stage_id"
-                value={formData.stage_id}
-                onChange={handleChange}
-                className={inputStyles}
-              >
-                <option value="">Select Stage</option>
-                {filteredStages.map(s => (
-                  <option key={s.id} value={s.id}>{s.name}</option>
-                ))}
-              </select>
-            </div>
-          </div>
 
           {/* Lead Type */}
           <div className="bg-orange-50 p-4 rounded-xl border-2 border-orange-100">
@@ -455,7 +414,7 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
                   </select>
                 </div>
 
-                <div className="group">
+                <div className="group md:col-span-2">
                   <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
                     <IndianRupee size={14} className="text-[#FF7B1D]" />
                     Budget / Expected Value
@@ -518,7 +477,7 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
                   </select>
                 </div>
 
-                <div className="group">
+                <div className="group md:col-span-2">
                   <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
                     <FileText size={14} className="text-[#FF7B1D]" />
                     Website
@@ -536,6 +495,25 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
               </div>
             </div>
           )}
+
+          {/* Pipeline */}
+          <div className="group">
+            <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+              <Workflow size={16} className="text-[#FF7B1D]" />
+              Pipeline
+            </label>
+            <select
+              name="pipeline_id"
+              value={formData.pipeline_id}
+              onChange={handleChange}
+              className={inputStyles}
+            >
+              <option value="">Select Pipeline</option>
+              {pipelines?.map(p => (
+                <option key={p.id} value={p.id}>{p.name}</option>
+              ))}
+            </select>
+          </div>
 
           {/* Additional Lead Info */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

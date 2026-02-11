@@ -136,7 +136,8 @@ export default function MissedLeads() {
         });
     };
 
-    const { data: pipelines } = useGetPipelinesQuery();
+    const { data: pipelinesData } = useGetPipelinesQuery({ limit: 1000 });
+    const pipelines = pipelinesData?.pipelines || [];
     const { data: employeesData } = useGetEmployeesQuery({ limit: 100 });
     const employees = employeesData?.employees || [];
 

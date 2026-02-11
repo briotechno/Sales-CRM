@@ -15,7 +15,10 @@ export const stageApi = createApi({
     tagTypes: ["Stage"],
     endpoints: (builder) => ({
         getStages: builder.query({
-            query: () => "/stages",
+            query: (params) => ({
+                url: "/stages",
+                params,
+            }),
             providesTags: ["Stage"],
         }),
         createStage: builder.mutation({

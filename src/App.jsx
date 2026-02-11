@@ -20,6 +20,7 @@ import MissedLeads from "./pages/LeadsManagement/MissedLeads";
 import DuplicatesLeads from "./pages/LeadsManagement/DuplicatesLeads";
 import WonLeads from "./pages/LeadsManagement/WonLeads";
 import AssignmentSettings from "./pages/LeadsManagement/AssignmentSettings";
+import WorkStation from "./pages/LeadsManagement/WorkStation";
 
 import LeadProfile from "./pages/LeadsManagement/LeadProfilePageParts/LeadProfile";
 
@@ -175,6 +176,7 @@ function App() {
           <Route path="/crm/leads/profile/:id" element={<LeadProfile />} />
           <Route path="/crm/leads/add-notes" element={<AddNotes />} />
           <Route path="/crm/leads/dashboard" element={<LeadDashboard />} />
+          <Route path="/crm/leads/work-station" element={<WorkStation />} />
           <Route
             path="/crm/leads/create-call-log"
             element={<CreateCallLogModal />}

@@ -17,15 +17,15 @@ const ViewPipelineModal = ({ isOpen, onClose, pipeline }) => {
   const footer = (
     <button
       onClick={onClose}
-      className="px-8 py-3 bg-white border-2 border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-100 transition"
+      className="px-6 py-2.5 rounded-sm border border-gray-300 text-gray-700 font-bold hover:bg-gray-50 transition-all text-sm"
     >
       Close Details
     </button>
   );
 
   const icon = (
-    <div className="bg-orange-500 text-white p-3 rounded-xl">
-      <Activity size={24} />
+    <div className="bg-orange-50 text-orange-600 p-2 rounded-sm border border-orange-100">
+      <Activity size={20} />
     </div>
   );
 
@@ -40,7 +40,7 @@ const ViewPipelineModal = ({ isOpen, onClose, pipeline }) => {
       icon={icon}
       footer={footer}
     >
-      <div className="space-y-8 bg-white text-black">
+      <div className="space-y-6 text-gray-800">
 
         {/* Stats */}
         <div className="grid grid-cols-3 gap-6">
@@ -57,11 +57,7 @@ const ViewPipelineModal = ({ isOpen, onClose, pipeline }) => {
             color="orange"
           />
           <StatCard
-            icon={
-              pipeline.status === "Active"
-                ? <CheckCircle size={20} />
-                : <XCircle size={20} />
-            }
+            icon={<CheckedIcon status={pipeline.status} />}
             value={pipeline.status}
             label="Status"
             color={pipeline.status === "Active" ? "green" : "red"}
@@ -69,7 +65,7 @@ const ViewPipelineModal = ({ isOpen, onClose, pipeline }) => {
         </div>
 
         {/* Details */}
-        <div className="space-y-5">
+        <div className="grid grid-cols-2 gap-4">
           <DetailRow
             icon={<DollarSign size={16} />}
             label="Total Deal Value"
@@ -84,36 +80,36 @@ const ViewPipelineModal = ({ isOpen, onClose, pipeline }) => {
 
         {/* Stages List */}
         <div>
-          <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-            <Layers size={20} className="text-[#FF7B1D]" />
+          <h3 className="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2 capitalize">
+            <Layers size={16} className="text-[#FF7B1D]" />
             Pipeline Stages
           </h3>
-          <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2">
+          <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
             {stages.length > 0 ? (
               stages.map((stage, index) => (
-                <div key={index} className="flex items-center justify-between p-4 border border-gray-200 rounded-xl hover:border-orange-300 transition-all bg-gray-50 hover:bg-white">
-                  <div className="flex items-center gap-4">
-                    <div className="w-8 h-8 flex items-center justify-center bg-orange-100 text-orange-600 font-bold rounded-full text-sm">
+                <div key={index} className="flex items-center justify-between p-3 border border-gray-200 rounded-sm hover:border-orange-300 transition-all bg-white hover:shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <div className="w-6 h-6 flex items-center justify-center bg-orange-50 text-orange-600 font-bold rounded-sm border border-orange-100 text-xs">
                       {index + 1}
                     </div>
                     <div>
-                      <p className="font-bold text-gray-800 flex items-center gap-2">
+                      <p className="font-bold text-gray-800 text-sm flex items-center gap-2 capitalize">
                         {stage.name}
                         {(stage.is_final === 1 || stage.is_final === true) && (
-                          <span className="text-[10px] bg-green-100 text-green-600 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider flex items-center gap-1">
+                          <span className="text-[10px] bg-green-50 text-green-600 px-2 py-0.5 rounded-sm border border-green-100 font-bold capitalize flex items-center gap-1">
                             <Flag size={10} /> Final
                           </span>
                         )}
                       </p>
                       {stage.description && (
-                        <p className="text-sm text-gray-500 line-clamp-1" title={stage.description}>
+                        <p className="text-xs text-gray-500 line-clamp-1 mt-0.5" title={stage.description}>
                           {stage.description}
                         </p>
                       )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 text-sm font-semibold text-gray-600 bg-white px-3 py-1 rounded-lg border">
-                    <Percent size={14} className="text-gray-400" />
+                  <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-600 bg-gray-50 px-2.5 py-1 rounded-sm border border-gray-200">
+                    <Percent size={12} className="text-gray-400" />
                     {stage.probability}%
                   </div>
                 </div>
@@ -132,26 +128,41 @@ const ViewPipelineModal = ({ isOpen, onClose, pipeline }) => {
 export default ViewPipelineModal;
 
 /* 🔹 Small reusable components */
-const StatCard = ({ icon, value, label, color }) => (
-  <div className={`bg-${color}-50 border border-${color}-100 p-4 rounded-2xl flex flex-col items-center`}>
-    <div className={`bg-${color}-600 text-white p-2 rounded-xl mb-2`}>
-      {icon}
+const StatCard = ({ icon, value, label, color }) => {
+  const colorClasses = {
+    blue: "bg-blue-50 border-blue-100 text-blue-600",
+    orange: "bg-orange-50 border-orange-100 text-orange-600",
+    green: "bg-green-50 border-green-100 text-green-600",
+    red: "bg-red-50 border-red-100 text-red-600",
+  };
+
+  const currentClass = colorClasses[color] || colorClasses.blue;
+
+  return (
+    <div className={`border p-4 rounded-sm flex flex-col items-center justify-center gap-1 ${currentClass}`}>
+      <div className="bg-white p-1.5 rounded-full shadow-sm mb-1">
+        {icon}
+      </div>
+      <span className="text-lg font-bold text-gray-800">{value}</span>
+      <span className="text-xs font-medium text-gray-500 capitalize">
+        {label}
+      </span>
     </div>
-    <span className="text-2xl font-bold">{value}</span>
-    <span className={`text-xs font-semibold uppercase tracking-widest text-${color}-600`}>
-      {label}
-    </span>
+  );
+};
+
+const DetailRow = ({ icon, label, value }) => (
+  <div className="flex items-center gap-3 bg-white p-3 rounded-sm border border-gray-100 hover:border-gray-200 transition-colors">
+    <div className="text-[#FF7B1D] bg-orange-50 p-1.5 rounded-sm border border-orange-100">{icon}</div>
+    <div>
+      <p className="text-[10px] font-bold text-gray-400 capitalize mb-0.5">
+        {label}
+      </p>
+      <p className="font-semibold text-sm text-gray-800 capitalize">{value}</p>
+    </div>
   </div>
 );
 
-const DetailRow = ({ icon, label, value }) => (
-  <div className="flex items-center gap-3 bg-gray-50 p-4 rounded-xl border">
-    <div className="text-orange-500">{icon}</div>
-    <div>
-      <p className="text-xs text-gray-400 uppercase tracking-widest">
-        {label}
-      </p>
-      <p className="font-semibold text-gray-800">{value}</p>
-    </div>
-  </div>
+const CheckedIcon = ({ status }) => (
+  status === "Active" ? <CheckCircle size={16} className="text-green-500" /> : <XCircle size={16} className="text-red-500" />
 );

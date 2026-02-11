@@ -9,8 +9,8 @@ const Pipeline = {
             await connection.beginTransaction();
 
             const [result] = await connection.query(
-                'INSERT INTO pipelines (name, status, description, user_id) VALUES (?, ?, ?, ?)',
-                [name, status || 'Active', description, userId]
+                'INSERT INTO pipelines (name, status, description, user_id, catalog_id) VALUES (?, ?, ?, ?, ?)',
+                [name, status || 'Active', description, userId, data.catalog_id || null]
             );
             const pipelineId = result.insertId;
 
@@ -40,22 +40,34 @@ const Pipeline = {
         }
     },
 
-    findAll: async (userId) => {
-        const [pipelines] = await pool.query(
-            `SELECT p.*, 
+    findAll: async (userId, page = 1, limit = 10, search = "") => {
+        const offset = (page - 1) * limit;
+        let query = `
+            SELECT p.*, 
+            c.name as catalog_name,
             (SELECT COUNT(*) FROM leads l WHERE l.pipeline_id = p.id) as noOfDeals,
             (SELECT COALESCE(SUM(l.value), 0) FROM leads l WHERE l.pipeline_id = p.id) as totalDealValue
             FROM pipelines p 
-            WHERE p.user_id = ? 
-            ORDER BY p.id DESC`,
-            [userId]
-        );
+            LEFT JOIN catalogs c ON p.catalog_id = c.id
+            WHERE p.user_id = ?
+        `;
+        const params = [userId];
 
-        // Fetch stages for each pipeline? 
-        // Or maybe just fetch all pipelines first. The list view shows "Number of Stages".
-        // Let's do a join or separate query. For scalability, maybe getting stage count is enough for list.
-        // But for "Edit", we need stages.
-        // Let's fetch stages and attach them.
+        if (search) {
+            query += ` AND p.name LIKE ?`;
+            params.push(`%${search}%`);
+        }
+
+        // Count query
+        const countQuery = `SELECT COUNT(*) as total FROM pipelines p WHERE p.user_id = ? ${search ? 'AND p.name LIKE ?' : ''}`;
+        const countParams = search ? [userId, `%${search}%`] : [userId];
+        const [countResult] = await pool.query(countQuery, countParams);
+        const total = countResult[0].total;
+
+        query += ` ORDER BY p.id DESC LIMIT ? OFFSET ?`;
+        params.push(parseInt(limit), parseInt(offset));
+
+        const [pipelines] = await pool.query(query, params);
 
         for (let pipeline of pipelines) {
             const [stages] = await pool.query(
@@ -69,12 +81,23 @@ const Pipeline = {
             });
         }
 
-        return pipelines;
+        return {
+            pipelines,
+            pagination: {
+                total,
+                page: parseInt(page),
+                limit: parseInt(limit),
+                totalPages: Math.ceil(total / limit)
+            }
+        };
     },
 
     findById: async (id, userId) => {
         const [rows] = await pool.query(
-            'SELECT * FROM pipelines WHERE id = ? AND user_id = ?',
+            `SELECT p.*, c.name as catalog_name 
+             FROM pipelines p 
+             LEFT JOIN catalogs c ON p.catalog_id = c.id
+             WHERE p.id = ? AND p.user_id = ?`,
             [id, userId]
         );
         if (rows.length === 0) return null;
@@ -100,8 +123,8 @@ const Pipeline = {
             if (check.length === 0) throw new Error('Pipeline not found or unauthorized');
 
             await connection.query(
-                'UPDATE pipelines SET name = ?, status = ?, description = ? WHERE id = ?',
-                [name, status, description, id]
+                'UPDATE pipelines SET name = ?, status = ?, description = ?, catalog_id = ? WHERE id = ?',
+                [name, status, description, data.catalog_id || null, id]
             );
 
             if (stages) {

@@ -25,8 +25,20 @@ const createPipeline = async (req, res) => {
 
 const getPipelines = async (req, res) => {
     try {
-        const pipelines = await Pipeline.findAll(req.user.id);
-        res.status(200).json(pipelines);
+        const { page = 1, limit = 10, search = "" } = req.query;
+        // Parse numbers to ensure safety
+        const pageNum = parseInt(page) || 1;
+        const limitNum = parseInt(limit) || 10;
+
+        const result = await Pipeline.findAll(req.user.id, pageNum, limitNum, search);
+
+        // If the result has pagination, return formatted response
+        if (result.pagination) {
+            res.status(200).json(result);
+        } else {
+            // Fallback for flat array (though model is updated)
+            res.status(200).json(result);
+        }
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

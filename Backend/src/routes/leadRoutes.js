@@ -7,10 +7,29 @@ const {
     updateLead,
     deleteLead,
     hitCall,
-    analyzeLead
+    analyzeLead,
+    getLeadNotes,
+    addLeadNote,
+    getLeadCalls,
+    addLeadCall,
+    getLeadFiles,
+    addLeadFile,
+    getLeadActivities,
+    getLeadMeetings,
+    addLeadMeeting,
+    updateLeadStatus,
+    updateLeadNote,
+    updateLeadCall,
+    updateLeadFile,
+    updateLeadMeeting,
+    deleteLeadNote,
+    deleteLeadCall,
+    deleteLeadFile,
+    deleteLeadMeeting
 } = require('../controllers/leadController');
 const { protect } = require('../middleware/authMiddleware');
 const { checkLimit } = require('../middleware/limitMiddleware');
+const upload = require('../middleware/uploadMiddleware'); // Added
 
 router.post('/', protect, checkLimit('leads'), createLead);
 router.get('/', protect, getLeads);
@@ -19,5 +38,35 @@ router.put('/:id', protect, updateLead);
 router.delete('/:id', protect, deleteLead);
 router.post('/:id/hit-call', protect, hitCall);
 router.post('/:id/analyze', protect, analyzeLead);
+
+// Notes
+router.get('/:id/notes', protect, getLeadNotes);
+router.post('/:id/notes', protect, upload.array('files'), addLeadNote);
+router.put('/:id/notes/:noteId', protect, updateLeadNote);
+router.delete('/:id/notes/:noteId', protect, deleteLeadNote);
+
+// Calls
+router.get('/:id/calls', protect, getLeadCalls);
+router.post('/:id/calls', protect, addLeadCall);
+router.put('/:id/calls/:callId', protect, updateLeadCall);
+router.delete('/:id/calls/:callId', protect, deleteLeadCall);
+
+// Files
+router.get('/:id/files', protect, getLeadFiles);
+router.post('/:id/files', protect, upload.array('files'), addLeadFile);
+router.put('/:id/files/:fileId', protect, updateLeadFile);
+router.delete('/:id/files/:fileId', protect, deleteLeadFile);
+
+// Activities
+router.get('/:id/activities', protect, getLeadActivities);
+
+// Meetings
+router.get('/:id/meetings', protect, getLeadMeetings);
+router.post('/:id/meetings', protect, addLeadMeeting);
+router.put('/:id/meetings/:meetingId', protect, updateLeadMeeting);
+router.delete('/:id/meetings/:meetingId', protect, deleteLeadMeeting);
+
+// Status
+router.put('/:id/status', protect, updateLeadStatus);
 
 module.exports = router;
