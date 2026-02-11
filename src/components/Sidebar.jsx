@@ -286,6 +286,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           permission: "Leads Management",
           children: [
             { name: "Lead Dashboard", path: "/crm/leads/dashboard" },
+            { name: "Work Station", path: "/crm/leads/work-station" },
             { name: "All Leads", path: "/crm/leads/all" },
             { name: "New Leads", path: "/crm/leads/new" },
             { name: "Not Connected", path: "/crm/leads/not-connected" },

@@ -1,4 +1,5 @@
 const Lead = require('../models/leadModel');
+const LeadResources = require('../models/leadResourcesModel'); // Added
 const leadAssignmentService = require('../services/leadAssignmentService');
 const LeadAssignmentLog = require('../models/leadAssignmentLogModel');
 
@@ -94,6 +95,224 @@ const analyzeLead = async (req, res) => {
     }
 };
 
+const getLeadNotes = async (req, res) => {
+    try {
+        const notes = await LeadResources.getNotes(req.params.id, req.user.id);
+        res.status(200).json(notes);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+const addLeadNote = async (req, res) => {
+    try {
+        const { title, description } = req.body;
+        // Handle files if any (assuming multer middleware populates req.files)
+        const files = req.files ? req.files.map(file => ({
+            name: file.originalname,
+            path: file.path,
+            type: file.mimetype,
+            size: file.size
+        })) : [];
+
+        const result = await LeadResources.addNote({
+            lead_id: req.params.id,
+            title,
+            description,
+            files
+        }, req.user.id);
+        res.status(201).json(result);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+const getLeadCalls = async (req, res) => {
+    try {
+        const calls = await LeadResources.getCalls(req.params.id, req.user.id);
+        res.status(200).json(calls);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+const addLeadCall = async (req, res) => {
+    try {
+        const { status, date, note, followTask } = req.body;
+        const result = await LeadResources.addCall({
+            lead_id: req.params.id,
+            status,
+            date,
+            note,
+            follow_task: followTask === 'true' || followTask === true
+        }, req.user.id);
+        res.status(201).json(result);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+const getLeadFiles = async (req, res) => {
+    try {
+        const files = await LeadResources.getFiles(req.params.id, req.user.id);
+        res.status(200).json(files);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+const addLeadFile = async (req, res) => {
+    try {
+        if (!req.files || req.files.length === 0) {
+            return res.status(400).json({ message: 'No files uploaded' });
+        }
+
+        const results = [];
+        for (const file of req.files) {
+            const result = await LeadResources.addFile({
+                lead_id: req.params.id,
+                name: file.originalname,
+                path: file.path,
+                type: file.mimetype,
+                size: file.size,
+                description: req.body.description
+            }, req.user.id);
+            results.push(result);
+        }
+
+        res.status(201).json(results);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+const getLeadActivities = async (req, res) => {
+    try {
+        const activities = await LeadResources.getActivities(req.params.id, req.user.id);
+        res.status(200).json(activities);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+const getLeadMeetings = async (req, res) => {
+    try {
+        const meetings = await LeadResources.getMeetings(req.params.id, req.user.id);
+        res.status(200).json(meetings);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+const addLeadMeeting = async (req, res) => {
+    try {
+        const { title, description, date, time, attendees } = req.body;
+        const result = await LeadResources.addMeeting({
+            lead_id: req.params.id,
+            title,
+            description,
+            date,
+            time,
+            attendees: Array.isArray(attendees) ? attendees : (attendees ? attendees.split(',').map(s => s.trim()) : [])
+        }, req.user.id);
+        res.status(201).json(result);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+const updateLeadStatus = async (req, res) => {
+    try {
+        const { status } = req.body;
+        await Lead.update(req.params.id, { status }, req.user.id); // Reusing existing update
+        // Could also log this change as an activity
+        res.status(200).json({ message: 'Status updated' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// Update methods
+const updateLeadNote = async (req, res) => {
+    try {
+        const result = await LeadResources.updateNote(req.params.noteId, req.body, req.user.id);
+        res.status(200).json(result);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+const updateLeadCall = async (req, res) => {
+    try {
+        const result = await LeadResources.updateCall(req.params.callId, req.body, req.user.id);
+        res.status(200).json(result);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+const updateLeadFile = async (req, res) => {
+    try {
+        const result = await LeadResources.updateFile(req.params.fileId, req.body, req.user.id);
+        res.status(200).json(result);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+const updateLeadMeeting = async (req, res) => {
+    try {
+        const { title, description, date, time, attendees } = req.body;
+        const result = await LeadResources.updateMeeting(req.params.meetingId, {
+            title,
+            description,
+            date,
+            time,
+            attendees: Array.isArray(attendees) ? attendees : (attendees ? attendees.split(',').map(s => s.trim()) : [])
+        }, req.user.id);
+        res.status(200).json(result);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// Delete methods
+const deleteLeadNote = async (req, res) => {
+    try {
+        await LeadResources.deleteNote(req.params.noteId, req.user.id);
+        res.status(200).json({ message: 'Note deleted' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+const deleteLeadCall = async (req, res) => {
+    try {
+        await LeadResources.deleteCall(req.params.callId, req.user.id);
+        res.status(200).json({ message: 'Call deleted' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+const deleteLeadFile = async (req, res) => {
+    try {
+        await LeadResources.deleteFile(req.params.fileId, req.user.id);
+        res.status(200).json({ message: 'File deleted' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+const deleteLeadMeeting = async (req, res) => {
+    try {
+        await LeadResources.deleteMeeting(req.params.meetingId, req.user.id);
+        res.status(200).json({ message: 'Meeting deleted' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 module.exports = {
     createLead,
     getLeads,
@@ -101,5 +320,23 @@ module.exports = {
     updateLead,
     deleteLead,
     hitCall,
-    analyzeLead
+    analyzeLead,
+    getLeadNotes,
+    addLeadNote,
+    getLeadCalls,
+    addLeadCall,
+    getLeadFiles,
+    addLeadFile,
+    getLeadActivities,
+    getLeadMeetings,
+    addLeadMeeting,
+    updateLeadStatus,
+    updateLeadNote,
+    updateLeadCall,
+    updateLeadFile,
+    updateLeadMeeting,
+    deleteLeadNote,
+    deleteLeadCall,
+    deleteLeadFile,
+    deleteLeadMeeting
 };

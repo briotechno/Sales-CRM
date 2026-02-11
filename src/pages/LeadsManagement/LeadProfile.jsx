@@ -92,13 +92,26 @@ export default function CRMLeadDetail() {
   const handleLeadInfoSave = (updatedData) => {
     setLeadData((prev) => ({
       ...prev,
-      id: updatedData.leadId,
+      id: updatedData.id,
+      name: updatedData.name,
+      fullName: updatedData.fullName,
+      gender: updatedData.gender,
+      email: updatedData.email,
+      phone: updatedData.phone,
+      address: updatedData.address,
+      city: updatedData.city,
+      state: updatedData.state,
+      pincode: updatedData.pincode,
       dateCreated: updatedData.dateCreated,
       value: updatedData.value,
       dueDate: updatedData.dueDate,
       followUp: updatedData.followUp,
       source: updatedData.source,
+      status: updatedData.status,
+      visibility: updatedData.visibility,
+      company: updatedData.company
     }));
+    setShowEditLeadModal(false);
     console.log("Lead information updated:", updatedData);
   };
 
@@ -529,25 +542,23 @@ export default function CRMLeadDetail() {
                     {note.files.map((file, idx) => (
                       <div
                         key={idx}
-                        className={`flex items-center gap-3 px-4 py-3 rounded-lg border ${
-                          file.type === "image"
-                            ? "border-orange-200 bg-orange-50"
-                            : "border-gray-200 bg-white"
-                        }`}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-lg border ${file.type === "image"
+                          ? "border-orange-200 bg-orange-50"
+                          : "border-gray-200 bg-white"
+                          }`}
                       >
                         <div
-                          className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                            file.type === "excel"
-                              ? "bg-green-500"
-                              : "bg-green-500"
-                          }`}
+                          className={`w-10 h-10 rounded-full flex items-center justify-center ${file.type === "excel"
+                            ? "bg-green-500"
+                            : "bg-green-500"
+                            }`}
                         >
                           <span className="text-white text-xl">
                             {file.type === "excel"
                               ? "📊"
                               : file.type === "image"
-                              ? "🖼️"
-                              : "📄"}
+                                ? "🖼️"
+                                : "📄"}
                           </span>
                         </div>
                         <div className="flex-1">
@@ -618,11 +629,10 @@ export default function CRMLeadDetail() {
                     <div className="flex items-center gap-2">
                       <div className="relative">
                         <button
-                          className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium ${
-                            call.status === "Busy"
-                              ? "bg-red-100 text-red-600"
-                              : "bg-purple-100 text-purple-600"
-                          }`}
+                          className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium ${call.status === "Busy"
+                            ? "bg-red-100 text-red-600"
+                            : "bg-purple-100 text-purple-600"
+                            }`}
                         >
                           {call.status}
                           <ChevronDown className="w-3 h-3" />
@@ -698,11 +708,10 @@ export default function CRMLeadDetail() {
                     <div className="flex items-center gap-4">
                       <div className="flex items-center gap-2">
                         <span
-                          className={`px-3 py-1.5 rounded-md text-xs font-semibold ${
-                            file.statusType === "quote"
-                              ? "bg-blue-100 text-blue-600"
-                              : "bg-pink-100 text-pink-600"
-                          }`}
+                          className={`px-3 py-1.5 rounded-md text-xs font-semibold ${file.statusType === "quote"
+                            ? "bg-blue-100 text-blue-600"
+                            : "bg-pink-100 text-pink-600"
+                            }`}
                         >
                           {file.status}
                         </span>
@@ -940,11 +949,10 @@ export default function CRMLeadDetail() {
                     Status
                   </span>
                   <span
-                    className={`px-2 py-1 rounded text-xs font-semibold ${
-                      leadData.status === "Active"
-                        ? "bg-green-100 text-green-600"
-                        : "bg-red-100 text-red-600"
-                    }`}
+                    className={`px-2 py-1 rounded text-xs font-semibold ${leadData.status === "Active"
+                      ? "bg-green-100 text-green-600"
+                      : "bg-red-100 text-red-600"
+                      }`}
                   >
                     {leadData.status || "Active"}
                   </span>
@@ -1146,69 +1154,62 @@ export default function CRMLeadDetail() {
               <div className="flex px-8">
                 <button
                   onClick={() => setActiveTab("activities")}
-                  className={`px-6 py-4 font-semibold flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${
-                    activeTab === "activities"
-                      ? "border-orange-500 text-orange-500"
-                      : "border-transparent text-gray-500 hover:text-gray-700"
-                  }`}
+                  className={`px-6 py-4 font-semibold flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${activeTab === "activities"
+                    ? "border-orange-500 text-orange-500"
+                    : "border-transparent text-gray-500 hover:text-gray-700"
+                    }`}
                 >
                   <span>⚡</span> Activities
                 </button>
                 <button
                   onClick={() => setActiveTab("notes")}
-                  className={`px-6 py-4 font-semibold flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${
-                    activeTab === "notes"
-                      ? "border-orange-500 text-orange-500"
-                      : "border-transparent text-gray-500 hover:text-gray-700"
-                  }`}
+                  className={`px-6 py-4 font-semibold flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${activeTab === "notes"
+                    ? "border-orange-500 text-orange-500"
+                    : "border-transparent text-gray-500 hover:text-gray-700"
+                    }`}
                 >
                   <span>📝</span> Notes
                 </button>
                 <button
                   onClick={() => setActiveTab("calls")}
-                  className={`px-6 py-4 font-semibold flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${
-                    activeTab === "calls"
-                      ? "border-orange-500 text-orange-500"
-                      : "border-transparent text-gray-500 hover:text-gray-700"
-                  }`}
+                  className={`px-6 py-4 font-semibold flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${activeTab === "calls"
+                    ? "border-orange-500 text-orange-500"
+                    : "border-transparent text-gray-500 hover:text-gray-700"
+                    }`}
                 >
                   <span>📞</span> Calls
                 </button>
                 <button
                   onClick={() => setActiveTab("files")}
-                  className={`px-6 py-4 font-semibold flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${
-                    activeTab === "files"
-                      ? "border-orange-500 text-orange-500"
-                      : "border-transparent text-gray-500 hover:text-gray-700"
-                  }`}
+                  className={`px-6 py-4 font-semibold flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${activeTab === "files"
+                    ? "border-orange-500 text-orange-500"
+                    : "border-transparent text-gray-500 hover:text-gray-700"
+                    }`}
                 >
                   <span>📄</span> Files
                 </button>
                 <button
                   onClick={() => setActiveTab("email")}
-                  className={`px-6 py-4 font-semibold flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${
-                    activeTab === "email"
-                      ? "border-orange-500 text-orange-500"
-                      : "border-transparent text-gray-500 hover:text-gray-700"
-                  }`}
+                  className={`px-6 py-4 font-semibold flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${activeTab === "email"
+                    ? "border-orange-500 text-orange-500"
+                    : "border-transparent text-gray-500 hover:text-gray-700"
+                    }`}
                 >
                   <span>✉️</span> Email
                 </button>
                 <button
                   onClick={() => setActiveTab("whatsapp")}
-                  className={`px-6 py-4 font-semibold flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${
-                    activeTab === "whatsapp"
-                      ? "border-orange-500 text-orange-500"
-                      : "border-transparent text-gray-500 hover:text-gray-700"
-                  }`}
+                  className={`px-6 py-4 font-semibold flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${activeTab === "whatsapp"
+                    ? "border-orange-500 text-orange-500"
+                    : "border-transparent text-gray-500 hover:text-gray-700"
+                    }`}
                 >
                   <FaWhatsapp
                     size={22}
-                    className={`${
-                      activeTab === "whatsapp"
-                        ? "text-green-500"
-                        : "text-green-400"
-                    }`}
+                    className={`${activeTab === "whatsapp"
+                      ? "text-green-500"
+                      : "text-green-400"
+                      }`}
                   />
                   WhatsApp
                 </button>

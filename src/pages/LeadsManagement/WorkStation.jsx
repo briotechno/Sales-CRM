@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { FiHome, FiGrid } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "../../components/DashboardLayout";
-import { Download, Upload, Filter, UserPlus, List, Trash2, Users, Server, Type, Phone, Loader2, ChevronLeft, ChevronRight, Mail, AlertCircle } from "lucide-react";
+import { Download, Upload, Filter, UserPlus, List, Trash2, Users, Server, Type, Phone, Loader2, ChevronLeft, ChevronRight, Mail, AlertCircle, PlusIcon } from "lucide-react";
 import Modal from "../../components/common/Modal";
 import AddLeadPopup from "../../components/AddNewLeads/AddNewLead";
 import BulkUploadLeads from "../../components/AddNewLeads/BulkUpload";
@@ -10,13 +10,13 @@ import AssignLeadsModal from "../../pages/LeadsManagement/AllLeadPagePart/Assign
 import LeadsListView from "../../pages/LeadsManagement/AllLeadPagePart/LeadsList";
 import LeadsGridView from "../../pages/LeadsManagement/AllLeadPagePart/LeadsGridView";
 import NumberCard from "../../components/NumberCard";
-import { useGetLeadsQuery, useDeleteLeadMutation, useUpdateLeadMutation, useHitCallMutation } from "../../store/api/leadApi";
+import CallActionPopup from "../../components/AddNewLeads/CallActionPopup";
+import { useGetLeadsQuery, useDeleteLeadMutation, useUpdateLeadMutation, useHitCallMutation, useManualAssignLeadsMutation } from "../../store/api/leadApi";
 import { useGetPipelinesQuery } from "../../store/api/pipelineApi";
 import { useGetEmployeesQuery } from "../../store/api/employeeApi";
-import CallActionPopup from "../../components/AddNewLeads/CallActionPopup";
 import { toast } from "react-hot-toast";
 
-export default function UnreadLeads() {
+export default function WorkStation() {
   const navigate = useNavigate();
   const [view, setView] = useState("list");
   const [searchQuery, setSearchQuery] = useState("");
@@ -149,7 +149,7 @@ export default function UnreadLeads() {
     status: filterStatus,
     tag: filterTag,
     type: filterType,
-    subview: 'unread',
+    // subview: 'new', // Removed specific subview for general workstation view
     priority: filterPriority,
     dateFrom: filterDateFrom,
     dateTo: filterDateTo,
@@ -164,6 +164,26 @@ export default function UnreadLeads() {
 
   const [deleteLead] = useDeleteLeadMutation();
   const [updateLead] = useUpdateLeadMutation();
+  const [hitCallMutation] = useHitCallMutation();
+  const [manualAssignLeads] = useManualAssignLeadsMutation();
+
+  const handleHitCall = async (callData) => {
+    try {
+      await hitCallMutation({
+        id: callData.id,
+        status: callData.status,
+        next_call_at: callData.next_call_at,
+        drop_reason: callData.drop_reason
+      }).unwrap();
+      toast.success("Lead status updated based on call response");
+    } catch (err) {
+      toast.error(err?.data?.message || "Failed to update call status");
+    }
+  };
+
+  const openCallAction = (lead) => {
+    setCallPopupData({ isOpen: true, lead });
+  };
 
   const leadsData = leadsResponse?.leads || [];
   const totalLeads = leadsResponse?.pagination?.total || 0;
@@ -254,10 +274,19 @@ export default function UnreadLeads() {
     setIsAssignModalOpen(true);
   };
 
-  const handleAssign = (assignmentData) => {
-    toast.success(`${selectedLeads.length} leads assigned successfully!`);
-    setIsAssignModalOpen(false);
-    setSelectedLeads([]);
+  const handleAssign = async (assignmentData) => {
+    try {
+      await manualAssignLeads({
+        leadIds: selectedLeads,
+        employeeIds: assignmentData.employees,
+        teamIds: assignmentData.teams
+      }).unwrap();
+      toast.success(`${selectedLeads.length} leads assigned successfully!`);
+      setIsAssignModalOpen(false);
+      setSelectedLeads([]);
+    } catch (err) {
+      toast.error(err?.data?.message || "Failed to assign leads");
+    }
   };
 
   const handleExport = () => {
@@ -273,33 +302,13 @@ export default function UnreadLeads() {
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `unread_leads_${new Date().toISOString().split("T")[0]}.csv`;
+    a.download = `workstation_leads_${new Date().toISOString().split("T")[0]}.csv`;
     a.click();
   };
 
   const handlePageChange = (page) => setCurrentPage(page);
   const handlePrev = () => setCurrentPage((prev) => (prev > 1 ? prev - 1 : prev));
   const handleNext = () => setCurrentPage((prev) => (prev < totalPages ? prev + 1 : prev));
-
-  const [hitCallMutation] = useHitCallMutation();
-
-  const handleHitCall = async (callData) => {
-    try {
-      await hitCallMutation({
-        id: callData.id,
-        status: callData.status,
-        next_call_at: callData.next_call_at,
-        drop_reason: callData.drop_reason
-      }).unwrap();
-      toast.success("Lead status updated based on call response");
-    } catch (err) {
-      toast.error(err?.data?.message || "Failed to update call status");
-    }
-  };
-
-  const openCallAction = (lead) => {
-    setCallPopupData({ isOpen: true, lead });
-  };
 
   return (
     <DashboardLayout>
@@ -315,7 +324,7 @@ export default function UnreadLeads() {
                   <span>CRM</span>
                   <span className="text-gray-300">/</span>
                   <span className="text-[#FF7B1D]">
-                    Unread
+                    Work Station
                   </span>
                 </p>
               </div>
@@ -586,24 +595,23 @@ export default function UnreadLeads() {
                 </div>
 
                 {/* Export Button */}
-                <button
+                {/* <button
                   onClick={handleExport}
                   className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-sm text-[11px] font-bold text-gray-700 hover:bg-gray-50 transition-all shadow-sm capitalize tracking-wider"
                 >
                   <Download size={18} className="text-[#FF7B1D]" />
                   Export
-                </button>
+                </button> */}
 
-                {/* Add Lead - Primary Button */}
+                {/* Add Lead Button */}
                 <div className="relative">
                   <button
                     onClick={() => setOpenLeadMenu(!openLeadMenu)}
-                    className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm text-[11px] font-bold transition shadow-lg hover:shadow-xl hover:from-orange-600 hover:to-orange-700 capitalize tracking-wider"
+                    className="flex items-center gap-2 px-6 py-3 rounded-sm font-semibold transition shadow-lg hover:shadow-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
                   >
-                    <UserPlus size={20} />
+                    <PlusIcon size={20} />
                     Add Lead
                   </button>
-
                   {openLeadMenu && (
                     <div className="absolute top-full right-0 mt-2 w-48 bg-white border border-gray-200 shadow-xl rounded-sm z-50 overflow-hidden divide-y divide-gray-100 animate-fadeIn">
                       <button
@@ -637,8 +645,8 @@ export default function UnreadLeads() {
 
         <div className="max-w-8xl mx-auto p-4 pt-0 mt-2">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-3">
-            <NumberCard title="Total Unread" number={totalLeads.toString()} icon={<Users className="text-blue-600" size={24} />} iconBgColor="bg-blue-100" lineBorderClass="border-blue-500" />
-            <NumberCard title="Quick Filters" number="Unread" icon={<Server className="text-green-600" size={24} />} iconBgColor="bg-green-100" lineBorderClass="border-green-500" />
+            <NumberCard title="Total Leads" number={totalLeads.toString()} icon={<Users className="text-blue-600" size={24} />} iconBgColor="bg-blue-100" lineBorderClass="border-blue-500" />
+            <NumberCard title="Quick Filters" number="All" icon={<Server className="text-green-600" size={24} />} iconBgColor="bg-green-100" lineBorderClass="border-green-500" />
             <NumberCard title="Avg Value" number="-" icon={<Type className="text-orange-600" size={24} />} iconBgColor="bg-orange-100" lineBorderClass="border-orange-500" />
             <NumberCard title="Priority" number="Mix" icon={<Phone className="text-purple-600" size={24} />} iconBgColor="bg-purple-100" lineBorderClass="border-purple-500" />
           </div>
@@ -657,7 +665,7 @@ export default function UnreadLeads() {
             {isLoading ? (
               <div className="flex justify-center items-center h-64"><Loader2 size={40} className="animate-spin text-orange-500" /></div>
             ) : isError ? (
-              <div className="text-center text-red-500 py-10 capitalize">Failed to load unread leads.</div>
+              <div className="text-center text-red-500 py-10 capitalize">Failed to load new leads.</div>
             ) : leadsData.length === 0 ? (
               <div className="text-center py-10 bg-white rounded-lg border border-gray-200 shadow-sm">
                 <Users size={48} className="mx-auto text-gray-300 mb-4" />

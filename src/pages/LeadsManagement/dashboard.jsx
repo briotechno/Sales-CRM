@@ -21,11 +21,13 @@ import {
   Filter,
   Upload,
   PlusIcon,
+  Briefcase,
 } from "lucide-react";
 import NumberCard from "../../components/NumberCard";
 import BulkUploadLeads from "../../components/AddNewLeads/BulkUpload";
 
 const leadCategories = [
+  { name: "Work Station", path: "/crm/leads/work-station", icon: <Briefcase size={16} /> },
   { name: "All Leads", path: "/crm/leads/all", icon: <Users size={16} /> },
   { name: "New Leads", path: "/crm/leads/new", icon: <UserPlus size={16} /> },
   { name: "Not Connected", path: "/crm/leads/not-connected", icon: <Server size={16} /> },
