@@ -15,7 +15,10 @@ export const pipelineApi = createApi({
     tagTypes: ['Pipeline', 'PipelineStage'],
     endpoints: (builder) => ({
         getPipelines: builder.query({
-            query: () => 'pipelines',
+            query: (params) => ({
+                url: 'pipelines',
+                params: params,
+            }),
             providesTags: ['Pipeline'],
         }),
         getPipelineById: builder.query({

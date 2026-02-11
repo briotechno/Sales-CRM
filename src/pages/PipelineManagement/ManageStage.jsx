@@ -16,6 +16,7 @@ import {
     XCircle,
     Layers,
     AlertCircle,
+    SquarePen,
 } from "lucide-react";
 import NumberCard from "../../components/NumberCard";
 import Modal from "../../components/common/Modal";
@@ -42,14 +43,25 @@ const ManageStage = () => {
     const filterDropdownRef = useRef(null);
 
     // API
-    const { data: stagesData, isLoading, isError } = useGetStagesQuery();
-    const stages = stagesData || [];
+    const { data, isLoading, isError } = useGetStagesQuery({
+        page: currentPage,
+        limit: rowsPerPage,
+        search: searchQuery
+    });
+
+    const stages = data?.stages || [];
+    const pagination = data?.pagination || {};
+    const totalPages = pagination.totalPages || 1;
+
+    // With server-side pagination, the 'filtered' list is just the list returned from the API
+    const filteredStages = stages;
+
+    // Pagination helpers
+    const indexOfLastItem = Math.min(currentPage * rowsPerPage, pagination.total || 0);
+    const indexOfFirstItem = (currentPage - 1) * rowsPerPage;
+    const currentStages = stages;
 
     // Filter
-    const filteredStages = stages.filter((stage) =>
-        stage.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-
     const hasActiveFilters = searchQuery !== "";
 
     const handleClearFilters = () => {
@@ -73,12 +85,6 @@ const ManageStage = () => {
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
-
-    // Pagination
-    const totalPages = Math.ceil(filteredStages.length / rowsPerPage);
-    const indexOfLastItem = currentPage * rowsPerPage;
-    const indexOfFirstItem = indexOfLastItem - rowsPerPage;
-    const currentStages = filteredStages.slice(indexOfFirstItem, indexOfLastItem);
 
     const handlePageChange = (page) => setCurrentPage(page);
     const handlePrev = () => setCurrentPage((prev) => (prev > 1 ? prev - 1 : prev));
@@ -237,14 +243,14 @@ const ManageStage = () => {
                                                 <div className="flex justify-end gap-2">
                                                     <button
                                                         onClick={() => { setSelectedStage(stage); setIsEditOpen(true); }}
-                                                        className="p-1.5 hover:bg-green-50 rounded-sm text-green-500 hover:text-green-700 transition-all border border-transparent hover:border-green-100"
+                                                        className="p-1.5 text-green-600 hover:bg-green-50 rounded-sm transition-all"
                                                         title="Edit"
                                                     >
-                                                        <Pencil size={18} />
+                                                        <SquarePen size={18} />
                                                     </button>
                                                     <button
                                                         onClick={() => { setSelectedStage(stage); setIsDeleteOpen(true); }}
-                                                        className="p-1.5 hover:bg-red-50 rounded-sm text-red-500 hover:text-red-700 transition-all border border-transparent hover:border-red-100"
+                                                        className="p-1.5 text-red-600 hover:bg-red-50 rounded-sm transition-all"
                                                         title="Delete"
                                                     >
                                                         <Trash2 size={18} />
@@ -282,7 +288,7 @@ const ManageStage = () => {
                     {totalPages > 0 && (
                         <div className="flex flex-col md:flex-row justify-between items-center mt-6 gap-4 bg-gray-50 p-4 rounded-sm border border-gray-200">
                             <p className="text-sm font-semibold text-gray-700">
-                                Showing <span className="text-orange-600">{indexOfFirstItem + 1}</span> to <span className="text-orange-600">{Math.min(indexOfLastItem, filteredStages.length)}</span> of <span className="text-orange-600">{filteredStages.length}</span> Stages
+                                Showing <span className="text-orange-600">{indexOfFirstItem + 1}</span> to <span className="text-orange-600">{indexOfFirstItem + currentStages.length}</span> of <span className="text-orange-600">{pagination.total || 0}</span> Stages
                             </p>
 
                             <div className="flex items-center gap-2">
@@ -521,7 +527,7 @@ const DeleteStageModal = ({ isOpen, onClose, stage, refetchStages }) => {
         <div className="flex gap-4 w-full">
             <button
                 onClick={onClose}
-                className="flex-1 px-6 py-3 border-2 border-gray-100 text-gray-600 font-bold rounded-sm hover:bg-gray-50 transition-all uppercase text-xs"
+                className="flex-1 px-6 py-3 border-2 border-gray-200 text-gray-700 font-bold rounded-sm hover:bg-gray-100 transition-all font-primary text-xs uppercase tracking-widest"
             >
                 Cancel
             </button>
@@ -529,7 +535,7 @@ const DeleteStageModal = ({ isOpen, onClose, stage, refetchStages }) => {
             <button
                 onClick={handleDelete}
                 disabled={isLoading}
-                className="flex-1 px-6 py-3 bg-red-600 text-white font-bold rounded-sm hover:bg-red-700 transition-all shadow-lg hover:shadow-red-200 flex items-center justify-center gap-2 disabled:opacity-50 uppercase text-xs"
+                className="flex-1 px-6 py-3 bg-red-600 text-white font-bold rounded-sm hover:bg-red-700 transition-all shadow-lg shadow-red-500/30 flex items-center justify-center gap-2 disabled:opacity-50 font-primary text-xs uppercase tracking-widest"
             >
                 {isLoading ? (
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -549,25 +555,25 @@ const DeleteStageModal = ({ isOpen, onClose, stage, refetchStages }) => {
             maxWidth="max-w-md"
             footer={footer}
         >
-            <div className="flex flex-col items-center text-center text-black">
-                <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mb-6 text-red-600 animate-pulse">
-                    <AlertCircle size={48} />
+            <div className="flex flex-col items-center text-center text-black font-primary">
+                <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mb-6">
+                    <AlertCircle size={48} className="text-red-600" />
                 </div>
 
-                <h2 className="text-2xl font-bold text-gray-800 mb-2 font-primary">
+                <h2 className="text-2xl font-bold text-gray-800 mb-2">
                     Confirm Delete
                 </h2>
 
-                <p className="text-gray-500 mb-2 leading-relaxed text-sm">
+                <p className="text-gray-600 mb-2 leading-relaxed">
                     Are you sure you want to delete the stage{" "}
-                    <span className="font-black text-gray-800 px-1">
+                    <span className="font-bold text-gray-800">
                         "{stage.name}"
                     </span>
                     ?
                 </p>
 
-                <p className="text-[10px] text-red-500 font-bold uppercase tracking-widest bg-red-50 px-3 py-1 rounded-full mt-2">
-                    This action is permanent
+                <p className="text-xs text-red-500 italic">
+                    This action cannot be undone. All associated data will be permanently removed.
                 </p>
             </div>
         </Modal>

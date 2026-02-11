@@ -19,12 +19,16 @@ import {
   Loader,
   Layers,
   ChevronDown,
+  SquarePen,
+  AlertCircle,
 } from "lucide-react";
+import Modal from "../../components/common/Modal";
 import NumberCard from "../../components/NumberCard";
-import EditPipelineModal from "../../components/PiplineManagement/EditPipelineModal";
-import DeletePipelineModal from "../../components/PiplineManagement/DeletePipelineModal";
+// import EditPipelineModal from "../../components/PiplineManagement/EditPipelineModal"; // Removed in favor of consolidated AddPipelineModal
+// import DeletePipelineModal from "../../components/PiplineManagement/DeletePipelineModal"; // Replaced with inline component
 import ViewPipelineModal from "../../components/PiplineManagement/ViewPipelineModal";
-import { useGetPipelinesQuery } from "../../store/api/pipelineApi";
+import { useGetPipelinesQuery, useDeletePipelineMutation } from "../../store/api/pipelineApi";
+import { toast } from "react-hot-toast";
 
 const PipelineList = () => {
   const navigate = useNavigate();
@@ -34,7 +38,7 @@ const PipelineList = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [filterStatus, setFilterStatus] = useState("all");
   const [isViewOpen, setIsViewOpen] = useState(false);
-  const [isEditOpen, setIsEditOpen] = useState(false);
+  // const [isEditOpen, setIsEditOpen] = useState(false); // Redundant now
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [selectedPipeline, setSelectedPipeline] = useState(null);
   const [tempSearch, setTempSearch] = useState("");
@@ -42,8 +46,25 @@ const PipelineList = () => {
   const statusDropdownRef = useRef(null);
 
   // Pipeline data
-  const { data: pipelinesData, isLoading, isError } = useGetPipelinesQuery();
-  const pipelines = pipelinesData || [];
+  const { data, isLoading, isError } = useGetPipelinesQuery({
+    page: currentPage,
+    limit: rowsPerPage,
+    search: searchQuery
+  });
+
+  const pipelines = data?.pipelines || [];
+  const pagination = data?.pagination || {};
+  const totalPages = pagination.totalPages || 1;
+  // Note: Status filtering is currently done on the fetched page. 
+  // For full server-side status filtering, the backend API needs to support it. 
+  // We'll filter the current page's results for status.
+  const filteredPipelines = pipelines.filter(p => filterStatus === "all" || p.status === filterStatus);
+
+  // Since we are paginating on backend, the "currentPipelines" is just the filtered list from the API response
+  const currentPipelines = filteredPipelines;
+
+  const indexOfFirstItem = (currentPage - 1) * rowsPerPage;
+  const indexOfLastItem = Math.min(currentPage * rowsPerPage, pagination.total || 0);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -66,18 +87,6 @@ const PipelineList = () => {
       .padStart(3, "0")}`;
   };
 
-  // Filter pipelines based on search and status
-  const filteredPipelines = pipelines.filter((pipeline) => {
-    const matchesSearch = pipeline.name
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase());
-
-    const matchesStatus =
-      filterStatus === "all" || pipeline.status === filterStatus;
-
-    return matchesSearch && matchesStatus;
-  });
-
   const hasActiveFilters = filterStatus !== "all" || searchQuery !== "";
 
   const handleClearFilters = () => {
@@ -93,20 +102,10 @@ const PipelineList = () => {
     setCurrentPage(1);
   };
 
-  // Pagination
-  const totalPages = Math.ceil(filteredPipelines.length / rowsPerPage);
-  const indexOfLastItem = currentPage * rowsPerPage;
-  const indexOfFirstItem = indexOfLastItem - rowsPerPage;
-  const currentPipelines = filteredPipelines.slice(
-    indexOfFirstItem,
-    indexOfLastItem
-  );
-
+  // Pagination handlers directly update currentPage, which triggers API refetch
   const handlePageChange = (page) => setCurrentPage(page);
-  const handlePrev = () =>
-    setCurrentPage((prev) => (prev > 1 ? prev - 1 : prev));
-  const handleNext = () =>
-    setCurrentPage((prev) => (prev < totalPages ? prev + 1 : prev));
+  const handlePrev = () => setCurrentPage((prev) => (prev > 1 ? prev - 1 : prev));
+  const handleNext = () => setCurrentPage((prev) => (prev < totalPages ? prev + 1 : prev));
 
 
 
@@ -255,7 +254,10 @@ const PipelineList = () => {
                 </button>
 
                 <button
-                  onClick={() => setIsAddPipelineOpen(true)}
+                  onClick={() => {
+                    setSelectedPipeline(null);
+                    setIsAddPipelineOpen(true);
+                  }}
                   className="flex items-center gap-2 px-6 py-3 rounded-sm font-semibold transition shadow-lg hover:shadow-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
                 >
                   <Plus size={20} />
@@ -362,7 +364,7 @@ const PipelineList = () => {
                       <td className="py-4 px-4">
                         <div className="flex justify-end gap-2 text-gray-400">
                           <button
-                            className="hover:bg-orange-100 rounded-sm text-blue-500 hover:text-blue-700 transition-all p-2"
+                            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-sm transition-all"
                             onClick={() => {
                               setSelectedPipeline(pipeline);
                               setIsViewOpen(true);
@@ -372,21 +374,21 @@ const PipelineList = () => {
                             <Eye size={18} />
                           </button>
                           <button
-                            className="hover:bg-orange-100 rounded-sm text-orange-500 hover:text-orange-700 transition-all p-2"
+                            className="p-1.5 text-green-600 hover:bg-green-50 rounded-sm transition-all"
                             onClick={() => {
                               setSelectedPipeline(pipeline);
-                              setIsEditOpen(true);
+                              setIsAddPipelineOpen(true);
                             }}
                             title="Edit"
                           >
-                            <Pencil size={18} />
+                            <SquarePen size={18} />
                           </button>
                           <button
                             onClick={() => {
                               setSelectedPipeline(pipeline);
                               setIsDeleteOpen(true);
                             }}
-                            className="hover:bg-red-100 rounded-sm text-red-500 hover:text-red-700 transition-all p-2"
+                            className="p-1.5 text-red-600 hover:bg-red-50 rounded-sm transition-all"
                             title="Delete"
                           >
                             <Trash2 size={18} />
@@ -407,7 +409,10 @@ const PipelineList = () => {
                           <p className="text-xs text-gray-400">Try adjusting your search or add a new pipeline.</p>
                         </div>
                         <button
-                          onClick={() => setIsAddPipelineOpen(true)}
+                          onClick={() => {
+                            setSelectedPipeline(null);
+                            setIsAddPipelineOpen(true);
+                          }}
                           className="mt-2 px-6 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm text-xs font-bold hover:shadow-lg transition-all active:scale-95 shadow-md"
                         >
                           Add Pipeline
@@ -424,7 +429,7 @@ const PipelineList = () => {
           {totalPages > 0 && (
             <div className="flex flex-col md:flex-row justify-between items-center mt-6 gap-4 bg-gray-50 p-4 rounded-sm border border-gray-200">
               <p className="text-sm font-semibold text-gray-700">
-                Showing <span className="text-orange-600">{indexOfFirstItem + 1}</span> to <span className="text-orange-600">{Math.min(indexOfLastItem, filteredPipelines.length)}</span> of <span className="text-orange-600">{filteredPipelines.length}</span> Pipelines
+                Showing <span className="text-orange-600">{indexOfFirstItem + 1}</span> to <span className="text-orange-600">{indexOfFirstItem + currentPipelines.length}</span> of <span className="text-orange-600">{pagination.total || 0}</span> Pipelines
               </p>
 
               <div className="flex items-center gap-2">
@@ -472,7 +477,11 @@ const PipelineList = () => {
         {/* POPUP MODALS */}
         <AddPipelineModal
           isOpen={isAddPipelineOpen}
-          onClose={() => setIsAddPipelineOpen(false)}
+          onClose={() => {
+            setIsAddPipelineOpen(false);
+            setSelectedPipeline(null);
+          }}
+          pipelineToEdit={selectedPipeline}
         />
         <ViewPipelineModal
           isOpen={isViewOpen}
@@ -482,11 +491,7 @@ const PipelineList = () => {
             setSelectedPipeline(null);
           }}
         />
-        <EditPipelineModal
-          isOpen={isEditOpen}
-          pipeline={selectedPipeline}
-          onClose={() => setIsEditOpen(false)}
-        />
+        {/* EditPipelineModal removed */}
         {selectedPipeline && (
           <DeletePipelineModal
             isOpen={isDeleteOpen}
@@ -504,3 +509,85 @@ const PipelineList = () => {
 };
 
 export default PipelineList;
+
+const DeletePipelineModal = ({
+  isOpen,
+  onClose,
+  pipelineId,
+  pipelineName,
+  refetchPipelines,
+}) => {
+  const [deletePipeline, { isLoading }] = useDeletePipelineMutation();
+
+  const handleDelete = async () => {
+    try {
+      await deletePipeline(pipelineId).unwrap();
+
+      toast.success("Pipeline deleted successfully");
+
+      if (refetchPipelines) {
+        refetchPipelines();
+      }
+
+      onClose();
+    } catch (err) {
+      toast.error(err?.data?.message || "Failed to delete pipeline");
+    }
+  };
+
+  const footer = (
+    <div className="flex gap-4 w-full">
+      <button
+        onClick={onClose}
+        className="flex-1 px-6 py-3 border-2 border-gray-200 text-gray-700 font-bold rounded-sm hover:bg-gray-100 transition-all font-primary text-xs uppercase tracking-widest"
+      >
+        Cancel
+      </button>
+
+      <button
+        onClick={handleDelete}
+        disabled={isLoading}
+        className="flex-1 px-6 py-3 bg-red-600 text-white font-bold rounded-sm hover:bg-red-700 transition-all shadow-lg shadow-red-500/30 flex items-center justify-center gap-2 disabled:opacity-50 font-primary text-xs uppercase tracking-widest"
+      >
+        {isLoading ? (
+          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+        ) : (
+          <Trash2 size={20} />
+        )}
+        {isLoading ? "Deleting..." : "Delete Now"}
+      </button>
+    </div>
+  );
+
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      headerVariant="simple"
+      maxWidth="max-w-md"
+      footer={footer}
+    >
+      <div className="flex flex-col items-center text-center text-black font-primary">
+        <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mb-6">
+          <AlertCircle size={48} className="text-red-600" />
+        </div>
+
+        <h2 className="text-2xl font-bold text-gray-800 mb-2">
+          Confirm Delete
+        </h2>
+
+        <p className="text-gray-600 mb-2 leading-relaxed">
+          Are you sure you want to delete the pipeline{" "}
+          <span className="font-bold text-gray-800">
+            "{pipelineName}"
+          </span>
+          ?
+        </p>
+
+        <p className="text-xs text-red-500 italic">
+          This action cannot be undone. All associated stages will be permanently removed.
+        </p>
+      </div>
+    </Modal>
+  );
+};
