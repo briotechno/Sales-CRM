@@ -632,7 +632,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           } md:translate-x-0 ${isLocked || isHovered ? "w-[280px]" : "w-[68px]"}`}
       >
         {/* Module Rail - Left */}
-        <div className="w-[68px] bg-[#f8f9fa] border-r border-[#eee] flex flex-col items-center py-4 gap-4 z-10 no-scrollbar overflow-y-auto">
+        <div className="w-[68px] bg-[#f8f9fa] border-r border-[#eee] flex flex-col items-center py-4 gap-4 z-10 no-scrollbar overflow-y-auto !overflow-hidden">
           <div className="mb-4">
             <div className="w-10 h-10 bg-[#FF7B1D] rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-orange-200">
               {user?.name?.charAt(0).toUpperCase()}
