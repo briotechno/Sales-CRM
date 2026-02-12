@@ -10,9 +10,11 @@ import AssignLeadsModal from "../../pages/LeadsManagement/AllLeadPagePart/Assign
 import LeadsListView from "../../pages/LeadsManagement/AllLeadPagePart/LeadsList";
 import LeadsGridView from "../../pages/LeadsManagement/AllLeadPagePart/LeadsGridView";
 import NumberCard from "../../components/NumberCard";
-import { useGetLeadsQuery, useDeleteLeadMutation, useUpdateLeadMutation } from "../../store/api/leadApi";
+import { useGetLeadsQuery, useDeleteLeadMutation, useUpdateLeadMutation, useHitCallMutation } from "../../store/api/leadApi";
 import { useGetPipelinesQuery } from "../../store/api/pipelineApi";
 import { useGetEmployeesQuery } from "../../store/api/employeeApi";
+import CallActionPopup from "../../components/AddNewLeads/CallActionPopup";
+import CallQrModal from "../../components/LeadManagement/CallQrModal";
 import { toast } from "react-hot-toast";
 
 export default function DuplicatesLeads() {
@@ -43,6 +45,9 @@ export default function DuplicatesLeads() {
     const itemsPerPage = 7;
     const [showBulkUploadPopup, setShowBulkUploadPopup] = useState(false);
     const [leadToEdit, setLeadToEdit] = useState(null);
+    const [isQrModalOpen, setIsQrModalOpen] = useState(false);
+    const [selectedLeadForCall, setSelectedLeadForCall] = useState(null);
+    const [callPopupData, setCallPopupData] = useState({ isOpen: false, lead: null });
     const [leadToDelete, setLeadToDelete] = useState(null);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const dropdownRef = useRef(null);
@@ -281,6 +286,32 @@ export default function DuplicatesLeads() {
     const handlePageChange = (page) => setCurrentPage(page);
     const handlePrev = () => setCurrentPage((prev) => (prev > 1 ? prev - 1 : prev));
     const handleNext = () => setCurrentPage((prev) => (prev < totalPages ? prev + 1 : prev));
+
+    const [hitCallMutation] = useHitCallMutation();
+
+    const handleHitCall = async (callData) => {
+        try {
+            await hitCallMutation({
+                id: callData.id,
+                status: callData.status,
+                next_call_at: callData.next_call_at,
+                drop_reason: callData.drop_reason
+            }).unwrap();
+            toast.success("Lead status updated based on call response");
+        } catch (err) {
+            toast.error(err?.data?.message || "Failed to update call status");
+        }
+    };
+
+    const openCallAction = (lead) => {
+        setSelectedLeadForCall(lead);
+        setIsQrModalOpen(true);
+    };
+
+    const handleProceedToLog = () => {
+        setIsQrModalOpen(false);
+        setCallPopupData({ isOpen: true, lead: selectedLeadForCall });
+    };
 
     return (
         <DashboardLayout>
@@ -656,9 +687,10 @@ export default function DuplicatesLeads() {
                                         itemsPerPage={itemsPerPage}
                                         handleDeleteLead={handleDeleteLead}
                                         handleEditLead={handleEditLead}
+                                        handleHitCall={openCallAction}
                                     />
                                 ) : (
-                                    <LeadsGridView leadsData={leadsData} filterStatus={filterStatus} handleLeadClick={handleLeadClick} selectedLeads={selectedLeads} handleSelectLead={handleSelectLead} />
+                                    <LeadsGridView leadsData={leadsData} filterStatus={filterStatus} handleLeadClick={handleLeadClick} selectedLeads={selectedLeads} handleSelectLead={handleSelectLead} handleHitCall={openCallAction} />
                                 )}
 
                                 {totalPages > 1 && (
@@ -722,6 +754,20 @@ export default function DuplicatesLeads() {
                 <AssignLeadsModal isOpen={isAssignModalOpen} onClose={() => setIsAssignModalOpen(false)} selectedLeadsCount={selectedLeads.length} onAssign={handleAssign} />
                 {isModalOpen && <AddLeadPopup isOpen={isModalOpen} onClose={handleCloseModal} leadToEdit={leadToEdit} />}
                 {showBulkUploadPopup && <BulkUploadLeads onClose={() => setShowBulkUploadPopup(false)} />}
+                <CallQrModal
+                    isOpen={isQrModalOpen}
+                    onClose={() => setIsQrModalOpen(false)}
+                    lead={selectedLeadForCall}
+                    onProceedToLog={handleProceedToLog}
+                />
+                {callPopupData.isOpen && (
+                    <CallActionPopup
+                        isOpen={callPopupData.isOpen}
+                        onClose={() => setCallPopupData({ isOpen: false, lead: null })}
+                        lead={callPopupData.lead}
+                        onHitCall={handleHitCall}
+                    />
+                )}
                 {/* Delete Confirmation Modal */}
                 <Modal
                     isOpen={showDeleteModal}

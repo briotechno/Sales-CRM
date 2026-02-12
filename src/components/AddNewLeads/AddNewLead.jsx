@@ -54,7 +54,7 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
 
   const [leadType, setLeadType] = useState("Individual");
   const [visibility, setVisibility] = useState("Public");
-  const [tags, setTags] = useState([]);
+  const [tags, setTags] = useState(["New Lead"]);
   const [tagInput, setTagInput] = useState("");
   const [customFields, setCustomFields] = useState([{ label: "", value: "" }]);
   const [contactPersons, setContactPersons] = useState([{

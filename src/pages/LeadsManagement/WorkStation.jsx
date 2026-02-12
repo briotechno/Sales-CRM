@@ -11,6 +11,7 @@ import LeadsListView from "../../pages/LeadsManagement/AllLeadPagePart/LeadsList
 import LeadsGridView from "../../pages/LeadsManagement/AllLeadPagePart/LeadsGridView";
 import NumberCard from "../../components/NumberCard";
 import CallActionPopup from "../../components/AddNewLeads/CallActionPopup";
+import CallQrModal from "../../components/LeadManagement/CallQrModal";
 import { useGetLeadsQuery, useDeleteLeadMutation, useUpdateLeadMutation, useHitCallMutation, useManualAssignLeadsMutation } from "../../store/api/leadApi";
 import { useGetPipelinesQuery } from "../../store/api/pipelineApi";
 import { useGetEmployeesQuery } from "../../store/api/employeeApi";
@@ -45,6 +46,8 @@ export default function WorkStation() {
   const [showBulkUploadPopup, setShowBulkUploadPopup] = useState(false);
   const [leadToEdit, setLeadToEdit] = useState(null);
   const [callPopupData, setCallPopupData] = useState({ isOpen: false, lead: null });
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
+  const [selectedLeadForCall, setSelectedLeadForCall] = useState(null);
   const [leadToDelete, setLeadToDelete] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const dropdownRef = useRef(null);
@@ -186,7 +189,13 @@ export default function WorkStation() {
   };
 
   const openCallAction = (lead) => {
-    setCallPopupData({ isOpen: true, lead });
+    setSelectedLeadForCall(lead);
+    setIsQrModalOpen(true);
+  };
+
+  const handleProceedToLog = () => {
+    setIsQrModalOpen(false);
+    setCallPopupData({ isOpen: true, lead: selectedLeadForCall });
   };
 
   const leadsData = leadsResponse?.leads || [];
@@ -322,7 +331,9 @@ export default function WorkStation() {
           <div className="max-w-8xl mx-auto px-4 py-4 border-b">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
-                <h1 className="text-2xl font-bold text-gray-800 capitalize tracking-tight">Leads Management</h1>
+                <h1 className="text-2xl font-bold text-gray-800 capitalize tracking-tight">
+                  {filterStatus === "All" ? "Work Station" : `${filterStatus} Leads`}
+                </h1>
                 <p className="text-[11px] text-gray-400 mt-1 flex items-center gap-2 font-bold capitalize tracking-wider">
                   <FiHome className="text-gray-400" size={12} />
                   <span>CRM</span>
@@ -648,12 +659,6 @@ export default function WorkStation() {
         </div>
 
         <div className="max-w-8xl mx-auto p-4 pt-0 mt-2">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-3">
-            <NumberCard title="Total Leads" number={totalLeads.toString()} icon={<Users className="text-blue-600" size={24} />} iconBgColor="bg-blue-100" lineBorderClass="border-blue-500" />
-            <NumberCard title="Quick Filters" number="All" icon={<Server className="text-green-600" size={24} />} iconBgColor="bg-green-100" lineBorderClass="border-green-500" />
-            <NumberCard title="Avg Value" number="-" icon={<Type className="text-orange-600" size={24} />} iconBgColor="bg-orange-100" lineBorderClass="border-orange-500" />
-            <NumberCard title="Priority" number="Mix" icon={<Phone className="text-purple-600" size={24} />} iconBgColor="bg-purple-100" lineBorderClass="border-purple-500" />
-          </div>
 
           {selectedLeads.length > 0 && (
             <div className="bg-orange-50 border border-orange-200 p-4 rounded-lg mb-4 flex justify-between items-center animate-fadeIn">
@@ -763,6 +768,12 @@ export default function WorkStation() {
             onHitCall={handleHitCall}
           />
         )}
+
+        <CallQrModal
+          isOpen={isQrModalOpen}
+          onClose={() => setIsQrModalOpen(false)}
+          lead={selectedLeadForCall}
+        />
 
         {/* Delete Confirmation Modal */}
         <Modal

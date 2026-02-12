@@ -280,13 +280,18 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           permission: "CRM Dashboard"
         },
         {
+          name: "Work Station",
+          icon: <ClipboardList size={22} />,
+          path: "/crm/leads/work-station",
+          permission: "Leads Management",
+        },
+        {
           name: "Leads Management",
           icon: <Users size={22} />,
           path: "/crm/leads",
           permission: "Leads Management",
           children: [
             { name: "Lead Dashboard", path: "/crm/leads/dashboard" },
-            { name: "Work Station", path: "/crm/leads/work-station" },
             { name: "All Leads", path: "/crm/leads/all" },
             { name: "New Leads", path: "/crm/leads/new" },
             { name: "Not Connected", path: "/crm/leads/not-connected" },
@@ -297,9 +302,19 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             { name: "Duplicates", path: "/crm/leads/duplicates" },
             { name: "Trending", path: "/crm/leads/trending" },
             { name: "Won", path: "/crm/leads/won" },
-            { name: "Analysis", path: "/crm/leads/analysis" },
-            { name: "Assignment Settings", path: "/crm/leads/assignment-settings" },
           ],
+        },
+        {
+          name: "Analysis & Report",
+          icon: <BarChart3 size={22} />,
+          path: "/crm/leads/analysis",
+          permission: "Leads Management"
+        },
+        {
+          name: "Assignment Settings",
+          icon: <Settings size={22} />,
+          path: "/crm/leads/assignment-settings",
+          permission: "Leads Management"
         },
         {
           name: "campaign",

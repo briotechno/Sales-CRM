@@ -14,6 +14,7 @@ import { useGetLeadsQuery, useDeleteLeadMutation, useUpdateLeadMutation, useHitC
 import { useGetPipelinesQuery } from "../../store/api/pipelineApi";
 import { useGetEmployeesQuery } from "../../store/api/employeeApi";
 import CallActionPopup from "../../components/AddNewLeads/CallActionPopup";
+import CallQrModal from "../../components/LeadManagement/CallQrModal";
 import { toast } from "react-hot-toast";
 
 export default function AssignedLeads() {
@@ -44,6 +45,8 @@ export default function AssignedLeads() {
   const itemsPerPage = 7;
   const [showBulkUploadPopup, setShowBulkUploadPopup] = useState(false);
   const [leadToEdit, setLeadToEdit] = useState(null);
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
+  const [selectedLeadForCall, setSelectedLeadForCall] = useState(null);
   const [callPopupData, setCallPopupData] = useState({ isOpen: false, lead: null });
   const [leadToDelete, setLeadToDelete] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -312,7 +315,13 @@ export default function AssignedLeads() {
   };
 
   const openCallAction = (lead) => {
-    setCallPopupData({ isOpen: true, lead });
+    setSelectedLeadForCall(lead);
+    setIsQrModalOpen(true);
+  };
+
+  const handleProceedToLog = () => {
+    setIsQrModalOpen(false);
+    setCallPopupData({ isOpen: true, lead: selectedLeadForCall });
   };
 
   return (
@@ -757,6 +766,12 @@ export default function AssignedLeads() {
         <AssignLeadsModal isOpen={isAssignModalOpen} onClose={() => setIsAssignModalOpen(false)} selectedLeadsCount={selectedLeads.length} onAssign={handleAssign} />
         {isModalOpen && <AddLeadPopup isOpen={isModalOpen} onClose={handleCloseModal} leadToEdit={leadToEdit} />}
         {showBulkUploadPopup && <BulkUploadLeads onClose={() => setShowBulkUploadPopup(false)} />}
+        <CallQrModal
+          isOpen={isQrModalOpen}
+          onClose={() => setIsQrModalOpen(false)}
+          lead={selectedLeadForCall}
+          onProceedToLog={handleProceedToLog}
+        />
         {callPopupData.isOpen && (
           <CallActionPopup
             isOpen={callPopupData.isOpen}
