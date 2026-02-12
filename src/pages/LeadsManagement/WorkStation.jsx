@@ -2,20 +2,303 @@ import React, { useState, useEffect, useRef } from "react";
 import { FiHome, FiGrid } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "../../components/DashboardLayout";
-import { Download, Upload, Filter, UserPlus, List, Trash2, Users, Server, Type, Phone, Loader2, ChevronLeft, ChevronRight, Mail, AlertCircle, PlusIcon } from "lucide-react";
+import {
+  Download,
+  Upload,
+  Filter,
+  UserPlus,
+  List,
+  Trash2,
+  Users,
+  Server,
+  Type,
+  Phone,
+  Loader2,
+  ChevronLeft,
+  ChevronRight,
+  Mail,
+  AlertCircle,
+  PlusIcon,
+  Edit,
+  Eye,
+  TrendingUp,
+  Inbox,
+  PhoneIncoming,
+  Clock
+} from "lucide-react";
 import Modal from "../../components/common/Modal";
 import AddLeadPopup from "../../components/AddNewLeads/AddNewLead";
 import BulkUploadLeads from "../../components/AddNewLeads/BulkUpload";
 import AssignLeadsModal from "../../pages/LeadsManagement/AllLeadPagePart/AssignLeadModal";
-import LeadsListView from "../../pages/LeadsManagement/AllLeadPagePart/LeadsList";
-import LeadsGridView from "../../pages/LeadsManagement/AllLeadPagePart/LeadsGridView";
-import NumberCard from "../../components/NumberCard";
-import CallActionPopup from "../../components/AddNewLeads/CallActionPopup";
-import CallQrModal from "../../components/LeadManagement/CallQrModal";
 import { useGetLeadsQuery, useDeleteLeadMutation, useUpdateLeadMutation, useHitCallMutation, useManualAssignLeadsMutation } from "../../store/api/leadApi";
 import { useGetPipelinesQuery } from "../../store/api/pipelineApi";
 import { useGetEmployeesQuery } from "../../store/api/employeeApi";
 import { toast } from "react-hot-toast";
+import { FaWhatsapp } from "react-icons/fa";
+import NumberCard from "../../components/NumberCard";
+import CallActionPopup from "../../components/AddNewLeads/CallActionPopup";
+import CallQrModal from "../../components/LeadManagement/CallQrModal";
+
+const WorkStationLeadsListView = ({
+  currentLeads,
+  selectedLeads,
+  handleSelectAll,
+  handleSelectLead,
+  handleLeadClick,
+  handleEditLead,
+  handleDeleteLead,
+  handleHitCall
+}) => {
+  return (
+    <div className="overflow-x-auto border border-gray-200 rounded-sm shadow-sm bg-white">
+      <table className="w-full border-collapse text-left">
+        <thead>
+          <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm">
+            <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-10">
+              <input
+                type="checkbox"
+                checked={selectedLeads.length === currentLeads.length && currentLeads.length > 0}
+                onChange={handleSelectAll}
+                className="w-4 h-4 cursor-pointer accent-orange-500"
+              />
+            </th>
+            <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 capitalize whitespace-nowrap">Full Name</th>
+            <th className="py-3 px-4 font-semibold text-center border-b border-orange-400 capitalize whitespace-nowrap">Mobile Number</th>
+            <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 capitalize whitespace-nowrap">Interested In</th>
+            <th className="py-3 px-4 font-semibold text-center border-b border-orange-400 capitalize whitespace-nowrap">Lead Status</th>
+            <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 capitalize whitespace-nowrap">Pipeline Stages</th>
+            <th className="py-3 px-4 font-semibold border-b border-orange-400 capitalize text-center whitespace-nowrap">Call Hits</th>
+            <th className="py-3 px-4 font-semibold text-right border-b border-orange-400 capitalize whitespace-nowrap">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {currentLeads.length > 0 ? (
+            currentLeads.map((lead) => (
+              <tr key={lead.id} className="border-t hover:bg-gray-50 transition-colors group">
+                <td className="py-3 px-4 text-left">
+                  <input
+                    type="checkbox"
+                    checked={selectedLeads.includes(lead.id)}
+                    onChange={() => handleSelectLead(lead.id)}
+                    className="w-4 h-4 cursor-pointer accent-orange-500"
+                  />
+                </td>
+                <td className="py-3 px-4 text-gray-800 hover:text-orange-600 cursor-pointer text-sm font-bold text-left" onClick={() => handleLeadClick(lead)}>
+                  {lead.name || lead.full_name || lead.organization_name || "Untitled Lead"}
+                </td>
+                <td className="py-3 px-4 text-center text-sm text-gray-600">
+                  {lead.mobile_number || lead.phone || "--"}
+                </td>
+                <td className="py-3 px-4 text-left">
+                  <div className="flex flex-wrap gap-1">
+                    {lead.interested_in ? (
+                      (Array.isArray(lead.interested_in) ? lead.interested_in : lead.interested_in.split(',')).map((item, idx) => (
+                        <span key={idx} className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-sm text-[10px] font-bold border border-gray-200 uppercase">
+                          {item.trim()}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-gray-400 text-[10px]">--</span>
+                    )}
+                  </div>
+                </td>
+                <td className="py-3 px-4 text-center">
+                  <span className={`px-2 py-1 rounded-[2px] text-[10px] font-bold border uppercase tracking-wider ${((tag, isTrending, status) => {
+                    let s = tag || status || "New Lead";
+                    if (s === "Not Contacted") s = "New Lead";
+                    if (isTrending) return "bg-orange-100 text-orange-600 border-orange-200";
+                    switch (s.toLowerCase()) {
+                      case "new lead": case "new": case "new leads": return "bg-blue-100 text-blue-600 border-blue-200";
+                      case "not connected": return "bg-purple-100 text-purple-600 border-purple-200";
+                      case "follow up": return "bg-yellow-100 text-yellow-600 border-yellow-200";
+                      case "won": case "closed": return "bg-green-100 text-green-600 border-green-200";
+                      case "dropped": case "lost": return "bg-red-100 text-red-600 border-red-200";
+                      default: return "bg-gray-100 text-gray-600 border-gray-200";
+                    }
+                  })(lead.tag, lead.is_trending, lead.status)}`}>
+                    {lead.is_trending === 1 ? "Trending" : (lead.tag || lead.status || "New Lead")}
+                  </span>
+                </td>
+                <td className="py-3 px-4 text-left">
+                  <div className="flex flex-col">
+                    <span className="text-xs font-bold text-gray-700">{lead.pipeline_name || "General"}</span>
+                    <span className="text-[10px] text-[#FF7B1D] font-bold italic">{lead.stage_name || "New"}</span>
+                  </div>
+                </td>
+                <td className="py-3 px-4 font-bold text-gray-700 text-center">
+                  <div className="flex flex-col items-center">
+                    <span className="text-sm">{lead.call_count || 0}</span>
+                    <span className="text-[9px] text-gray-400 font-normal">Hits</span>
+                  </div>
+                </td>
+                <td className="py-3 px-4">
+                  <div className="flex justify-end gap-1.5">
+                    <button onClick={() => handleHitCall && handleHitCall(lead)} className="p-1.5 bg-orange-50 hover:bg-orange-500 rounded-sm text-orange-600 hover:text-white transition-all border border-orange-100 hover:border-orange-500 shadow-sm" title="Hit Call">
+                      <Phone size={16} />
+                    </button>
+                    <a
+                      href={((lead.mobile_number || lead.phone || '').replace(/\D/g, '')) ? `https://wa.me/${(lead.mobile_number || lead.phone || '').replace(/\D/g, '')}` : '#'}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-1.5 bg-green-50 hover:bg-green-500 rounded-sm text-green-600 hover:text-white transition-all border border-green-100 hover:border-green-500 shadow-sm"
+                      title="WhatsApp"
+                    >
+                      <FaWhatsapp size={16} />
+                    </a>
+                    <button className="p-1.5 hover:bg-blue-50 rounded-sm text-blue-500 hover:text-blue-700 transition-all border border-transparent hover:border-blue-100" onClick={() => handleLeadClick(lead)} title="View Profile">
+                      <Eye size={16} />
+                    </button>
+                    <button className="p-1.5 hover:bg-green-50 rounded-sm text-green-500 hover:text-green-700 transition-all border border-transparent hover:border-green-100" onClick={() => handleEditLead(lead)} title="Edit Lead">
+                      <Edit size={16} />
+                    </button>
+                    <button className="p-1.5 hover:bg-red-50 rounded-sm text-red-500 hover:text-red-700 transition-all border border-transparent hover:border-red-100" onClick={() => handleDeleteLead(lead)} title="Delete Lead">
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan="8" className="py-12 text-center text-gray-500 font-medium text-sm">No leads found.</td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
+const WorkStationLeadsGridView = ({
+  leadsData,
+  filterStatus,
+  handleLeadClick,
+  selectedLeads,
+  handleSelectLead,
+  handleHitCall
+}) => {
+  const groupTags = ["New Leads", "Not Connected", "Follow Up", "Trending"];
+
+  const getAvatarBg = (tag) => {
+    switch (tag) {
+      case "Follow Up": return "bg-amber-500";
+      case "Not Connected": return "bg-purple-500";
+      case "Trending": return "bg-orange-500";
+      default: return "bg-blue-500";
+    }
+  };
+
+  const getPriorityColor = (priority) => {
+    switch (priority) {
+      case "High": return "bg-red-100 text-red-600";
+      case "Medium": return "bg-yellow-100 text-yellow-600";
+      case "Low": return "bg-green-100 text-green-600";
+      default: return "bg-gray-100 text-gray-600";
+    }
+  };
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      {groupTags.map((groupTag) => {
+        const tagLeads = leadsData.filter((lead) => {
+          const isTrending = lead.is_trending === 1 || lead.priority === "High" || lead.tag === "Trending";
+          const isFollowUp = lead.tag === "Follow Up";
+          const isNotConnected = lead.tag === "Not Connected";
+          const isNew = lead.tag === "Not Contacted" || lead.tag === "New Lead" || lead.tag === "New Leads" || lead.stage_name === "New" || !lead.tag;
+
+          if (isTrending) return groupTag === "Trending";
+          if (isFollowUp) return groupTag === "Follow Up";
+          if (isNotConnected) return groupTag === "Not Connected";
+          if (isNew) return groupTag === "New Leads";
+          return false;
+        }).filter(lead => filterStatus === "All" || (lead.tag || lead.status) === filterStatus);
+
+        return (
+          <div key={groupTag} className="flex flex-col group/column">
+            <div className={`rounded-sm shadow-sm border border-gray-200 p-4 mb-4 border-t-4 bg-white transition-all duration-300 hover:shadow-md ${groupTag === 'Trending' ? 'border-t-orange-500 bg-orange-50/50' : groupTag === 'New Leads' ? 'border-t-blue-500 bg-blue-50/50' : groupTag === 'Not Connected' ? 'border-t-purple-500 bg-purple-50/50' : 'border-t-yellow-500 bg-yellow-50/50'}`}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-1.5 rounded-sm bg-white border border-gray-100 shadow-sm">
+                    {groupTag === 'New Leads' && <UserPlus size={18} className="text-blue-500" />}
+                    {groupTag === 'Not Connected' && <PhoneIncoming size={18} className="text-purple-500" />}
+                    {groupTag === 'Follow Up' && <Clock size={18} className="text-yellow-500" />}
+                    {groupTag === 'Trending' && <TrendingUp size={18} className="text-orange-500" />}
+                  </div>
+                  <h3 className="text-sm font-bold text-gray-800 capitalize tracking-tight font-primary">{groupTag}</h3>
+                </div>
+                <span className="bg-white text-gray-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-gray-100 shadow-sm">{tagLeads.length}</span>
+              </div>
+            </div>
+
+            <div className="space-y-4 flex-1">
+              {tagLeads.length > 0 ? (
+                tagLeads.map((lead) => {
+                  const leadDisplayName = lead.name || lead.full_name || lead.organization_name || "L";
+                  const initials = leadDisplayName.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+                  const cleanNumber = (lead.mobile_number || lead.phone || '').replace(/\D/g, '');
+                  const waLink = cleanNumber ? `https://wa.me/${cleanNumber}` : '#';
+
+                  return (
+                    <div key={lead.id} className="bg-white border border-gray-200 rounded-sm shadow-sm hover:shadow-md transition relative p-4 space-y-3">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-3">
+                          {lead.profile_image ? (
+                            <img src={lead.profile_image} alt="" className="w-10 h-10 rounded-sm object-cover border border-gray-200" />
+                          ) : (
+                            <div className={`w-10 h-10 ${getAvatarBg(lead.tag)} rounded-sm flex items-center justify-center text-white font-semibold text-sm shadow-inner uppercase`}>
+                              {initials}
+                            </div>
+                          )}
+                          <div>
+                            <h4 className="font-bold text-gray-800 text-sm hover:text-orange-600 cursor-pointer line-clamp-1 font-primary" onClick={() => handleLeadClick(lead)}>
+                              {leadDisplayName}
+                            </h4>
+                            <p className="text-[10px] text-gray-400 font-bold capitalize tracking-widest font-primary">{lead.lead_id || `ID: ${lead.id}`}</p>
+                          </div>
+                        </div>
+                        <input type="checkbox" checked={selectedLeads.includes(lead.id)} onChange={() => handleSelectLead(lead.id)} className="w-4 h-4 cursor-pointer accent-orange-500 mt-1" />
+                      </div>
+
+                      <div className="space-y-1.5 pt-1">
+                        <div className="flex items-center gap-2 text-[11px] text-gray-500">
+                          <Phone size={12} className="text-orange-500" />
+                          <span className="font-medium font-primary">{lead.mobile_number || lead.phone || '--'}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-[11px] text-gray-500">
+                          <span className="text-[10px] text-gray-400 uppercase font-bold font-primary">Owner:</span>
+                          <span className="font-bold text-gray-700 truncate font-primary">{lead.employee_name || "Unassigned"}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                        <span className={`px-2 py-0.5 text-[10px] font-bold rounded-sm uppercase tracking-wider font-primary ${getPriorityColor(lead.priority)}`}>
+                          {lead.priority || 'Medium'}
+                        </span>
+                        <div className="flex gap-2">
+                          <button onClick={() => handleHitCall && handleHitCall(lead)} className="p-1.5 bg-orange-50 hover:bg-orange-500 rounded-sm text-orange-600 hover:text-white transition-all border border-orange-100 hover:border-orange-500" title="Hit Call">
+                            <Phone size={14} />
+                          </button>
+                          <a href={waLink} target="_blank" rel="noopener noreferrer" className="p-1.5 bg-green-50 hover:bg-green-500 rounded-sm text-green-600 hover:text-white transition-all border border-green-100 hover:border-green-500" title="WhatsApp">
+                            <FaWhatsapp size={14} />
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="flex flex-col items-center justify-center py-10 rounded-sm border border-dashed border-gray-200 bg-gray-50/30">
+                  <Inbox className="text-gray-300 mb-2" size={24} />
+                  <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest font-primary">No Leads</h4>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
 
 export default function WorkStation() {
   const navigate = useNavigate();
@@ -683,20 +966,18 @@ export default function WorkStation() {
             ) : (
               <>
                 {view === "list" ? (
-                  <LeadsListView
+                  <WorkStationLeadsListView
                     currentLeads={leadsData}
                     selectedLeads={selectedLeads}
                     handleSelectAll={handleSelectAll}
                     handleSelectLead={handleSelectLead}
                     handleLeadClick={handleLeadClick}
-                    currentPage={currentPage}
-                    itemsPerPage={itemsPerPage}
                     handleDeleteLead={handleDeleteLead}
                     handleEditLead={handleEditLead}
                     handleHitCall={openCallAction}
                   />
                 ) : (
-                  <LeadsGridView leadsData={leadsData} filterStatus={filterStatus} handleLeadClick={handleLeadClick} selectedLeads={selectedLeads} handleSelectLead={handleSelectLead} handleHitCall={openCallAction} />
+                  <WorkStationLeadsGridView leadsData={leadsData} filterStatus={filterStatus} handleLeadClick={handleLeadClick} selectedLeads={selectedLeads} handleSelectLead={handleSelectLead} handleHitCall={openCallAction} />
                 )}
 
                 {totalPages > 1 && (
@@ -773,6 +1054,7 @@ export default function WorkStation() {
           isOpen={isQrModalOpen}
           onClose={() => setIsQrModalOpen(false)}
           lead={selectedLeadForCall}
+          onProceedToLog={handleProceedToLog}
         />
 
         {/* Delete Confirmation Modal */}
@@ -791,13 +1073,13 @@ export default function WorkStation() {
                   setShowDeleteModal(false);
                   setLeadToDelete(null);
                 }}
-                className="flex-1 px-6 py-3 border-2 border-gray-200 text-gray-700 font-bold rounded-sm hover:bg-gray-100 transition-all font-primary text-xs uppercase tracking-widest"
+                className="flex-1 px-6 py-3 border-2 border-gray-200 text-gray-700 font-bold rounded-sm hover:bg-gray-100 transition-all font-primary text-xs capitalize tracking-widest"
               >
                 Cancel
               </button>
               <button
                 onClick={confirmDelete}
-                className="flex-1 px-6 py-3 bg-red-600 text-white font-bold rounded-sm hover:bg-red-700 transition-all shadow-lg flex items-center justify-center gap-2 font-primary text-xs uppercase tracking-widest"
+                className="flex-1 px-6 py-3 bg-red-600 text-white font-bold rounded-sm hover:bg-red-700 transition-all shadow-lg flex items-center justify-center gap-2 font-primary text-xs capitalize tracking-widest"
               >
                 <Trash2 size={18} />
                 Delete Now
