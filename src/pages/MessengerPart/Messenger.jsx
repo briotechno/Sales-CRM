@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
-import DashboardLayout from "../../components/DashboardLayout";
 import { MessageCircle, Search, Users, User, X } from "lucide-react";
 import { useSelector } from "react-redux";
 import { io } from "socket.io-client";
@@ -880,7 +879,7 @@ export default function MessengerPage() {
     : messages;
 
   return (
-    <DashboardLayout isFullHeight={true}>
+    <>
       <div className="flex-1 min-h-0 ml-5 bg-white rounded-3xl overflow-hidden shadow-2xl border border-gray-100 flex flex-col">
         <div className="flex flex-1 min-h-0">
           {/* Sidebar */}
@@ -1068,6 +1067,6 @@ export default function MessengerPage() {
           background-color: #ea580c;
         }
       `}</style>
-    </DashboardLayout>
+    </>
   );
 }

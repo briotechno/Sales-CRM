@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import DashboardLayout from "../../components/DashboardLayout";
+
 import {
   BarChart3,
   TrendingUp,
@@ -179,7 +179,8 @@ export default function AnalysisPage() {
   };
 
   return (
-    <DashboardLayout>
+    <>
+
       <div className="min-h-screen bg-white">
         {/* Header Section */}
         <div className="bg-white sticky top-0 z-30">
@@ -556,6 +557,7 @@ export default function AnalysisPage() {
           </div>
         </div>
       </div>
-    </DashboardLayout>
+    </>
+
   );
 }

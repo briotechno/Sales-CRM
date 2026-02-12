@@ -1,33 +1,56 @@
-import React, { useState } from "react";
+import { Outlet, useLocation } from "react-router-dom";
+import { createContext, useContext, useState } from "react";
+import { useSelector } from "react-redux";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
 import ProfileCompletionBanner from "./ProfileCompletionBanner";
 
+const LayoutContext = createContext(null);
+
 const DashboardLayout = ({ children, isFullHeight = false }) => {
+  const isNested = useContext(LayoutContext);
+  const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const isLocked = useSelector((state) => state.ui.sidebarLocked);
+
+  // If already inside a layout provider, just render children
+  if (isNested) {
+    return <>{children}</>;
+  }
+
+  // Determine if this page should be full height based on route
+  const fullHeightPages = [
+    "/notifications",
+    "/mail",
+    "/additional/messenger"
+  ];
+
+  const isFull = isFullHeight || fullHeightPages.some(path => location.pathname.startsWith(path));
 
   return (
-    <div className={isFullHeight ? "h-screen overflow-hidden" : ""}>
-      {/* Header */}
-      <Header />
+    <LayoutContext.Provider value={true}>
+      <div className={isFull ? "h-screen overflow-hidden" : ""}>
+        {/* Header */}
+        <Header />
 
-      {/* Sidebar */}
-      <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
+        {/* Sidebar */}
+        <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
 
-      {/* Main Content */}
-      <main
-        className={`mt-[70px] p-0 pr-0 bg-white transition-all duration-300
-        ${sidebarOpen ? "ml-[280px]" : "ml-0"} 
-        md:ml-[280px] ${isFullHeight ? "h-[calc(100vh-64px)] flex flex-col overflow-hidden" : "min-h-screen"}`}
-      >
-        <ProfileCompletionBanner />
-        {isFullHeight ? (
-          <div className="flex-1 min-h-0 flex flex-col">
-            {children}
-          </div>
-        ) : children}
-      </main>
-    </div>
+        {/* Main Content */}
+        <main
+          className={`mt-[70px] p-0 pr-0 bg-white transition-all duration-300
+          ${sidebarOpen ? "ml-[280px]" : "ml-0"} 
+          ${isLocked ? "md:ml-[280px]" : "md:ml-[68px]"} ${isFull ? "h-[calc(100vh-64px)] flex flex-col overflow-hidden" : "min-h-screen"}`}
+        >
+          <ProfileCompletionBanner />
+          {isFull ? (
+            <div className="flex-1 min-h-0 flex flex-col">
+              {children || <Outlet />}
+            </div>
+          ) : (children || <Outlet />)}
+        </main>
+      </div>
+    </LayoutContext.Provider>
   );
 };
 

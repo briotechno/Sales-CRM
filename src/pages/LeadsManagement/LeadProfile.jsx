@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import DashboardLayout from "../../components/DashboardLayout";
+
 import AddNoteModal from "../../components/LeadManagement/LeadPipLineStatus/AddNotes";
 import EditLeadModal from "../../pages/LeadsManagement/EditLeadPopup"; // Adjust path as needed
 import {
@@ -793,7 +793,8 @@ export default function CRMLeadDetail() {
   };
 
   return (
-    <DashboardLayout>
+    <>
+
       <div className="min-h-screen bg-gray-0 flex flex-col">
         {/* Back Button */}
         <div className="bg-white px-8 py-4 border-b">
@@ -1233,6 +1234,7 @@ export default function CRMLeadDetail() {
         leadData={leadData}
         onSave={handleLeadInfoSave}
       />
-    </DashboardLayout>
+    </>
+
   );
 }

@@ -1,5 +1,4 @@
 import React, { useState, useMemo, useEffect } from "react";
-import DashboardLayout from "../../components/DashboardLayout";
 import {
   FiMail,
   FiStar,
@@ -184,7 +183,7 @@ const MailPage = () => {
   };
 
   return (
-    <DashboardLayout isFullHeight={true} isNoPadding={true}>
+    <>
       <div className="flex h-full w-full bg-white overflow-hidden text-gray-800 font-sans">
 
         {/* --- LEFT SIDEBAR (Glassmorphism effect) --- */}
@@ -489,7 +488,7 @@ const MailPage = () => {
           </div>
         </div>
       )}
-    </DashboardLayout>
+    </>
   );
 };
 

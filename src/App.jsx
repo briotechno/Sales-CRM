@@ -137,6 +137,7 @@ import PhonePay from "./pages/SuperAdmin/PaymentGateways/PhonePay.jsx";
 import RoleProtectedRoute from "./components/RoleProtectedRoute";
 import GlobalModals from "./components/common/GlobalModals";
 import TaskReminderPopup from "./components/TaskReminderPopup.jsx";
+import DashboardLayout from "./components/DashboardLayout";
 
 function App() {
   return (
@@ -155,92 +156,94 @@ function App() {
 
 
         {/* Protected Routes */}
+        {/* Protected Routes */}
         <Route element={<ProtectedRoute />}>
-          <Route path="/logout" element={<Logout />} />
-          <Route path="/notifications" element={<NotificationPage />} />
-          <Route path="/mail" element={<MailPage />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/crm/dashboard" element={<CRMDashboard />} />
-          <Route path="/crm/leads/all" element={<AllLeads />} />
-          <Route path="/crm/leads/new" element={<NewLeads />} />
-          <Route path="/crm/leads/assigned" element={<Assigned />} />
-          <Route path="/crm/leads/not-connected" element={<NotConnectedLeads />} />
-          <Route path="/crm/leads/follow-up" element={<FollowUpLeads />} />
-          <Route path="/crm/leads/missed" element={<MissedLeads />} />
-          <Route path="/crm/leads/dropped" element={<DroppedLeads />} />
-          <Route path="/crm/leads/duplicates" element={<DuplicatesLeads />} />
-          <Route path="/crm/leads/trending" element={<TrendingLeads />} />
-          <Route path="/crm/leads/won" element={<WonLeads />} />
-          <Route path="/crm/leads/analysis" element={<Analysis />} />
-          <Route path="/crm/leads/assignment-settings" element={<AssignmentSettings />} />
-          <Route path="/crm/leads/profile/:id" element={<LeadProfile />} />
-          <Route path="/crm/leads/add-notes" element={<AddNotes />} />
-          <Route path="/crm/leads/dashboard" element={<LeadDashboard />} />
-          <Route path="/crm/leads/work-station" element={<WorkStation />} />
-          <Route
-            path="/crm/leads/create-call-log"
-            element={<CreateCallLogModal />}
-          />
-          <Route path="/crm/champions/lead" element={<Lead />} />
-          <Route path="/crm/pipeline/manage" element={<ManagePipline />} />
-          <Route path="/crm/pipeline/stages" element={<ManageStage />} />
-          <Route path="/crm/pipeline/analytics" element={<Analytics />} />
-          <Route path="/hrm/dashboard" element={<HrmDashboard />} />
-          <Route path="/hrm/department" element={<AllDepartment />} />
-          <Route path="/hrm/designation" element={<AllDesignation />} />
-          <Route path="/hrm/terms" element={<AllTermCondition />} />
-          <Route path="/hrm/employee/all" element={<AllEmployee />} />
-          <Route path="/profile" element={<MyProfile />} />
-          <Route path="/employee-profile/:id" element={<EmployeeProfile />} />
-          <Route path="/hrm/attendance" element={<AllAttendance />} />
-          <Route path="/hrm/attendance/employee" element={<EmployeeAttendance />} />
+          <Route element={<DashboardLayout />}>
+            <Route path="/logout" element={<Logout />} />
+            <Route path="/notifications" element={<NotificationPage />} />
+            <Route path="/mail" element={<MailPage />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/crm/dashboard" element={<CRMDashboard />} />
+            <Route path="/crm/leads/all" element={<AllLeads />} />
+            <Route path="/crm/leads/new" element={<NewLeads />} />
+            <Route path="/crm/leads/assigned" element={<Assigned />} />
+            <Route path="/crm/leads/not-connected" element={<NotConnectedLeads />} />
+            <Route path="/crm/leads/follow-up" element={<FollowUpLeads />} />
+            <Route path="/crm/leads/missed" element={<MissedLeads />} />
+            <Route path="/crm/leads/dropped" element={<DroppedLeads />} />
+            <Route path="/crm/leads/duplicates" element={<DuplicatesLeads />} />
+            <Route path="/crm/leads/trending" element={<TrendingLeads />} />
+            <Route path="/crm/leads/won" element={<WonLeads />} />
+            <Route path="/crm/leads/analysis" element={<Analysis />} />
+            <Route path="/crm/leads/assignment-settings" element={<AssignmentSettings />} />
+            <Route path="/crm/leads/profile/:id" element={<LeadProfile />} />
+            <Route path="/crm/leads/add-notes" element={<AddNotes />} />
+            <Route path="/crm/leads/dashboard" element={<LeadDashboard />} />
+            <Route path="/crm/leads/work-station" element={<WorkStation />} />
+            <Route
+              path="/crm/leads/create-call-log"
+              element={<CreateCallLogModal />}
+            />
+            <Route path="/crm/champions/lead" element={<Lead />} />
+            <Route path="/crm/pipeline/manage" element={<ManagePipline />} />
+            <Route path="/crm/pipeline/stages" element={<ManageStage />} />
+            <Route path="/crm/pipeline/analytics" element={<Analytics />} />
+            <Route path="/hrm/dashboard" element={<HrmDashboard />} />
+            <Route path="/hrm/department" element={<AllDepartment />} />
+            <Route path="/hrm/designation" element={<AllDesignation />} />
+            <Route path="/hrm/terms" element={<AllTermCondition />} />
+            <Route path="/hrm/employee/all" element={<AllEmployee />} />
+            <Route path="/profile" element={<MyProfile />} />
+            <Route path="/employee-profile/:id" element={<EmployeeProfile />} />
+            <Route path="/hrm/attendance" element={<AllAttendance />} />
+            <Route path="/hrm/attendance/employee" element={<EmployeeAttendance />} />
 
-          <Route path="/hrm/attendance/manage" element={<ManageAttendance />} />
-          <Route path="/hrm/leave/all" element={<AllLeave />} />
-          <Route path="/hrm/leave/holiday" element={<Holiday />} />
-          <Route path="/hrm/leave/manage" element={<ManageLeave />} />
-          <Route path="/hrm/salary" element={<AllSalary />} />
-          <Route path="/hrm/company-policy" element={<AllCompanyPolicy />} />
-          <Route path="/hrm/hr-policy" element={<AllHRPolicy />} />
-          <Route path="/hrm/job-management" element={<Job />} />
-          <Route path="/hrm/applicants" element={<ApplicantList />} />
-          <Route path="/hrm/offer-letters" element={<OfferLetterList />} />
-          <Route path="/additional/notes" element={<AllNotes />} />
-          <Route path="/additional/todo" element={<AllToDo />} />
-          <Route path="/additional/expenses" element={<MyExpanses />} />
-          <Route path="/additional/quotation" element={<AllQuotation />} />
-          <Route path="/additional/invoice" element={<AllInvoice />} />
-          <Route path="/additional/notification" element={<Notification />} />
-          <Route path="/additional/announcement" element={<AllAnouncement />} />
-          <Route path="/additional/announcement/category" element={<AnnouncementCategoryPage />} />
-          <Route path="/crm/client/all" element={<ClientManagement />} />
-          <Route path="/settings/business-info" element={<BusinessInfo />} />
-          <Route path="/settings/subscription" element={<ManageSubscription />} />
-          <Route path="/settings/faq" element={<Faq />} />
-          <Route path="/additional/messenger" element={<Messenger />} />
-          <Route path="/crm/channel/form" element={<CRMFormPage />} />
-          <Route path="/crm/channel/google-docs" element={<GoogleDocsPage />} />
-          <Route path="/crm/channel/meta" element={<ComingSoon title="Meta Integration" />} />
-          <Route path="/crm/channel/justdial" element={<ComingSoon title="Justdial Integration" />} />
-          <Route path="/crm/channel/indiamart" element={<ComingSoon title="Indiamart Integration" />} />
-          <Route path="/additional/catelogs" element={<Catelogs />} />
+            <Route path="/hrm/attendance/manage" element={<ManageAttendance />} />
+            <Route path="/hrm/leave/all" element={<AllLeave />} />
+            <Route path="/hrm/leave/holiday" element={<Holiday />} />
+            <Route path="/hrm/leave/manage" element={<ManageLeave />} />
+            <Route path="/hrm/salary" element={<AllSalary />} />
+            <Route path="/hrm/company-policy" element={<AllCompanyPolicy />} />
+            <Route path="/hrm/hr-policy" element={<AllHRPolicy />} />
+            <Route path="/hrm/job-management" element={<Job />} />
+            <Route path="/hrm/applicants" element={<ApplicantList />} />
+            <Route path="/hrm/offer-letters" element={<OfferLetterList />} />
+            <Route path="/additional/notes" element={<AllNotes />} />
+            <Route path="/additional/todo" element={<AllToDo />} />
+            <Route path="/additional/expenses" element={<MyExpanses />} />
+            <Route path="/additional/quotation" element={<AllQuotation />} />
+            <Route path="/additional/invoice" element={<AllInvoice />} />
+            <Route path="/additional/notification" element={<Notification />} />
+            <Route path="/additional/announcement" element={<AllAnouncement />} />
+            <Route path="/additional/announcement/category" element={<AnnouncementCategoryPage />} />
+            <Route path="/crm/client/all" element={<ClientManagement />} />
+            <Route path="/settings/business-info" element={<BusinessInfo />} />
+            <Route path="/settings/subscription" element={<ManageSubscription />} />
+            <Route path="/settings/faq" element={<Faq />} />
+            <Route path="/additional/messenger" element={<Messenger />} />
+            <Route path="/crm/channel/form" element={<CRMFormPage />} />
+            <Route path="/crm/channel/google-docs" element={<GoogleDocsPage />} />
+            <Route path="/crm/channel/meta" element={<ComingSoon title="Meta Integration" />} />
+            <Route path="/crm/channel/justdial" element={<ComingSoon title="Justdial Integration" />} />
+            <Route path="/crm/channel/indiamart" element={<ComingSoon title="Indiamart Integration" />} />
+            <Route path="/additional/catelogs" element={<Catelogs />} />
 
-          <Route path="/additional/catalog-categories" element={<CatalogCategory />} />
-          <Route path="/hrm/teams" element={<TeamManagement />} />
+            <Route path="/additional/catalog-categories" element={<CatalogCategory />} />
+            <Route path="/hrm/teams" element={<TeamManagement />} />
 
-          {/* Super Admin Routes */}
-          <Route element={<RoleProtectedRoute allowedRoles={['Super Admin']} />}>
-            <Route path="/superadmin/dashboard" element={<SuperAdmin />} />
-            <Route path="/superadmin/enterprises" element={<EnterpriseManagement />} />
-            <Route path="/superadmin/subscriptions" element={<SubscriptionManagement />} />
-            <Route path="/superadmin/productkeys" element={<ProductKeys />} />
-            <Route path="/superadmin/plans" element={<PlanManagement />} />
-            <Route path="/superadmin/paymentgateways" element={<PaymentGateways />} />
-            <Route path="/superadmin/paymentgateways/Cashfree" element={<Cashfree />} />
-            <Route path="/superadmin/paymentgateways/PhonePay" element={<PhonePay />} />
-            <Route path="/superadmin/paymentgateways/Razorpay" element={<Razorpay />} />
+            {/* Super Admin Routes */}
+            <Route element={<RoleProtectedRoute allowedRoles={['Super Admin']} />}>
+              <Route path="/superadmin/dashboard" element={<SuperAdmin />} />
+              <Route path="/superadmin/enterprises" element={<EnterpriseManagement />} />
+              <Route path="/superadmin/subscriptions" element={<SubscriptionManagement />} />
+              <Route path="/superadmin/productkeys" element={<ProductKeys />} />
+              <Route path="/superadmin/plans" element={<PlanManagement />} />
+              <Route path="/superadmin/paymentgateways" element={<PaymentGateways />} />
+              <Route path="/superadmin/paymentgateways/Cashfree" element={<Cashfree />} />
+              <Route path="/superadmin/paymentgateways/PhonePay" element={<PhonePay />} />
+              <Route path="/superadmin/paymentgateways/Razorpay" element={<Razorpay />} />
+            </Route>
           </Route>
-
         </Route>
       </Routes>
       <LeadsReminder />

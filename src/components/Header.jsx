@@ -121,8 +121,10 @@ const Header = () => {
     }, [])
     : [];
 
+  const { sidebarLocked: isLocked } = useSelector((state) => state.ui);
+
   return (
-    <header className="fixed top-0 left-0 right-0 md:left-[280px] h-[70px] flex items-center px-4 lg:px-8 z-40 bg-[#2b303b] transition-all duration-300">
+    <header className={`fixed top-0 left-0 right-0 ${isLocked ? "md:left-[280px]" : "md:left-[68px]"} h-[70px] flex items-center px-4 lg:px-8 z-40 bg-[#2b303b] transition-all duration-300`}>
       {/* Left Clock */}
       <div className="flex flex-col min-w-[120px]">
         <span className="text-[17px] font-bold text-white leading-none tracking-tight">

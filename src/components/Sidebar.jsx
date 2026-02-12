@@ -5,6 +5,7 @@ import { departmentApi } from "../store/api/departmentApi";
 import { designationApi } from "../store/api/designationApi";
 import { employeeApi } from "../store/api/employeeApi";
 import { businessApi } from "../store/api/businessApi";
+import { toggleSidebarLock } from "../store/slices/uiSlice";
 import { permissionCategories } from "../pages/EmployeePart/permissionsData";
 import {
   LayoutDashboard,
@@ -36,6 +37,8 @@ import {
   Package,
   Shield,
   Search,
+  Lock,
+  Unlock,
 } from "lucide-react";
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
@@ -45,6 +48,8 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
   const activeItemRef = React.useRef(null);
   const dispatch = useDispatch();
   const user = useSelector((state) => state.auth.user);
+  const isLocked = useSelector((state) => state.ui.sidebarLocked);
+  const [isHovered, setIsHovered] = useState(false);
 
   const handleItemClick = (path) => {
     setActiveItem(path);
@@ -186,17 +191,28 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
     ? [{ id: "superadmin", name: "Admin", icon: <Shield size={20} />, section: "Super Admin" }, ...modules]
     : modules;
 
-  const [activeModule, setActiveModule] = useState("dashboard");
-
   // Detect active module from URL
+  const getInitialModule = () => {
+    const path = location.pathname;
+    if (path.startsWith("/superadmin")) return "superadmin";
+    if (path.startsWith("/crm")) return "crm";
+    if (path.startsWith("/hrm")) return "hrm";
+    if (path.startsWith("/settings")) return "settings";
+    if (path.startsWith("/additional")) return "additional";
+    return "dashboard";
+  };
+
+  const [activeModule, setActiveModule] = useState(getInitialModule());
+
+  // Detect active module from URL changes
   useEffect(() => {
     const path = location.pathname;
     if (path.startsWith("/superadmin")) setActiveModule("superadmin");
     else if (path.startsWith("/crm")) setActiveModule("crm");
     else if (path.startsWith("/hrm")) setActiveModule("hrm");
+    else if (path.startsWith("/settings")) setActiveModule("settings");
     else if (path.startsWith("/additional")) setActiveModule("additional");
-    else if (path.startsWith("/settings") || path === "/logout") setActiveModule("settings");
-    else if (path === "/dashboard" || path === "/") setActiveModule("dashboard");
+    else setActiveModule("dashboard");
   }, [location.pathname]);
 
 
@@ -610,8 +626,10 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
 
       {/* Sidebar Container */}
       <aside
+        onMouseEnter={() => !isLocked && setIsHovered(true)}
+        onMouseLeave={() => !isLocked && setIsHovered(false)}
         className={`fixed top-0 left-0 h-screen bg-white shadow-xl flex transition-all duration-300 z-40 ${isOpen ? "translate-x-0" : "-translate-x-full"
-          } md:translate-x-0 w-[280px]`}
+          } md:translate-x-0 ${isLocked || isHovered ? "w-[280px]" : "w-[68px]"}`}
       >
         {/* Module Rail - Left */}
         <div className="w-[68px] bg-[#f8f9fa] border-r border-[#eee] flex flex-col items-center py-4 gap-4 z-10 no-scrollbar overflow-y-auto">
@@ -660,11 +678,20 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         </div>
 
         {/* Navigation Panel - Right */}
-        <div className="flex-1 flex flex-col min-w-0 bg-white shadow-[-10px_0_15px_-3px_rgba(0,0,0,0.02)]">
+        <div className="flex-1 flex flex-col min-w-0 bg-white shadow-[-10px_0_15px_-3px_rgba(0,0,0,0.02)] overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-50 mb-0 bg-gradient-to-r from-white to-gray-50/30">
-            <h2 className="text-xl font-extrabold text-gray-900 flex items-center gap-2 tracking-tight">
-              {availableModules.find(m => m.id === activeModule)?.name}
-            </h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-extrabold text-gray-900 flex items-center gap-2 tracking-tight">
+                {availableModules.find(m => m.id === activeModule)?.name}
+              </h2>
+              <button
+                onClick={() => dispatch(toggleSidebarLock())}
+                className={`p-1.5 rounded-lg transition-all hidden md:block ${isLocked ? "text-[#FF7B1D] bg-orange-50" : "text-gray-400 hover:text-gray-600 hover:bg-gray-100"}`}
+                title={isLocked ? "Unlock Sidebar" : "Lock Sidebar"}
+              >
+                {isLocked ? <Lock size={16} /> : <Unlock size={16} />}
+              </button>
+            </div>
             <div className="flex items-center gap-2 mt-1">
               <div className="w-1.5 h-1.5 rounded-full bg-[#FF7B1D] animate-pulse" />
               <p className="text-[9px] text-gray-400 font-bold uppercase tracking-wider whitespace-nowrap">
@@ -764,15 +791,17 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             ))}
           </div>
         </div>
-      </aside>
+      </aside >
 
       {/* Overlay for Mobile */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 bg-black opacity-40 z-30 md:hidden"
-          onClick={() => setIsOpen(false)}
-        />
-      )}
+      {
+        isOpen && (
+          <div
+            className="fixed inset-0 bg-black opacity-40 z-30 md:hidden"
+            onClick={() => setIsOpen(false)}
+          />
+        )
+      }
 
       <style>{`
         /* Custom scrollbar styling */
