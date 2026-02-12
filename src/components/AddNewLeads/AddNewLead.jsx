@@ -11,15 +11,37 @@ import {
   IndianRupee,
   Tag,
   Layers,
-  Workflow
+  Workflow,
+  Plus,
+  Trash2,
+  Image as ImageIcon,
+  Calendar,
+  Upload
 } from "lucide-react";
 import { useCreateLeadMutation, useUpdateLeadMutation } from "../../store/api/leadApi";
 import { useGetPipelinesQuery } from "../../store/api/pipelineApi";
 import { useGetEmployeesQuery } from "../../store/api/employeeApi";
 import { toast } from "react-hot-toast";
+import { useSelector } from "react-redux";
 
 const inputStyles =
   "w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300";
+
+// Helper function to convert file to base64
+const fileToBase64 = (file) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = (error) => reject(error);
+  });
+};
+
+// Helper function to validate file size (max 1MB)
+const validateFileSize = (file) => {
+  const maxSize = 1 * 1024 * 1024; // 1MB in bytes
+  return file.size <= maxSize;
+};
 
 export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
   const [createLead, { isLoading: isCreating }] = useCreateLeadMutation();
@@ -27,70 +49,134 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
   const { data: pipelinesData } = useGetPipelinesQuery({ limit: 1000 });
   const pipelines = pipelinesData?.pipelines || [];
   const { data: employeesData } = useGetEmployeesQuery({ limit: 100 });
-
   const employees = employeesData?.employees || [];
+  const { user } = useSelector((state) => state.auth);
 
-  console.log(employees);
-
-  const [leadType, setLeadType] = useState("Person");
+  const [leadType, setLeadType] = useState("Individual");
   const [visibility, setVisibility] = useState("Public");
   const [tags, setTags] = useState([]);
   const [tagInput, setTagInput] = useState("");
-
-  const [formData, setFormData] = useState({
-    name: "", // Lead Name
-    lead_source: "",
-    status: "Active", // Default status
-    visibility: "Public",
-
-    // Person Details
-    full_name: "",
+  const [customFields, setCustomFields] = useState([{ label: "", value: "" }]);
+  const [contactPersons, setContactPersons] = useState([{
+    name: "",
+    profile_image: "",
     gender: "",
-    dob: null,
+    dob: "",
+    designation: "",
     mobile_number: "",
     alt_mobile_number: "",
+    whatsapp_number: "",
+    email: "",
+    mobile_same_as_whatsapp: false,
+    alt_mobile_same_as_whatsapp: false
+  }]);
+
+  const [formData, setFormData] = useState({
+    name: "",
+    lead_source: "",
+    status: "Active",
+    visibility: "Public",
+
+    // Individual Details
+    full_name: "",
+    profile_image: "",
+    gender: "",
+    dob: "",
+    mobile_number: "",
+    alt_mobile_number: "",
+    whatsapp_number: "",
     email: "",
     address: "",
     city: "",
     state: "",
+    country: "",
     pincode: "",
+    mobile_same_as_whatsapp: false,
+    alt_mobile_same_as_whatsapp: false,
 
-    // Org Details
+    // Organization Details
     organization_name: "",
+    company_logo: "",
     industry_type: "",
     website: "",
     company_email: "",
     company_phone: "",
-    gst_pan_number: "",
-    org_address: "",
+    gst_number: "",
+    company_address: "",
     org_city: "",
     org_state: "",
+    org_country: "",
     org_pincode: "",
-    primary_contact_name: "",
-    primary_dob: null,
-    designation: "",
-    primary_mobile: "",
-    primary_email: "",
 
-    // Common
-    interested_in: "",
-    value: "", // Budget/Expected Value
-    owner: "", // Leads Owner (User ID)
+    // Common Fields
+    interested_in: [],
+    value: "",
+    owner: "",
     pipeline_id: "",
     stage_id: "",
+    referral_mobile: "",
     description: ""
   });
 
-  // Derive stages from selected pipeline
   const selectedPipeline = pipelines?.find(p => p.id == formData.pipeline_id);
   const filteredStages = selectedPipeline?.stages || [];
 
-  // Load data if editing
+  // Service options (you can fetch these from API if needed)
+  const serviceOptions = [
+    "Product Demo",
+    "Pricing Info",
+    "Support",
+    "Partnership",
+    "Consultation",
+    "Training",
+    "Other"
+  ];
+
+  // Automatic Pipeline Recommendation
+  useEffect(() => {
+    if (formData.interested_in.length > 0 && !formData.pipeline_id && pipelines.length > 0) {
+      // Find a pipeline that might match the first selected service, 
+      // otherwise default to the first pipeline or one named "Default"
+      const defaultPipe = pipelines.find(p => p.name.toLowerCase().includes('default')) || pipelines[0];
+      if (defaultPipe) {
+        setFormData(prev => ({ ...prev, pipeline_id: defaultPipe.id }));
+        toast.success(`Recommended pipeline: ${defaultPipe.name}`, { icon: 'ℹ️', duration: 2000 });
+      }
+    }
+  }, [formData.interested_in, pipelines]);
+
+  // Set default owner to logged-in user
+  useEffect(() => {
+    if (!leadToEdit && user && !formData.owner) {
+      setFormData(prev => ({ ...prev, owner: user.id || user.user_id }));
+    }
+  }, [user, leadToEdit]);
+
   useEffect(() => {
     if (leadToEdit) {
-      setLeadType(leadToEdit.type || "Person");
+      setLeadType(leadToEdit.type || "Individual");
       setVisibility(leadToEdit.visibility || "Public");
       setTags(leadToEdit.tag ? leadToEdit.tag.split(',').map(t => t.trim()) : []);
+
+      // Parse custom fields if available
+      if (leadToEdit.custom_fields) {
+        try {
+          const parsed = JSON.parse(leadToEdit.custom_fields);
+          setCustomFields(parsed.length > 0 ? parsed : [{ label: "", value: "" }]);
+        } catch (e) {
+          setCustomFields([{ label: "", value: "" }]);
+        }
+      }
+
+      // Parse contact persons if available
+      if (leadToEdit.contact_persons) {
+        try {
+          const parsed = JSON.parse(leadToEdit.contact_persons);
+          setContactPersons(parsed.length > 0 ? parsed : [{ name: "", profile_image: "", gender: "", dob: "", designation: "", mobile_number: "", alt_mobile_number: "", whatsapp_number: "", email: "", mobile_same_as_whatsapp: false, alt_mobile_same_as_whatsapp: false }]);
+        } catch (e) {
+          setContactPersons([{ name: "", profile_image: "", gender: "", dob: "", designation: "", mobile_number: "", alt_mobile_number: "", whatsapp_number: "", email: "", mobile_same_as_whatsapp: false, alt_mobile_same_as_whatsapp: false }]);
+        }
+      }
 
       setFormData({
         name: leadToEdit.name || "",
@@ -98,58 +184,250 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
         status: leadToEdit.status || "Active",
         visibility: leadToEdit.visibility || "Public",
         full_name: leadToEdit.full_name || "",
+        profile_image: leadToEdit.profile_image || "",
         gender: leadToEdit.gender || "",
-        dob: leadToEdit.dob ? leadToEdit.dob.split('T')[0] : null,
+        dob: leadToEdit.dob ? leadToEdit.dob.split('T')[0] : "",
         mobile_number: leadToEdit.mobile_number || "",
         alt_mobile_number: leadToEdit.alt_mobile_number || "",
+        whatsapp_number: leadToEdit.whatsapp_number || "",
         email: leadToEdit.email || "",
         address: leadToEdit.address || "",
         city: leadToEdit.city || "",
         state: leadToEdit.state || "",
+        country: leadToEdit.country || "",
         pincode: leadToEdit.pincode || "",
+        mobile_same_as_whatsapp: false,
+        alt_mobile_same_as_whatsapp: false,
 
         organization_name: leadToEdit.organization_name || "",
+        company_logo: leadToEdit.company_logo || "",
         industry_type: leadToEdit.industry_type || "",
         website: leadToEdit.website || "",
         company_email: leadToEdit.company_email || "",
         company_phone: leadToEdit.company_phone || "",
-        gst_pan_number: leadToEdit.gst_pan_number || "",
-        org_address: leadToEdit.org_address || "",
+        gst_number: leadToEdit.gst_number || "",
+        company_address: leadToEdit.company_address || "",
         org_city: leadToEdit.org_city || "",
         org_state: leadToEdit.org_state || "",
+        org_country: leadToEdit.org_country || "",
         org_pincode: leadToEdit.org_pincode || "",
-        primary_contact_name: leadToEdit.primary_contact_name || "",
-        primary_dob: leadToEdit.primary_dob ? leadToEdit.primary_dob.split('T')[0] : "",
-        designation: leadToEdit.designation || "",
-        primary_mobile: leadToEdit.primary_mobile || "",
-        primary_email: leadToEdit.primary_email || "",
 
-        interested_in: leadToEdit.interested_in || "",
+        interested_in: leadToEdit.interested_in ? (Array.isArray(leadToEdit.interested_in) ? leadToEdit.interested_in : leadToEdit.interested_in.split(',')) : [],
         value: leadToEdit.value || "",
         owner: leadToEdit.owner || "",
         pipeline_id: leadToEdit.pipeline_id || "",
         stage_id: leadToEdit.stage_id || "",
+        referral_mobile: leadToEdit.referral_mobile || "",
         description: leadToEdit.description || ""
       });
     }
   }, [leadToEdit]);
 
+  const handlePincodeLookup = async (pincode, isOrg = false) => {
+    if (pincode.length !== 6) return;
+
+    try {
+      const response = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
+      const data = await response.json();
+
+      if (data[0].Status === "Success") {
+        const postOffice = data[0].PostOffice[0];
+        const state = postOffice.State;
+        const city = postOffice.District;
+        const country = postOffice.Country || "India";
+
+        if (isOrg) {
+          setFormData(prev => ({
+            ...prev,
+            org_state: state,
+            org_city: city,
+            org_country: country
+          }));
+        } else {
+          setFormData(prev => ({
+            ...prev,
+            state: state,
+            city: city,
+            country: country
+          }));
+        }
+        toast.success(`Location auto-filled: ${city}, ${state}`, {
+          icon: '📍',
+          style: {
+            borderRadius: '4px',
+            background: '#333',
+            color: '#fff',
+          },
+        });
+      } else {
+        toast.error("Invalid Pincode");
+      }
+    } catch (error) {
+      console.error("Pincode lookup failed:", error);
+    }
+  };
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    const { name, value, type, checked } = e.target;
+
+    if (type === "checkbox") {
+      if (name === "mobile_same_as_whatsapp" && checked) {
+        setFormData(prev => ({ ...prev, [name]: checked, whatsapp_number: prev.mobile_number }));
+      } else if (name === "alt_mobile_same_as_whatsapp" && checked) {
+        setFormData(prev => ({ ...prev, [name]: checked, whatsapp_number: prev.alt_mobile_number }));
+      } else {
+        setFormData(prev => ({ ...prev, [name]: checked }));
+      }
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+
+      if (name === "pincode" && value.length === 6) {
+        handlePincodeLookup(value, false);
+      } else if (name === "org_pincode" && value.length === 6) {
+        handlePincodeLookup(value, true);
+      }
+    }
+  };
+
+  const handleServiceToggle = (service) => {
+    setFormData(prev => ({
+      ...prev,
+      interested_in: prev.interested_in.includes(service)
+        ? prev.interested_in.filter(s => s !== service)
+        : [...prev.interested_in, service]
+    }));
+  };
+
+  // Handle profile image upload for Individual
+  const handleProfileImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!validateFileSize(file)) {
+      toast.error("File size must not exceed 1 MB");
+      e.target.value = ""; // Reset input
+      return;
+    }
+
+    try {
+      const base64 = await fileToBase64(file);
+      setFormData(prev => ({ ...prev, profile_image: base64 }));
+      toast.success("Profile image uploaded successfully");
+    } catch (error) {
+      toast.error("Failed to upload image");
+      console.error(error);
+    }
+  };
+
+  // Handle company logo upload for Organization
+  const handleCompanyLogoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!validateFileSize(file)) {
+      toast.error("File size must not exceed 1 MB");
+      e.target.value = ""; // Reset input
+      return;
+    }
+
+    try {
+      const base64 = await fileToBase64(file);
+      setFormData(prev => ({ ...prev, company_logo: base64 }));
+      toast.success("Company logo uploaded successfully");
+    } catch (error) {
+      toast.error("Failed to upload logo");
+      console.error(error);
+    }
+  };
+
+  // Handle contact person profile image upload
+  const handleContactPersonImageUpload = async (index, e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!validateFileSize(file)) {
+      toast.error("File size must not exceed 1 MB");
+      e.target.value = ""; // Reset input
+      return;
+    }
+
+    try {
+      const base64 = await fileToBase64(file);
+      const updated = [...contactPersons];
+      updated[index].profile_image = base64;
+      setContactPersons(updated);
+      toast.success("Profile image uploaded successfully");
+    } catch (error) {
+      toast.error("Failed to upload image");
+      console.error(error);
+    }
+  };
+
+  const handleContactPersonChange = (index, field, value) => {
+    const updated = [...contactPersons];
+    updated[index][field] = value;
+
+    // Handle "same as WhatsApp" checkboxes
+    if (field === "mobile_same_as_whatsapp" && value) {
+      updated[index].whatsapp_number = updated[index].mobile_number;
+      updated[index].alt_mobile_same_as_whatsapp = false;
+    } else if (field === "alt_mobile_same_as_whatsapp" && value) {
+      updated[index].whatsapp_number = updated[index].alt_mobile_number;
+      updated[index].mobile_same_as_whatsapp = false;
+    }
+
+    setContactPersons(updated);
+  };
+
+  const addContactPerson = () => {
+    setContactPersons([...contactPersons, {
+      name: "",
+      profile_image: "",
+      gender: "",
+      dob: "",
+      designation: "",
+      mobile_number: "",
+      alt_mobile_number: "",
+      whatsapp_number: "",
+      email: "",
+      mobile_same_as_whatsapp: false,
+      alt_mobile_same_as_whatsapp: false
+    }]);
+  };
+
+  const removeContactPerson = (index) => {
+    if (contactPersons.length > 1) {
+      setContactPersons(contactPersons.filter((_, i) => i !== index));
+    }
+  };
+
+  const handleCustomFieldChange = (index, field, value) => {
+    const updated = [...customFields];
+    updated[index][field] = value;
+    setCustomFields(updated);
+  };
+
+  const addCustomField = () => {
+    setCustomFields([...customFields, { label: "", value: "" }]);
+  };
+
+  const removeCustomField = (index) => {
+    if (customFields.length > 1) {
+      setCustomFields(customFields.filter((_, i) => i !== index));
+    }
   };
 
   const handleSubmit = async () => {
-    // Validation (No longer needed for pipeline/stage as backend handles defaults)
-
     const payload = {
       ...formData,
-      name: formData.name || (leadType === "Person" ? formData.full_name : formData.organization_name) || "Untitled Lead",
+      name: formData.name || (leadType === "Individual" ? formData.full_name : formData.organization_name) || "Untitled Lead",
       type: leadType,
-      tag: tags.join(','), // Assuming backend expects comma separated string
+      tag: tags.join(','),
       visibility,
-      value: Number(formData.value) || 0
+      value: Number(formData.value) || 0,
+      interested_in: formData.interested_in.join(','),
+      custom_fields: JSON.stringify(customFields.filter(cf => cf.label && cf.value)),
+      contact_persons: leadType === "Organization" ? JSON.stringify(contactPersons) : null
     };
 
     try {
@@ -163,7 +441,6 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
       onClose();
     } catch (error) {
       console.error("Failed to save lead:", error);
-      // Don't show toast for limit errors, global modal handles that
       if (!error?.data?.limitReached && error.status !== 402) {
         toast.error(error?.data?.message || "Failed to save lead");
       }
@@ -186,14 +463,12 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
     setTags(tags.filter((tag) => tag !== tagToRemove));
   };
 
-
-
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-sm shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-slideUp">
-        {/* Header with Gradient */}
+      <div className="bg-white rounded-sm shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden animate-slideUp">
+        {/* Header */}
         <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-4 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
             <div className="bg-white bg-opacity-20 p-2 rounded-sm text-white">
@@ -217,9 +492,9 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
         </div>
 
         {/* Form Content */}
-        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5 max-h-[70vh]">
+        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
 
-          {/* Lead Type */}
+          {/* Lead Type Selection */}
           <div className="bg-orange-50 p-4 rounded-xl border-2 border-orange-100">
             <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-3">
               <Briefcase size={16} className="text-[#FF7B1D]" />
@@ -229,13 +504,13 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
               <label className="flex items-center cursor-pointer group">
                 <input
                   type="radio"
-                  value="Person"
-                  checked={leadType === "Person"}
+                  value="Individual"
+                  checked={leadType === "Individual"}
                   onChange={(e) => setLeadType(e.target.value)}
-                  className="w-5 h-5 text-[#FF7B1D] "
+                  className="w-5 h-5 text-[#FF7B1D]"
                 />
                 <span className="ml-3 text-sm font-semibold text-gray-800 group-hover:text-[#FF7B1D] transition-colors">
-                  Person
+                  Individual
                 </span>
               </label>
               <label className="flex items-center cursor-pointer group">
@@ -244,7 +519,7 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
                   value="Organization"
                   checked={leadType === "Organization"}
                   onChange={(e) => setLeadType(e.target.value)}
-                  className="w-5 h-5 text-[#FF7B1D] "
+                  className="w-5 h-5 text-[#FF7B1D]"
                 />
                 <span className="ml-3 text-sm font-semibold text-gray-800 group-hover:text-[#FF7B1D] transition-colors">
                   Organization
@@ -253,13 +528,13 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
             </div>
           </div>
 
-          {/* Person Details */}
-          {leadType === "Person" && (
+          {/* Individual Details */}
+          {leadType === "Individual" && (
             <div className="space-y-4">
               <div className="flex items-center gap-2 pb-2 border-b border-gray-200">
                 <User size={20} className="text-[#FF7B1D]" />
                 <h3 className="text-lg font-bold text-gray-800 capitalize">
-                  Person Details
+                  Individual Details
                 </h3>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -277,6 +552,65 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
                     onChange={handleChange}
                   />
                 </div>
+
+                <div className="group">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                    <Upload size={14} className="text-[#FF7B1D]" />
+                    Profile Image
+                  </label>
+                  <div className="relative group/img">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleProfileImageUpload}
+                      className="hidden"
+                      id="profile-image-upload"
+                    />
+
+                    {formData.profile_image ? (
+                      <div className="flex items-center gap-4 p-2 border-2 border-orange-100 rounded-lg bg-orange-50/50">
+                        <div className="relative shrink-0">
+                          <img
+                            src={formData.profile_image}
+                            alt="Profile Preview"
+                            className="w-20 h-20 object-cover rounded-lg border-2 border-white shadow-md"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setFormData(prev => ({ ...prev, profile_image: "" }))}
+                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-md hover:bg-red-600 transition-all hover:scale-110"
+                          >
+                            <X size={12} />
+                          </button>
+                        </div>
+                        <div className="flex-1">
+                          <label
+                            htmlFor="profile-image-upload"
+                            className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-orange-200 text-orange-600 rounded-md text-xs font-bold hover:bg-orange-500 hover:text-white transition-all cursor-pointer shadow-sm"
+                          >
+                            <Upload size={14} />
+                            Change Photo
+                          </label>
+                          <p className="text-[10px] text-gray-400 mt-2 font-medium">Image uploaded successfully</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <label
+                        htmlFor="profile-image-upload"
+                        className="flex flex-col items-center justify-center gap-2 w-full py-6 border-2 border-dashed border-gray-200 rounded-lg hover:border-[#FF7B1D] hover:bg-orange-50 transition-all cursor-pointer group/label"
+                      >
+                        <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center group-hover/label:bg-orange-100 transition-all">
+                          <Upload size={20} className="text-gray-400 group-hover/label:text-[#FF7B1D]" />
+                        </div>
+                        <div className="text-center">
+                          <span className="block text-xs font-bold text-gray-600">Click to upload photo</span>
+                          <span className="block text-[10px] text-gray-400 mt-0.5">JPG, PNG or GIF (Max 1MB)</span>
+                        </div>
+                      </label>
+                    )}
+                  </div>
+                </div>
+
                 <div className="group">
                   <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
                     <User size={14} className="text-[#FF7B1D]" />
@@ -297,6 +631,20 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
 
                 <div className="group">
                   <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                    <Calendar size={14} className="text-[#FF7B1D]" />
+                    Date of Birth
+                  </label>
+                  <input
+                    type="date"
+                    name="dob"
+                    className={inputStyles}
+                    value={formData.dob}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                <div className="group">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
                     <Phone size={14} className="text-[#FF7B1D]" />
                     Mobile Number
                   </label>
@@ -308,11 +656,22 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
                     value={formData.mobile_number}
                     onChange={handleChange}
                   />
+                  <label className="flex items-center gap-2 mt-2 text-xs text-gray-600">
+                    <input
+                      type="checkbox"
+                      name="mobile_same_as_whatsapp"
+                      checked={formData.mobile_same_as_whatsapp}
+                      onChange={handleChange}
+                      className="w-4 h-4 text-[#FF7B1D]"
+                    />
+                    Same as WhatsApp Number
+                  </label>
                 </div>
+
                 <div className="group">
                   <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
                     <Phone size={14} className="text-[#FF7B1D]" />
-                    Alt Mobile Number
+                    Alternate Mobile Number
                   </label>
                   <input
                     type="text"
@@ -322,11 +681,38 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
                     value={formData.alt_mobile_number}
                     onChange={handleChange}
                   />
+                  <label className="flex items-center gap-2 mt-2 text-xs text-gray-600">
+                    <input
+                      type="checkbox"
+                      name="alt_mobile_same_as_whatsapp"
+                      checked={formData.alt_mobile_same_as_whatsapp}
+                      onChange={handleChange}
+                      className="w-4 h-4 text-[#FF7B1D]"
+                    />
+                    Same as WhatsApp Number
+                  </label>
                 </div>
+
+                <div className="group">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                    <Phone size={14} className="text-[#FF7B1D]" />
+                    WhatsApp Number
+                  </label>
+                  <input
+                    type="text"
+                    name="whatsapp_number"
+                    placeholder="Enter WhatsApp number"
+                    className={inputStyles}
+                    value={formData.whatsapp_number}
+                    onChange={handleChange}
+                    disabled={formData.mobile_same_as_whatsapp || formData.alt_mobile_same_as_whatsapp}
+                  />
+                </div>
+
                 <div className="group">
                   <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
                     <Mail size={14} className="text-[#FF7B1D]" />
-                    Email ID
+                    Email
                   </label>
                   <input
                     type="email"
@@ -337,10 +723,11 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
                     onChange={handleChange}
                   />
                 </div>
-                <div className="group">
+
+                <div className="group col-span-2">
                   <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
                     <MapPin size={14} className="text-[#FF7B1D]" />
-                    Location / Address
+                    Address Line 1
                   </label>
                   <input
                     type="text"
@@ -351,20 +738,7 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
                     onChange={handleChange}
                   />
                 </div>
-                <div className="group">
-                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-                    <MapPin size={14} className="text-[#FF7B1D]" />
-                    City
-                  </label>
-                  <input
-                    type="text"
-                    name="city"
-                    placeholder="Enter city"
-                    className={inputStyles}
-                    value={formData.city}
-                    onChange={handleChange}
-                  />
-                </div>
+
                 <div className="group">
                   <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
                     <MapPin size={14} className="text-[#FF7B1D]" />
@@ -379,54 +753,52 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
                     onChange={handleChange}
                   />
                 </div>
+
                 <div className="group">
                   <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
                     <MapPin size={14} className="text-[#FF7B1D]" />
-                    Pincode
+                    City
+                  </label>
+                  <input
+                    type="text"
+                    name="city"
+                    placeholder="Enter city"
+                    className={inputStyles}
+                    value={formData.city}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                <div className="group">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                    <MapPin size={14} className="text-[#FF7B1D]" />
+                    Country
+                  </label>
+                  <input
+                    type="text"
+                    name="country"
+                    placeholder="Enter country"
+                    className={inputStyles}
+                    value={formData.country}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                <div className="group">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                    <MapPin size={14} className="text-[#FF7B1D]" />
+                    PIN Code
                   </label>
                   <input
                     type="text"
                     name="pincode"
-                    placeholder="Enter pincode"
+                    placeholder="Enter 6-digit PIN code"
                     className={inputStyles}
                     value={formData.pincode}
                     onChange={handleChange}
+                    maxLength={6}
                   />
-                </div>
-                <div className="group">
-                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-                    <FileText size={14} className="text-[#FF7B1D]" />
-                    Interested In
-                  </label>
-
-                  <select
-                    name="interested_in"
-                    className={inputStyles}
-                    value={formData.interested_in}
-                    onChange={handleChange}
-                  >
-                    <option value="">Select an option</option>
-                    <option value="Product Demo">Product Demo</option>
-                    <option value="Pricing Info">Pricing Info</option>
-                    <option value="Support">Support</option>
-                    <option value="Partnership">Partnership</option>
-                    <option value="Other">Other</option>
-                  </select>
-                </div>
-
-                <div className="group md:col-span-2">
-                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-                    <IndianRupee size={14} className="text-[#FF7B1D]" />
-                    Budget / Expected Value
-                  </label>
-                  <input
-                    type="number"
-                    name="value"
-                    placeholder="Enter budget"
-                    className={inputStyles}
-                    value={formData.value}
-                    onChange={handleChange}
-                  />
+                  <p className="text-[10px] text-gray-400 mt-1 italic">Location auto-fills on 6 digits</p>
                 </div>
               </div>
             </div>
@@ -438,14 +810,14 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
               <div className="flex items-center gap-2 pb-2 border-b border-gray-200">
                 <Building2 size={20} className="text-[#FF7B1D]" />
                 <h3 className="text-lg font-bold text-gray-800 capitalize">
-                  Organization Details
+                  Organization Information
                 </h3>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="group">
                   <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
                     <Building2 size={14} className="text-[#FF7B1D]" />
-                    Organization Name
+                    Organization / Company Name
                   </label>
                   <input
                     type="text"
@@ -456,12 +828,71 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
                     onChange={handleChange}
                   />
                 </div>
+
+
+                <div className="group">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                    <Upload size={14} className="text-[#FF7B1D]" />
+                    Company Logo
+                  </label>
+                  <div className="relative group/logo">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleCompanyLogoUpload}
+                      className="hidden"
+                      id="company-logo-upload"
+                    />
+
+                    {formData.company_logo ? (
+                      <div className="flex items-center gap-4 p-2 border-2 border-orange-100 rounded-lg bg-orange-50/50">
+                        <div className="relative shrink-0">
+                          <img
+                            src={formData.company_logo}
+                            alt="Logo Preview"
+                            className="w-20 h-20 object-contain bg-white rounded-lg border-2 border-white shadow-md p-1"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setFormData(prev => ({ ...prev, company_logo: "" }))}
+                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-md hover:bg-red-600 transition-all hover:scale-110"
+                          >
+                            <X size={12} />
+                          </button>
+                        </div>
+                        <div className="flex-1">
+                          <label
+                            htmlFor="company-logo-upload"
+                            className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-orange-200 text-orange-600 rounded-md text-xs font-bold hover:bg-orange-500 hover:text-white transition-all cursor-pointer shadow-sm"
+                          >
+                            <Upload size={14} />
+                            Change Logo
+                          </label>
+                          <p className="text-[10px] text-gray-400 mt-2 font-medium">Logo uploaded successfully</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <label
+                        htmlFor="company-logo-upload"
+                        className="flex flex-col items-center justify-center gap-2 w-full py-6 border-2 border-dashed border-gray-200 rounded-lg hover:border-[#FF7B1D] hover:bg-orange-50 transition-all cursor-pointer group/label"
+                      >
+                        <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center group-hover/label:bg-orange-100 transition-all">
+                          <Upload size={20} className="text-gray-400 group-hover/label:text-[#FF7B1D]" />
+                        </div>
+                        <div className="text-center">
+                          <span className="block text-xs font-bold text-gray-600">Upload Company Logo</span>
+                          <span className="block text-[10px] text-gray-400 mt-0.5">Max size 1MB</span>
+                        </div>
+                      </label>
+                    )}
+                  </div>
+                </div>
+
                 <div className="group">
                   <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
                     <Briefcase size={14} className="text-[#FF7B1D]" />
                     Industry Type
                   </label>
-
                   <select
                     name="industry_type"
                     className={inputStyles}
@@ -473,14 +904,16 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
                     <option value="Finance">Finance</option>
                     <option value="Healthcare">Healthcare</option>
                     <option value="Manufacturing">Manufacturing</option>
+                    <option value="Retail">Retail</option>
+                    <option value="Education">Education</option>
                     <option value="Other">Other</option>
                   </select>
                 </div>
 
-                <div className="group md:col-span-2">
+                <div className="group">
                   <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
                     <FileText size={14} className="text-[#FF7B1D]" />
-                    Website
+                    Company Website
                   </label>
                   <input
                     type="text"
@@ -491,83 +924,518 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
                     onChange={handleChange}
                   />
                 </div>
-                {/* Add other Org fields similarly if needed, keeping it concise for now */}
+
+                <div className="group">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                    <Mail size={14} className="text-[#FF7B1D]" />
+                    Company Email
+                  </label>
+                  <input
+                    type="email"
+                    name="company_email"
+                    placeholder="Enter company email"
+                    className={inputStyles}
+                    value={formData.company_email}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                <div className="group">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                    <Phone size={14} className="text-[#FF7B1D]" />
+                    Company Phone Number
+                  </label>
+                  <input
+                    type="text"
+                    name="company_phone"
+                    placeholder="Enter company phone"
+                    className={inputStyles}
+                    value={formData.company_phone}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                <div className="group col-span-2">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                    <FileText size={14} className="text-[#FF7B1D]" />
+                    GST Number
+                  </label>
+                  <input
+                    type="text"
+                    name="gst_number"
+                    placeholder="Enter GST number"
+                    className={inputStyles}
+                    value={formData.gst_number}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                <div className="group col-span-2">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                    <MapPin size={14} className="text-[#FF7B1D]" />
+                    Company Address
+                  </label>
+                  <input
+                    type="text"
+                    name="company_address"
+                    placeholder="Enter company address"
+                    className={inputStyles}
+                    value={formData.company_address}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                <div className="group">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                    <MapPin size={14} className="text-[#FF7B1D]" />
+                    State
+                  </label>
+                  <input
+                    type="text"
+                    name="org_state"
+                    placeholder="Enter state"
+                    className={inputStyles}
+                    value={formData.org_state}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                <div className="group">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                    <MapPin size={14} className="text-[#FF7B1D]" />
+                    City
+                  </label>
+                  <input
+                    type="text"
+                    name="org_city"
+                    placeholder="Enter city"
+                    className={inputStyles}
+                    value={formData.org_city}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                <div className="group">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                    <MapPin size={14} className="text-[#FF7B1D]" />
+                    Country
+                  </label>
+                  <input
+                    type="text"
+                    name="org_country"
+                    placeholder="Enter country"
+                    className={inputStyles}
+                    value={formData.org_country}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                <div className="group">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                    <MapPin size={14} className="text-[#FF7B1D]" />
+                    PIN Code
+                  </label>
+                  <input
+                    type="text"
+                    name="org_pincode"
+                    placeholder="Enter 6-digit PIN code"
+                    className={inputStyles}
+                    value={formData.org_pincode}
+                    onChange={handleChange}
+                    maxLength={6}
+                  />
+                  <p className="text-[10px] text-gray-400 mt-1 italic">Location auto-fills on 6 digits</p>
+                </div>
+              </div>
+
+              {/* Primary Contact Person(s) */}
+              <div className="mt-6 space-y-4">
+                <div className="flex items-center justify-between pb-2 border-b border-gray-200">
+                  <div className="flex items-center gap-2">
+                    <User size={20} className="text-[#FF7B1D]" />
+                    <h3 className="text-lg font-bold text-gray-800 capitalize">
+                      Primary Contact Person
+                    </h3>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={addContactPerson}
+                    className="flex items-center gap-2 px-3 py-1.5 bg-orange-500 text-white rounded-sm hover:bg-orange-600 transition-colors text-sm font-semibold"
+                  >
+                    <Plus size={16} />
+                    Add Contact
+                  </button>
+                </div>
+
+                {contactPersons.map((contact, index) => (
+                  <div key={index} className="p-4 bg-gray-50 rounded-lg border border-gray-200 space-y-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-semibold text-gray-700">Contact Person #{index + 1}</span>
+                      {contactPersons.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeContactPerson(index)}
+                          className="text-red-500 hover:text-red-700 transition-colors"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="group">
+                        <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                          <User size={14} className="text-[#FF7B1D]" />
+                          Contact Person Name
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Enter name"
+                          className={inputStyles}
+                          value={contact.name}
+                          onChange={(e) => handleContactPersonChange(index, 'name', e.target.value)}
+                        />
+                      </div>
+
+
+                      <div className="group">
+                        <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                          <Upload size={14} className="text-[#FF7B1D]" />
+                          Profile Photo
+                        </label>
+                        <div className="relative group/contact-img">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => handleContactPersonImageUpload(index, e)}
+                            className="hidden"
+                            id={`contact-image-upload-${index}`}
+                          />
+
+                          {contact.profile_image ? (
+                            <div className="flex items-center gap-3 p-1.5 border-2 border-orange-100 rounded-lg bg-orange-50/50">
+                              <div className="relative shrink-0">
+                                <img
+                                  src={contact.profile_image}
+                                  alt="Contact Preview"
+                                  className="w-14 h-14 object-cover rounded-lg border-2 border-white shadow-sm"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => handleContactPersonChange(index, 'profile_image', '')}
+                                  className="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full p-0.5 shadow-sm hover:bg-red-600 transition-all hover:scale-110"
+                                >
+                                  <X size={10} />
+                                </button>
+                              </div>
+                              <div className="flex-1">
+                                <label
+                                  htmlFor={`contact-image-upload-${index}`}
+                                  className="inline-flex items-center gap-1.5 px-2 py-1 bg-white border border-orange-200 text-orange-600 rounded text-[10px] font-bold hover:bg-orange-500 hover:text-white transition-all cursor-pointer shadow-xs"
+                                >
+                                  <Upload size={12} />
+                                  Change
+                                </label>
+                              </div>
+                            </div>
+                          ) : (
+                            <label
+                              htmlFor={`contact-image-upload-${index}`}
+                              className="flex flex-col items-center justify-center gap-1 w-full py-4 border-2 border-dashed border-gray-200 rounded-lg hover:border-[#FF7B1D] hover:bg-orange-50 transition-all cursor-pointer group/label"
+                            >
+                              <Upload size={16} className="text-gray-400 group-hover/label:text-[#FF7B1D]" />
+                              <span className="text-[10px] font-bold text-gray-600">Upload Photo</span>
+                            </label>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="group">
+                        <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                          <User size={14} className="text-[#FF7B1D]" />
+                          Gender
+                        </label>
+                        <select
+                          className={inputStyles}
+                          value={contact.gender}
+                          onChange={(e) => handleContactPersonChange(index, 'gender', e.target.value)}
+                        >
+                          <option value="">Select Gender</option>
+                          <option value="Male">Male</option>
+                          <option value="Female">Female</option>
+                          <option value="Other">Other</option>
+                        </select>
+                      </div>
+
+                      <div className="group">
+                        <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                          <Calendar size={14} className="text-[#FF7B1D]" />
+                          Date of Birth
+                        </label>
+                        <input
+                          type="date"
+                          className={inputStyles}
+                          value={contact.dob}
+                          onChange={(e) => handleContactPersonChange(index, 'dob', e.target.value)}
+                        />
+                      </div>
+
+                      <div className="group col-span-2">
+                        <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                          <Briefcase size={14} className="text-[#FF7B1D]" />
+                          Designation
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Enter designation"
+                          className={inputStyles}
+                          value={contact.designation}
+                          onChange={(e) => handleContactPersonChange(index, 'designation', e.target.value)}
+                        />
+                      </div>
+
+                      <div className="group">
+                        <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                          <Phone size={14} className="text-[#FF7B1D]" />
+                          Mobile Number
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Enter mobile number"
+                          className={inputStyles}
+                          value={contact.mobile_number}
+                          onChange={(e) => handleContactPersonChange(index, 'mobile_number', e.target.value)}
+                        />
+                        <label className="flex items-center gap-2 mt-2 text-xs text-gray-600">
+                          <input
+                            type="checkbox"
+                            checked={contact.mobile_same_as_whatsapp}
+                            onChange={(e) => handleContactPersonChange(index, 'mobile_same_as_whatsapp', e.target.checked)}
+                            className="w-4 h-4 text-[#FF7B1D]"
+                          />
+                          Same as WhatsApp Number
+                        </label>
+                      </div>
+
+                      <div className="group">
+                        <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                          <Phone size={14} className="text-[#FF7B1D]" />
+                          Alternate Mobile Number
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Enter alternate mobile"
+                          className={inputStyles}
+                          value={contact.alt_mobile_number}
+                          onChange={(e) => handleContactPersonChange(index, 'alt_mobile_number', e.target.value)}
+                        />
+                        <label className="flex items-center gap-2 mt-2 text-xs text-gray-600">
+                          <input
+                            type="checkbox"
+                            checked={contact.alt_mobile_same_as_whatsapp}
+                            onChange={(e) => handleContactPersonChange(index, 'alt_mobile_same_as_whatsapp', e.target.checked)}
+                            className="w-4 h-4 text-[#FF7B1D]"
+                          />
+                          Same as WhatsApp Number
+                        </label>
+                      </div>
+
+                      <div className="group">
+                        <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                          <Phone size={14} className="text-[#FF7B1D]" />
+                          WhatsApp Number
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Enter WhatsApp number"
+                          className={inputStyles}
+                          value={contact.whatsapp_number}
+                          onChange={(e) => handleContactPersonChange(index, 'whatsapp_number', e.target.value)}
+                          disabled={contact.mobile_same_as_whatsapp || contact.alt_mobile_same_as_whatsapp}
+                        />
+                      </div>
+
+                      <div className="group">
+                        <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                          <Mail size={14} className="text-[#FF7B1D]" />
+                          Email
+                        </label>
+                        <input
+                          type="email"
+                          placeholder="Enter email"
+                          className={inputStyles}
+                          value={contact.email}
+                          onChange={(e) => handleContactPersonChange(index, 'email', e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           )}
 
-          {/* Pipeline */}
-          <div className="group">
-            <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-              <Workflow size={16} className="text-[#FF7B1D]" />
-              Pipeline
-            </label>
-            <select
-              name="pipeline_id"
-              value={formData.pipeline_id}
-              onChange={handleChange}
-              className={inputStyles}
-            >
-              <option value="">Select Pipeline</option>
-              {pipelines?.map(p => (
-                <option key={p.id} value={p.id}>{p.name}</option>
-              ))}
-            </select>
-          </div>
+          {/* Common Fields */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 pb-2 border-b border-gray-200">
+              <Layers size={20} className="text-[#FF7B1D]" />
+              <h3 className="text-lg font-bold text-gray-800 capitalize">
+                Common Information
+              </h3>
+            </div>
 
-          {/* Additional Lead Info */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="group">
-              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-                <User size={14} className="text-[#FF7B1D]" />
-                Lead Owner
-              </label>
-              <select
-                name="owner"
-                value={formData.owner}
-                onChange={handleChange}
-                className={inputStyles}
-              >
-                <option value="">Select Owner</option>
-                {employees.map(emp => (
-                  <option key={emp.id} value={emp.user_id || emp.id}>{emp.employee_name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="group">
-              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-                <FileText size={14} className="text-[#FF7B1D]" />
-                Lead Source
-              </label>
-              <select
-                name="lead_source"
-                value={formData.lead_source}
-                onChange={handleChange}
-                className={inputStyles}
-              >
-                <option value="">Select Source</option>
-                <option value="Website">Website</option>
-                <option value="Referral">Referral</option>
-                <option value="Social Media">Social Media</option>
-                <option value="Email Campaign">Email Campaign</option>
-                <option value="Cold Call">Cold Call</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
-            <div className="group col-span-2">
-              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-                <FileText size={14} className="text-[#FF7B1D]" />
-                Description
-              </label>
-              <textarea
-                name="description"
-                rows="3"
-                placeholder="Enter description"
-                className={inputStyles}
-                value={formData.description}
-                onChange={handleChange}
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="group md:col-span-2">
+                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                  <IndianRupee size={14} className="text-[#FF7B1D]" />
+                  Budget / Expected Value
+                </label>
+                <input
+                  type="number"
+                  name="value"
+                  placeholder="Enter budget"
+                  className={inputStyles}
+                  value={formData.value}
+                  onChange={handleChange}
+                />
+              </div>
+
+              <div className="group md:col-span-2">
+                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-3">
+                  <FileText size={14} className="text-[#FF7B1D]" />
+                  Interested In (Multiple Selection Allowed)
+                </label>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                  {serviceOptions.map(service => (
+                    <label key={service} className="flex items-center gap-2 cursor-pointer group">
+                      <input
+                        type="checkbox"
+                        checked={formData.interested_in.includes(service)}
+                        onChange={() => handleServiceToggle(service)}
+                        className="w-4 h-4 text-[#FF7B1D]"
+                      />
+                      <span className="text-sm text-gray-700 group-hover:text-[#FF7B1D] transition-colors">
+                        {service}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="group">
+                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                  <FileText size={14} className="text-[#FF7B1D]" />
+                  Lead Source
+                </label>
+                <select
+                  name="lead_source"
+                  value={formData.lead_source}
+                  onChange={handleChange}
+                  className={inputStyles}
+                >
+                  <option value="">Select Source</option>
+                  <option value="Website">Website</option>
+                  <option value="Referral">Referral</option>
+                  <option value="Social Media">Social Media</option>
+                  <option value="Email Campaign">Email Campaign</option>
+                  <option value="Cold Call">Cold Call</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              <div className="group">
+                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                  <User size={14} className="text-[#FF7B1D]" />
+                  Lead Owner
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    readOnly
+                    value={
+                      leadToEdit
+                        ? (employees.find(emp => (emp.user_id || emp.id) == formData.owner)?.employee_name || "Assigned Owner")
+                        : (employees.find(emp => (emp.user_id || emp.id) == (user?.id || user?.user_id))?.employee_name ||
+                          user?.employee_name ||
+                          user?.name ||
+                          (user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : "") ||
+                          user?.username ||
+                          "Logged User")
+                    }
+                    className={inputStyles + " bg-gray-50 cursor-not-allowed border-gray-100"}
+                  />
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]"></div>
+                  </div>
+                </div>
+                <input type="hidden" name="owner" value={formData.owner} />
+              </div>
+
+              <div className="group">
+                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                  <Workflow size={14} className="text-[#FF7B1D]" />
+                  Select Pipeline
+                </label>
+                <select
+                  name="pipeline_id"
+                  value={formData.pipeline_id}
+                  onChange={handleChange}
+                  className={inputStyles}
+                >
+                  <option value="">Select Pipeline</option>
+                  {pipelines?.map(p => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="group">
+                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                  <Layers size={14} className="text-[#FF7B1D]" />
+                  Select Stage
+                </label>
+                <select
+                  name="stage_id"
+                  value={formData.stage_id}
+                  onChange={handleChange}
+                  className={inputStyles}
+                  disabled={!formData.pipeline_id}
+                >
+                  <option value="">Select Stage</option>
+                  {filteredStages?.map(s => (
+                    <option key={s.id} value={s.id}>{s.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="group md:col-span-2">
+                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                  <Phone size={14} className="text-[#FF7B1D]" />
+                  Referral (Search by mobile number)
+                </label>
+                <input
+                  type="text"
+                  name="referral_mobile"
+                  placeholder="Enter referral mobile number"
+                  className={inputStyles}
+                  value={formData.referral_mobile}
+                  onChange={handleChange}
+                />
+              </div>
+
+              <div className="group md:col-span-2">
+                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                  <FileText size={14} className="text-[#FF7B1D]" />
+                  Description
+                </label>
+                <textarea
+                  name="description"
+                  rows="3"
+                  placeholder="Enter description"
+                  className={inputStyles}
+                  value={formData.description}
+                  onChange={handleChange}
+                />
+              </div>
             </div>
           </div>
 
@@ -580,7 +1448,6 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
                 (Press Enter to add)
               </span>
             </label>
-
             <div className="flex flex-wrap items-center gap-2 px-3 py-2 border-2 border-gray-200 rounded-lg focus-within:border-[#FF7B1D] bg-white">
               {tags.map((tag, index) => (
                 <span
@@ -597,42 +1464,95 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
                   </button>
                 </span>
               ))}
-
               <input
                 type="text"
                 value={tagInput}
                 onChange={(e) => setTagInput(e.target.value)}
                 onKeyDown={handleTagKeyDown}
-                placeholder={
-                  tags.length === 0
-                    ? "Type and press Enter to add tags..."
-                    : "Add more..."
-                }
+                placeholder={tags.length === 0 ? "Type and press Enter to add tags..." : "Add more..."}
                 className="flex-1 min-w-[120px] outline-none text-sm bg-transparent"
               />
             </div>
           </div>
 
+          {/* Custom Fields */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between pb-2 border-b border-gray-200">
+              <div className="flex items-center gap-2">
+                <FileText size={20} className="text-[#FF7B1D]" />
+                <h3 className="text-lg font-bold text-gray-800 capitalize">
+                  Custom Fields
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={addCustomField}
+                className="flex items-center gap-2 px-3 py-1.5 bg-orange-500 text-white rounded-sm hover:bg-orange-600 transition-colors text-sm font-semibold"
+              >
+                <Plus size={16} />
+                Add Field
+              </button>
+            </div>
 
-
-          {/* Footer */}
-          <div className="flex justify-end gap-3 px-6 py-4 border-t bg-gray-50 shrink-0">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-6 py-2 border-2 border-gray-300 text-gray-700 rounded-sm hover:bg-gray-100 transition-all font-semibold capitalize"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              onClick={handleSubmit}
-              disabled={isCreating || isUpdating}
-              className="px-6 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all font-semibold shadow-lg disabled:opacity-50 capitalize"
-            >
-              {isCreating || isUpdating ? "Saving..." : leadToEdit ? "Update Lead" : "Save Lead"}
-            </button>
+            {customFields.map((field, index) => (
+              <div key={index} className="grid grid-cols-2 gap-3 items-end">
+                <div className="group">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                    Label
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Enter label"
+                    className={inputStyles}
+                    value={field.label}
+                    onChange={(e) => handleCustomFieldChange(index, 'label', e.target.value)}
+                  />
+                </div>
+                <div className="group flex gap-2">
+                  <div className="flex-1">
+                    <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                      Value
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Enter value"
+                      className={inputStyles}
+                      value={field.value}
+                      onChange={(e) => handleCustomFieldChange(index, 'value', e.target.value)}
+                    />
+                  </div>
+                  {customFields.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeCustomField(index)}
+                      className="text-red-500 hover:text-red-700 transition-colors self-end pb-3"
+                    >
+                      <Trash2 size={20} />
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
+        </div>
+
+        {/* Footer */}
+        <div className="flex justify-end gap-3 px-6 py-4 border-t bg-gray-50 shrink-0">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-6 py-2 border-2 border-gray-300 text-gray-700 rounded-sm hover:bg-gray-100 transition-all font-semibold capitalize"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={isCreating || isUpdating}
+            className="px-6 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all font-semibold shadow-lg disabled:opacity-50 capitalize"
+          >
+            {isCreating || isUpdating ? "Saving..." : leadToEdit ? "Update Lead" : "Save Lead"}
+          </button>
         </div>
       </div>
     </div>

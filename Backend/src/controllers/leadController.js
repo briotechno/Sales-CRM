@@ -338,5 +338,13 @@ module.exports = {
     deleteLeadNote,
     deleteLeadCall,
     deleteLeadFile,
-    deleteLeadMeeting
+    deleteLeadMeeting,
+    bulkCreateLeads: async (req, res) => {
+        try {
+            const affectedRows = await Lead.bulkCreate(req.body, req.user.id);
+            res.status(201).json({ status: true, message: `${affectedRows} leads imported successfully` });
+        } catch (error) {
+            res.status(500).json({ status: false, message: error.message });
+        }
+    }
 };
