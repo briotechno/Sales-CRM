@@ -25,12 +25,14 @@ const {
     deleteLeadNote,
     deleteLeadCall,
     deleteLeadFile,
-    deleteLeadMeeting
+    deleteLeadMeeting,
+    bulkCreateLeads
 } = require('../controllers/leadController');
 const { protect } = require('../middleware/authMiddleware');
 const { checkLimit } = require('../middleware/limitMiddleware');
 const upload = require('../middleware/uploadMiddleware'); // Added
 
+router.post('/bulk', protect, bulkCreateLeads);
 router.post('/', protect, checkLimit('leads'), createLead);
 router.get('/', protect, getLeads);
 router.get('/:id', protect, getLeadById);

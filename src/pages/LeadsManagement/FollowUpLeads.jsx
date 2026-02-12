@@ -48,6 +48,7 @@ export default function FollowUpLeads() {
     const [leadToDelete, setLeadToDelete] = useState(null);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const dropdownRef = useRef(null);
+    const addLeadMenuRef = useRef(null);
 
     // Temporary filter states for the menu
     const [tempFilters, setTempFilters] = useState({
@@ -92,6 +93,9 @@ export default function FollowUpLeads() {
         const handleClickOutside = (event) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
                 setIsFilterOpen(false);
+            }
+            if (addLeadMenuRef.current && !addLeadMenuRef.current.contains(event.target)) {
+                setOpenLeadMenu(false);
             }
         };
         document.addEventListener("mousedown", handleClickOutside);
@@ -595,7 +599,7 @@ export default function FollowUpLeads() {
                                 </button> */}
 
                                 {/* Add Lead - Primary Button */}
-                                <div className="relative">
+                                <div className="relative" ref={addLeadMenuRef}>
                                     <button
                                         onClick={() => setOpenLeadMenu(!openLeadMenu)}
                                         className="flex items-center gap-2 px-6 py-3 rounded-sm font-semibold transition shadow-lg hover:shadow-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
@@ -605,15 +609,15 @@ export default function FollowUpLeads() {
                                     </button>
 
                                     {openLeadMenu && (
-                                        <div className="absolute top-full right-0 mt-2 w-48 bg-white border border-gray-200 shadow-xl rounded-sm z-50 overflow-hidden divide-y divide-gray-100 animate-fadeIn">
+                                        <div className="absolute top-full right-0 mt-2 w-56 bg-white border border-gray-200 shadow-xl rounded-sm z-50 overflow-hidden divide-y divide-gray-100 animate-fadeIn">
                                             <button
                                                 onClick={() => {
                                                     setOpenLeadMenu(false);
                                                     handleAddLead();
                                                 }}
-                                                className="w-full flex items-center gap-3 text-left px-4 py-3 hover:bg-orange-50 text-[11px] font-bold text-gray-700 hover:text-orange-600 transition uppercase tracking-wider"
+                                                className="w-full flex items-center gap-3 text-left px-5 py-3.5 hover:bg-orange-50 text-sm font-bold text-gray-700 hover:text-orange-600 transition font-primary"
                                             >
-                                                <UserPlus size={16} />
+                                                <UserPlus size={18} />
                                                 Add Single Lead
                                             </button>
 
@@ -622,9 +626,9 @@ export default function FollowUpLeads() {
                                                     setOpenLeadMenu(false);
                                                     setShowBulkUploadPopup(true);
                                                 }}
-                                                className="w-full flex items-center gap-3 text-left px-4 py-3 hover:bg-orange-50 text-[11px] font-bold text-gray-700 hover:text-orange-600 transition uppercase tracking-wider"
+                                                className="w-full flex items-center gap-3 text-left px-5 py-3.5 hover:bg-orange-50 text-sm font-bold text-gray-700 hover:text-orange-600 transition font-primary"
                                             >
-                                                <Upload size={16} />
+                                                <Upload size={18} />
                                                 Bulk Upload
                                             </button>
                                         </div>

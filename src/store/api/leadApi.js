@@ -59,6 +59,14 @@ export const leadApi = createApi({
             }),
             invalidatesTags: ['Lead'],
         }),
+        bulkCreateLeads: builder.mutation({
+            query: (data) => ({
+                url: 'leads/bulk',
+                method: 'POST',
+                body: data,
+            }),
+            invalidatesTags: ['Lead'],
+        }),
         updateLead: builder.mutation({
             query: ({ id, data }) => ({
                 url: `leads/${id}`,
@@ -242,6 +250,7 @@ export const {
     useGetLeadsQuery,
     useGetLeadByIdQuery,
     useCreateLeadMutation,
+    useBulkCreateLeadsMutation,
     useUpdateLeadMutation,
     useDeleteLeadMutation,
     useHitCallMutation,

@@ -13,29 +13,29 @@ import {
   Info,
 } from "lucide-react";
 
-const leadOwners = [
-  { id: 1, name: "Anish Kumar", role: "Team Lead" },
-  { id: 2, name: "Priya Sharma", role: "Sales Manager" },
-  { id: 3, name: "Rahul Verma", role: "Senior Executive" },
-  { id: 4, name: "Sneha Patel", role: "Manager" },
-  { id: 5, name: "Vikram Singh", role: "Team Lead" },
-  { id: 6, name: "Neha Gupta", role: "Assistant Manager" },
-  { id: 7, name: "Amit Mishra", role: "Director" },
-  { id: 8, name: "Kavita Reddy", role: "Regional Head" },
-];
+import { useSelector } from "react-redux";
+import { useGetEmployeesQuery } from "../../store/api/employeeApi";
+import { useBulkCreateLeadsMutation } from "../../store/api/leadApi";
+import * as XLSX from "xlsx";
+import toast from "react-hot-toast";
 
 const inputStyles =
   "w-full px-4 py-3 border-2 border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300";
 
 export default function BulkUploadLeads({ onClose }) {
-  const [leadType, setLeadType] = useState("person");
-  const [visibility, setVisibility] = useState("public");
+  const { user } = useSelector((state) => state.auth);
+  const { data: employeesData } = useGetEmployeesQuery({ limit: 100 });
+  const [bulkCreateLeads, { isLoading: isUploading }] = useBulkCreateLeadsMutation();
+  const employees = employeesData?.employees || [];
+
+  const [leadType, setLeadType] = useState("Individual");
   const [tags, setTags] = useState([]);
   const [tagInput, setTagInput] = useState("");
   const [formData, setFormData] = useState({
-    leadsOwner: "",
-    source: "",
+    owner: user?.id || user?.user_id || "",
+    lead_source: "Bulk Upload",
   });
+  const [file, setFile] = useState(null);
   const [fileName, setFileName] = useState("");
   const [dragActive, setDragActive] = useState(false);
 
@@ -57,7 +57,9 @@ export default function BulkUploadLeads({ onClose }) {
 
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
-      setFileName(e.target.files[0].name);
+      const selectedFile = e.target.files[0];
+      setFile(selectedFile);
+      setFileName(selectedFile.name);
     }
   };
 
@@ -76,20 +78,61 @@ export default function BulkUploadLeads({ onClose }) {
     e.stopPropagation();
     setDragActive(false);
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      setFileName(e.dataTransfer.files[0].name);
+      const droppedFile = e.dataTransfer.files[0];
+      setFile(droppedFile);
+      setFileName(droppedFile.name);
     }
   };
 
-  const handleSubmit = () => {
-    console.log("Bulk Upload:", {
-      leadType,
-      visibility,
-      tags,
-      ...formData,
-      fileName,
-    });
-    alert("Leads uploaded successfully!");
-    if (onClose) onClose();
+  const handleSubmit = async () => {
+    if (!file) {
+      toast.error("Please select a file first");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const data = e.target.result;
+        const workbook = XLSX.read(data, { type: "binary" });
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        const jsonData = XLSX.utils.sheet_to_json(sheet);
+
+        if (jsonData.length === 0) {
+          toast.error("No data found in the file");
+          return;
+        }
+
+        // Map jsonData to our lead model structure
+        const leadsToUpload = jsonData.map((row) => ({
+          type: leadType,
+          name: row.Name || row.full_name || row["Full Name"],
+          email: row.Email || row.email,
+          mobile_number: row.Phone || row.mobile_number || row["Phone Number"],
+          organization_name: row.Company || row.organization_name || row["Company Name"],
+          address: row.Address || row.address,
+          city: row.City || row.city,
+          state: row.State || row.state,
+          country: row.Country || row.country,
+          pincode: row.Zipcode || row.pincode || row["Zip Code"],
+          owner: formData.owner,
+          lead_source: formData.lead_source,
+          tag: tags.join(", "),
+        }));
+
+        const response = await bulkCreateLeads(leadsToUpload).unwrap();
+
+        if (response.status) {
+          toast.success(response.message || "Leads uploaded successfully!");
+          if (onClose) onClose();
+        }
+      } catch (error) {
+        console.error("Bulk upload failed:", error);
+        toast.error(error?.data?.message || "Failed to upload leads. Please check the file format.");
+      }
+    };
+    reader.readAsBinaryString(file);
   };
 
   return (
@@ -130,21 +173,21 @@ export default function BulkUploadLeads({ onClose }) {
               <label className="flex items-center cursor-pointer group">
                 <input
                   type="radio"
-                  value="person"
-                  checked={leadType === "person"}
+                  value="Individual"
+                  checked={leadType === "Individual"}
                   onChange={(e) => setLeadType(e.target.value)}
                   className="w-5 h-5 text-[#FF7B1D]"
                 />
                 <span className="ml-3 text-sm font-semibold text-gray-800 group-hover:text-[#FF7B1D] flex items-center gap-2">
-                  <User size={16} /> Person
+                  <User size={16} /> Individual
                 </span>
               </label>
 
               <label className="flex items-center cursor-pointer group">
                 <input
                   type="radio"
-                  value="organization"
-                  checked={leadType === "organization"}
+                  value="Organization"
+                  checked={leadType === "Organization"}
                   onChange={(e) => setLeadType(e.target.value)}
                   className="w-5 h-5 text-[#FF7B1D]"
                 />
@@ -167,23 +210,21 @@ export default function BulkUploadLeads({ onClose }) {
               <div className="group">
                 <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
                   <User size={14} className="text-[#FF7B1D]" />
-                  Leads Owner <span className="text-red-500">*</span>
+                  Lead Owner
                 </label>
                 <div className="relative">
-                  <select
-                    value={formData.leadsOwner}
-                    onChange={(e) =>
-                      setFormData({ ...formData, leadsOwner: e.target.value })
+                  <input
+                    type="text"
+                    readOnly
+                    value={
+                      employees.find(emp => (emp.user_id || emp.id) == (user?.id || user?.user_id))?.employee_name ||
+                      user?.employee_name || user?.name || (user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : "") || "Self"
                     }
-                    className={inputStyles + " appearance-none cursor-pointer"}
-                  >
-                    <option value="">Select Lead Owner</option>
-                    {leadOwners.map((owner) => (
-                      <option key={owner.id} value={owner.id}>
-                        {owner.name} - {owner.role}
-                      </option>
-                    ))}
-                  </select>
+                    className={inputStyles + " bg-gray-50 cursor-not-allowed border-gray-100"}
+                  />
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]"></div>
+                  </div>
                 </div>
               </div>
 
@@ -191,13 +232,13 @@ export default function BulkUploadLeads({ onClose }) {
               <div className="group">
                 <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
                   <FileText size={14} className="text-[#FF7B1D]" />
-                  Source
+                  Lead Source
                 </label>
                 <div className="relative">
                   <select
-                    value={formData.source}
+                    value={formData.lead_source}
                     onChange={(e) =>
-                      setFormData({ ...formData, source: e.target.value })
+                      setFormData({ ...formData, lead_source: e.target.value })
                     }
                     className={inputStyles + " appearance-none cursor-pointer"}
                   >
@@ -206,7 +247,7 @@ export default function BulkUploadLeads({ onClose }) {
                     <option value="Referral">Referral</option>
                     <option value="Social Media">Social Media</option>
                     <option value="Email Campaign">Email Campaign</option>
-                    <option value="Partner">Partner</option>
+                    <option value="Cold Call">Cold Call</option>
                     <option value="Other">Other</option>
                   </select>
                 </div>
@@ -254,41 +295,12 @@ export default function BulkUploadLeads({ onClose }) {
                 </div>
               </div>
 
-              {/* Visibility */}
-              <div className="col-span-2 bg-orange-50 p-4 rounded-lg border border-orange-200">
-                <div className="flex gap-6 items-center">
-                  <span className="text-sm font-semibold text-gray-800">
-                    Visibility:
-                  </span>
 
-                  <label className="flex items-center cursor-pointer group">
-                    <input
-                      type="radio"
-                      value="public"
-                      checked={visibility === "public"}
-                      onChange={(e) => setVisibility(e.target.value)}
-                      className="w-4 h-4 text-[#FF7B1D]"
-                    />
-                    <span className="ml-2 text-sm">Public</span>
-                  </label>
-
-                  <label className="flex items-center cursor-pointer group">
-                    <input
-                      type="radio"
-                      value="private"
-                      checked={visibility === "private"}
-                      onChange={(e) => setVisibility(e.target.value)}
-                      className="w-4 h-4 text-[#FF7B1D]"
-                    />
-                    <span className="ml-2 text-sm">Private</span>
-                  </label>
-                </div>
-              </div>
             </div>
           </div>
 
           {/* Download Sample Section */}
-          <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
+          <div className="bg-blue-50 border-2 border-blue-200 rounded-sm p-4">
             <div className="flex items-start gap-3">
               <div className="bg-blue-100 p-2 rounded-lg mt-1">
                 <Info size={20} className="text-blue-600" />
@@ -360,13 +372,12 @@ export default function BulkUploadLeads({ onClose }) {
 
           {/* Upload Box */}
           <div
-            className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all ${
-              dragActive
-                ? "border-[#FF7B1D] bg-orange-50"
-                : fileName
+            className={`border-2 border-dashed rounded-sm p-8 text-center cursor-pointer transition-all ${dragActive
+              ? "border-[#FF7B1D] bg-orange-50"
+              : fileName
                 ? "border-green-400 bg-green-50"
                 : "border-gray-300 hover:border-[#FF7B1D] hover:bg-orange-50"
-            }`}
+              }`}
             onDragEnter={handleDrag}
             onDragLeave={handleDrag}
             onDragOver={handleDrag}
@@ -383,9 +394,8 @@ export default function BulkUploadLeads({ onClose }) {
 
             <div className="flex flex-col items-center gap-3">
               <div
-                className={`p-4 rounded-full ${
-                  fileName ? "bg-green-100" : "bg-orange-100"
-                }`}
+                className={`p-4 rounded-full ${fileName ? "bg-green-100" : "bg-orange-100"
+                  }`}
               >
                 {fileName ? (
                   <CheckCircle2 size={32} className="text-green-500" />
@@ -430,10 +440,11 @@ export default function BulkUploadLeads({ onClose }) {
 
           <button
             type="button"
+            disabled={isUploading}
             onClick={handleSubmit}
-            className="px-6 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-700 hover:to-orange-700 rounded-sm shadow-md hover:shadow-lg"
+            className="px-6 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-700 hover:to-orange-700 rounded-sm shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Upload Leads
+            {isUploading ? "Uploading..." : "Upload Leads"}
           </button>
         </div>
       </div>

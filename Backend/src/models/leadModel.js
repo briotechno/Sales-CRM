@@ -7,11 +7,15 @@ const Lead = {
             status, type, tag, location,
             lead_source, visibility,
             full_name, gender, dob, alt_mobile_number, address, city, state, pincode, interested_in,
-            organization_name, industry_type, website, company_email, company_phone, gst_pan_number,
-            org_address, org_city, org_state, org_pincode,
+            profile_image, whatsapp_number, country,
+            organization_name, industry_type, website, company_email, company_phone, gst_pan_number, gst_number,
+            org_address, org_city, org_state, org_pincode, company_address, org_country,
             primary_contact_name, primary_dob, designation, primary_mobile, primary_email,
-            description, owner
+            description, owner, referral_mobile, custom_fields, contact_persons
         } = data;
+
+        // Normalize type: 'Person' -> 'Individual' for consistency
+        if (type === 'Person') type = 'Individual';
 
         // If pipeline_id or stage_id is missing, handle default
         if (!pipeline_id || !stage_id) {
@@ -60,29 +64,101 @@ const Lead = {
             nextId = 'L' + num.toString().padStart(3, '0');
         }
 
+        // Handle custom_fields and contact_persons - ensure they're JSON strings
+        const customFieldsJson = typeof custom_fields === 'string' ? custom_fields : JSON.stringify(custom_fields || []);
+        const contactPersonsJson = typeof contact_persons === 'string' ? contact_persons : JSON.stringify(contact_persons || []);
+
         const [result] = await pool.query(
             `INSERT INTO leads (
                 lead_id, name, mobile_number, email, value, pipeline_id, stage_id, 
                 status, type, tag, location, user_id,
                 lead_source, visibility,
                 full_name, gender, dob, alt_mobile_number, address, city, state, pincode, interested_in,
-                organization_name, industry_type, website, company_email, company_phone, gst_pan_number,
-                org_address, org_city, org_state, org_pincode,
+                profile_image, whatsapp_number, country,
+                organization_name, industry_type, website, company_email, company_phone, gst_pan_number, gst_number,
+                org_address, org_city, org_state, org_pincode, company_address, org_country,
                 primary_contact_name, primary_dob, designation, primary_mobile, primary_email,
-                description, assigned_to
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                description, assigned_to, referral_mobile, custom_fields, contact_persons
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 nextId, name, mobile_number, email, value || 0, pipeline_id, stage_id,
-                status || 'Open', type || 'Person', tag || 'Not Contacted', location, userId,
+                status || 'Open', type || 'Individual', tag || 'Not Contacted', location, userId,
                 lead_source, visibility,
                 full_name, gender, dob, alt_mobile_number, address, city, state, pincode, interested_in,
-                organization_name, industry_type, website, company_email, company_phone, gst_pan_number,
-                org_address, org_city, org_state, org_pincode,
+                profile_image, whatsapp_number, country,
+                organization_name, industry_type, website, company_email, company_phone, gst_pan_number || gst_number, gst_number,
+                org_address || company_address, org_city, org_state, org_pincode, company_address, org_country,
                 primary_contact_name, primary_dob, designation, primary_mobile, primary_email,
-                description, owner
+                description, owner, referral_mobile, customFieldsJson, contactPersonsJson
             ]
         );
         return result.insertId;
+    },
+
+    bulkCreate: async (leadsArray, userId) => {
+        if (!leadsArray || leadsArray.length === 0) return 0;
+
+        // 1. Get default pipeline/stage once if needed
+        let [pipes] = await pool.query('SELECT id FROM pipelines WHERE user_id = ? ORDER BY id ASC LIMIT 1', [userId]);
+        let defaultPipelineId = pipes.length > 0 ? pipes[0].id : null;
+        let defaultStageId = null;
+
+        if (defaultPipelineId) {
+            const [stgs] = await pool.query('SELECT id FROM pipeline_stages WHERE pipeline_id = ? ORDER BY stage_order ASC LIMIT 1', [defaultPipelineId]);
+            defaultStageId = stgs.length > 0 ? stgs[0].id : null;
+        }
+
+        // 2. Prepare Lead ID sequence
+        const [rows] = await pool.query('SELECT lead_id FROM leads WHERE user_id = ? ORDER BY id DESC LIMIT 1', [userId]);
+        let lastIdNum = 0;
+        if (rows.length > 0 && rows[0].lead_id) {
+            lastIdNum = parseInt(rows[0].lead_id.substring(1)) || 0;
+        }
+
+        const values = leadsArray.map((data, index) => {
+            let {
+                name, mobile_number, email, value, pipeline_id, stage_id,
+                status, type, tag, location, lead_source, visibility,
+                full_name, gender, dob, alt_mobile_number, address, city, state, pincode, interested_in,
+                profile_image, whatsapp_number, country,
+                organization_name, industry_type, website, company_email, company_phone, gst_pan_number, gst_number,
+                org_address, org_city, org_state, org_pincode, company_address, org_country,
+                primary_contact_name, primary_dob, designation, primary_mobile, primary_email,
+                description, owner, referral_mobile, custom_fields, contact_persons
+            } = data;
+
+            const nextId = 'L' + (lastIdNum + index + 1).toString().padStart(3, '0');
+            const customFieldsJson = typeof custom_fields === 'string' ? custom_fields : JSON.stringify(custom_fields || []);
+            const contactPersonsJson = typeof contact_persons === 'string' ? contact_persons : JSON.stringify(contact_persons || []);
+
+            return [
+                nextId, name || full_name, mobile_number, email, value || 0, pipeline_id || defaultPipelineId, stage_id || defaultStageId,
+                status || 'Open', type || 'Individual', tag || 'Not Contacted', location, userId,
+                lead_source || 'Bulk Upload', visibility || 'Public',
+                full_name || name, gender, dob, alt_mobile_number, address || company_address, city, state, pincode, interested_in,
+                profile_image, whatsapp_number, country,
+                organization_name, industry_type, website, company_email, company_phone, gst_pan_number || gst_number, gst_number,
+                org_address || company_address, org_city, org_state, org_pincode, company_address, org_country,
+                primary_contact_name, primary_dob, designation, primary_mobile, primary_email,
+                description, owner, referral_mobile, customFieldsJson, contactPersonsJson
+            ];
+        });
+
+        const [result] = await pool.query(
+            `INSERT INTO leads (
+                lead_id, name, mobile_number, email, value, pipeline_id, stage_id, 
+                status, type, tag, location, user_id,
+                lead_source, visibility,
+                full_name, gender, dob, alt_mobile_number, address, city, state, pincode, interested_in,
+                profile_image, whatsapp_number, country,
+                organization_name, industry_type, website, company_email, company_phone, gst_pan_number, gst_number,
+                org_address, org_city, org_state, org_pincode, company_address, org_country,
+                primary_contact_name, primary_dob, designation, primary_mobile, primary_email,
+                description, assigned_to, referral_mobile, custom_fields, contact_persons
+            ) VALUES ?`,
+            [values]
+        );
+        return result.affectedRows;
     },
 
     findAll: async (userId, page = 1, limit = 10, search = '', status = 'All', pipelineId = null, tag = null, type = null, subview = 'All', priority = 'All', services = 'All', dateFrom = null, dateTo = null) => {
@@ -210,20 +286,29 @@ const Lead = {
             'status', 'type', 'tag', 'location',
             'lead_source', 'visibility',
             'full_name', 'gender', 'dob', 'alt_mobile_number', 'address', 'city', 'state', 'pincode', 'interested_in',
-            'organization_name', 'industry_type', 'website', 'company_email', 'company_phone', 'gst_pan_number',
-            'org_address', 'org_city', 'org_state', 'org_pincode',
+            'profile_image', 'whatsapp_number', 'country',
+            'organization_name', 'industry_type', 'website', 'company_email', 'company_phone', 'gst_pan_number', 'gst_number',
+            'org_address', 'org_city', 'org_state', 'org_pincode', 'company_address', 'org_country',
             'primary_contact_name', 'primary_dob', 'designation', 'primary_mobile', 'primary_email',
             'description', 'assigned_to', 'last_call_at', 'next_call_at', 'call_count',
             'not_connected_count', 'connected_count', 'drop_reason', 'call_success_rate',
-            'follow_up_frequency', 'response_quality', 'conversion_probability', 'is_trending'
+            'follow_up_frequency', 'response_quality', 'conversion_probability', 'is_trending',
+            'referral_mobile', 'custom_fields', 'contact_persons'
         ];
         const updates = [];
         const values = [];
 
         Object.keys(data).forEach(key => {
             if (allowedFields.includes(key)) {
-                updates.push(`${key} = ?`);
-                values.push(data[key]);
+                // Handle JSON fields
+                if (key === 'custom_fields' || key === 'contact_persons') {
+                    const jsonValue = typeof data[key] === 'string' ? data[key] : JSON.stringify(data[key] || []);
+                    updates.push(`${key} = ?`);
+                    values.push(jsonValue);
+                } else {
+                    updates.push(`${key} = ?`);
+                    values.push(data[key]);
+                }
             } else if (key === 'owner') {
                 updates.push('assigned_to = ?');
                 values.push(data[key]);
