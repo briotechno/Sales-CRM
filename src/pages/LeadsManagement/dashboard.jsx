@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import NumberCard from "../../components/NumberCard";
 import BulkUploadLeads from "../../components/AddNewLeads/BulkUpload";
+import AddLeadPopup from "../../components/AddNewLeads/AddNewLead";
 
 const leadCategories = [
   { name: "Work Station", path: "/crm/leads/work-station", icon: <Briefcase size={16} /> },
@@ -46,17 +47,30 @@ export default function LeadDashboard() {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [openLeadMenu, setOpenLeadMenu] = useState(false);
   const [showBulkUploadPopup, setShowBulkUploadPopup] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const addLeadMenuRef = useRef(null);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsFilterOpen(false);
       }
+      if (addLeadMenuRef.current && !addLeadMenuRef.current.contains(event.target)) {
+        setOpenLeadMenu(false);
+      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  const handleAddLead = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+  };
 
   const recentLeads = [
     {
@@ -214,7 +228,7 @@ export default function LeadDashboard() {
                   )}
                 </div>
 
-                <div className="relative">
+                <div className="relative" ref={addLeadMenuRef}>
                   <button
                     onClick={() => setOpenLeadMenu(!openLeadMenu)}
                     className="flex items-center gap-2 px-6 py-3 rounded-sm font-semibold transition shadow-lg hover:shadow-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
@@ -224,15 +238,15 @@ export default function LeadDashboard() {
                   </button>
 
                   {openLeadMenu && (
-                    <div className="absolute top-full right-0 mt-2 w-48 bg-white border border-gray-200 shadow-xl rounded-sm z-50 overflow-hidden divide-y divide-gray-100">
+                    <div className="absolute top-full right-0 mt-2 w-56 bg-white border border-gray-200 shadow-xl rounded-sm z-50 overflow-hidden divide-y divide-gray-100 animate-fadeIn">
                       <button
                         onClick={() => {
                           setOpenLeadMenu(false);
-                          navigate("/crm/leads/all"); // Or show a popup
+                          handleAddLead();
                         }}
-                        className="w-full flex items-center gap-3 text-left px-4 py-3 hover:bg-orange-50 text-[11px] font-bold text-gray-700 hover:text-orange-600 transition capitalize tracking-wider"
+                        className="w-full flex items-center gap-3 text-left px-5 py-3.5 hover:bg-orange-50 text-sm font-bold text-gray-700 hover:text-orange-600 transition font-primary"
                       >
-                        <UserPlus size={16} />
+                        <UserPlus size={18} />
                         Add Single Lead
                       </button>
 
@@ -241,9 +255,9 @@ export default function LeadDashboard() {
                           setOpenLeadMenu(false);
                           setShowBulkUploadPopup(true);
                         }}
-                        className="w-full flex items-center gap-3 text-left px-4 py-3 hover:bg-orange-50 text-[11px] font-bold text-gray-700 hover:text-orange-600 transition capitalize tracking-wider"
+                        className="w-full flex items-center gap-3 text-left px-5 py-3.5 hover:bg-orange-50 text-sm font-bold text-gray-700 hover:text-orange-600 transition font-primary"
                       >
-                        <Upload size={16} />
+                        <Upload size={18} />
                         Bulk Upload
                       </button>
                     </div>
@@ -463,6 +477,7 @@ export default function LeadDashboard() {
           </div>
         </div>
         {showBulkUploadPopup && <BulkUploadLeads onClose={() => setShowBulkUploadPopup(false)} />}
+        {isModalOpen && <AddLeadPopup isOpen={isModalOpen} onClose={handleCloseModal} />}
       </div>
     </DashboardLayout>
   );
