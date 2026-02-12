@@ -1,9 +1,9 @@
 import React from "react";
 import Modal from "../common/Modal";
 import { QRCodeSVG } from "qrcode.react";
-import { Smartphone } from "lucide-react";
+import { Smartphone, Phone } from "lucide-react";
 
-export default function CallQrModal({ isOpen, onClose, lead }) {
+export default function CallQrModal({ isOpen, onClose, lead, onProceedToLog }) {
     if (!lead) return null;
 
     const phoneNumber = lead.mobile_number || lead.phone;
@@ -34,9 +34,9 @@ export default function CallQrModal({ isOpen, onClose, lead }) {
                     )}
                 </div>
 
-                <div className="space-y-4 w-full">
+                <div className="space-y-6 w-full px-4">
                     <div>
-                        <h3 className="text-lg font-bold text-gray-800 font-primary">
+                        <h3 className="text-xl font-bold text-gray-800">
                             {lead.name || lead.full_name || "Lead Contact"}
                         </h3>
                         <p className="text-[#FF7B1D] font-bold text-sm tracking-widest mt-1">
@@ -44,6 +44,20 @@ export default function CallQrModal({ isOpen, onClose, lead }) {
                         </p>
                     </div>
 
+                    <button
+                        onClick={() => {
+                            if (phoneNumber) window.location.href = dialerUrl;
+                            if (onProceedToLog) onProceedToLog();
+                        }}
+                        className="w-full py-3 rounded-sm font-semibold transition shadow-lg hover:shadow-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 flex items-center justify-center gap-2 active:scale-[0.98] capitalize"
+                    >
+                        <Phone size={18} />
+                        Call Now & Log Result
+                    </button>
+
+                    <p className="text-[10px] text-gray-400 font-bold capitalize tracking-tight">
+                        Click Above If You Are Calling Via IVR Or Desktop System
+                    </p>
                 </div>
             </div>
         </Modal>
