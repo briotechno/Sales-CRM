@@ -1,7 +1,5 @@
 import React, { useState, useMemo } from "react";
 import { FiBell, FiSearch, FiCheckCircle, FiTrash2, FiMail } from "react-icons/fi";
-import DashboardLayout from "../../components/DashboardLayout";
-
 const initialNotifications = [
   { id: 1, title: "New Lead Assigned", message: "A new high-value lead has been assigned to you.", time: "10m ago", unread: true },
   { id: 2, title: "Deal Follow-up Reminder", message: "Follow up with client Sarah regarding the Q4 proposal.", time: "2h ago", unread: true },
@@ -33,7 +31,7 @@ export default function CRMNotificationPage() {
   };
 
   return (
-    <DashboardLayout isFullHeight>
+    <>
       <div className="flex h-full w-full bg-gray-50 text-gray-900 font-sans">
 
         {/* --- LEFT COLUMN --- */}
@@ -122,6 +120,6 @@ export default function CRMNotificationPage() {
         </div>
 
       </div>
-    </DashboardLayout>
+    </>
   );
 }

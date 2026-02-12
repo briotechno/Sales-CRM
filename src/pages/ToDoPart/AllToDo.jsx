@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
 import { FiHome } from "react-icons/fi";
-import DashboardLayout from "../../components/DashboardLayout";
 import {
   Check,
   Plus,
@@ -327,7 +326,7 @@ export default function TodoPage() {
     searchTerm || filterPriority !== "all" || dateFilter !== "All" || filterCategory !== "All" || filterStatus !== "All";
 
   return (
-    <DashboardLayout>
+    <>
       <div className="min-h-screen bg-white">
         {/* Header Section */}
         <div className="bg-white sticky top-0 z-30">
@@ -1344,6 +1343,6 @@ export default function TodoPage() {
           )}
         </Modal>
       </div>
-    </DashboardLayout>
+    </>
   );
 }

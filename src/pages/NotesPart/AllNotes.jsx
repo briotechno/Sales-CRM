@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { FiHome } from "react-icons/fi";
-import DashboardLayout from "../../components/DashboardLayout";
 import {
   FileText,
   Plus,
@@ -220,7 +219,7 @@ export default function NotesPage() {
     searchTerm || selectedCategory !== "All" || dateFilter !== "All";
 
   return (
-    <DashboardLayout>
+    <>
       <div className="min-h-screen bg-white">
         {/* Header Section */}
         <div className="bg-white sticky top-0 z-30">
@@ -933,6 +932,6 @@ export default function NotesPage() {
           </Modal>
         </div>
       </div>
-    </DashboardLayout>
+    </>
   );
 }

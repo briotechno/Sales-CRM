@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
-import DashboardLayout from "../components/DashboardLayout";
 import AddLeadModal from "../components/AddNewLeads/AddNewLead";
 import BulkUploadLeads from "../components/AddNewLeads/BulkUpload";
 import {
@@ -156,7 +155,7 @@ const CRMDashboard = () => {
   const upcomingBirthdays = dashboardData?.upcomingBirthdays || [];
 
   return (
-    <DashboardLayout>
+    <>
       {isLoading ? (
         <div className="flex items-center justify-center min-h-screen">
           <div className="flex flex-col items-center gap-4">
@@ -758,7 +757,7 @@ const CRMDashboard = () => {
           </div>
         </div>
       )}
-    </DashboardLayout>
+    </>
   );
 };
 

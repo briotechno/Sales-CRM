@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { FiHome, FiGrid } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
-import DashboardLayout from "../../components/DashboardLayout";
+
 import { Download, Upload, Filter, UserPlus, List, Trash2, Users, Server, Type, Phone, Loader2, ChevronLeft, ChevronRight, Mail, AlertCircle } from "lucide-react";
 import Modal from "../../components/common/Modal";
 import AddLeadPopup from "../../components/AddNewLeads/AddNewLead";
@@ -311,7 +311,8 @@ export default function UnreadLeads() {
   };
 
   return (
-    <DashboardLayout>
+    <>
+
       <div className="min-h-screen bg-white">
         {/* Header Section */}
         <div className="bg-white sticky top-0 z-30">
@@ -811,6 +812,7 @@ export default function UnreadLeads() {
           </div>
         </Modal>
       </div>
-    </DashboardLayout>
+    </>
+
   );
 }

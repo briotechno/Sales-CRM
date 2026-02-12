@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from "react";
-import DashboardLayout from "../../components/DashboardLayout";
 import {
   Users,
   Plus,
@@ -207,7 +206,7 @@ export default function TeamManagement() {
   }, []);
 
   return (
-    <DashboardLayout>
+    <>
       <div className="min-h-screen bg-white">
         {/* Header Section */}
         <div className="bg-white sticky top-0 z-30">
@@ -678,7 +677,7 @@ export default function TeamManagement() {
                         {team.team_id}
                       </p>
                     </div>
-                    
+
                     <div className="flex flex-wrap justify-center gap-2 mt-4">
                       {/* Optional: Add tags or badges for team types if available */}
                       <span className="px-2 py-1 bg-blue-50 text-blue-600 text-[10px] font-bold rounded-sm border border-blue-100 uppercase tracking-tighter">Collaboration</span>
@@ -812,6 +811,6 @@ export default function TeamManagement() {
         }}
         teamId={selectedTeam?.id}
       />
-    </DashboardLayout>
+    </>
   );
 }

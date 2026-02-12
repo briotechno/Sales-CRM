@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { FiHome } from "react-icons/fi";
-import DashboardLayout from "../../components/DashboardLayout";
 import AddTermModal from "../../components/TermCondition/AddTermModal";
 import ViewTermModal from "../../components/TermCondition/ViewTermModal";
 import EditTermModal from "../../components/TermCondition/EditTermModal";
@@ -175,7 +174,7 @@ const TermsAndCondition = () => {
 
   /* ================= UI ================= */
   return (
-    <DashboardLayout>
+    <>
       <div className="min-h-screen bg-white">
         {/* Header Section */}
         <div className="bg-white sticky top-0 z-30">
@@ -570,7 +569,7 @@ const TermsAndCondition = () => {
           term={selectedTerm}
         />
       </div>
-    </DashboardLayout>
+    </>
   );
 };
 

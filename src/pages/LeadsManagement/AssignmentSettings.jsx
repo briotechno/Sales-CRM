@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import DashboardLayout from "../../components/DashboardLayout";
+
 import {
     Settings,
     Users,
@@ -53,7 +53,8 @@ export default function AssignmentSettings() {
     const logs = logsData?.logs || [];
 
     return (
-        <DashboardLayout>
+        <>
+
             <div className="p-6 max-w-7xl mx-auto space-y-8 font-primary pb-20 text-left">
                 {/* Header */}
                 <div className="flex items-center justify-between">
@@ -278,6 +279,7 @@ export default function AssignmentSettings() {
                     </div>
                 </div>
             </div>
-        </DashboardLayout>
+        </>
+
     );
 }
