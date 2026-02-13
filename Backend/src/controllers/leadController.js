@@ -93,21 +93,27 @@ const hitCall = async (req, res) => {
             const maxAttempts = settings?.max_call_attempts || 5;
 
             if (result.call_count >= maxAttempts) {
-                console.log(`Lead ${leadId} reached max call attempts (${maxAttempts}). Reassigning...`);
+                console.log(`Lead ${leadId} reached max call attempts (${maxAttempts}). Processing...`);
 
-                // 1. Mark as unassigned and reset status to fresh
-                await Lead.update(leadId, {
+                let updateData = {
                     assigned_to: null,
                     assigned_at: null,
-                    tag: 'Not Contacted',
                     call_count: 0,
                     not_connected_count: 0,
                     connected_count: 0,
                     last_call_at: null,
                     next_call_at: null
-                }, userId);
+                };
 
-                // 2. Log the drop
+                if (settings?.auto_disqualification) {
+                    updateData.tag = 'Lost';
+                    updateData.drop_reason = `Auto-drop: Max attempts reached (${maxAttempts})`;
+                } else {
+                    updateData.tag = 'Not Contacted';
+                }
+
+                await Lead.update(leadId, updateData, userId);
+
                 await LeadAssignmentLog.create({
                     user_id: userId,
                     lead_id: leadId,
@@ -115,11 +121,10 @@ const hitCall = async (req, res) => {
                     assigned_by: 'system',
                     assignment_type: 'auto',
                     reassigned_from: currentLead?.assigned_to || null,
-                    reason: `Max call attempts reached (${maxAttempts})`
+                    reason: `Max attempts reached (${maxAttempts})`
                 });
 
-                // 3. Trigger auto-assignment to someone ELSE
-                if (settings?.mode === 'auto') {
+                if (settings?.mode === 'auto' && (settings?.reassignment_on_disqualified || !settings?.auto_disqualification)) {
                     await leadAssignmentService.autoAssign(leadId, userId, currentLead?.assigned_to);
                 }
             }
