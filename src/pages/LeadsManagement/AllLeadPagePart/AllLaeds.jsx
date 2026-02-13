@@ -6,9 +6,9 @@ import { Download, Upload, Filter, UserPlus, List, Trash2, Users, Server, Type, 
 import Modal from "../../../components/common/Modal";
 import AddLeadPopup from "../../../components/AddNewLeads/AddNewLead";
 import BulkUploadLeads from "../../../components/AddNewLeads/BulkUpload";
-import AssignLeadsModal from "../../../pages/LeadsManagement/AllLeadPagePart/AssignLeadModal";
-import LeadsListView from "../../../pages/LeadsManagement/AllLeadPagePart/LeadsList";
-import LeadsGridView from "../../../pages/LeadsManagement/AllLeadPagePart/LeadsGridView";
+import AssignLeadsModal from "./AssignLeadModal";
+import LeadsListView from "./LeadsList";
+import LeadsGridView from "./LeadsGridView";
 import NumberCard from "../../../components/NumberCard";
 import CallActionPopup from "../../../components/AddNewLeads/CallActionPopup";
 import CallQrModal from "../../../components/LeadManagement/CallQrModal";
