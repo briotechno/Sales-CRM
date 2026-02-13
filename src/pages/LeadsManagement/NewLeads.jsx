@@ -332,12 +332,11 @@ export default function NewLeads() {
           <div className="max-w-8xl mx-auto px-4 py-4 border-b">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
-                <h1 className="text-2xl font-bold text-gray-800 capitalize tracking-tight">Leads Management</h1>
-                <p className="text-[11px] text-gray-400 mt-1 flex items-center gap-2 font-bold capitalize tracking-wider">
-                  <FiHome className="text-gray-400" size={12} />
-                  <span>CRM</span>
-                  <span className="text-gray-300">/</span>
-                  <span className="text-[#FF7B1D]">
+                <h1 className="text-2xl font-bold text-gray-800">New Leads</h1>
+                <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
+                  <FiHome className="text-gray-700" size={14} />
+                  <span className="text-gray-400">CRM / </span>
+                  <span className="text-[#FF7B1D] font-medium">
                     New Leads
                   </span>
                 </p>
