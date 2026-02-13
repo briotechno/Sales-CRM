@@ -1,5 +1,6 @@
 const Lead = require('../models/leadModel');
 const { pool } = require('../config/db');
+const leadAssignmentService = require('./leadAssignmentService');
 
 const LeadService = {
     /**
@@ -63,6 +64,10 @@ const LeadService = {
 
         // 3. Create Lead
         const leadId = await Lead.create(finalLeadData, userId);
+
+        // 4. Handle Auto-Assignment if enabled
+        await leadAssignmentService.autoAssign(leadId, userId);
+
         return { action: 'created', id: leadId };
     },
 

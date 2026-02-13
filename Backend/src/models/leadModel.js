@@ -292,7 +292,7 @@ const Lead = {
             'organization_name', 'industry_type', 'website', 'company_email', 'company_phone', 'gst_pan_number', 'gst_number',
             'org_address', 'org_city', 'org_state', 'org_pincode', 'company_address', 'org_country',
             'primary_contact_name', 'primary_dob', 'designation', 'primary_mobile', 'primary_email',
-            'description', 'assigned_to', 'last_call_at', 'next_call_at', 'call_count',
+            'description', 'assigned_to', 'assigned_at', 'is_read', 'priority', 'last_call_at', 'next_call_at', 'call_count',
             'not_connected_count', 'connected_count', 'drop_reason', 'call_success_rate',
             'follow_up_frequency', 'response_quality', 'conversion_probability', 'is_trending',
             'referral_mobile', 'custom_fields', 'contact_persons'
@@ -326,7 +326,7 @@ const Lead = {
         );
     },
 
-    hitCall: async (id, status, nextCallAt, dropReason, userId) => {
+    hitCall: async (id, status, nextCallAt, dropReason, userId, createReminder = false) => {
         const [lead] = await pool.query('SELECT * FROM leads WHERE id = ? AND user_id = ?', [id, userId]);
         if (!lead.length) throw new Error('Lead not found');
 
@@ -342,7 +342,7 @@ const Lead = {
         if (status === 'connected') {
             connected_count++;
             updateData.connected_count = connected_count;
-            updateData.tag = 'Interested'; // Default if connected
+            updateData.tag = 'Follow Up'; // Updated to match user preference for 'Connected' outcome
         } else if (status === 'not_connected') {
             not_connected_count++;
             updateData.not_connected_count = not_connected_count;
@@ -366,6 +366,28 @@ const Lead = {
         const values = [...Object.values(updateData), id, userId];
 
         await pool.query(`UPDATE leads SET ${updates} WHERE id = ? AND user_id = ?`, values);
+
+        // Create Task Reminder if requested
+        if (createReminder && updateData.next_call_at) {
+            const nextCall = new Date(updateData.next_call_at);
+            const dueDate = nextCall.toISOString().split('T')[0];
+            const dueTime = nextCall.toTimeString().split(' ')[0];
+
+            await pool.query(
+                `INSERT INTO tasks (user_id, title, priority, due_date, due_time, category, status, completed, created_at)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, 0, NOW())`,
+                [
+                    userId,
+                    `Follow-up call: ${lead[0].name}`,
+                    (lead[0].priority || 'medium').toLowerCase(),
+                    dueDate,
+                    dueTime,
+                    'Follow-up',
+                    'Active'
+                ]
+            );
+        }
+
         return updateData;
     },
 
@@ -397,6 +419,24 @@ const Lead = {
 
     delete: async (id, userId) => {
         await pool.query('DELETE FROM leads WHERE id = ? AND user_id = ?', [id, userId]);
+    },
+
+    checkCallConflict: async (userId, dateTime, excludeLeadId = null) => {
+        // Check for calls within a 5-minute window (2.5 mins before and after)
+        const date = new Date(dateTime);
+        const startTime = new Date(date.getTime() - 2.5 * 60000);
+        const endTime = new Date(date.getTime() + 2.5 * 60000);
+
+        let query = 'SELECT id, name, next_call_at FROM leads WHERE user_id = ? AND next_call_at BETWEEN ? AND ?';
+        let params = [userId, startTime, endTime];
+
+        if (excludeLeadId) {
+            query += ' AND id != ?';
+            params.push(excludeLeadId);
+        }
+
+        const [rows] = await pool.query(query, params);
+        return rows;
     }
 };
 

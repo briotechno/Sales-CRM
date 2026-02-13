@@ -308,7 +308,8 @@ export default function AssignedLeads() {
         id: callData.id,
         status: callData.status,
         next_call_at: callData.next_call_at,
-        drop_reason: callData.drop_reason
+        drop_reason: callData.drop_reason,
+        create_reminder: callData.create_reminder
       }).unwrap();
       toast.success("Lead status updated based on call response");
     } catch (err) {
@@ -882,3 +883,4 @@ export default function AssignedLeads() {
 
   );
 }
+

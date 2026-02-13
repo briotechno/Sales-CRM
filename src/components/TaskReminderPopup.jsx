@@ -12,13 +12,21 @@ export default function TaskReminderPopup() {
     const [isVisible, setIsVisible] = useState(false);
     const [openTaskId, setOpenTaskId] = useState(null);
     const audioRef = useRef(null);
+    const [now, setNow] = useState(new Date());
 
     const toggleTask = (id) => {
         setOpenTaskId((prev) => (prev === id ? null : id));
     };
 
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setNow(new Date());
+        }, 15000); // Check every 15 seconds
+        return () => clearInterval(timer);
+    }, []);
+
     // Get tasks for the next 7 days
-    const { startDate, endDate } = React.useMemo(() => {
+    const { dateFrom, dateTo } = React.useMemo(() => {
         const start = new Date();
         start.setHours(0, 0, 0, 0);
 
@@ -27,29 +35,27 @@ export default function TaskReminderPopup() {
         end.setHours(23, 59, 59, 999);
 
         return {
-            startDate: start.toISOString().split("T")[0],
-            endDate: end.toISOString().split("T")[0],
+            dateFrom: start.toISOString().split("T")[0],
+            dateTo: end.toISOString().split("T")[0],
         };
     }, []);
 
     const { data } = useGetTasksQuery({
         priority: "all",
-        startDate,
-        endDate,
-    });
+        dateFrom,
+        dateTo,
+    }, { pollingInterval: 30000 }); // Poll every 30s to get new follow-up tasks
 
-    // Filter pending tasks
     // Filter pending tasks
     const pendingTasks = (data?.tasks || [])
         .filter((t) => {
-            if (t.completed) return false;
+            if (t.completed || t.status === 'Completed') return false;
             if (!t.due_date) return false;
 
-            const now = new Date();
             const dueDate = new Date(t.due_date);
 
             // Compare Dates (Day level)
-            const today = new Date();
+            const today = new Date(now);
             today.setHours(0, 0, 0, 0);
 
             const taskDate = new Date(dueDate);
@@ -62,14 +68,14 @@ export default function TaskReminderPopup() {
             if (!t.due_time) return true; // No time set = Due sometime today -> Show
 
             const [hours, minutes] = t.due_time.split(":").map(Number);
-            const dueTime = new Date();
+            const dueTime = new Date(now);
             dueTime.setHours(hours, minutes, 0, 0);
 
             return dueTime <= now; // Show if due time has passed
         })
         .sort((a, b) => {
-            const dateA = new Date(`${a.due_date}T${a.due_time || "00:00"}`);
-            const dateB = new Date(`${b.due_date}T${b.due_time || "00:00"}`);
+            const dateA = new Date(`${a.due_date.split('T')[0]}T${a.due_time || "00:00"}`);
+            const dateB = new Date(`${b.due_date.split('T')[0]}T${b.due_time || "00:00"}`);
             return dateA - dateB;
         });
 

@@ -2,6 +2,7 @@ const Lead = require('../models/leadModel');
 const LeadResources = require('../models/leadResourcesModel'); // Added
 const leadAssignmentService = require('../services/leadAssignmentService');
 const LeadAssignmentLog = require('../models/leadAssignmentLogModel');
+const LeadAssignmentSettings = require('../models/leadAssignmentSettingsModel');
 
 const createLead = async (req, res) => {
     try {
@@ -74,11 +75,60 @@ const deleteLead = async (req, res) => {
 
 const hitCall = async (req, res) => {
     try {
-        const { status, next_call_at, drop_reason } = req.body;
-        const result = await Lead.hitCall(req.params.id, status, next_call_at, drop_reason, req.user.id);
+        const userId = req.user.id;
+        const leadId = req.params.id;
+        const { status, next_call_at, drop_reason, create_reminder } = req.body;
+
+        // Get current lead before update to know current owner
+        const currentLead = await Lead.findById(leadId, userId);
+
+        const result = await Lead.hitCall(leadId, status, next_call_at, drop_reason, userId, create_reminder);
 
         // Auto-analyze after call
-        await Lead.analyzeLead(req.params.id, req.user.id);
+        await Lead.analyzeLead(leadId, userId);
+
+        // Auto-Reassignment Check
+        if (status === 'not_connected') {
+            const settings = await LeadAssignmentSettings.findByUserId(userId);
+            const maxAttempts = settings?.max_call_attempts || 5;
+
+            if (result.call_count >= maxAttempts) {
+                console.log(`Lead ${leadId} reached max call attempts (${maxAttempts}). Processing...`);
+
+                let updateData = {
+                    assigned_to: null,
+                    assigned_at: null,
+                    call_count: 0,
+                    not_connected_count: 0,
+                    connected_count: 0,
+                    last_call_at: null,
+                    next_call_at: null
+                };
+
+                if (settings?.auto_disqualification) {
+                    updateData.tag = 'Lost';
+                    updateData.drop_reason = `Auto-drop: Max attempts reached (${maxAttempts})`;
+                } else {
+                    updateData.tag = 'Not Contacted';
+                }
+
+                await Lead.update(leadId, updateData, userId);
+
+                await LeadAssignmentLog.create({
+                    user_id: userId,
+                    lead_id: leadId,
+                    employee_id: 0,
+                    assigned_by: 'system',
+                    assignment_type: 'auto',
+                    reassigned_from: currentLead?.assigned_to || null,
+                    reason: `Max attempts reached (${maxAttempts})`
+                });
+
+                if (settings?.mode === 'auto' && (settings?.reassignment_on_disqualified || !settings?.auto_disqualification)) {
+                    await leadAssignmentService.autoAssign(leadId, userId, currentLead?.assigned_to);
+                }
+            }
+        }
 
         res.status(200).json({ status: true, message: 'Call status updated', data: result });
     } catch (error) {
@@ -223,9 +273,12 @@ const addLeadMeeting = async (req, res) => {
 
 const updateLeadStatus = async (req, res) => {
     try {
-        const { status } = req.body;
-        await Lead.update(req.params.id, { status }, req.user.id); // Reusing existing update
-        // Could also log this change as an activity
+        const { status, tag } = req.body;
+        const updateData = {};
+        if (status) updateData.status = status;
+        if (tag) updateData.tag = tag;
+
+        await Lead.update(req.params.id, updateData, req.user.id);
         res.status(200).json({ message: 'Status updated' });
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -321,6 +374,17 @@ module.exports = {
     deleteLead,
     hitCall,
     analyzeLead,
+    checkCallConflict: async (req, res) => {
+        try {
+            const { dateTime, excludeId } = req.query;
+            if (!dateTime) return res.status(400).json({ message: 'DateTime is required' });
+
+            const conflicts = await Lead.checkCallConflict(req.user.id, dateTime, excludeId);
+            res.status(200).json(conflicts);
+        } catch (error) {
+            res.status(500).json({ message: error.message });
+        }
+    },
     getLeadNotes,
     addLeadNote,
     getLeadCalls,

@@ -12,7 +12,8 @@ import {
     ToggleLeft,
     ToggleRight,
     TrendingUp,
-    Target
+    Target,
+    Phone
 } from "lucide-react";
 import {
     useGetAssignmentSettingsQuery,
@@ -32,7 +33,11 @@ export default function AssignmentSettings() {
         max_active_leads_balance: 5,
         revert_time_hours: 24,
         load_balancing_strategy: 'round_robin',
-        priority_handling: true
+        priority_handling: true,
+        max_call_attempts: 5,
+        call_time_gap_minutes: 60,
+        auto_disqualification: false,
+        reassignment_on_disqualified: false
     });
 
     useEffect(() => {
@@ -211,6 +216,71 @@ export default function AssignmentSettings() {
                                     >
                                         <div className={`w-5 h-5 bg-white rounded-full transition-all shadow-sm ${formData.priority_handling ? 'ml-7' : 'ml-0'}`} />
                                     </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Call & Reassignment Rules */}
+                        <div className={`bg-white rounded-sm border border-gray-200 shadow-sm overflow-hidden transition-all ${formData.mode !== 'auto' ? 'opacity-50 pointer-events-none grayscale' : ''}`}>
+                            <div className="bg-gray-50 px-6 py-4 border-b border-gray-200 flex items-center gap-3">
+                                <Phone className="text-orange-500" size={20} />
+                                <h2 className="font-bold text-[15px] text-gray-700 capitalize">Call & Reassignment Rules</h2>
+                            </div>
+                            <div className="p-8 space-y-8">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                                    <div className="space-y-2">
+                                        <label className="flex items-center gap-2 text-[15px] font-semibold text-gray-700 capitalize">
+                                            <AlertCircle size={14} className="text-orange-500" /> Max call attempts
+                                        </label>
+                                        <input
+                                            type="number"
+                                            value={formData.max_call_attempts}
+                                            onChange={(e) => setFormData({ ...formData, max_call_attempts: e.target.value })}
+                                            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500 focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 shadow-sm font-semibold"
+                                        />
+                                        <p className="text-[11px] text-gray-400 font-medium capitalize">Lead will be reassigned after these many failed attempts</p>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label className="flex items-center gap-2 text-[15px] font-semibold text-gray-700 capitalize">
+                                            <Clock size={14} className="text-orange-500" /> Call time gap (minutes)
+                                        </label>
+                                        <input
+                                            type="number"
+                                            value={formData.call_time_gap_minutes}
+                                            onChange={(e) => setFormData({ ...formData, call_time_gap_minutes: e.target.value })}
+                                            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500 focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 shadow-sm font-semibold"
+                                        />
+                                        <p className="text-[11px] text-gray-400 font-medium capitalize">Minimum time between two call attempts</p>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="flex items-center justify-between p-6 bg-gray-50 rounded-sm border border-gray-100 shadow-inner">
+                                        <div>
+                                            <h4 className="text-[15px] font-bold text-gray-800 capitalize">Auto Disqualification</h4>
+                                            <p className="text-xs text-gray-500 font-medium capitalize mt-1">Mark lead as lost if attempts limit is reached</p>
+                                        </div>
+                                        <button
+                                            onClick={() => setFormData({ ...formData, auto_disqualification: !formData.auto_disqualification })}
+                                            className={`relative w-14 h-7 transition-all rounded-full flex items-center px-1 shadow-md ${formData.auto_disqualification ? 'bg-orange-500' : 'bg-gray-300'}`}
+                                        >
+                                            <div className={`w-5 h-5 bg-white rounded-full transition-all shadow-sm ${formData.auto_disqualification ? 'ml-7' : 'ml-0'}`} />
+                                        </button>
+                                    </div>
+
+                                    <div className="flex items-center justify-between p-6 bg-gray-50 rounded-sm border border-gray-100 shadow-inner">
+                                        <div>
+                                            <h4 className="text-[15px] font-bold text-gray-800 capitalize">Reassign to New Employee</h4>
+                                            <p className="text-xs text-gray-500 font-medium capitalize mt-1">Reassign as fresh lead on failure (current preference)</p>
+                                        </div>
+                                        <button
+                                            onClick={() => setFormData({ ...formData, reassignment_on_disqualified: !formData.reassignment_on_disqualified })}
+                                            className={`relative w-14 h-7 transition-all rounded-full flex items-center px-1 shadow-md ${formData.reassignment_on_disqualified ? 'bg-orange-500' : 'bg-gray-300'}`}
+                                        >
+                                            <div className={`w-5 h-5 bg-white rounded-full transition-all shadow-sm ${formData.reassignment_on_disqualified ? 'ml-7' : 'ml-0'}`} />
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>

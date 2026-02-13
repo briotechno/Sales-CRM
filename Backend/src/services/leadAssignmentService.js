@@ -4,20 +4,26 @@ const LeadAssignmentLog = require('../models/leadAssignmentLogModel');
 const Lead = require('../models/leadModel');
 
 const leadAssignmentService = {
-    autoAssign: async (leadId, userId) => {
+    autoAssign: async (leadId, userId, excludeEmployeeId = null) => {
         try {
             const settings = await LeadAssignmentSettings.findByUserId(userId);
             if (!settings || settings.mode !== 'auto') return;
 
             // 1. Find all active employees for this user
-            const [employees] = await pool.query(
-                `SELECT e.id, e.employee_name,
+            let query = `SELECT e.id, e.employee_name,
                     (SELECT COUNT(*) FROM leads l WHERE l.assigned_to = e.id AND l.user_id = ? AND DATE(l.assigned_at) = CURDATE()) as daily_count,
                     (SELECT COUNT(*) FROM leads l WHERE l.assigned_to = e.id AND l.user_id = ? AND l.tag NOT IN ('Closed', 'Lost')) as active_balance
                  FROM employees e
-                 WHERE e.user_id = ? AND e.status = 'Active'`,
-                [userId, userId, userId]
-            );
+                 WHERE e.user_id = ? AND e.status = 'Active'`;
+
+            let queryParams = [userId, userId, userId];
+
+            if (excludeEmployeeId) {
+                query += ` AND e.id != ?`;
+                queryParams.push(excludeEmployeeId);
+            }
+
+            const [employees] = await pool.query(query, queryParams);
 
             if (employees.length === 0) {
                 console.log('No active employees available for auto-assignment');

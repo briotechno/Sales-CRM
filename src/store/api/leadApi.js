@@ -83,10 +83,10 @@ export const leadApi = createApi({
             invalidatesTags: ['Lead'],
         }),
         hitCall: builder.mutation({
-            query: ({ id, status, next_call_at, drop_reason }) => ({
+            query: ({ id, status, next_call_at, drop_reason, create_reminder }) => ({
                 url: `leads/${id}/hit-call`,
                 method: 'POST',
-                body: { status, next_call_at, drop_reason },
+                body: { status, next_call_at, drop_reason, create_reminder },
             }),
             invalidatesTags: (result, error, { id }) => ['Lead', { type: 'Lead', id }],
         }),
@@ -96,6 +96,9 @@ export const leadApi = createApi({
                 method: 'POST',
             }),
             invalidatesTags: (result, error, id) => ['Lead', { type: 'Lead', id }],
+        }),
+        checkCallConflict: builder.query({
+            query: ({ dateTime, excludeId }) => `leads/check-call-conflict?dateTime=${dateTime}${excludeId ? `&excludeId=${excludeId}` : ''}`,
         }),
         getAssignmentSettings: builder.query({
             query: () => 'lead-assignment/settings',
@@ -174,10 +177,10 @@ export const leadApi = createApi({
             invalidatesTags: (result, error, { id }) => [{ type: 'LeadMeetings', id }, 'Lead'],
         }),
         updateLeadStatus: builder.mutation({
-            query: ({ id, status }) => ({
+            query: ({ id, status, tag }) => ({
                 url: `leads/${id}/status`,
                 method: 'PUT',
-                body: { status },
+                body: { status, tag },
             }),
             invalidatesTags: (result, error, { id }) => ['Lead', { type: 'Lead', id }],
         }),
@@ -277,4 +280,5 @@ export const {
     useDeleteLeadCallMutation,
     useDeleteLeadFileMutation,
     useDeleteLeadMeetingMutation,
+    useCheckCallConflictQuery,
 } = leadApi;
