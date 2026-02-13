@@ -39,6 +39,7 @@ import {
   Search,
   Lock,
   Unlock,
+  Zap,
 } from "lucide-react";
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
@@ -330,6 +331,12 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           name: "Assignment Settings",
           icon: <Settings size={22} />,
           path: "/crm/leads/assignment-settings",
+          permission: "Leads Management"
+        },
+        {
+          name: "Lead Rules",
+          icon: <Zap size={22} />,
+          path: "/crm/leads/lead-rules-config",
           permission: "Leads Management"
         },
         {

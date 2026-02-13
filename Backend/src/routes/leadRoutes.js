@@ -8,6 +8,7 @@ const {
     deleteLead,
     hitCall,
     analyzeLead,
+    checkCallConflict,
     getLeadNotes,
     addLeadNote,
     getLeadCalls,
@@ -40,6 +41,7 @@ router.put('/:id', protect, updateLead);
 router.delete('/:id', protect, deleteLead);
 router.post('/:id/hit-call', protect, hitCall);
 router.post('/:id/analyze', protect, analyzeLead);
+router.get('/check-call-conflict', protect, checkCallConflict);
 
 // Notes
 router.get('/:id/notes', protect, getLeadNotes);

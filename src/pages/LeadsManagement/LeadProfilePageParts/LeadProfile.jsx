@@ -1,6 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import DashboardLayout from "../../../components/DashboardLayout";
 import AddNoteModal from "../../../components/LeadManagement/LeadPipLineStatus/AddNotes";
 import CreateCallLogModal from "../../../components/LeadManagement/LeadPipLineStatus/CreateCallLogModal";
 import AddMeetingModal from "../../../components/LeadManagement/LeadPipLineStatus/AddMeetingModal";
@@ -19,7 +18,8 @@ import {
   useHitCallMutation,
   useUpdateLeadStatusMutation,
   useUpdateLeadMutation,
-  useGetLeadByIdQuery
+  useGetLeadByIdQuery,
+  useGetAssignmentSettingsQuery
 } from "../../../store/api/leadApi";
 import { useCreateQuotationMutation } from "../../../store/api/quotationApi";
 import CreateQuotationModal from "../../QuotationPart/CreateQuotationModal";
@@ -61,8 +61,13 @@ export default function CRMLeadDetail() {
   const [editItem, setEditItem] = useState(null);
   const [showDropdown, setShowDropdown] = useState(false);
   const [pipelineStage, setPipelineStage] = useState("Not Contacted");
-  const [callPopupData, setCallPopupData] = useState({ isOpen: false, lead: null });
+  const [callPopupData, setCallPopupData] = useState({ isOpen: false, lead: null, initialResponse: null });
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, type: null, itemId: null });
+
+  // Data Fetching
+  const passedLead = location.state?.lead;
+  const { data: leadFromQuery, isLoading: leadLoading } = useGetLeadByIdQuery(passedLead?.id, { skip: !passedLead?.id });
+  const { data: rules } = useGetAssignmentSettingsQuery();
   const [showQuotationModal, setShowQuotationModal] = useState(false);
   const [quotationFormData, setQuotationFormData] = useState({
     customerType: "Individual",
@@ -91,9 +96,6 @@ export default function CRMLeadDetail() {
     status: "Draft",
   });
 
-  // Get lead data from navigation state
-  const passedLead = location.state?.lead;
-
   // Format currency to match the display format
   const formatCurrency = (value) => {
     if (!value && value !== 0) return "₹0";
@@ -110,57 +112,55 @@ export default function CRMLeadDetail() {
     return "₹" + formatted;
   };
 
-  // Convert lead data to the format expected by the detail page
-  const [leadData, setLeadData] = useState(() => {
-    if (passedLead) {
-      return {
-        name: passedLead.name,
-        address: passedLead.location,
-        company: passedLead.type === "Person" ? "Individual" : passedLead.name,
-        dateCreated: passedLead.createdAt,
-        value: formatCurrency(passedLead.value),
-        dueDate: passedLead.createdAt,
-        followUp: passedLead.createdAt.split(" ")[0],
-        source: "Google",
-        email: passedLead.email,
-        phone: passedLead.phone,
-        status: passedLead.status,
-        tag: passedLead.tag || "Contacted",
-        tags: passedLead.tags || ["Collab", "Rated"],
-        services: passedLead.services || ["Product Demo", "Pricing Info"],
-        priority: passedLead.priority || "High",
-        visibility: passedLead.visibility,
-        id: passedLead.id,
-        owner: { name: passedLead.employee_name || "Unassigned", img: passedLead.owner?.img || "https://i.pravatar.cc/150?img=12" },
-        assigner: passedLead.assigner || { name: "Khushi Soni", img: "https://i.pravatar.cc/150?img=5" },
-        modifiedBy: passedLead.modifiedBy || { name: "Darlee Robertson", img: "https://i.pravatar.cc/150?img=8" },
-        city: passedLead.city || "Manchester",
-        state: passedLead.state || "New Jersey",
-        pincode: passedLead.pincode || "08759",
-        altMobileNumber: passedLead.altMobileNumber || "-",
-        gender: passedLead.gender || "Male",
-        fullName: passedLead.fullName || passedLead.name,
-        profileImage: passedLead.profileImage || null,
-        assigned_to: passedLead.assigned_to
-      };
+  // Get lead data from query or navigation state
+  const [leadData, setLeadData] = useState(null);
+
+  useEffect(() => {
+    if (leadFromQuery) {
+      setLeadData({
+        ...leadFromQuery,
+        name: leadFromQuery.name,
+        address: leadFromQuery.address || leadFromQuery.location,
+        company: leadFromQuery.type === "Person" ? "Individual" : leadFromQuery.organization_name || leadFromQuery.name,
+        dateCreated: leadFromQuery.created_at,
+        value: formatCurrency(leadFromQuery.value || leadFromQuery.estimated_value),
+        dueDate: leadFromQuery.created_at,
+        followUp: leadFromQuery.next_call_at ? new Date(leadFromQuery.next_call_at).toISOString().split("T")[0] : "-",
+        source: leadFromQuery.lead_source || "Google",
+        email: leadFromQuery.email,
+        phone: leadFromQuery.mobile_number || leadFromQuery.phone,
+        status: leadFromQuery.status,
+        tag: leadFromQuery.tag || "Not Contacted",
+        tags: leadFromQuery.tags || [],
+        services: leadFromQuery.services || [],
+        priority: leadFromQuery.priority || "High",
+        visibility: leadFromQuery.visibility,
+        id: leadFromQuery.id,
+        owner: { name: leadFromQuery.employee_name || "Unassigned", img: "https://i.pravatar.cc/150?img=12" },
+        assigner: { name: "Khushi Soni", img: "https://i.pravatar.cc/150?img=5" },
+        modifiedBy: { name: "Darlee Robertson", img: "https://i.pravatar.cc/150?img=8" },
+        city: leadFromQuery.city || "-",
+        state: leadFromQuery.state || "-",
+        pincode: leadFromQuery.pincode || "-",
+        altMobileNumber: leadFromQuery.alt_mobile_number || "-",
+        gender: leadFromQuery.gender || "Male",
+        fullName: leadFromQuery.full_name || leadFromQuery.name,
+        profileImage: leadFromQuery.profile_image || null,
+        assigned_to: leadFromQuery.assigned_to,
+        call_count: leadFromQuery.call_count || 0
+      });
+      setPipelineStage(leadFromQuery.tag || "Not Contacted");
+    } else if (passedLead && !leadData) {
+      setLeadData({
+        ...passedLead,
+        phone: passedLead.mobile_number || passedLead.phone,
+        call_count: passedLead.call_count || 0
+      });
     }
-    return {
-      name: "Unknown Lead",
-      address: "",
-      company: "",
-      dateCreated: "",
-      value: "₹0",
-      dueDate: "",
-      followUp: "",
-      source: "",
-      tags: [],
-      services: [],
-      priority: "Low",
-      owner: { name: "N/A", img: "" },
-      assigner: { name: "N/A", img: "" },
-      modifiedBy: { name: "N/A", img: "" }
-    };
-  });
+  }, [leadFromQuery, passedLead]);
+
+  const isTabsEnabled = leadData?.tag === "Follow Up" || leadData?.tag === "Won" || leadData?.tag === "Interested" || leadData?.status === "In Progress";
+  const canNotQualified = (leadData?.call_count || 0) >= (rules?.max_call_attempts || 5);
 
   const handleLeadInfoSave = async (updatedData) => {
     try {
@@ -444,9 +444,21 @@ export default function CRMLeadDetail() {
 
   const handleUpdateStatus = async (status) => {
     try {
-      await updateLeadStatus({ id: passedLead?.id, status }).unwrap();
+      let backendStatus = status;
+      let backendTag = leadData?.tag;
+
+      if (status === "In Progress") {
+        backendStatus = "In Progress";
+        backendTag = "Follow Up";
+      } else if (status === "Not Qualified") {
+        backendStatus = "Not Qualified";
+        backendTag = "Dropped"; // Or Lost
+      } else if (status === "Not Connected") {
+        openCallAction(); // Just open call action choice
+      }
+
+      await updateLeadStatus({ id: leadData?.id, status: backendStatus, tag: backendTag }).unwrap();
       toast.success(`Status updated to ${status}`);
-      setLeadData(prev => ({ ...prev, status }));
     } catch (err) {
       toast.error("Failed to update status");
     }
@@ -460,20 +472,32 @@ export default function CRMLeadDetail() {
         id: callData.id,
         status: callData.status,
         next_call_at: callData.next_call_at,
-        drop_reason: callData.drop_reason
+        drop_reason: callData.drop_reason,
+        create_reminder: callData.create_reminder
       }).unwrap();
-      toast.success("Lead status updated based on call response");
+
+      // If call was connected, automatically move to In Progress
+      if (callData.response === "connected") {
+        await updateLeadStatus({
+          id: callData.id,
+          status: "In Progress",
+          tag: "Follow Up"
+        }).unwrap();
+        toast.success("Lead moved to In Progress");
+      } else {
+        toast.success("Lead status updated based on call response");
+      }
     } catch (err) {
       toast.error(err?.data?.message || "Failed to update call status");
     }
   };
 
-  const openCallAction = () => {
-    setCallPopupData({ isOpen: true, lead: passedLead });
+  const openCallAction = (initialResponse = null) => {
+    setCallPopupData({ isOpen: true, lead: passedLead, initialResponse });
   };
 
   return (
-    <DashboardLayout>
+    <>
       <div className="min-h-screen bg-gray-0 flex flex-col">
         {/* Back Button */}
         <div className="bg-white px-8 py-4 border-b">
@@ -511,22 +535,36 @@ export default function CRMLeadDetail() {
                       <Zap className="w-5 h-5 text-orange-500 fill-orange-500" /> Lead Status
                     </h2>
                     <div className="flex flex-wrap items-center gap-2.5">
-                      {["New", "Contacted", "Qualified", "Proposal", "Won", "Lost"].map((step) => {
-                        const currentStatus = leadData?.status || "New";
-                        const isActive = currentStatus === step;
-                        return (
-                          <button
-                            key={step}
-                            onClick={() => handleUpdateStatus(step)}
-                            className={`px-5 py-2 rounded-sm text-sm font-semibold capitalize tracking-wide border transition-all active:scale-95 shadow-sm ${isActive
-                              ? "bg-orange-500 text-white border-orange-500 ring-2 ring-orange-500 ring-opacity-20 translate-y-[-1px]"
-                              : "bg-white text-gray-500 border-gray-200 hover:border-orange-500 hover:text-orange-500 hover:bg-orange-50"
-                              }`}
-                          >
-                            {step}
-                          </button>
-                        );
-                      })}
+                      <button
+                        onClick={() => openCallAction()}
+                        className={`px-5 py-2 rounded-sm text-sm font-semibold capitalize tracking-wide border transition-all active:scale-95 shadow-sm ${leadData?.tag === "Not Connected" || leadData?.tag === "Not Contacted" || leadData?.status === "Not Connected"
+                          ? "bg-orange-500 text-white border-orange-500 ring-2 ring-orange-500 ring-opacity-20 translate-y-[-1px]"
+                          : "bg-white text-gray-500 border-gray-200 hover:border-orange-500 hover:text-orange-500 hover:bg-orange-50"
+                          }`}
+                      >
+                        Call Action
+                      </button>
+                      <button
+                        onClick={() => openCallAction()}
+                        className={`px-5 py-2 rounded-sm text-sm font-semibold capitalize tracking-wide border transition-all active:scale-95 shadow-sm ${leadData?.status === "In Progress" || leadData?.tag === "Follow Up"
+                          ? "bg-blue-500 text-white border-blue-500 ring-2 ring-blue-500 ring-opacity-20 translate-y-[-1px]"
+                          : "bg-white text-gray-500 border-gray-200 hover:border-blue-500 hover:text-blue-500 hover:bg-blue-50"
+                          }`}
+                      >
+                        In Progress
+                      </button>
+                      <button
+                        disabled={!canNotQualified}
+                        onClick={() => handleUpdateStatus("Not Qualified")}
+                        className={`px-5 py-2 rounded-sm text-sm font-semibold capitalize tracking-wide border transition-all active:scale-95 shadow-sm ${leadData?.status === "Not Qualified" || leadData?.tag === "Lost"
+                          ? "bg-red-500 text-white border-red-500 ring-2 ring-red-500 ring-opacity-20 translate-y-[-1px]"
+                          : canNotQualified
+                            ? "bg-white text-gray-500 border-gray-200 hover:border-red-500 hover:text-red-500 hover:bg-red-50"
+                            : "bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed"
+                          }`}
+                      >
+                        Not Qualified
+                      </button>
                     </div>
                   </div>
 
@@ -537,7 +575,7 @@ export default function CRMLeadDetail() {
                         onClick={() => setShowDropdown(!showDropdown)}
                         className={`font-bold px-6 py-3 rounded-sm shadow-lg flex items-center gap-3 transition-all active:scale-95 text-sm capitalize tracking-wide border border-transparent ${pipelineStage === 'Lost' ? 'bg-red-600 hover:bg-red-700 text-white' :
                           pipelineStage === 'Closed' ? 'bg-yellow-500 hover:bg-yellow-600 text-white' :
-                            pipelineStage === 'Contacted' ? 'bg-blue-600 hover:bg-blue-700 text-white' :
+                            (pipelineStage === 'Contacted' || pipelineStage === 'Follow Up') ? 'bg-blue-600 hover:bg-blue-700 text-white' :
                               'bg-purple-600 hover:bg-purple-700 text-white'
                           }`}
                       >
@@ -548,7 +586,7 @@ export default function CRMLeadDetail() {
                       {showDropdown && (
                         <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-sm shadow-2xl z-50 animate-fadeIn">
                           <ul className="py-1">
-                            {["Not Contacted", "Contacted", "Closed", "Lost"].map(
+                            {["Not Contacted", "Contacted", "Follow Up", "Closed", "Lost"].map(
                               (stage) => (
                                 <li
                                   key={stage}
@@ -570,12 +608,13 @@ export default function CRMLeadDetail() {
                 </div>
 
                 <div className="flex items-stretch w-full overflow-hidden rounded-sm" style={{ height: "54px" }}>
-                  {["Not Contacted", "Contacted", "Closed", "Lost"].map((stage, idx, arr) => {
+                  {["Not Contacted", "Contacted", "Follow Up", "Closed", "Lost"].map((stage, idx, arr) => {
                     const isActive = pipelineStage === stage;
                     const colors = {
                       "Not Contacted": isActive ? "bg-purple-600" : "bg-purple-400 opacity-60",
-                      "Contacted": isActive ? "bg-blue-500" : "bg-blue-300 opacity-60",
-                      "Closed": isActive ? "bg-yellow-500" : "bg-yellow-300 opacity-60", // Changed from yellow-400/200 to 500/300 for consistency
+                      "Contacted": isActive ? "bg-blue-400" : "bg-blue-200 opacity-60",
+                      "Follow Up": isActive ? "bg-blue-600" : "bg-blue-300 opacity-60",
+                      "Closed": isActive ? "bg-yellow-500" : "bg-yellow-300 opacity-60",
                       "Lost": isActive ? "bg-red-600" : "bg-red-300 opacity-60"
                     };
 
@@ -609,77 +648,31 @@ export default function CRMLeadDetail() {
 
             {/* Tabs Navigation */}
             <div className="bg-white border-b">
-              <div className="flex px-0">
-                <button
-                  onClick={() => setActiveTab("activities")}
-                  className={`px-6 py-4 font-semibold flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${activeTab === "activities"
-                    ? "border-orange-500 text-orange-500"
-                    : "border-transparent text-gray-500 hover:text-gray-700"
-                    }`}
-                >
-                  <Zap className="w-5 h-5" /> Activities
-                </button>
-                <button
-                  onClick={() => setActiveTab("notes")}
-                  className={`px-6 py-4 font-semibold flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${activeTab === "notes"
-                    ? "border-orange-500 text-orange-500"
-                    : "border-transparent text-gray-500 hover:text-gray-700"
-                    }`}
-                >
-                  <FileText className="w-5 h-5" /> Notes
-                </button>
-                <button
-                  onClick={() => setActiveTab("calls")}
-                  className={`px-6 py-4 font-semibold flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${activeTab === "calls"
-                    ? "border-orange-500 text-orange-500"
-                    : "border-transparent text-gray-500 hover:text-gray-700"
-                    }`}
-                >
-                  <Phone className="w-5 h-5" /> Calls
-                </button>
-                <button
-                  onClick={() => setActiveTab("files")}
-                  className={`px-6 py-4 font-semibold flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${activeTab === "files"
-                    ? "border-orange-500 text-orange-500"
-                    : "border-transparent text-gray-500 hover:text-gray-700"
-                    }`}
-                >
-                  <File className="w-5 h-5" /> Files
-                </button>
-                <button
-                  onClick={() => setActiveTab("email")}
-                  className={`px-6 py-4 font-semibold flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${activeTab === "email"
-                    ? "border-orange-500 text-orange-500"
-                    : "border-transparent text-gray-500 hover:text-gray-700"
-                    }`}
-                >
-                  <Mail className="w-5 h-5" /> Email
-                </button>
-                <button
-                  onClick={() => setActiveTab("whatsapp")}
-                  className={`px-6 py-4 font-semibold flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${activeTab === "whatsapp"
-                    ? "border-orange-500 text-orange-500"
-                    : "border-transparent text-gray-500 hover:text-gray-700"
-                    }`}
-                >
-                  <FaWhatsapp
-                    size={22}
-                    className={`${activeTab === "whatsapp"
-                      ? "text-grey-500"
-                      : "text-grey-400"
+              <div className="flex px-0 overflow-x-auto no-scrollbar">
+                {[
+                  { id: "activities", label: "Activities", Icon: Zap },
+                  { id: "notes", label: "Notes", Icon: FileText },
+                  { id: "calls", label: "Calls", Icon: Phone },
+                  { id: "files", label: "Files", Icon: File },
+                  { id: "email", label: "Email", Icon: Mail },
+                  { id: "whatsapp", label: "WhatsApp", Icon: FaWhatsapp },
+                  { id: "meeting", label: "Meeting", Icon: Users },
+                ].map(({ id, label, Icon }) => (
+                  <button
+                    key={id}
+                    onClick={() => isTabsEnabled && setActiveTab(id)}
+                    disabled={!isTabsEnabled}
+                    className={`px-6 py-4 font-semibold flex items-center gap-2 border-b-2 transition-all whitespace-nowrap ${!isTabsEnabled
+                      ? "opacity-40 cursor-not-allowed border-transparent text-gray-300"
+                      : activeTab === id
+                        ? "border-orange-500 text-orange-500 bg-orange-50/30 shadow-sm"
+                        : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50"
                       }`}
-                  />
-                  WhatsApp
-                </button>
-                <button
-                  onClick={() => setActiveTab("meeting")}
-                  className={`px-6 py-4 font-semibold flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${activeTab === "meeting"
-                    ? "border-orange-500 text-orange-500"
-                    : "border-transparent text-gray-500 hover:text-gray-700"
-                    }`}
-                >
-                  <Users className="w-5 h-5" /> Meeting
-                </button>
+                  >
+                    <Icon size={id === 'whatsapp' ? 20 : 18} className={id === 'whatsapp' && activeTab === id ? 'text-[#25D366]' : ''} />
+                    {label}
+                  </button>
+                ))}
               </div>
             </div>
 
@@ -781,11 +774,15 @@ export default function CRMLeadDetail() {
       {callPopupData.isOpen && (
         <CallActionPopup
           isOpen={callPopupData.isOpen}
-          onClose={() => setCallPopupData({ isOpen: false, lead: null })}
+          onClose={() => setCallPopupData({ isOpen: false, lead: null, initialResponse: null })}
           lead={callPopupData.lead}
+          initialResponse={callPopupData.initialResponse}
+          rules={rules}
           onHitCall={handleHitCall}
         />
       )}
-    </DashboardLayout>
+    </>
   );
 }
+
+

@@ -1,0 +1,12 @@
+Columns in tasks:
+- id (int(11))
+- user_id (int(11))
+- title (varchar(255))
+- priority (enum('high','medium','low'))
+- due_date (date)
+- due_time (time)
+- category (varchar(100))
+- completed (tinyint(1))
+- created_at (timestamp)
+- updated_at (timestamp)
+- status (varchar(20))

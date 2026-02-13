@@ -13,7 +13,11 @@ const leadAssignmentController = {
                 max_active_leads_balance: 5,
                 revert_time_hours: 24,
                 load_balancing_strategy: 'round_robin',
-                priority_handling: true
+                priority_handling: true,
+                max_call_attempts: 5,
+                call_time_gap_minutes: 60,
+                auto_disqualification: false,
+                reassignment_on_disqualified: false
             });
         } catch (error) {
             res.status(500).json({ message: error.message });

@@ -1,23 +1,63 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Modal from "../common/Modal";
-import { Phone, PhoneOff, Calendar, Trash2, X, Check, Loader2 } from "lucide-react";
+import { Phone, PhoneOff, Calendar, Trash2, X, Check, Loader2, AlertCircle, Clock } from "lucide-react";
+import { useCheckCallConflictQuery } from "../../store/api/leadApi";
 
-export default function CallActionPopup({ isOpen, onClose, lead, onHitCall }) {
+export default function CallActionPopup({ isOpen, onClose, lead, onHitCall, initialResponse, rules }) {
     const [step, setStep] = useState(1); // 1: Initial call action, 2: Response form
     const [response, setResponse] = useState(""); // connected, not_connected
     const [finalAction, setFinalAction] = useState(""); // follow_up, drop
     const [nextCallAt, setNextCallAt] = useState("");
     const [dropReason, setDropReason] = useState("");
     const [loading, setLoading] = useState(false);
+    const [createReminder, setCreateReminder] = useState(true);
+
+    const { data: conflicts } = useCheckCallConflictQuery(
+        { dateTime: nextCallAt, excludeId: lead?.id },
+        { skip: !nextCallAt || finalAction !== "follow_up" || !isOpen }
+    );
+
+    const formatDateTime = (date) => {
+        const d = new Date(date);
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        const hours = String(d.getHours()).padStart(2, '0');
+        const minutes = String(d.getMinutes()).padStart(2, '0');
+        return `${year}-${month}-${day}T${hours}:${minutes}`;
+    };
+
+    useEffect(() => {
+        if (initialResponse) {
+            setResponse(initialResponse);
+            setStep(2);
+            setFinalAction("follow_up");
+            if (rules?.call_time_gap_minutes) {
+                const nextDate = new Date(Date.now() + rules.call_time_gap_minutes * 60000);
+                setNextCallAt(formatDateTime(nextDate));
+            } else {
+                const nextDate = new Date(Date.now() + 60 * 60000);
+                setNextCallAt(formatDateTime(nextDate));
+            }
+        } else {
+            setStep(1);
+            setResponse("");
+            setFinalAction("");
+            setNextCallAt("");
+        }
+    }, [initialResponse, isOpen, rules]);
 
     const handleInitialAction = (type) => {
         setResponse(type);
-        if (type === "not_connected") {
-            // Auto handle not connected or show reschedule?
-            // Requirement says: Mark as Not Connected, Reschedule for retry.
-            submitCall({ status: "not_connected" });
+        setStep(2);
+        setFinalAction("follow_up");
+
+        if (rules?.call_time_gap_minutes) {
+            const nextDate = new Date(Date.now() + rules.call_time_gap_minutes * 60000);
+            setNextCallAt(formatDateTime(nextDate));
         } else {
-            setStep(2);
+            const nextDate = new Date(Date.now() + 60 * 60000); // 1 hour default
+            setNextCallAt(formatDateTime(nextDate));
         }
     };
 
@@ -26,6 +66,8 @@ export default function CallActionPopup({ isOpen, onClose, lead, onHitCall }) {
         try {
             await onHitCall({
                 id: lead.id,
+                response,
+                create_reminder: createReminder,
                 ...data
             });
             onClose();
@@ -39,7 +81,12 @@ export default function CallActionPopup({ isOpen, onClose, lead, onHitCall }) {
     const handleFinalSubmit = () => {
         if (finalAction === "follow_up") {
             if (!nextCallAt) return alert("Please select next call date/time");
-            submitCall({ status: "follow_up", next_call_at: nextCallAt });
+            if (new Date(nextCallAt) < new Date()) return alert("Next call cannot be in the past");
+            submitCall({
+                status: response || "follow_up",
+                next_call_at: nextCallAt,
+                tag: response === "connected" ? "Follow Up" : "Not Connected"
+            });
         } else if (finalAction === "drop") {
             if (!dropReason) return alert("Please provide a reason for dropping");
             submitCall({ status: "dropped", drop_reason: dropReason });
@@ -77,7 +124,16 @@ export default function CallActionPopup({ isOpen, onClose, lead, onHitCall }) {
             <div className="py-2">
                 {step === 1 ? (
                     <div className="space-y-6">
-                        <p className="text-sm text-gray-500 text-center">How was the call with <span className="font-bold text-gray-800">{lead?.name}</span>?</p>
+                        <div className="px-4 py-3 bg-gray-50 border border-gray-100 rounded-sm flex items-center justify-between">
+                            <div className="flex flex-col">
+                                <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest leading-tight">Current Session</span>
+                                <span className="text-[11px] font-bold text-gray-700 uppercase tracking-wide">Call Attempt #{(lead?.call_count || 0) + 1}</span>
+                            </div>
+                            <div className="flex items-center gap-2 px-3 py-1.5 bg-orange-500/10 border border-orange-500/20 rounded-sm">
+                                <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(249,115,22,0.6)]" />
+                                <span className="text-[10px] font-bold text-orange-600 uppercase tracking-widest">Active Call</span>
+                            </div>
+                        </div>
                         <div className="grid grid-cols-2 gap-4">
                             <button
                                 onClick={() => handleInitialAction("connected")}
@@ -119,16 +175,47 @@ export default function CallActionPopup({ isOpen, onClose, lead, onHitCall }) {
                         </div>
 
                         {finalAction === "follow_up" && (
-                            <div className="space-y-2 animate-fadeIn">
-                                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Next Call Date & Time</label>
-                                <div className="relative">
-                                    <input
-                                        type="datetime-local"
-                                        value={nextCallAt}
-                                        onChange={(e) => setNextCallAt(e.target.value)}
-                                        className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:ring-1 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all text-sm font-medium bg-gray-50"
-                                    />
-                                    <Calendar className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
+                            <div className="space-y-4 animate-fadeIn">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Next Call Date & Time</label>
+                                    <div className="relative">
+                                        <input
+                                            type="datetime-local"
+                                            value={nextCallAt}
+                                            min={formatDateTime(new Date())}
+                                            onChange={(e) => setNextCallAt(e.target.value)}
+                                            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:ring-1 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all text-sm font-medium bg-gray-50"
+                                        />
+                                        <Calendar className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
+                                    </div>
+
+                                    {conflicts && conflicts.length > 0 && (
+                                        <div className="p-3 bg-red-50 border border-red-200 rounded-sm flex items-start gap-3 animate-fadeIn mt-2 shadow-sm">
+                                            <AlertCircle size={16} className="text-red-500 mt-0.5 shrink-0" />
+                                            <div className="flex flex-col">
+                                                <p className="text-[10px] font-bold text-red-700 uppercase tracking-widest leading-none">Schedule Conflict</p>
+                                                <p className="text-[11px] text-red-600 font-bold mt-1.5 leading-relaxed">
+                                                    Already scheduled: <span className="underline italic">{conflicts[0].name}</span> at {new Date(conflicts[0].next_call_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-sm border border-gray-100 transition-all hover:bg-orange-50 group">
+                                    <div className="relative flex items-center">
+                                        <input
+                                            type="checkbox"
+                                            id="createReminder"
+                                            checked={createReminder}
+                                            onChange={() => setCreateReminder(!createReminder)}
+                                            className="w-4 h-4 border-2 border-gray-300 rounded-sm text-orange-500 focus:ring-orange-500 cursor-pointer accent-orange-500"
+                                        />
+                                    </div>
+                                    <label htmlFor="createReminder" className="text-[11px] font-bold text-gray-600 cursor-pointer select-none flex items-center gap-2 group-hover:text-orange-700 transition-colors uppercase tracking-tight">
+                                        <Clock size={16} className="text-orange-400 group-hover:text-orange-500" />
+                                        Create parallel task reminder
+                                    </label>
                                 </div>
                             </div>
                         )}
@@ -147,11 +234,11 @@ export default function CallActionPopup({ isOpen, onClose, lead, onHitCall }) {
                         )}
 
                         {!finalAction && (
-                            <p className="text-xs text-gray-400 text-center italic py-4">Please select an outcome for the connected call.</p>
+                            <p className="text-xs text-gray-400 text-center italic py-4">Please select an outcome for the call.</p>
                         )}
                     </div>
                 )}
             </div>
-        </Modal>
+        </Modal >
     );
 }
