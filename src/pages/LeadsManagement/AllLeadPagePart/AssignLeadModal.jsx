@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { X, Users, UserPlus, Building2, Briefcase, Star, Search, CheckCircle2 } from "lucide-react";
 import { useGetEmployeesQuery } from "../../../store/api/employeeApi";
 import { useGetTeamsQuery } from "../../../store/api/teamApi";
@@ -10,10 +10,21 @@ export default function AssignLeadsModal({
   onClose,
   selectedLeadsCount,
   onAssign,
+  title = "Assign Leads",
+  buttonText = "Assign Leads",
+  selectedLeadsList = []
 }) {
   const [assignView, setAssignView] = useState("teams");
   const [selectedTeams, setSelectedTeams] = useState([]);
   const [selectedEmployees, setSelectedEmployees] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  useEffect(() => {
+    if (isOpen && selectedLeadsList.length === 1) {
+      // If single lead, we could pre-populate if we had the IDs, 
+      // but usually the user wants to pick NEW ones for 'Change Assignment'
+    }
+  }, [isOpen, selectedLeadsList]);
   const [teamFilter, setTeamFilter] = useState("All");
   const [employeeFilter, setEmployeeFilter] = useState({
     department: "All",
@@ -107,13 +118,35 @@ export default function AssignLeadsModal({
             </div>
             <div>
               <h2 className="text-2xl font-bold text-white capitalize tracking-wide leading-tight">
-                Assign Leads
+                {title}
               </h2>
               <p className="text-xs text-orange-50 font-medium opacity-90">
-                Assigning <strong className="text-white">{selectedLeadsCount}</strong> selected lead(s) to team members
+                {title.toLowerCase().includes('change') ? 'Updating' : 'Assigning'} <strong className="text-white">{selectedLeadsCount}</strong> selected lead(s) to team members
               </p>
             </div>
           </div>
+          {selectedLeadsList && selectedLeadsList.length > 0 && (
+            <div className="hidden lg:flex items-center gap-2 max-w-md overflow-hidden bg-white/10 px-3 py-1.5 rounded-sm">
+              <span className="text-[10px] text-orange-100 font-bold uppercase whitespace-nowrap">For:</span>
+              <div className="flex gap-1 overflow-x-auto pb-1 no-scrollbar items-center">
+                {selectedLeadsList.slice(0, 3).map(lead => (
+                  <div key={lead.id} className="flex flex-col">
+                    <span className="px-2 py-0.5 bg-white/20 rounded-full text-[10px] text-white font-bold whitespace-nowrap">
+                      {lead.name || lead.full_name}
+                      {lead.employee_name && (
+                        <span className="ml-1 opacity-60 font-normal">({lead.employee_name})</span>
+                      )}
+                    </span>
+                  </div>
+                ))}
+                {selectedLeadsList.length > 3 && (
+                  <span className="px-2 py-0.5 bg-white/20 rounded-full text-[10px] text-white font-bold whitespace-nowrap">
+                    +{selectedLeadsList.length - 3} more
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
           <button
             onClick={onClose}
             className="text-white hover:bg-white hover:bg-opacity-20 p-2 transition-all rounded-full"
@@ -145,11 +178,56 @@ export default function AssignLeadsModal({
             <UserPlus size={18} />
             EMPLOYEES ({filteredEmployees.length})
           </button>
+
+          {selectedLeadsList.length > 0 && (
+            <div className="flex items-center justify-center px-4 border-l border-gray-200">
+              <button
+                onClick={() => setAssignView("selected")}
+                className={`flex-1 py-1 px-1 rounded-sm text-[10px] font-bold uppercase tracking-widest transition-all ${assignView === "selected"
+                  ? "bg-white text-orange-600 shadow-sm"
+                  : "text-gray-400 hover:text-gray-600"
+                  }`}
+              >
+                Selected Leads ({selectedLeadsList.length})
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Content Area */}
         <div className="flex-1 overflow-y-auto bg-gray-50/50 custom-scrollbar">
-          {assignView === "teams" ? (
+          {assignView === "selected" ? (
+            <div className="p-8">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Currently Assigned To</h3>
+                  <span className="text-[10px] text-gray-400 font-semibold italic">Individual lead details</span>
+                </div>
+                <div className="max-h-[300px] overflow-y-auto space-y-2 pr-2 custom-scrollbar">
+                  {selectedLeadsList.map(lead => (
+                    <div key={lead.id} className="flex items-center justify-between p-3 bg-gray-50 border border-gray-100 rounded-sm group hover:bg-orange-50 hover:border-orange-100 transition-all">
+                      <div className="flex flex-col">
+                        <span className="text-sm font-bold text-gray-800 group-hover:text-orange-600 transition-colors uppercase">
+                          {lead.name || lead.full_name || "Unknown Lead"}
+                        </span>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <span className="text-[10px] text-gray-400 font-bold uppercase">{lead.lead_id || lead.id}</span>
+                          <span className="text-gray-300">•</span>
+                          <span className="text-[10px] text-[#FF7B1D] font-bold">{lead.pipeline_name || "General"}</span>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <span className="block text-[10px] text-gray-400 font-bold uppercase mb-0.5">Current Owner</span>
+                        <span className="px-2 py-1 bg-white border border-gray-200 rounded-sm text-xs font-bold text-gray-700 shadow-sm">
+                          {lead.employee_name || "Unassigned"}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ) : assignView === "teams" ? (
             <div className="p-6">
               {/* Team Filters */}
               <div className="mb-6 flex flex-wrap gap-4 items-center bg-white p-4 rounded-sm border border-gray-200 shadow-sm">
@@ -364,7 +442,7 @@ export default function AssignLeadsModal({
                 disabled={selectedTeams.length === 0 && selectedEmployees.length === 0}
                 className="flex-1 sm:flex-none px-10 py-3 rounded-sm bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold text-xs uppercase tracking-widest shadow-md hover:shadow-xl hover:from-orange-600 hover:to-orange-700 transition-all transform active:scale-95 disabled:opacity-50 disabled:grayscale disabled:pointer-events-none"
               >
-                Assign Leads
+                {buttonText}
               </button>
             </div>
           </div>

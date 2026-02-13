@@ -81,8 +81,8 @@ export default function EditLeadModal({ open, onClose, leadData, onSave }) {
         tags: Array.isArray(leadData.tags) ? leadData.tags.join(', ') : (leadData.tags || ""),
         services: Array.isArray(leadData.services) ? leadData.services.join(', ') : (leadData.services || ""),
         priority: leadData.priority || "High",
-        ownerName: leadData.owner?.name || "",
-        assignerName: leadData.assigner?.name || ""
+        ownerName: leadData.assigned_to || "",
+        assignerName: leadData.assignerName || ""
       });
       setImagePreview(leadData.profileImage || null);
       setProfileImage(null);
@@ -568,7 +568,7 @@ export default function EditLeadModal({ open, onClose, leadData, onSave }) {
                 >
                   <option value="">Select Owner</option>
                   {employees.map(emp => (
-                    <option key={emp.id} value={emp.employee_name}>
+                    <option key={emp.id} value={emp.id}>
                       {emp.employee_name}
                     </option>
                   ))}
