@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useSelector } from "react-redux";
 import { FiHome, FiGrid } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 
@@ -18,6 +19,7 @@ import CallQrModal from "../../components/LeadManagement/CallQrModal";
 import { toast } from "react-hot-toast";
 
 export default function DroppedLeads() {
+  const isLocked = useSelector((state) => state.ui.sidebarLocked);
   const navigate = useNavigate();
   const [view, setView] = useState("list");
   const [searchQuery, setSearchQuery] = useState("");
@@ -323,12 +325,11 @@ export default function DroppedLeads() {
           <div className="max-w-8xl mx-auto px-4 py-4 border-b">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
-                <h1 className="text-2xl font-bold text-gray-800 capitalize tracking-tight">Leads Management</h1>
-                <p className="text-[11px] text-gray-400 mt-1 flex items-center gap-2 font-bold capitalize tracking-wider">
-                  <FiHome className="text-gray-400" size={12} />
-                  <span>CRM</span>
-                  <span className="text-gray-300">/</span>
-                  <span className="text-[#FF7B1D]">
+                <h1 className="text-2xl font-bold text-gray-800">Dropped Leads</h1>
+                <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
+                  <FiHome className="text-gray-700" size={14} />
+                  <span className="text-gray-400">CRM / </span>
+                  <span className="text-[#FF7B1D] font-medium">
                     Dropped
                   </span>
                 </p>
@@ -657,12 +658,40 @@ export default function DroppedLeads() {
             <NumberCard title="Priority" number="Mix" icon={<Phone className="text-purple-600" size={24} />} iconBgColor="bg-purple-100" lineBorderClass="border-purple-500" />
           </div>
 
-          {selectedLeads.length > 0 && (
-            <div className="bg-orange-50 border border-orange-200 p-4 rounded-lg mb-4 flex justify-between items-center animate-fadeIn">
-              <span className="font-semibold text-orange-800 text-lg capitalize">{selectedLeads.length} Lead(s) Selected</span>
-              <div className="flex gap-3">
-                <button onClick={handleAssignLeads} className="bg-white border border-orange-300 text-orange-600 px-4 py-2 rounded-sm font-semibold hover:bg-orange-50 transition capitalize flex items-center gap-2"><UserPlus size={18} /> Assign Leads</button>
-                <button onClick={handleDeleteSelected} className="bg-red-600 text-white px-4 py-2 rounded-sm font-semibold hover:bg-red-700 transition capitalize flex items-center gap-2"><Trash2 size={18} /> Delete Selected</button>
+          {/* Floating Action Bar for Selected Leads - Properly Centered in Content Area */}
+          {selectedLeads.length > 0 && !isAssignModalOpen && !isModalOpen && !showDeleteModal && !callPopupData.isOpen && !isQrModalOpen && !showBulkUploadPopup && (
+            <div
+              className={`fixed bottom-10 z-[100] flex justify-center pointer-events-none transition-all duration-300 left-0 ${isLocked ? "md:left-[280px]" : "md:left-[68px]"} right-0 animate-slideUp`}
+            >
+              <div className="pointer-events-auto flex items-center gap-8 px-8 py-4 bg-white/95 backdrop-blur-xl border border-gray-200 rounded-sm shadow-[0_30px_70px_rgba(0,0,0,0.25)] flex-wrap md:flex-nowrap justify-center">
+                <div className="flex items-center gap-4 border-r border-gray-200 pr-8">
+                  <span className="w-11 h-11 rounded-full bg-orange-100 text-[#FF7B1D] flex items-center justify-center text-xl font-black font-primary shadow-inner">
+                    {selectedLeads.length}
+                  </span>
+                  <div className="flex flex-col">
+                    <span className="text-base font-bold text-gray-800 capitalize tracking-tight font-primary leading-none">
+                      Leads Selected
+                    </span>
+                    <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1 font-primary">Ready to manage</span>
+                  </div>
+                </div>
+
+                <div className="flex gap-4">
+                  <button
+                    onClick={handleAssignLeads}
+                    className="bg-white border border-gray-300 text-gray-700 px-6 py-2.5 rounded-sm font-bold hover:bg-orange-50 hover:border-[#FF7B1D] hover:text-[#FF7B1D] transition-all capitalize flex items-center gap-2.5 text-sm shadow-sm active:scale-95 font-primary group"
+                  >
+                    <UserPlus size={18} className="text-[#FF7B1D] group-hover:scale-110 transition-transform" />
+                    Assign Leads
+                  </button>
+                  <button
+                    onClick={handleDeleteSelected}
+                    className="bg-red-600 text-white px-6 py-2.5 rounded-sm font-bold hover:bg-red-700 transition-all capitalize flex items-center gap-2.5 text-sm shadow-md shadow-red-200 active:scale-95 font-primary border border-red-700"
+                  >
+                    <Trash2 size={18} />
+                    Delete Selected
+                  </button>
+                </div>
               </div>
             </div>
           )}
@@ -816,6 +845,21 @@ export default function DroppedLeads() {
           </div>
         </Modal>
       </div>
+      <style>{`
+        @keyframes slideUp {
+          from {
+            transform: translateY(100px);
+            opacity: 0;
+          }
+          to {
+            transform: translateY(0);
+            opacity: 1;
+          }
+        }
+        .animate-slideUp {
+          animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+      `}</style>
     </>
 
   );

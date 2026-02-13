@@ -131,7 +131,7 @@ export default function CRMLeadDetail() {
         priority: passedLead.priority || "High",
         visibility: passedLead.visibility,
         id: passedLead.id,
-        owner: passedLead.owner || { name: "Vaughan Lewis", img: "https://i.pravatar.cc/150?img=12" },
+        owner: { name: passedLead.employee_name || "Unassigned", img: passedLead.owner?.img || "https://i.pravatar.cc/150?img=12" },
         assigner: passedLead.assigner || { name: "Khushi Soni", img: "https://i.pravatar.cc/150?img=5" },
         modifiedBy: passedLead.modifiedBy || { name: "Darlee Robertson", img: "https://i.pravatar.cc/150?img=8" },
         city: passedLead.city || "Manchester",
@@ -140,7 +140,8 @@ export default function CRMLeadDetail() {
         altMobileNumber: passedLead.altMobileNumber || "-",
         gender: passedLead.gender || "Male",
         fullName: passedLead.fullName || passedLead.name,
-        profileImage: passedLead.profileImage || null
+        profileImage: passedLead.profileImage || null,
+        assigned_to: passedLead.assigned_to
       };
     }
     return {

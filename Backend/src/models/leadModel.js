@@ -164,10 +164,11 @@ const Lead = {
     findAll: async (userId, page = 1, limit = 10, search = '', status = 'All', pipelineId = null, tag = null, type = null, subview = 'All', priority = 'All', services = 'All', dateFrom = null, dateTo = null) => {
         const offset = (page - 1) * limit;
         let query = `
-            SELECT l.*, p.name as pipeline_name, s.name as stage_name 
+            SELECT l.*, p.name as pipeline_name, s.name as stage_name, IFNULL(e.employee_name, l.assigned_to) as employee_name
             FROM leads l
             LEFT JOIN pipelines p ON l.pipeline_id = p.id
             LEFT JOIN pipeline_stages s ON l.stage_id = s.id
+            LEFT JOIN employees e ON (l.assigned_to = CAST(e.id AS CHAR) OR l.assigned_to = e.employee_id OR l.assigned_to = e.employee_name)
             WHERE l.user_id = ?
         `;
         const params = [userId];
@@ -270,10 +271,11 @@ const Lead = {
 
     findById: async (id, userId) => {
         const [rows] = await pool.query(
-            `SELECT l.*, p.name as pipeline_name, s.name as stage_name 
+            `SELECT l.*, p.name as pipeline_name, s.name as stage_name, IFNULL(e.employee_name, l.assigned_to) as employee_name
              FROM leads l
              LEFT JOIN pipelines p ON l.pipeline_id = p.id
              LEFT JOIN pipeline_stages s ON l.stage_id = s.id
+             LEFT JOIN employees e ON (l.assigned_to = CAST(e.id AS CHAR) OR l.assigned_to = e.employee_id OR l.assigned_to = e.employee_name)
              WHERE l.id = ? AND l.user_id = ?`,
             [id, userId]
         );
@@ -309,7 +311,7 @@ const Lead = {
                     updates.push(`${key} = ?`);
                     values.push(data[key]);
                 }
-            } else if (key === 'owner') {
+            } else if (key === 'owner' || key === 'owner_name') {
                 updates.push('assigned_to = ?');
                 values.push(data[key]);
             }
