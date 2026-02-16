@@ -36,7 +36,7 @@ export default function CallQrModal({ isOpen, onClose, lead, onProceedToLog }) {
 
                 <div className="space-y-6 w-full px-4">
                     <div>
-                        <h3 className="text-xl font-bold text-gray-800">
+                        <h3 className="text-xl font-bold text-gray-800 truncate px-4" title={lead.name || lead.full_name}>
                             {lead.name || lead.full_name || "Lead Contact"}
                         </h3>
                         <p className="text-[#FF7B1D] font-bold text-sm tracking-widest mt-1">

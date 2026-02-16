@@ -25,7 +25,8 @@ import {
   Inbox,
   PhoneIncoming,
   Clock,
-  QrCode
+  QrCode,
+  Calendar
 } from "lucide-react";
 import Modal from "../../components/common/Modal";
 import AddLeadPopup from "../../components/AddNewLeads/AddNewLead";
@@ -91,8 +92,8 @@ const WorkStationLeadsListView = ({
                 >
                   {lead.lead_id || lead.id}
                 </td>
-                <td className="py-3 px-4 text-gray-800 hover:text-orange-600 cursor-pointer text-sm font-bold text-left" onClick={() => handleLeadClick(lead)}>
-                  {lead.name || lead.full_name || lead.organization_name || "Untitled Lead"}
+                <td className="py-3 px-4 text-gray-800 hover:text-orange-600 cursor-pointer text-sm font-bold text-left" onClick={() => handleLeadClick(lead)} title={lead.name || lead.full_name || lead.organization_name}>
+                  {((name) => name.length > 25 ? name.substring(0, 25) + "..." : name)(lead.name || lead.full_name || lead.organization_name || "Untitled Lead")}
                 </td>
                 <td className="py-3 px-4 text-center text-sm text-gray-600">
                   <div className="flex items-center justify-center gap-2">
@@ -139,7 +140,7 @@ const WorkStationLeadsListView = ({
                       {lead.is_trending === 1 ? "Trending" : (lead.tag || lead.status || "New Lead")}
                     </span>
                     <span className="text-[10px] text-gray-500 font-semibold font-primary">
-                      {lead.updatedAt ? new Date(lead.updatedAt).toLocaleString('en-IN', {
+                      {(lead.rawUpdated || lead.last_call_at || lead.updated_at) ? new Date(lead.rawUpdated || lead.last_call_at || lead.updated_at).toLocaleString('en-IN', {
                         day: '2-digit',
                         month: '2-digit',
                         year: 'numeric',
@@ -155,7 +156,7 @@ const WorkStationLeadsListView = ({
                     <span className="text-xs font-bold text-gray-700">{lead.pipeline_name || "General"}</span>
                     <span className="text-[10px] text-[#FF7B1D] font-bold italic">{lead.stage_name || "New"}</span>
                     <span className="text-[10px] text-gray-500 font-semibold mt-1 font-primary">
-                      {lead.createdAt ? new Date(lead.createdAt).toLocaleString('en-IN', {
+                      {(lead.rawCreated || lead.created_at) ? new Date(lead.rawCreated || lead.created_at).toLocaleString('en-IN', {
                         day: '2-digit',
                         month: '2-digit',
                         year: 'numeric',
@@ -229,11 +230,22 @@ const WorkStationLeadsGridView = ({
 
   const getPriorityColor = (priority) => {
     switch (priority) {
-      case "High": return "bg-red-100 text-red-600";
-      case "Medium": return "bg-yellow-100 text-yellow-600";
-      case "Low": return "bg-green-100 text-green-600";
-      default: return "bg-gray-100 text-gray-600";
+      case "High": return "bg-rose-50 text-rose-700 border-rose-200";
+      case "Medium": return "bg-amber-50 text-amber-700 border-amber-200";
+      case "Low": return "bg-teal-50 text-teal-700 border-teal-200";
+      default: return "bg-gray-50 text-gray-600 border-gray-200";
     }
+  };
+
+  const calculateProfileCompletion = (lead) => {
+    const fields = [
+      'name', 'email', 'mobile_number', 'whatsapp_number',
+      'address', 'city', 'state', 'pincode',
+      'organization_name', 'interested_in',
+      'gender', 'dob', 'lead_source', 'description'
+    ];
+    const filledFields = fields.filter(field => lead[field] && lead[field].toString().trim() !== '');
+    return Math.round((filledFields.length / fields.length) * 100);
   };
 
   return (
@@ -269,7 +281,7 @@ const WorkStationLeadsGridView = ({
               </div>
             </div>
 
-            <div className="space-y-4 flex-1">
+            <div className="space-y-4">
               {tagLeads.length > 0 ? (
                 tagLeads.map((lead) => {
                   const leadDisplayName = lead.name || lead.full_name || lead.organization_name || "L";
@@ -278,48 +290,146 @@ const WorkStationLeadsGridView = ({
                   const waLink = cleanNumber ? `https://wa.me/${cleanNumber}` : '#';
 
                   return (
-                    <div key={lead.id} className="bg-white border border-gray-200 rounded-sm shadow-sm hover:shadow-md transition relative p-4 space-y-3">
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-center gap-3">
-                          {lead.profile_image ? (
-                            <img src={lead.profile_image} alt="" className="w-10 h-10 rounded-sm object-cover border border-gray-200" />
-                          ) : (
-                            <div className={`w-10 h-10 ${getAvatarBg(lead.tag)} rounded-sm flex items-center justify-center text-white font-semibold text-sm shadow-inner uppercase`}>
-                              {initials}
-                            </div>
-                          )}
-                          <div>
-                            <h4 className="font-bold text-gray-800 text-sm hover:text-orange-600 cursor-pointer line-clamp-1 font-primary" onClick={() => handleLeadClick(lead)}>
-                              {leadDisplayName}
-                            </h4>
-                            <p className="text-[10px] text-orange-600 font-bold capitalize tracking-widest font-primary">{lead.lead_id || lead.id}</p>
+                    <div key={lead.id} className="bg-white border border-gray-300 rounded-sm shadow-sm hover:shadow-lg transition-all relative group flex flex-col overflow-hidden">
+                      {/* Top Selection & Quick Actions */}
+                      <div className="absolute top-4 left-4 z-10">
+                        <input
+                          type="checkbox"
+                          checked={selectedLeads.includes(lead.id)}
+                          onChange={() => handleSelectLead(lead.id)}
+                          className="w-4 h-4 cursor-pointer accent-orange-500 rounded-sm border-gray-300 transition-all hover:scale-110"
+                        />
+                      </div>
+
+                      <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                        <button
+                          onClick={() => handleLeadClick(lead)}
+                          className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-sm bg-white shadow-sm border border-blue-100"
+                          title="View Details"
+                        >
+                          <Eye size={14} />
+                        </button>
+                      </div>
+
+                      {/* Card Content Section */}
+                      <div className="p-6 pb-4 flex flex-col items-center mt-2">
+                        {/* Avatar/Profile Image */}
+                        <div className="relative">
+                          <div className={`w-20 h-20 rounded-full flex items-center justify-center font-bold text-2xl border-4 border-gray-50 bg-white overflow-hidden shadow-sm`}>
+                            {lead.profile_image ? (
+                              <img src={lead.profile_image} alt={leadDisplayName} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className={`w-full h-full ${getAvatarBg(lead.tag)} flex items-center justify-center text-white shadow-inner uppercase`}>
+                                {initials}
+                              </div>
+                            )}
+                          </div>
+                          <div className="absolute bottom-0 right-0 w-5 h-5 bg-white rounded-full flex items-center justify-center border border-gray-100 shadow-sm">
+                            <div className={`w-3 h-3 rounded-full ${lead.status === 'Active' ? 'bg-green-500' : 'bg-gray-400'}`}></div>
                           </div>
                         </div>
-                        <input type="checkbox" checked={selectedLeads.includes(lead.id)} onChange={() => handleSelectLead(lead.id)} className="w-4 h-4 cursor-pointer accent-orange-500 mt-1" />
+
+                        {/* Name & ID */}
+                        <h3 className="text-lg font-bold text-gray-900 mt-4 text-center line-clamp-1 capitalize font-primary px-2" onClick={() => handleLeadClick(lead)}>
+                          {leadDisplayName}
+                        </h3>
+                        <p className="text-[10px] text-orange-600 font-bold capitalize tracking-widest font-primary mt-1 border border-orange-100 px-2 py-0.5 rounded-sm bg-orange-50/50">
+                          {lead.lead_id || lead.id}
+                        </p>
+
+                        {/* Birth/Creation Details */}
+                        <p className="text-[11px] text-gray-700 mt-4 font-bold flex items-center gap-1.5 font-primary">
+                          <Calendar size={13} className="text-orange-500" />
+                          <span className="text-gray-500 capitalize">Born:</span>
+                          {(lead.rawCreated || lead.created_at) ? new Date(lead.rawCreated || lead.created_at).toLocaleDateString('en-IN', {
+                            day: '2-digit', month: 'short', year: 'numeric',
+                            hour: '2-digit', minute: '2-digit', hour12: true
+                          }).toUpperCase() : "--"}
+                        </p>
+
+                        {/* Pipeline info */}
+                        <div className="mt-5 w-full bg-gray-100/60 rounded-sm p-3 border border-gray-200 space-y-2">
+                          <div className="flex justify-between items-center px-1">
+                            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider font-primary">Pipeline</span>
+                            <span className="text-xs font-bold text-gray-900 font-primary">{lead.pipeline_name || "General"}</span>
+                          </div>
+                          <div className="flex justify-between items-center px-1">
+                            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider font-primary">Stage</span>
+                            <span className="text-[11px] text-[#FF7B1D] font-bold italic font-primary">{lead.stage_name || "New"}</span>
+                          </div>
+                          <div className="pt-2 border-t border-gray-300 mt-1 flex justify-center items-center gap-1.5 text-[10px] text-gray-600 font-bold font-primary">
+                            <Clock size={11} />
+                            <span>Modified: {(lead.rawUpdated || lead.last_call_at || lead.updated_at) ? new Date(lead.rawUpdated || lead.last_call_at || lead.updated_at).toLocaleDateString('en-IN', {
+                              day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true
+                            }).toUpperCase() : "--"}</span>
+                          </div>
+                        </div>
+
+                        {/* Profile Strength/Progress Bar */}
+                        <div className="w-full mt-5 px-1">
+                          <div className="flex justify-between items-center mb-1.5">
+                            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-tight font-primary">Leads Profile</span>
+                            <span className={`text-[10px] font-black font-primary ${calculateProfileCompletion(lead) > 70 ? 'text-green-600' : 'text-orange-600'}`}>
+                              {calculateProfileCompletion(lead)}%
+                            </span>
+                          </div>
+                          <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden shadow-inner">
+                            <div
+                              className={`h-full rounded-full transition-all duration-500 ${calculateProfileCompletion(lead) > 70 ? 'bg-gradient-to-r from-green-400 to-green-600' : 'bg-gradient-to-r from-orange-400 to-orange-600'}`}
+                              style={{ width: `${calculateProfileCompletion(lead)}%` }}
+                            ></div>
+                          </div>
+                        </div>
                       </div>
 
-                      <div className="space-y-1.5 pt-1">
-                        <div className="flex items-center gap-2 text-[11px] text-gray-500">
-                          <Phone size={12} className="text-orange-500" />
-                          <span className="font-medium font-primary">{lead.mobile_number || lead.phone || '--'}</span>
+                      {/* Footer Stats & Info */}
+                      <div className="bg-gray-100/60 p-5 space-y-4 border-t border-gray-300 mt-auto">
+                        {/* Stat Row */}
+                        <div className="flex justify-between items-center text-center border-b border-gray-300/60 pb-4">
+                          <div className="flex-1 border-r border-gray-300/60 pr-2">
+                            <p className="text-[10px] text-[#FF7B1D] font-bold tracking-tight font-primary uppercase">Hits</p>
+                            <p className="text-sm font-bold text-gray-900 mt-1 font-primary">{lead.call_count || 0}</p>
+                          </div>
+                          <div className="flex-1 border-r border-gray-300/60 px-2">
+                            <p className="text-[10px] text-[#FF7B1D] font-bold tracking-tight font-primary uppercase">Priority</p>
+                            <span className={`inline-block px-1.5 py-0.5 text-[9px] font-bold rounded-[2px] mt-1 uppercase border font-primary ${getPriorityColor(lead.priority)}`}>
+                              {lead.priority || 'Medium'}
+                            </span>
+                          </div>
+                          <div className="flex-1 pl-2">
+                            <p className="text-[10px] text-[#FF7B1D] font-bold tracking-tight font-primary uppercase">Source</p>
+                            <p className="text-[11px] font-bold text-gray-800 mt-1 truncate font-primary capitalize">{lead.lead_source || "Direct"}</p>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2 text-[11px] text-gray-500">
-                          <span className="text-[10px] text-gray-400 uppercase font-bold font-primary">Owner:</span>
-                          <span className="font-bold text-gray-700 truncate font-primary">{lead.employee_name || "Unassigned"}</span>
-                        </div>
-                      </div>
 
-                      <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                        <span className={`px-2 py-0.5 text-[10px] font-bold rounded-sm uppercase tracking-wider font-primary ${getPriorityColor(lead.priority)}`}>
-                          {lead.priority || 'Medium'}
-                        </span>
-                        <div className="flex gap-2">
-                          <button onClick={() => handleHitCall && handleHitCall(lead)} className="p-1.5 bg-orange-50 hover:bg-orange-500 rounded-sm text-orange-600 hover:text-white transition-all border border-orange-100 hover:border-orange-500" title="Hit Call">
-                            <Phone size={14} />
-                          </button>
-                          <a href={waLink} target="_blank" rel="noopener noreferrer" className="p-1.5 bg-green-50 hover:bg-green-500 rounded-sm text-green-600 hover:text-white transition-all border border-green-100 hover:border-green-500" title="WhatsApp">
-                            <FaWhatsapp size={14} />
-                          </a>
+                        {/* Owner Info */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2.5 max-w-[70%]">
+                            <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center shadow-md border border-gray-200 bg-white">
+                              <div className="w-full h-full bg-gradient-to-br from-gray-700 to-black flex items-center justify-center text-white font-bold text-[10px]">
+                                {lead.employee_name ? lead.employee_name.charAt(0).toUpperCase() : "A"}
+                              </div>
+                            </div>
+                            <div className="flex flex-col min-w-0">
+                              <span className="text-[10px] text-gray-600 font-bold uppercase tracking-wider leading-none">Lead Owner</span>
+                              <span className="text-xs text-gray-900 font-bold truncate capitalize font-primary mt-1">
+                                {lead.employee_name || "Unassigned"}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Quick Action Icons */}
+                          <div className="flex gap-1.5">
+                            <button onClick={() => handleHitCall && handleHitCall(lead)} className="p-2 bg-white hover:bg-orange-500 rounded-sm text-orange-600 hover:text-white transition-all border border-orange-100 hover:border-orange-500 shadow-sm" title="Call">
+                              <Phone size={14} />
+                            </button>
+                            <a href={waLink} target="_blank" rel="noopener noreferrer" className="p-2 bg-white hover:bg-green-500 rounded-sm text-green-600 hover:text-white transition-all border border-green-100 hover:border-green-500 shadow-sm" title="WhatsApp">
+                              <FaWhatsapp size={14} />
+                            </a>
+                            <a href={lead.email ? `mailto:${lead.email}` : '#'} className="p-2 bg-white hover:bg-blue-500 rounded-sm text-blue-600 hover:text-white transition-all border border-blue-100 hover:border-blue-500 shadow-sm" title="Email">
+                              <Mail size={14} />
+                            </a>
+                          </div>
                         </div>
                       </div>
                     </div>
