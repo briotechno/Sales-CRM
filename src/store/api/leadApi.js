@@ -41,6 +41,12 @@ export const leadApi = createApi({
                             day: 'numeric', month: 'short', year: 'numeric',
                             hour: '2-digit', minute: '2-digit'
                         }),
+                        updatedAt: (lead.last_call_at || lead.updated_at || lead.created_at) ? new Date(lead.last_call_at || lead.updated_at || lead.created_at).toLocaleDateString('en-GB', {
+                            day: 'numeric', month: 'short', year: 'numeric',
+                            hour: '2-digit', minute: '2-digit'
+                        }) : null,
+                        rawCreated: lead.created_at,
+                        rawUpdated: lead.last_call_at || lead.updated_at || lead.created_at
                     }));
                 }
                 return response;

@@ -82,20 +82,22 @@ export default function LeadSidebar({
       <div className="px-4 -mt-12 mb-4 relative z-10">
         <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-5">
           <div className="flex items-center justify-center gap-2 mb-2">
-            <h2 className="text-xl font-bold text-gray-900">
+            <h2 className="text-xl font-bold text-gray-900 truncate max-w-[280px]" title={leadData?.name}>
               {leadData?.name || "Lead Name"}
             </h2>
             <Star className="w-5 h-5 fill-yellow-400 text-yellow-400 cursor-pointer hover:scale-110 transition-transform" />
           </div>
 
-          <p className="text-center text-sm text-gray-600 mb-3">
+          <p className="text-center text-sm text-gray-600 mb-3 truncate px-2" title={leadData?.address || "1861 Bayonne Ave, Manchester, NJ, 08759"}>
             {leadData?.address || "1861 Bayonne Ave, Manchester, NJ, 08759"}
           </p>
 
-          <div className="flex items-center justify-center gap-2 text-sm text-gray-700 mb-3">
-            <span className="flex items-center gap-1">
-              <FaBuilding />
-              <span>{leadData?.company || "Company Name"}</span>
+          <div className="flex items-center justify-center gap-2 text-sm text-gray-700 mb-3 min-w-0">
+            <span className="flex items-center gap-1 min-w-0 max-w-full">
+              <FaBuilding className="flex-shrink-0" />
+              <span className="truncate" title={leadData?.company || "Company Name"}>
+                {leadData?.company || "Company Name"}
+              </span>
             </span>
           </div>
           <div className="flex items-center justify-center gap-2">
@@ -144,9 +146,9 @@ export default function LeadSidebar({
               <FileText className="w-4 h-4 text-gray-500" />
               Lead Name
             </span>
-            <span className="text-sm text-gray-600 flex items-center gap-2 text-right">
+            <span className="text-sm text-gray-600 flex items-center gap-2 text-right truncate max-w-[200px]" title={leadData?.name}>
               {leadData?.name || "N/A"}
-              <Edit2 className="w-3 h-3 text-gray-400 cursor-pointer hover:text-orange-500" onClick={() => setShowEditLeadModal && setShowEditLeadModal(true)} />
+              <Edit2 className="w-3 h-3 text-gray-400 cursor-pointer hover:text-orange-500 flex-shrink-0" onClick={() => setShowEditLeadModal && setShowEditLeadModal(true)} />
             </span>
           </div>
 
@@ -156,9 +158,9 @@ export default function LeadSidebar({
               <User className="w-4 h-4 text-gray-500" />
               Full Name
             </span>
-            <span className="text-sm text-gray-600 flex items-center gap-2 text-right">
-              {leadData?.name || "N/A"}
-              <Edit2 className="w-3 h-3 text-gray-400 cursor-pointer hover:text-orange-500" onClick={() => setShowEditLeadModal && setShowEditLeadModal(true)} />
+            <span className="text-sm text-gray-600 flex items-center gap-2 text-right truncate max-w-[200px]" title={leadData?.fullName || leadData?.name}>
+              {leadData?.fullName || leadData?.name || "N/A"}
+              <Edit2 className="w-3 h-3 text-gray-400 cursor-pointer hover:text-orange-500 flex-shrink-0" onClick={() => setShowEditLeadModal && setShowEditLeadModal(true)} />
             </span>
           </div>
 
@@ -216,9 +218,9 @@ export default function LeadSidebar({
               <MapPin className="w-4 h-4 text-gray-500" />
               Address
             </span>
-            <span className="text-sm text-gray-600 text-right max-w-[250px] flex items-center gap-2">
+            <span className="text-sm text-gray-600 text-right max-w-[200px] flex items-center gap-2 truncate" title={leadData?.address}>
               {leadData?.address || "N/A"}
-              <Edit2 className="w-3 h-3 text-gray-400 cursor-pointer hover:text-orange-500" onClick={() => setShowEditLeadModal && setShowEditLeadModal(true)} />
+              <Edit2 className="w-3 h-3 text-gray-400 cursor-pointer hover:text-orange-500 flex-shrink-0" onClick={() => setShowEditLeadModal && setShowEditLeadModal(true)} />
             </span>
           </div>
 
