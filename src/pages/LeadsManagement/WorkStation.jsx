@@ -24,7 +24,8 @@ import {
   TrendingUp,
   Inbox,
   PhoneIncoming,
-  Clock
+  Clock,
+  QrCode
 } from "lucide-react";
 import Modal from "../../components/common/Modal";
 import AddLeadPopup from "../../components/AddNewLeads/AddNewLead";
@@ -94,7 +95,18 @@ const WorkStationLeadsListView = ({
                   {lead.name || lead.full_name || lead.organization_name || "Untitled Lead"}
                 </td>
                 <td className="py-3 px-4 text-center text-sm text-gray-600">
-                  {lead.mobile_number || lead.phone || "--"}
+                  <div className="flex items-center justify-center gap-2">
+                    <span>{lead.mobile_number || lead.phone || "--"}</span>
+                    {lead.mobile_number || lead.phone ? (
+                      <button
+                        onClick={() => handleHitCall && handleHitCall(lead)}
+                        className="p-1 hover:bg-orange-50 rounded-full text-orange-500 transition-colors"
+                        title="View QR"
+                      >
+                        <QrCode size={16} />
+                      </button>
+                    ) : null}
+                  </div>
                 </td>
                 <td className="py-3 px-4 text-left">
                   <div className="flex flex-wrap gap-1">
@@ -110,26 +122,48 @@ const WorkStationLeadsListView = ({
                   </div>
                 </td>
                 <td className="py-3 px-4 text-center">
-                  <span className={`px-2 py-1 rounded-[2px] text-[10px] font-bold border uppercase tracking-wider ${((tag, isTrending, status) => {
-                    let s = tag || status || "New Lead";
-                    if (s === "Not Contacted") s = "New Lead";
-                    if (isTrending) return "bg-orange-100 text-orange-600 border-orange-200";
-                    switch (s.toLowerCase()) {
-                      case "new lead": case "new": case "new leads": return "bg-blue-100 text-blue-600 border-blue-200";
-                      case "not connected": return "bg-purple-100 text-purple-600 border-purple-200";
-                      case "follow up": return "bg-yellow-100 text-yellow-600 border-yellow-200";
-                      case "won": case "closed": return "bg-green-100 text-green-600 border-green-200";
-                      case "dropped": case "lost": return "bg-red-100 text-red-600 border-red-200";
-                      default: return "bg-gray-100 text-gray-600 border-gray-200";
-                    }
-                  })(lead.tag, lead.is_trending, lead.status)}`}>
-                    {lead.is_trending === 1 ? "Trending" : (lead.tag || lead.status || "New Lead")}
-                  </span>
+                  <div className="flex flex-col items-center gap-1">
+                    <span className={`px-2 py-1 rounded-[2px] text-[10px] font-bold border uppercase tracking-wider ${((tag, isTrending, status) => {
+                      let s = tag || status || "New Lead";
+                      if (s === "Not Contacted") s = "New Lead";
+                      if (isTrending) return "bg-orange-100 text-orange-600 border-orange-200";
+                      switch (s.toLowerCase()) {
+                        case "new lead": case "new": case "new leads": return "bg-blue-100 text-blue-600 border-blue-200";
+                        case "not connected": return "bg-purple-100 text-purple-600 border-purple-200";
+                        case "follow up": return "bg-yellow-100 text-yellow-600 border-yellow-200";
+                        case "won": case "closed": return "bg-green-100 text-green-600 border-green-200";
+                        case "dropped": case "lost": return "bg-red-100 text-red-600 border-red-200";
+                        default: return "bg-gray-100 text-gray-600 border-gray-200";
+                      }
+                    })(lead.tag, lead.is_trending, lead.status)}`}>
+                      {lead.is_trending === 1 ? "Trending" : (lead.tag || lead.status || "New Lead")}
+                    </span>
+                    <span className="text-[10px] text-gray-500 font-semibold font-primary">
+                      {lead.updatedAt ? new Date(lead.updatedAt).toLocaleString('en-IN', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: true
+                      }).toUpperCase() : "--"}
+                    </span>
+                  </div>
                 </td>
                 <td className="py-3 px-4 text-left">
                   <div className="flex flex-col">
                     <span className="text-xs font-bold text-gray-700">{lead.pipeline_name || "General"}</span>
                     <span className="text-[10px] text-[#FF7B1D] font-bold italic">{lead.stage_name || "New"}</span>
+                    <span className="text-[10px] text-gray-500 font-semibold mt-1 font-primary">
+                      {lead.createdAt ? new Date(lead.createdAt).toLocaleString('en-IN', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: true
+                      }).toUpperCase() : "--"}
+                    </span>
                   </div>
                 </td>
                 <td className="py-3 px-4 font-bold text-gray-700 text-center">
@@ -140,7 +174,7 @@ const WorkStationLeadsListView = ({
                 </td>
                 <td className="py-3 px-4">
                   <div className="flex justify-end gap-1.5">
-                    <button onClick={() => handleHitCall && handleHitCall(lead)} className="p-1.5 bg-orange-50 hover:bg-orange-500 rounded-sm text-orange-600 hover:text-white transition-all border border-orange-100 hover:border-orange-500 shadow-sm" title="Hit Call">
+                    <button onClick={() => handleHitCall && handleHitCall(lead)} className="p-1.5 bg-orange-50 hover:bg-orange-500 rounded-sm text-orange-600 hover:text-white transition-all border border-orange-100 hover:border-orange-500 shadow-sm" title="Call">
                       <Phone size={16} />
                     </button>
                     <a
@@ -152,15 +186,13 @@ const WorkStationLeadsListView = ({
                     >
                       <FaWhatsapp size={16} />
                     </a>
-                    <button className="p-1.5 hover:bg-blue-50 rounded-sm text-blue-500 hover:text-blue-700 transition-all border border-transparent hover:border-blue-100" onClick={() => handleLeadClick(lead)} title="View Profile">
-                      <Eye size={16} />
-                    </button>
-                    <button className="p-1.5 hover:bg-green-50 rounded-sm text-green-500 hover:text-green-700 transition-all border border-transparent hover:border-green-100" onClick={() => handleEditLead(lead)} title="Edit Lead">
-                      <Edit size={16} />
-                    </button>
-                    <button className="p-1.5 hover:bg-red-50 rounded-sm text-red-500 hover:text-red-700 transition-all border border-transparent hover:border-red-100" onClick={() => handleDeleteLead(lead)} title="Delete Lead">
-                      <Trash2 size={16} />
-                    </button>
+                    <a
+                      href={lead.email ? `mailto:${lead.email}` : '#'}
+                      className="p-1.5 bg-blue-50 hover:bg-blue-500 rounded-sm text-blue-600 hover:text-white transition-all border border-blue-100 hover:border-blue-500 shadow-sm"
+                      title="Email"
+                    >
+                      <Mail size={16} />
+                    </a>
                   </div>
                 </td>
               </tr>
