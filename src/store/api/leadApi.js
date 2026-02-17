@@ -89,10 +89,10 @@ export const leadApi = createApi({
             invalidatesTags: ['Lead'],
         }),
         hitCall: builder.mutation({
-            query: ({ id, status, next_call_at, drop_reason, create_reminder }) => ({
+            query: ({ id, status, next_call_at, drop_reason, create_reminder, not_connected_reason, remarks }) => ({
                 url: `leads/${id}/hit-call`,
                 method: 'POST',
-                body: { status, next_call_at, drop_reason, create_reminder },
+                body: { status, next_call_at, drop_reason, create_reminder, not_connected_reason, remarks },
             }),
             invalidatesTags: (result, error, { id }) => ['Lead', { type: 'Lead', id }],
         }),

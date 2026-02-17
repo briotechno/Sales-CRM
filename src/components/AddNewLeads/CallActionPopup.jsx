@@ -9,8 +9,29 @@ export default function CallActionPopup({ isOpen, onClose, lead, onHitCall, init
     const [finalAction, setFinalAction] = useState(""); // follow_up, drop
     const [nextCallAt, setNextCallAt] = useState("");
     const [dropReason, setDropReason] = useState("");
+    const [notConnectedReason, setNotConnectedReason] = useState("");
+    const [remarks, setRemarks] = useState("");
     const [loading, setLoading] = useState(false);
     const [createReminder, setCreateReminder] = useState(true);
+
+    const notConnectedStatuses = [
+        "Busy",
+        "No Answer",
+        "Switch Off",
+        "Out of Coverage",
+        "Invalid Number",
+        "Call Not Picked",
+        "Call Failed",
+        "Wrong Number"
+    ];
+
+    const followupShortcuts = [
+        { label: "1 Hour", value: 1, unit: "hour" },
+        { label: "2 Hours", value: 2, unit: "hour" },
+        { label: "Tomorrow", value: 1, unit: "day" },
+        { label: "2 Days", value: 2, unit: "day" },
+        { label: "Next Week", value: 7, unit: "day" },
+    ];
 
     const { data: conflicts } = useCheckCallConflictQuery(
         { dateTime: nextCallAt, excludeId: lead?.id },
@@ -25,6 +46,13 @@ export default function CallActionPopup({ isOpen, onClose, lead, onHitCall, init
         const hours = String(d.getHours()).padStart(2, '0');
         const minutes = String(d.getMinutes()).padStart(2, '0');
         return `${year}-${month}-${day}T${hours}:${minutes}`;
+    };
+
+    const handleShortcut = (val, unit) => {
+        const now = new Date();
+        if (unit === "hour") now.setHours(now.getHours() + val);
+        else if (unit === "day") now.setDate(now.getDate() + val);
+        setNextCallAt(formatDateTime(now));
     };
 
     useEffect(() => {
@@ -44,6 +72,8 @@ export default function CallActionPopup({ isOpen, onClose, lead, onHitCall, init
             setResponse("");
             setFinalAction("");
             setNextCallAt("");
+            setNotConnectedReason("");
+            setRemarks("");
         }
     }, [initialResponse, isOpen, rules]);
 
@@ -68,6 +98,8 @@ export default function CallActionPopup({ isOpen, onClose, lead, onHitCall, init
                 id: lead.id,
                 response,
                 create_reminder: createReminder,
+                not_connected_reason: response === "not_connected" ? notConnectedReason : null,
+                remarks: remarks,
                 ...data
             });
             onClose();
@@ -79,6 +111,10 @@ export default function CallActionPopup({ isOpen, onClose, lead, onHitCall, init
     };
 
     const handleFinalSubmit = () => {
+        if (response === "not_connected" && !notConnectedReason) {
+            return alert("Please select why the call was not connected");
+        }
+
         if (finalAction === "follow_up") {
             if (!nextCallAt) return alert("Please select next call date/time");
             if (new Date(nextCallAt) < new Date()) return alert("Next call cannot be in the past");
@@ -93,31 +129,49 @@ export default function CallActionPopup({ isOpen, onClose, lead, onHitCall, init
         }
     };
 
-    const footer = step === 2 ? (
+    const footer = (
         <div className="flex gap-3 w-full">
-            <button
-                onClick={() => setStep(1)}
-                className="flex-1 py-2.5 border border-gray-200 rounded-sm font-bold text-gray-500 hover:bg-gray-50 transition-all uppercase text-[10px] tracking-widest"
-            >
-                Back
-            </button>
-            <button
-                onClick={handleFinalSubmit}
-                disabled={loading}
-                className="flex-1 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm font-bold shadow-md hover:shadow-orange-200 transition-all uppercase text-[10px] tracking-widest flex items-center justify-center gap-2"
-            >
-                {loading ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
-                Submit Response
-            </button>
+            {step === 1 ? (
+                <button
+                    onClick={onClose}
+                    className="flex-1 py-2.5 bg-gray-100 border border-gray-200 rounded-sm font-bold text-gray-600 hover:bg-gray-200 transition-all uppercase text-[10px] tracking-widest flex items-center justify-center gap-2"
+                >
+                    <X size={14} /> Close Window
+                </button>
+            ) : (
+                <>
+                    <button
+                        onClick={() => setStep(1)}
+                        className="flex-1 py-2.5 border border-gray-200 rounded-sm font-bold text-gray-500 hover:bg-gray-50 transition-all uppercase text-[10px] tracking-widest"
+                    >
+                        Back
+                    </button>
+                    <button
+                        onClick={onClose}
+                        className="px-4 py-2.5 border border-gray-200 rounded-sm font-bold text-gray-400 hover:bg-red-50 hover:text-red-500 transition-all uppercase text-[10px] tracking-widest"
+                        title="Cancel and Close"
+                    >
+                        <X size={16} />
+                    </button>
+                    <button
+                        onClick={handleFinalSubmit}
+                        disabled={loading}
+                        className="flex-[2] py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm font-bold shadow-md hover:shadow-orange-200 transition-all uppercase text-[10px] tracking-widest flex items-center justify-center gap-2"
+                    >
+                        {loading ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
+                        Submit Response
+                    </button>
+                </>
+            )}
         </div>
-    ) : null;
+    );
 
     return (
         <Modal
             isOpen={isOpen}
             onClose={onClose}
             title={`Call: ${lead?.name}`}
-            icon={<Phone size={20} className="text-orange-600" />}
+            icon={<Phone size={20} className="text-white" />}
             footer={footer}
             maxWidth="max-w-md"
         >
@@ -174,10 +228,53 @@ export default function CallActionPopup({ isOpen, onClose, lead, onHitCall, init
                             </button>
                         </div>
 
+                        {response === "not_connected" && (
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Why not connected? <span className="text-red-500">*</span></label>
+                                <select
+                                    value={notConnectedReason}
+                                    onChange={(e) => setNotConnectedReason(e.target.value)}
+                                    className="w-full px-4 py-2.5 border border-gray-200 rounded-sm focus:border-orange-500 outline-none text-sm font-semibold bg-white shadow-sm"
+                                >
+                                    <option value="">Select Call Status</option>
+                                    {notConnectedStatuses.map(s => (
+                                        <option key={s} value={s}>{s}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
+
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Remarks (Optional)</label>
+                            <textarea
+                                value={remarks}
+                                onChange={(e) => setRemarks(e.target.value)}
+                                placeholder="Add any quick remarks here..."
+                                className="w-full px-4 py-2.5 border border-gray-200 rounded-sm focus:ring-1 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all text-sm font-medium bg-gray-50 resize-none"
+                                rows="2"
+                            />
+                        </div>
+
                         {finalAction === "follow_up" && (
                             <div className="space-y-4 animate-fadeIn">
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Next Call Date & Time</label>
+                                    <div className="flex justify-between items-end">
+                                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Set Follow-up Time</label>
+                                    </div>
+
+                                    <div className="flex flex-wrap gap-2 mb-3">
+                                        {followupShortcuts.map((sc) => (
+                                            <button
+                                                key={sc.label}
+                                                type="button"
+                                                onClick={() => handleShortcut(sc.value, sc.unit)}
+                                                className="px-3 py-1.5 bg-orange-50 text-orange-600 text-[10px] font-bold rounded-sm border border-orange-100 hover:bg-orange-500 hover:text-white transition-all shadow-sm"
+                                            >
+                                                +{sc.label}
+                                            </button>
+                                        ))}
+                                    </div>
+
                                     <div className="relative">
                                         <input
                                             type="datetime-local"

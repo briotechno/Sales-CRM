@@ -36,12 +36,12 @@ const upload = require('../middleware/uploadMiddleware'); // Added
 router.post('/bulk', protect, bulkCreateLeads);
 router.post('/', protect, checkLimit('leads'), createLead);
 router.get('/', protect, getLeads);
+router.get('/check-call-conflict', protect, checkCallConflict);
 router.get('/:id', protect, getLeadById);
 router.put('/:id', protect, updateLead);
 router.delete('/:id', protect, deleteLead);
 router.post('/:id/hit-call', protect, hitCall);
 router.post('/:id/analyze', protect, analyzeLead);
-router.get('/check-call-conflict', protect, checkCallConflict);
 
 // Notes
 router.get('/:id/notes', protect, getLeadNotes);

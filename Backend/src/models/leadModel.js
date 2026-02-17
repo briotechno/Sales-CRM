@@ -326,27 +326,33 @@ const Lead = {
         );
     },
 
-    hitCall: async (id, status, nextCallAt, dropReason, userId, createReminder = false) => {
+    hitCall: async (id, status, nextCallAt, dropReason, userId, createReminder = false, notConnectedReason = null, remarks = null) => {
         const [lead] = await pool.query('SELECT * FROM leads WHERE id = ? AND user_id = ?', [id, userId]);
         if (!lead.length) throw new Error('Lead not found');
 
         let { call_count, not_connected_count, connected_count, tag } = lead[0];
         call_count++;
 
+        // Ensure we don't pass undefined to SQL
+        const safeReason = notConnectedReason || null;
+        const safeRemarks = remarks || null;
+
         let updateData = {
             call_count,
             last_call_at: new Date(),
-            next_call_at: nextCallAt || null
+            next_call_at: nextCallAt || null,
+            call_remarks: safeRemarks
         };
 
         if (status === 'connected') {
             connected_count++;
             updateData.connected_count = connected_count;
-            updateData.tag = 'Follow Up'; // Updated to match user preference for 'Connected' outcome
+            updateData.tag = 'Follow Up';
         } else if (status === 'not_connected') {
             not_connected_count++;
             updateData.not_connected_count = not_connected_count;
             updateData.tag = 'Not Connected';
+            updateData.not_connected_reason = safeReason;
 
             // Auto schedule if not connected (e.g. +2 hours)
             if (!nextCallAt) {
@@ -356,10 +362,10 @@ const Lead = {
             }
         } else if (status === 'dropped') {
             updateData.tag = 'Lost';
-            updateData.drop_reason = dropReason;
+            updateData.drop_reason = dropReason || null;
         } else if (status === 'follow_up') {
             updateData.tag = 'Follow Up';
-            updateData.next_call_at = nextCallAt;
+            updateData.next_call_at = nextCallAt || null;
         }
 
         const updates = Object.keys(updateData).map(k => `${k} = ?`).join(', ');
@@ -373,12 +379,19 @@ const Lead = {
             const dueDate = nextCall.toISOString().split('T')[0];
             const dueTime = nextCall.toTimeString().split(' ')[0];
 
+            // Build task description
+            let taskDesc = "";
+            if (safeReason) taskDesc += `Reason: ${safeReason}. `;
+            if (safeRemarks) taskDesc += `Remarks: ${safeRemarks}`;
+            taskDesc = taskDesc.trim() || null;
+
             await pool.query(
-                `INSERT INTO tasks (user_id, title, priority, due_date, due_time, category, status, completed, created_at)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, 0, NOW())`,
+                `INSERT INTO tasks (user_id, title, description, priority, due_date, due_time, category, status, completed, created_at)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, NOW())`,
                 [
                     userId,
                     `Follow-up call: ${lead[0].name}`,
+                    taskDesc,
                     (lead[0].priority || 'medium').toLowerCase(),
                     dueDate,
                     dueTime,

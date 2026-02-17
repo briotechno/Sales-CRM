@@ -473,7 +473,9 @@ export default function CRMLeadDetail() {
         status: callData.status,
         next_call_at: callData.next_call_at,
         drop_reason: callData.drop_reason,
-        create_reminder: callData.create_reminder
+        create_reminder: callData.create_reminder,
+        not_connected_reason: callData.not_connected_reason,
+        remarks: callData.remarks
       }).unwrap();
 
       // If call was connected, automatically move to In Progress
