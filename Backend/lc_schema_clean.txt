@@ -1,0 +1,11 @@
+id: int(11)
+lead_id: int(11)
+user_id: int(11)
+status: varchar(50)
+call_date: datetime
+note: text
+follow_task: tinyint(1)
+created_by: varchar(255)
+created_at: timestamp
+updated_at: timestamp
+duration: varchar(50)

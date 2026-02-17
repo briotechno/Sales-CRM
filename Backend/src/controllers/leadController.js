@@ -77,12 +77,12 @@ const hitCall = async (req, res) => {
     try {
         const userId = req.user.id;
         const leadId = req.params.id;
-        const { status, next_call_at, drop_reason, create_reminder, not_connected_reason, remarks } = req.body;
+        const { status, next_call_at, drop_reason, create_reminder, not_connected_reason, remarks, priority, duration } = req.body;
 
         // Get current lead before update to know current owner
         const currentLead = await Lead.findById(leadId, userId);
 
-        const result = await Lead.hitCall(leadId, status, next_call_at, drop_reason, userId, create_reminder, not_connected_reason, remarks);
+        const result = await Lead.hitCall(leadId, status, next_call_at, drop_reason, userId, create_reminder, not_connected_reason, remarks, priority, duration);
 
         // Auto-analyze after call
         await Lead.analyzeLead(leadId, userId);
@@ -97,12 +97,7 @@ const hitCall = async (req, res) => {
 
                 let updateData = {
                     assigned_to: null,
-                    assigned_at: null,
-                    call_count: 0,
-                    not_connected_count: 0,
-                    connected_count: 0,
-                    last_call_at: null,
-                    next_call_at: null
+                    assigned_at: null
                 };
 
                 if (settings?.auto_disqualification) {

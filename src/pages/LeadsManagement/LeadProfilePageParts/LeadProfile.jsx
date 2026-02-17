@@ -159,8 +159,19 @@ export default function CRMLeadDetail() {
     }
   }, [leadFromQuery, passedLead]);
 
-  const isTabsEnabled = leadData?.tag === "Follow Up" || leadData?.tag === "Won" || leadData?.tag === "Interested" || leadData?.status === "In Progress";
+  const isOnlyCallTabEnabled = (leadData?.tag === "Not Connected" || leadData?.status === "Not Connected" || leadData?.tag === "Not Contacted" || leadData?.status === "Not Contacted" || leadData?.tag === "New Lead" || leadData?.status === "New Lead") && (leadData?.call_count > 0);
+  const isTabsEnabled = leadData?.tag === "Follow Up" || leadData?.tag === "Won" || leadData?.tag === "Interested" || leadData?.status === "In Progress" || (leadData?.call_count > 0);
+
+  useEffect(() => {
+    if (isOnlyCallTabEnabled && activeTab !== "calls" && activeTab !== "activities") {
+      setActiveTab("calls");
+    }
+  }, [isOnlyCallTabEnabled, activeTab]);
   const canNotQualified = (leadData?.call_count || 0) >= (rules?.max_call_attempts || 5);
+
+  const openCallAction = (initialResponse = null) => {
+    setCallPopupData({ isOpen: true, lead: leadData, initialResponse });
+  };
 
   const handleLeadInfoSave = async (updatedData) => {
     try {
@@ -453,7 +464,7 @@ export default function CRMLeadDetail() {
       } else if (status === "Not Qualified") {
         backendStatus = "Not Qualified";
         backendTag = "Dropped"; // Or Lost
-      } else if (status === "Not Connected") {
+      } else if (status === "Not Connected" || status === "New Lead") {
         openCallAction(); // Just open call action choice
       }
 
@@ -469,13 +480,7 @@ export default function CRMLeadDetail() {
   const handleHitCall = async (callData) => {
     try {
       await hitCallMutation({
-        id: callData.id,
-        status: callData.status,
-        next_call_at: callData.next_call_at,
-        drop_reason: callData.drop_reason,
-        create_reminder: callData.create_reminder,
-        not_connected_reason: callData.not_connected_reason,
-        remarks: callData.remarks
+        ...callData
       }).unwrap();
 
       // If call was connected, automatically move to In Progress
@@ -494,9 +499,7 @@ export default function CRMLeadDetail() {
     }
   };
 
-  const openCallAction = (initialResponse = null) => {
-    setCallPopupData({ isOpen: true, lead: passedLead, initialResponse });
-  };
+
 
   return (
     <>
@@ -538,10 +541,11 @@ export default function CRMLeadDetail() {
                     </h2>
                     <div className="flex flex-wrap items-center gap-2.5">
                       <button
-                        onClick={() => openCallAction()}
-                        className={`px-5 py-2 rounded-sm text-sm font-semibold capitalize tracking-wide border transition-all active:scale-95 shadow-sm ${leadData?.tag === "Not Connected" || leadData?.tag === "Not Contacted" || leadData?.status === "Not Connected"
-                          ? "bg-orange-500 text-white border-orange-500 ring-2 ring-orange-500 ring-opacity-20 translate-y-[-1px]"
-                          : "bg-white text-gray-500 border-gray-200 hover:border-orange-500 hover:text-orange-500 hover:bg-orange-50"
+                        onClick={() => (leadData?.tag === "Not Connected" || leadData?.tag === "Not Contacted" || leadData?.status === "Not Connected" || leadData?.tag === "New Lead" || leadData?.status === "New Lead") && openCallAction()}
+                        disabled={!(leadData?.tag === "Not Connected" || leadData?.tag === "Not Contacted" || leadData?.status === "Not Connected" || leadData?.tag === "New Lead" || leadData?.status === "New Lead")}
+                        className={`px-5 py-2 rounded-sm text-sm font-semibold capitalize tracking-wide border transition-all active:scale-95 shadow-sm ${!(leadData?.tag === "Not Connected" || leadData?.tag === "Not Contacted" || leadData?.status === "Not Connected" || leadData?.tag === "New Lead" || leadData?.status === "New Lead")
+                          ? "bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed opacity-70"
+                          : "bg-orange-500 text-white border-orange-500 ring-2 ring-orange-500 ring-opacity-20 translate-y-[-1px]"
                           }`}
                       >
                         Call Action
@@ -662,9 +666,12 @@ export default function CRMLeadDetail() {
                 ].map(({ id, label, Icon }) => (
                   <button
                     key={id}
-                    onClick={() => isTabsEnabled && setActiveTab(id)}
-                    disabled={!isTabsEnabled}
-                    className={`px-6 py-4 font-semibold flex items-center gap-2 border-b-2 transition-all whitespace-nowrap ${!isTabsEnabled
+                    onClick={() => {
+                      const isTabDisabled = isOnlyCallTabEnabled ? (id !== "calls" && id !== "activities") : !isTabsEnabled;
+                      if (!isTabDisabled) setActiveTab(id);
+                    }}
+                    disabled={isOnlyCallTabEnabled ? (id !== "calls" && id !== "activities") : !isTabsEnabled}
+                    className={`px-6 py-4 font-semibold flex items-center gap-2 border-b-2 transition-all whitespace-nowrap ${(isOnlyCallTabEnabled ? (id !== "calls" && id !== "activities") : !isTabsEnabled)
                       ? "opacity-40 cursor-not-allowed border-transparent text-gray-300"
                       : activeTab === id
                         ? "border-orange-500 text-orange-500 bg-orange-50/30 shadow-sm"

@@ -39,10 +39,10 @@ const LeadResources = {
     },
 
     addCall: async (data, userId) => {
-        const { lead_id, status, date, note, follow_task } = data;
+        const { lead_id, status, date, note, follow_task, duration } = data;
         const [result] = await pool.query(
-            'INSERT INTO lead_calls (lead_id, user_id, status, call_date, note, follow_task, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())',
-            [lead_id, userId, status, date, note, follow_task ? 1 : 0]
+            'INSERT INTO lead_calls (lead_id, user_id, status, call_date, note, follow_task, duration, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())',
+            [lead_id, userId, status, date, note, follow_task ? 1 : 0, duration || null]
         );
         return { id: result.insertId, ...data, created_at: new Date() };
     },
@@ -82,7 +82,7 @@ const LeadResources = {
         );
         const [calls] = await pool.query(
             `SELECT lc.id, "call" as type, lc.status as title, lc.note as description, lc.created_at, lc.user_id, 
-             CONCAT(u.firstName, ' ', u.lastName) as user_name, u.profile_picture
+             CONCAT(u.firstName, ' ', u.lastName) as user_name, u.profile_picture, lc.duration
              FROM lead_calls lc 
              LEFT JOIN users u ON lc.user_id = u.id 
              WHERE lc.lead_id = ? AND lc.user_id = ?`,
@@ -142,10 +142,10 @@ const LeadResources = {
     },
 
     updateCall: async (callId, data, userId) => {
-        const { status, date, note, follow_task } = data;
+        const { status, date, note, follow_task, duration } = data;
         await pool.query(
-            'UPDATE lead_calls SET status = ?, call_date = ?, note = ?, follow_task = ? WHERE id = ? AND user_id = ?',
-            [status, date, note, follow_task ? 1 : 0, callId, userId]
+            'UPDATE lead_calls SET status = ?, call_date = ?, note = ?, follow_task = ?, duration = ? WHERE id = ? AND user_id = ?',
+            [status, date, note, follow_task ? 1 : 0, duration || null, callId, userId]
         );
         return { id: callId, ...data };
     },

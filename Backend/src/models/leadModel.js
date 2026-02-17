@@ -326,7 +326,7 @@ const Lead = {
         );
     },
 
-    hitCall: async (id, status, nextCallAt, dropReason, userId, createReminder = false, notConnectedReason = null, remarks = null) => {
+    hitCall: async (id, status, nextCallAt, dropReason, userId, createReminder = false, notConnectedReason = null, remarks = null, priority = null, duration = null) => {
         const [lead] = await pool.query('SELECT * FROM leads WHERE id = ? AND user_id = ?', [id, userId]);
         if (!lead.length) throw new Error('Lead not found');
 
@@ -341,8 +341,13 @@ const Lead = {
             call_count,
             last_call_at: new Date(),
             next_call_at: nextCallAt || null,
-            call_remarks: safeRemarks
+            call_remarks: safeRemarks,
+            last_call_duration: duration || null
         };
+
+        if (priority) {
+            updateData.priority = priority;
+        }
 
         if (status === 'connected') {
             connected_count++;
@@ -373,6 +378,20 @@ const Lead = {
 
         await pool.query(`UPDATE leads SET ${updates} WHERE id = ? AND user_id = ?`, values);
 
+        // Add to lead_calls history with sanitized status
+        const callStatusMap = {
+            'connected': 'Connected',
+            'not_connected': 'Not Connected',
+            'dropped': 'Dropped',
+            'follow_up': 'Follow Up'
+        };
+        const displayStatus = callStatusMap[status] || status;
+
+        await pool.query(
+            'INSERT INTO lead_calls (lead_id, user_id, status, call_date, note, duration, created_at) VALUES (?, ?, ?, NOW(), ?, ?, NOW())',
+            [id, userId, displayStatus.substring(0, 50), safeRemarks, duration]
+        );
+
         // Create Task Reminder if requested
         if (createReminder && updateData.next_call_at) {
             const nextCall = new Date(updateData.next_call_at);
@@ -392,11 +411,11 @@ const Lead = {
                     userId,
                     `Follow-up call: ${lead[0].name}`,
                     taskDesc,
-                    (lead[0].priority || 'medium').toLowerCase(),
+                    (priority || lead[0].priority || 'medium').toLowerCase(),
                     dueDate,
                     dueTime,
                     'Follow-up',
-                    'Active'
+                    'Pending' // Use default status
                 ]
             );
         }
@@ -422,11 +441,10 @@ const Lead = {
         probability = Math.min(Math.max(probability, 0), 100);
 
         const isTrending = probability > 70 ? 1 : 0;
-        const priority = probability > 70 ? 'High' : (probability > 40 ? 'Medium' : 'Low');
 
         await pool.query(
-            'UPDATE leads SET call_success_rate = ?, conversion_probability = ?, is_trending = ?, priority = ? WHERE id = ?',
-            [successRate, probability, isTrending, priority, id]
+            'UPDATE leads SET call_success_rate = ?, conversion_probability = ?, is_trending = ? WHERE id = ?',
+            [successRate, probability, isTrending, id]
         );
     },
 

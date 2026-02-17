@@ -89,19 +89,19 @@ export const leadApi = createApi({
             invalidatesTags: ['Lead'],
         }),
         hitCall: builder.mutation({
-            query: ({ id, status, next_call_at, drop_reason, create_reminder, not_connected_reason, remarks }) => ({
+            query: ({ id, status, next_call_at, drop_reason, create_reminder, not_connected_reason, remarks, priority, duration }) => ({
                 url: `leads/${id}/hit-call`,
                 method: 'POST',
-                body: { status, next_call_at, drop_reason, create_reminder, not_connected_reason, remarks },
+                body: { status, next_call_at, drop_reason, create_reminder, not_connected_reason, remarks, priority, duration },
             }),
-            invalidatesTags: (result, error, { id }) => ['Lead', { type: 'Lead', id }],
+            invalidatesTags: (result, error, { id }) => ['Lead', { type: 'Lead', id }, { type: 'LeadActivities', id }],
         }),
         analyzeLead: builder.mutation({
             query: (id) => ({
                 url: `leads/${id}/analyze`,
                 method: 'POST',
             }),
-            invalidatesTags: (result, error, id) => ['Lead', { type: 'Lead', id }],
+            invalidatesTags: (result, error, id) => ['Lead', { type: 'Lead', id }, { type: 'LeadActivities', id }],
         }),
         checkCallConflict: builder.query({
             query: ({ dateTime, excludeId }) => `leads/check-call-conflict?dateTime=${dateTime}${excludeId ? `&excludeId=${excludeId}` : ''}`,
@@ -140,7 +140,7 @@ export const leadApi = createApi({
                 method: 'POST',
                 body: data,
             }),
-            invalidatesTags: (result, error, { id }) => [{ type: 'LeadNotes', id }, 'Lead'],
+            invalidatesTags: (result, error, { id }) => [{ type: 'LeadNotes', id }, 'Lead', { type: 'LeadActivities', id }],
         }),
         getLeadCalls: builder.query({
             query: (id) => `leads/${id}/calls`,
@@ -152,7 +152,7 @@ export const leadApi = createApi({
                 method: 'POST',
                 body: data,
             }),
-            invalidatesTags: (result, error, { id }) => [{ type: 'LeadCalls', id }, 'Lead'],
+            invalidatesTags: (result, error, { id }) => [{ type: 'LeadCalls', id }, 'Lead', { type: 'LeadActivities', id }],
         }),
         getLeadFiles: builder.query({
             query: (id) => `leads/${id}/files`,
@@ -164,7 +164,7 @@ export const leadApi = createApi({
                 method: 'POST',
                 body: data, // Form data usually
             }),
-            invalidatesTags: (result, error, { id }) => [{ type: 'LeadFiles', id }, 'Lead'],
+            invalidatesTags: (result, error, { id }) => [{ type: 'LeadFiles', id }, 'Lead', { type: 'LeadActivities', id }],
         }),
         getLeadActivities: builder.query({
             query: (id) => `leads/${id}/activities`,
@@ -180,7 +180,7 @@ export const leadApi = createApi({
                 method: 'POST',
                 body: data,
             }),
-            invalidatesTags: (result, error, { id }) => [{ type: 'LeadMeetings', id }, 'Lead'],
+            invalidatesTags: (result, error, { id }) => [{ type: 'LeadMeetings', id }, 'Lead', { type: 'LeadActivities', id }],
         }),
         updateLeadStatus: builder.mutation({
             query: ({ id, status, tag }) => ({
