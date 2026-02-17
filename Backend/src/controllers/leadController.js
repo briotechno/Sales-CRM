@@ -268,12 +268,25 @@ const addLeadMeeting = async (req, res) => {
 
 const updateLeadStatus = async (req, res) => {
     try {
-        const { status, tag } = req.body;
+        const { status, tag, drop_reason, remarks } = req.body;
         const updateData = {};
         if (status) updateData.status = status;
         if (tag) updateData.tag = tag;
+        if (drop_reason) updateData.drop_reason = drop_reason;
+
+        // If remarks are provided and it's a disqualification, we could save them
+        // For now, let's just update the lead with the reason.
 
         await Lead.update(req.params.id, updateData, req.user.id);
+
+        // If there are remarks, add them as a note automatically
+        if (remarks) {
+            await LeadResources.addNote({
+                lead_id: req.params.id,
+                content: `[Status Update: ${status}${drop_reason ? ' - ' + drop_reason : ''}] ${remarks}`
+            }, req.user.id);
+        }
+
         res.status(200).json({ message: 'Status updated' });
     } catch (error) {
         res.status(500).json({ message: error.message });

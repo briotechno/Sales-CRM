@@ -15,7 +15,6 @@ export default function CallActionPopup({ isOpen, onClose, lead, onHitCall, init
     const [durationHr, setDurationHr] = useState(0);
     const [durationMin, setDurationMin] = useState(0);
     const [loading, setLoading] = useState(false);
-    const [createReminder, setCreateReminder] = useState(true);
 
     const notConnectedStatuses = [
         "Busy",
@@ -101,7 +100,7 @@ export default function CallActionPopup({ isOpen, onClose, lead, onHitCall, init
             await onHitCall({
                 id: lead.id,
                 response,
-                create_reminder: createReminder,
+                create_reminder: false,
                 not_connected_reason: response === "not_connected" ? notConnectedReason : null,
                 remarks: remarks,
                 ...data
@@ -366,21 +365,6 @@ export default function CallActionPopup({ isOpen, onClose, lead, onHitCall, init
                                     )}
                                 </div>
 
-                                <div className="flex items-center gap-3 p-4 bg-gray-50/50 rounded-sm border border-gray-100 transition-all hover:bg-orange-50/50 group mt-4">
-                                    <div className="relative flex items-center">
-                                        <input
-                                            type="checkbox"
-                                            id="createReminder"
-                                            checked={createReminder}
-                                            onChange={() => setCreateReminder(!createReminder)}
-                                            className="w-5 h-5 border-2 border-gray-300 rounded-sm text-orange-500 focus:ring-orange-500 cursor-pointer accent-orange-500"
-                                        />
-                                    </div>
-                                    <label htmlFor="createReminder" className="flex items-center gap-2 text-[13px] font-bold text-gray-600 cursor-pointer select-none group-hover:text-orange-700 transition-colors capitalize tracking-wide">
-                                        <Clock size={16} className="text-orange-400 group-hover:text-[#FF7B1D]" />
-                                        Create parallel task reminder
-                                    </label>
-                                </div>
                             </div>
                         )}
 

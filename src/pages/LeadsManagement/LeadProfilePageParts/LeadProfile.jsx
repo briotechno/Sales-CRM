@@ -43,6 +43,7 @@ import {
   Mail,
   Users,
   Zap,
+  X,
 } from "lucide-react";
 
 export default function CRMLeadDetail() {
@@ -50,7 +51,7 @@ export default function CRMLeadDetail() {
   const navigate = useNavigate();
 
   // State Management
-  const [activeTab, setActiveTab] = useState("activities");
+  const [activeTab, setActiveTab] = useState("calls");
   const [isEditingLead, setIsEditingLead] = useState(false);
   const [isEditingOwner, setIsEditingOwner] = useState(false);
   const [showPriorityDropdown, setShowPriorityDropdown] = useState(false);
@@ -63,6 +64,21 @@ export default function CRMLeadDetail() {
   const [pipelineStage, setPipelineStage] = useState("Not Contacted");
   const [callPopupData, setCallPopupData] = useState({ isOpen: false, lead: null, initialResponse: null });
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, type: null, itemId: null });
+  const [showDropModal, setShowDropModal] = useState(false);
+  const [dropReason, setDropReason] = useState("");
+  const [dropRemarks, setDropRemarks] = useState("");
+  const [showConfirmDrop, setShowConfirmDrop] = useState(false);
+
+  const dropReasons = [
+    "Not Interested",
+    "Budget Issue",
+    "Already Purchased",
+    "No Requirement",
+    "Not Right Time",
+    "Trust Issue",
+    "Wrong Lead",
+    "Others"
+  ];
 
   // Data Fetching
   const passedLead = location.state?.lead;
@@ -167,7 +183,7 @@ export default function CRMLeadDetail() {
       setActiveTab("calls");
     }
   }, [isOnlyCallTabEnabled, activeTab]);
-  const canNotQualified = (leadData?.call_count || 0) >= (rules?.max_call_attempts || 5);
+  const canNotQualified = (leadData?.call_count || 0) >= (rules?.max_call_attempts || 5) || leadData?.status === "In Progress" || leadData?.tag === "Follow Up";
 
   const openCallAction = (initialResponse = null) => {
     setCallPopupData({ isOpen: true, lead: leadData, initialResponse });
@@ -454,6 +470,11 @@ export default function CRMLeadDetail() {
   const [updateLeadStatus] = useUpdateLeadStatusMutation();
 
   const handleUpdateStatus = async (status) => {
+    if (status === "Not Qualified") {
+      setShowConfirmDrop(false);
+      setShowDropModal(true);
+      return;
+    }
     try {
       let backendStatus = status;
       let backendTag = leadData?.tag;
@@ -461,17 +482,48 @@ export default function CRMLeadDetail() {
       if (status === "In Progress") {
         backendStatus = "In Progress";
         backendTag = "Follow Up";
-      } else if (status === "Not Qualified") {
-        backendStatus = "Not Qualified";
-        backendTag = "Dropped"; // Or Lost
       } else if (status === "Not Connected" || status === "New Lead") {
         openCallAction(); // Just open call action choice
+        return;
       }
 
       await updateLeadStatus({ id: leadData?.id, status: backendStatus, tag: backendTag }).unwrap();
       toast.success(`Status updated to ${status}`);
     } catch (err) {
       toast.error("Failed to update status");
+    }
+  };
+
+  const handleDropLead = async () => {
+    if (!dropReason) {
+      toast.error("Please select a reason");
+      return;
+    }
+    if (!dropRemarks.trim()) {
+      toast.error("Remarks are mandatory");
+      return;
+    }
+
+    if (!showConfirmDrop) {
+      setShowConfirmDrop(true);
+      return;
+    }
+
+    try {
+      await updateLeadStatus({
+        id: leadData?.id,
+        status: "Dropped",
+        tag: "Dropped",
+        drop_reason: dropReason,
+        remarks: dropRemarks
+      }).unwrap();
+      toast.success("Lead marked as Dropped");
+      setShowDropModal(false);
+      setShowConfirmDrop(false);
+      setDropReason("");
+      setDropRemarks("");
+    } catch (err) {
+      toast.error("Failed to drop lead");
     }
   };
 
@@ -551,7 +603,7 @@ export default function CRMLeadDetail() {
                         Call Action
                       </button>
                       <button
-                        onClick={() => openCallAction()}
+                        onClick={() => handleUpdateStatus("In Progress")}
                         className={`px-5 py-2 rounded-sm text-sm font-semibold capitalize tracking-wide border transition-all active:scale-95 shadow-sm ${leadData?.status === "In Progress" || leadData?.tag === "Follow Up"
                           ? "bg-blue-500 text-white border-blue-500 ring-2 ring-blue-500 ring-opacity-20 translate-y-[-1px]"
                           : "bg-white text-gray-500 border-gray-200 hover:border-blue-500 hover:text-blue-500 hover:bg-blue-50"
@@ -569,48 +621,11 @@ export default function CRMLeadDetail() {
                             : "bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed"
                           }`}
                       >
-                        Not Qualified
+                        Drop Lead
                       </button>
                     </div>
                   </div>
 
-                  <div className="flex flex-col md:items-end gap-2">
-                    <span className="text-xs font-bold text-gray-400 capitalize tracking-wide">Active Pipeline Stage</span>
-                    <div className="relative inline-block text-left">
-                      <button
-                        onClick={() => setShowDropdown(!showDropdown)}
-                        className={`font-bold px-6 py-3 rounded-sm shadow-lg flex items-center gap-3 transition-all active:scale-95 text-sm capitalize tracking-wide border border-transparent ${pipelineStage === 'Lost' ? 'bg-red-600 hover:bg-red-700 text-white' :
-                          pipelineStage === 'Closed' ? 'bg-yellow-500 hover:bg-yellow-600 text-white' :
-                            (pipelineStage === 'Contacted' || pipelineStage === 'Follow Up') ? 'bg-blue-600 hover:bg-blue-700 text-white' :
-                              'bg-purple-600 hover:bg-purple-700 text-white'
-                          }`}
-                      >
-                        {pipelineStage}
-                        <ChevronDown className={`w-4 h-4 transition-transform ${showDropdown ? "rotate-180" : ""}`} />
-                      </button>
-
-                      {showDropdown && (
-                        <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-sm shadow-2xl z-50 animate-fadeIn">
-                          <ul className="py-1">
-                            {["Not Contacted", "Contacted", "Follow Up", "Closed", "Lost"].map(
-                              (stage) => (
-                                <li
-                                  key={stage}
-                                  onClick={() => {
-                                    setPipelineStage(stage);
-                                    setShowDropdown(false);
-                                  }}
-                                  className="px-4 py-3 hover:bg-orange-50 hover:text-orange-600 cursor-pointer text-sm font-semibold capitalize tracking-wide transition-colors border-b border-gray-50 last:border-0"
-                                >
-                                  {stage}
-                                </li>
-                              )
-                            )}
-                          </ul>
-                        </div>
-                      )}
-                    </div>
-                  </div>
                 </div>
 
                 <div className="flex items-stretch w-full overflow-hidden rounded-sm" style={{ height: "54px" }}>
@@ -789,6 +804,117 @@ export default function CRMLeadDetail() {
           rules={rules}
           onHitCall={handleHitCall}
         />
+      )}
+
+      {/* Disqualify Lead Modal */}
+      {showDropModal && (
+        <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-[100] p-4 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-white w-full max-w-xl rounded-sm shadow-2xl overflow-hidden animate-slideUp font-primary">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-red-600 to-red-700 px-6 py-4 flex items-center justify-between shadow-md">
+              <div className="flex items-center gap-4">
+                <div className="bg-white bg-opacity-20 p-2.5 rounded-sm">
+                  <Zap size={24} className="text-white fill-white" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-white capitalize tracking-wide leading-tight">
+                    Disqualify Lead
+                  </h2>
+                  <p className="text-xs text-red-50 font-medium opacity-90">
+                    {showConfirmDrop ? "Final confirmation for lead investigation" : "Provide details to move lead to investigation"}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowDropModal(false)}
+                className="text-white hover:bg-white hover:bg-opacity-20 p-2 transition-all rounded-full"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="p-8 space-y-6">
+              {!showConfirmDrop ? (
+                <>
+                  <div className="bg-red-50 p-4 border border-red-100 rounded-sm flex items-start gap-3 shadow-sm">
+                    <div className="w-1.5 h-1.5 bg-red-600 rounded-full mt-1.5 animate-pulse shrink-0"></div>
+                    <div>
+                      <p className="text-[13px] text-red-700 font-bold uppercase tracking-wider mb-0.5">
+                        Marking as Not Qualified
+                      </p>
+                      <p className="text-[11px] text-red-600 font-medium opacity-80 leading-relaxed text-left">
+                        Please select a reason and provide mandatory remarks. This lead will be automatically assigned to the Investigation Officer.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-2 text-[15px] font-semibold text-gray-700 mb-2 capitalize">
+                      <ChevronDown size={14} className="text-red-500" />
+                      Reason for Disqualification <span className="text-red-500 font-black">*</span>
+                    </label>
+                    <select
+                      value={dropReason}
+                      onChange={(e) => setDropReason(e.target.value)}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-red-500 focus:ring-2 focus:ring-red-500 focus:ring-opacity-20 outline-none transition-all text-sm font-semibold bg-white hover:border-gray-300 shadow-sm"
+                    >
+                      <option value="">Select a specific reason</option>
+                      {dropReasons.map(reason => (
+                        <option key={reason} value={reason}>{reason}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-2 text-[15px] font-semibold text-gray-700 mb-2 capitalize">
+                      <FileText size={14} className="text-red-500" />
+                      Detailed Remarks <span className="text-red-500 font-black">*</span>
+                    </label>
+                    <textarea
+                      value={dropRemarks}
+                      onChange={(e) => setDropRemarks(e.target.value)}
+                      placeholder="Explain why this lead isn't a good fit..."
+                      className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-red-500 focus:ring-2 focus:ring-red-500 focus:ring-opacity-20 outline-none transition-all text-sm font-medium h-32 resize-none bg-white placeholder-gray-400 shadow-sm hover:border-gray-300"
+                    />
+                  </div>
+                </>
+              ) : (
+                <div className="py-6 animate-fadeIn">
+                  <div className="flex flex-col items-center text-center space-y-6">
+                    <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center text-red-600 shadow-inner border-2 border-red-100">
+                      <Zap size={40} className="fill-red-600" />
+                    </div>
+                    <div className="space-y-3 px-4">
+                      <h3 className="text-xl font-black text-gray-800 uppercase tracking-tighter">Final Commitment</h3>
+                      <p className="text-sm text-gray-600 font-medium leading-relaxed">
+                        Are you sure you want to drop this lead? Once dropped, it will be <span className="text-red-600 font-bold border-b border-red-200">automatically assigned to the Leads Investigation Officer</span> for further review.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex gap-4 pt-4 border-t border-gray-100">
+                <button
+                  onClick={() => showConfirmDrop ? setShowConfirmDrop(false) : setShowDropModal(false)}
+                  className="flex-1 px-6 py-3 border-2 border-gray-200 text-gray-700 font-bold rounded-sm hover:bg-gray-100 transition-all text-xs uppercase tracking-widest active:scale-95 bg-white shadow-sm"
+                >
+                  {showConfirmDrop ? "Back To Edit" : "Cancel"}
+                </button>
+                <button
+                  onClick={handleDropLead}
+                  disabled={!dropReason || !dropRemarks.trim()}
+                  className={`flex-1 px-6 py-3 font-bold rounded-sm transition-all text-xs uppercase tracking-widest active:scale-95 shadow-lg flex items-center justify-center gap-2 ${!dropReason || !dropRemarks.trim()
+                    ? "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none"
+                    : "bg-gradient-to-r from-red-600 to-red-700 text-white hover:from-red-700 hover:to-red-800"
+                    }`}
+                >
+                  {showConfirmDrop ? "Yes, Drop Lead Now" : "Continue Drop"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </>
   );

@@ -14,6 +14,10 @@ const Lead = {
             description, owner, referral_mobile, custom_fields, contact_persons
         } = data;
 
+        // Sanitize Date Fields
+        if (!dob) dob = null;
+        if (!primary_dob) primary_dob = null;
+
         // Normalize type: 'Person' -> 'Individual' for consistency
         if (type === 'Person') type = 'Individual';
 
@@ -126,6 +130,9 @@ const Lead = {
                 primary_contact_name, primary_dob, designation, primary_mobile, primary_email,
                 description, owner, referral_mobile, custom_fields, contact_persons
             } = data;
+
+            if (!dob) dob = null;
+            if (!primary_dob) primary_dob = null;
 
             const nextId = 'L' + (lastIdNum + index + 1).toString().padStart(3, '0');
             const customFieldsJson = typeof custom_fields === 'string' ? custom_fields : JSON.stringify(custom_fields || []);

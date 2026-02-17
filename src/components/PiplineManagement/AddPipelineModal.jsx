@@ -23,7 +23,8 @@ import { useGetStagesQuery } from "../../store/api/stageApi";
 const AddPipelineModal = ({ isOpen, onClose, pipelineToEdit }) => {
   const [createPipeline, { isLoading: isCreating }] = useCreatePipelineMutation();
   const [updatePipeline, { isLoading: isUpdating }] = useUpdatePipelineMutation();
-  const { data: masterStages } = useGetStagesQuery(); // Fetch master stages
+  const { data: stagesResponse, isLoading: isLoadingStages } = useGetStagesQuery({ limit: 1000 }); // Fetch all master stages
+  const masterStages = stagesResponse?.stages || [];
   const { data: catalogsData } = useGetCatalogsQuery({ limit: 1000, status: 'Active' }); // Fetch all active catalogs
 
   const [pipelineName, setPipelineName] = useState("");
@@ -331,7 +332,12 @@ const AddPipelineModal = ({ isOpen, onClose, pipelineToEdit }) => {
                 {isStageDropdownOpen && (
                   <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-100 rounded-sm shadow-xl z-50 max-h-60 overflow-y-auto overflow-x-hidden animate-fadeIn">
                     <div className="py-1">
-                      {masterStages && masterStages.length > 0 ? (
+                      {isLoadingStages ? (
+                        <div className="px-4 py-3 text-sm text-gray-500 text-center flex items-center justify-center gap-2">
+                          <div className="w-4 h-4 border-2 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+                          Loading stages...
+                        </div>
+                      ) : masterStages.length > 0 ? (
                         masterStages.map((ms) => (
                           <div
                             key={ms.id}
