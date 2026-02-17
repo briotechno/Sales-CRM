@@ -104,6 +104,7 @@ import CatalogCategory from "./pages/CatelogsPart/CatalogCategory";
 import CRMFormPage from "./pages/ChannelIntegration/CRMForm";
 import GoogleDocsPage from "./pages/ChannelIntegration/GoogleDocs";
 import PublicForm from "./pages/Public/PublicForm";
+import ChannelSettings from "./pages/ChannelIntegration/ChannelSettings";
 // Team Management
 
 // Team Management
@@ -228,6 +229,7 @@ function App() {
             <Route path="/crm/channel/meta" element={<ComingSoon title="Meta Integration" />} />
             <Route path="/crm/channel/justdial" element={<ComingSoon title="Justdial Integration" />} />
             <Route path="/crm/channel/indiamart" element={<ComingSoon title="Indiamart Integration" />} />
+            <Route path="/crm/channel/settings" element={<ChannelSettings />} />
             <Route path="/additional/catelogs" element={<Catelogs />} />
 
             <Route path="/additional/catalog-categories" element={<CatalogCategory />} />
