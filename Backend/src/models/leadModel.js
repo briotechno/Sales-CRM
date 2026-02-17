@@ -14,6 +14,10 @@ const Lead = {
             description, owner, referral_mobile, custom_fields, contact_persons
         } = data;
 
+        // Sanitize Date Fields
+        if (!dob) dob = null;
+        if (!primary_dob) primary_dob = null;
+
         // Normalize type: 'Person' -> 'Individual' for consistency
         if (type === 'Person') type = 'Individual';
 
@@ -126,6 +130,9 @@ const Lead = {
                 primary_contact_name, primary_dob, designation, primary_mobile, primary_email,
                 description, owner, referral_mobile, custom_fields, contact_persons
             } = data;
+
+            if (!dob) dob = null;
+            if (!primary_dob) primary_dob = null;
 
             const nextId = 'L' + (lastIdNum + index + 1).toString().padStart(3, '0');
             const customFieldsJson = typeof custom_fields === 'string' ? custom_fields : JSON.stringify(custom_fields || []);
@@ -326,27 +333,38 @@ const Lead = {
         );
     },
 
-    hitCall: async (id, status, nextCallAt, dropReason, userId, createReminder = false) => {
+    hitCall: async (id, status, nextCallAt, dropReason, userId, createReminder = false, notConnectedReason = null, remarks = null, priority = null, duration = null) => {
         const [lead] = await pool.query('SELECT * FROM leads WHERE id = ? AND user_id = ?', [id, userId]);
         if (!lead.length) throw new Error('Lead not found');
 
         let { call_count, not_connected_count, connected_count, tag } = lead[0];
         call_count++;
 
+        // Ensure we don't pass undefined to SQL
+        const safeReason = notConnectedReason || null;
+        const safeRemarks = remarks || null;
+
         let updateData = {
             call_count,
             last_call_at: new Date(),
-            next_call_at: nextCallAt || null
+            next_call_at: nextCallAt || null,
+            call_remarks: safeRemarks,
+            last_call_duration: duration || null
         };
+
+        if (priority) {
+            updateData.priority = priority;
+        }
 
         if (status === 'connected') {
             connected_count++;
             updateData.connected_count = connected_count;
-            updateData.tag = 'Follow Up'; // Updated to match user preference for 'Connected' outcome
+            updateData.tag = 'Follow Up';
         } else if (status === 'not_connected') {
             not_connected_count++;
             updateData.not_connected_count = not_connected_count;
             updateData.tag = 'Not Connected';
+            updateData.not_connected_reason = safeReason;
 
             // Auto schedule if not connected (e.g. +2 hours)
             if (!nextCallAt) {
@@ -356,10 +374,10 @@ const Lead = {
             }
         } else if (status === 'dropped') {
             updateData.tag = 'Lost';
-            updateData.drop_reason = dropReason;
+            updateData.drop_reason = dropReason || null;
         } else if (status === 'follow_up') {
             updateData.tag = 'Follow Up';
-            updateData.next_call_at = nextCallAt;
+            updateData.next_call_at = nextCallAt || null;
         }
 
         const updates = Object.keys(updateData).map(k => `${k} = ?`).join(', ');
@@ -367,23 +385,44 @@ const Lead = {
 
         await pool.query(`UPDATE leads SET ${updates} WHERE id = ? AND user_id = ?`, values);
 
+        // Add to lead_calls history with sanitized status
+        const callStatusMap = {
+            'connected': 'Connected',
+            'not_connected': 'Not Connected',
+            'dropped': 'Dropped',
+            'follow_up': 'Follow Up'
+        };
+        const displayStatus = callStatusMap[status] || status;
+
+        await pool.query(
+            'INSERT INTO lead_calls (lead_id, user_id, status, call_date, note, duration, created_at) VALUES (?, ?, ?, NOW(), ?, ?, NOW())',
+            [id, userId, displayStatus.substring(0, 50), safeRemarks, duration]
+        );
+
         // Create Task Reminder if requested
         if (createReminder && updateData.next_call_at) {
             const nextCall = new Date(updateData.next_call_at);
             const dueDate = nextCall.toISOString().split('T')[0];
             const dueTime = nextCall.toTimeString().split(' ')[0];
 
+            // Build task description
+            let taskDesc = "";
+            if (safeReason) taskDesc += `Reason: ${safeReason}. `;
+            if (safeRemarks) taskDesc += `Remarks: ${safeRemarks}`;
+            taskDesc = taskDesc.trim() || null;
+
             await pool.query(
-                `INSERT INTO tasks (user_id, title, priority, due_date, due_time, category, status, completed, created_at)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, 0, NOW())`,
+                `INSERT INTO tasks (user_id, title, description, priority, due_date, due_time, category, status, completed, created_at)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, NOW())`,
                 [
                     userId,
                     `Follow-up call: ${lead[0].name}`,
-                    (lead[0].priority || 'medium').toLowerCase(),
+                    taskDesc,
+                    (priority || lead[0].priority || 'medium').toLowerCase(),
                     dueDate,
                     dueTime,
                     'Follow-up',
-                    'Active'
+                    'Pending' // Use default status
                 ]
             );
         }
@@ -409,11 +448,10 @@ const Lead = {
         probability = Math.min(Math.max(probability, 0), 100);
 
         const isTrending = probability > 70 ? 1 : 0;
-        const priority = probability > 70 ? 'High' : (probability > 40 ? 'Medium' : 'Low');
 
         await pool.query(
-            'UPDATE leads SET call_success_rate = ?, conversion_probability = ?, is_trending = ?, priority = ? WHERE id = ?',
-            [successRate, probability, isTrending, priority, id]
+            'UPDATE leads SET call_success_rate = ?, conversion_probability = ?, is_trending = ? WHERE id = ?',
+            [successRate, probability, isTrending, id]
         );
     },
 

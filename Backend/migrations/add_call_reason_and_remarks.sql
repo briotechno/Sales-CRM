@@ -1,0 +1,3 @@
+ALTER TABLE leads 
+ADD COLUMN not_connected_reason VARCHAR(255) DEFAULT NULL,
+ADD COLUMN call_remarks TEXT DEFAULT NULL;

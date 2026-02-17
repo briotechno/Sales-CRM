@@ -251,18 +251,27 @@ const WorkStationLeadsGridView = ({
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
       {groupTags.map((groupTag) => {
-        const tagLeads = leadsData.filter((lead) => {
-          const isTrending = lead.is_trending === 1 || lead.priority === "High" || lead.tag === "Trending";
+        let tagLeads = leadsData.filter((lead) => {
+          const isTrending = lead.is_trending === 1 || lead.priority === "High" || (lead.tag && (lead.tag === "Trending" || lead.tag === "High Priority"));
           const isFollowUp = lead.tag === "Follow Up";
           const isNotConnected = lead.tag === "Not Connected";
           const isNew = lead.tag === "Not Contacted" || lead.tag === "New Lead" || lead.tag === "New Leads" || lead.stage_name === "New" || !lead.tag;
 
-          if (isTrending) return groupTag === "Trending";
-          if (isFollowUp) return groupTag === "Follow Up";
-          if (isNotConnected) return groupTag === "Not Connected";
-          if (isNew) return groupTag === "New Leads";
+          if (groupTag === "Trending") return isTrending;
+          if (groupTag === "Follow Up") return isFollowUp;
+          if (groupTag === "Not Connected") return isNotConnected;
+          if (groupTag === "New Leads") return isNew;
           return false;
         }).filter(lead => filterStatus === "All" || (lead.tag || lead.status) === filterStatus);
+
+        // Sorting Not Connected leads by next_call_at (soonest first)
+        if (groupTag === "Not Connected") {
+          tagLeads = [...tagLeads].sort((a, b) => {
+            if (!a.next_call_at) return 1;
+            if (!b.next_call_at) return -1;
+            return new Date(a.next_call_at) - new Date(b.next_call_at);
+          });
+        }
 
         return (
           <div key={groupTag} className="flex flex-col group/column">
@@ -337,15 +346,27 @@ const WorkStationLeadsGridView = ({
                           {lead.lead_id || lead.id}
                         </p>
 
-                        {/* Birth/Creation Details */}
-                        <p className="text-[11px] text-gray-700 mt-4 font-bold flex items-center gap-1.5 font-primary">
-                          <Calendar size={13} className="text-orange-500" />
-                          <span className="text-gray-500 capitalize">Born:</span>
-                          {(lead.rawCreated || lead.created_at) ? new Date(lead.rawCreated || lead.created_at).toLocaleDateString('en-IN', {
-                            day: '2-digit', month: 'short', year: 'numeric',
-                            hour: '2-digit', minute: '2-digit', hour12: true
-                          }).toUpperCase() : "--"}
-                        </p>
+                        {/* Birth/Creation/Next Call Details */}
+                        <div className="mt-4 space-y-1.5">
+                          {lead.next_call_at && (groupTag === "Not Connected" || groupTag === "Follow Up") ? (
+                            <p className="text-[11px] text-orange-700 font-bold flex items-center gap-1.5 font-primary bg-orange-50 px-2 py-1 rounded-sm border border-orange-100">
+                              <Clock size={13} className="text-orange-500" />
+                              <span className="text-orange-500 capitalize">Next Call:</span>
+                              {new Date(lead.next_call_at).toLocaleString('en-IN', {
+                                day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true
+                              }).toUpperCase()}
+                            </p>
+                          ) : (
+                            <p className="text-[11px] text-gray-700 font-bold flex items-center gap-1.5 font-primary">
+                              <Calendar size={13} className="text-orange-500" />
+                              <span className="text-gray-500 capitalize">Born:</span>
+                              {(lead.rawCreated || lead.created_at) ? new Date(lead.rawCreated || lead.created_at).toLocaleDateString('en-IN', {
+                                day: '2-digit', month: 'short', year: 'numeric',
+                                hour: '2-digit', minute: '2-digit', hour12: true
+                              }).toUpperCase() : "--"}
+                            </p>
+                          )}
+                        </div>
 
                         {/* Pipeline info */}
                         <div className="mt-5 w-full bg-gray-100/60 rounded-sm p-3 border border-gray-200 space-y-2">
@@ -609,13 +630,7 @@ export default function WorkStation() {
 
   const handleHitCall = async (callData) => {
     try {
-      await hitCallMutation({
-        id: callData.id,
-        status: callData.status,
-        next_call_at: callData.next_call_at,
-        drop_reason: callData.drop_reason,
-        create_reminder: callData.create_reminder
-      }).unwrap();
+      await hitCallMutation(callData).unwrap();
       toast.success("Lead status updated based on call response");
     } catch (err) {
       toast.error(err?.data?.message || "Failed to update call status");

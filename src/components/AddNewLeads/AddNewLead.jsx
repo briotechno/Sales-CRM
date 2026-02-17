@@ -426,6 +426,7 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
       visibility,
       value: Number(formData.value) || 0,
       interested_in: formData.interested_in.join(','),
+      dob: formData.dob || null,
       custom_fields: JSON.stringify(customFields.filter(cf => cf.label && cf.value)),
       contact_persons: leadType === "Organization" ? JSON.stringify(contactPersons) : null
     };

@@ -2,7 +2,7 @@ const { pool } = require('./src/config/db');
 async function checkSchema() {
     try {
         const [rows] = await pool.query("DESCRIBE tasks");
-        rows.forEach(r => console.log(`${r.Field}: ${r.Type}`));
+        console.log(JSON.stringify(rows, null, 2));
     } catch (e) {
         console.log("Error:", e.message);
     }

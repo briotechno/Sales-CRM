@@ -77,12 +77,12 @@ const hitCall = async (req, res) => {
     try {
         const userId = req.user.id;
         const leadId = req.params.id;
-        const { status, next_call_at, drop_reason, create_reminder } = req.body;
+        const { status, next_call_at, drop_reason, create_reminder, not_connected_reason, remarks, priority, duration } = req.body;
 
         // Get current lead before update to know current owner
         const currentLead = await Lead.findById(leadId, userId);
 
-        const result = await Lead.hitCall(leadId, status, next_call_at, drop_reason, userId, create_reminder);
+        const result = await Lead.hitCall(leadId, status, next_call_at, drop_reason, userId, create_reminder, not_connected_reason, remarks, priority, duration);
 
         // Auto-analyze after call
         await Lead.analyzeLead(leadId, userId);
@@ -97,12 +97,7 @@ const hitCall = async (req, res) => {
 
                 let updateData = {
                     assigned_to: null,
-                    assigned_at: null,
-                    call_count: 0,
-                    not_connected_count: 0,
-                    connected_count: 0,
-                    last_call_at: null,
-                    next_call_at: null
+                    assigned_at: null
                 };
 
                 if (settings?.auto_disqualification) {
@@ -273,12 +268,25 @@ const addLeadMeeting = async (req, res) => {
 
 const updateLeadStatus = async (req, res) => {
     try {
-        const { status, tag } = req.body;
+        const { status, tag, drop_reason, remarks } = req.body;
         const updateData = {};
         if (status) updateData.status = status;
         if (tag) updateData.tag = tag;
+        if (drop_reason) updateData.drop_reason = drop_reason;
+
+        // If remarks are provided and it's a disqualification, we could save them
+        // For now, let's just update the lead with the reason.
 
         await Lead.update(req.params.id, updateData, req.user.id);
+
+        // If there are remarks, add them as a note automatically
+        if (remarks) {
+            await LeadResources.addNote({
+                lead_id: req.params.id,
+                content: `[Status Update: ${status}${drop_reason ? ' - ' + drop_reason : ''}] ${remarks}`
+            }, req.user.id);
+        }
+
         res.status(200).json({ message: 'Status updated' });
     } catch (error) {
         res.status(500).json({ message: error.message });

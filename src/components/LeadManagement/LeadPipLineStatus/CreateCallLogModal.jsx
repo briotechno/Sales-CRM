@@ -58,10 +58,13 @@ const CreateCallLogModal = ({ open, onClose, onSave }) => {
                 required
               >
                 <option value="Busy">Busy</option>
-                <option value="Not Answered">Not Answered</option>
-                <option value="Completed">Completed</option>
+                <option value="No Answer">No Answer</option>
+                <option value="Switch Off">Switch Off</option>
+                <option value="Out of Coverage">Out of Coverage</option>
+                <option value="Invalid Number">Invalid Number</option>
+                <option value="Call Not Picked">Call Not Picked</option>
+                <option value="Call Failed">Call Failed</option>
                 <option value="Wrong Number">Wrong Number</option>
-                <option value="Follow-up Required">Follow-up Required</option>
               </select>
             </div>
 
@@ -69,10 +72,10 @@ const CreateCallLogModal = ({ open, onClose, onSave }) => {
             <div>
               <label className="flex items-center gap-2 text-[15px] font-semibold text-gray-700 mb-2 capitalize">
                 <Calendar size={14} className="text-orange-500" />
-                Follow-up Date <span className="text-red-500">*</span>
+                Follow-up Date & Time <span className="text-red-500">*</span>
               </label>
               <input
-                type="date"
+                type="datetime-local"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
                 className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500 focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white placeholder-gray-400 shadow-sm hover:border-gray-300"

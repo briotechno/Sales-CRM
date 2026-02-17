@@ -71,6 +71,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
   useEffect(() => {
     setActiveItem(location.pathname);
     // Auto-open parent menu if child is active
+    let newOpenMenu = "";
     menuItems.forEach((section) => {
       section.items.forEach((item) => {
         if (item.children) {
@@ -78,11 +79,12 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             (child) => child.path === location.pathname
           );
           if (hasActiveChild) {
-            setOpenMenu(item.name);
+            newOpenMenu = item.name;
           }
         }
       });
     });
+    setOpenMenu(newOpenMenu);
 
     // Scroll active item into view after a short delay to ensure DOM is updated
     setTimeout(() => {
@@ -327,18 +329,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           path: "/crm/leads/analysis",
           permission: "Leads Management"
         },
-        {
-          name: "Assignment Settings",
-          icon: <Settings size={22} />,
-          path: "/crm/leads/assignment-settings",
-          permission: "Leads Management"
-        },
-        {
-          name: "Lead Rules",
-          icon: <Zap size={22} />,
-          path: "/crm/leads/lead-rules-config",
-          permission: "Leads Management"
-        },
+
         {
           name: "campaign",
           icon: <Users size={16} />,
@@ -368,6 +359,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           path: "/crm/client/all",
           permission: "Client Management",
 
+
         },
         {
           name: "Channel Integration",
@@ -381,6 +373,12 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             { name: "Google Docs", path: "/crm/channel/google-docs" },
             { name: "CRM Form", path: "/crm/channel/form" },
           ],
+        },
+        {
+          name: "Lead Settings",
+          icon: <Settings size={22} />,
+          path: "/crm/channel/settings",
+          permission: "Leads Management"
         },
       ],
     },

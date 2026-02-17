@@ -294,13 +294,7 @@ export default function WonLeads() {
 
     const handleHitCall = async (callData) => {
         try {
-            await hitCallMutation({
-                id: callData.id,
-                status: callData.status,
-                next_call_at: callData.next_call_at,
-                drop_reason: callData.drop_reason,
-        create_reminder: callData.create_reminder
-            }).unwrap();
+            await hitCallMutation(callData).unwrap();
             toast.success("Lead status updated based on call response");
         } catch (err) {
             toast.error(err?.data?.message || "Failed to update call status");
