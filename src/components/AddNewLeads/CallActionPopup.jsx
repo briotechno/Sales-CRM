@@ -131,7 +131,7 @@ export default function CallActionPopup({ isOpen, onClose, lead, onHitCall, init
                 status: response || "follow_up",
                 next_call_at: nextCallAt,
                 priority,
-                duration: `${durationHr} Hr ${durationMin} Min`,
+                duration: (parseInt(durationHr) || 0) * 60 + (parseInt(durationMin) || 0),
                 tag: response === "connected" ? "Follow Up" : "Not Connected"
             });
         } else if (finalAction === "drop") {

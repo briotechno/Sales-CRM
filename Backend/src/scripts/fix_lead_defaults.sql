@@ -1,0 +1,80 @@
+-- SQL Query to fix 'Field doesn't have a default value' errors in 'leads' table
+
+-- 1. Ensure 'not_connected_reason' column exists (if your MySQL version supports IF NOT EXISTS)
+-- otherwise just run the add column command if it fails
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS not_connected_reason TEXT NULL;
+
+-- 2. Modify columns to be nullable or have default values
+
+-- Critical Fixes
+ALTER TABLE leads MODIFY COLUMN not_connected_reason TEXT NULL;
+ALTER TABLE leads MODIFY COLUMN call_remarks TEXT NULL;
+ALTER TABLE leads MODIFY COLUMN last_call_duration INT NULL;
+
+-- Core Fields
+ALTER TABLE leads MODIFY COLUMN lead_source VARCHAR(255) NULL;
+ALTER TABLE leads MODIFY COLUMN visibility VARCHAR(50) DEFAULT 'Public';
+ALTER TABLE leads MODIFY COLUMN value DECIMAL(15,2) DEFAULT 0;
+ALTER TABLE leads MODIFY COLUMN status VARCHAR(50) DEFAULT 'Open';
+ALTER TABLE leads MODIFY COLUMN type VARCHAR(50) DEFAULT 'Individual';
+ALTER TABLE leads MODIFY COLUMN tag VARCHAR(50) DEFAULT 'Not Contacted';
+
+-- Personal & Contact
+ALTER TABLE leads MODIFY COLUMN email VARCHAR(255) NULL;
+ALTER TABLE leads MODIFY COLUMN website VARCHAR(255) NULL;
+ALTER TABLE leads MODIFY COLUMN full_name VARCHAR(255) NULL;
+ALTER TABLE leads MODIFY COLUMN gender VARCHAR(50) NULL;
+ALTER TABLE leads MODIFY COLUMN dob DATE NULL;
+ALTER TABLE leads MODIFY COLUMN alt_mobile_number VARCHAR(20) NULL;
+ALTER TABLE leads MODIFY COLUMN address TEXT NULL;
+ALTER TABLE leads MODIFY COLUMN city VARCHAR(100) NULL;
+ALTER TABLE leads MODIFY COLUMN state VARCHAR(100) NULL;
+ALTER TABLE leads MODIFY COLUMN pincode VARCHAR(20) NULL;
+ALTER TABLE leads MODIFY COLUMN interest_in VARCHAR(255) NULL;
+ALTER TABLE leads MODIFY COLUMN interested_in VARCHAR(255) NULL;
+ALTER TABLE leads MODIFY COLUMN profile_image VARCHAR(500) NULL;
+ALTER TABLE leads MODIFY COLUMN whatsapp_number VARCHAR(20) NULL;
+ALTER TABLE leads MODIFY COLUMN country VARCHAR(100) NULL;
+
+-- Organization Details
+ALTER TABLE leads MODIFY COLUMN organization_name VARCHAR(255) NULL;
+ALTER TABLE leads MODIFY COLUMN industry_type VARCHAR(100) NULL;
+ALTER TABLE leads MODIFY COLUMN company_email VARCHAR(255) NULL;
+ALTER TABLE leads MODIFY COLUMN company_phone VARCHAR(20) NULL;
+ALTER TABLE leads MODIFY COLUMN gst_pan_number VARCHAR(100) NULL;
+ALTER TABLE leads MODIFY COLUMN gst_number VARCHAR(100) NULL;
+ALTER TABLE leads MODIFY COLUMN org_address TEXT NULL;
+ALTER TABLE leads MODIFY COLUMN org_city VARCHAR(100) NULL;
+ALTER TABLE leads MODIFY COLUMN org_state VARCHAR(100) NULL;
+ALTER TABLE leads MODIFY COLUMN org_pincode VARCHAR(20) NULL;
+ALTER TABLE leads MODIFY COLUMN company_address TEXT NULL;
+ALTER TABLE leads MODIFY COLUMN org_country VARCHAR(100) NULL;
+
+-- Primary Contact
+ALTER TABLE leads MODIFY COLUMN primary_contact_name VARCHAR(255) NULL;
+ALTER TABLE leads MODIFY COLUMN primary_dob DATE NULL;
+ALTER TABLE leads MODIFY COLUMN designation VARCHAR(100) NULL;
+ALTER TABLE leads MODIFY COLUMN primary_mobile VARCHAR(20) NULL;
+ALTER TABLE leads MODIFY COLUMN primary_email VARCHAR(255) NULL;
+
+-- Meta/System
+ALTER TABLE leads MODIFY COLUMN description TEXT NULL;
+ALTER TABLE leads MODIFY COLUMN assigned_to INT NULL;
+ALTER TABLE leads MODIFY COLUMN referral_mobile VARCHAR(20) NULL;
+ALTER TABLE leads MODIFY COLUMN custom_fields JSON NULL;
+ALTER TABLE leads MODIFY COLUMN contact_persons JSON NULL;
+ALTER TABLE leads MODIFY COLUMN is_read TINYINT(1) DEFAULT 0;
+ALTER TABLE leads MODIFY COLUMN priority VARCHAR(50) DEFAULT 'Medium';
+
+-- Call Flow fields
+ALTER TABLE leads MODIFY COLUMN last_call_at DATETIME NULL;
+ALTER TABLE leads MODIFY COLUMN next_call_at DATETIME NULL;
+ALTER TABLE leads MODIFY COLUMN call_count INT DEFAULT 0;
+ALTER TABLE leads MODIFY COLUMN not_connected_count INT DEFAULT 0;
+ALTER TABLE leads MODIFY COLUMN connected_count INT DEFAULT 0;
+ALTER TABLE leads MODIFY COLUMN drop_reason TEXT NULL;
+ALTER TABLE leads MODIFY COLUMN call_success_rate DECIMAL(5,2) DEFAULT 0;
+ALTER TABLE leads MODIFY COLUMN follow_up_frequency INT DEFAULT 0;
+ALTER TABLE leads MODIFY COLUMN response_quality VARCHAR(50) NULL;
+ALTER TABLE leads MODIFY COLUMN conversion_probability DECIMAL(5,2) DEFAULT 0;
+ALTER TABLE leads MODIFY COLUMN is_trending TINYINT(1) DEFAULT 0;
