@@ -136,6 +136,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Cashfree from "./pages/SuperAdmin/PaymentGateways/Cashfree.jsx";
 import Razorpay from "./pages/SuperAdmin/PaymentGateways/Razorpay.jsx";
 import PhonePay from "./pages/SuperAdmin/PaymentGateways/PhonePay.jsx";
+import Wallet from "./pages/SuperAdmin/PaymentGateways/Wallet.jsx";
 
 import RoleProtectedRoute from "./components/RoleProtectedRoute";
 import GlobalModals from "./components/common/GlobalModals";
@@ -248,6 +249,7 @@ function App() {
               <Route path="/superadmin/paymentgateways/Cashfree" element={<Cashfree />} />
               <Route path="/superadmin/paymentgateways/PhonePay" element={<PhonePay />} />
               <Route path="/superadmin/paymentgateways/Razorpay" element={<Razorpay />} />
+              <Route path="/superadmin/paymentgateways/Wallet" element={<Wallet />} />
             </Route>
           </Route>
         </Route>
