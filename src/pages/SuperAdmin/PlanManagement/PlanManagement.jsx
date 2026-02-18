@@ -228,63 +228,88 @@ export default function PlanManagement() {
                                         </td>
                                     </tr>
                                 ) : plans.length > 0 ? (
-                                    plans.map((plan) => (
-                                        <tr key={plan.id} className="border-t hover:bg-gray-50 transition-colors font-medium cursor-pointer">
-                                            <td className="py-3 px-6">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-10 h-10 bg-orange-100 text-orange-600 flex items-center justify-center rounded-sm font-black shadow-inner">
-                                                        {plan.name.charAt(0)}
+                                    plans.map((plan) => {
+                                        const isStrictPlan = !plan.upgradable_users && !plan.upgradable_storage && !plan.upgradable_leads;
+                                        return (
+                                            <tr key={plan.id} className="border-t hover:bg-gray-50 transition-colors font-medium cursor-pointer group">
+                                                <td className="py-3 px-6">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-10 h-10 bg-orange-100 text-orange-600 flex items-center justify-center rounded-sm font-black shadow-inner group-hover:bg-[#FF7B1D] group-hover:text-white transition-all transform group-hover:scale-110">
+                                                            {plan.name.charAt(0)}
+                                                        </div>
+                                                        <div>
+                                                            <div className="flex items-center gap-2">
+                                                                <div className="font-bold text-gray-800 text-sm">{plan.name}</div>
+                                                                {isStrictPlan && (
+                                                                    <span className="text-[9px] font-black bg-red-100 text-red-600 px-1.5 py-0.5 rounded shadow-sm flex items-center gap-1">
+                                                                        <XCircle size={10} /> STRICT
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                            <div className="text-[10px] text-gray-400 font-black uppercase tracking-widest text-nowrap">PLAN-ID: {plan.id}</div>
+                                                        </div>
                                                     </div>
-                                                    <div>
-                                                        <div className="font-bold text-gray-800 text-sm">{plan.name}</div>
-                                                        <div className="text-[10px] text-gray-400 font-black uppercase tracking-widest text-nowrap">PLAN-ID: {plan.id}</div>
+                                                </td>
+                                                <td className="py-3 px-6 text-center">
+                                                    <div className="inline-flex items-center gap-1 bg-green-50 text-green-700 px-3 py-1.5 rounded-sm font-bold text-xs border border-green-200 shadow-sm">
+                                                        <IndianRupee size={12} /> {parseFloat(plan.price).toLocaleString()}
                                                     </div>
-                                                </div>
-                                            </td>
-                                            <td className="py-3 px-6 text-center">
-                                                <div className="inline-flex items-center gap-1 bg-green-50 text-green-700 px-3 py-1.5 rounded-sm font-bold text-xs border border-green-200 shadow-sm">
-                                                    <IndianRupee size={12} /> {parseFloat(plan.price).toLocaleString()}
-                                                </div>
-                                            </td>
-                                            <td className="py-3 px-6 text-center">
-                                                <div className="flex flex-col items-center">
-                                                    <Users size={16} className="text-blue-500 mb-1" />
-                                                    <span className="text-sm font-bold text-gray-700">{plan.default_users}</span>
-                                                </div>
-                                            </td>
-                                            <td className="py-3 px-6 text-center">
-                                                <div className="flex flex-col items-center">
-                                                    <Zap size={16} className="text-[#00C853] mb-1" />
-                                                    <span className="text-sm font-bold text-gray-700">{plan.monthly_leads}</span>
-                                                </div>
-                                            </td>
-                                            <td className="py-3 px-6 text-center">
-                                                <div className="flex flex-col items-center">
-                                                    <HardDrive size={16} className="text-purple-500 mb-1" />
-                                                    <span className="text-sm font-bold text-gray-700">{plan.default_storage} GB</span>
-                                                </div>
-                                            </td>
-                                            <td className="py-3 px-6 text-right">
-                                                <div className="flex justify-end gap-2">
-                                                    <button
-                                                        onClick={() => { setSelectedPlan(plan); setIsViewModalOpen(true); }}
-                                                        className="p-1 hover:bg-orange-100 rounded-sm text-blue-500 hover:text-blue-700 transition-all" title="View Details">
-                                                        <Eye size={18} />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => { setSelectedPlan(plan); setIsEditModalOpen(true); }}
-                                                        className="p-1 hover:bg-orange-100 rounded-sm text-green-500 hover:text-green-700 transition-all font-bold" title="Edit Plan">
-                                                        <Edit2 size={18} />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => { setSelectedPlan(plan); setIsDeleteModalOpen(true); }}
-                                                        className="p-1 hover:bg-orange-100 rounded-sm text-red-500 hover:text-red-700 transition-all" title="Delete Plan">
-                                                        <Trash2 size={18} />
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))
+                                                </td>
+                                                <td className="py-3 px-6 text-center">
+                                                    <div className="flex flex-col items-center gap-1">
+                                                        <div className="flex items-center gap-1">
+                                                            <Users size={14} className="text-blue-500" />
+                                                            <span className="text-sm font-bold text-gray-700">{plan.default_users}</span>
+                                                        </div>
+                                                        <span className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded transition-all ${plan.upgradable_users ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-400'}`}>
+                                                            {plan.upgradable_users ? 'Upgradable' : 'Fixed'}
+                                                        </span>
+                                                    </div>
+                                                </td>
+                                                <td className="py-3 px-6 text-center">
+                                                    <div className="flex flex-col items-center gap-1">
+                                                        <div className="flex items-center gap-1">
+                                                            <Zap size={14} className="text-[#00C853]" />
+                                                            <span className="text-sm font-bold text-gray-700">{plan.monthly_leads.toLocaleString()}</span>
+                                                        </div>
+                                                        <span className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded transition-all ${plan.upgradable_leads ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-400'}`}>
+                                                            {plan.upgradable_leads ? 'Upgradable' : 'Fixed'}
+                                                        </span>
+                                                    </div>
+                                                </td>
+                                                <td className="py-3 px-6 text-center">
+                                                    <div className="flex flex-col items-center gap-1">
+                                                        <div className="flex items-center gap-1">
+                                                            <HardDrive size={14} className="text-purple-500" />
+                                                            <span className="text-sm font-bold text-gray-700">{plan.default_storage} GB</span>
+                                                        </div>
+                                                        <span className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded transition-all ${plan.upgradable_storage ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-400'}`}>
+                                                            {plan.upgradable_storage ? 'Upgradable' : 'Fixed'}
+                                                        </span>
+                                                    </div>
+                                                </td>
+                                                <td className="py-3 px-6 text-right">
+                                                    <div className="flex justify-end gap-2">
+                                                        <button
+                                                            onClick={() => { setSelectedPlan(plan); setIsViewModalOpen(true); }}
+                                                            className="p-1 hover:bg-orange-100 rounded-sm text-blue-500 hover:text-blue-700 transition-all" title="View Details">
+                                                            <Eye size={18} />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => { setSelectedPlan(plan); setIsEditModalOpen(true); }}
+                                                            className="p-1 hover:bg-orange-100 rounded-sm text-green-500 hover:text-green-700 transition-all font-bold" title="Edit Plan">
+                                                            <Edit2 size={18} />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => { setSelectedPlan(plan); setIsDeleteModalOpen(true); }}
+                                                            className="p-1 hover:bg-orange-100 rounded-sm text-red-500 hover:text-red-700 transition-all" title="Delete Plan">
+                                                            <Trash2 size={18} />
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })
                                 ) : (
                                     <tr>
                                         <td colSpan="6" className="py-20 text-center">
