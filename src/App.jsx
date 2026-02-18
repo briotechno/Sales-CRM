@@ -120,6 +120,7 @@ import LandingPage from "./pages/LandingPage";
 import Logout from "./pages/Logout";
 import SuperAdmin from "./pages/SuperAdmin/Dashboard/SuperAdmin";
 import EnterpriseManagement from "./pages/SuperAdmin/EnterpriseManagement/EnterpriseManagement";
+import EnterpriseDetail from "./pages/SuperAdmin/EnterpriseManagement/EnterpriseDetail";
 import SubscriptionManagement from "./pages/SuperAdmin/SubscriptionManagement/SubscriptionManagement";
 import ProductKeys from "./pages/SuperAdmin/ProductKeys/ProductKeys";
 import PaymentGateways from "./pages/SuperAdmin/PaymentGateways/PaymentGateways";
@@ -239,6 +240,7 @@ function App() {
             <Route element={<RoleProtectedRoute allowedRoles={['Super Admin']} />}>
               <Route path="/superadmin/dashboard" element={<SuperAdmin />} />
               <Route path="/superadmin/enterprises" element={<EnterpriseManagement />} />
+              <Route path="/superadmin/enterprises/:id" element={<EnterpriseDetail />} />
               <Route path="/superadmin/subscriptions" element={<SubscriptionManagement />} />
               <Route path="/superadmin/productkeys" element={<ProductKeys />} />
               <Route path="/superadmin/plans" element={<PlanManagement />} />

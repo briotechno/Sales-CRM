@@ -83,7 +83,7 @@ export default function SuperAdmin() {
                         </div>
                     </div>
                 </div>
-              
+
                 {/* Stats Grid */}
                 <div className="pointer-events-none">
 
