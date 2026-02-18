@@ -19,6 +19,8 @@ import {
     ShieldOff,
     RefreshCw,
     AlertCircle,
+    Filter,
+    X,
 } from "lucide-react";
 import NumberCard from "../../../components/NumberCard";
 import AddEnterpriseModal from "../../../components/EnterpriseManagement/AddEnterpriseModal";
@@ -76,7 +78,10 @@ const chipColorMap = {
 export default function EnterpriseManagement() {
     const navigate = useNavigate();
     const [searchTerm, setSearchTerm] = useState("");
+    const [tempSearch, setTempSearch] = useState("");
     const [filterStatus, setFilterStatus] = useState("all");
+    const [isFilterOpen, setIsFilterOpen] = useState(false);
+    const filterRef = useRef(null);
     const [isAddEnterpriseOpen, setIsAddEnterpriseOpen] = useState(false);
     const [isEditOpen, setIsEditOpen] = useState(false);
     const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -84,7 +89,7 @@ export default function EnterpriseManagement() {
 
     // Pagination State
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 10;
+    const itemsPerPage = 8;
 
     // FETCH DATA
     const { data: response, isLoading, isError, refetch, isFetching } = useGetEnterprisesQuery({
@@ -102,17 +107,34 @@ export default function EnterpriseManagement() {
     const totalPlans = new Set(enterprises.map(e => e.plan)).size;
     const trialCount = enterprises.filter(e => e.status === "Trial").length;
 
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (filterRef.current && !filterRef.current.contains(e.target)) {
+                setIsFilterOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    const hasActiveFilters = searchTerm !== "" || filterStatus !== "all";
+
+    const handleClearFilters = () => {
+        setFilterStatus("all");
+        setSearchTerm("");
+        setTempSearch("");
+        setCurrentPage(1);
+    };
+
+    const handleApplyFilters = () => {
+        setSearchTerm(tempSearch);
+        setIsFilterOpen(false);
+        setCurrentPage(1);
+    };
+
     const handlePageChange = (page) => setCurrentPage(page);
     const handlePrev = () => setCurrentPage((prev) => (prev > 1 ? prev - 1 : prev));
     const handleNext = () => setCurrentPage((prev) => (prev < pagination.totalPages ? prev + 1 : prev));
-
-    const indexOfFirstItem = (currentPage - 1) * itemsPerPage;
-    const indexOfLastItem = Math.min(currentPage * itemsPerPage, pagination.total || 0);
-
-    const handleFilterChange = (key) => {
-        setFilterStatus(key);
-        setCurrentPage(1);
-    };
 
     const getStatusBadge = (status) => {
         if (status === "Active") return (
@@ -137,63 +159,142 @@ export default function EnterpriseManagement() {
         );
     };
 
+    const indexOfFirstItem = (currentPage - 1) * itemsPerPage;
+    const indexOfLastItem = Math.min(currentPage * itemsPerPage, pagination.total || 0);
+
     return (
         <DashboardLayout>
             <div className="min-h-screen bg-white">
 
                 {/* ── HEADER ── */}
-                <div className="bg-white sticky top-0 z-30">
-                    <div className="max-w-8xl mx-auto px-6 py-4 border-b">
-                        <div className="flex items-center justify-between flex-wrap gap-4">
-                            <div>
-                                <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                                    <Building2 className="text-[#FF7B1D]" size={26} />
-                                    Enterprise Management
-                                </h1>
-                                <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
-                                    <Home className="text-gray-700" size={14} />
-                                    Super Admin /{" "}
-                                    <span className="text-[#FF7B1D] font-medium">Enterprises</span>
-                                </p>
-                            </div>
+                <div className="bg-white border-b sticky top-0 z-30">
+                    <div className="max-w-8xl mx-auto px-6 py-4 flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+                        <div>
+                            <h1 className="text-2xl font-bold flex items-center gap-2 text-gray-800">
+                                <Building2 className="text-[#FF7B1D]" size={26} /> Enterprise Management
+                            </h1>
+                            <p className="text-sm text-gray-500 mt-1 flex items-center gap-2 font-medium">
+                                <Home size={14} className="text-gray-700" /> Super Admin /{" "}
+                                <span className="text-[#FF7B1D]">Enterprises</span>
+                            </p>
+                        </div>
 
-                            <div className="flex items-center gap-3 flex-wrap">
-                                {/* Search */}
-                                <div className="relative">
-                                    <Search
-                                        size={16}
-                                        className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                                    />
-                                    <input
-                                        type="text"
-                                        placeholder="Search enterprises..."
-                                        className="pl-9 pr-4 py-2.5 border border-gray-200 rounded-sm text-sm w-60 focus:outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-orange-400 transition-all font-semibold"
-                                        value={searchTerm}
-                                        onChange={(e) => {
-                                            setSearchTerm(e.target.value);
-                                            setCurrentPage(1);
-                                        }}
-                                    />
-                                </div>
+                        <div className="flex items-center gap-3 flex-wrap">
 
-                                {/* Refresh */}
+                            {/* UNIFIED FILTER */}
+                            <div className="relative" ref={filterRef}>
                                 <button
-                                    onClick={refetch}
-                                    className={`p-2.5 bg-white border border-gray-200 rounded-sm hover:bg-gray-50 text-gray-600 transition shadow-sm active:scale-95 ${isFetching ? "ring-2 ring-orange-500/20" : ""}`}
-                                    title="Refresh"
+                                    onClick={() => {
+                                        if (hasActiveFilters) {
+                                            handleClearFilters();
+                                        } else {
+                                            setTempSearch(searchTerm);
+                                            setIsFilterOpen(!isFilterOpen);
+                                        }
+                                    }}
+                                    className={`p-3 rounded-sm border transition shadow-sm ${isFilterOpen || hasActiveFilters
+                                        ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
+                                        : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
+                                        }`}
+                                    title={hasActiveFilters ? "Clear Filters" : "Filter Options"}
                                 >
-                                    <RefreshCw size={18} className={isFetching ? "animate-spin text-orange-500" : ""} />
+                                    {hasActiveFilters ? <X size={20} /> : <Filter size={20} />}
                                 </button>
 
-                                {/* Add Enterprise */}
-                                <button
-                                    onClick={() => setIsAddEnterpriseOpen(true)}
-                                    className="px-5 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm flex items-center gap-2 font-bold shadow-md hover:from-orange-600 hover:to-orange-700 transition active:scale-95"
-                                >
-                                    <Plus size={18} />
-                                    Add Enterprise
-                                </button>
+                                {isFilterOpen && (
+                                    <div className="absolute right-0 mt-2 w-[400px] bg-white border border-gray-200 rounded-sm shadow-2xl z-50 animate-fadeIn overflow-hidden">
+                                        {/* Header */}
+                                        <div className="p-4 bg-gray-50 border-b flex justify-between items-center">
+                                            <span className="text-sm font-bold text-gray-800 tracking-tight uppercase">Filter Options</span>
+                                            <button
+                                                onClick={handleClearFilters}
+                                                className="text-[10px] font-bold text-orange-600 hover:underline hover:text-orange-700 capitalize tracking-wider"
+                                            >
+                                                Reset All
+                                            </button>
+                                        </div>
+
+                                        <div className="p-5 space-y-6">
+                                            {/* Search Input */}
+                                            <div>
+                                                <label className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-2 border-b pb-1">Search Enterprises</label>
+                                                <div className="relative">
+                                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                                                    <input
+                                                        type="text"
+                                                        value={tempSearch}
+                                                        onChange={(e) => setTempSearch(e.target.value)}
+                                                        placeholder="Search name, email, or city..."
+                                                        className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500/20 outline-none transition-all text-xs font-semibold text-gray-700 bg-gray-50 hover:bg-white"
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            {/* Status Filter */}
+                                            <div>
+                                                <label className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-3 border-b pb-1">Filter by Status</label>
+                                                <div className="grid grid-cols-2 gap-2">
+                                                    {FILTER_CHIPS.map((chip) => (
+                                                        <label
+                                                            key={chip.key}
+                                                            className={`flex items-center gap-2 p-2.5 border rounded-sm cursor-pointer transition-all ${filterStatus === chip.key
+                                                                ? "bg-orange-50 border-orange-200 ring-1 ring-orange-200"
+                                                                : "hover:bg-gray-50 border-gray-100"
+                                                                }`}
+                                                        >
+                                                            <input
+                                                                type="radio"
+                                                                name="status"
+                                                                value={chip.key}
+                                                                checked={filterStatus === chip.key}
+                                                                onChange={() => setFilterStatus(chip.key)}
+                                                                className="w-3 h-3 text-orange-600 focus:ring-orange-500 border-gray-300"
+                                                            />
+                                                            <span className={`text-[11px] font-bold ${filterStatus === chip.key ? "text-orange-700" : "text-gray-600"}`}>
+                                                                {chip.label}
+                                                            </span>
+                                                        </label>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Filter Actions */}
+                                        <div className="p-4 bg-gray-50 border-t flex gap-3">
+                                            <button
+                                                onClick={() => setIsFilterOpen(false)}
+                                                className="flex-1 py-2.5 text-[11px] font-bold text-gray-500 capitalize tracking-wider hover:bg-gray-200 transition-colors rounded-sm border border-gray-200 bg-white shadow-sm"
+                                            >
+                                                Cancel
+                                            </button>
+                                            <button
+                                                onClick={handleApplyFilters}
+                                                className="flex-1 py-2.5 text-[11px] font-bold text-white capitalize tracking-wider bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 transition-all rounded-sm shadow-md active:scale-95"
+                                            >
+                                                Apply Filters
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
+
+                            {/* REFRESH */}
+                            <button
+                                onClick={refetch}
+                                className={`p-3 bg-white border border-gray-200 rounded-sm hover:bg-gray-50 text-gray-600 transition shadow-sm active:scale-95 ${isFetching ? "ring-2 ring-orange-500/20" : ""}`}
+                                title="Refresh"
+                            >
+                                <RefreshCw size={20} className={isFetching ? "animate-spin text-orange-500" : ""} />
+                            </button>
+
+                            {/* Add */}
+                            <button
+                                onClick={() => setIsAddEnterpriseOpen(true)}
+                                className="px-5 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm flex items-center gap-2 font-bold shadow-md hover:from-orange-600 hover:to-orange-700 transition active:scale-95 text-sm"
+                            >
+                                <Plus size={20} />
+                                Add Enterprise
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -231,24 +332,6 @@ export default function EnterpriseManagement() {
                             iconBgColor="bg-purple-100"
                             lineBorderClass="border-purple-500"
                         />
-                    </div>
-
-                    {/* ── FILTER CHIPS ── */}
-                    <div className="flex items-center gap-3 flex-wrap">
-                        {FILTER_CHIPS.map((chip) => {
-                            const isActive = filterStatus === chip.key;
-                            const colors = chipColorMap[chip.color];
-                            return (
-                                <button
-                                    key={chip.key}
-                                    onClick={() => handleFilterChange(chip.key)}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-sm text-sm font-bold border transition-all duration-200 ${isActive ? colors.active : colors.inactive}`}
-                                >
-                                    {chip.icon}
-                                    {chip.label}
-                                </button>
-                            );
-                        })}
                     </div>
 
                     {/* ── TABLE ── */}
