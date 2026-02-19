@@ -216,7 +216,8 @@ const WorkStationLeadsGridView = ({
   selectedLeads,
   handleSelectLead,
   handleHitCall,
-  employees = []
+  employees = [],
+  currentTime // Added currentTime prop for instant UI moves
 }) => {
   const groupTags = ["New Leads", "Not Connected", "Follow Up", "Trending"];
 
@@ -255,8 +256,8 @@ const WorkStationLeadsGridView = ({
         let tagLeads = leadsData.filter((lead) => {
           const isTrending = lead.is_trending === 1 || lead.priority === "High" || (lead.tag && (lead.tag === "Trending" || lead.tag === "High Priority"));
           const isFollowUp = lead.tag === "Follow Up";
-          const isNotConnected = lead.tag === "Not Connected";
-          const isNew = lead.tag === "Not Contacted" || lead.tag === "New Lead" || lead.tag === "New Leads" || lead.stage_name === "New" || !lead.tag;
+          const isNotConnected = lead.tag === "Not Connected" && (!lead.next_call_at || new Date(lead.next_call_at) > currentTime);
+          const isNew = lead.tag === "Not Contacted" || lead.tag === "New Lead" || lead.tag === "New Leads" || lead.stage_name === "New" || !lead.tag || (lead.tag === "Not Connected" && lead.next_call_at && new Date(lead.next_call_at) <= currentTime);
 
           if (groupTag === "Trending") return isTrending;
           if (groupTag === "Follow Up") return isFollowUp;
@@ -300,7 +301,7 @@ const WorkStationLeadsGridView = ({
                   const waLink = cleanNumber ? `https://wa.me/${cleanNumber}` : '#';
 
                   return (
-                    <div key={lead.id} className="bg-white border border-gray-300 rounded-sm shadow-sm hover:shadow-lg transition-all relative group flex flex-col overflow-hidden">
+                    <div key={lead.id} className="bg-white border border-gray-300 rounded-sm shadow-sm hover:shadow-xl transition-all duration-300 relative group flex flex-col overflow-hidden animate-slideIn hover:scale-[1.02] hover:z-10">
                       {/* Top Selection */}
                       <div className="absolute top-4 right-4 z-10">
                         <input
@@ -509,6 +510,14 @@ export default function WorkStation() {
     value: filterValue,
   });
 
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  // Update current time every second for instant UI transitions
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
   useEffect(() => {
     if (isFilterOpen) {
       setTempFilters({
@@ -606,6 +615,14 @@ export default function WorkStation() {
     city: filterCity,
     value: filterValue,
   });
+
+  // Auto-refresh the workstation every minute to handle automatic moves (e.g. Not Connected -> New)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refetch();
+    }, 60000);
+    return () => clearInterval(interval);
+  }, [refetch]);
 
   const [deleteLead] = useDeleteLeadMutation();
   const [updateLead] = useUpdateLeadMutation();
@@ -1146,6 +1163,7 @@ export default function WorkStation() {
                   handleSelectLead={handleSelectLead}
                   handleHitCall={openCallAction}
                   employees={employees}
+                  currentTime={currentTime}
                 />
               )}
 
@@ -1224,6 +1242,7 @@ export default function WorkStation() {
         onClose={() => setIsQrModalOpen(false)}
         lead={selectedLeadForCall}
         onProceedToLog={handleProceedToLog}
+        onViewProfile={() => handleLeadClick(selectedLeadForCall)}
       />
 
       {/* Delete Confirmation Modal */}
@@ -1358,8 +1377,28 @@ export default function WorkStation() {
             opacity: 1;
           }
         }
+        @keyframes slideIn {
+          from {
+            transform: translateX(20px);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
         .animate-slideUp {
           animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .animate-slideIn {
+          animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .animate-fadeIn {
+          animation: fadeIn 0.4s ease-out forwards;
         }
       `}</style>
     </div>

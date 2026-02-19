@@ -198,9 +198,9 @@ const Lead = {
 
         // Subview logic
         if (subview === 'new') {
-            query += " AND (l.tag = 'Not Contacted' OR l.created_at >= DATE_SUB(NOW(), INTERVAL 2 DAY))";
+            query += " AND (l.tag = 'Not Contacted' OR l.created_at >= DATE_SUB(NOW(), INTERVAL 2 DAY) OR (l.tag = 'Not Connected' AND l.next_call_at <= NOW()))";
         } else if (subview === 'not-connected') {
-            query += " AND l.tag = 'Not Connected'";
+            query += " AND l.tag = 'Not Connected' AND (l.next_call_at IS NULL OR l.next_call_at > NOW())";
         } else if (subview === 'follow-up') {
             query += " AND l.tag = 'Follow Up'";
         } else if (subview === 'missed') {
@@ -236,8 +236,8 @@ const Lead = {
             countParams.push(term, term, term);
         }
 
-        if (subview === 'new') { countQuery += " AND (l.tag = 'Not Contacted' OR l.created_at >= DATE_SUB(NOW(), INTERVAL 2 DAY))"; }
-        else if (subview === 'not-connected') { countQuery += " AND l.tag = 'Not Connected'"; }
+        if (subview === 'new') { countQuery += " AND (l.tag = 'Not Contacted' OR l.created_at >= DATE_SUB(NOW(), INTERVAL 2 DAY) OR (l.tag = 'Not Connected' AND l.next_call_at <= NOW()))"; }
+        else if (subview === 'not-connected') { countQuery += " AND l.tag = 'Not Connected' AND (l.next_call_at IS NULL OR l.next_call_at > NOW())"; }
         else if (subview === 'follow-up') { countQuery += " AND l.tag = 'Follow Up'"; }
         else if (subview === 'missed') { countQuery += " AND l.next_call_at < NOW() AND l.tag NOT IN ('Won', 'Lost', 'Closed')"; }
         else if (subview === 'assigned') { countQuery += " AND l.assigned_to IS NOT NULL"; }
