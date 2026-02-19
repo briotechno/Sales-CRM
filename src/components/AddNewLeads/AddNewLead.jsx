@@ -112,6 +112,7 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
     interested_in: [],
     value: "",
     owner: "",
+    owner_name: "",
     pipeline_id: "",
     stage_id: "",
     referral_mobile: "",
@@ -148,7 +149,17 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
   // Set default owner to logged-in user
   useEffect(() => {
     if (!leadToEdit && user && !formData.owner) {
-      setFormData(prev => ({ ...prev, owner: user.id || user.user_id }));
+      const name = user.employee_name ||
+        user.name ||
+        (user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : null) ||
+        user.username ||
+        "Unknown User";
+
+      setFormData(prev => ({
+        ...prev,
+        owner: user.id || user.user_id || user._id,
+        owner_name: name
+      }));
     }
   }, [user, leadToEdit]);
 
@@ -214,7 +225,8 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
 
         interested_in: leadToEdit.interested_in ? (Array.isArray(leadToEdit.interested_in) ? leadToEdit.interested_in : leadToEdit.interested_in.split(',')) : [],
         value: leadToEdit.value || "",
-        owner: leadToEdit.owner || "",
+        owner: leadToEdit.owner || leadToEdit.assigned_to || "",
+        owner_name: leadToEdit.owner_name || leadToEdit.employee_name || "",
         pipeline_id: leadToEdit.pipeline_id || "",
         stage_id: leadToEdit.stage_id || "",
         referral_mobile: leadToEdit.referral_mobile || "",
@@ -428,7 +440,8 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
       interested_in: formData.interested_in.join(','),
       dob: formData.dob || null,
       custom_fields: JSON.stringify(customFields.filter(cf => cf.label && cf.value)),
-      contact_persons: leadType === "Organization" ? JSON.stringify(contactPersons) : null
+      contact_persons: leadType === "Organization" ? JSON.stringify(contactPersons) : null,
+      owner_name: formData.owner_name
     };
 
     try {
@@ -1351,24 +1364,15 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
                 <div className="relative">
                   <input
                     type="text"
-                    readOnly
-                    value={
-                      leadToEdit
-                        ? (employees.find(emp => (emp.user_id || emp.id) == formData.owner)?.employee_name || "Assigned Owner")
-                        : (employees.find(emp => (emp.user_id || emp.id) == (user?.id || user?.user_id))?.employee_name ||
-                          user?.employee_name ||
-                          user?.name ||
-                          (user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : "") ||
-                          user?.username ||
-                          "Logged User")
-                    }
+                    disabled
+                    value={formData.owner_name || ""}
                     className={inputStyles + " bg-gray-50 cursor-not-allowed border-gray-100"}
+                    placeholder="Auto-assigned"
                   />
                   <div className="absolute right-3 top-1/2 -translate-y-1/2">
                     <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]"></div>
                   </div>
                 </div>
-                <input type="hidden" name="owner" value={formData.owner} />
               </div>
 
               <div className="group">

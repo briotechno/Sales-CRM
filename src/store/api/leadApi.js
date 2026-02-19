@@ -46,7 +46,8 @@ export const leadApi = createApi({
                             hour: '2-digit', minute: '2-digit'
                         }) : null,
                         rawCreated: lead.created_at,
-                        rawUpdated: lead.last_call_at || lead.updated_at || lead.created_at
+                        rawUpdated: lead.last_call_at || lead.updated_at || lead.created_at,
+                        owner: lead.assigned_to
                     }));
                 }
                 return response;

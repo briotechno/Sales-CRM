@@ -977,7 +977,7 @@ export default function CRMLeadDetail() {
                   className="w-10 h-10 rounded-full"
                 />
                 <span className="text-sm font-semibold text-gray-900">
-                  Vaughan Lewis
+                  {passedLead?.employee_name || passedLead?.owner_name || "Unassigned"}
                 </span>
               </div>
               {isEditingOwner && (

@@ -8,11 +8,11 @@ const createLead = async (req, res) => {
     try {
         const id = await Lead.create(req.body, req.user.id);
 
-        // Handle Auto-Assignment if enabled
-        await leadAssignmentService.autoAssign(id, req.user.id);
-
-        // If manual assignment was passed directly (owner/assigned_to)
-        if (req.body.owner || req.body.assigned_to) {
+        // Handle Auto-Assignment if enabled AND no manual owner was assigned
+        if (!req.body.owner && !req.body.assigned_to) {
+            await leadAssignmentService.autoAssign(id, req.user.id);
+        } else {
+            // If manual assignment was passed directly (owner/assigned_to)
             await LeadAssignmentLog.create({
                 user_id: req.user.id,
                 lead_id: id,
@@ -97,6 +97,7 @@ const hitCall = async (req, res) => {
 
                 let updateData = {
                     assigned_to: null,
+                    owner_name: null,
                     assigned_at: null
                 };
 
