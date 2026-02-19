@@ -277,6 +277,12 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           permission: "Product Key Management",
         },
         {
+          name: "Wallet Management",
+          icon: <Wallet size={22} />,
+          path: "/superadmin/wallet",
+          permission: "Payment Gateway Management",
+        },
+        {
           name: "Payment Gateways",
           icon: <Wallet size={22} />,
           path: "/superadmin/paymentgateways",
@@ -285,7 +291,6 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             { name: "Cashfree", path: "/superadmin/paymentgateways/Cashfree" },
             { name: "PhonePay", path: "/superadmin/paymentgateways/PhonePay" },
             { name: "Razorpay", path: "/superadmin/paymentgateways/Razorpay" },
-            { name: "Wallet", path: "/superadmin/paymentgateways/Wallet" },
           ],
         }
       ],

@@ -78,20 +78,16 @@ export default function PaymentGateways() {
         <DashboardLayout>
             <div className="min-h-screen">
                 {/* Header */}
-                <div className="bg-white border-b my-3">
-                    <div className="max-w-7xl mx-auto px-6 py-4">
+                <div className="bg-white border-b sticky top-0 z-30">
+                    <div className="max-w-8xl mx-auto px-6 py-4">
                         <div className="flex items-center justify-between">
                             <div>
-                                <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                                    <WalletIcon className="text-[#FF7B1D]" />
-                                    Payment Gateways
+                                <h1 className="text-2xl font-bold flex items-center gap-2 text-gray-800">
+                                    <WalletIcon className="text-[#FF7B1D]" size={26} /> Payment Gateways
                                 </h1>
-                                <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
-                                    <Home className="text-gray-700" size={14} />
-                                    <span className="text-gray-400"></span> Super Admin /{" "}
-                                    <span className="text-[#FF7B1D] font-medium">
-                                        Payment Gateways
-                                    </span>
+                                <p className="text-sm text-gray-500 mt-1 flex items-center gap-2 font-medium">
+                                    <Home size={14} className="text-gray-700" /> Super Admin /{" "}
+                                    <span className="text-[#FF7B1D]">Payment Gateways</span>
                                 </p>
                             </div>
                         </div>
@@ -99,7 +95,7 @@ export default function PaymentGateways() {
                 </div>
 
                 {/* Gateways Grid */}
-                <div className="p-0 px-6 space-y-8">
+                <div className="max-w-8xl mx-auto px-6 pt-2 pb-6 space-y-8">
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         {gateways.map((gw) => (
                             <div
@@ -178,7 +174,13 @@ export default function PaymentGateways() {
 
                                 <div className="p-4 bg-gray-50 border-t flex gap-2">
                                     <button
-                                        onClick={() => navigate(`/superadmin/paymentgateways/${gw.slug}`)}
+                                        onClick={() => {
+                                            if (gw.slug === 'Wallet') {
+                                                navigate('/superadmin/wallet');
+                                            } else {
+                                                navigate(`/superadmin/paymentgateways/${gw.slug}`);
+                                            }
+                                        }}
                                         className="flex-1 bg-white border border-gray-200 text-gray-700 py-2 rounded-sm text-xs font-bold flex items-center justify-center gap-2 hover:bg-white transition-all active:scale-95"
                                     >
                                         <Settings size={14} /> {gw.slug === 'Wallet' ? 'Manage Wallet' : 'Configure'}

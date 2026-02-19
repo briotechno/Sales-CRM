@@ -31,6 +31,7 @@ export default function ProductKeys() {
     const [searchTerm, setSearchTerm] = useState("");
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [filterStatus, setFilterStatus] = useState("all");
+    const [planFilter, setPlanFilter] = useState("all");
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isViewOpen, setIsViewOpen] = useState(false);
     const [isEditOpen, setIsEditOpen] = useState(false);
@@ -59,6 +60,7 @@ export default function ProductKeys() {
     // FETCH DATA
     const { data: response, isLoading, isError, refetch, isFetching } = useGetProductKeysQuery({
         status: filterStatus,
+        plan: planFilter,
         searchTerm: searchTerm,
         page: currentPage,
         limit: itemsPerPage
@@ -108,10 +110,11 @@ export default function ProductKeys() {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    const hasActiveFilters = filterStatus !== "all" || searchTerm !== "";
+    const hasActiveFilters = filterStatus !== "all" || planFilter !== "all" || searchTerm !== "";
 
     const handleClearFilters = () => {
         setFilterStatus("all");
+        setPlanFilter("all");
         setSearchTerm("");
         setTempSearch("");
         setCurrentPage(1);
@@ -208,6 +211,7 @@ export default function ProductKeys() {
                                                 onClick={() => {
                                                     setTempSearch("");
                                                     setFilterStatus("all");
+                                                    setPlanFilter("all");
                                                 }}
                                                 className="text-[10px] font-bold text-orange-600 hover:underline hover:text-orange-700 capitalize tracking-wider"
                                             >
@@ -250,6 +254,21 @@ export default function ProductKeys() {
                                                         </label>
                                                     ))}
                                                 </div>
+                                            </div>
+
+                                            {/* Plan Filter */}
+                                            <div>
+                                                <span className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-3 border-b pb-1">Filter by Plan Type</span>
+                                                <select
+                                                    value={planFilter}
+                                                    onChange={(e) => setPlanFilter(e.target.value)}
+                                                    className="w-full border border-gray-200 rounded-sm px-3 py-2 text-xs focus:ring-1 focus:ring-orange-500/30 outline-none font-bold text-gray-700 bg-gray-50 hover:bg-white transition"
+                                                >
+                                                    <option value="all">All Plans</option>
+                                                    {plansList.map(p => (
+                                                        <option key={p.id} value={p.name}>{p.name}</option>
+                                                    ))}
+                                                </select>
                                             </div>
                                         </div>
 
@@ -295,7 +314,7 @@ export default function ProductKeys() {
                 </div>
 
                 {/* Dashboard Content */}
-                <div className="max-w-8xl mx-auto px-6 py-6 space-y-6">
+                <div className="max-w-8xl mx-auto px-6 pt-2 pb-6 space-y-6">
                     {/* Quick Generate Card */}
                     <div className="bg-white rounded-sm shadow-md border border-gray-100 overflow-hidden">
                         <div className="bg-gradient-to-r from-[#1a222c] to-[#2d3a4b] p-4 border-b border-gray-700">
@@ -348,23 +367,33 @@ export default function ProductKeys() {
                                         <option>1 Year</option>
                                     </select>
                                 </div>
-                                <div className="space-y-1.5">
+                                <div className="space-y-1.5 group/readonly relative">
                                     <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest">Users</label>
                                     <input
                                         type="number"
                                         value={quickData.users}
-                                        onChange={(e) => setQuickData({ ...quickData, users: parseInt(e.target.value) || 0 })}
-                                        className="w-full border border-gray-200 rounded-sm px-3 py-2.5 text-xs focus:ring-1 focus:ring-orange-500/30 outline-none font-bold text-gray-700 bg-gray-50 hover:bg-white transition"
+                                        readOnly
+                                        className="w-full border border-gray-200 rounded-sm px-3 py-2.5 text-xs outline-none font-bold text-gray-500 bg-gray-100 cursor-not-allowed transition shadow-inner"
+                                        title="User count is automatically set based on plan selection"
                                     />
+                                    {/* Tooltip on hover */}
+                                    <div className="absolute bottom-full left-0 mb-2 invisible group-hover/readonly:visible bg-gray-800 text-white text-[9px] px-2 py-1 rounded-sm whitespace-nowrap z-10 pointer-events-none font-bold uppercase tracking-wider shadow-xl opacity-90">
+                                        Value set by plan
+                                    </div>
                                 </div>
-                                <div className="space-y-1.5">
+                                <div className="space-y-1.5 group/readonly relative">
                                     <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest">Leads</label>
                                     <input
                                         type="number"
                                         value={quickData.leads}
-                                        onChange={(e) => setQuickData({ ...quickData, leads: parseInt(e.target.value) || 0 })}
-                                        className="w-full border border-gray-200 rounded-sm px-3 py-2.5 text-xs focus:ring-1 focus:ring-orange-500/30 outline-none font-bold text-gray-700 bg-gray-50 hover:bg-white transition"
+                                        readOnly
+                                        className="w-full border border-gray-200 rounded-sm px-3 py-2.5 text-xs outline-none font-bold text-gray-500 bg-gray-100 cursor-not-allowed transition shadow-inner"
+                                        title="Monthly leads are automatically set based on plan selection"
                                     />
+                                    {/* Tooltip on hover */}
+                                    <div className="absolute bottom-full left-0 mb-2 invisible group-hover/readonly:visible bg-gray-800 text-white text-[9px] px-2 py-1 rounded-sm whitespace-nowrap z-10 pointer-events-none font-bold uppercase tracking-wider shadow-xl opacity-90">
+                                        Value set by plan
+                                    </div>
                                 </div>
                                 <div className="flex items-end">
                                     <button

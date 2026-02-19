@@ -249,7 +249,7 @@ function App() {
               <Route path="/superadmin/paymentgateways/Cashfree" element={<Cashfree />} />
               <Route path="/superadmin/paymentgateways/PhonePay" element={<PhonePay />} />
               <Route path="/superadmin/paymentgateways/Razorpay" element={<Razorpay />} />
-              <Route path="/superadmin/paymentgateways/Wallet" element={<Wallet />} />
+              <Route path="/superadmin/wallet" element={<Wallet />} />
             </Route>
           </Route>
         </Route>

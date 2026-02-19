@@ -193,7 +193,7 @@ export default function PlanManagement() {
                 </div>
 
                 {/* Main Content Table */}
-                <div className="max-w-8xl mx-auto px-6 py-6">
+                <div className="max-w-8xl mx-auto px-6 pt-2 pb-6">
                     <div className="overflow-x-auto border border-gray-200 rounded-sm shadow-sm">
                         <table className="w-full border-collapse text-left">
                             <thead className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm">
