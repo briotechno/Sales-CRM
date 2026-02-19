@@ -50,6 +50,7 @@ const leadAssignmentService = {
             // 4. Perform Assignment
             await Lead.update(leadId, {
                 assigned_to: selectedEmployee.id,
+                owner_name: selectedEmployee.employee_name,
                 assigned_at: new Date()
             }, userId);
 
@@ -93,7 +94,7 @@ const leadAssignmentService = {
                 const oldEmployeeId = lead.assigned_to;
 
                 // Clear assignment
-                await pool.query('UPDATE leads SET assigned_to = NULL, assigned_at = NULL WHERE id = ?', [lead.id]);
+                await pool.query('UPDATE leads SET assigned_to = NULL, owner_name = NULL, assigned_at = NULL WHERE id = ?', [lead.id]);
 
                 // Re-trigger auto-assignment
                 await leadAssignmentService.autoAssign(lead.id, lead.user_id);

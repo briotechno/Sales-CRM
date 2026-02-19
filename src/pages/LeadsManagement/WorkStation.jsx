@@ -215,7 +215,8 @@ const WorkStationLeadsGridView = ({
   handleLeadClick,
   selectedLeads,
   handleSelectLead,
-  handleHitCall
+  handleHitCall,
+  employees = []
 }) => {
   const groupTags = ["New Leads", "Not Connected", "Follow Up", "Trending"];
 
@@ -300,8 +301,8 @@ const WorkStationLeadsGridView = ({
 
                   return (
                     <div key={lead.id} className="bg-white border border-gray-300 rounded-sm shadow-sm hover:shadow-lg transition-all relative group flex flex-col overflow-hidden">
-                      {/* Top Selection & Quick Actions */}
-                      <div className="absolute top-4 left-4 z-10">
+                      {/* Top Selection */}
+                      <div className="absolute top-4 right-4 z-10">
                         <input
                           type="checkbox"
                           checked={selectedLeads.includes(lead.id)}
@@ -310,91 +311,74 @@ const WorkStationLeadsGridView = ({
                         />
                       </div>
 
-                      <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                        <button
-                          onClick={() => handleLeadClick(lead)}
-                          className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-sm bg-white shadow-sm border border-blue-100"
-                          title="View Details"
-                        >
-                          <Eye size={14} />
-                        </button>
-                      </div>
-
-                      {/* Card Content Section */}
-                      <div className="p-6 pb-4 flex flex-col items-center mt-2">
-                        {/* Avatar/Profile Image */}
-                        <div className="relative">
-                          <div className={`w-20 h-20 rounded-full flex items-center justify-center font-bold text-2xl border-4 border-gray-50 bg-white overflow-hidden shadow-sm`}>
+                      <div className="p-4 flex flex-col gap-3">
+                        {/* Lead Header */}
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 rounded-full flex-shrink-0 border-2 border-gray-100 shadow-sm overflow-hidden bg-white">
                             {lead.profile_image ? (
                               <img src={lead.profile_image} alt={leadDisplayName} className="w-full h-full object-cover" />
                             ) : (
-                              <div className={`w-full h-full ${getAvatarBg(lead.tag)} flex items-center justify-center text-white shadow-inner uppercase`}>
+                              <div className={`w-full h-full ${getAvatarBg(lead.tag)} flex items-center justify-center text-white text-base font-semibold capitalize`}>
                                 {initials}
                               </div>
                             )}
                           </div>
-                          <div className="absolute bottom-0 right-0 w-5 h-5 bg-white rounded-full flex items-center justify-center border border-gray-100 shadow-sm">
-                            <div className={`w-3 h-3 rounded-full ${lead.status === 'Active' ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h3
+                                className="text-base font-bold text-gray-900 capitalize font-primary cursor-pointer hover:text-orange-600 transition-colors truncate max-w-[150px]"
+                                onClick={() => handleLeadClick(lead)}
+                                title={leadDisplayName}
+                              >
+                                {leadDisplayName}
+                              </h3>
+                              <span className="text-[10px] text-orange-600 font-bold px-2 py-0.5 rounded-sm bg-orange-50 border border-orange-100 whitespace-nowrap capitalize">
+                                {lead.lead_id || lead.id}
+                              </span>
+                              <div className="flex items-center gap-1.5 text-[11px] font-semibold font-primary text-gray-500 whitespace-nowrap capitalize">
+                                <Calendar size={12} className="text-orange-500" />
+                                {(lead.rawCreated || lead.created_at) ? new Date(lead.rawCreated || lead.created_at).toLocaleDateString('en-IN', {
+                                  day: '2-digit', month: 'short', year: 'numeric'
+                                }) : "--"}
+                              </div>
+                            </div>
+
+                            {lead.next_call_at && (groupTag === "Not Connected" || groupTag === "Follow Up") && (
+                              <div className="mt-1.5 text-[11px] text-orange-700 font-semibold flex items-center gap-1.5 font-primary bg-orange-50 px-2 py-1 rounded-sm border border-orange-100 w-fit capitalize">
+                                <Clock size={12} className="text-orange-500" />
+                                <span className="text-orange-600">Next:</span>
+                                {new Date(lead.next_call_at).toLocaleString('en-IN', {
+                                  day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true
+                                })}
+                              </div>
+                            )}
                           </div>
-                        </div>
-
-                        {/* Name & ID */}
-                        <h3 className="text-lg font-bold text-gray-900 mt-4 text-center line-clamp-1 capitalize font-primary px-2" onClick={() => handleLeadClick(lead)}>
-                          {leadDisplayName}
-                        </h3>
-                        <p className="text-[10px] text-orange-600 font-bold capitalize tracking-widest font-primary mt-1 border border-orange-100 px-2 py-0.5 rounded-sm bg-orange-50/50">
-                          {lead.lead_id || lead.id}
-                        </p>
-
-                        {/* Birth/Creation/Next Call Details */}
-                        <div className="mt-4 space-y-1.5">
-                          {lead.next_call_at && (groupTag === "Not Connected" || groupTag === "Follow Up") ? (
-                            <p className="text-[11px] text-orange-700 font-bold flex items-center gap-1.5 font-primary bg-orange-50 px-2 py-1 rounded-sm border border-orange-100">
-                              <Clock size={13} className="text-orange-500" />
-                              <span className="text-orange-500 capitalize">Next Call:</span>
-                              {new Date(lead.next_call_at).toLocaleString('en-IN', {
-                                day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true
-                              }).toUpperCase()}
-                            </p>
-                          ) : (
-                            <p className="text-[11px] text-gray-700 font-bold flex items-center gap-1.5 font-primary">
-                              <Calendar size={13} className="text-orange-500" />
-                              <span className="text-gray-500 capitalize">Born:</span>
-                              {(lead.rawCreated || lead.created_at) ? new Date(lead.rawCreated || lead.created_at).toLocaleDateString('en-IN', {
-                                day: '2-digit', month: 'short', year: 'numeric',
-                                hour: '2-digit', minute: '2-digit', hour12: true
-                              }).toUpperCase() : "--"}
-                            </p>
-                          )}
                         </div>
 
                         {/* Pipeline info */}
-                        <div className="mt-5 w-full bg-gray-100/60 rounded-sm p-3 border border-gray-200 space-y-2">
-                          <div className="flex justify-between items-center px-1">
-                            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider font-primary">Pipeline</span>
-                            <span className="text-xs font-bold text-gray-900 font-primary">{lead.pipeline_name || "General"}</span>
-                          </div>
-                          <div className="flex justify-between items-center px-1">
-                            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider font-primary">Stage</span>
-                            <span className="text-[11px] text-[#FF7B1D] font-bold italic font-primary">{lead.stage_name || "New"}</span>
-                          </div>
-                          <div className="pt-2 border-t border-gray-300 mt-1 flex justify-center items-center gap-1.5 text-[10px] text-gray-600 font-bold font-primary">
-                            <Clock size={11} />
-                            <span>Modified: {(lead.rawUpdated || lead.last_call_at || lead.updated_at) ? new Date(lead.rawUpdated || lead.last_call_at || lead.updated_at).toLocaleDateString('en-IN', {
-                              day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true
-                            }).toUpperCase() : "--"}</span>
+                        <div className="bg-gray-50/80 rounded-sm p-3 border border-gray-200">
+                          <div className="flex justify-between items-center gap-4">
+                            <div className="flex flex-col">
+                              <span className="text-[12px] font-bold text-gray-500 capitalize font-primary tracking-tight mb-1">Pipeline</span>
+                              <span className="text-sm font-bold text-gray-800 font-primary truncate max-w-[130px] capitalize">{lead.pipeline_name || "General"}</span>
+                            </div>
+                            <div className="flex flex-col items-end">
+                              <span className="text-[12px] font-bold text-gray-500 capitalize font-primary tracking-tight mb-1">Stage</span>
+                              <span className="text-sm text-[#FF7B1D] font-bold italic font-primary capitalize">{lead.stage_name || "New"}</span>
+                            </div>
                           </div>
                         </div>
 
-                        {/* Profile Strength/Progress Bar */}
-                        <div className="w-full mt-5 px-1">
-                          <div className="flex justify-between items-center mb-1.5">
-                            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-tight font-primary">Leads Profile</span>
-                            <span className={`text-[10px] font-black font-primary ${calculateProfileCompletion(lead) > 70 ? 'text-green-600' : 'text-orange-600'}`}>
+                        {/* Profile Strength */}
+                        <div className="w-full space-y-2">
+                          <div className="flex justify-between items-center gap-2">
+                            <span className="text-[12px] font-bold text-gray-500 capitalize font-primary tracking-wider">Lead Profile</span>
+                            <span className={`text-[12px] font-bold font-primary ${calculateProfileCompletion(lead) > 70 ? 'text-green-600' : 'text-orange-600'}`}>
                               {calculateProfileCompletion(lead)}%
                             </span>
                           </div>
-                          <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden shadow-inner">
+                          <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
                             <div
                               className={`h-full rounded-full transition-all duration-500 ${calculateProfileCompletion(lead) > 70 ? 'bg-gradient-to-r from-green-400 to-green-600' : 'bg-gradient-to-r from-orange-400 to-orange-600'}`}
                               style={{ width: `${calculateProfileCompletion(lead)}%` }}
@@ -404,43 +388,40 @@ const WorkStationLeadsGridView = ({
                       </div>
 
                       {/* Footer Stats & Info */}
-                      <div className="bg-gray-100/60 p-5 space-y-4 border-t border-gray-300 mt-auto">
-                        {/* Stat Row */}
-                        <div className="flex justify-between items-center text-center border-b border-gray-300/60 pb-4">
+                      <div className="bg-gray-50 p-4 space-y-4 border-t border-gray-200 mt-auto">
+                        <div className="flex justify-between items-center text-center border-b border-gray-300/60 pb-3.5">
                           <div className="flex-1 border-r border-gray-300/60 pr-2">
-                            <p className="text-[10px] text-[#FF7B1D] font-bold tracking-tight font-primary uppercase">Hits</p>
+                            <p className="text-[12px] text-[#FF7B1D] font-bold tracking-tight font-primary capitalize">Hits</p>
                             <p className="text-sm font-bold text-gray-900 mt-1 font-primary">{lead.call_count || 0}</p>
                           </div>
                           <div className="flex-1 border-r border-gray-300/60 px-2">
-                            <p className="text-[10px] text-[#FF7B1D] font-bold tracking-tight font-primary uppercase">Priority</p>
-                            <span className={`inline-block px-1.5 py-0.5 text-[9px] font-bold rounded-[2px] mt-1 uppercase border font-primary ${getPriorityColor(lead.priority)}`}>
+                            <p className="text-[12px] text-[#FF7B1D] font-bold tracking-tight font-primary capitalize">Priority</p>
+                            <span className={`inline-block px-2 py-0.5 text-[11px] font-bold rounded-[2px] mt-1 capitalize border font-primary ${getPriorityColor(lead.priority)}`}>
                               {lead.priority || 'Medium'}
                             </span>
                           </div>
                           <div className="flex-1 pl-2">
-                            <p className="text-[10px] text-[#FF7B1D] font-bold tracking-tight font-primary uppercase">Source</p>
-                            <p className="text-[11px] font-bold text-gray-800 mt-1 truncate font-primary capitalize">{lead.lead_source || "Direct"}</p>
+                            <p className="text-[12px] text-[#FF7B1D] font-bold tracking-tight font-primary capitalize">Source</p>
+                            <p className="text-sm font-bold text-gray-800 mt-1 truncate font-primary capitalize">{lead.lead_source || "Direct"}</p>
                           </div>
                         </div>
 
-                        {/* Owner Info */}
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2.5 max-w-[70%]">
-                            <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center shadow-md border border-gray-200 bg-white">
-                              <div className="w-full h-full bg-gradient-to-br from-gray-700 to-black flex items-center justify-center text-white font-bold text-[10px]">
-                                {lead.employee_name ? lead.employee_name.charAt(0).toUpperCase() : "A"}
+                          <div className="flex items-center gap-3 max-w-[65%]">
+                            <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center shadow-sm border border-gray-200 bg-white">
+                              <div className="w-full h-full bg-gradient-to-br from-gray-600 to-gray-800 flex items-center justify-center text-white font-semibold text-[10px] capitalize">
+                                {((lead.owner_name || lead.employee_name || employees.find(emp => (emp.user_id || emp.id) == lead.owner)?.employee_name || "A").charAt(0).toUpperCase())}
                               </div>
                             </div>
                             <div className="flex flex-col min-w-0">
-                              <span className="text-[10px] text-gray-600 font-bold uppercase tracking-wider leading-none">Lead Owner</span>
-                              <span className="text-xs text-gray-900 font-bold truncate capitalize font-primary mt-1">
-                                {lead.employee_name || "Unassigned"}
+                              <span className="text-[12px] text-gray-500 font-bold capitalize tracking-wider leading-none">Owner</span>
+                              <span className="text-sm text-gray-800 font-bold truncate capitalize font-primary mt-1">
+                                {lead.owner_name || lead.employee_name || employees.find(emp => (emp.user_id || emp.id) == lead.owner)?.employee_name || "Unassigned"}
                               </span>
                             </div>
                           </div>
 
-                          {/* Quick Action Icons */}
-                          <div className="flex gap-1.5">
+                          <div className="flex gap-2">
                             <button onClick={() => handleHitCall && handleHitCall(lead)} className="p-2 bg-white hover:bg-orange-500 rounded-sm text-orange-600 hover:text-white transition-all border border-orange-100 hover:border-orange-500 shadow-sm" title="Call">
                               <Phone size={14} />
                             </button>
@@ -503,6 +484,9 @@ export default function WorkStation() {
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [selectedLeadForCall, setSelectedLeadForCall] = useState(null);
   const [leadToDelete, setLeadToDelete] = useState(null);
+  const [isAddMobileModalOpen, setIsAddMobileModalOpen] = useState(false);
+  const [leadForMobileUpdate, setLeadForMobileUpdate] = useState(null);
+  const [newMobileNumber, setNewMobileNumber] = useState("");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const dropdownRef = useRef(null);
   const addLeadMenuRef = useRef(null);
@@ -638,8 +622,29 @@ export default function WorkStation() {
   };
 
   const openCallAction = (lead) => {
+    if (!lead.mobile_number && !lead.phone) {
+      setLeadForMobileUpdate(lead);
+      setNewMobileNumber("");
+      setIsAddMobileModalOpen(true);
+      return;
+    }
     setSelectedLeadForCall(lead);
     setIsQrModalOpen(true);
+  };
+
+  const handleUpdateMobile = async () => {
+    if (!newMobileNumber.trim()) {
+      toast.error("Please enter a mobile number");
+      return;
+    }
+    try {
+      await updateLead({ id: leadForMobileUpdate.id, data: { mobile_number: newMobileNumber } }).unwrap();
+      toast.success("Mobile number updated successfully");
+      setIsAddMobileModalOpen(false);
+      refetch();
+    } catch (err) {
+      toast.error(err?.data?.message || "Failed to update mobile number");
+    }
   };
 
   const handleProceedToLog = () => {
@@ -1133,7 +1138,15 @@ export default function WorkStation() {
                   handleHitCall={openCallAction}
                 />
               ) : (
-                <WorkStationLeadsGridView leadsData={leadsData} filterStatus={filterStatus} handleLeadClick={handleLeadClick} selectedLeads={selectedLeads} handleSelectLead={handleSelectLead} handleHitCall={openCallAction} />
+                <WorkStationLeadsGridView
+                  leadsData={leadsData}
+                  filterStatus={filterStatus}
+                  handleLeadClick={handleLeadClick}
+                  selectedLeads={selectedLeads}
+                  handleSelectLead={handleSelectLead}
+                  handleHitCall={openCallAction}
+                  employees={employees}
+                />
               )}
 
               {totalPages > 1 && (
@@ -1294,6 +1307,45 @@ export default function WorkStation() {
           </div>
         </div>
       )}
+
+      {/* Add Mobile Number Modal */}
+      <Modal
+        isOpen={isAddMobileModalOpen}
+        onClose={() => setIsAddMobileModalOpen(false)}
+        title="Add Mobile Number"
+        subtitle={`Please add a mobile number for ${leadForMobileUpdate?.name || leadForMobileUpdate?.full_name || leadForMobileUpdate?.organization_name || 'this lead'} to proceed with the call.`}
+        maxWidth="max-w-md"
+        icon={<Phone size={24} />}
+        footer={
+          <div className="flex gap-4 w-full">
+            <button
+              onClick={() => setIsAddMobileModalOpen(false)}
+              className="flex-1 px-6 py-3 border-2 border-gray-200 text-gray-700 font-bold rounded-sm hover:bg-gray-100 transition-all font-primary text-xs capitalize tracking-widest"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleUpdateMobile}
+              className="flex-1 px-6 py-3 bg-orange-500 text-white font-bold rounded-sm hover:bg-orange-600 transition-all shadow-lg flex items-center justify-center gap-2 font-primary text-xs capitalize tracking-widest"
+            >
+              Add
+            </button>
+          </div>
+        }
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2 font-primary capitalize">Mobile Number</label>
+            <input
+              type="text"
+              value={newMobileNumber}
+              onChange={(e) => setNewMobileNumber(e.target.value)}
+              placeholder="Enter mobile number"
+              className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-sm focus:border-orange-500 focus:bg-white transition-all outline-none font-primary"
+            />
+          </div>
+        </div>
+      </Modal>
 
       <style>{`
         @keyframes slideUp {

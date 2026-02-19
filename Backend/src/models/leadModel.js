@@ -11,7 +11,7 @@ const Lead = {
             organization_name, industry_type, website, company_email, company_phone, gst_pan_number, gst_number,
             org_address, org_city, org_state, org_pincode, company_address, org_country,
             primary_contact_name, primary_dob, designation, primary_mobile, primary_email,
-            description, owner, referral_mobile, custom_fields, contact_persons
+            description, owner, assigned_to, owner_name, referral_mobile, custom_fields, contact_persons
         } = data;
 
         // Sanitize Date Fields
@@ -82,8 +82,8 @@ const Lead = {
                 organization_name, industry_type, website, company_email, company_phone, gst_pan_number, gst_number,
                 org_address, org_city, org_state, org_pincode, company_address, org_country,
                 primary_contact_name, primary_dob, designation, primary_mobile, primary_email,
-                description, assigned_to, referral_mobile, custom_fields, contact_persons
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                description, assigned_to, owner_name, referral_mobile, custom_fields, contact_persons
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 nextId, name, mobile_number, email, value || 0, pipeline_id, stage_id,
                 status || 'Open', type || 'Individual', tag || 'Not Contacted', location, userId,
@@ -93,7 +93,7 @@ const Lead = {
                 organization_name, industry_type, website, company_email, company_phone, gst_pan_number || gst_number, gst_number,
                 org_address || company_address, org_city, org_state, org_pincode, company_address, org_country,
                 primary_contact_name, primary_dob, designation, primary_mobile, primary_email,
-                description, owner, referral_mobile, customFieldsJson, contactPersonsJson
+                description, owner || assigned_to, owner_name, referral_mobile, customFieldsJson, contactPersonsJson
             ]
         );
         return result.insertId;
@@ -128,7 +128,7 @@ const Lead = {
                 organization_name, industry_type, website, company_email, company_phone, gst_pan_number, gst_number,
                 org_address, org_city, org_state, org_pincode, company_address, org_country,
                 primary_contact_name, primary_dob, designation, primary_mobile, primary_email,
-                description, owner, referral_mobile, custom_fields, contact_persons
+                description, owner, assigned_to, owner_name, referral_mobile, custom_fields, contact_persons
             } = data;
 
             if (!dob) dob = null;
@@ -147,7 +147,7 @@ const Lead = {
                 organization_name, industry_type, website, company_email, company_phone, gst_pan_number || gst_number, gst_number,
                 org_address || company_address, org_city, org_state, org_pincode, company_address, org_country,
                 primary_contact_name, primary_dob, designation, primary_mobile, primary_email,
-                description, owner, referral_mobile, customFieldsJson, contactPersonsJson
+                description, owner || assigned_to, owner_name, referral_mobile, customFieldsJson, contactPersonsJson
             ];
         });
 
@@ -161,7 +161,7 @@ const Lead = {
                 organization_name, industry_type, website, company_email, company_phone, gst_pan_number, gst_number,
                 org_address, org_city, org_state, org_pincode, company_address, org_country,
                 primary_contact_name, primary_dob, designation, primary_mobile, primary_email,
-                description, assigned_to, referral_mobile, custom_fields, contact_persons
+                description, assigned_to, owner_name, referral_mobile, custom_fields, contact_persons
             ) VALUES ?`,
             [values]
         );
@@ -171,7 +171,7 @@ const Lead = {
     findAll: async (userId, page = 1, limit = 10, search = '', status = 'All', pipelineId = null, tag = null, type = null, subview = 'All', priority = 'All', services = 'All', dateFrom = null, dateTo = null) => {
         const offset = (page - 1) * limit;
         let query = `
-            SELECT l.*, p.name as pipeline_name, s.name as stage_name, IFNULL(e.employee_name, l.assigned_to) as employee_name
+            SELECT l.*, p.name as pipeline_name, s.name as stage_name, COALESCE(e.employee_name, l.owner_name, l.assigned_to) as employee_name
             FROM leads l
             LEFT JOIN pipelines p ON l.pipeline_id = p.id
             LEFT JOIN pipeline_stages s ON l.stage_id = s.id
@@ -278,7 +278,7 @@ const Lead = {
 
     findById: async (id, userId) => {
         const [rows] = await pool.query(
-            `SELECT l.*, p.name as pipeline_name, s.name as stage_name, IFNULL(e.employee_name, l.assigned_to) as employee_name
+            `SELECT l.*, p.name as pipeline_name, s.name as stage_name, COALESCE(e.employee_name, l.owner_name, l.assigned_to) as employee_name
              FROM leads l
              LEFT JOIN pipelines p ON l.pipeline_id = p.id
              LEFT JOIN pipeline_stages s ON l.stage_id = s.id
@@ -302,7 +302,7 @@ const Lead = {
             'description', 'assigned_to', 'assigned_at', 'is_read', 'priority', 'last_call_at', 'next_call_at', 'call_count',
             'not_connected_count', 'connected_count', 'drop_reason', 'call_success_rate',
             'follow_up_frequency', 'response_quality', 'conversion_probability', 'is_trending',
-            'referral_mobile', 'custom_fields', 'contact_persons'
+            'referral_mobile', 'custom_fields', 'contact_persons', 'owner_name'
         ];
         const updates = [];
         const values = [];
@@ -318,7 +318,7 @@ const Lead = {
                     updates.push(`${key} = ?`);
                     values.push(data[key]);
                 }
-            } else if (key === 'owner' || key === 'owner_name') {
+            } else if (key === 'owner') {
                 updates.push('assigned_to = ?');
                 values.push(data[key]);
             }

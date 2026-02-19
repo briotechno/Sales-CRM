@@ -81,7 +81,7 @@ export default function EditLeadModal({ open, onClose, leadData, onSave }) {
         tags: Array.isArray(leadData.tags) ? leadData.tags.join(', ') : (leadData.tags || ""),
         services: Array.isArray(leadData.services) ? leadData.services.join(', ') : (leadData.services || ""),
         priority: leadData.priority || "High",
-        ownerName: leadData.assigned_to || "",
+        ownerName: leadData.employee_name || leadData.owner_name || leadData.assigned_to || "",
         assignerName: leadData.assignerName || ""
       });
       setImagePreview(leadData.profileImage || null);
