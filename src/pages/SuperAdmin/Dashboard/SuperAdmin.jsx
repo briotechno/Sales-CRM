@@ -64,7 +64,7 @@ export default function SuperAdmin() {
         <DashboardLayout>
             <div className="min-h-screen">
                 {/* Header */}
-                <div className="bg-white border-b  ">
+                <div className="bg-white border-b my-3">
                     <div className="max-w-7xl   px-6 py-4">
                         <div className="flex items-center justify-between">
                             <div>
