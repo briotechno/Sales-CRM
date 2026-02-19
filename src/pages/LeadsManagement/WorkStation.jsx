@@ -454,7 +454,7 @@ const WorkStationLeadsGridView = ({
 export default function WorkStation() {
   const isLocked = useSelector((state) => state.ui.sidebarLocked);
   const navigate = useNavigate();
-  const [view, setView] = useState("list");
+  const [view, setView] = useState("grid");
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("All");
   const [filterTag, setFilterTag] = useState("All");
