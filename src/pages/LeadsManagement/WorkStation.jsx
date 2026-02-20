@@ -26,7 +26,8 @@ import {
   PhoneIncoming,
   Clock,
   QrCode,
-  Calendar
+  Calendar,
+  History
 } from "lucide-react";
 import Modal from "../../components/common/Modal";
 import AddLeadPopup from "../../components/AddNewLeads/AddNewLead";
@@ -353,169 +354,178 @@ const WorkStationLeadsGridView = ({
                   })();
 
                   return (
-                    <div key={lead.id} className="bg-white border border-gray-300 rounded-sm shadow-sm hover:shadow-xl transition-all duration-300 relative group flex flex-col overflow-hidden animate-slideIn hover:scale-[1.02] hover:z-10">
+                    <div key={lead.id} className="bg-white border border-gray-300 rounded-sm shadow-sm transition-all duration-300 relative group flex flex-col overflow-hidden animate-slideIn">
                       {/* Top Selection */}
-                      <div className="absolute top-4 right-4 z-10">
-                        <input
-                          type="checkbox"
-                          checked={selectedLeads.includes(lead.id)}
-                          onChange={() => handleSelectLead(lead.id)}
-                          className="w-4 h-4 cursor-pointer accent-orange-500 rounded-sm border-gray-300 transition-all hover:scale-110"
-                        />
-                      </div>
 
-                      <div className="p-4 flex flex-col gap-3">
-                        {/* Lead Header */}
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-full flex-shrink-0 border-2 border-gray-100 shadow-sm overflow-hidden bg-white">
+                      {/* ── CARD BODY ── */}
+                      <div className="p-3 flex flex-col gap-2">
+
+                        {/* Row 1: Avatar + Info + Checkbox */}
+                        <div className="flex items-start gap-2.5">
+                          {/* Avatar */}
+                          <div className="w-10 h-10 rounded-full flex-shrink-0 border-2 border-gray-100 shadow-sm overflow-hidden bg-white">
                             {lead.profile_image ? (
                               <img src={lead.profile_image} alt={leadDisplayName} className="w-full h-full object-cover" />
                             ) : (
-                              <div className={`w-full h-full ${getAvatarBg(lead.tag)} flex items-center justify-center text-white text-base font-semibold capitalize`}>
+                              <div className={`w-full h-full ${getAvatarBg(lead.tag)} flex items-center justify-center text-white text-sm font-semibold capitalize`}>
                                 {initials}
                               </div>
                             )}
                           </div>
 
+                          {/* Name + ID + Date block */}
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
+                            {/* Name row + checkbox — checkbox is INLINE, no absolute */}
+                            <div className="flex items-center justify-between gap-1">
                               <h3
-                                className="text-base font-bold text-gray-900 capitalize font-primary cursor-pointer hover:text-orange-600 transition-colors truncate max-w-[150px]"
+                                className="text-sm font-bold text-gray-900 capitalize font-primary cursor-pointer hover:text-orange-600 transition-colors truncate max-w-[140px] leading-tight"
                                 onClick={() => handleLeadClick(lead)}
                                 title={leadDisplayName}
                               >
                                 {leadDisplayName}
                               </h3>
-                              <span className="text-[10px] text-orange-600 font-bold px-2 py-0.5 rounded-sm bg-orange-50 border border-orange-100 whitespace-nowrap capitalize">
+                              <input
+                                type="checkbox"
+                                checked={selectedLeads.includes(lead.id)}
+                                onChange={() => handleSelectLead(lead.id)}
+                                className="w-4 h-4 cursor-pointer accent-orange-500 flex-shrink-0 border-gray-300 transition-all hover:scale-110"
+                              />
+                            </div>
+
+                            {/* ID badge + Date on same row — kept small so they never push */}
+                            <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                              <span className="text-[9px] text-orange-600 font-bold px-1.5 py-0.5 rounded-sm bg-orange-50 border border-orange-100 whitespace-nowrap capitalize flex-shrink-0">
                                 {lead.lead_id || lead.id}
                               </span>
-                              <div className="flex items-center gap-1.5 text-[11px] font-semibold font-primary text-gray-500 whitespace-nowrap capitalize">
-                                <Calendar size={12} className="text-orange-500" />
+                              <div className="flex items-center gap-1 text-[10px] font-semibold font-primary text-gray-400 whitespace-nowrap">
+                                <Calendar size={10} className="text-orange-400 flex-shrink-0" />
                                 {(lead.rawCreated || lead.created_at) ? safeParseDate(lead.rawCreated || lead.created_at).toLocaleDateString('en-IN', {
                                   day: '2-digit', month: 'short', year: 'numeric'
                                 }) : "--"}
                               </div>
                             </div>
 
+                            {/* Next call row */}
                             {lead.next_call_at && (groupTag === "Not Connected" || groupTag === "Follow Up") && (
-                              <div className="mt-1.5 text-[11px] text-orange-700 font-semibold flex items-center gap-1.5 font-primary bg-orange-50 px-2 py-1 rounded-sm border border-orange-100 w-fit capitalize">
-                                <Clock size={12} className="text-orange-500" />
-                                <span className="text-orange-600">Next:</span>
-                                {safeParseDate(lead.next_call_at).toLocaleString('en-IN', {
-                                  day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true
-                                })}
+                              <div className="mt-1 text-[10px] text-orange-700 font-semibold flex items-center gap-1 font-primary bg-orange-50 px-2 py-0.5 rounded-sm border border-orange-100 w-fit capitalize">
+                                <Clock size={10} className="text-orange-500 flex-shrink-0" />
+                                <span className="text-orange-600 font-bold">Next:</span>
+                                <span className="truncate max-w-[140px]">
+                                  {safeParseDate(lead.next_call_at).toLocaleString('en-IN', {
+                                    day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true
+                                  })}
+                                </span>
                               </div>
                             )}
                           </div>
                         </div>
 
-                        {/* Pipeline info */}
-                        <div className="bg-gray-50/80 rounded-sm p-3 border border-gray-200">
-                          <div className="flex justify-between items-center gap-4">
-                            <div className="flex flex-col">
-                              <span className="text-[12px] font-bold text-gray-500 capitalize font-primary tracking-tight mb-1">Pipeline</span>
-                              <span className="text-sm font-bold text-gray-800 font-primary truncate max-w-[130px] capitalize">{lead.pipeline_name || "General"}</span>
-                            </div>
-                            <div className="flex flex-col items-end">
-                              <span className="text-[12px] font-bold text-gray-500 capitalize font-primary tracking-tight mb-1">Stage</span>
-                              <span className="text-sm text-[#FF7B1D] font-bold italic font-primary capitalize">{lead.stage_name || "New"}</span>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Status Field */}
-                        <div className="px-1 py-1">
-                          <div className="flex justify-between items-center bg-gray-50 p-2 rounded-sm border border-gray-100">
-                            <span className="text-[12px] font-bold text-gray-500 capitalize font-primary tracking-tight">Status</span>
-                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-sm border capitalize truncate max-w-[150px] ${displayStatus.color}`}>
-                              {displayStatus.text}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Profile Strength */}
-                        <div className="w-full space-y-2">
+                        {/* Pipeline + Stage */}
+                        <div className="bg-gray-50/80 rounded-sm px-3 py-2 border border-gray-200">
                           <div className="flex justify-between items-center gap-2">
-                            <span className="text-[12px] font-bold text-gray-500 capitalize font-primary tracking-wider">Lead Profile</span>
-                            <span className={`text-[12px] font-bold font-primary ${calculateProfileCompletion(lead) > 70 ? 'text-green-600' : 'text-orange-600'}`}>
+                            <div className="flex flex-col min-w-0">
+                              <span className="text-[11px] font-bold text-gray-500 capitalize font-primary tracking-tight">Pipeline</span>
+                              <span className="text-[13px] font-bold text-gray-800 font-primary truncate max-w-[110px] capitalize" title={lead.pipeline_name || "General"}>
+                                {lead.pipeline_name || "General"}
+                              </span>
+                            </div>
+                            <div className="flex flex-col items-end min-w-0">
+                              <span className="text-[11px] font-bold text-gray-500 capitalize font-primary tracking-tight">Stage</span>
+                              <span className="text-[13px] text-[#FF7B1D] font-bold italic font-primary capitalize truncate max-w-[110px]" title={lead.stage_name || "New"}>
+                                {lead.stage_name || "New"}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Status */}
+                        <div className="flex justify-between items-center bg-gray-50 px-3 py-1.5 rounded-sm border border-gray-100 gap-2">
+                          <span className="text-[11px] font-bold text-gray-500 capitalize font-primary tracking-tight flex-shrink-0">Status</span>
+                          <span
+                            className={`text-[11px] font-bold px-2 py-0.5 rounded-sm border capitalize ${displayStatus.color}`}
+                            title={displayStatus.text}
+                          >
+                            {displayStatus.text}
+                          </span>
+                        </div>
+
+                        {/* Lead Profile Strength */}
+                        <div className="w-full space-y-1">
+                          <div className="flex justify-between items-center">
+                            <span className="text-[11px] font-bold text-gray-500 capitalize font-primary tracking-wider">Lead Profile</span>
+                            <span className={`text-[11px] font-bold font-primary ${calculateProfileCompletion(lead) > 70 ? 'text-green-600' : 'text-orange-600'}`}>
                               {calculateProfileCompletion(lead)}%
                             </span>
                           </div>
-                          <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                          <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
                             <div
                               className={`h-full rounded-full transition-all duration-500 ${calculateProfileCompletion(lead) > 70 ? 'bg-gradient-to-r from-green-400 to-green-600' : 'bg-gradient-to-r from-orange-400 to-orange-600'}`}
                               style={{ width: `${calculateProfileCompletion(lead)}%` }}
                             ></div>
                           </div>
                         </div>
-                      </div>
 
-                      {/* Footer Stats & Info */}
-                      <div className="bg-gray-50 p-4 space-y-4 border-t border-gray-200 mt-auto">
-                        <div className="flex justify-between items-center text-center border-b border-gray-300/60 pb-3.5">
-                          <div className="flex-1 border-r border-gray-300/60 pr-2">
-                            <p className="text-[12px] text-[#FF7B1D] font-bold tracking-tight font-primary capitalize">Hits</p>
-                            <p className="text-sm font-bold text-gray-900 mt-1 font-primary">{lead.call_count || 0}</p>
-                          </div>
-                          <div className="flex-1 border-r border-gray-300/60 px-2">
-                            <p className="text-[12px] text-[#FF7B1D] font-bold tracking-tight font-primary capitalize">Priority</p>
-                            <span className={`inline-block px-2 py-0.5 text-[11px] font-bold rounded-[2px] mt-1 capitalize border font-primary ${getPriorityColor(lead.priority)}`}>
-                              {lead.priority || 'Medium'}
+                        {/* Assign — styled like Status row */}
+                        <div
+                          className="flex justify-between items-center bg-gray-50 px-3 py-1.5 rounded-sm border border-gray-100 gap-2 cursor-pointer hover:bg-orange-50 hover:border-orange-200 transition-colors group/assign"
+                          onClick={() => handleShowAssignmentHistory && handleShowAssignmentHistory(lead)}
+                          title="View assignment history"
+                        >
+                          <span className="text-[11px] font-bold text-gray-500 capitalize font-primary tracking-tight flex-shrink-0 group-hover/assign:text-[#FF7B1D] transition-colors">Assign</span>
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <span className="text-[11px] font-bold text-gray-900 capitalize font-primary truncate" title={lead.employee_name || "-"}>
+                              {lead.employee_name || "-"}
                             </span>
-                          </div>
-                          <div className="flex-1 pl-2">
-                            <p className="text-[12px] text-[#FF7B1D] font-bold tracking-tight font-primary capitalize">Source</p>
-                            <p className="text-sm font-bold text-gray-800 mt-1 truncate font-primary capitalize">{lead.lead_source || "Direct"}</p>
+                            <History
+                              size={13}
+                              className="flex-shrink-0 text-gray-300 group-hover/assign:text-[#FF7B1D] transition-colors"
+                            />
                           </div>
                         </div>
 
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between gap-2">
-                            <div
-                              className="flex items-center gap-2 min-w-0 cursor-pointer group/assign hover:bg-gray-100/50 rounded-sm p-1 transition-colors"
-                              onClick={() => handleShowAssignmentHistory && handleShowAssignmentHistory(lead)}
-                            >
-                              <div className="w-7 h-7 shrink-0 rounded-full overflow-hidden flex items-center justify-center shadow-sm border border-gray-200 bg-white group-hover/assign:border-blue-200 transition-colors">
-                                <div className="w-full h-full bg-gradient-to-br from-gray-600 to-gray-800 flex items-center justify-center text-white font-semibold text-[9px] capitalize group-hover/assign:from-blue-600 group-hover/assign:to-blue-800 transition-colors">
-                                  {(lead.employee_name || "-").charAt(0).toUpperCase()}
-                                </div>
-                              </div>
-                              <div className="flex flex-col min-w-0">
-                                <span className="text-[10px] text-gray-500 font-bold capitalize tracking-wider leading-none group-hover/assign:text-blue-600 transition-colors">Assign</span>
-                                <span className="text-[12px] text-gray-800 font-bold truncate capitalize font-primary mt-1">
-                                  {lead.employee_name || "-"}
-                                </span>
-                              </div>
-                            </div>
+                        {/* Owner — styled like Status row */}
+                        <div className="flex justify-between items-center bg-gray-50 px-3 py-1.5 rounded-sm border border-gray-100 gap-2">
+                          <span className="text-[11px] font-bold text-gray-500 capitalize font-primary tracking-tight flex-shrink-0">Owner</span>
+                          <span className="text-[11px] font-bold text-gray-900 capitalize font-primary truncate" title={lead.lead_owner || "-"}>
+                            {lead.lead_owner || "-"}
+                          </span>
+                        </div>
+                      </div>
 
-                            <div className="flex items-center gap-2 min-w-0 p-1">
-                              <div className="w-7 h-7 shrink-0 rounded-full overflow-hidden flex items-center justify-center shadow-sm border border-orange-200 bg-white">
-                                <div className="w-full h-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white font-semibold text-[9px] capitalize">
-                                  {(lead.lead_owner || "-").charAt(0).toUpperCase()}
-                                </div>
-                              </div>
-                              <div className="flex flex-col min-w-0">
-                                <span className="text-[10px] text-gray-500 font-bold capitalize tracking-wider leading-none">Owner</span>
-                                <span className="text-[12px] text-gray-800 font-bold truncate capitalize font-primary mt-1">
-                                  {lead.lead_owner || "-"}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
+                      {/* ── CARD FOOTER ── */}
+                      <div className="bg-gray-50 px-3 py-2.5 space-y-2.5 border-t border-gray-200 mt-auto">
 
-                          <div className="flex items-center justify-end border-t border-gray-100 pt-3">
-                            <div className="flex gap-2">
-                              <button onClick={() => handleHitCall && handleHitCall(lead)} className="p-2 bg-white hover:bg-orange-500 rounded-sm text-orange-600 hover:text-white transition-all border border-orange-100 hover:border-orange-500 shadow-sm" title="Call">
-                                <Phone size={14} />
-                              </button>
-                              <a href={waLink} target="_blank" rel="noopener noreferrer" className="p-2 bg-white hover:bg-green-500 rounded-sm text-green-600 hover:text-white transition-all border border-green-100 hover:border-green-500 shadow-sm" title="WhatsApp">
-                                <FaWhatsapp size={14} />
-                              </a>
-                              <a href={lead.email ? `mailto:${lead.email}` : '#'} className="p-2 bg-white hover:bg-blue-500 rounded-sm text-blue-600 hover:text-white transition-all border border-blue-100 hover:border-blue-500 shadow-sm" title="Email">
-                                <Mail size={14} />
-                              </a>
-                            </div>
+                        {/* Stats row: Hits | Priority | Source */}
+                        <div className="flex items-center justify-between text-center border-b border-gray-200 pb-2">
+                          <div className="flex-1 border-r border-gray-200 pr-2">
+                            <p className="text-[11px] text-[#FF7B1D] font-bold font-primary capitalize">Hits</p>
+                            <p className="text-[13px] font-bold text-gray-900 mt-0.5 font-primary">{lead.call_count || 0}</p>
                           </div>
+                          <div className="flex-1 border-r border-gray-200 px-2">
+                            <p className="text-[11px] text-[#FF7B1D] font-bold font-primary capitalize">Priority</p>
+                            <span className={`inline-block px-1.5 py-0.5 text-[11px] font-bold rounded-[2px] mt-0.5 capitalize border font-primary ${getPriorityColor(lead.priority)}`}>
+                              {lead.priority || 'Medium'}
+                            </span>
+                          </div>
+                          <div className="flex-1 pl-2 min-w-0">
+                            <p className="text-[11px] text-[#FF7B1D] font-bold font-primary capitalize">Source</p>
+                            <p className="text-[13px] font-bold text-gray-900 mt-0.5 truncate font-primary capitalize" title={lead.lead_source || "Direct"}>
+                              {lead.lead_source || "Direct"}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Action Buttons — horizontal row aligned right */}
+                        <div className="flex items-center justify-end gap-2">
+                          <button onClick={() => handleHitCall && handleHitCall(lead)} className="p-2.5 bg-white hover:bg-orange-500 rounded-sm text-orange-600 hover:text-white transition-all border border-orange-100 hover:border-orange-500 shadow-sm" title="Call">
+                            <Phone size={16} />
+                          </button>
+                          <a href={waLink} target="_blank" rel="noopener noreferrer" className="p-2.5 bg-white hover:bg-green-500 rounded-sm text-green-600 hover:text-white transition-all border border-green-100 hover:border-green-500 shadow-sm" title="WhatsApp">
+                            <FaWhatsapp size={16} />
+                          </a>
+                          <a href={lead.email ? `mailto:${lead.email}` : '#'} className="p-2.5 bg-white hover:bg-blue-500 rounded-sm text-blue-600 hover:text-white transition-all border border-blue-100 hover:border-blue-500 shadow-sm" title="Email">
+                            <Mail size={16} />
+                          </a>
                         </div>
                       </div>
                     </div>

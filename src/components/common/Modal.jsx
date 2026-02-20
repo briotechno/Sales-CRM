@@ -67,7 +67,7 @@ const Modal = ({
                                     </div>
                                 )}
                                 <div className="min-w-0 flex-1 pr-4">
-                                    {title && <h2 className="text-xl font-bold leading-tight" title={title}>{title}</h2>}
+                                    {title && <h2 className="text-xl font-bold leading-tight truncate max-w-[280px] block" title={title}>{title}</h2>}
                                     {subtitle && (
                                         <p className="text-xs text-white text-opacity-80 mt-1 leading-relaxed">
                                             {subtitle}
