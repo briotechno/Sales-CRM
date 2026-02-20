@@ -206,7 +206,7 @@ export default function CallActionPopup({ isOpen, onClose, lead, onHitCall, init
         <Modal
             isOpen={isOpen}
             onClose={onClose}
-            title={`Call: ${lead?.name}`}
+            title={`Call: ${lead?.name?.length > 25 ? lead.name.substring(0, 25) + '...' : lead?.name}`}
             icon={<Phone size={20} className="text-white" />}
             footer={footer}
             maxWidth="max-w-md"
