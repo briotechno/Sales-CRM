@@ -53,7 +53,6 @@ export default function CallQrModal({ isOpen, onClose, lead, onProceedToLog, onV
                     <div className="flex flex-col gap-3">
                         <button
                             onClick={() => {
-                                if (phoneNumber) window.location.href = dialerUrl;
                                 if (onProceedToLog) onProceedToLog();
                             }}
                             className="w-full py-3 rounded-sm font-semibold transition shadow-lg hover:shadow-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 flex items-center justify-center gap-2 active:scale-[0.98] capitalize font-primary"

@@ -39,7 +39,22 @@ import { toast } from "react-hot-toast";
 import { FaWhatsapp } from "react-icons/fa";
 import NumberCard from "../../components/NumberCard";
 import CallActionPopup from "../../components/AddNewLeads/CallActionPopup";
+
 import CallQrModal from "../../components/LeadManagement/CallQrModal";
+import AssignmentHistoryModal from "../../components/LeadManagement/AssignmentHistoryModal";
+
+const safeParseDate = (dateStr) => {
+  if (!dateStr) return null;
+  if (dateStr instanceof Date) return dateStr;
+  if (typeof dateStr === 'string' && (dateStr.includes('T') || dateStr.includes('Z'))) {
+    const date = new Date(dateStr);
+    if (!isNaN(date)) return date;
+  }
+  const normalized = String(dateStr).replace(' ', 'T');
+  const date = new Date(normalized);
+  if (!isNaN(date)) return date;
+  return new Date(dateStr);
+};
 
 const WorkStationLeadsListView = ({
   currentLeads,
@@ -140,7 +155,7 @@ const WorkStationLeadsListView = ({
                       {lead.is_trending === 1 ? "Trending" : (lead.tag || lead.status || "New Lead")}
                     </span>
                     <span className="text-[10px] text-gray-500 font-semibold font-primary">
-                      {(lead.rawUpdated || lead.last_call_at || lead.updated_at) ? new Date(lead.rawUpdated || lead.last_call_at || lead.updated_at).toLocaleString('en-IN', {
+                      {(lead.rawUpdated || lead.last_call_at || lead.updated_at) ? safeParseDate(lead.rawUpdated || lead.last_call_at || lead.updated_at).toLocaleString('en-IN', {
                         day: '2-digit',
                         month: '2-digit',
                         year: 'numeric',
@@ -156,7 +171,7 @@ const WorkStationLeadsListView = ({
                     <span className="text-xs font-bold text-gray-700">{lead.pipeline_name || "General"}</span>
                     <span className="text-[10px] text-[#FF7B1D] font-bold italic">{lead.stage_name || "New"}</span>
                     <span className="text-[10px] text-gray-500 font-semibold mt-1 font-primary">
-                      {(lead.rawCreated || lead.created_at) ? new Date(lead.rawCreated || lead.created_at).toLocaleString('en-IN', {
+                      {(lead.rawCreated || lead.created_at) ? safeParseDate(lead.rawCreated || lead.created_at).toLocaleString('en-IN', {
                         day: '2-digit',
                         month: '2-digit',
                         year: 'numeric',
@@ -217,7 +232,8 @@ const WorkStationLeadsGridView = ({
   handleSelectLead,
   handleHitCall,
   employees = [],
-  currentTime // Added currentTime prop for instant UI moves
+  currentTime, // Added currentTime prop for instant UI moves
+  handleShowAssignmentHistory
 }) => {
   const groupTags = ["New Leads", "Not Connected", "Follow Up", "Trending"];
 
@@ -300,6 +316,42 @@ const WorkStationLeadsGridView = ({
                   const cleanNumber = (lead.mobile_number || lead.phone || '').replace(/\D/g, '');
                   const waLink = cleanNumber ? `https://wa.me/${cleanNumber}` : '#';
 
+                  const displayStatus = (() => {
+                    // Context-aware status: If in Trending column, show "Trading"
+                    if (groupTag === "Trending") {
+                      return { text: "Trading", color: "text-indigo-600 bg-indigo-50 border-indigo-200" };
+                    }
+
+                    const isMovedFromNotConnected = lead.tag === "Not Connected" && lead.next_call_at && safeParseDate(lead.next_call_at) <= currentTime;
+
+                    if (isMovedFromNotConnected) {
+                      return { text: "Moved from Not Connected", color: "text-purple-600 bg-purple-50 border-purple-200" };
+                    }
+
+                    // Prioritize Trending -> Tag -> Status -> Default
+                    let s = lead.is_trending === 1 ? "Trending" : (lead.tag || lead.status || "New Lead");
+
+                    // Normalize specific statuses
+                    if (s === "Not Contacted") s = "New Lead";
+                    if (s === "Active") s = "New Lead"; // generic Active status maps to New Lead if no other tag exists
+
+                    let c = "text-gray-600 bg-gray-50 border-gray-200";
+
+                    switch (s?.toLowerCase()) {
+                      case "connected": c = "text-green-600 bg-green-50 border-green-200"; break;
+                      case "not connected": c = "text-red-600 bg-red-50 border-red-200"; break;
+                      case "follow up": c = "text-amber-600 bg-amber-50 border-amber-200"; break;
+                      case "trending": c = "text-orange-600 bg-orange-50 border-orange-200"; break;
+                      case "trading": c = "text-indigo-600 bg-indigo-50 border-indigo-200"; break;
+                      case "won": case "closed": c = "text-emerald-600 bg-emerald-50 border-emerald-200"; break;
+                      case "lost": case "dropped": c = "text-rose-600 bg-rose-50 border-rose-200"; break;
+                      case "new lead": case "new leads": case "new": c = "text-blue-600 bg-blue-50 border-blue-200"; break;
+                      default: c = "text-gray-600 bg-gray-50 border-gray-200";
+                    }
+
+                    return { text: s, color: c };
+                  })();
+
                   return (
                     <div key={lead.id} className="bg-white border border-gray-300 rounded-sm shadow-sm hover:shadow-xl transition-all duration-300 relative group flex flex-col overflow-hidden animate-slideIn hover:scale-[1.02] hover:z-10">
                       {/* Top Selection */}
@@ -339,7 +391,7 @@ const WorkStationLeadsGridView = ({
                               </span>
                               <div className="flex items-center gap-1.5 text-[11px] font-semibold font-primary text-gray-500 whitespace-nowrap capitalize">
                                 <Calendar size={12} className="text-orange-500" />
-                                {(lead.rawCreated || lead.created_at) ? new Date(lead.rawCreated || lead.created_at).toLocaleDateString('en-IN', {
+                                {(lead.rawCreated || lead.created_at) ? safeParseDate(lead.rawCreated || lead.created_at).toLocaleDateString('en-IN', {
                                   day: '2-digit', month: 'short', year: 'numeric'
                                 }) : "--"}
                               </div>
@@ -349,7 +401,7 @@ const WorkStationLeadsGridView = ({
                               <div className="mt-1.5 text-[11px] text-orange-700 font-semibold flex items-center gap-1.5 font-primary bg-orange-50 px-2 py-1 rounded-sm border border-orange-100 w-fit capitalize">
                                 <Clock size={12} className="text-orange-500" />
                                 <span className="text-orange-600">Next:</span>
-                                {new Date(lead.next_call_at).toLocaleString('en-IN', {
+                                {safeParseDate(lead.next_call_at).toLocaleString('en-IN', {
                                   day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true
                                 })}
                               </div>
@@ -368,6 +420,16 @@ const WorkStationLeadsGridView = ({
                               <span className="text-[12px] font-bold text-gray-500 capitalize font-primary tracking-tight mb-1">Stage</span>
                               <span className="text-sm text-[#FF7B1D] font-bold italic font-primary capitalize">{lead.stage_name || "New"}</span>
                             </div>
+                          </div>
+                        </div>
+
+                        {/* Status Field */}
+                        <div className="px-1 py-1">
+                          <div className="flex justify-between items-center bg-gray-50 p-2 rounded-sm border border-gray-100">
+                            <span className="text-[12px] font-bold text-gray-500 capitalize font-primary tracking-tight">Status</span>
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-sm border capitalize truncate max-w-[150px] ${displayStatus.color}`}>
+                              {displayStatus.text}
+                            </span>
                           </div>
                         </div>
 
@@ -407,31 +469,52 @@ const WorkStationLeadsGridView = ({
                           </div>
                         </div>
 
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3 max-w-[65%]">
-                            <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center shadow-sm border border-gray-200 bg-white">
-                              <div className="w-full h-full bg-gradient-to-br from-gray-600 to-gray-800 flex items-center justify-center text-white font-semibold text-[10px] capitalize">
-                                {((lead.owner_name || lead.employee_name || employees.find(emp => (emp.user_id || emp.id) == lead.owner)?.employee_name || "A").charAt(0).toUpperCase())}
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between gap-2">
+                            <div
+                              className="flex items-center gap-2 min-w-0 cursor-pointer group/assign hover:bg-gray-100/50 rounded-sm p-1 transition-colors"
+                              onClick={() => handleShowAssignmentHistory && handleShowAssignmentHistory(lead)}
+                            >
+                              <div className="w-7 h-7 shrink-0 rounded-full overflow-hidden flex items-center justify-center shadow-sm border border-gray-200 bg-white group-hover/assign:border-blue-200 transition-colors">
+                                <div className="w-full h-full bg-gradient-to-br from-gray-600 to-gray-800 flex items-center justify-center text-white font-semibold text-[9px] capitalize group-hover/assign:from-blue-600 group-hover/assign:to-blue-800 transition-colors">
+                                  {(lead.employee_name || "-").charAt(0).toUpperCase()}
+                                </div>
+                              </div>
+                              <div className="flex flex-col min-w-0">
+                                <span className="text-[10px] text-gray-500 font-bold capitalize tracking-wider leading-none group-hover/assign:text-blue-600 transition-colors">Assign</span>
+                                <span className="text-[12px] text-gray-800 font-bold truncate capitalize font-primary mt-1">
+                                  {lead.employee_name || "-"}
+                                </span>
                               </div>
                             </div>
-                            <div className="flex flex-col min-w-0">
-                              <span className="text-[12px] text-gray-500 font-bold capitalize tracking-wider leading-none">Owner</span>
-                              <span className="text-sm text-gray-800 font-bold truncate capitalize font-primary mt-1">
-                                {lead.owner_name || lead.employee_name || employees.find(emp => (emp.user_id || emp.id) == lead.owner)?.employee_name || "Unassigned"}
-                              </span>
+
+                            <div className="flex items-center gap-2 min-w-0 p-1">
+                              <div className="w-7 h-7 shrink-0 rounded-full overflow-hidden flex items-center justify-center shadow-sm border border-orange-200 bg-white">
+                                <div className="w-full h-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white font-semibold text-[9px] capitalize">
+                                  {(lead.lead_owner || "-").charAt(0).toUpperCase()}
+                                </div>
+                              </div>
+                              <div className="flex flex-col min-w-0">
+                                <span className="text-[10px] text-gray-500 font-bold capitalize tracking-wider leading-none">Owner</span>
+                                <span className="text-[12px] text-gray-800 font-bold truncate capitalize font-primary mt-1">
+                                  {lead.lead_owner || "-"}
+                                </span>
+                              </div>
                             </div>
                           </div>
 
-                          <div className="flex gap-2">
-                            <button onClick={() => handleHitCall && handleHitCall(lead)} className="p-2 bg-white hover:bg-orange-500 rounded-sm text-orange-600 hover:text-white transition-all border border-orange-100 hover:border-orange-500 shadow-sm" title="Call">
-                              <Phone size={14} />
-                            </button>
-                            <a href={waLink} target="_blank" rel="noopener noreferrer" className="p-2 bg-white hover:bg-green-500 rounded-sm text-green-600 hover:text-white transition-all border border-green-100 hover:border-green-500 shadow-sm" title="WhatsApp">
-                              <FaWhatsapp size={14} />
-                            </a>
-                            <a href={lead.email ? `mailto:${lead.email}` : '#'} className="p-2 bg-white hover:bg-blue-500 rounded-sm text-blue-600 hover:text-white transition-all border border-blue-100 hover:border-blue-500 shadow-sm" title="Email">
-                              <Mail size={14} />
-                            </a>
+                          <div className="flex items-center justify-end border-t border-gray-100 pt-3">
+                            <div className="flex gap-2">
+                              <button onClick={() => handleHitCall && handleHitCall(lead)} className="p-2 bg-white hover:bg-orange-500 rounded-sm text-orange-600 hover:text-white transition-all border border-orange-100 hover:border-orange-500 shadow-sm" title="Call">
+                                <Phone size={14} />
+                              </button>
+                              <a href={waLink} target="_blank" rel="noopener noreferrer" className="p-2 bg-white hover:bg-green-500 rounded-sm text-green-600 hover:text-white transition-all border border-green-100 hover:border-green-500 shadow-sm" title="WhatsApp">
+                                <FaWhatsapp size={14} />
+                              </a>
+                              <a href={lead.email ? `mailto:${lead.email}` : '#'} className="p-2 bg-white hover:bg-blue-500 rounded-sm text-blue-600 hover:text-white transition-all border border-blue-100 hover:border-blue-500 shadow-sm" title="Email">
+                                <Mail size={14} />
+                              </a>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -488,9 +571,17 @@ export default function WorkStation() {
   const [isAddMobileModalOpen, setIsAddMobileModalOpen] = useState(false);
   const [leadForMobileUpdate, setLeadForMobileUpdate] = useState(null);
   const [newMobileNumber, setNewMobileNumber] = useState("");
+
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isAssignmentHistoryOpen, setIsAssignmentHistoryOpen] = useState(false);
+  const [currentAssignmentLead, setCurrentAssignmentLead] = useState(null);
   const dropdownRef = useRef(null);
   const addLeadMenuRef = useRef(null);
+
+  const handleShowAssignmentHistory = (lead) => {
+    setCurrentAssignmentLead(lead);
+    setIsAssignmentHistoryOpen(true);
+  };
 
   // Temporary filter states for the menu
   const [tempFilters, setTempFilters] = useState({
@@ -1164,6 +1255,7 @@ export default function WorkStation() {
                   handleHitCall={openCallAction}
                   employees={employees}
                   currentTime={currentTime}
+                  handleShowAssignmentHistory={handleShowAssignmentHistory}
                 />
               )}
 
@@ -1289,43 +1381,52 @@ export default function WorkStation() {
         </div>
       </Modal>
 
+      <AssignmentHistoryModal
+        open={isAssignmentHistoryOpen}
+        onClose={() => setIsAssignmentHistoryOpen(false)}
+        lead={currentAssignmentLead}
+        employees={employees}
+      />
+
       {/* Floating Action Bar for Selected Leads - Properly Centered in Content Area */}
-      {selectedLeads.length > 0 && !isAssignModalOpen && !isModalOpen && !showDeleteModal && !callPopupData.isOpen && !isQrModalOpen && !showBulkUploadPopup && (
-        <div
-          className={`fixed bottom-10 z-[100] flex justify-center pointer-events-none transition-all duration-300 left-0 ${isLocked ? "md:left-[280px]" : "md:left-[68px]"} right-0 animate-slideUp`}
-        >
-          <div className="pointer-events-auto flex items-center gap-8 px-8 py-4 bg-white/95 backdrop-blur-xl border border-gray-200 rounded-sm shadow-[0_30px_70px_rgba(0,0,0,0.25)] flex-wrap md:flex-nowrap justify-center">
-            <div className="flex items-center gap-4 border-r border-gray-200 pr-8">
-              <span className="w-11 h-11 rounded-full bg-orange-100 text-[#FF7B1D] flex items-center justify-center text-xl font-black font-primary shadow-inner">
-                {selectedLeads.length}
-              </span>
-              <div className="flex flex-col">
-                <span className="text-base font-bold text-gray-800 capitalize tracking-tight font-primary leading-none">
-                  Leads Selected
+      {
+        selectedLeads.length > 0 && !isAssignModalOpen && !isModalOpen && !showDeleteModal && !callPopupData.isOpen && !isQrModalOpen && !showBulkUploadPopup && (
+          <div
+            className={`fixed bottom-10 z-[100] flex justify-center pointer-events-none transition-all duration-300 left-0 ${isLocked ? "md:left-[280px]" : "md:left-[68px]"} right-0 animate-slideUp`}
+          >
+            <div className="pointer-events-auto flex items-center gap-8 px-8 py-4 bg-white/95 backdrop-blur-xl border border-gray-200 rounded-sm shadow-[0_30px_70px_rgba(0,0,0,0.25)] flex-wrap md:flex-nowrap justify-center">
+              <div className="flex items-center gap-4 border-r border-gray-200 pr-8">
+                <span className="w-11 h-11 rounded-full bg-orange-100 text-[#FF7B1D] flex items-center justify-center text-xl font-black font-primary shadow-inner">
+                  {selectedLeads.length}
                 </span>
-                <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1 font-primary">Ready to manage</span>
+                <div className="flex flex-col">
+                  <span className="text-base font-bold text-gray-800 capitalize tracking-tight font-primary leading-none">
+                    Leads Selected
+                  </span>
+                  <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1 font-primary">Ready to manage</span>
+                </div>
+              </div>
+
+              <div className="flex gap-4">
+                <button
+                  onClick={handleAssignLeads}
+                  className="bg-white border border-gray-300 text-gray-700 px-6 py-2.5 rounded-sm font-bold hover:bg-orange-50 hover:border-[#FF7B1D] hover:text-[#FF7B1D] transition-all capitalize flex items-center gap-2.5 text-sm shadow-sm active:scale-95 font-primary group"
+                >
+                  <UserPlus size={18} className="text-[#FF7B1D] group-hover:scale-110 transition-transform" />
+                  Assign Leads
+                </button>
+                <button
+                  onClick={handleDeleteSelected}
+                  className="bg-red-600 text-white px-6 py-2.5 rounded-sm font-bold hover:bg-red-700 transition-all capitalize flex items-center gap-2.5 text-sm shadow-md shadow-red-200 active:scale-95 font-primary border border-red-700"
+                >
+                  <Trash2 size={18} />
+                  Delete Selected
+                </button>
               </div>
             </div>
-
-            <div className="flex gap-4">
-              <button
-                onClick={handleAssignLeads}
-                className="bg-white border border-gray-300 text-gray-700 px-6 py-2.5 rounded-sm font-bold hover:bg-orange-50 hover:border-[#FF7B1D] hover:text-[#FF7B1D] transition-all capitalize flex items-center gap-2.5 text-sm shadow-sm active:scale-95 font-primary group"
-              >
-                <UserPlus size={18} className="text-[#FF7B1D] group-hover:scale-110 transition-transform" />
-                Assign Leads
-              </button>
-              <button
-                onClick={handleDeleteSelected}
-                className="bg-red-600 text-white px-6 py-2.5 rounded-sm font-bold hover:bg-red-700 transition-all capitalize flex items-center gap-2.5 text-sm shadow-md shadow-red-200 active:scale-95 font-primary border border-red-700"
-              >
-                <Trash2 size={18} />
-                Delete Selected
-              </button>
-            </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       {/* Add Mobile Number Modal */}
       <Modal
@@ -1401,7 +1502,7 @@ export default function WorkStation() {
           animation: fadeIn 0.4s ease-out forwards;
         }
       `}</style>
-    </div>
+    </div >
   );
 }
 

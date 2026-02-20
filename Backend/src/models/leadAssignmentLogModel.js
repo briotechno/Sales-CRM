@@ -22,11 +22,14 @@ const LeadAssignmentLog = {
 
     findByLeadId: async (leadId) => {
         const [rows] = await pool.query(
-            `SELECT l.*, e.employee_name 
+            `SELECT l.*, 
+                    COALESCE(e1.employee_name, l.employee_id) as employee_name, 
+                    COALESCE(e2.employee_name, l.reassigned_from) as reassigned_from_name
              FROM lead_assignment_logs l
-             LEFT JOIN employees e ON l.employee_id = e.id
+             LEFT JOIN employees e1 ON (l.employee_id = CAST(e1.id AS CHAR) OR l.employee_id = e1.employee_id)
+             LEFT JOIN employees e2 ON (l.reassigned_from = CAST(e2.id AS CHAR) OR l.reassigned_from = e2.employee_id)
              WHERE l.lead_id = ?
-             ORDER BY l.created_at DESC`,
+             ORDER BY l.created_at ASC`,
             [leadId]
         );
         return rows;

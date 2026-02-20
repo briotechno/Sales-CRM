@@ -4,7 +4,7 @@ import { Phone, PhoneOff, Calendar, Trash2, X, Check, Loader2, AlertCircle, Cloc
 import { useCheckCallConflictQuery } from "../../store/api/leadApi";
 import { toast } from "react-hot-toast";
 
-export default function CallActionPopup({ isOpen, onClose, lead, onHitCall, initialResponse, rules }) {
+export default function CallActionPopup({ isOpen, onClose, lead, onHitCall, initialResponse, rules, onConnectedSelect }) {
     const [step, setStep] = useState(1); // 1: Initial call action, 2: Response form
     const [response, setResponse] = useState(""); // connected, not_connected
     const [finalAction, setFinalAction] = useState(""); // follow_up, drop
@@ -26,7 +26,6 @@ export default function CallActionPopup({ isOpen, onClose, lead, onHitCall, init
         "Invalid Number",
         "Call Not Picked",
         "Call Failed",
-
         "Number Not Reachable",
         "Number Does Not Exist",
         "Voicemail Reached",
@@ -115,6 +114,11 @@ export default function CallActionPopup({ isOpen, onClose, lead, onHitCall, init
     }, [initialResponse, isOpen, rules]);
 
     const handleInitialAction = (type) => {
+        if (type === "connected" && onConnectedSelect) {
+            onConnectedSelect();
+            return;
+        }
+
         setResponse(type);
         setStep(2);
         setFinalAction("follow_up");

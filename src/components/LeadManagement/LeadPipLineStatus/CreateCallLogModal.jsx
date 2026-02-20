@@ -3,8 +3,9 @@ import ReactDOM from "react-dom";
 import { X, PhoneCall, Calendar, FileText, CheckCircle, Clock } from "lucide-react";
 
 const CreateCallLogModal = ({ open, onClose, onSave }) => {
-  const [status, setStatus] = useState("Busy");
-  const [date, setDate] = useState("");
+  const [status, setStatus] = useState("Interested");
+  const [selectedDate, setSelectedDate] = useState("");
+  const [selectedTime, setSelectedTime] = useState("");
   const [note, setNote] = useState("");
   const [followTask, setFollowTask] = useState(false);
 
@@ -12,7 +13,8 @@ const CreateCallLogModal = ({ open, onClose, onSave }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSave({ status, date, note, followTask });
+    const finalDate = (selectedDate && selectedTime) ? `${selectedDate}T${selectedTime}` : "";
+    onSave({ status, date: finalDate, note, followTask });
     onClose();
   };
 
@@ -57,14 +59,20 @@ const CreateCallLogModal = ({ open, onClose, onSave }) => {
                 className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500 focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 shadow-sm"
                 required
               >
-                <option value="Busy">Busy</option>
-                <option value="No Answer">No Answer</option>
-                <option value="Switch Off">Switch Off</option>
-                <option value="Out of Coverage">Out of Coverage</option>
-                <option value="Invalid Number">Invalid Number</option>
-                <option value="Call Not Picked">Call Not Picked</option>
-                <option value="Call Failed">Call Failed</option>
-                <option value="Wrong Number">Wrong Number</option>
+                <option value="Interested">Interested</option>
+                <option value="Not Interested">Not Interested</option>
+                <option value="Follow-up Required">Follow-up Required</option>
+                <option value="Callback Scheduled">Callback Scheduled</option>
+                <option value="Demo Scheduled">Demo Scheduled</option>
+                <option value="Meeting Scheduled">Meeting Scheduled</option>
+                <option value="Quotation Sent">Quotation Sent</option>
+                <option value="Negotiation">Negotiation</option>
+                <option value="Converted / Sale Closed">Converted / Sale Closed</option>
+                <option value="Lost Lead">Lost Lead</option>
+                <option value="Call Disconnected">Call Disconnected</option>
+                <option value="Wrong Requirement">Wrong Requirement</option>
+                <option value="Duplicate Lead">Duplicate Lead</option>
+                <option value="Do Not Call (DNC)">Do Not Call (DNC)</option>
               </select>
             </div>
 
@@ -74,13 +82,22 @@ const CreateCallLogModal = ({ open, onClose, onSave }) => {
                 <Calendar size={14} className="text-orange-500" />
                 Follow-up Date & Time <span className="text-red-500">*</span>
               </label>
-              <input
-                type="datetime-local"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500 focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white placeholder-gray-400 shadow-sm hover:border-gray-300"
-                required
-              />
+              <div className="flex gap-2">
+                <input
+                  type="date"
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500 focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white placeholder-gray-400 shadow-sm hover:border-gray-300"
+                  required
+                />
+                <input
+                  type="time"
+                  value={selectedTime}
+                  onChange={(e) => setSelectedTime(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500 focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white placeholder-gray-400 shadow-sm hover:border-gray-300"
+                  required
+                />
+              </div>
             </div>
           </div>
 

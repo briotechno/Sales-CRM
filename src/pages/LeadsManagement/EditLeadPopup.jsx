@@ -47,7 +47,7 @@ export default function EditLeadModal({ open, onClose, leadData, onSave }) {
     services: "",
     priority: "High",
     ownerName: "",
-    assignerName: ""
+    leadOwner: ""
   });
 
   const [profileImage, setProfileImage] = useState(null);
@@ -81,8 +81,8 @@ export default function EditLeadModal({ open, onClose, leadData, onSave }) {
         tags: Array.isArray(leadData.tags) ? leadData.tags.join(', ') : (leadData.tags || ""),
         services: Array.isArray(leadData.services) ? leadData.services.join(', ') : (leadData.services || ""),
         priority: leadData.priority || "High",
-        ownerName: leadData.employee_name || leadData.owner_name || leadData.assigned_to || "",
-        assignerName: leadData.assignerName || ""
+        ownerName: leadData.assigned_to || "",
+        leadOwner: leadData.lead_owner || (leadData.owner && leadData.owner.name) || ""
       });
       setImagePreview(leadData.profileImage || null);
       setProfileImage(null);
@@ -150,8 +150,13 @@ export default function EditLeadModal({ open, onClose, leadData, onSave }) {
     if (!validateForm()) return;
 
     try {
+      const selectedOwner = employees.find(e => e.id == formData.ownerName);
+      const ownerNameText = String(selectedOwner?.employee_name || formData.ownerName || "");
+
       const dataToSave = {
         ...formData,
+        ownerNameText,
+        lead_owner: formData.leadOwner,
         profileImage,
       };
 
@@ -555,10 +560,24 @@ export default function EditLeadModal({ open, onClose, leadData, onSave }) {
               />
             </div>
 
-            {/* Owner & Assigner */}
+            {/* Owner & Assign to */}
             <div>
               <label className="flex items-center gap-2 text-[15px] font-semibold text-gray-700 mb-2 capitalize">
-                <User size={14} className="text-[#FF7B1D]" /> Owner Name
+                <User size={14} className="text-[#FF7B1D]" /> Owner
+              </label>
+              <div className="relative group">
+                <input
+                  type="text"
+                  disabled
+                  value={formData.leadOwner || ""}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-sm bg-gray-50 text-sm text-gray-500 cursor-not-allowed outline-none font-medium"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="flex items-center gap-2 text-[15px] font-semibold text-gray-700 mb-2 capitalize">
+                <User size={14} className="text-[#FF7B1D]" /> Assign to
               </label>
               <div className="relative group">
                 <select
@@ -566,30 +585,9 @@ export default function EditLeadModal({ open, onClose, leadData, onSave }) {
                   onChange={(e) => handleChange("ownerName", e.target.value)}
                   className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 shadow-sm appearance-none cursor-pointer"
                 >
-                  <option value="">Select Owner</option>
+                  <option value="">Select Option</option>
                   {employees.map(emp => (
                     <option key={emp.id} value={emp.id}>
-                      {emp.employee_name}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none group-hover:text-[#FF7B1D] transition-colors" />
-              </div>
-            </div>
-
-            <div>
-              <label className="flex items-center gap-2 text-[15px] font-semibold text-gray-700 mb-2 capitalize">
-                <User size={14} className="text-[#FF7B1D]" /> Assigner Name
-              </label>
-              <div className="relative group">
-                <select
-                  value={formData.assignerName}
-                  onChange={(e) => handleChange("assignerName", e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 shadow-sm appearance-none cursor-pointer"
-                >
-                  <option value="">Select Assigner</option>
-                  {employees.map(emp => (
-                    <option key={emp.id} value={emp.employee_name}>
                       {emp.employee_name}
                     </option>
                   ))}

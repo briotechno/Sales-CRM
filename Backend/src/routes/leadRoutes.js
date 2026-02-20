@@ -27,7 +27,8 @@ const {
     deleteLeadCall,
     deleteLeadFile,
     deleteLeadMeeting,
-    bulkCreateLeads
+    bulkCreateLeads,
+    getAssignmentHistory
 } = require('../controllers/leadController');
 const { protect } = require('../middleware/authMiddleware');
 const { checkLimit } = require('../middleware/limitMiddleware');
@@ -42,6 +43,7 @@ router.put('/:id', protect, updateLead);
 router.delete('/:id', protect, deleteLead);
 router.post('/:id/hit-call', protect, hitCall);
 router.post('/:id/analyze', protect, analyzeLead);
+router.get('/:id/assignment-history', protect, getAssignmentHistory);
 
 // Notes
 router.get('/:id/notes', protect, getLeadNotes);
