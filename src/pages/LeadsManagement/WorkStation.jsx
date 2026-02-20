@@ -478,13 +478,13 @@ const WorkStationLeadsGridView = ({
                             <div className="flex items-center gap-2 min-w-0 p-1">
                               <div className="w-7 h-7 shrink-0 rounded-full overflow-hidden flex items-center justify-center shadow-sm border border-orange-200 bg-white">
                                 <div className="w-full h-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white font-semibold text-[9px] capitalize">
-                                  {(lead.owner_name || "-").charAt(0).toUpperCase()}
+                                  {(lead.lead_owner || "-").charAt(0).toUpperCase()}
                                 </div>
                               </div>
                               <div className="flex flex-col min-w-0">
                                 <span className="text-[10px] text-gray-500 font-bold capitalize tracking-wider leading-none">Owner</span>
                                 <span className="text-[12px] text-gray-800 font-bold truncate capitalize font-primary mt-1">
-                                  {lead.owner_name || "-"}
+                                  {lead.lead_owner || "-"}
                                 </span>
                               </div>
                             </div>

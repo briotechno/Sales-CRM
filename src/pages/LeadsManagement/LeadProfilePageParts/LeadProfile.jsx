@@ -1026,6 +1026,41 @@ export default function CRMLeadDetail() {
           </div>
         </div>
       )}
+      {/* Floating Action Buttons */}
+      <div className="fixed bottom-8 right-8 flex flex-col gap-4 z-50">
+        <a
+          href={leadData?.email ? `mailto:${leadData.email}` : '#'}
+          className="w-14 h-14 bg-blue-500 rounded-full flex items-center justify-center text-white shadow-lg hover:bg-blue-600 transition-all hover:scale-110 group"
+          title="Email"
+        >
+          <Mail size={24} />
+          <span className="absolute right-full mr-4 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+            Email
+          </span>
+        </a>
+        <a
+          href={leadData?.phone ? `https://wa.me/${leadData.phone.replace(/\D/g, '')}` : '#'}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-14 h-14 bg-green-500 rounded-full flex items-center justify-center text-white shadow-lg hover:bg-green-600 transition-all hover:scale-110 group"
+          title="WhatsApp"
+        >
+          <FaWhatsapp size={24} />
+          <span className="absolute right-full mr-4 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+            WhatsApp
+          </span>
+        </a>
+        <button
+          onClick={() => openCallAction()}
+          className="w-14 h-14 bg-orange-500 rounded-full flex items-center justify-center text-white shadow-lg hover:bg-orange-600 transition-all hover:scale-110 group"
+          title="Call"
+        >
+          <Phone size={24} />
+          <span className="absolute right-full mr-4 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+            Call
+          </span>
+        </button>
+      </div>
     </>
   );
 }

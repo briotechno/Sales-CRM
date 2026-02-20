@@ -439,7 +439,7 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
       custom_fields: JSON.stringify(customFields.filter(cf => cf.label && cf.value)),
       contact_persons: leadType === "Organization" ? JSON.stringify(contactPersons) : null,
       lead_owner: formData.lead_owner,
-      owner_name: formData.lead_owner,
+      // owner_name: formData.lead_owner,
       // owner: formData.lead_owner
     };
 

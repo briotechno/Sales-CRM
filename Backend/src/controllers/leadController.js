@@ -9,7 +9,7 @@ const LeadAssignmentSettings = require('../models/leadAssignmentSettingsModel');
 const createLead = async (req, res) => {
     try {
         // Set lead_owner to the logged-in user's name (creator)
-        const leadOwner = req.user.employee_name || req.user.username || 'admin';
+        const leadOwner = req.user.employee_name || req.user.username || req.body.lead_owner || 'admin';
         req.body.lead_owner = leadOwner;
 
         const id = await Lead.create(req.body, req.user.id);
