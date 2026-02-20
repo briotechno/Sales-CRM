@@ -39,7 +39,9 @@ import { toast } from "react-hot-toast";
 import { FaWhatsapp } from "react-icons/fa";
 import NumberCard from "../../components/NumberCard";
 import CallActionPopup from "../../components/AddNewLeads/CallActionPopup";
+
 import CallQrModal from "../../components/LeadManagement/CallQrModal";
+import AssignmentHistoryModal from "../../components/LeadManagement/AssignmentHistoryModal";
 
 const WorkStationLeadsListView = ({
   currentLeads,
@@ -217,7 +219,8 @@ const WorkStationLeadsGridView = ({
   handleSelectLead,
   handleHitCall,
   employees = [],
-  currentTime // Added currentTime prop for instant UI moves
+  currentTime, // Added currentTime prop for instant UI moves
+  handleShowAssignmentHistory
 }) => {
   const groupTags = ["New Leads", "Not Connected", "Follow Up", "Trending"];
 
@@ -453,31 +456,52 @@ const WorkStationLeadsGridView = ({
                           </div>
                         </div>
 
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3 max-w-[65%]">
-                            <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center shadow-sm border border-gray-200 bg-white">
-                              <div className="w-full h-full bg-gradient-to-br from-gray-600 to-gray-800 flex items-center justify-center text-white font-semibold text-[10px] capitalize">
-                                {((lead.owner_name || lead.employee_name || employees.find(emp => (emp.user_id || emp.id) == lead.owner)?.employee_name || "A").charAt(0).toUpperCase())}
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between gap-2">
+                            <div
+                              className="flex items-center gap-2 min-w-0 cursor-pointer group/assign hover:bg-gray-100/50 rounded-sm p-1 transition-colors"
+                              onClick={() => handleShowAssignmentHistory && handleShowAssignmentHistory(lead)}
+                            >
+                              <div className="w-7 h-7 shrink-0 rounded-full overflow-hidden flex items-center justify-center shadow-sm border border-gray-200 bg-white group-hover/assign:border-blue-200 transition-colors">
+                                <div className="w-full h-full bg-gradient-to-br from-gray-600 to-gray-800 flex items-center justify-center text-white font-semibold text-[9px] capitalize group-hover/assign:from-blue-600 group-hover/assign:to-blue-800 transition-colors">
+                                  {(lead.employee_name || "-").charAt(0).toUpperCase()}
+                                </div>
+                              </div>
+                              <div className="flex flex-col min-w-0">
+                                <span className="text-[10px] text-gray-500 font-bold capitalize tracking-wider leading-none group-hover/assign:text-blue-600 transition-colors">Assign</span>
+                                <span className="text-[12px] text-gray-800 font-bold truncate capitalize font-primary mt-1">
+                                  {lead.employee_name || "-"}
+                                </span>
                               </div>
                             </div>
-                            <div className="flex flex-col min-w-0">
-                              <span className="text-[12px] text-gray-500 font-bold capitalize tracking-wider leading-none">Owner</span>
-                              <span className="text-sm text-gray-800 font-bold truncate capitalize font-primary mt-1">
-                                {lead.owner_name || lead.employee_name || employees.find(emp => (emp.user_id || emp.id) == lead.owner)?.employee_name || "Unassigned"}
-                              </span>
+
+                            <div className="flex items-center gap-2 min-w-0 p-1">
+                              <div className="w-7 h-7 shrink-0 rounded-full overflow-hidden flex items-center justify-center shadow-sm border border-orange-200 bg-white">
+                                <div className="w-full h-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white font-semibold text-[9px] capitalize">
+                                  {(lead.owner_name || "-").charAt(0).toUpperCase()}
+                                </div>
+                              </div>
+                              <div className="flex flex-col min-w-0">
+                                <span className="text-[10px] text-gray-500 font-bold capitalize tracking-wider leading-none">Owner</span>
+                                <span className="text-[12px] text-gray-800 font-bold truncate capitalize font-primary mt-1">
+                                  {lead.owner_name || "-"}
+                                </span>
+                              </div>
                             </div>
                           </div>
 
-                          <div className="flex gap-2">
-                            <button onClick={() => handleHitCall && handleHitCall(lead)} className="p-2 bg-white hover:bg-orange-500 rounded-sm text-orange-600 hover:text-white transition-all border border-orange-100 hover:border-orange-500 shadow-sm" title="Call">
-                              <Phone size={14} />
-                            </button>
-                            <a href={waLink} target="_blank" rel="noopener noreferrer" className="p-2 bg-white hover:bg-green-500 rounded-sm text-green-600 hover:text-white transition-all border border-green-100 hover:border-green-500 shadow-sm" title="WhatsApp">
-                              <FaWhatsapp size={14} />
-                            </a>
-                            <a href={lead.email ? `mailto:${lead.email}` : '#'} className="p-2 bg-white hover:bg-blue-500 rounded-sm text-blue-600 hover:text-white transition-all border border-blue-100 hover:border-blue-500 shadow-sm" title="Email">
-                              <Mail size={14} />
-                            </a>
+                          <div className="flex items-center justify-end border-t border-gray-100 pt-3">
+                            <div className="flex gap-2">
+                              <button onClick={() => handleHitCall && handleHitCall(lead)} className="p-2 bg-white hover:bg-orange-500 rounded-sm text-orange-600 hover:text-white transition-all border border-orange-100 hover:border-orange-500 shadow-sm" title="Call">
+                                <Phone size={14} />
+                              </button>
+                              <a href={waLink} target="_blank" rel="noopener noreferrer" className="p-2 bg-white hover:bg-green-500 rounded-sm text-green-600 hover:text-white transition-all border border-green-100 hover:border-green-500 shadow-sm" title="WhatsApp">
+                                <FaWhatsapp size={14} />
+                              </a>
+                              <a href={lead.email ? `mailto:${lead.email}` : '#'} className="p-2 bg-white hover:bg-blue-500 rounded-sm text-blue-600 hover:text-white transition-all border border-blue-100 hover:border-blue-500 shadow-sm" title="Email">
+                                <Mail size={14} />
+                              </a>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -534,9 +558,17 @@ export default function WorkStation() {
   const [isAddMobileModalOpen, setIsAddMobileModalOpen] = useState(false);
   const [leadForMobileUpdate, setLeadForMobileUpdate] = useState(null);
   const [newMobileNumber, setNewMobileNumber] = useState("");
+
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isAssignmentHistoryOpen, setIsAssignmentHistoryOpen] = useState(false);
+  const [currentAssignmentLead, setCurrentAssignmentLead] = useState(null);
   const dropdownRef = useRef(null);
   const addLeadMenuRef = useRef(null);
+
+  const handleShowAssignmentHistory = (lead) => {
+    setCurrentAssignmentLead(lead);
+    setIsAssignmentHistoryOpen(true);
+  };
 
   // Temporary filter states for the menu
   const [tempFilters, setTempFilters] = useState({
@@ -1210,6 +1242,7 @@ export default function WorkStation() {
                   handleHitCall={openCallAction}
                   employees={employees}
                   currentTime={currentTime}
+                  handleShowAssignmentHistory={handleShowAssignmentHistory}
                 />
               )}
 
@@ -1335,43 +1368,52 @@ export default function WorkStation() {
         </div>
       </Modal>
 
+      <AssignmentHistoryModal
+        open={isAssignmentHistoryOpen}
+        onClose={() => setIsAssignmentHistoryOpen(false)}
+        lead={currentAssignmentLead}
+        employees={employees}
+      />
+
       {/* Floating Action Bar for Selected Leads - Properly Centered in Content Area */}
-      {selectedLeads.length > 0 && !isAssignModalOpen && !isModalOpen && !showDeleteModal && !callPopupData.isOpen && !isQrModalOpen && !showBulkUploadPopup && (
-        <div
-          className={`fixed bottom-10 z-[100] flex justify-center pointer-events-none transition-all duration-300 left-0 ${isLocked ? "md:left-[280px]" : "md:left-[68px]"} right-0 animate-slideUp`}
-        >
-          <div className="pointer-events-auto flex items-center gap-8 px-8 py-4 bg-white/95 backdrop-blur-xl border border-gray-200 rounded-sm shadow-[0_30px_70px_rgba(0,0,0,0.25)] flex-wrap md:flex-nowrap justify-center">
-            <div className="flex items-center gap-4 border-r border-gray-200 pr-8">
-              <span className="w-11 h-11 rounded-full bg-orange-100 text-[#FF7B1D] flex items-center justify-center text-xl font-black font-primary shadow-inner">
-                {selectedLeads.length}
-              </span>
-              <div className="flex flex-col">
-                <span className="text-base font-bold text-gray-800 capitalize tracking-tight font-primary leading-none">
-                  Leads Selected
+      {
+        selectedLeads.length > 0 && !isAssignModalOpen && !isModalOpen && !showDeleteModal && !callPopupData.isOpen && !isQrModalOpen && !showBulkUploadPopup && (
+          <div
+            className={`fixed bottom-10 z-[100] flex justify-center pointer-events-none transition-all duration-300 left-0 ${isLocked ? "md:left-[280px]" : "md:left-[68px]"} right-0 animate-slideUp`}
+          >
+            <div className="pointer-events-auto flex items-center gap-8 px-8 py-4 bg-white/95 backdrop-blur-xl border border-gray-200 rounded-sm shadow-[0_30px_70px_rgba(0,0,0,0.25)] flex-wrap md:flex-nowrap justify-center">
+              <div className="flex items-center gap-4 border-r border-gray-200 pr-8">
+                <span className="w-11 h-11 rounded-full bg-orange-100 text-[#FF7B1D] flex items-center justify-center text-xl font-black font-primary shadow-inner">
+                  {selectedLeads.length}
                 </span>
-                <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1 font-primary">Ready to manage</span>
+                <div className="flex flex-col">
+                  <span className="text-base font-bold text-gray-800 capitalize tracking-tight font-primary leading-none">
+                    Leads Selected
+                  </span>
+                  <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1 font-primary">Ready to manage</span>
+                </div>
+              </div>
+
+              <div className="flex gap-4">
+                <button
+                  onClick={handleAssignLeads}
+                  className="bg-white border border-gray-300 text-gray-700 px-6 py-2.5 rounded-sm font-bold hover:bg-orange-50 hover:border-[#FF7B1D] hover:text-[#FF7B1D] transition-all capitalize flex items-center gap-2.5 text-sm shadow-sm active:scale-95 font-primary group"
+                >
+                  <UserPlus size={18} className="text-[#FF7B1D] group-hover:scale-110 transition-transform" />
+                  Assign Leads
+                </button>
+                <button
+                  onClick={handleDeleteSelected}
+                  className="bg-red-600 text-white px-6 py-2.5 rounded-sm font-bold hover:bg-red-700 transition-all capitalize flex items-center gap-2.5 text-sm shadow-md shadow-red-200 active:scale-95 font-primary border border-red-700"
+                >
+                  <Trash2 size={18} />
+                  Delete Selected
+                </button>
               </div>
             </div>
-
-            <div className="flex gap-4">
-              <button
-                onClick={handleAssignLeads}
-                className="bg-white border border-gray-300 text-gray-700 px-6 py-2.5 rounded-sm font-bold hover:bg-orange-50 hover:border-[#FF7B1D] hover:text-[#FF7B1D] transition-all capitalize flex items-center gap-2.5 text-sm shadow-sm active:scale-95 font-primary group"
-              >
-                <UserPlus size={18} className="text-[#FF7B1D] group-hover:scale-110 transition-transform" />
-                Assign Leads
-              </button>
-              <button
-                onClick={handleDeleteSelected}
-                className="bg-red-600 text-white px-6 py-2.5 rounded-sm font-bold hover:bg-red-700 transition-all capitalize flex items-center gap-2.5 text-sm shadow-md shadow-red-200 active:scale-95 font-primary border border-red-700"
-              >
-                <Trash2 size={18} />
-                Delete Selected
-              </button>
-            </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       {/* Add Mobile Number Modal */}
       <Modal
@@ -1447,7 +1489,7 @@ export default function WorkStation() {
           animation: fadeIn 0.4s ease-out forwards;
         }
       `}</style>
-    </div>
+    </div >
   );
 }
 

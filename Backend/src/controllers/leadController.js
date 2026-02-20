@@ -1,4 +1,6 @@
 const Lead = require('../models/leadModel');
+const Employee = require('../models/employeeModel');
+const { pool } = require('../config/db');
 const LeadResources = require('../models/leadResourcesModel'); // Added
 const leadAssignmentService = require('../services/leadAssignmentService');
 const LeadAssignmentLog = require('../models/leadAssignmentLogModel');
@@ -6,22 +8,25 @@ const LeadAssignmentSettings = require('../models/leadAssignmentSettingsModel');
 
 const createLead = async (req, res) => {
     try {
+        // Set lead_owner to the logged-in user's name (creator)
+        const leadOwner = req.user.employee_name || req.user.username || 'admin';
+        req.body.lead_owner = leadOwner;
+
         const id = await Lead.create(req.body, req.user.id);
 
-        // Handle Auto-Assignment if enabled AND no manual owner was assigned
-        if (!req.body.owner && !req.body.assigned_to) {
-            await leadAssignmentService.autoAssign(id, req.user.id);
-        } else {
-            // If manual assignment was passed directly (owner/assigned_to)
+        // If manual assignment was provided in the request body
+        const assignedTo = req.body.owner || req.body.assigned_to;
+        if (assignedTo) {
             await LeadAssignmentLog.create({
                 user_id: req.user.id,
                 lead_id: id,
-                employee_id: req.body.owner || req.body.assigned_to,
-                assigned_by: req.user.username || 'admin',
+                employee_id: assignedTo,
+                assigned_by: leadOwner,
                 assignment_type: 'manual',
                 reason: 'Initial Assignment'
             });
         }
+        // Removed autoAssign call to ensure Assign To remains null unless explicitly assigned
 
         res.status(201).json({ status: true, message: 'Lead created successfully', id });
     } catch (error) {
@@ -51,10 +56,44 @@ const getLeadById = async (req, res) => {
 
 const updateLead = async (req, res) => {
     try {
-        const lead = await Lead.findById(req.params.id, req.user.id);
-        if (!lead) return res.status(404).json({ message: 'Lead not found' });
+        const leadId = req.params.id;
+        const userId = req.user.id;
 
-        await Lead.update(req.params.id, req.body, req.user.id);
+        // Get current lead to check for assignment changes
+        const currentLead = await Lead.findById(leadId, userId);
+        if (!currentLead) return res.status(404).json({ message: 'Lead not found' });
+
+        // Check if owner/assignment is changing
+        const newOwnerId = req.body.owner || req.body.assigned_to;
+        const oldOwnerId = currentLead.assigned_to;
+
+        // If assignment changed and owner_name wasn't provided, fetch it to keep Grid Card synced
+        if (newOwnerId && String(newOwnerId) !== String(oldOwnerId) && !req.body.owner_name) {
+            const [emps] = await pool.query(
+                'SELECT employee_name FROM employees WHERE id = ? OR employee_id = ?',
+                [newOwnerId, newOwnerId]
+            );
+            if (emps.length > 0) {
+                req.body.owner_name = emps[0].employee_name;
+            }
+        }
+
+        await Lead.update(leadId, req.body, userId);
+
+        // Create assignment log if owner changed
+        // Use loose comparison via String() to handle ID type mismatches (int vs string)
+        if (newOwnerId && String(newOwnerId) !== String(oldOwnerId)) {
+            await LeadAssignmentLog.create({
+                user_id: userId,
+                lead_id: leadId,
+                employee_id: newOwnerId,
+                assigned_by: req.user.employee_name || req.user.username || 'admin',
+                assignment_type: 'manual',
+                reassigned_from: oldOwnerId,
+                reason: 'Lead Profile Update'
+            });
+        }
+
         res.status(200).json({ status: true, message: 'Lead updated successfully' });
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -138,6 +177,15 @@ const analyzeLead = async (req, res) => {
         res.status(200).json({ status: true, message: 'Lead analysis completed' });
     } catch (error) {
         res.status(500).json({ status: false, message: error.message });
+    }
+};
+
+const getAssignmentHistory = async (req, res) => {
+    try {
+        const history = await LeadAssignmentLog.findByLeadId(req.params.id);
+        res.status(200).json(history);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
     }
 };
 
@@ -383,6 +431,7 @@ module.exports = {
     deleteLead,
     hitCall,
     analyzeLead,
+    getAssignmentHistory,
     checkCallConflict: async (req, res) => {
         try {
             const { dateTime, excludeId } = req.query;

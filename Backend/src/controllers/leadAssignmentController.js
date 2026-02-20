@@ -2,6 +2,7 @@ const LeadAssignmentSettings = require('../models/leadAssignmentSettingsModel');
 const LeadAssignmentLog = require('../models/leadAssignmentLogModel');
 const Lead = require('../models/leadModel');
 const Employee = require('../models/employeeModel');
+const { pool } = require('../config/db');
 
 const leadAssignmentController = {
     getSettings: async (req, res) => {
@@ -71,9 +72,18 @@ const leadAssignmentController = {
                 const currentLead = await Lead.findById(leadId, userId);
                 const reassignedFrom = currentLead ? currentLead.assigned_to : null;
 
-                // Update lead
+                // Get employee name for assigner_name and owner_name fields
+                // Check both primary key 'id' and unique string 'employee_id'
+                const [emps] = await pool.query(
+                    'SELECT employee_name FROM employees WHERE id = ? OR employee_id = ?',
+                    [employeeId, employeeId]
+                );
+                const empName = emps.length > 0 ? emps[0].employee_name : null;
+
+                // Update lead with all necessary fields for UI consistency
                 await Lead.update(leadId, {
                     assigned_to: employeeId,
+                    owner_name: empName,
                     assigned_at: new Date()
                 }, userId);
 
@@ -85,7 +95,7 @@ const leadAssignmentController = {
                     assigned_by: req.user.username || 'admin',
                     assignment_type: 'manual',
                     reassigned_from: reassignedFrom,
-                    reason: 'Manual Assignment'
+                    reason: 'Manual Assignment (Bulk/Workspace)'
                 });
             }
 

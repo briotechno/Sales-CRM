@@ -32,8 +32,10 @@ export default function LeadSidebar({
 
   // Get initials for avatar
   const getInitials = (name) => {
+    if (!name || typeof name !== "string") return "";
     return name
       .split(" ")
+      .filter(Boolean)
       .map((n) => n[0])
       .join("")
       .toUpperCase()
@@ -413,7 +415,7 @@ export default function LeadSidebar({
       <div className="px-6 mb-4">
         <div className="flex items-center justify-between mb-3 pb-2  border-gray-200">
           <h3 className="text-base font-bold text-gray-800">
-            Assigner Profile
+            Assign to
           </h3>
           <button
             className="text-orange-500 text-xs font-semibold flex items-center gap-1"
@@ -424,10 +426,10 @@ export default function LeadSidebar({
         </div>
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-bold text-sm border-2 border-white shadow-sm">
-            {getInitials(leadData?.assigner?.name || "Assigner")}
+            {getInitials(leadData?.assignee?.name || "-")}
           </div>
           <span className="text-sm font-semibold text-gray-800">
-            {leadData?.assigner?.name || "N/A"}
+            {leadData?.assignee?.name || "-"}
           </span>
         </div>
       </div>

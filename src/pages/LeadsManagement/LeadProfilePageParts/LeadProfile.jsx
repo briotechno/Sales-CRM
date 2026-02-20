@@ -19,8 +19,10 @@ import {
   useUpdateLeadStatusMutation,
   useUpdateLeadMutation,
   useGetLeadByIdQuery,
-  useGetAssignmentSettingsQuery
+  useGetAssignmentSettingsQuery,
+  useManualAssignLeadsMutation
 } from "../../../store/api/leadApi";
+import { useGetEmployeesQuery } from "../../../store/api/employeeApi";
 import { useCreateQuotationMutation } from "../../../store/api/quotationApi";
 import CreateQuotationModal from "../../QuotationPart/CreateQuotationModal";
 import EditLeadModal from "../../../pages/LeadsManagement/EditLeadPopup";
@@ -84,6 +86,8 @@ export default function CRMLeadDetail() {
   const passedLead = location.state?.lead;
   const { data: leadFromQuery, isLoading: leadLoading } = useGetLeadByIdQuery(passedLead?.id, { skip: !passedLead?.id });
   const { data: rules } = useGetAssignmentSettingsQuery();
+  const { data: employeesData } = useGetEmployeesQuery({ limit: 1000, status: 'Active' });
+  const employees = employeesData?.employees || [];
   const [showQuotationModal, setShowQuotationModal] = useState(false);
   const [quotationFormData, setQuotationFormData] = useState({
     customerType: "Individual",
@@ -152,8 +156,8 @@ export default function CRMLeadDetail() {
         priority: leadFromQuery.priority || "High",
         visibility: leadFromQuery.visibility,
         id: leadFromQuery.id,
-        owner: { name: leadFromQuery.employee_name || "Unassigned", img: "https://i.pravatar.cc/150?img=12" },
-        assigner: { name: "Khushi Soni", img: "https://i.pravatar.cc/150?img=5" },
+        owner: { name: leadFromQuery.lead_owner || "N/A", img: "https://i.pravatar.cc/150?img=12" },
+        assignee: { name: leadFromQuery.employee_name || "-", img: "https://i.pravatar.cc/150?img=5" },
         modifiedBy: { name: "Darlee Robertson", img: "https://i.pravatar.cc/150?img=8" },
         city: leadFromQuery.city || "-",
         state: leadFromQuery.state || "-",
@@ -218,21 +222,37 @@ export default function CRMLeadDetail() {
         tags: processedTags,
         services: processedServices,
         priority: updatedData.priority,
-        owner_name: updatedData.ownerName,
-        assigner_name: updatedData.assignerName,
+        owner_name: updatedData.ownerNameText || updatedData.ownerName,
+        owner: updatedData.ownerName, // Maps to assigned_to in backend
+        lead_owner: updatedData.lead_owner
       };
 
       await updateLead({ id: updatedData.id, data: apiData }).unwrap();
 
       // Update local state for immediate feedback
-      setLeadData((prev) => ({
-        ...prev,
-        ...updatedData,
-        tags: processedTags,
-        services: processedServices,
-        owner: { ...prev.owner, name: updatedData.ownerName || prev.owner.name },
-        assigner: { ...prev.assigner, name: updatedData.assignerName || prev.assigner.name },
-      }));
+      setLeadData((prev) => {
+        const selectedEmployee = employees.find(e => e.id == updatedData.ownerName);
+        const newAssigneeName = selectedEmployee?.employee_name || "-";
+
+        return {
+          ...prev,
+          ...updatedData,
+          tags: processedTags,
+          services: processedServices,
+          assigned_to: updatedData.ownerName,
+          assignee: {
+            ...prev.assignee,
+            name: newAssigneeName
+          },
+          // Update lead_owner in local state if it changed
+          owner: {
+            ...prev.owner,
+            name: updatedData.lead_owner || prev.owner.name
+          },
+          lead_owner: updatedData.lead_owner || prev.lead_owner,
+          owner_name: newAssigneeName
+        };
+      });
 
       setShowEditLeadModal(false);
     } catch (error) {
@@ -390,7 +410,57 @@ export default function CRMLeadDetail() {
   const handleSaveCall = async (callData) => {
     try {
       await addLeadCall({ id: passedLead?.id, data: callData }).unwrap();
-      toast.success("Call logged successfully");
+
+      // Update local state and backend status based on call status
+      const positiveStatuses = ["Interested", "Follow-up Required", "Callback Scheduled", "Demo Scheduled", "Meeting Scheduled", "Quotation Sent", "Negotiation"];
+      const convertedStatus = "Converted / Sale Closed";
+      const negativeStatuses = ["Not Interested", "Lost Lead", "Wrong Requirement", "Duplicate Lead", "Do Not Call (DNC)"];
+
+      if (positiveStatuses.includes(callData.status)) {
+        await updateLeadStatus({
+          id: passedLead?.id,
+          status: "In Progress",
+          tag: "Follow Up"
+        }).unwrap();
+        setLeadData(prev => ({ ...prev, status: "In Progress", tag: "Follow Up", call_count: (prev.call_count || 0) + 1 }));
+        setPipelineStage("Follow Up");
+        toast.success(`Call logged & status updated to In Progress`);
+      } else if (callData.status === convertedStatus) {
+        await updateLeadStatus({
+          id: passedLead?.id,
+          status: "Closed",
+          tag: "Closed"
+        }).unwrap();
+        setLeadData(prev => ({ ...prev, status: "Closed", tag: "Closed", call_count: (prev.call_count || 0) + 1 }));
+        setPipelineStage("Closed");
+        toast.success(`Call logged & status updated to Closed`);
+      } else if (negativeStatuses.includes(callData.status)) {
+        await updateLeadStatus({
+          id: passedLead?.id,
+          status: "Lost",
+          tag: "Lost"
+        }).unwrap();
+        setLeadData(prev => ({ ...prev, status: "Lost", tag: "Lost", call_count: (prev.call_count || 0) + 1 }));
+        setPipelineStage("Lost");
+        toast.success(`Call logged & status updated to Lost`);
+      } else {
+        // Assume Not Connected for other statuses (Call Disconnected) if currently not connected
+        if (leadData?.tag !== "Follow Up" && leadData?.status !== "In Progress" && leadData?.tag !== "Connected" && leadData?.status !== "Closed" && leadData?.status !== "Lost") {
+          const newTag = "Not Connected";
+          await updateLeadStatus({
+            id: passedLead?.id,
+            status: "Not Connected",
+            tag: newTag
+          }).unwrap();
+          setLeadData(prev => ({ ...prev, status: "Not Connected", tag: newTag, call_count: (prev.call_count || 0) + 1 }));
+          setPipelineStage("Not Connected");
+          toast.success("Call logged & status updated to Not Connected");
+        } else {
+          setLeadData(prev => ({ ...prev, call_count: (prev.call_count || 0) + 1 }));
+          toast.success("Call logged successfully");
+        }
+      }
+
       setActiveModal({ type: null, isOpen: false });
     } catch (error) {
       toast.error("Failed to log call");
@@ -535,15 +605,24 @@ export default function CRMLeadDetail() {
         ...callData
       }).unwrap();
 
-      // If call was connected, automatically move to In Progress
+      // If call was connected, automatically move to In Progress, update local state
       if (callData.response === "connected") {
         await updateLeadStatus({
           id: callData.id,
           status: "In Progress",
           tag: "Follow Up"
         }).unwrap();
+        setLeadData(prev => ({ ...prev, status: "In Progress", tag: "Follow Up", call_count: (prev.call_count || 0) + 1 }));
+        setPipelineStage("Follow Up");
         toast.success("Lead moved to In Progress");
       } else {
+        // If not connected, ensure status reflects that locally
+        if (leadData?.tag !== "Follow Up" && leadData?.status !== "In Progress" && leadData?.tag !== "Connected") {
+          setLeadData(prev => ({ ...prev, status: "Not Connected", tag: "Not Connected", call_count: (prev.call_count || 0) + 1 }));
+          setPipelineStage("Not Connected");
+        } else {
+          setLeadData(prev => ({ ...prev, call_count: (prev.call_count || 0) + 1 }));
+        }
         toast.success("Lead status updated based on call response");
       }
     } catch (err) {
@@ -708,6 +787,36 @@ export default function CRMLeadDetail() {
               showSortDropdown={showSortDropdown}
               setShowSortDropdown={setShowSortDropdown}
               onAddClick={(type) => {
+                if (type === 'call') {
+                  const isNotConnected = (leadData?.tag === "Not Connected" || leadData?.status === "Not Connected");
+                  const hasAttempts = (leadData?.call_count || 0) > 0;
+
+                  if (isNotConnected && hasAttempts) {
+                    setCallPopupData({
+                      isOpen: true,
+                      lead: leadData,
+                      initialResponse: null,
+                      onConnectedSelect: async () => {
+                        try {
+                          await updateLeadStatus({
+                            id: leadData?.id,
+                            status: "In Progress",
+                            tag: "Follow Up"
+                          }).unwrap();
+                          setLeadData(prev => ({ ...prev, status: "In Progress", tag: "Follow Up" }));
+                          setPipelineStage("Follow Up");
+                          toast.success("Connected! Lead moved to In Progress");
+                        } catch (e) {
+                          console.error("Failed to update status", e);
+                        }
+                        setCallPopupData({ isOpen: false, lead: null, initialResponse: null });
+                        // Use setTimeout to allow state update to process before opening new modal
+                        setTimeout(() => setActiveModal({ type: 'call', isOpen: true }), 0);
+                      }
+                    });
+                    return;
+                  }
+                }
                 setEditItem(null);
                 setActiveModal({ type, isOpen: true });
               }}
@@ -803,6 +912,7 @@ export default function CRMLeadDetail() {
           initialResponse={callPopupData.initialResponse}
           rules={rules}
           onHitCall={handleHitCall}
+          onConnectedSelect={callPopupData.onConnectedSelect}
         />
       )}
 

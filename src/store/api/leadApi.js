@@ -80,7 +80,7 @@ export const leadApi = createApi({
                 method: 'PUT',
                 body: data,
             }),
-            invalidatesTags: (result, error, { id }) => ['Lead', { type: 'Lead', id }],
+            invalidatesTags: (result, error, { id }) => ['Lead', { type: 'Lead', id }, { type: 'LeadAssignmentLogs', id }],
         }),
         deleteLead: builder.mutation({
             query: (id) => ({
@@ -129,7 +129,7 @@ export const leadApi = createApi({
                 method: 'POST',
                 body: data,
             }),
-            invalidatesTags: ['Lead'],
+            invalidatesTags: ['Lead', 'LeadAssignmentLogs'],
         }),
         getLeadNotes: builder.query({
             query: (id) => `leads/${id}/notes`,
@@ -253,6 +253,10 @@ export const leadApi = createApi({
             }),
             invalidatesTags: (result, error, { leadId }) => [{ type: 'LeadMeetings', id: leadId }],
         }),
+        getLeadAssignmentHistory: builder.query({
+            query: (id) => `leads/${id}/assignment-history`,
+            providesTags: (result, error, id) => [{ type: 'LeadAssignmentLogs', id }],
+        }),
     }),
 });
 
@@ -287,5 +291,6 @@ export const {
     useDeleteLeadCallMutation,
     useDeleteLeadFileMutation,
     useDeleteLeadMeetingMutation,
+    useGetLeadAssignmentHistoryQuery,
     useCheckCallConflictQuery,
 } = leadApi;

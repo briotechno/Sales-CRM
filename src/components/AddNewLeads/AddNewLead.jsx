@@ -116,7 +116,8 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
     pipeline_id: "",
     stage_id: "",
     referral_mobile: "",
-    description: ""
+    description: "",
+    lead_owner: ""
   });
 
   const selectedPipeline = pipelines?.find(p => p.id == formData.pipeline_id);
@@ -146,20 +147,16 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
     }
   }, [formData.interested_in, pipelines]);
 
-  // Set default owner to logged-in user
+  // Set default lead owner to logged-in user
   useEffect(() => {
-    if (!leadToEdit && user && !formData.owner) {
+    if (!leadToEdit && user && !formData.lead_owner) {
       const name = user.employee_name ||
         user.name ||
         (user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : null) ||
         user.username ||
         "Unknown User";
 
-      setFormData(prev => ({
-        ...prev,
-        owner: user.id || user.user_id || user._id,
-        owner_name: name
-      }));
+      setFormData(prev => ({ ...prev, lead_owner: name }));
     }
   }, [user, leadToEdit]);
 
@@ -441,7 +438,9 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
       dob: formData.dob || null,
       custom_fields: JSON.stringify(customFields.filter(cf => cf.label && cf.value)),
       contact_persons: leadType === "Organization" ? JSON.stringify(contactPersons) : null,
-      owner_name: formData.owner_name
+      lead_owner: formData.lead_owner,
+      owner_name: formData.lead_owner,
+      // owner: formData.lead_owner
     };
 
     try {
@@ -1365,7 +1364,7 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
                   <input
                     type="text"
                     disabled
-                    value={formData.owner_name || ""}
+                    value={formData.lead_owner || ""}
                     className={inputStyles + " bg-gray-50 cursor-not-allowed border-gray-100"}
                     placeholder="Auto-assigned"
                   />
