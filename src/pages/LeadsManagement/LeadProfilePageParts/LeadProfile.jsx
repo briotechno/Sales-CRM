@@ -52,6 +52,15 @@ export default function CRMLeadDetail() {
   const location = useLocation();
   const navigate = useNavigate();
 
+  const safeParseDate = (dateStr) => {
+    if (!dateStr) return null;
+    if (dateStr instanceof Date) return dateStr;
+    const normalized = String(dateStr).replace(' ', 'T');
+    const date = new Date(normalized);
+    if (!isNaN(date)) return date;
+    return new Date(dateStr);
+  };
+
   // State Management
   const [activeTab, setActiveTab] = useState("calls");
   const [isEditingLead, setIsEditingLead] = useState(false);
@@ -142,10 +151,10 @@ export default function CRMLeadDetail() {
         name: leadFromQuery.name,
         address: leadFromQuery.address || leadFromQuery.location,
         company: leadFromQuery.type === "Person" ? "Individual" : leadFromQuery.organization_name || leadFromQuery.name,
-        dateCreated: leadFromQuery.created_at,
+        dateCreated: leadFromQuery.created_at ? safeParseDate(leadFromQuery.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : "-",
         value: formatCurrency(leadFromQuery.value || leadFromQuery.estimated_value),
-        dueDate: leadFromQuery.created_at,
-        followUp: leadFromQuery.next_call_at ? new Date(leadFromQuery.next_call_at).toISOString().split("T")[0] : "-",
+        dueDate: leadFromQuery.created_at ? safeParseDate(leadFromQuery.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : "-",
+        followUp: leadFromQuery.next_call_at ? String(leadFromQuery.next_call_at).split(" ")[0].split("T")[0] : "-",
         source: leadFromQuery.lead_source || "Google",
         email: leadFromQuery.email,
         phone: leadFromQuery.mobile_number || leadFromQuery.phone,

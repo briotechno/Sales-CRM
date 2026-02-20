@@ -43,6 +43,19 @@ import CallActionPopup from "../../components/AddNewLeads/CallActionPopup";
 import CallQrModal from "../../components/LeadManagement/CallQrModal";
 import AssignmentHistoryModal from "../../components/LeadManagement/AssignmentHistoryModal";
 
+const safeParseDate = (dateStr) => {
+  if (!dateStr) return null;
+  if (dateStr instanceof Date) return dateStr;
+  if (typeof dateStr === 'string' && (dateStr.includes('T') || dateStr.includes('Z'))) {
+    const date = new Date(dateStr);
+    if (!isNaN(date)) return date;
+  }
+  const normalized = String(dateStr).replace(' ', 'T');
+  const date = new Date(normalized);
+  if (!isNaN(date)) return date;
+  return new Date(dateStr);
+};
+
 const WorkStationLeadsListView = ({
   currentLeads,
   selectedLeads,
@@ -142,7 +155,7 @@ const WorkStationLeadsListView = ({
                       {lead.is_trending === 1 ? "Trending" : (lead.tag || lead.status || "New Lead")}
                     </span>
                     <span className="text-[10px] text-gray-500 font-semibold font-primary">
-                      {(lead.rawUpdated || lead.last_call_at || lead.updated_at) ? new Date(lead.rawUpdated || lead.last_call_at || lead.updated_at).toLocaleString('en-IN', {
+                      {(lead.rawUpdated || lead.last_call_at || lead.updated_at) ? safeParseDate(lead.rawUpdated || lead.last_call_at || lead.updated_at).toLocaleString('en-IN', {
                         day: '2-digit',
                         month: '2-digit',
                         year: 'numeric',
@@ -158,7 +171,7 @@ const WorkStationLeadsListView = ({
                     <span className="text-xs font-bold text-gray-700">{lead.pipeline_name || "General"}</span>
                     <span className="text-[10px] text-[#FF7B1D] font-bold italic">{lead.stage_name || "New"}</span>
                     <span className="text-[10px] text-gray-500 font-semibold mt-1 font-primary">
-                      {(lead.rawCreated || lead.created_at) ? new Date(lead.rawCreated || lead.created_at).toLocaleString('en-IN', {
+                      {(lead.rawCreated || lead.created_at) ? safeParseDate(lead.rawCreated || lead.created_at).toLocaleString('en-IN', {
                         day: '2-digit',
                         month: '2-digit',
                         year: 'numeric',
@@ -309,7 +322,7 @@ const WorkStationLeadsGridView = ({
                       return { text: "Trading", color: "text-indigo-600 bg-indigo-50 border-indigo-200" };
                     }
 
-                    const isMovedFromNotConnected = lead.tag === "Not Connected" && lead.next_call_at && new Date(lead.next_call_at) <= currentTime;
+                    const isMovedFromNotConnected = lead.tag === "Not Connected" && lead.next_call_at && safeParseDate(lead.next_call_at) <= currentTime;
 
                     if (isMovedFromNotConnected) {
                       return { text: "Moved from Not Connected", color: "text-purple-600 bg-purple-50 border-purple-200" };
@@ -378,7 +391,7 @@ const WorkStationLeadsGridView = ({
                               </span>
                               <div className="flex items-center gap-1.5 text-[11px] font-semibold font-primary text-gray-500 whitespace-nowrap capitalize">
                                 <Calendar size={12} className="text-orange-500" />
-                                {(lead.rawCreated || lead.created_at) ? new Date(lead.rawCreated || lead.created_at).toLocaleDateString('en-IN', {
+                                {(lead.rawCreated || lead.created_at) ? safeParseDate(lead.rawCreated || lead.created_at).toLocaleDateString('en-IN', {
                                   day: '2-digit', month: 'short', year: 'numeric'
                                 }) : "--"}
                               </div>
@@ -388,7 +401,7 @@ const WorkStationLeadsGridView = ({
                               <div className="mt-1.5 text-[11px] text-orange-700 font-semibold flex items-center gap-1.5 font-primary bg-orange-50 px-2 py-1 rounded-sm border border-orange-100 w-fit capitalize">
                                 <Clock size={12} className="text-orange-500" />
                                 <span className="text-orange-600">Next:</span>
-                                {new Date(lead.next_call_at).toLocaleString('en-IN', {
+                                {safeParseDate(lead.next_call_at).toLocaleString('en-IN', {
                                   day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true
                                 })}
                               </div>

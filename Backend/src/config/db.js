@@ -11,7 +11,8 @@ const pool = mysql.createPool({
     port: process.env.DB_PORT || 3307,
     waitForConnections: true,
     connectionLimit: 10,
-    queueLimit: 0
+    queueLimit: 0,
+    dateStrings: true
 });
 
 const connectDB = async () => {
