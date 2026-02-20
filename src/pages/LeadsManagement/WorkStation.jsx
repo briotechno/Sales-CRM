@@ -300,6 +300,42 @@ const WorkStationLeadsGridView = ({
                   const cleanNumber = (lead.mobile_number || lead.phone || '').replace(/\D/g, '');
                   const waLink = cleanNumber ? `https://wa.me/${cleanNumber}` : '#';
 
+                  const displayStatus = (() => {
+                    // Context-aware status: If in Trending column, show "Trading"
+                    if (groupTag === "Trending") {
+                      return { text: "Trading", color: "text-indigo-600 bg-indigo-50 border-indigo-200" };
+                    }
+
+                    const isMovedFromNotConnected = lead.tag === "Not Connected" && lead.next_call_at && new Date(lead.next_call_at) <= currentTime;
+
+                    if (isMovedFromNotConnected) {
+                      return { text: "Moved from Not Connected", color: "text-purple-600 bg-purple-50 border-purple-200" };
+                    }
+
+                    // Prioritize Trending -> Tag -> Status -> Default
+                    let s = lead.is_trending === 1 ? "Trending" : (lead.tag || lead.status || "New Lead");
+
+                    // Normalize specific statuses
+                    if (s === "Not Contacted") s = "New Lead";
+                    if (s === "Active") s = "New Lead"; // generic Active status maps to New Lead if no other tag exists
+
+                    let c = "text-gray-600 bg-gray-50 border-gray-200";
+
+                    switch (s?.toLowerCase()) {
+                      case "connected": c = "text-green-600 bg-green-50 border-green-200"; break;
+                      case "not connected": c = "text-red-600 bg-red-50 border-red-200"; break;
+                      case "follow up": c = "text-amber-600 bg-amber-50 border-amber-200"; break;
+                      case "trending": c = "text-orange-600 bg-orange-50 border-orange-200"; break;
+                      case "trading": c = "text-indigo-600 bg-indigo-50 border-indigo-200"; break;
+                      case "won": case "closed": c = "text-emerald-600 bg-emerald-50 border-emerald-200"; break;
+                      case "lost": case "dropped": c = "text-rose-600 bg-rose-50 border-rose-200"; break;
+                      case "new lead": case "new leads": case "new": c = "text-blue-600 bg-blue-50 border-blue-200"; break;
+                      default: c = "text-gray-600 bg-gray-50 border-gray-200";
+                    }
+
+                    return { text: s, color: c };
+                  })();
+
                   return (
                     <div key={lead.id} className="bg-white border border-gray-300 rounded-sm shadow-sm hover:shadow-xl transition-all duration-300 relative group flex flex-col overflow-hidden animate-slideIn hover:scale-[1.02] hover:z-10">
                       {/* Top Selection */}
@@ -368,6 +404,16 @@ const WorkStationLeadsGridView = ({
                               <span className="text-[12px] font-bold text-gray-500 capitalize font-primary tracking-tight mb-1">Stage</span>
                               <span className="text-sm text-[#FF7B1D] font-bold italic font-primary capitalize">{lead.stage_name || "New"}</span>
                             </div>
+                          </div>
+                        </div>
+
+                        {/* Status Field */}
+                        <div className="px-1 py-1">
+                          <div className="flex justify-between items-center bg-gray-50 p-2 rounded-sm border border-gray-100">
+                            <span className="text-[12px] font-bold text-gray-500 capitalize font-primary tracking-tight">Status</span>
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-sm border capitalize truncate max-w-[150px] ${displayStatus.color}`}>
+                              {displayStatus.text}
+                            </span>
                           </div>
                         </div>
 
