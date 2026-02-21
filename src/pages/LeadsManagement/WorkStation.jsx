@@ -330,8 +330,8 @@ const WorkStationLeadsGridView = ({
           return false;
         }).filter(lead => filterStatus === "All" || (lead.tag || lead.status) === filterStatus);
 
-        // Sorting Not Connected leads by next_call_at (soonest first)
-        if (groupTag === "Not Connected") {
+        // Sorting Not Connected and Follow Up leads by next_call_at (soonest first)
+        if (groupTag === "Not Connected" || groupTag === "Follow Up") {
           tagLeads = [...tagLeads].sort((a, b) => {
             if (!a.next_call_at) return 1;
             if (!b.next_call_at) return -1;
