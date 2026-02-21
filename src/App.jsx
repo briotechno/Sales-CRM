@@ -8,7 +8,7 @@ import CRMDashboard from "./pages/CrmDashboard/dashboard";
 import HrmDashboard from "./pages/HrmDashboard/dashboard";
 // Leads Managament part
 import LeadDashboard from "./pages/LeadsManagement/dashboard";
-import AllLeads from "./pages/LeadsManagement/AllLeadPagePart/AllLaeds";
+import AllLeads from "./pages/LeadsManagement/AllLeadPagePart/AllLeads";
 import NewLeads from "./pages/LeadsManagement/NewLeads";
 import Assigned from "./pages/LeadsManagement/Assigned";
 import DroppedLeads from "./pages/LeadsManagement/DroppedLeads";

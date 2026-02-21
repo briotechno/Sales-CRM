@@ -59,6 +59,17 @@ const Lead = {
             }
         }
 
+        // Check for duplicate mobile number
+        if (mobile_number) {
+            const [duplicates] = await pool.query(
+                'SELECT id FROM leads WHERE user_id = ? AND mobile_number = ? LIMIT 1',
+                [userId, mobile_number]
+            );
+            if (duplicates.length > 0) {
+                tag = 'Duplicate';
+            }
+        }
+
         // Generate Lead ID (e.g. L001)
         const [rows] = await pool.query('SELECT lead_id FROM leads WHERE user_id = ? ORDER BY id DESC LIMIT 1', [userId]);
         let nextId = 'L001';
@@ -86,7 +97,7 @@ const Lead = {
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 nextId, name, mobile_number, email, value || 0, pipeline_id, stage_id,
-                status || 'Open', type || 'Individual', tag || 'Not Contacted', location, userId,
+                status || 'Open', type || 'Individual', tag || 'New Lead', location, userId,
                 lead_source, visibility,
                 full_name, gender, dob, alt_mobile_number, address, city, state, pincode, interested_in,
                 profile_image, whatsapp_number, country,
@@ -119,6 +130,10 @@ const Lead = {
             lastIdNum = parseInt(rows[0].lead_id.substring(1)) || 0;
         }
 
+        // Fetch existing mobile numbers for duplicate check
+        const [existingLeads] = await pool.query('SELECT mobile_number FROM leads WHERE user_id = ?', [userId]);
+        const existingNumbers = new Set(existingLeads.map(l => l.mobile_number).filter(Boolean));
+
         const values = leadsArray.map((data, index) => {
             let {
                 name, mobile_number, email, value, pipeline_id, stage_id,
@@ -138,9 +153,12 @@ const Lead = {
             const customFieldsJson = typeof custom_fields === 'string' ? custom_fields : JSON.stringify(custom_fields || []);
             const contactPersonsJson = typeof contact_persons === 'string' ? contact_persons : JSON.stringify(contact_persons || []);
 
+            const isDuplicate = mobile_number && existingNumbers.has(mobile_number);
+            const finalTag = isDuplicate ? 'Duplicate' : (tag || 'New Lead');
+
             return [
                 nextId, name || full_name, mobile_number, email, value || 0, pipeline_id || defaultPipelineId, stage_id || defaultStageId,
-                status || 'Open', type || 'Individual', tag || 'Not Contacted', location, userId,
+                status || 'Open', type || 'Individual', finalTag, location, userId,
                 lead_source || 'Bulk Upload', visibility || 'Public',
                 full_name || name, gender, dob, alt_mobile_number, address || company_address, city, state, pincode, interested_in,
                 profile_image, whatsapp_number, country,
@@ -202,9 +220,9 @@ const Lead = {
         } else if (subview === 'not-connected') {
             query += " AND l.tag = 'Not Connected' AND (l.next_call_at IS NULL OR l.next_call_at > NOW())";
         } else if (subview === 'follow-up') {
-            query += " AND l.tag = 'Follow Up'";
+            query += " AND (l.tag = 'Follow Up' OR l.tag = 'Missed')";
         } else if (subview === 'missed') {
-            query += " AND l.next_call_at < NOW() AND l.tag NOT IN ('Won', 'Lost', 'Closed')";
+            query += " AND l.tag = 'Missed'";
         } else if (subview === 'assigned') {
             query += " AND l.assigned_to IS NOT NULL";
         } else if (subview === 'dropped') {
@@ -238,8 +256,8 @@ const Lead = {
 
         if (subview === 'new') { countQuery += " AND (l.tag = 'Not Contacted' OR l.created_at >= DATE_SUB(NOW(), INTERVAL 2 DAY) OR (l.tag = 'Not Connected' AND l.next_call_at <= NOW()))"; }
         else if (subview === 'not-connected') { countQuery += " AND l.tag = 'Not Connected' AND (l.next_call_at IS NULL OR l.next_call_at > NOW())"; }
-        else if (subview === 'follow-up') { countQuery += " AND l.tag = 'Follow Up'"; }
-        else if (subview === 'missed') { countQuery += " AND l.next_call_at < NOW() AND l.tag NOT IN ('Won', 'Lost', 'Closed')"; }
+        else if (subview === 'follow-up') { countQuery += " AND (l.tag = 'Follow Up' OR l.tag = 'Missed')"; }
+        else if (subview === 'missed') { countQuery += " AND l.tag = 'Missed'"; }
         else if (subview === 'assigned') { countQuery += " AND l.assigned_to IS NOT NULL"; }
         else if (subview === 'dropped') { countQuery += " AND l.tag IN ('Lost', 'Dropped', 'Lost Lead')"; }
         else if (subview === 'trending') { countQuery += " AND (l.priority = 'High' OR l.is_trending = 1)"; }
@@ -325,6 +343,12 @@ const Lead = {
         });
 
         if (updates.length === 0) return;
+
+        // If next_call_at is updated, and tag is not manually changed, 
+        // ensure 'Missed' leads revert to 'Follow Up'
+        if (data.next_call_at && !data.hasOwnProperty('tag')) {
+            updates.push("tag = CASE WHEN tag = 'Missed' THEN 'Follow Up' ELSE tag END");
+        }
 
         values.push(id, userId);
         await pool.query(
@@ -475,6 +499,55 @@ const Lead = {
 
         const [rows] = await pool.query(query, params);
         return rows;
+    },
+
+    getDueReminders: async (userId) => {
+        // Get leads where next_call_at is due (within last 1 minute to prevent skipping)
+        // and lead is not already Won/Lost/Closed/Missed
+        const [rows] = await pool.query(
+            `SELECT l.*, p.name as pipeline_name, s.name as stage_name 
+             FROM leads l
+             LEFT JOIN pipelines p ON l.pipeline_id = p.id
+             LEFT JOIN pipeline_stages s ON l.stage_id = s.id
+             WHERE l.user_id = ? 
+             AND l.next_call_at <= NOW() 
+             AND l.tag = 'Follow Up'
+             ORDER BY l.next_call_at DESC`,
+            [userId]
+        );
+        return rows;
+    },
+
+    snoozeLead: async (id, userId, minutes = 10) => {
+        const [lead] = await pool.query('SELECT next_call_at FROM leads WHERE id = ? AND user_id = ?', [id, userId]);
+        if (!lead.length) throw new Error('Lead not found');
+
+        let nextCall = lead[0].next_call_at ? new Date(lead[0].next_call_at) : new Date();
+        // If the scheduled time is already in the past, snooze from NOW
+        if (nextCall < new Date()) {
+            nextCall = new Date();
+        }
+        nextCall.setMinutes(nextCall.getMinutes() + minutes);
+
+        await pool.query(
+            'UPDATE leads SET next_call_at = ?, tag = CASE WHEN tag = "Missed" THEN "Follow Up" ELSE tag END WHERE id = ? AND user_id = ?',
+            [nextCall, id, userId]
+        );
+        return nextCall;
+    },
+
+    checkMissedLeads: async (userId) => {
+        // Automatically change status to 'Missed' if next_call_at is older than 5 minutes
+        // and current status is 'Follow Up'
+        await pool.query(
+            `UPDATE leads 
+             SET tag = 'Missed' 
+             WHERE user_id = ? 
+             AND next_call_at IS NOT NULL 
+             AND next_call_at <= DATE_SUB(NOW(), INTERVAL 5 MINUTE)
+             AND tag = 'Follow Up'`,
+            [userId]
+        );
     }
 };
 

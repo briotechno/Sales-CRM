@@ -1,5 +1,5 @@
-import React from "react";
-import { Edit, Trash2, Eye, Phone, TrendingUp } from "lucide-react";
+import { Phone, Mail, TrendingUp } from "lucide-react";
+import { FaWhatsapp } from "react-icons/fa";
 
 export default function LeadsListView({
   currentLeads,
@@ -131,7 +131,7 @@ export default function LeadsListView({
 
                   <td className="py-3 px-4 text-center">
                     <span className="px-2 py-1 bg-gray-50 text-gray-600 rounded-sm text-[10px] font-bold border border-gray-100 capitalize tracking-tighter">
-                      {lead.lead_source || "Direct"}
+                      {lead.lead_source || "-"}
                     </span>
                   </td>
 
@@ -176,35 +176,32 @@ export default function LeadsListView({
                   </td>
 
                   <td className="py-3 px-4">
-                    <div className="flex justify-end gap-1.5">
-
+                    <div className="flex justify-end gap-2">
                       <button
                         onClick={() => handleHitCall && handleHitCall(lead)}
                         className="p-1.5 bg-orange-50 hover:bg-orange-500 rounded-sm text-orange-600 hover:text-white transition-all border border-orange-100 hover:border-orange-500 shadow-sm"
-                        title="Hit Call"
+                        title="Call"
                       >
-                        <Phone size={16} />
+                        <Phone size={14} />
                       </button>
                       <button
-                        className="p-1.5 hover:bg-blue-50 rounded-sm text-blue-500 hover:text-blue-700 transition-all border border-transparent hover:border-blue-100"
-                        onClick={() => handleLeadClick(lead)}
-                        title="View Profile"
+                        onClick={() => {
+                          const phone = lead.mobile_number || lead.phone;
+                          if (phone) window.open(`https://wa.me/${phone.replace(/\D/g, "")}`, "_blank");
+                        }}
+                        className="p-1.5 bg-green-50 hover:bg-green-500 rounded-sm text-green-600 hover:text-white transition-all border border-green-100 hover:border-green-500 shadow-sm"
+                        title="WhatsApp"
                       >
-                        <Eye size={16} />
+                        <FaWhatsapp size={14} />
                       </button>
                       <button
-                        className="p-1.5 hover:bg-green-50 rounded-sm text-green-500 hover:text-green-700 transition-all border border-transparent hover:border-green-100"
-                        onClick={() => handleEditLead(lead)}
-                        title="Edit Lead"
+                        onClick={() => {
+                          if (lead.email) window.location.href = `mailto:${lead.email}`;
+                        }}
+                        className="p-1.5 bg-blue-50 hover:bg-blue-500 rounded-sm text-blue-600 hover:text-white transition-all border border-blue-100 hover:border-blue-500 shadow-sm"
+                        title="Email"
                       >
-                        <Edit size={16} />
-                      </button>
-                      <button
-                        className="p-1.5 hover:bg-red-50 rounded-sm text-red-500 hover:text-red-700 transition-all border border-transparent hover:border-red-100"
-                        onClick={() => handleDeleteLead(lead)}
-                        title="Delete Lead"
-                      >
-                        <Trash2 size={16} />
+                        <Mail size={14} />
                       </button>
                     </div>
                   </td>
