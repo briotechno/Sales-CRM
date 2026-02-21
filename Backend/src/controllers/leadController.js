@@ -36,6 +36,7 @@ const createLead = async (req, res) => {
 
 const getLeads = async (req, res) => {
     try {
+        await Lead.checkMissedLeads(req.user.id);
         const { page, limit, search, status, pipeline_id, tag, type, subview, priority, services, dateFrom, dateTo } = req.query;
         const data = await Lead.findAll(req.user.id, page, limit, search, status, pipeline_id, tag, type, subview, priority, services, dateFrom, dateTo);
         res.status(200).json(data);
@@ -46,6 +47,7 @@ const getLeads = async (req, res) => {
 
 const getLeadById = async (req, res) => {
     try {
+        await Lead.checkMissedLeads(req.user.id);
         const lead = await Lead.findById(req.params.id, req.user.id);
         if (!lead) return res.status(404).json({ message: 'Lead not found' });
         res.status(200).json(lead);
@@ -423,6 +425,26 @@ const deleteLeadMeeting = async (req, res) => {
     }
 };
 
+const getDueReminders = async (req, res) => {
+    try {
+        await Lead.checkMissedLeads(req.user.id);
+        const reminders = await Lead.getDueReminders(req.user.id);
+        res.status(200).json(reminders);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+const snoozeLead = async (req, res) => {
+    try {
+        const { minutes } = req.body;
+        const nextCall = await Lead.snoozeLead(req.params.id, req.user.id, minutes);
+        res.status(200).json({ status: true, message: `Lead snoozed for ${minutes || 10} minutes`, next_call_at: nextCall });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 module.exports = {
     createLead,
     getLeads,
@@ -432,17 +454,6 @@ module.exports = {
     hitCall,
     analyzeLead,
     getAssignmentHistory,
-    checkCallConflict: async (req, res) => {
-        try {
-            const { dateTime, excludeId } = req.query;
-            if (!dateTime) return res.status(400).json({ message: 'DateTime is required' });
-
-            const conflicts = await Lead.checkCallConflict(req.user.id, dateTime, excludeId);
-            res.status(200).json(conflicts);
-        } catch (error) {
-            res.status(500).json({ message: error.message });
-        }
-    },
     getLeadNotes,
     addLeadNote,
     getLeadCalls,
@@ -461,6 +472,16 @@ module.exports = {
     deleteLeadCall,
     deleteLeadFile,
     deleteLeadMeeting,
+    checkCallConflict: async (req, res) => {
+        try {
+            const { dateTime, excludeId } = req.query;
+            if (!dateTime) return res.status(400).json({ message: 'DateTime is required' });
+            const conflicts = await Lead.checkCallConflict(req.user.id, dateTime, excludeId);
+            res.status(200).json(conflicts);
+        } catch (error) {
+            res.status(500).json({ message: error.message });
+        }
+    },
     bulkCreateLeads: async (req, res) => {
         try {
             const affectedRows = await Lead.bulkCreate(req.body, req.user.id);
@@ -468,5 +489,7 @@ module.exports = {
         } catch (error) {
             res.status(500).json({ status: false, message: error.message });
         }
-    }
+    },
+    getDueReminders,
+    snoozeLead
 };

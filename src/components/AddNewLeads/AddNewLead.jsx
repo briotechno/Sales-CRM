@@ -43,6 +43,15 @@ const validateFileSize = (file) => {
   return file.size <= maxSize;
 };
 
+// Helper function to validate Indian mobile numbers
+// Accepts 10-digit numbers starting with 6, 7, 8, or 9
+// Also accepts numbers with +91 or 0 prefix (stripped before checking)
+const validateMobileNumber = (number) => {
+  if (!number || number.trim() === "") return true; // empty = optional field, skip
+  const cleaned = number.trim().replace(/^\+91/, "").replace(/^0/, "").replace(/\s|-/g, "");
+  return /^[6-9]\d{9}$/.test(cleaned);
+};
+
 export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
   const [createLead, { isLoading: isCreating }] = useCreateLeadMutation();
   const [updateLead, { isLoading: isUpdating }] = useUpdateLeadMutation();
@@ -54,7 +63,7 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
 
   const [leadType, setLeadType] = useState("Individual");
   const [visibility, setVisibility] = useState("Public");
-  const [tags, setTags] = useState(["New Lead"]);
+  const [tags, setTags] = useState([]);
   const [tagInput, setTagInput] = useState("");
   const [customFields, setCustomFields] = useState([{ label: "", value: "" }]);
   const [contactPersons, setContactPersons] = useState([{
@@ -74,7 +83,7 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
   const [formData, setFormData] = useState({
     name: "",
     lead_source: "",
-    status: "Active",
+    status: "New Lead",
     visibility: "Public",
 
     // Individual Details
@@ -110,21 +119,21 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
 
     // Common Fields
     interested_in: [],
+
     value: "",
     owner: "",
     owner_name: "",
     pipeline_id: "",
     stage_id: "",
     referral_mobile: "",
-    description: "",
     lead_owner: ""
   });
 
   const selectedPipeline = pipelines?.find(p => p.id == formData.pipeline_id);
   const filteredStages = selectedPipeline?.stages || [];
 
-  // Service options (you can fetch these from API if needed)
-  const serviceOptions = [
+  // Interested-in options
+  const interestedInOptions = [
     "Product Demo",
     "Pricing Info",
     "Support",
@@ -134,11 +143,14 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
     "Other"
   ];
 
+
+  // State to track which multi-select dropdown is open
+  const [openMultiSelect, setOpenMultiSelect] = useState(null);
+
+
   // Automatic Pipeline Recommendation
   useEffect(() => {
     if (formData.interested_in.length > 0 && !formData.pipeline_id && pipelines.length > 0) {
-      // Find a pipeline that might match the first selected service, 
-      // otherwise default to the first pipeline or one named "Default"
       const defaultPipe = pipelines.find(p => p.name.toLowerCase().includes('default')) || pipelines[0];
       if (defaultPipe) {
         setFormData(prev => ({ ...prev, pipeline_id: defaultPipe.id }));
@@ -146,6 +158,18 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
       }
     }
   }, [formData.interested_in, pipelines]);
+
+  // Close multi-select dropdowns when clicking outside
+  useEffect(() => {
+    if (!openMultiSelect) return;
+    const handler = (e) => {
+      if (!e.target.closest('[data-multiselect]')) {
+        setOpenMultiSelect(null);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [openMultiSelect]);
 
   // Set default lead owner to logged-in user
   useEffect(() => {
@@ -221,13 +245,13 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
         org_pincode: leadToEdit.org_pincode || "",
 
         interested_in: leadToEdit.interested_in ? (Array.isArray(leadToEdit.interested_in) ? leadToEdit.interested_in : leadToEdit.interested_in.split(',')) : [],
+
         value: leadToEdit.value || "",
         owner: leadToEdit.owner || leadToEdit.assigned_to || "",
         owner_name: leadToEdit.owner_name || leadToEdit.employee_name || "",
         pipeline_id: leadToEdit.pipeline_id || "",
         stage_id: leadToEdit.stage_id || "",
-        referral_mobile: leadToEdit.referral_mobile || "",
-        description: leadToEdit.description || ""
+        referral_mobile: leadToEdit.referral_mobile || ""
       });
     }
   }, [leadToEdit]);
@@ -298,12 +322,12 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
     }
   };
 
-  const handleServiceToggle = (service) => {
+  const handleInterestedInToggle = (item) => {
     setFormData(prev => ({
       ...prev,
-      interested_in: prev.interested_in.includes(service)
-        ? prev.interested_in.filter(s => s !== service)
-        : [...prev.interested_in, service]
+      interested_in: prev.interested_in.includes(item)
+        ? prev.interested_in.filter(s => s !== item)
+        : [...prev.interested_in, item]
     }));
   };
 
@@ -426,15 +450,68 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
     }
   };
 
+  // Validate all mobile fields before form submission
+  const validateAllMobiles = () => {
+    // Individual fields
+    if (leadType === "Individual") {
+      if (!validateMobileNumber(formData.mobile_number)) {
+        toast.error("Invalid Mobile Number — Please enter a valid 10-digit number starting with 6–9.");
+        return false;
+      }
+      if (!validateMobileNumber(formData.alt_mobile_number)) {
+        toast.error("Invalid Alternate Mobile Number — Please enter a valid 10-digit number starting with 6–9.");
+        return false;
+      }
+      if (!validateMobileNumber(formData.whatsapp_number)) {
+        toast.error("Invalid WhatsApp Number — Please enter a valid 10-digit number starting with 6–9.");
+        return false;
+      }
+    }
+    // Organization fields
+    if (leadType === "Organization") {
+      if (!validateMobileNumber(formData.company_phone)) {
+        toast.error("Invalid Company Phone Number — Please enter a valid 10-digit number starting with 6–9.");
+        return false;
+      }
+      // Contact persons
+      for (let i = 0; i < contactPersons.length; i++) {
+        const cp = contactPersons[i];
+        if (!validateMobileNumber(cp.mobile_number)) {
+          toast.error(`Invalid Mobile Number for Contact Person ${i + 1} — Please enter a valid 10-digit number.`);
+          return false;
+        }
+        if (!validateMobileNumber(cp.alt_mobile_number)) {
+          toast.error(`Invalid Alternate Mobile for Contact Person ${i + 1} — Please enter a valid 10-digit number.`);
+          return false;
+        }
+        if (!validateMobileNumber(cp.whatsapp_number)) {
+          toast.error(`Invalid WhatsApp Number for Contact Person ${i + 1} — Please enter a valid 10-digit number.`);
+          return false;
+        }
+      }
+    }
+    return true;
+  };
+
+  // onBlur handler — shows a non-blocking warning when user leaves a mobile field with bad data
+  const handleMobileBlur = (label, value) => {
+    if (value && value.trim() !== "" && !validateMobileNumber(value)) {
+      toast.error(`Invalid ${label} — Must be a 10-digit number starting with 6, 7, 8, or 9.`, { duration: 3000 });
+    }
+  };
+
   const handleSubmit = async () => {
+    if (!validateAllMobiles()) return;
     const payload = {
       ...formData,
       name: formData.name || (leadType === "Individual" ? formData.full_name : formData.organization_name) || "Untitled Lead",
       type: leadType,
-      tag: tags.join(','),
+      tag: tags.length ? tags.join(',') : 'New Lead',
       visibility,
       value: Number(formData.value) || 0,
       interested_in: formData.interested_in.join(','),
+
+      description: null,
       dob: formData.dob || null,
       custom_fields: JSON.stringify(customFields.filter(cf => cf.label && cf.value)),
       contact_persons: leadType === "Organization" ? JSON.stringify(contactPersons) : null,
@@ -551,6 +628,7 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
                 </h3>
               </div>
               <div className="grid grid-cols-2 gap-4">
+                {/* 1. Full Name */}
                 <div className="group">
                   <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
                     <User size={14} className="text-[#FF7B1D]" />
@@ -566,7 +644,99 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
                   />
                 </div>
 
+                {/* 2. Mobile Number */}
                 <div className="group">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                    <Phone size={14} className="text-[#FF7B1D]" />
+                    Mobile Number
+                  </label>
+                  <input
+                    type="text"
+                    name="mobile_number"
+                    placeholder="Enter mobile number"
+                    className={inputStyles}
+                    value={formData.mobile_number}
+                    onChange={handleChange}
+                    onBlur={(e) => handleMobileBlur("Mobile Number", e.target.value)}
+                    maxLength={15}
+                  />
+                  <label className="flex items-center gap-2 mt-2 text-xs text-gray-600">
+                    <input
+                      type="checkbox"
+                      name="mobile_same_as_whatsapp"
+                      checked={formData.mobile_same_as_whatsapp}
+                      onChange={handleChange}
+                      className="w-4 h-4 text-[#FF7B1D]"
+                    />
+                    Same as WhatsApp Number
+                  </label>
+                </div>
+
+                {/* 3. Email */}
+                <div className="group">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                    <Mail size={14} className="text-[#FF7B1D]" />
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    placeholder="Enter email address"
+                    className={inputStyles}
+                    value={formData.email}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                {/* 4. Alternate Mobile Number */}
+                <div className="group">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                    <Phone size={14} className="text-[#FF7B1D]" />
+                    Alternate Mobile Number
+                  </label>
+                  <input
+                    type="text"
+                    name="alt_mobile_number"
+                    placeholder="Enter alternate mobile"
+                    className={inputStyles}
+                    value={formData.alt_mobile_number}
+                    onChange={handleChange}
+                    onBlur={(e) => handleMobileBlur("Alternate Mobile Number", e.target.value)}
+                    maxLength={15}
+                  />
+                  <label className="flex items-center gap-2 mt-2 text-xs text-gray-600">
+                    <input
+                      type="checkbox"
+                      name="alt_mobile_same_as_whatsapp"
+                      checked={formData.alt_mobile_same_as_whatsapp}
+                      onChange={handleChange}
+                      className="w-4 h-4 text-[#FF7B1D]"
+                    />
+                    Same as WhatsApp Number
+                  </label>
+                </div>
+
+                {/* 5. WhatsApp Number */}
+                <div className="group col-span-2">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                    <Phone size={14} className="text-[#FF7B1D]" />
+                    WhatsApp Number
+                  </label>
+                  <input
+                    type="text"
+                    name="whatsapp_number"
+                    placeholder="Enter WhatsApp number"
+                    className={inputStyles}
+                    value={formData.whatsapp_number}
+                    onChange={handleChange}
+                    onBlur={(e) => handleMobileBlur("WhatsApp Number", e.target.value)}
+                    disabled={formData.mobile_same_as_whatsapp || formData.alt_mobile_same_as_whatsapp}
+                    maxLength={15}
+                  />
+                </div>
+
+                {/* 6. Profile Image — full width */}
+                <div className="group col-span-2">
                   <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
                     <Upload size={14} className="text-[#FF7B1D]" />
                     Profile Image
@@ -624,6 +794,7 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
                   </div>
                 </div>
 
+                {/* 7. Gender */}
                 <div className="group">
                   <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
                     <User size={14} className="text-[#FF7B1D]" />
@@ -642,6 +813,7 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
                   </select>
                 </div>
 
+                {/* 8. Date of Birth */}
                 <div className="group">
                   <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
                     <Calendar size={14} className="text-[#FF7B1D]" />
@@ -656,87 +828,7 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
                   />
                 </div>
 
-                <div className="group">
-                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-                    <Phone size={14} className="text-[#FF7B1D]" />
-                    Mobile Number
-                  </label>
-                  <input
-                    type="text"
-                    name="mobile_number"
-                    placeholder="Enter mobile number"
-                    className={inputStyles}
-                    value={formData.mobile_number}
-                    onChange={handleChange}
-                  />
-                  <label className="flex items-center gap-2 mt-2 text-xs text-gray-600">
-                    <input
-                      type="checkbox"
-                      name="mobile_same_as_whatsapp"
-                      checked={formData.mobile_same_as_whatsapp}
-                      onChange={handleChange}
-                      className="w-4 h-4 text-[#FF7B1D]"
-                    />
-                    Same as WhatsApp Number
-                  </label>
-                </div>
-
-                <div className="group">
-                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-                    <Phone size={14} className="text-[#FF7B1D]" />
-                    Alternate Mobile Number
-                  </label>
-                  <input
-                    type="text"
-                    name="alt_mobile_number"
-                    placeholder="Enter alternate mobile"
-                    className={inputStyles}
-                    value={formData.alt_mobile_number}
-                    onChange={handleChange}
-                  />
-                  <label className="flex items-center gap-2 mt-2 text-xs text-gray-600">
-                    <input
-                      type="checkbox"
-                      name="alt_mobile_same_as_whatsapp"
-                      checked={formData.alt_mobile_same_as_whatsapp}
-                      onChange={handleChange}
-                      className="w-4 h-4 text-[#FF7B1D]"
-                    />
-                    Same as WhatsApp Number
-                  </label>
-                </div>
-
-                <div className="group">
-                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-                    <Phone size={14} className="text-[#FF7B1D]" />
-                    WhatsApp Number
-                  </label>
-                  <input
-                    type="text"
-                    name="whatsapp_number"
-                    placeholder="Enter WhatsApp number"
-                    className={inputStyles}
-                    value={formData.whatsapp_number}
-                    onChange={handleChange}
-                    disabled={formData.mobile_same_as_whatsapp || formData.alt_mobile_same_as_whatsapp}
-                  />
-                </div>
-
-                <div className="group">
-                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-                    <Mail size={14} className="text-[#FF7B1D]" />
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    name="email"
-                    placeholder="Enter email address"
-                    className={inputStyles}
-                    value={formData.email}
-                    onChange={handleChange}
-                  />
-                </div>
-
+                {/* 9. Address */}
                 <div className="group col-span-2">
                   <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
                     <MapPin size={14} className="text-[#FF7B1D]" />
@@ -827,6 +919,7 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
                 </h3>
               </div>
               <div className="grid grid-cols-2 gap-4">
+                {/* 1. Organization/Company Name */}
                 <div className="group">
                   <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
                     <Building2 size={14} className="text-[#FF7B1D]" />
@@ -842,8 +935,65 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
                   />
                 </div>
 
-
+                {/* 2. Company Phone Number */}
                 <div className="group">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                    <Phone size={14} className="text-[#FF7B1D]" />
+                    Company Phone Number
+                  </label>
+                  <input
+                    type="text"
+                    name="company_phone"
+                    placeholder="Enter company phone"
+                    className={inputStyles}
+                    value={formData.company_phone}
+                    onChange={handleChange}
+                    onBlur={(e) => handleMobileBlur("Company Phone Number", e.target.value)}
+                    maxLength={15}
+                  />
+                </div>
+
+                {/* 3. Company Email */}
+                <div className="group">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                    <Mail size={14} className="text-[#FF7B1D]" />
+                    Company Email
+                  </label>
+                  <input
+                    type="email"
+                    name="company_email"
+                    placeholder="Enter company email"
+                    className={inputStyles}
+                    value={formData.company_email}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                {/* 4. Industry Type */}
+                <div className="group">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                    <Briefcase size={14} className="text-[#FF7B1D]" />
+                    Industry Type
+                  </label>
+                  <select
+                    name="industry_type"
+                    className={inputStyles}
+                    value={formData.industry_type}
+                    onChange={handleChange}
+                  >
+                    <option value="">Select industry</option>
+                    <option value="Information Technology">IT</option>
+                    <option value="Finance">Finance</option>
+                    <option value="Healthcare">Healthcare</option>
+                    <option value="Manufacturing">Manufacturing</option>
+                    <option value="Retail">Retail</option>
+                    <option value="Education">Education</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+
+                {/* 5. Company Logo — full width */}
+                <div className="group col-span-2">
                   <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
                     <Upload size={14} className="text-[#FF7B1D]" />
                     Company Logo
@@ -901,28 +1051,7 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
                   </div>
                 </div>
 
-                <div className="group">
-                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-                    <Briefcase size={14} className="text-[#FF7B1D]" />
-                    Industry Type
-                  </label>
-                  <select
-                    name="industry_type"
-                    className={inputStyles}
-                    value={formData.industry_type}
-                    onChange={handleChange}
-                  >
-                    <option value="">Select industry</option>
-                    <option value="Information Technology">IT</option>
-                    <option value="Finance">Finance</option>
-                    <option value="Healthcare">Healthcare</option>
-                    <option value="Manufacturing">Manufacturing</option>
-                    <option value="Retail">Retail</option>
-                    <option value="Education">Education</option>
-                    <option value="Other">Other</option>
-                  </select>
-                </div>
-
+                {/* 6. Company Website */}
                 <div className="group">
                   <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
                     <FileText size={14} className="text-[#FF7B1D]" />
@@ -938,37 +1067,8 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
                   />
                 </div>
 
+                {/* 7. GST Number */}
                 <div className="group">
-                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-                    <Mail size={14} className="text-[#FF7B1D]" />
-                    Company Email
-                  </label>
-                  <input
-                    type="email"
-                    name="company_email"
-                    placeholder="Enter company email"
-                    className={inputStyles}
-                    value={formData.company_email}
-                    onChange={handleChange}
-                  />
-                </div>
-
-                <div className="group">
-                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-                    <Phone size={14} className="text-[#FF7B1D]" />
-                    Company Phone Number
-                  </label>
-                  <input
-                    type="text"
-                    name="company_phone"
-                    placeholder="Enter company phone"
-                    className={inputStyles}
-                    value={formData.company_phone}
-                    onChange={handleChange}
-                  />
-                </div>
-
-                <div className="group col-span-2">
                   <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
                     <FileText size={14} className="text-[#FF7B1D]" />
                     GST Number
@@ -983,6 +1083,7 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
                   />
                 </div>
 
+                {/* 8. Company Address */}
                 <div className="group col-span-2">
                   <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
                     <MapPin size={14} className="text-[#FF7B1D]" />
@@ -1217,6 +1318,8 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
                           className={inputStyles}
                           value={contact.mobile_number}
                           onChange={(e) => handleContactPersonChange(index, 'mobile_number', e.target.value)}
+                          onBlur={(e) => handleMobileBlur(`Mobile Number (Contact ${index + 1})`, e.target.value)}
+                          maxLength={15}
                         />
                         <label className="flex items-center gap-2 mt-2 text-xs text-gray-600">
                           <input
@@ -1240,6 +1343,8 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
                           className={inputStyles}
                           value={contact.alt_mobile_number}
                           onChange={(e) => handleContactPersonChange(index, 'alt_mobile_number', e.target.value)}
+                          onBlur={(e) => handleMobileBlur(`Alternate Mobile (Contact ${index + 1})`, e.target.value)}
+                          maxLength={15}
                         />
                         <label className="flex items-center gap-2 mt-2 text-xs text-gray-600">
                           <input
@@ -1263,7 +1368,9 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
                           className={inputStyles}
                           value={contact.whatsapp_number}
                           onChange={(e) => handleContactPersonChange(index, 'whatsapp_number', e.target.value)}
+                          onBlur={(e) => handleMobileBlur(`WhatsApp Number (Contact ${index + 1})`, e.target.value)}
                           disabled={contact.mobile_same_as_whatsapp || contact.alt_mobile_same_as_whatsapp}
+                          maxLength={15}
                         />
                       </div>
 
@@ -1312,27 +1419,63 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
                 />
               </div>
 
-              <div className="group md:col-span-2">
-                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-3">
+              {/* Interested In — custom multi-select dropdown */}
+              <div className="group md:col-span-2" data-multiselect style={{ position: 'relative', zIndex: openMultiSelect === 'interested_in' ? 30 : 1 }}>
+                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
                   <FileText size={14} className="text-[#FF7B1D]" />
-                  Interested In (Multiple Selection Allowed)
+                  Interested In
+                  <span className="text-xs text-gray-400 font-normal">(select multiple)</span>
                 </label>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                  {serviceOptions.map(service => (
-                    <label key={service} className="flex items-center gap-2 cursor-pointer group">
-                      <input
-                        type="checkbox"
-                        checked={formData.interested_in.includes(service)}
-                        onChange={() => handleServiceToggle(service)}
-                        className="w-4 h-4 text-[#FF7B1D]"
-                      />
-                      <span className="text-sm text-gray-700 group-hover:text-[#FF7B1D] transition-colors">
-                        {service}
+
+                {/* Trigger button */}
+                <div
+                  onClick={() => setOpenMultiSelect(prev => prev === 'interested_in' ? null : 'interested_in')}
+                  className="w-full min-h-[46px] px-3 py-2 border border-gray-200 rounded-sm cursor-pointer flex flex-wrap gap-1.5 items-center bg-white hover:border-[#FF7B1D] transition-all"
+                >
+                  {formData.interested_in.length === 0 ? (
+                    <span className="text-sm text-gray-400">Select options...</span>
+                  ) : (
+                    formData.interested_in.map(item => (
+                      <span
+                        key={item}
+                        className="inline-flex items-center gap-1 px-2 py-0.5 bg-orange-100 text-orange-600 text-xs font-semibold rounded-sm"
+                      >
+                        {item}
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); handleInterestedInToggle(item); }}
+                          className="hover:text-orange-800 leading-none"
+                        >
+                          <X size={10} />
+                        </button>
                       </span>
-                    </label>
-                  ))}
+                    ))
+                  )}
+                  <span className="ml-auto text-gray-400 text-xs">{openMultiSelect === 'interested_in' ? '▲' : '▼'}</span>
                 </div>
+
+                {/* Dropdown list */}
+                {openMultiSelect === 'interested_in' && (
+                  <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-sm shadow-lg z-50 max-h-52 overflow-y-auto">
+                    {interestedInOptions.map(option => (
+                      <label
+                        key={option}
+                        className="flex items-center gap-3 px-4 py-2.5 hover:bg-orange-50 cursor-pointer transition-colors"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={formData.interested_in.includes(option)}
+                          onChange={() => handleInterestedInToggle(option)}
+                          className="w-4 h-4 accent-[#FF7B1D] cursor-pointer"
+                        />
+                        <span className="text-sm text-gray-700 font-medium">{option}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
               </div>
+
+
 
               <div className="group">
                 <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
@@ -1426,20 +1569,7 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
                 />
               </div>
 
-              <div className="group md:col-span-2">
-                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-                  <FileText size={14} className="text-[#FF7B1D]" />
-                  Description
-                </label>
-                <textarea
-                  name="description"
-                  rows="3"
-                  placeholder="Enter description"
-                  className={inputStyles}
-                  value={formData.description}
-                  onChange={handleChange}
-                />
-              </div>
+
             </div>
           </div>
 

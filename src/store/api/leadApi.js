@@ -257,6 +257,18 @@ export const leadApi = createApi({
             query: (id) => `leads/${id}/assignment-history`,
             providesTags: (result, error, id) => [{ type: 'LeadAssignmentLogs', id }],
         }),
+        getDueReminders: builder.query({
+            query: () => 'leads/due-reminders',
+            providesTags: ['Lead'],
+        }),
+        snoozeLead: builder.mutation({
+            query: ({ id, minutes }) => ({
+                url: `leads/${id}/snooze`,
+                method: 'POST',
+                body: { minutes },
+            }),
+            invalidatesTags: (result, error, { id }) => ['Lead', { type: 'Lead', id }],
+        }),
     }),
 });
 
@@ -293,4 +305,6 @@ export const {
     useDeleteLeadMeetingMutation,
     useGetLeadAssignmentHistoryQuery,
     useCheckCallConflictQuery,
+    useGetDueRemindersQuery,
+    useSnoozeLeadMutation,
 } = leadApi;

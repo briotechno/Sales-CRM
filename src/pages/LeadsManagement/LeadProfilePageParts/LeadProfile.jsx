@@ -29,6 +29,7 @@ import EditLeadModal from "../../../pages/LeadsManagement/EditLeadPopup";
 import LeadSidebar from "./LeadSidebar";
 import LeadTabs from "./LeadTable";
 import CallActionPopup from "../../../components/AddNewLeads/CallActionPopup";
+import CallQrModal from "../../../components/LeadManagement/CallQrModal";
 import LeadDeleteConfirmationModal from "../../../components/LeadManagement/LeadPipLineStatus/LeadDeleteConfirmationModal";
 import { toast } from "react-hot-toast";
 import { FaWhatsapp } from "react-icons/fa";
@@ -74,6 +75,7 @@ export default function CRMLeadDetail() {
   const [showDropdown, setShowDropdown] = useState(false);
   const [pipelineStage, setPipelineStage] = useState("Not Contacted");
   const [callPopupData, setCallPopupData] = useState({ isOpen: false, lead: null, initialResponse: null });
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, type: null, itemId: null });
   const [showDropModal, setShowDropModal] = useState(false);
   const [dropReason, setDropReason] = useState("");
@@ -200,6 +202,17 @@ export default function CRMLeadDetail() {
 
   const openCallAction = (initialResponse = null) => {
     setCallPopupData({ isOpen: true, lead: leadData, initialResponse });
+  };
+
+  // Opens the QR scan screen first; afterwards handleProceedFromQr decides the form
+  const openQrCall = () => {
+    setIsQrModalOpen(true);
+  };
+
+  // Called when user clicks "Add Call Log" / "Proceed" inside the QR modal
+  const handleProceedFromQr = () => {
+    setIsQrModalOpen(false);
+    setCallPopupData({ isOpen: true, lead: leadData });
   };
 
   const handleLeadInfoSave = async (updatedData) => {
@@ -757,7 +770,7 @@ export default function CRMLeadDetail() {
 
             {/* Tabs Navigation */}
             <div className="bg-white border-b">
-              <div className="flex px-0 overflow-x-auto no-scrollbar">
+              <div className="flex w-full overflow-x-auto no-scrollbar">
                 {[
                   { id: "activities", label: "Activities", Icon: Zap },
                   { id: "notes", label: "Notes", Icon: FileText },
@@ -774,7 +787,7 @@ export default function CRMLeadDetail() {
                       if (!isTabDisabled) setActiveTab(id);
                     }}
                     disabled={isOnlyCallTabEnabled ? (id !== "calls" && id !== "activities") : !isTabsEnabled}
-                    className={`px-6 py-4 font-semibold flex items-center gap-2 border-b-2 transition-all whitespace-nowrap ${(isOnlyCallTabEnabled ? (id !== "calls" && id !== "activities") : !isTabsEnabled)
+                    className={`flex-1 py-4 font-semibold flex items-center justify-center gap-2 border-b-2 transition-all whitespace-nowrap ${(isOnlyCallTabEnabled ? (id !== "calls" && id !== "activities") : !isTabsEnabled)
                       ? "opacity-40 cursor-not-allowed border-transparent text-gray-300"
                       : activeTab === id
                         ? "border-orange-500 text-orange-500 bg-orange-50/30 shadow-sm"
@@ -918,12 +931,20 @@ export default function CRMLeadDetail() {
           isOpen={callPopupData.isOpen}
           onClose={() => setCallPopupData({ isOpen: false, lead: null, initialResponse: null })}
           lead={callPopupData.lead}
-          initialResponse={callPopupData.initialResponse}
           rules={rules}
           onHitCall={handleHitCall}
           onConnectedSelect={callPopupData.onConnectedSelect}
         />
       )}
+
+      {/* QR scan modal — shown before the call log form for the floating call button */}
+      <CallQrModal
+        isOpen={isQrModalOpen}
+        onClose={() => setIsQrModalOpen(false)}
+        lead={leadData}
+        onProceedToLog={handleProceedFromQr}
+        onViewProfile={() => { }}
+      />
 
       {/* Disqualify Lead Modal */}
       {showDropModal && (
@@ -1060,7 +1081,7 @@ export default function CRMLeadDetail() {
           </span>
         </a>
         <button
-          onClick={() => openCallAction()}
+          onClick={openQrCall}
           className="w-14 h-14 bg-orange-500 rounded-full flex items-center justify-center text-white shadow-lg hover:bg-orange-600 transition-all hover:scale-110 group"
           title="Call"
         >

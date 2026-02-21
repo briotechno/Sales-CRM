@@ -127,7 +127,7 @@ export default function LeadsGridView({
         const tagLeads = leadsData.filter((lead) => {
           // Identify potential categories based on backend criteria
           const isTrending = lead.is_trending === 1 || lead.priority === "High" || lead.tag === "Trending";
-          const isFollowUp = lead.tag === "Follow Up";
+          const isFollowUp = lead.tag === "Follow Up" || lead.tag === "Missed";
           const isNotConnected = lead.tag === "Not Connected";
 
           // Match backend 'new' criteria: tag is 'Not Contacted' OR created in last 2 days

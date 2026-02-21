@@ -82,11 +82,11 @@ const WorkStationLeadsListView = ({
             </th>
             <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 capitalize whitespace-nowrap">Lead ID</th>
             <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 capitalize whitespace-nowrap">Full Name</th>
-            <th className="py-3 px-4 font-semibold text-center border-b border-orange-400 capitalize whitespace-nowrap">Mobile Number</th>
+            <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 capitalize whitespace-nowrap">Mobile Number</th>
             <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 capitalize whitespace-nowrap">Interested In</th>
-            <th className="py-3 px-4 font-semibold text-center border-b border-orange-400 capitalize whitespace-nowrap">Lead Status</th>
+            <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 capitalize whitespace-nowrap">Lead Status</th>
             <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 capitalize whitespace-nowrap">Pipeline Stages</th>
-            <th className="py-3 px-4 font-semibold border-b border-orange-400 capitalize text-center whitespace-nowrap">Call Hits</th>
+            <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 capitalize whitespace-nowrap">Call Hits</th>
             <th className="py-3 px-4 font-semibold text-right border-b border-orange-400 capitalize whitespace-nowrap">Action</th>
           </tr>
         </thead>
@@ -111,9 +111,9 @@ const WorkStationLeadsListView = ({
                 <td className="py-3 px-4 text-gray-800 hover:text-orange-600 cursor-pointer text-sm font-bold text-left" onClick={() => handleLeadClick(lead)} title={lead.name || lead.full_name || lead.organization_name}>
                   {((name) => name.length > 25 ? name.substring(0, 25) + "..." : name)(lead.name || lead.full_name || lead.organization_name || "Untitled Lead")}
                 </td>
-                <td className="py-3 px-4 text-center text-sm text-gray-600">
-                  <div className="flex items-center justify-center gap-2">
-                    <span>{lead.mobile_number || lead.phone || "--"}</span>
+                <td className="py-3 px-4 text-left text-sm text-gray-700">
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold">{lead.mobile_number || lead.phone || "--"}</span>
                     {lead.mobile_number || lead.phone ? (
                       <button
                         onClick={() => handleHitCall && handleHitCall(lead)}
@@ -126,67 +126,114 @@ const WorkStationLeadsListView = ({
                   </div>
                 </td>
                 <td className="py-3 px-4 text-left">
-                  <div className="flex flex-wrap gap-1">
-                    {lead.interested_in ? (
-                      (Array.isArray(lead.interested_in) ? lead.interested_in : lead.interested_in.split(',')).map((item, idx) => (
-                        <span key={idx} className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-sm text-[10px] font-bold border border-gray-200 uppercase">
-                          {item.trim()}
-                        </span>
-                      ))
-                    ) : (
-                      <span className="text-gray-400 text-[10px]">--</span>
-                    )}
-                  </div>
+                  {(() => {
+                    const allItems = lead.interested_in
+                      ? (Array.isArray(lead.interested_in) ? lead.interested_in : lead.interested_in.split(',')).map(i => i.trim()).filter(Boolean)
+                      : [];
+                    const visible = allItems.slice(0, 1);
+                    const hidden = allItems.slice(1);
+                    return (
+                      <div className="flex items-center gap-1">
+                        {visible.length > 0 ? (
+                          <>
+                            {visible.map((item, idx) => (
+                              <span key={idx} className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-sm text-[10px] font-bold border border-gray-200 uppercase whitespace-nowrap max-w-[110px] truncate" title={item}>
+                                {item}
+                              </span>
+                            ))}
+                            {hidden.length > 0 && (
+                              <span
+                                className="inline-flex items-center justify-center px-2 py-0.5 bg-orange-500 text-white rounded-sm text-[10px] font-bold cursor-pointer select-none whitespace-nowrap"
+                                onMouseEnter={(e) => {
+                                  const tip = document.getElementById(`tip-${lead.id}`);
+                                  if (!tip) return;
+                                  const rect = e.currentTarget.getBoundingClientRect();
+                                  tip.style.display = 'block';
+                                  tip.style.top = `${rect.bottom + 6}px`;
+                                  tip.style.left = `${rect.left + rect.width / 2}px`;
+                                  tip.style.transform = 'translateX(-50%)';
+                                }}
+                                onMouseLeave={() => {
+                                  const tip = document.getElementById(`tip-${lead.id}`);
+                                  if (tip) tip.style.display = 'none';
+                                }}
+                              >
+                                +{hidden.length} more
+                              </span>
+                            )}
+                          </>
+                        ) : (
+                          <span className="text-gray-400 text-[10px]">--</span>
+                        )}
+                        {/* Fixed-position tooltip — escapes overflow-x-auto clipping */}
+                        {hidden.length > 0 && (
+                          <div
+                            id={`tip-${lead.id}`}
+                            style={{ display: 'none', position: 'fixed', zIndex: 99999 }}
+                            className="bg-white border border-orange-200 shadow-xl rounded-md px-3 py-2.5 min-w-[140px]"
+                            onMouseEnter={(e) => { e.currentTarget.style.display = 'block'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.display = 'none'; }}
+                          >
+                            {/* Arrow pointing up */}
+                            <span className="absolute -top-[6px] left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-l border-t border-orange-200 rotate-45 block" />
+                            <p className="text-[9px] font-bold uppercase tracking-widest text-orange-500 mb-1.5 border-b border-orange-100 pb-1">Interested In</p>
+                            <div className="flex flex-col gap-1">
+                              {hidden.map((item, i) => (
+                                <span key={i} className="text-[11px] font-semibold text-gray-700 uppercase flex items-center gap-1.5">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-orange-400 flex-shrink-0 inline-block" />
+                                  {item}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </td>
-                <td className="py-3 px-4 text-center">
-                  <div className="flex flex-col items-center gap-1">
-                    <span className={`px-2 py-1 rounded-[2px] text-[10px] font-bold border uppercase tracking-wider ${((tag, isTrending, status) => {
+                <td className="py-3 px-4 text-left">
+                  <div className="flex flex-row flex-wrap items-center gap-x-2 gap-y-0.5">
+                    <span className={`px-2 py-1 rounded-[2px] text-[10px] font-bold border uppercase tracking-wider whitespace-nowrap ${((tag, isTrending, status) => {
                       let s = tag || status || "New Lead";
                       if (s === "Not Contacted") s = "New Lead";
                       if (isTrending) return "bg-orange-100 text-orange-600 border-orange-200";
                       switch (s.toLowerCase()) {
-                        case "new lead": case "new": case "new leads": return "bg-blue-100 text-blue-600 border-blue-200";
+                        case "new lead": case "new": case "new leads": case "New Lead": return "bg-blue-100 text-blue-600 border-blue-200";
                         case "not connected": return "bg-purple-100 text-purple-600 border-purple-200";
                         case "follow up": return "bg-yellow-100 text-yellow-600 border-yellow-200";
                         case "won": case "closed": return "bg-green-100 text-green-600 border-green-200";
                         case "dropped": case "lost": return "bg-red-100 text-red-600 border-red-200";
+                        case "duplicate": return "bg-rose-100 text-rose-600 border-rose-200";
                         default: return "bg-gray-100 text-gray-600 border-gray-200";
                       }
                     })(lead.tag, lead.is_trending, lead.status)}`}>
-                      {lead.is_trending === 1 ? "Trending" : (lead.tag || lead.status || "New Lead")}
+                      {lead.is_trending === 1 ? "Trending" : (lead.tag === "Not Contacted" ? "New Lead" : (lead.tag || lead.status || "New Lead"))}
                     </span>
-                    <span className="text-[10px] text-gray-500 font-semibold font-primary">
+                    <span className="text-[13px] text-gray-400 font-medium whitespace-nowrap">
                       {(lead.rawUpdated || lead.last_call_at || lead.updated_at) ? safeParseDate(lead.rawUpdated || lead.last_call_at || lead.updated_at).toLocaleString('en-IN', {
-                        day: '2-digit',
-                        month: '2-digit',
-                        year: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        hour12: true
+                        day: '2-digit', month: '2-digit', year: 'numeric',
+                        hour: '2-digit', minute: '2-digit', hour12: true
                       }).toUpperCase() : "--"}
                     </span>
                   </div>
                 </td>
                 <td className="py-3 px-4 text-left">
-                  <div className="flex flex-col">
-                    <span className="text-xs font-bold text-gray-700">{lead.pipeline_name || "General"}</span>
-                    <span className="text-[10px] text-[#FF7B1D] font-bold italic">{lead.stage_name || "New"}</span>
-                    <span className="text-[10px] text-gray-500 font-semibold mt-1 font-primary">
+                  <div className="flex flex-row flex-wrap items-center gap-3">
+                    <div className="flex flex-col"> <span className="text-sm font-semibold text-gray-800 whitespace-nowrap capitalize">{lead.pipeline_name || "General"}</span>
+                      <span className="text-[11px] text-[#FF7B1D] font-bold  whitespace-nowrap capitalize">{lead.stage_name || "New"}</span>
+                    </div>
+                    <span className="text-[12px] text-gray-400 font-medium whitespace-nowrap">
                       {(lead.rawCreated || lead.created_at) ? safeParseDate(lead.rawCreated || lead.created_at).toLocaleString('en-IN', {
-                        day: '2-digit',
-                        month: '2-digit',
-                        year: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        hour12: true
+                        day: '2-digit', month: '2-digit', year: 'numeric',
+                        hour: '2-digit', minute: '2-digit', hour12: true
                       }).toUpperCase() : "--"}
                     </span>
                   </div>
                 </td>
-                <td className="py-3 px-4 font-bold text-gray-700 text-center">
-                  <div className="flex flex-col items-center">
-                    <span className="text-sm">{lead.call_count || 0}</span>
-                    <span className="text-[9px] text-gray-400 font-normal">Hits</span>
+                <td className="py-3 px-4 text-right">
+                  <div className="flex flex-col items-start">
+                    <span className="text-sm font-bold text-gray-800">{lead.call_count || 0}</span>
+                    <span className="text-[9px] text-gray-400 font-normal uppercase tracking-wide">Hits</span>
                   </div>
                 </td>
                 <td className="py-3 px-4">
@@ -272,7 +319,7 @@ const WorkStationLeadsGridView = ({
       {groupTags.map((groupTag) => {
         let tagLeads = leadsData.filter((lead) => {
           const isTrending = lead.is_trending === 1 || lead.priority === "High" || (lead.tag && (lead.tag === "Trending" || lead.tag === "High Priority"));
-          const isFollowUp = lead.tag === "Follow Up";
+          const isFollowUp = lead.tag === "Follow Up" || lead.tag === "Missed";
           const isNotConnected = lead.tag === "Not Connected" && (!lead.next_call_at || new Date(lead.next_call_at) > currentTime);
           const isNew = lead.tag === "Not Contacted" || lead.tag === "New Lead" || lead.tag === "New Leads" || lead.stage_name === "New" || !lead.tag || (lead.tag === "Not Connected" && lead.next_call_at && new Date(lead.next_call_at) <= currentTime);
 
@@ -347,70 +394,70 @@ const WorkStationLeadsGridView = ({
                       case "won": case "closed": c = "text-emerald-600 bg-emerald-50 border-emerald-200"; break;
                       case "lost": case "dropped": c = "text-rose-600 bg-rose-50 border-rose-200"; break;
                       case "new lead": case "new leads": case "new": c = "text-blue-600 bg-blue-50 border-blue-200"; break;
+                      case "missed": c = "text-red-600 bg-red-50 border-red-500"; break;
                       default: c = "text-gray-600 bg-gray-50 border-gray-200";
                     }
 
                     return { text: s, color: c };
                   })();
 
+                  const isMissed = lead.tag === "Missed" || displayStatus.text === "Missed";
+
                   return (
-                    <div key={lead.id} className="bg-white border border-gray-300 rounded-sm shadow-sm transition-all duration-300 relative group flex flex-col overflow-hidden animate-slideIn">
-                      {/* Top Selection */}
+                    <div
+                      key={lead.id}
+                      className={`group flex flex-col bg-white border ${isMissed ? 'border-red-500 ring-1 ring-red-500/10' : 'border-gray-200'} rounded-sm shadow-sm transition-all duration-300 relative overflow-hidden animate-slideIn`}
+                    >
 
                       {/* ── CARD BODY ── */}
-                      <div className="p-3 flex flex-col gap-2">
+                      <div className="pt-4 px-4 pb-2.5 flex flex-col gap-2">
 
-                        {/* Row 1: Avatar + Info + Checkbox */}
-                        <div className="flex items-start gap-2.5">
-                          {/* Avatar */}
-                          <div className="w-10 h-10 rounded-full flex-shrink-0 border-2 border-gray-100 shadow-sm overflow-hidden bg-white">
-                            {lead.profile_image ? (
-                              <img src={lead.profile_image} alt={leadDisplayName} className="w-full h-full object-cover" />
-                            ) : (
-                              <div className={`w-full h-full ${getAvatarBg(lead.tag)} flex items-center justify-center text-white text-sm font-semibold capitalize`}>
-                                {initials}
+                        {/* Header: Avatar + Info */}
+                        <div className="flex items-start gap-3">
+                          <div className="relative">
+                            <div className="w-12 h-12 rounded-sm flex-shrink-0 border border-gray-100 overflow-hidden bg-white transition-colors">
+                              {lead.profile_image ? (
+                                <img src={lead.profile_image} alt={leadDisplayName} className="w-full h-full object-cover" />
+                              ) : (
+                                <div className={`w-full h-full ${getAvatarBg(lead.tag)} flex items-center justify-center text-white text-base font-bold capitalize`}>
+                                  {initials}
+                                </div>
+                              )}
+                            </div>
+                            {lead.is_trending === 1 && (
+                              <div className="absolute -top-1.5 -right-1.5 bg-orange-500 text-white p-1 rounded-full border-2 border-white">
+                                <TrendingUp size={10} strokeWidth={3} />
                               </div>
                             )}
                           </div>
 
-                          {/* Name + ID + Date block */}
                           <div className="flex-1 min-w-0">
-                            {/* Name row + checkbox — checkbox is INLINE, no absolute */}
-                            <div className="flex items-center justify-between gap-1">
-                              <h3
-                                className="text-sm font-bold text-gray-900 capitalize font-primary cursor-pointer hover:text-orange-600 transition-colors truncate max-w-[140px] leading-tight"
-                                onClick={() => handleLeadClick(lead)}
-                                title={leadDisplayName}
-                              >
-                                {leadDisplayName}
-                              </h3>
-                              <input
-                                type="checkbox"
-                                checked={selectedLeads.includes(lead.id)}
-                                onChange={() => handleSelectLead(lead.id)}
-                                className="w-4 h-4 cursor-pointer accent-orange-500 flex-shrink-0 border-gray-300 transition-all hover:scale-110"
-                              />
-                            </div>
+                            <h3
+                              className="text-[15px] font-bold text-gray-900 capitalize font-primary cursor-pointer hover:text-orange-600 transition-colors leading-tight"
+                              onClick={() => handleLeadClick(lead)}
+                              title={leadDisplayName}
+                            >
+                              {leadDisplayName}
+                            </h3>
 
-                            {/* ID badge + Date on same row — kept small so they never push */}
-                            <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                              <span className="text-[9px] text-orange-600 font-bold px-1.5 py-0.5 rounded-sm bg-orange-50 border border-orange-100 whitespace-nowrap capitalize flex-shrink-0">
+                            <div className="flex items-center gap-2 mt-1.5">
+                              <span className="text-[10px] text-orange-600 font-bold px-1.5 py-0.5 rounded-sm bg-orange-50 border border-orange-100 capitalize tracking-wide">
                                 {lead.lead_id || lead.id}
                               </span>
-                              <div className="flex items-center gap-1 text-[10px] font-semibold font-primary text-gray-400 whitespace-nowrap">
-                                <Calendar size={10} className="text-orange-400 flex-shrink-0" />
-                                {(lead.rawCreated || lead.created_at) ? safeParseDate(lead.rawCreated || lead.created_at).toLocaleDateString('en-IN', {
-                                  day: '2-digit', month: 'short', year: 'numeric'
+                              <div className="flex items-center gap-1 text-[11px] font-medium font-primary text-gray-500">
+                                <Calendar size={11} className="text-gray-400" />
+                                {(lead.rawCreated || lead.created_at) ? safeParseDate(lead.rawCreated || lead.created_at).toLocaleString('en-IN', {
+                                  day: '2-digit', month: 'short', year: 'numeric',
+                                  hour: '2-digit', minute: '2-digit', hour12: true
                                 }) : "--"}
                               </div>
                             </div>
 
-                            {/* Next call row */}
                             {lead.next_call_at && (groupTag === "Not Connected" || groupTag === "Follow Up") && (
-                              <div className="mt-1 text-[10px] text-orange-700 font-semibold flex items-center gap-1 font-primary bg-orange-50 px-2 py-0.5 rounded-sm border border-orange-100 w-fit capitalize">
-                                <Clock size={10} className="text-orange-500 flex-shrink-0" />
-                                <span className="text-orange-600 font-bold">Next:</span>
-                                <span className="truncate max-w-[140px]">
+                              <div className="mt-2 text-[10px] text-orange-700 font-bold flex items-center gap-1.5 font-primary bg-orange-50/50 px-2 py-1 rounded-sm border border-orange-100/50 w-fit backdrop-blur-sm">
+                                <Clock size={11} className="text-orange-500 animate-pulse" />
+                                <span className="opacity-70 font-bold  text-[11px] capitalize ">Next Call:</span>
+                                <span className="font-bold text-[11px]">
                                   {safeParseDate(lead.next_call_at).toLocaleString('en-IN', {
                                     day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true
                                   })}
@@ -420,111 +467,139 @@ const WorkStationLeadsGridView = ({
                           </div>
                         </div>
 
-                        {/* Pipeline + Stage */}
-                        <div className="bg-gray-50/80 rounded-sm px-3 py-2 border border-gray-200">
-                          <div className="flex justify-between items-center gap-2">
+                        {/* Pipeline & Stage Section */}
+                        <div className="bg-slate-100 rounded-sm p-3 border border-gray-200 transition-colors">
+                          <div className="flex justify-between items-center gap-3">
                             <div className="flex flex-col min-w-0">
-                              <span className="text-[11px] font-bold text-gray-500 capitalize font-primary tracking-tight">Pipeline</span>
-                              <span className="text-[13px] font-bold text-gray-800 font-primary truncate max-w-[110px] capitalize" title={lead.pipeline_name || "General"}>
+                              <span className="text-sm font-medium text-gray-800 font-primary truncate max-w-[120px] capitalize leading-none" title={lead.pipeline_name || "General"}>
                                 {lead.pipeline_name || "General"}
                               </span>
+                              <span className="text-xs font-bold text-gray-700 mt-1 capitalize">Pipeline</span>
                             </div>
                             <div className="flex flex-col items-end min-w-0">
-                              <span className="text-[11px] font-bold text-gray-500 capitalize font-primary tracking-tight">Stage</span>
-                              <span className="text-[13px] text-[#FF7B1D] font-bold italic font-primary capitalize truncate max-w-[110px]" title={lead.stage_name || "New"}>
+                              <span className="text-sm text-[#FF7B1D] font-medium italic font-primary capitalize truncate max-w-[120px] leading-none" title={lead.stage_name || "New"}>
                                 {lead.stage_name || "New"}
                               </span>
+                              <span className="text-xs font-bold text-gray-700 mt-1 capitalize">Stage</span>
                             </div>
                           </div>
                         </div>
 
-                        {/* Status */}
-                        <div className="flex justify-between items-center bg-gray-50 px-3 py-1.5 rounded-sm border border-gray-100 gap-2">
-                          <span className="text-[11px] font-bold text-gray-500 capitalize font-primary tracking-tight flex-shrink-0">Status</span>
-                          <span
-                            className={`text-[11px] font-bold px-2 py-0.5 rounded-sm border capitalize ${displayStatus.color}`}
-                            title={displayStatus.text}
-                          >
-                            {displayStatus.text}
-                          </span>
-                        </div>
-
-                        {/* Lead Profile Strength */}
-                        <div className="w-full space-y-1">
+                        {/* Status Section */}
+                        <div className="bg-slate-100 rounded-sm px-3 py-1.5 border border-gray-200 transition-colors">
                           <div className="flex justify-between items-center">
-                            <span className="text-[11px] font-bold text-gray-500 capitalize font-primary tracking-wider">Lead Profile</span>
-                            <span className={`text-[11px] font-bold font-primary ${calculateProfileCompletion(lead) > 70 ? 'text-green-600' : 'text-orange-600'}`}>
-                              {calculateProfileCompletion(lead)}%
+                            <span className="text-xs font-bold text-gray-700 capitalize font-primary">Status</span>
+                            <span className={`text-[12px] font-medium capitalize px-2.5 py-0.5 rounded-sm border shadow-sm ${displayStatus.color}`} title={displayStatus.text}>
+                              {displayStatus.text}
                             </span>
                           </div>
-                          <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
+                        </div>
+
+                        {/* People: Assign & Owner Section */}
+                        <div className="grid grid-cols-2 gap-2.5">
+                          <div
+                            className="flex flex-col gap-1 px-3 py-2 bg-slate-100 rounded-sm border border-gray-200 cursor-pointer hover:bg-orange-50 hover:border-orange-200 transition-all group/people"
+                            onClick={() => handleShowAssignmentHistory && handleShowAssignmentHistory(lead)}
+                          >
+                            <span className="text-xs font-bold text-gray-700 capitalize font-primary">Assignee</span>
+                            <div className="flex items-center justify-between gap-1">
+                              <span className="text-[12px] font-medium text-gray-800 capitalize truncate" title={lead.employee_name || "Unassigned"}>
+                                {lead.employee_name || "Unassigned"}
+                              </span>
+                              <History size={11} className="text-gray-300 group-hover/people:text-orange-500 flex-shrink-0" />
+                            </div>
+                          </div>
+                          <div className="flex flex-col gap-1 px-3 py-2 bg-slate-100 rounded-sm border border-gray-200">
+                            <span className="text-xs font-bold text-gray-700 capitalize font-primary">Owner</span>
+                            <span className="text-[12px] font-medium text-gray-800 capitalize truncate" title={lead.lead_owner || "-"}>
+                              {lead.lead_owner || "-"}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Profile Strength Progress Bar */}
+                        <div className="group/strength relative">
+                          <div
+                            className="w-full bg-gray-100 h-2 rounded-full overflow-hidden shadow-inner cursor-help border border-transparent hover:border-orange-300 hover:ring-2 hover:ring-orange-100 transition-all duration-300"
+                          >
                             <div
-                              className={`h-full rounded-full transition-all duration-500 ${calculateProfileCompletion(lead) > 70 ? 'bg-gradient-to-r from-green-400 to-green-600' : 'bg-gradient-to-r from-orange-400 to-orange-600'}`}
+                              className={`h-full rounded-full transition-all duration-700 ease-out ${calculateProfileCompletion(lead) > 70 ? 'bg-gradient-to-r from-green-400 to-green-600' : 'bg-gradient-to-r from-orange-400 to-[#FF7B1D]'}`}
                               style={{ width: `${calculateProfileCompletion(lead)}%` }}
-                            ></div>
+                            >
+                              <div className="w-full h-full opacity-20 bg-[linear-gradient(45deg,rgba(255,255,255,0.2)_25%,transparent_25%,transparent_50%,rgba(255,255,255,0.2)_50%,rgba(255,255,255,0.2)_75%,transparent_75%,transparent)] bg-[length:10px_10px] animate-stripe" />
+                            </div>
                           </div>
-                        </div>
 
-                        {/* Assign — styled like Status row */}
-                        <div
-                          className="flex justify-between items-center bg-gray-50 px-3 py-1.5 rounded-sm border border-gray-100 gap-2 cursor-pointer hover:bg-orange-50 hover:border-orange-200 transition-colors group/assign"
-                          onClick={() => handleShowAssignmentHistory && handleShowAssignmentHistory(lead)}
-                          title="View assignment history"
-                        >
-                          <span className="text-[11px] font-bold text-gray-500 capitalize font-primary tracking-tight flex-shrink-0 group-hover/assign:text-[#FF7B1D] transition-colors">Assign</span>
-                          <div className="flex items-center gap-1.5 min-w-0">
-                            <span className="text-[11px] font-bold text-gray-900 capitalize font-primary truncate" title={lead.employee_name || "-"}>
-                              {lead.employee_name || "-"}
-                            </span>
-                            <History
-                              size={13}
-                              className="flex-shrink-0 text-gray-300 group-hover/assign:text-[#FF7B1D] transition-colors"
-                            />
+                          {/* Premium Custom Tooltip */}
+                          <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-gray-900 text-white text-[11px] font-bold rounded-sm shadow-xl opacity-0 group-hover/strength:opacity-100 transition-all duration-200 pointer-events-none whitespace-nowrap z-20 transform translate-y-1 group-hover/strength:translate-y-0">
+                            <div className="flex items-center gap-1.5">
+                              <div className={`w-1.5 h-1.5 rounded-full ${calculateProfileCompletion(lead) > 70 ? 'bg-green-400' : 'bg-orange-400'}`} />
+                              <span>Lead Profile: <span className="text-orange-300">{calculateProfileCompletion(lead)}%</span></span>
+                            </div>
+                            {/* Tooltip Arrow */}
+                            <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-gray-900" />
                           </div>
-                        </div>
-
-                        {/* Owner — styled like Status row */}
-                        <div className="flex justify-between items-center bg-gray-50 px-3 py-1.5 rounded-sm border border-gray-100 gap-2">
-                          <span className="text-[11px] font-bold text-gray-500 capitalize font-primary tracking-tight flex-shrink-0">Owner</span>
-                          <span className="text-[11px] font-bold text-gray-900 capitalize font-primary truncate" title={lead.lead_owner || "-"}>
-                            {lead.lead_owner || "-"}
-                          </span>
                         </div>
                       </div>
 
                       {/* ── CARD FOOTER ── */}
-                      <div className="bg-gray-50 px-3 py-2.5 space-y-2.5 border-t border-gray-200 mt-auto">
-
-                        {/* Stats row: Hits | Priority | Source */}
-                        <div className="flex items-center justify-between text-center border-b border-gray-200 pb-2">
-                          <div className="flex-1 border-r border-gray-200 pr-2">
-                            <p className="text-[11px] text-[#FF7B1D] font-bold font-primary capitalize">Hits</p>
-                            <p className="text-[13px] font-bold text-gray-900 mt-0.5 font-primary">{lead.call_count || 0}</p>
-                          </div>
-                          <div className="flex-1 border-r border-gray-200 px-2">
-                            <p className="text-[11px] text-[#FF7B1D] font-bold font-primary capitalize">Priority</p>
-                            <span className={`inline-block px-1.5 py-0.5 text-[11px] font-bold rounded-[2px] mt-0.5 capitalize border font-primary ${getPriorityColor(lead.priority)}`}>
+                      <div className="bg-slate-100 px-4 py-3 border-t border-gray-200 mt-auto flex items-center justify-between gap-2">
+                        {/* Stats Group */}
+                        <div className="flex items-center gap-5 min-w-0">
+                          <div className="flex flex-col min-w-0">
+                            <span className="text-[10px] text-gray-400 font-bold capitalize leading-none mb-1.5">Priority</span>
+                            <span className={`inline-flex px-1.5 py-0.5 text-[10px] font-medium rounded-sm capitalize border ${getPriorityColor(lead.priority)} whitespace-nowrap`}>
                               {lead.priority || 'Medium'}
                             </span>
                           </div>
-                          <div className="flex-1 pl-2 min-w-0">
-                            <p className="text-[11px] text-[#FF7B1D] font-bold font-primary capitalize">Source</p>
-                            <p className="text-[13px] font-bold text-gray-900 mt-0.5 truncate font-primary capitalize" title={lead.lead_source || "Direct"}>
+                          <div className="flex flex-col min-w-0">
+                            <span className="text-[10px] text-gray-400 font-bold capitalize leading-none mb-1.5 text-center">Source</span>
+                            <p className="text-[12px] font-medium text-gray-800 truncate max-w-[85px] font-primary capitalize italic bg-gray-50 px-2 py-0.5 rounded-sm border border-gray-100" title={lead.lead_source || "Direct"}>
                               {lead.lead_source || "Direct"}
                             </p>
                           </div>
                         </div>
 
-                        {/* Action Buttons — horizontal row aligned right */}
-                        <div className="flex items-center justify-end gap-2">
-                          <button onClick={() => handleHitCall && handleHitCall(lead)} className="p-2.5 bg-white hover:bg-orange-500 rounded-sm text-orange-600 hover:text-white transition-all border border-orange-100 hover:border-orange-500 shadow-sm" title="Call">
-                            <Phone size={16} />
-                          </button>
-                          <a href={waLink} target="_blank" rel="noopener noreferrer" className="p-2.5 bg-white hover:bg-green-500 rounded-sm text-green-600 hover:text-white transition-all border border-green-100 hover:border-green-500 shadow-sm" title="WhatsApp">
-                            <FaWhatsapp size={16} />
+                        {/* Premium Action Buttons */}
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <div className="relative group/call">
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleHitCall && handleHitCall(lead); }}
+                              className="p-2 bg-white hover:bg-[#FF7B1D] rounded-sm text-[#FF7B1D] hover:text-white transition-all duration-300 border border-orange-100 hover:border-[#FF7B1D] active:scale-95"
+                            >
+                              <Phone size={14} />
+                            </button>
+                            {/* Premium Custom Tooltip for Call Hits */}
+                            <div className="absolute -top-11 left-1/2 -translate-x-1/2 px-3 py-2 bg-gray-900/95 backdrop-blur-md text-white text-[11px] font-bold rounded-sm shadow-2xl opacity-0 group-hover/call:opacity-100 transition-all duration-300 pointer-events-none whitespace-nowrap z-30 transform translate-y-2 group-hover/call:translate-y-0 border border-gray-800">
+                              <div className="flex items-center gap-2">
+                                <div className="flex h-2 w-2 relative">
+                                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
+                                  <span className="relative inline-flex rounded-full h-2 w-2 bg-orange-500"></span>
+                                </div>
+                                <span className="tracking-wide uppercase text-[9px] text-gray-400">Total Hits</span>
+                                <span className="text-orange-400 font-black text-xs">{lead.call_count || 0}</span>
+                              </div>
+                              {/* Tooltip Arrow */}
+                              <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-gray-900" />
+                            </div>
+                          </div>
+                          <a
+                            href={waLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="p-2 bg-white hover:bg-green-600 rounded-sm text-green-600 hover:text-white transition-all duration-300 border border-green-100 hover:border-green-600 active:scale-95"
+                            title="WhatsApp"
+                          >
+                            <FaWhatsapp size={14} />
                           </a>
-                          <a href={lead.email ? `mailto:${lead.email}` : '#'} className="p-2.5 bg-white hover:bg-blue-500 rounded-sm text-blue-600 hover:text-white transition-all border border-blue-100 hover:border-blue-500 shadow-sm" title="Email">
-                            <Mail size={16} />
+                          <a
+                            href={lead.email ? `mailto:${lead.email}` : '#'}
+                            onClick={(e) => e.stopPropagation()}
+                            className="p-2 bg-white hover:bg-blue-600 rounded-sm text-blue-600 hover:text-white transition-all duration-300 border border-blue-100 hover:border-blue-600 active:scale-95"
+                            title="Email"
+                          >
+                            <Mail size={14} />
                           </a>
                         </div>
                       </div>
@@ -538,10 +613,10 @@ const WorkStationLeadsGridView = ({
                 </div>
               )}
             </div>
-          </div>
+          </div >
         );
       })}
-    </div>
+    </div >
   );
 };
 
