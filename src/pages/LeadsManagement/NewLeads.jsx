@@ -723,7 +723,7 @@ export default function LeadsList() {
                   handleHitCall={openCallAction}
                 />
               ) : (
-                <LeadsGridView leadsData={leadsData} filterStatus={filterStatus} handleLeadClick={handleLeadClick} selectedLeads={selectedLeads} handleSelectLead={handleSelectLead} handleHitCall={openCallAction} />
+                <LeadsGridView leadsData={leadsData} filterStatus={filterStatus} handleLeadClick={handleLeadClick} selectedLeads={selectedLeads} handleSelectLead={handleSelectLead} handleHitCall={openCallAction} groupTags={["New Lead", "Not Connected", "Follow-up", "Trading"]} />
               )}
 
               {totalPages > 1 && (

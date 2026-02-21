@@ -715,7 +715,7 @@ export default function DuplicatesLeads() {
                                         handleHitCall={openCallAction}
                                     />
                                 ) : (
-                                    <LeadsGridView leadsData={leadsData} filterStatus={filterStatus} handleLeadClick={handleLeadClick} selectedLeads={selectedLeads} handleSelectLead={handleSelectLead} handleHitCall={openCallAction} />
+                                    <LeadsGridView leadsData={leadsData} filterStatus={filterStatus} handleLeadClick={handleLeadClick} selectedLeads={selectedLeads} handleSelectLead={handleSelectLead} handleHitCall={openCallAction} groupTags={["Duplicate", "New Lead", "Follow-up", "Trading"]} />
                                 )}
 
                                 {totalPages > 1 && (

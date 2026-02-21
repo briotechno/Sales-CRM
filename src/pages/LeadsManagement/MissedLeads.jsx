@@ -717,7 +717,7 @@ export default function MissedLeads() {
                                         handleHitCall={openCallAction}
                                     />
                                 ) : (
-                                    <LeadsGridView leadsData={leadsData} filterStatus={filterStatus} handleLeadClick={handleLeadClick} selectedLeads={selectedLeads} handleSelectLead={handleSelectLead} handleHitCall={openCallAction} />
+                                    <LeadsGridView leadsData={leadsData} filterStatus={filterStatus} handleLeadClick={handleLeadClick} selectedLeads={selectedLeads} handleSelectLead={handleSelectLead} handleHitCall={openCallAction} groupTags={["Missed", "New Lead", "Follow-up", "Trading"]} />
                                 )}
 
                                 {totalPages > 1 && (

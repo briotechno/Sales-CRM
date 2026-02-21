@@ -1,5 +1,41 @@
-import { Mail, Phone, MapPin, Eye, UserPlus, PhoneIncoming, Clock, TrendingUp, AlertCircle, Inbox } from "lucide-react";
+import React from "react";
+import {
+  Mail,
+  Phone,
+  Calendar,
+  Clock,
+  TrendingUp,
+  UserPlus,
+  PhoneIncoming,
+  Inbox,
+  History,
+  QrCode
+} from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
+
+const safeParseDate = (dateStr) => {
+  if (!dateStr) return null;
+  if (dateStr instanceof Date) return dateStr;
+  if (typeof dateStr === 'string' && (dateStr.includes('T') || dateStr.includes('Z'))) {
+    const date = new Date(dateStr);
+    if (!isNaN(date)) return date;
+  }
+  const normalized = String(dateStr).replace(' ', 'T');
+  const date = new Date(normalized);
+  if (!isNaN(date)) return date;
+  return new Date(dateStr);
+};
+
+const calculateProfileCompletion = (lead) => {
+  const fields = [
+    'name', 'email', 'mobile_number', 'whatsapp_number',
+    'address', 'city', 'state', 'pincode',
+    'organization_name', 'interested_in',
+    'gender', 'dob', 'lead_source', 'description'
+  ];
+  const filledFields = fields.filter(field => lead[field] && lead[field].toString().trim() !== '');
+  return Math.round((filledFields.length / fields.length) * 100);
+};
 
 export default function LeadsGridView({
   leadsData,
@@ -8,239 +44,186 @@ export default function LeadsGridView({
   selectedLeads,
   handleSelectLead,
   handleHitCall,
+  groupTags: initialGroupTags,
+  handleShowAssignmentHistory,
+  currentTime = new Date()
 }) {
-  const getTagColor = (tag) => {
-    switch (tag) {
-      case "Follow Up":
-      case "Contacted":
-      case "Interested":
-        return {
-          bg: "bg-yellow-500",
-          border: "border-t-yellow-500",
-          dot: "bg-yellow-500",
-          line: "bg-yellow-500",
-        };
-      case "Not Connected":
-      case "Not Contacted":
-        return {
-          bg: "bg-purple-500",
-          border: "border-t-purple-500",
-          dot: "bg-purple-500",
-          line: "bg-purple-500",
-        };
-      case "New Leads":
-      case "New Lead":
-      case "Closed":
-      case "Won":
-        return {
-          bg: "bg-blue-500",
-          border: "border-t-blue-500",
-          dot: "bg-blue-500",
-          line: "bg-blue-500",
-        };
-      case "Trending":
-        return {
-          bg: "bg-orange-500",
-          border: "border-t-orange-500",
-          dot: "bg-orange-500",
-          line: "bg-orange-500",
-        };
-      case "Lost":
-      case "Dropped":
-        return {
-          bg: "bg-red-500",
-          border: "border-t-red-500",
-          dot: "bg-red-500",
-          line: "bg-red-500",
-        };
-      default:
-        return {
-          bg: "bg-gray-500",
-          border: "border-t-gray-500",
-          dot: "bg-gray-500",
-          line: "bg-gray-500",
-        };
-    }
-  };
-
-  const formatCurrency = (value) => {
-    const num = Number(value);
-    if (isNaN(num)) return "₹0";
-
-    const [intPart] = num.toFixed(0).split(".");
-    const lastThree = intPart.substring(intPart.length - 3);
-    const otherNumbers = intPart.substring(0, intPart.length - 3);
-    const formatted =
-      otherNumbers.replace(/\B(?=(\d{2})+(?!\d))/g, ",") +
-      (otherNumbers ? "," : "") +
-      lastThree;
-
-    let finalValue = "₹   " + formatted;
-    if (finalValue.length < 8) {
-      finalValue = "₹0" + formatted;
-    }
-    return finalValue;
-  };
+  const groupTags = initialGroupTags || ["New Leads", "Not Connected", "Follow Up", "Trending"];
 
   const getAvatarBg = (tag) => {
     switch (tag) {
-      case "Follow Up":
-      case "Contacted":
-      case "Interested":
-        return "bg-amber-500";
-      case "Not Connected":
-      case "Not Contacted":
-        return "bg-purple-500";
-      case "New Leads":
-      case "New Lead":
-      case "Closed":
-      case "Won":
-        return "bg-blue-500";
-      case "Lost":
-      case "Dropped":
-        return "bg-red-500";
-      case "Trending":
-        return "bg-orange-500";
-      default:
-        return "bg-blue-500";
+      case "Follow Up": return "bg-amber-500";
+      case "Not Connected": return "bg-purple-500";
+      case "Trending": case "Trading": return "bg-orange-500";
+      case "Won": return "bg-emerald-500";
+      case "Dropped": case "Lost": case "Drop": return "bg-rose-500";
+      case "Missed": return "bg-red-500";
+      case "Duplicate": return "bg-rose-400";
+      default: return "bg-blue-500";
     }
   };
 
   const getPriorityColor = (priority) => {
     switch (priority) {
-      case "High":
-        return "bg-red-100 text-red-600";
-      case "Medium":
-        return "bg-yellow-100 text-yellow-600";
-      case "Low":
-        return "bg-green-100 text-green-600";
-      default:
-        return "bg-gray-100 text-gray-600";
+      case "High": return "bg-rose-50 text-rose-700 border-rose-200";
+      case "Medium": return "bg-amber-50 text-amber-700 border-amber-200";
+      case "Low": return "bg-teal-50 text-teal-700 border-teal-200";
+      default: return "bg-gray-50 text-gray-600 border-gray-200";
     }
   };
 
-  const groupTags = ["New Leads", "Not Connected", "Follow Up", "Trending"];
+  const getHeaderIcon = (tag) => {
+    const t = tag.toLowerCase().replace('-', ' ').trim();
+    switch (t) {
+      case "new leads": case "new lead": return <UserPlus size={18} className="text-blue-500" />;
+      case "not connected": return <PhoneIncoming size={18} className="text-purple-500" />;
+      case "follow up": case "follow-up": return <Clock size={18} className="text-yellow-500" />;
+      case "trending": case "trading": return <TrendingUp size={18} className="text-orange-500" />;
+      case "missed": return <Phone size={18} className="text-red-500" />;
+      case "won": return <UserPlus size={18} className="text-emerald-500" />;
+      case "dropped": case "lost": case "drop": return <Inbox size={18} className="text-rose-500" />;
+      case "duplicate": return <Inbox size={18} className="text-rose-400" />;
+      case "assigned": return <History size={18} className="text-indigo-500" />;
+      default: return <Inbox size={18} className="text-gray-500" />;
+    }
+  };
+
+  const getHeaderBg = (tag) => {
+    const t = tag.toLowerCase().replace('-', ' ').trim();
+    switch (t) {
+      case "new leads": case "new lead": return "border-t-blue-500 bg-blue-50/50";
+      case "not connected": return "border-t-purple-500 bg-purple-50/50";
+      case "follow up": case "follow-up": return "border-t-yellow-500 bg-yellow-50/50";
+      case "trending": case "trading": return "border-t-orange-500 bg-orange-50/50";
+      case "missed": return "border-t-red-500 bg-red-50/50";
+      case "won": return "border-t-emerald-500 bg-emerald-50/50";
+      case "dropped": case "lost": case "drop": return "border-t-rose-500 bg-rose-50/50";
+      case "duplicate": return "border-t-rose-400 bg-rose-50/50";
+      case "assigned": return "border-t-indigo-500 bg-indigo-50/50";
+      default: return "border-t-gray-500 bg-gray-50/50";
+    }
+  };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+    <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-${Math.min(groupTags.length, 4)} gap-4`}>
       {groupTags.map((groupTag) => {
-        const tagLeads = leadsData.filter((lead) => {
-          // Identify potential categories based on backend criteria
-          const isTrending = lead.is_trending === 1 || lead.priority === "High" || lead.tag === "Trending";
+        let tagLeads = leadsData.filter((lead) => {
+          // Logic to match lead to column
+          const leadTag = lead.tag || lead.status || "New Lead";
+
+          // Specific logic for workstation columns
+          const isTrending = lead.is_trending === 1 || lead.priority === "High" || (lead.tag && (lead.tag === "Trending" || lead.tag === "High Priority"));
           const isFollowUp = lead.tag === "Follow Up" || lead.tag === "Missed";
-          const isNotConnected = lead.tag === "Not Connected";
+          const isNotConnected = lead.tag === "Not Connected" && (!lead.next_call_at || new Date(lead.next_call_at) > currentTime);
+          const isNew = lead.tag === "Not Contacted" || lead.tag === "New Lead" || lead.tag === "New Leads" || lead.stage_name === "New" || !lead.tag || (lead.tag === "Not Connected" && lead.next_call_at && new Date(lead.next_call_at) <= currentTime);
 
-          // Match backend 'new' criteria: tag is 'Not Contacted' OR created in last 2 days
-          // Also include common 'New' identifiers as fallback
-          const isNew = lead.tag === "Not Contacted" ||
-            lead.tag === "New Lead" ||
-            lead.tag === "New Leads" ||
-            lead.stage_name === "New" ||
-            !lead.tag ||
-            (lead.created_at && (new Date() - new Date(lead.created_at)) < 2 * 24 * 60 * 60 * 1000) ||
-            (lead.createdAt && (new Date() - new Date(lead.createdAt)) < 2 * 24 * 60 * 60 * 1000);
+          const normalizedGroupTag = groupTag.toLowerCase().replace('-', ' ').trim();
 
-          // Priority assignment (mutually exclusive) for grid view
-          if (isTrending) {
-            return groupTag === "Trending";
-          }
-          if (isFollowUp) {
-            return groupTag === "Follow Up";
-          }
-          if (isNotConnected) {
-            return groupTag === "Not Connected";
-          }
-          if (isNew) {
-            return groupTag === "New Leads";
-          }
+          if (normalizedGroupTag === "trending" || normalizedGroupTag === "trading") return isTrending;
+          if (normalizedGroupTag === "follow up" || normalizedGroupTag === "follow-up") return isFollowUp;
+          if (normalizedGroupTag === "not connected") return isNotConnected;
+          if (normalizedGroupTag === "new lead" || normalizedGroupTag === "new leads") return isNew;
 
-          // Fallback: If it doesn't match above but we want to show it in the workstation grid, 
-          // we could put it in New Leads or another column, but per user request we stick to these 4.
-          return false;
-        }).filter(lead => filterStatus === "All" || lead.status === filterStatus);
+          // For other pages, match if the tag matches the groupTag exactly
+          if (normalizedGroupTag === "assigned") return true; // Show everything if on "Assigned" column (API already filtered)
 
-        const totalValue = tagLeads.reduce((sum, lead) => sum + (Number(lead.value) || 0), 0);
-        const tagColor = getTagColor(groupTag);
+          return leadTag.toLowerCase() === normalizedGroupTag ||
+            (normalizedGroupTag === "won" && (leadTag === "Won" || leadTag === "Closed")) ||
+            (normalizedGroupTag === "drop" && (leadTag.toLowerCase() === "dropped" || leadTag.toLowerCase() === "lost"));
+        }).filter(lead => filterStatus === "All" || (lead.tag || lead.status) === filterStatus);
 
-        const getHeaderIcon = (tag) => {
-          switch (tag) {
-            case "New Leads": return <UserPlus size={18} className="text-blue-500" />;
-            case "Not Connected": return <PhoneIncoming size={18} className="text-purple-500" />;
-            case "Follow Up": return <Clock size={18} className="text-yellow-500" />;
-            case "Trending": return <TrendingUp size={18} className="text-orange-500" />;
-            default: return null;
-          }
-        };
-
-        const getHeaderBg = (tag) => {
-          switch (tag) {
-            case "New Leads": return "bg-blue-50/50";
-            case "Not Connected": return "bg-purple-50/50";
-            case "Follow Up": return "bg-yellow-50/50";
-            case "Trending": return "bg-orange-50/50";
-            default: return "bg-gray-50/50";
-          }
-        };
+        // Sorting Not Connected and Follow Up leads by next_call_at (soonest first)
+        if (groupTag === "Not Connected" || groupTag === "Follow Up") {
+          tagLeads = [...tagLeads].sort((a, b) => {
+            if (!a.next_call_at) return 1;
+            if (!b.next_call_at) return -1;
+            return new Date(a.next_call_at) - new Date(b.next_call_at);
+          });
+        }
 
         return (
           <div key={groupTag} className="flex flex-col group/column">
-            <div className={`rounded-sm shadow-sm border border-gray-200 p-4 mb-4 border-t-4 bg-white transition-all duration-300 hover:shadow-md ${tagColor.border} ${getHeaderBg(groupTag)}`}>
-              <div className="flex items-center justify-between mb-3">
+            <div className={`rounded-sm shadow-sm border border-gray-200 p-4 mb-4 border-t-4 bg-white transition-all duration-300 ${getHeaderBg(groupTag)}`}>
+              <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
-                  <div className={`p-1.5 rounded-sm bg-white border border-gray-100 shadow-sm`}>
+                  <div className="p-1.5 rounded-sm bg-white border border-gray-100 shadow-sm">
                     {getHeaderIcon(groupTag)}
                   </div>
                   <h3 className="text-sm font-bold text-gray-800 capitalize tracking-tight font-primary">{groupTag}</h3>
                 </div>
-                <span className="bg-white text-gray-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-gray-100 shadow-sm">
-                  {tagLeads.length}
-                </span>
-              </div>
-              <div className="flex items-baseline justify-between pt-1">
-                <p className="text-[10px] text-gray-400 font-bold capitalize tracking-wider font-primary">Total Value</p>
-                <p className="text-sm text-orange-600 font-bold font-primary">
-                  {formatCurrency(totalValue)}
-                </p>
+                <span className="bg-white text-gray-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-gray-100 shadow-sm">{tagLeads.length}</span>
               </div>
             </div>
-            <div className="space-y-4 flex-1">
+
+            <div className="space-y-4">
               {tagLeads.length > 0 ? (
                 tagLeads.map((lead) => {
                   const leadDisplayName = lead.name || lead.full_name || lead.organization_name || "L";
-                  const initials = leadDisplayName
-                    ? leadDisplayName.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
-                    : "L";
+                  const initials = leadDisplayName.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+                  const cleanNumber = (lead.mobile_number || lead.phone || '').replace(/\D/g, '');
+                  const waLink = cleanNumber ? `https://wa.me/${cleanNumber}` : '#';
+
+                  const displayStatus = (() => {
+                    if (groupTag === "Trending" || groupTag === "Trading") {
+                      return { text: "Trading", color: "text-indigo-600 bg-indigo-50 border-indigo-200" };
+                    }
+
+                    const isMovedFromNotConnected = lead.tag === "Not Connected" && lead.next_call_at && safeParseDate(lead.next_call_at) <= currentTime;
+                    if (isMovedFromNotConnected) {
+                      return { text: "Moved from Not Connected", color: "text-purple-600 bg-purple-50 border-purple-200" };
+                    }
+
+                    let s = lead.is_trending === 1 ? "Trending" : (lead.tag || lead.status || "New Lead");
+                    if (s === "Not Contacted") s = "New Lead";
+
+                    let c = "text-gray-600 bg-gray-50 border-gray-200";
+                    switch (s?.toLowerCase()) {
+                      case "connected": c = "text-green-600 bg-green-50 border-green-200"; break;
+                      case "not connected": c = "text-red-600 bg-red-50 border-red-200"; break;
+                      case "follow up": c = "text-amber-600 bg-amber-50 border-amber-200"; break;
+                      case "trending": c = "text-orange-600 bg-orange-50 border-orange-200"; break;
+                      case "trading": c = "text-indigo-600 bg-indigo-50 border-indigo-200"; break;
+                      case "won": case "closed": c = "text-emerald-600 bg-emerald-50 border-emerald-200"; break;
+                      case "lost": case "dropped": c = "text-rose-600 bg-rose-50 border-rose-200"; break;
+                      case "new lead": case "new leads": case "new": c = "text-blue-600 bg-blue-50 border-blue-200"; break;
+                      case "missed": c = "text-red-600 bg-red-50 border-red-500"; break;
+                      case "duplicate": c = "text-rose-600 bg-rose-50 border-rose-200"; break;
+                      default: c = "text-gray-600 bg-gray-50 border-gray-200";
+                    }
+                    return { text: s, color: c };
+                  })();
+
+                  const isMissed = lead.tag === "Missed" || displayStatus.text === "Missed";
 
                   return (
                     <div
                       key={lead.id}
-                      className={`bg-white border border-gray-200 rounded-sm shadow-sm hover:shadow-md transition relative overflow-hidden ${lead.is_trending === 1 ? 'ring-1 ring-orange-500/50 shadow-orange-100' : ''}`}
+                      className={`group flex flex-col h-auto bg-white border ${isMissed ? 'border-red-500 ring-1 ring-red-500/10' : 'border-gray-200'} rounded-sm shadow-sm transition-all duration-300 relative overflow-hidden`}
                     >
-                      {lead.is_trending === 1 && (
-                        <div className="absolute top-0 right-0">
-                          <div className="bg-orange-500 text-white text-[8px] font-bold px-4 py-0.5 rotate-45 translate-x-3 translate-y-[-1px] shadow-sm capitalize tracking-tighter font-primary">
-                            Trending
-                          </div>
-                        </div>
-                      )}
-
-                      <div className="p-4 space-y-3">
-                        <div className="flex items-start justify-between">
-                          <div className="flex items-center gap-3">
-                            <div
-                              className={`w-10 h-10 ${getAvatarBg(lead.tag)} rounded-sm flex items-center justify-center text-white font-semibold text-sm shadow-inner`}
-                            >
-                              {initials}
+                      <div className="pt-4 px-4 pb-2.5 flex flex-col gap-2.5 text-xs">
+                        {/* Top Section */}
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-start gap-3 flex-1 min-w-0">
+                            <div className="w-11 h-11 rounded-sm flex-shrink-0 border border-gray-100 overflow-hidden bg-white shadow-sm">
+                              {lead.profile_image ? (
+                                <img src={lead.profile_image} alt={leadDisplayName} className="w-full h-full object-cover" />
+                              ) : (
+                                <div className={`w-full h-full ${getAvatarBg(lead.tag)} flex items-center justify-center text-white text-base font-bold capitalize`}>
+                                  {initials}
+                                </div>
+                              )}
                             </div>
-                            <div>
-                              <h4
-                                className="font-bold text-gray-800 text-sm hover:text-orange-600 cursor-pointer line-clamp-1 font-primary"
+                            <div className="flex-1 min-w-0 flex flex-col">
+                              <h3
+                                className="text-[15px] font-bold text-gray-900 capitalize font-primary cursor-pointer hover:text-orange-600 transition-colors leading-tight truncate"
                                 onClick={() => handleLeadClick(lead)}
-                                title={lead.name || lead.full_name || lead.organization_name}
+                                title={leadDisplayName}
                               >
-                                {lead.name || lead.full_name || lead.organization_name || "Untitled Lead"}
-                              </h4>
-                              <p className="text-[10px] text-gray-400 font-bold capitalize tracking-widest font-primary">{lead.lead_id || `ID: ${lead.id}`}</p>
+                                {leadDisplayName}
+                              </h3>
+                              <span className="text-[11px] text-orange-600 font-bold px-2 py-0.5 rounded-sm bg-orange-50 border border-orange-100 capitalize tracking-wide w-fit mt-1">
+                                {lead.lead_id || lead.id}
+                              </span>
                             </div>
                           </div>
                           <input
@@ -251,82 +234,128 @@ export default function LeadsGridView({
                           />
                         </div>
 
-                        <div className="flex justify-between items-center text-xs">
-                          <span className="font-bold text-gray-700">{formatCurrency(lead.value)}</span>
-                          <div className="flex items-center gap-1">
-                            <span className="text-gray-400 text-[10px] uppercase font-bold">Prob:</span>
-                            <span className={`font-bold ${lead.conversion_probability > 70 ? 'text-green-600' : lead.conversion_probability > 40 ? 'text-orange-600' : 'text-gray-400'}`}>
-                              {lead.conversion_probability || 0}%
+                        {/* Timeline */}
+                        <div className="flex flex-wrap items-center gap-2">
+                          <div className="flex items-center gap-1.5 px-2 py-1 bg-slate-50 text-slate-500 rounded-sm font-bold border border-slate-100 shadow-sm">
+                            <Calendar size={13} className="text-slate-400" />
+                            <span>Born:</span>
+                            <span className="text-gray-800 font-bold">
+                              {(lead.rawCreated || lead.created_at) ? safeParseDate(lead.rawCreated || lead.created_at).toLocaleString('en-IN', {
+                                day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true
+                              }) : "--"}
+                            </span>
+                          </div>
+
+                          {lead.next_call_at && (
+                            <div className="flex items-center gap-1.5 px-2 py-1 bg-orange-50 text-orange-600 rounded-sm font-bold border border-orange-100 shadow-sm">
+                              <Clock size={13} className="text-orange-400" />
+                              <span>Next:</span>
+                              <span className="text-orange-700 font-bold">
+                                {safeParseDate(lead.next_call_at).toLocaleString('en-IN', {
+                                  day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true
+                                })}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Pipeline Stage */}
+                        <div className="bg-slate-50/80 rounded-sm p-3 border border-slate-200">
+                          <div className="flex justify-between items-center gap-3">
+                            <div className="flex flex-col min-w-0">
+                              <span className="text-[13px] font-bold text-gray-800 font-primary truncate max-w-[140px] capitalize leading-none" title={lead.pipeline_name || "General"}>
+                                {lead.pipeline_name || "General"}
+                              </span>
+                              <span className="text-[11px] font-bold text-gray-500 mt-1 capitalize">Pipeline</span>
+                            </div>
+                            <div className="flex flex-col items-end min-w-0">
+                              <span className="text-[13px] text-[#FF7B1D] font-bold italic font-primary capitalize truncate max-w-[140px] leading-none" title={lead.stage_name || "New"}>
+                                {lead.stage_name || "New"}
+                              </span>
+                              <span className="text-[11px] font-bold text-gray-500 mt-1 capitalize">Stage</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Status */}
+                        <div className="bg-slate-50/80 rounded-sm px-3 py-2 border border-slate-200">
+                          <div className="flex justify-between items-center">
+                            <span className="text-[11px] font-bold text-gray-500 capitalize font-primary">Status</span>
+                            <span className={`text-[12px] font-bold capitalize px-3 py-0.5 rounded-sm border shadow-sm ${displayStatus.color}`} title={displayStatus.text}>
+                              {displayStatus.text}
                             </span>
                           </div>
                         </div>
 
-                        <div className="space-y-1.5 pt-1">
-                          <div className="flex items-center gap-2 text-[11px] text-gray-500">
-                            <Phone size={12} className="text-orange-500" />
-                            <span className="font-medium">{lead.mobile_number || lead.phone || '--'}</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-[11px] text-gray-500">
-                            <div className="flex items-center gap-1">
-                              <span className="text-[10px] text-gray-400 uppercase font-bold">Calls:</span>
-                              <span className="font-bold text-gray-700">{lead.call_count || 0} Hits</span>
+                        {/* Assignment */}
+                        <div className="grid grid-cols-2 gap-2">
+                          <div
+                            className="flex flex-col gap-1 px-3 py-2 bg-slate-50/80 rounded-sm border border-slate-200 cursor-pointer hover:bg-orange-50 transition-all"
+                            onClick={() => handleShowAssignmentHistory && handleShowAssignmentHistory(lead)}
+                          >
+                            <span className="text-[11px] font-bold text-gray-500 capitalize font-primary">Assignee</span>
+                            <div className="flex items-center justify-between gap-1">
+                              <span className="text-[13px] font-bold text-gray-800 capitalize truncate" title={lead.employee_name || "Unassigned"}>
+                                {lead.employee_name || "Unassigned"}
+                              </span>
+                              <History size={12} className="text-gray-300 group-hover:text-orange-500 flex-shrink-0" />
                             </div>
-                            {lead.next_call_at && (
-                              <div className="ml-auto bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded-[2px] text-[9px] font-bold border border-blue-100">
-                                Next: {new Date(lead.next_call_at).toLocaleDateString()}
-                              </div>
-                            )}
+                          </div>
+                          <div className="flex flex-col gap-1 px-3 py-2 bg-slate-50/80 rounded-sm border border-slate-200">
+                            <span className="text-[11px] font-bold text-gray-500 capitalize font-primary">Owner</span>
+                            <span className="text-[13px] font-bold text-gray-800 capitalize truncate" title={lead.lead_owner || "-"}>
+                              {lead.lead_owner || "-"}
+                            </span>
                           </div>
                         </div>
 
-                        <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                          <span
-                            className={`px-2 py-0.5 text-[10px] font-bold rounded-sm uppercase tracking-wider ${getPriorityColor(
-                              lead.priority
-                            )}`}
-                          >
-                            {lead.priority || 'Medium'}
-                          </span>
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => handleHitCall && handleHitCall(lead)}
-                              className="p-1.5 bg-orange-50 hover:bg-orange-500 rounded-sm text-orange-600 hover:text-white transition-all border border-orange-100 hover:border-orange-500"
-                              title="Call"
-                            >
-                              <Phone size={14} />
-                            </button>
-                            <button
-                              onClick={() => {
-                                const phone = lead.mobile_number || lead.phone;
-                                if (phone) window.open(`https://wa.me/${phone.replace(/\D/g, "")}`, "_blank");
-                              }}
-                              className="p-1.5 bg-green-50 hover:bg-green-500 rounded-sm text-green-600 hover:text-white transition-all border border-green-100 hover:border-green-500"
-                              title="WhatsApp"
-                            >
-                              <FaWhatsapp size={14} />
-                            </button>
-                            <button
-                              onClick={() => {
-                                if (lead.email) window.location.href = `mailto:${lead.email}`;
-                              }}
-                              className="p-1.5 bg-blue-50 hover:bg-blue-500 rounded-sm text-blue-600 hover:text-white transition-all border border-blue-100 hover:border-blue-500"
-                              title="Email"
-                            >
-                              <Mail size={14} />
-                            </button>
+                        {/* Progress */}
+                        <div className="relative mt-1">
+                          <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden border border-gray-200">
+                            <div
+                              className={`h-full rounded-full transition-all duration-700 ease-out ${calculateProfileCompletion(lead) > 70 ? 'bg-gradient-to-r from-green-400 to-green-600' : 'bg-gradient-to-r from-orange-400 to-[#FF7B1D]'}`}
+                              style={{ width: `${calculateProfileCompletion(lead)}%` }}
+                            />
                           </div>
+                        </div>
+                      </div>
+
+                      {/* Footer */}
+                      <div className="bg-slate-50/90 px-4 py-3 border-t border-gray-200 mt-auto flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-6 min-w-0">
+                          <div className="flex flex-col min-w-0">
+                            <span className="text-[10px] text-gray-400 font-bold capitalize mb-1">Priority</span>
+                            <span className={`inline-flex px-2 py-0.5 text-[10px] font-bold rounded-sm capitalize border ${getPriorityColor(lead.priority)} whitespace-nowrap`}>
+                              {lead.priority || 'Medium'}
+                            </span>
+                          </div>
+                          <div className="flex flex-col min-w-0">
+                            <span className="text-[10px] text-gray-400 font-bold capitalize mb-1">Source</span>
+                            <p className="text-[12px] font-bold text-gray-700 truncate max-w-[80px] font-primary capitalize italic" title={lead.lead_source || "-"}>
+                              {lead.lead_source || "-"}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleHitCall && handleHitCall(lead); }}
+                            className="p-2 bg-white hover:bg-[#FF7B1D] rounded-sm text-[#FF7B1D] hover:text-white transition-all border border-orange-100 hover:border-[#FF7B1D] shadow-sm"
+                            title={`Calls: ${lead.call_count || 0}`}
+                          >
+                            <Phone size={14} />
+                          </button>
+                          <a href={waLink} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="p-2 bg-white hover:bg-green-600 rounded-sm text-green-600 hover:text-white transition-all border border-green-100 shadow-sm"><FaWhatsapp size={14} /></a>
+                          <a href={lead.email ? `mailto:${lead.email}` : '#'} onClick={(e) => e.stopPropagation()} className="p-2 bg-white hover:bg-blue-600 rounded-sm text-blue-600 hover:text-white transition-all border border-blue-100 shadow-sm"><Mail size={14} /></a>
                         </div>
                       </div>
                     </div>
                   );
                 })
               ) : (
-                <div className="flex flex-col items-center justify-center py-12 px-4 rounded-sm border border-dashed border-gray-200 bg-gray-50/30 group-hover/column:bg-gray-50/50 transition-all duration-300">
-                  <div className="w-12 h-12 rounded-full bg-white border border-gray-100 shadow-sm flex items-center justify-center mb-3">
-                    <Inbox className="text-gray-300" size={24} />
-                  </div>
-                  <h4 className="text-[10px] font-bold text-gray-400 capitalize tracking-widest font-primary">No Active Leads</h4>
-                  <p className="text-[9px] text-gray-300 font-semibold mt-1 capitalize font-primary">Empty Pipeline</p>
+                <div className="flex flex-col items-center justify-center py-10 rounded-sm border border-dashed border-gray-200 bg-gray-50/30">
+                  <Inbox className="text-gray-300 mb-2" size={24} />
+                  <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest font-primary">No Leads</h4>
                 </div>
               )}
             </div>

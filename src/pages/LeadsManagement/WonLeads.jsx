@@ -717,7 +717,7 @@ export default function WonLeads() {
                                         handleHitCall={openCallAction}
                                     />
                                 ) : (
-                                    <LeadsGridView leadsData={leadsData} filterStatus={filterStatus} handleLeadClick={handleLeadClick} selectedLeads={selectedLeads} handleSelectLead={handleSelectLead} handleHitCall={openCallAction} />
+                                    <LeadsGridView leadsData={leadsData} filterStatus={filterStatus} handleLeadClick={handleLeadClick} selectedLeads={selectedLeads} handleSelectLead={handleSelectLead} handleHitCall={handleHitCall} groupTags={["Won", "New Lead", "Follow-up", "Trading"]} />
                                 )}
 
                                 {totalPages > 1 && (
