@@ -291,16 +291,28 @@ export default function LeadsGridView({
                             <button
                               onClick={() => handleHitCall && handleHitCall(lead)}
                               className="p-1.5 bg-orange-50 hover:bg-orange-500 rounded-sm text-orange-600 hover:text-white transition-all border border-orange-100 hover:border-orange-500"
-                              title="Hit Call"
+                              title="Call"
                             >
                               <Phone size={14} />
                             </button>
                             <button
-                              onClick={() => handleLeadClick(lead)}
-                              className="p-1.5 bg-gray-50 hover:bg-gray-200 rounded-sm text-gray-500 hover:text-gray-700 transition-all border border-gray-100"
-                              title="View Profile"
+                              onClick={() => {
+                                const phone = lead.mobile_number || lead.phone;
+                                if (phone) window.open(`https://wa.me/${phone.replace(/\D/g, "")}`, "_blank");
+                              }}
+                              className="p-1.5 bg-green-50 hover:bg-green-500 rounded-sm text-green-600 hover:text-white transition-all border border-green-100 hover:border-green-500"
+                              title="WhatsApp"
                             >
-                              <Eye size={14} />
+                              <FaWhatsapp size={14} />
+                            </button>
+                            <button
+                              onClick={() => {
+                                if (lead.email) window.location.href = `mailto:${lead.email}`;
+                              }}
+                              className="p-1.5 bg-blue-50 hover:bg-blue-500 rounded-sm text-blue-600 hover:text-white transition-all border border-blue-100 hover:border-blue-500"
+                              title="Email"
+                            >
+                              <Mail size={14} />
                             </button>
                           </div>
                         </div>

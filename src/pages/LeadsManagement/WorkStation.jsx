@@ -281,7 +281,8 @@ const WorkStationLeadsGridView = ({
   handleHitCall,
   employees = [],
   currentTime, // Added currentTime prop for instant UI moves
-  handleShowAssignmentHistory
+  handleShowAssignmentHistory,
+  navigate
 }) => {
   const groupTags = ["New Leads", "Not Connected", "Follow Up", "Trending"];
 
@@ -341,7 +342,18 @@ const WorkStationLeadsGridView = ({
 
         return (
           <div key={groupTag} className="flex flex-col group/column">
-            <div className={`rounded-sm shadow-sm border border-gray-200 p-4 mb-4 border-t-4 bg-white transition-all duration-300 hover:shadow-md ${groupTag === 'Trending' ? 'border-t-orange-500 bg-orange-50/50' : groupTag === 'New Leads' ? 'border-t-blue-500 bg-blue-50/50' : groupTag === 'Not Connected' ? 'border-t-purple-500 bg-purple-50/50' : 'border-t-yellow-500 bg-yellow-50/50'}`}>
+            <div
+              onClick={() => {
+                const paths = {
+                  "New Leads": "/crm/leads/new",
+                  "Not Connected": "/crm/leads/not-connected",
+                  "Follow Up": "/crm/leads/follow-up",
+                  "Trending": "/crm/leads/trending"
+                };
+                if (paths[groupTag]) navigate(paths[groupTag]);
+              }}
+              className={`cursor-pointer rounded-sm shadow-sm border border-gray-200 p-4 mb-4 border-t-4 bg-white transition-all duration-300 ${groupTag === 'Trending' ? 'border-t-orange-500 bg-orange-50/50' : groupTag === 'New Leads' ? 'border-t-blue-500 bg-blue-50/50' : groupTag === 'Not Connected' ? 'border-t-purple-500 bg-purple-50/50' : 'border-t-yellow-500 bg-yellow-50/50'}`}
+            >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
                   <div className="p-1.5 rounded-sm bg-white border border-gray-100 shadow-sm">
@@ -395,6 +407,7 @@ const WorkStationLeadsGridView = ({
                       case "lost": case "dropped": c = "text-rose-600 bg-rose-50 border-rose-200"; break;
                       case "new lead": case "new leads": case "new": c = "text-blue-600 bg-blue-50 border-blue-200"; break;
                       case "missed": c = "text-red-600 bg-red-50 border-red-500"; break;
+                      case "duplicate": c = "text-rose-600 bg-rose-50 border-rose-200"; break;
                       default: c = "text-gray-600 bg-gray-50 border-gray-200";
                     }
 
@@ -406,189 +419,156 @@ const WorkStationLeadsGridView = ({
                   return (
                     <div
                       key={lead.id}
-                      className={`group flex flex-col bg-white border ${isMissed ? 'border-red-500 ring-1 ring-red-500/10' : 'border-gray-200'} rounded-sm shadow-sm transition-all duration-300 relative overflow-hidden animate-slideIn`}
+                      className={`group flex flex-col h-auto bg-white border ${isMissed ? 'border-red-500 ring-1 ring-red-500/10' : 'border-gray-200'} rounded-sm shadow-sm transition-all duration-300 relative overflow-hidden animate-slideIn`}
                     >
 
                       {/* ── CARD BODY ── */}
-                      <div className="pt-4 px-4 pb-2.5 flex flex-col gap-2">
+                      <div className="pt-4 px-4 pb-2.5 flex flex-col gap-2.5 text-xs">
 
-                        {/* Header: Avatar + Info */}
+                        {/* Top Section: Avatar, Name, ID */}
                         <div className="flex items-start gap-3">
-                          <div className="relative">
-                            <div className="w-12 h-12 rounded-sm flex-shrink-0 border border-gray-100 overflow-hidden bg-white transition-colors">
-                              {lead.profile_image ? (
-                                <img src={lead.profile_image} alt={leadDisplayName} className="w-full h-full object-cover" />
-                              ) : (
-                                <div className={`w-full h-full ${getAvatarBg(lead.tag)} flex items-center justify-center text-white text-base font-bold capitalize`}>
-                                  {initials}
-                                </div>
-                              )}
-                            </div>
-                            {lead.is_trending === 1 && (
-                              <div className="absolute -top-1.5 -right-1.5 bg-orange-500 text-white p-1 rounded-full border-2 border-white">
-                                <TrendingUp size={10} strokeWidth={3} />
+                          <div className="w-11 h-11 rounded-sm flex-shrink-0 border border-gray-100 overflow-hidden bg-white shadow-sm">
+                            {lead.profile_image ? (
+                              <img src={lead.profile_image} alt={leadDisplayName} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className={`w-full h-full ${getAvatarBg(lead.tag)} flex items-center justify-center text-white text-base font-bold capitalize`}>
+                                {initials}
                               </div>
                             )}
                           </div>
-
-                          <div className="flex-1 min-w-0">
+                          <div className="flex-1 min-w-0 flex flex-col">
                             <h3
-                              className="text-[15px] font-bold text-gray-900 capitalize font-primary cursor-pointer hover:text-orange-600 transition-colors leading-tight"
+                              className="text-[15px] font-bold text-gray-900 capitalize font-primary cursor-pointer hover:text-orange-600 transition-colors leading-tight truncate"
                               onClick={() => handleLeadClick(lead)}
                               title={leadDisplayName}
                             >
                               {leadDisplayName}
                             </h3>
-
-                            <div className="flex items-center gap-2 mt-1.5">
-                              <span className="text-[10px] text-orange-600 font-bold px-1.5 py-0.5 rounded-sm bg-orange-50 border border-orange-100 capitalize tracking-wide">
-                                {lead.lead_id || lead.id}
-                              </span>
-                              <div className="flex items-center gap-1 text-[11px] font-medium font-primary text-gray-500">
-                                <Calendar size={11} className="text-gray-400" />
-                                {(lead.rawCreated || lead.created_at) ? safeParseDate(lead.rawCreated || lead.created_at).toLocaleString('en-IN', {
-                                  day: '2-digit', month: 'short', year: 'numeric',
-                                  hour: '2-digit', minute: '2-digit', hour12: true
-                                }) : "--"}
-                              </div>
-                            </div>
-
-                            {lead.next_call_at && (groupTag === "Not Connected" || groupTag === "Follow Up") && (
-                              <div className="mt-2 text-[10px] text-orange-700 font-bold flex items-center gap-1.5 font-primary bg-orange-50/50 px-2 py-1 rounded-sm border border-orange-100/50 w-fit backdrop-blur-sm">
-                                <Clock size={11} className="text-orange-500 animate-pulse" />
-                                <span className="opacity-70 font-bold  text-[11px] capitalize ">Next Call:</span>
-                                <span className="font-bold text-[11px]">
-                                  {safeParseDate(lead.next_call_at).toLocaleString('en-IN', {
-                                    day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true
-                                  })}
-                                </span>
-                              </div>
-                            )}
+                            <span className="text-[11px] text-orange-600 font-bold px-2 py-0.5 rounded-sm bg-orange-50 border border-orange-100 capitalize tracking-wide w-fit mt-1">
+                              {lead.lead_id || lead.id}
+                            </span>
                           </div>
                         </div>
 
-                        {/* Pipeline & Stage Section */}
-                        <div className="bg-slate-100 rounded-sm p-3 border border-gray-200 transition-colors">
+                        {/* Timeline Row: Born & Next Call */}
+                        <div className="flex flex-wrap items-center gap-2">
+                          <div className="flex items-center gap-1.5 px-2 py-1 bg-slate-50 text-slate-500 rounded-sm font-bold border border-slate-100 shadow-sm">
+                            <Calendar size={13} className="text-slate-400" />
+                            <span>Born:</span>
+                            <span className="text-gray-800 font-bold">
+                              {(lead.rawCreated || lead.created_at) ? safeParseDate(lead.rawCreated || lead.created_at).toLocaleString('en-IN', {
+                                day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true
+                              }) : "--"}
+                            </span>
+                          </div>
+
+                          {lead.next_call_at && (
+                            <div className="flex items-center gap-1.5 px-2 py-1 bg-orange-50 text-orange-600 rounded-sm font-bold border border-orange-100 shadow-sm">
+                              <Clock size={13} className="text-orange-400" />
+                              <span>Next:</span>
+                              <span className="text-orange-700 font-bold">
+                                {safeParseDate(lead.next_call_at).toLocaleString('en-IN', {
+                                  day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true
+                                })}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Pipeline Section */}
+                        <div className="bg-slate-50/80 rounded-sm p-3 border border-slate-200 transition-colors">
                           <div className="flex justify-between items-center gap-3">
                             <div className="flex flex-col min-w-0">
-                              <span className="text-sm font-medium text-gray-800 font-primary truncate max-w-[120px] capitalize leading-none" title={lead.pipeline_name || "General"}>
+                              <span className="text-[13px] font-bold text-gray-800 font-primary truncate max-w-[140px] capitalize leading-none" title={lead.pipeline_name || "General"}>
                                 {lead.pipeline_name || "General"}
                               </span>
-                              <span className="text-xs font-bold text-gray-700 mt-1 capitalize">Pipeline</span>
+                              <span className="text-[11px] font-bold text-gray-500 mt-1 capitalize">Pipeline</span>
                             </div>
                             <div className="flex flex-col items-end min-w-0">
-                              <span className="text-sm text-[#FF7B1D] font-medium italic font-primary capitalize truncate max-w-[120px] leading-none" title={lead.stage_name || "New"}>
+                              <span className="text-[13px] text-[#FF7B1D] font-bold italic font-primary capitalize truncate max-w-[140px] leading-none" title={lead.stage_name || "New"}>
                                 {lead.stage_name || "New"}
                               </span>
-                              <span className="text-xs font-bold text-gray-700 mt-1 capitalize">Stage</span>
+                              <span className="text-[11px] font-bold text-gray-500 mt-1 capitalize">Stage</span>
                             </div>
                           </div>
                         </div>
 
                         {/* Status Section */}
-                        <div className="bg-slate-100 rounded-sm px-3 py-1.5 border border-gray-200 transition-colors">
+                        <div className="bg-slate-50/80 rounded-sm px-3 py-2 border border-slate-200">
                           <div className="flex justify-between items-center">
-                            <span className="text-xs font-bold text-gray-700 capitalize font-primary">Status</span>
-                            <span className={`text-[12px] font-medium capitalize px-2.5 py-0.5 rounded-sm border shadow-sm ${displayStatus.color}`} title={displayStatus.text}>
+                            <span className="text-[11px] font-bold text-gray-500 capitalize font-primary">Status</span>
+                            <span className={`text-[12px] font-bold capitalize px-3 py-0.5 rounded-sm border shadow-sm ${displayStatus.color}`} title={displayStatus.text}>
                               {displayStatus.text}
                             </span>
                           </div>
                         </div>
 
-                        {/* People: Assign & Owner Section */}
-                        <div className="grid grid-cols-2 gap-2.5">
+                        {/* People Section */}
+                        <div className="grid grid-cols-2 gap-2">
                           <div
-                            className="flex flex-col gap-1 px-3 py-2 bg-slate-100 rounded-sm border border-gray-200 cursor-pointer hover:bg-orange-50 hover:border-orange-200 transition-all group/people"
+                            className="flex flex-col gap-1 px-3 py-2 bg-slate-50/80 rounded-sm border border-slate-200 cursor-pointer hover:bg-orange-50 hover:border-orange-200 transition-all group/people"
                             onClick={() => handleShowAssignmentHistory && handleShowAssignmentHistory(lead)}
                           >
-                            <span className="text-xs font-bold text-gray-700 capitalize font-primary">Assignee</span>
+                            <span className="text-[11px] font-bold text-gray-500 capitalize font-primary">Assignee</span>
                             <div className="flex items-center justify-between gap-1">
-                              <span className="text-[12px] font-medium text-gray-800 capitalize truncate" title={lead.employee_name || "Unassigned"}>
+                              <span className="text-[13px] font-bold text-gray-800 capitalize truncate" title={lead.employee_name || "Unassigned"}>
                                 {lead.employee_name || "Unassigned"}
                               </span>
-                              <History size={11} className="text-gray-300 group-hover/people:text-orange-500 flex-shrink-0" />
+                              <History size={12} className="text-gray-300 group-hover/people:text-orange-500 flex-shrink-0" />
                             </div>
                           </div>
-                          <div className="flex flex-col gap-1 px-3 py-2 bg-slate-100 rounded-sm border border-gray-200">
-                            <span className="text-xs font-bold text-gray-700 capitalize font-primary">Owner</span>
-                            <span className="text-[12px] font-medium text-gray-800 capitalize truncate" title={lead.lead_owner || "-"}>
+                          <div className="flex flex-col gap-1 px-3 py-2 bg-slate-50/80 rounded-sm border border-slate-200">
+                            <span className="text-[11px] font-bold text-gray-500 capitalize font-primary">Owner</span>
+                            <span className="text-[13px] font-bold text-gray-800 capitalize truncate" title={lead.lead_owner || "-"}>
                               {lead.lead_owner || "-"}
                             </span>
                           </div>
                         </div>
 
-                        {/* Profile Strength Progress Bar */}
-                        <div className="group/strength relative">
-                          <div
-                            className="w-full bg-gray-100 h-2 rounded-full overflow-hidden shadow-inner cursor-help border border-transparent hover:border-orange-300 hover:ring-2 hover:ring-orange-100 transition-all duration-300"
-                          >
+                        {/* Progress Bar */}
+                        <div className="group/strength relative mt-1">
+                          <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden border border-gray-200">
                             <div
                               className={`h-full rounded-full transition-all duration-700 ease-out ${calculateProfileCompletion(lead) > 70 ? 'bg-gradient-to-r from-green-400 to-green-600' : 'bg-gradient-to-r from-orange-400 to-[#FF7B1D]'}`}
                               style={{ width: `${calculateProfileCompletion(lead)}%` }}
-                            >
-                              <div className="w-full h-full opacity-20 bg-[linear-gradient(45deg,rgba(255,255,255,0.2)_25%,transparent_25%,transparent_50%,rgba(255,255,255,0.2)_50%,rgba(255,255,255,0.2)_75%,transparent_75%,transparent)] bg-[length:10px_10px] animate-stripe" />
-                            </div>
-                          </div>
-
-                          {/* Premium Custom Tooltip */}
-                          <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-gray-900 text-white text-[11px] font-bold rounded-sm shadow-xl opacity-0 group-hover/strength:opacity-100 transition-all duration-200 pointer-events-none whitespace-nowrap z-20 transform translate-y-1 group-hover/strength:translate-y-0">
-                            <div className="flex items-center gap-1.5">
-                              <div className={`w-1.5 h-1.5 rounded-full ${calculateProfileCompletion(lead) > 70 ? 'bg-green-400' : 'bg-orange-400'}`} />
-                              <span>Lead Profile: <span className="text-orange-300">{calculateProfileCompletion(lead)}%</span></span>
-                            </div>
-                            {/* Tooltip Arrow */}
-                            <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-gray-900" />
+                            />
                           </div>
                         </div>
                       </div>
 
                       {/* ── CARD FOOTER ── */}
-                      <div className="bg-slate-100 px-4 py-3 border-t border-gray-200 mt-auto flex items-center justify-between gap-2">
+                      <div className="bg-slate-50/90 px-4 py-3 border-t border-gray-200 mt-auto flex items-center justify-between gap-3">
                         {/* Stats Group */}
-                        <div className="flex items-center gap-5 min-w-0">
+                        <div className="flex items-center gap-6 min-w-0">
                           <div className="flex flex-col min-w-0">
                             <span className="text-[10px] text-gray-400 font-bold capitalize leading-none mb-1.5">Priority</span>
-                            <span className={`inline-flex px-1.5 py-0.5 text-[10px] font-medium rounded-sm capitalize border ${getPriorityColor(lead.priority)} whitespace-nowrap`}>
+                            <span className={`inline-flex px-2 py-0.5 text-[10px] font-bold rounded-sm capitalize border ${getPriorityColor(lead.priority)} whitespace-nowrap`}>
                               {lead.priority || 'Medium'}
                             </span>
                           </div>
                           <div className="flex flex-col min-w-0">
-                            <span className="text-[10px] text-gray-400 font-bold capitalize leading-none mb-1.5 text-center">Source</span>
-                            <p className="text-[12px] font-medium text-gray-800 truncate max-w-[85px] font-primary capitalize italic bg-gray-50 px-2 py-0.5 rounded-sm border border-gray-100" title={lead.lead_source || "Direct"}>
-                              {lead.lead_source || "Direct"}
+                            <span className="text-[10px] text-gray-400 font-bold capitalize leading-none mb-1.5">Source</span>
+                            <p className="text-[12px] font-bold text-gray-700 truncate max-w-[90px] font-primary capitalize italic" title={lead.lead_source || "-"}>
+                              {lead.lead_source || "-"}
                             </p>
                           </div>
                         </div>
 
-                        {/* Premium Action Buttons */}
+                        {/* Action Buttons */}
                         <div className="flex items-center gap-2 flex-shrink-0">
-                          <div className="relative group/call">
-                            <button
-                              onClick={(e) => { e.stopPropagation(); handleHitCall && handleHitCall(lead); }}
-                              className="p-2 bg-white hover:bg-[#FF7B1D] rounded-sm text-[#FF7B1D] hover:text-white transition-all duration-300 border border-orange-100 hover:border-[#FF7B1D] active:scale-95"
-                            >
-                              <Phone size={14} />
-                            </button>
-                            {/* Premium Custom Tooltip for Call Hits */}
-                            <div className="absolute -top-11 left-1/2 -translate-x-1/2 px-3 py-2 bg-gray-900/95 backdrop-blur-md text-white text-[11px] font-bold rounded-sm shadow-2xl opacity-0 group-hover/call:opacity-100 transition-all duration-300 pointer-events-none whitespace-nowrap z-30 transform translate-y-2 group-hover/call:translate-y-0 border border-gray-800">
-                              <div className="flex items-center gap-2">
-                                <div className="flex h-2 w-2 relative">
-                                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
-                                  <span className="relative inline-flex rounded-full h-2 w-2 bg-orange-500"></span>
-                                </div>
-                                <span className="tracking-wide uppercase text-[9px] text-gray-400">Total Hits</span>
-                                <span className="text-orange-400 font-black text-xs">{lead.call_count || 0}</span>
-                              </div>
-                              {/* Tooltip Arrow */}
-                              <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-gray-900" />
-                            </div>
-                          </div>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleHitCall && handleHitCall(lead); }}
+                            className="p-2 bg-white hover:bg-[#FF7B1D] rounded-sm text-[#FF7B1D] hover:text-white transition-all duration-200 border border-orange-100 hover:border-[#FF7B1D] shadow-sm active:scale-95"
+                            title={`Calls: ${lead.call_count || 0}`}
+                          >
+                            <Phone size={14} />
+                          </button>
                           <a
                             href={waLink}
                             target="_blank"
                             rel="noopener noreferrer"
                             onClick={(e) => e.stopPropagation()}
-                            className="p-2 bg-white hover:bg-green-600 rounded-sm text-green-600 hover:text-white transition-all duration-300 border border-green-100 hover:border-green-600 active:scale-95"
+                            className="p-2 bg-white hover:bg-green-600 rounded-sm text-green-600 hover:text-white transition-all duration-200 border border-green-100 hover:border-green-600 shadow-sm active:scale-95"
                             title="WhatsApp"
                           >
                             <FaWhatsapp size={14} />
@@ -596,7 +576,7 @@ const WorkStationLeadsGridView = ({
                           <a
                             href={lead.email ? `mailto:${lead.email}` : '#'}
                             onClick={(e) => e.stopPropagation()}
-                            className="p-2 bg-white hover:bg-blue-600 rounded-sm text-blue-600 hover:text-white transition-all duration-300 border border-blue-100 hover:border-blue-600 active:scale-95"
+                            className="p-2 bg-white hover:bg-blue-600 rounded-sm text-blue-600 hover:text-white transition-all duration-200 border border-blue-100 hover:border-blue-600 shadow-sm active:scale-95"
                             title="Email"
                           >
                             <Mail size={14} />
@@ -1341,6 +1321,7 @@ export default function WorkStation() {
                   employees={employees}
                   currentTime={currentTime}
                   handleShowAssignmentHistory={handleShowAssignmentHistory}
+                  navigate={navigate}
                 />
               )}
 

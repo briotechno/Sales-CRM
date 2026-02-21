@@ -25,7 +25,6 @@ import {
 import { useGetEmployeesQuery } from "../../../store/api/employeeApi";
 import { useCreateQuotationMutation } from "../../../store/api/quotationApi";
 import CreateQuotationModal from "../../QuotationPart/CreateQuotationModal";
-import EditLeadModal from "../../../pages/LeadsManagement/EditLeadPopup";
 import LeadSidebar from "./LeadSidebar";
 import LeadTabs from "./LeadTable";
 import CallActionPopup from "../../../components/AddNewLeads/CallActionPopup";
@@ -70,7 +69,6 @@ export default function CRMLeadDetail() {
   const [showSortDropdown, setShowSortDropdown] = useState(false);
   const [selectedPriority, setSelectedPriority] = useState("High");
   const [selectedSort, setSelectedSort] = useState("Last 7 Days");
-  const [showEditLeadModal, setShowEditLeadModal] = useState(false);
   const [editItem, setEditItem] = useState(null);
   const [showDropdown, setShowDropdown] = useState(false);
   const [pipelineStage, setPipelineStage] = useState("Not Contacted");
@@ -157,7 +155,7 @@ export default function CRMLeadDetail() {
         value: formatCurrency(leadFromQuery.value || leadFromQuery.estimated_value),
         dueDate: leadFromQuery.created_at ? safeParseDate(leadFromQuery.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : "-",
         followUp: leadFromQuery.next_call_at ? String(leadFromQuery.next_call_at).split(" ")[0].split("T")[0] : "-",
-        source: leadFromQuery.lead_source || "Google",
+        source: leadFromQuery.lead_source || "-",
         email: leadFromQuery.email,
         phone: leadFromQuery.mobile_number || leadFromQuery.phone,
         status: leadFromQuery.status,
@@ -189,16 +187,19 @@ export default function CRMLeadDetail() {
       });
     }
   }, [leadFromQuery, passedLead]);
+  const isFollowUp = (leadData?.tag === "Follow Up" || leadData?.status === "In Progress");
+  const isWon = (leadData?.status === "Closed" || leadData?.tag === "Won");
+  const isDropped = (leadData?.status === "Dropped" || leadData?.tag === "Lost" || leadData?.tag === "Dropped" || leadData?.status === "Not Qualified");
 
-  const isOnlyCallTabEnabled = (leadData?.tag === "Not Connected" || leadData?.status === "Not Connected" || leadData?.tag === "Not Contacted" || leadData?.status === "Not Contacted" || leadData?.tag === "New Lead" || leadData?.status === "New Lead") && (leadData?.call_count > 0);
-  const isTabsEnabled = leadData?.tag === "Follow Up" || leadData?.tag === "Won" || leadData?.tag === "Interested" || leadData?.status === "In Progress" || (leadData?.call_count > 0);
+  const isOnlyCallTabEnabled = (leadData?.call_count > 0) && !isFollowUp && !isWon && !isDropped;
+  const isTabsEnabled = isFollowUp || isWon || isDropped || (leadData?.call_count > 0);
 
   useEffect(() => {
     if (isOnlyCallTabEnabled && activeTab !== "calls" && activeTab !== "activities") {
       setActiveTab("calls");
     }
   }, [isOnlyCallTabEnabled, activeTab]);
-  const canNotQualified = (leadData?.call_count || 0) >= (rules?.max_call_attempts || 5) || leadData?.status === "In Progress" || leadData?.tag === "Follow Up";
+  const canNotQualified = (leadData?.call_count || 0) >= (rules?.max_call_attempts || 5) || isFollowUp;
 
   const openCallAction = (initialResponse = null) => {
     setCallPopupData({ isOpen: true, lead: leadData, initialResponse });
@@ -276,10 +277,64 @@ export default function CRMLeadDetail() {
         };
       });
 
-      setShowEditLeadModal(false);
+      setPipelineStage(leadFromQuery.tag || "Not Contacted");
     } catch (error) {
       console.error("Failed to update lead:", error);
-      throw error; // Rethrow to let modal handle toast
+      throw error;
+    }
+  };
+
+  const handleSingleFieldUpdate = async (field, value) => {
+    try {
+      const fieldMapping = {
+        phone: 'mobile_number',
+        altMobileNumber: 'alt_mobile_number',
+        fullName: 'full_name',
+        source: 'lead_source',
+        value: 'value',
+        address: 'address',
+        city: 'city',
+        state: 'state',
+        pincode: 'pincode',
+        email: 'email',
+        gender: 'gender',
+        status: 'status',
+        tag: 'tag',
+        priority: 'priority',
+        assigned_to: 'assigned_to',
+        lead_owner: 'lead_owner',
+        name: 'name',
+        followUp: 'next_call_at'
+      };
+
+      const backendField = fieldMapping[field] || field;
+      let processedValue = value;
+
+      if (field === 'value' && typeof value === 'string') {
+        processedValue = parseFloat(value.replace(/[^0-9.-]+/g, "")) || 0;
+      }
+
+      await updateLead({ id: leadData.id, data: { [backendField]: processedValue } }).unwrap();
+
+      setLeadData((prev) => {
+        let updated = { ...prev, [field]: value };
+
+        // Handle special dependencies
+        if (field === 'assigned_to') {
+          const selectedEmployee = employees.find(e => (e.id == value || e.employee_id === value));
+          updated.assignee = { ...prev.assignee, name: selectedEmployee?.employee_name || "-" };
+        }
+        if (field === 'lead_owner') {
+          updated.owner = { ...prev.owner, name: value };
+        }
+
+        return updated;
+      });
+
+      toast.success(`${field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())} updated successfully`);
+    } catch (error) {
+      console.error("Failed to update field:", error);
+      toast.error("Failed to update field");
     }
   };
 
@@ -676,10 +731,11 @@ export default function CRMLeadDetail() {
             isEditingOwner={isEditingOwner}
             setIsEditingOwner={setIsEditingOwner}
             handleLeadUpdate={handleLeadUpdate}
-            setShowEditLeadModal={setShowEditLeadModal}
+            handleSingleFieldUpdate={handleSingleFieldUpdate}
             formatCurrency={formatCurrency}
+            setShowModal={setShowQuotationModal}
             handleHitCall={openCallAction}
-            setShowModal={openQuotationModal}
+            employees={employees}
           />
 
           {/* Main Content */}
@@ -692,78 +748,77 @@ export default function CRMLeadDetail() {
                     <h2 className="text-xl font-bold text-gray-800 mb-4 capitalize tracking-wide flex items-center gap-2">
                       <Zap className="w-5 h-5 text-orange-500 fill-orange-500" /> Lead Status
                     </h2>
-                    <div className="flex flex-wrap items-center gap-2.5">
-                      <button
-                        onClick={() => (leadData?.tag === "Not Connected" || leadData?.tag === "Not Contacted" || leadData?.status === "Not Connected" || leadData?.tag === "New Lead" || leadData?.status === "New Lead") && openCallAction()}
-                        disabled={!(leadData?.tag === "Not Connected" || leadData?.tag === "Not Contacted" || leadData?.status === "Not Connected" || leadData?.tag === "New Lead" || leadData?.status === "New Lead")}
-                        className={`px-5 py-2 rounded-sm text-sm font-semibold capitalize tracking-wide border transition-all active:scale-95 shadow-sm ${!(leadData?.tag === "Not Connected" || leadData?.tag === "Not Contacted" || leadData?.status === "Not Connected" || leadData?.tag === "New Lead" || leadData?.status === "New Lead")
-                          ? "bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed opacity-70"
-                          : "bg-orange-500 text-white border-orange-500 ring-2 ring-orange-500 ring-opacity-20 translate-y-[-1px]"
-                          }`}
-                      >
-                        Call Action
-                      </button>
-                      <button
-                        onClick={() => handleUpdateStatus("In Progress")}
-                        className={`px-5 py-2 rounded-sm text-sm font-semibold capitalize tracking-wide border transition-all active:scale-95 shadow-sm ${leadData?.status === "In Progress" || leadData?.tag === "Follow Up"
-                          ? "bg-blue-500 text-white border-blue-500 ring-2 ring-blue-500 ring-opacity-20 translate-y-[-1px]"
-                          : "bg-white text-gray-500 border-gray-200 hover:border-blue-500 hover:text-blue-500 hover:bg-blue-50"
-                          }`}
-                      >
-                        In Progress
-                      </button>
-                      <button
-                        disabled={!canNotQualified}
-                        onClick={() => handleUpdateStatus("Not Qualified")}
-                        className={`px-5 py-2 rounded-sm text-sm font-semibold capitalize tracking-wide border transition-all active:scale-95 shadow-sm ${leadData?.status === "Not Qualified" || leadData?.tag === "Lost"
-                          ? "bg-red-500 text-white border-red-500 ring-2 ring-red-500 ring-opacity-20 translate-y-[-1px]"
-                          : canNotQualified
-                            ? "bg-white text-gray-500 border-gray-200 hover:border-red-500 hover:text-red-500 hover:bg-red-50"
-                            : "bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed"
-                          }`}
-                      >
-                        Drop Lead
-                      </button>
+                    <div className="flex flex-wrap items-center gap-3 w-full">
+                      {[
+                        {
+                          label: "New Lead",
+                          isActive: (leadData?.tag === "New Lead" || leadData?.tag === "Not Contacted" || leadData?.status === "New Lead") &&
+                            !(leadData?.tag === "Not Connected" || leadData?.status === "Not Connected") &&
+                            !(leadData?.tag === "Follow Up" || leadData?.status === "In Progress") &&
+                            !(leadData?.status === "Closed" || leadData?.tag === "Won") &&
+                            !(leadData?.status === "Dropped" || leadData?.tag === "Lost" || leadData?.status === "Not Qualified"),
+                          activeClass: "bg-purple-500 text-white border-purple-500",
+                          inactiveClass: "bg-purple-100/20 text-purple-300 border-purple-100"
+                        },
+                        {
+                          label: "Not Connected",
+                          isActive: (leadData?.tag === "Not Connected" || leadData?.status === "Not Connected") &&
+                            !(leadData?.tag === "Follow Up" || leadData?.status === "In Progress") &&
+                            !(leadData?.status === "Closed" || leadData?.tag === "Won") &&
+                            !(leadData?.status === "Dropped" || leadData?.tag === "Lost" || leadData?.status === "Not Qualified"),
+                          activeClass: "bg-orange-500 text-white border-orange-500",
+                          inactiveClass: "bg-orange-100/20 text-orange-300 border-orange-100"
+                        },
+                        {
+                          label: "Follow Up",
+                          isActive: (leadData?.tag === "Follow Up" || leadData?.status === "In Progress") &&
+                            !(leadData?.status === "Closed" || leadData?.tag === "Won") &&
+                            !(leadData?.status === "Dropped" || leadData?.tag === "Lost" || leadData?.status === "Not Qualified"),
+                          activeClass: "bg-blue-500 text-white border-blue-500",
+                          inactiveClass: "bg-blue-100/20 text-blue-300 border-blue-100"
+                        },
+                        {
+                          label: "Won",
+                          isActive: (leadData?.status === "Closed" || leadData?.tag === "Won") &&
+                            !(leadData?.status === "Dropped" || leadData?.tag === "Lost" || leadData?.status === "Not Qualified"),
+                          activeClass: "bg-green-600 text-white border-green-600",
+                          inactiveClass: "bg-green-100/20 text-green-300 border-green-100"
+                        },
+                        {
+                          label: "Drop",
+                          isActive: (leadData?.status === "Dropped" || leadData?.tag === "Lost" || leadData?.tag === "Dropped" || leadData?.status === "Not Qualified"),
+                          activeClass: "bg-red-500 text-white border-red-500",
+                          inactiveClass: "bg-red-100/20 text-red-300 border-red-100"
+                        }
+                      ].map((status) => (
+                        <div
+                          key={status.label}
+                          className={`px-4 py-2 rounded-sm text-sm font-semibold font-primary capitalize tracking-wide border transition-all shadow-sm flex items-center justify-center min-w-[120px] ${status.isActive
+                            ? `${status.activeClass} shadow-md ring-2 ring-orange-500/10`
+                            : `${status.inactiveClass} cursor-default`
+                            }`}
+                        >
+                          {status.label}
+                        </div>
+                      ))}
+
+                      {/* Action Button: Drop Lead */}
+                      <div className="ml-auto">
+                        <button
+                          disabled={!canNotQualified}
+                          onClick={() => handleUpdateStatus("Not Qualified")}
+                          className={`px-6 py-2 rounded-sm text-sm font-semibold font-primary capitalize tracking-widest border transition-all active:scale-95 shadow-sm ${leadData?.status === "Not Qualified" || leadData?.tag === "Lost" || leadData?.tag === "Dropped"
+                            ? "bg-red-600 text-white border-red-600 shadow-md"
+                            : canNotQualified
+                              ? "bg-white text-gray-400 border-gray-100 hover:border-red-500 hover:text-red-500 hover:bg-red-50"
+                              : "bg-gray-50 text-gray-200 border-gray-50 cursor-not-allowed"
+                            }`}
+                        >
+                          Drop Lead
+                        </button>
+                      </div>
                     </div>
                   </div>
-
-                </div>
-
-                <div className="flex items-stretch w-full overflow-hidden rounded-sm" style={{ height: "54px" }}>
-                  {["Not Contacted", "Contacted", "Follow Up", "Closed", "Lost"].map((stage, idx, arr) => {
-                    const isActive = pipelineStage === stage;
-                    const colors = {
-                      "Not Contacted": isActive ? "bg-purple-600" : "bg-purple-400 opacity-60",
-                      "Contacted": isActive ? "bg-blue-400" : "bg-blue-200 opacity-60",
-                      "Follow Up": isActive ? "bg-blue-600" : "bg-blue-300 opacity-60",
-                      "Closed": isActive ? "bg-yellow-500" : "bg-yellow-300 opacity-60",
-                      "Lost": isActive ? "bg-red-600" : "bg-red-300 opacity-60"
-                    };
-
-                    let clipPath = "";
-                    if (idx === 0) clipPath = "polygon(0 0, calc(100% - 24px) 0, 100% 50%, calc(100% - 24px) 100%, 0 100%)";
-                    else if (idx === arr.length - 1) clipPath = "polygon(24px 0, 100% 0, 100% 100%, 24px 100%, 0 50%)";
-                    else clipPath = "polygon(24px 0, calc(100% - 24px) 0, 100% 50%, calc(100% - 24px) 100%, 24px 100%, 0 50%)";
-
-                    return (
-                      <div
-                        key={stage}
-                        onClick={() => setPipelineStage(stage)}
-                        className={`relative flex-1 ${colors[stage]} flex items-center justify-center cursor-pointer transition-all duration-300 group ${isActive ? 'z-10 shadow-inner' : '-ml-6 first:ml-0'}`}
-                        style={{ clipPath }}
-                      >
-                        <span className={`relative z-10 font-bold capitalize tracking-wide text-sm transition-all ${isActive ? 'text-white scale-105' : 'text-white/80 group-hover:text-white'}`}>
-                          {stage}
-                        </span>
-                        {isActive && (
-                          <div className="absolute inset-x-0 bottom-0 h-1 bg-white/30"></div>
-                        )}
-                        {!isActive && (
-                          <div className="absolute inset-0 bg-black/0 group-hover:bg-white/10 transition-colors"></div>
-                        )}
-                      </div>
-                    );
-                  })}
                 </div>
               </div>
             </div>
@@ -787,14 +842,14 @@ export default function CRMLeadDetail() {
                       if (!isTabDisabled) setActiveTab(id);
                     }}
                     disabled={isOnlyCallTabEnabled ? (id !== "calls" && id !== "activities") : !isTabsEnabled}
-                    className={`flex-1 py-4 font-semibold flex items-center justify-center gap-2 border-b-2 transition-all whitespace-nowrap ${(isOnlyCallTabEnabled ? (id !== "calls" && id !== "activities") : !isTabsEnabled)
-                      ? "opacity-40 cursor-not-allowed border-transparent text-gray-300"
+                    className={`flex-1 py-4 font-bold font-primary flex items-center justify-center gap-2 border-b-2 transition-all whitespace-nowrap text-sm tracking-wide ${(isOnlyCallTabEnabled ? (id !== "calls" && id !== "activities") : !isTabsEnabled)
+                      ? "opacity-30 cursor-not-allowed border-transparent text-gray-300"
                       : activeTab === id
-                        ? "border-orange-500 text-orange-500 bg-orange-50/30 shadow-sm"
-                        : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                        ? "border-orange-500 text-orange-600 bg-orange-50/10"
+                        : "border-transparent text-gray-400 hover:text-gray-600 hover:bg-gray-50/50"
                       }`}
                   >
-                    <Icon size={id === 'whatsapp' ? 20 : 18} className={id === 'whatsapp' && activeTab === id ? 'text-[#25D366]' : ''} />
+                    <Icon size={id === 'whatsapp' ? 18 : 16} className={id === 'whatsapp' && activeTab === id ? 'text-[#25D366]' : (activeTab === id ? 'text-orange-500' : 'text-gray-400')} />
                     {label}
                   </button>
                 ))}
@@ -903,15 +958,6 @@ export default function CRMLeadDetail() {
           }}
           onSave={handleSaveMeeting}
           editData={editItem}
-        />
-      )}
-
-      {showEditLeadModal && (
-        <EditLeadModal
-          open={showEditLeadModal}
-          onClose={() => setShowEditLeadModal(false)}
-          leadData={leadData}
-          onSave={handleLeadInfoSave}
         />
       )}
 

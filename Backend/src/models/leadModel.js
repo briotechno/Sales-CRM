@@ -59,6 +59,17 @@ const Lead = {
             }
         }
 
+        // Check for duplicate mobile number
+        if (mobile_number) {
+            const [duplicates] = await pool.query(
+                'SELECT id FROM leads WHERE user_id = ? AND mobile_number = ? LIMIT 1',
+                [userId, mobile_number]
+            );
+            if (duplicates.length > 0) {
+                tag = 'Duplicate';
+            }
+        }
+
         // Generate Lead ID (e.g. L001)
         const [rows] = await pool.query('SELECT lead_id FROM leads WHERE user_id = ? ORDER BY id DESC LIMIT 1', [userId]);
         let nextId = 'L001';
@@ -119,6 +130,10 @@ const Lead = {
             lastIdNum = parseInt(rows[0].lead_id.substring(1)) || 0;
         }
 
+        // Fetch existing mobile numbers for duplicate check
+        const [existingLeads] = await pool.query('SELECT mobile_number FROM leads WHERE user_id = ?', [userId]);
+        const existingNumbers = new Set(existingLeads.map(l => l.mobile_number).filter(Boolean));
+
         const values = leadsArray.map((data, index) => {
             let {
                 name, mobile_number, email, value, pipeline_id, stage_id,
@@ -138,9 +153,12 @@ const Lead = {
             const customFieldsJson = typeof custom_fields === 'string' ? custom_fields : JSON.stringify(custom_fields || []);
             const contactPersonsJson = typeof contact_persons === 'string' ? contact_persons : JSON.stringify(contact_persons || []);
 
+            const isDuplicate = mobile_number && existingNumbers.has(mobile_number);
+            const finalTag = isDuplicate ? 'Duplicate' : (tag || 'New Lead');
+
             return [
                 nextId, name || full_name, mobile_number, email, value || 0, pipeline_id || defaultPipelineId, stage_id || defaultStageId,
-                status || 'Open', type || 'Individual', tag || 'New Lead', location, userId,
+                status || 'Open', type || 'Individual', finalTag, location, userId,
                 lead_source || 'Bulk Upload', visibility || 'Public',
                 full_name || name, gender, dob, alt_mobile_number, address || company_address, city, state, pincode, interested_in,
                 profile_image, whatsapp_number, country,
