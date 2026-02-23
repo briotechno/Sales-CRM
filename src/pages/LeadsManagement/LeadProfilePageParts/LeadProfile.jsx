@@ -75,8 +75,13 @@ export default function CRMLeadDetail() {
       const minute = parts[4] ? parseInt(parts[4], 10) : 0;
       const second = parts[5] ? parseInt(parts[5], 10) : 0;
 
-      const d = new Date(year, month, day, hour, minute, second);
-      if (!isNaN(d)) return d;
+      if (str.length > 10) {
+        const d = new Date(Date.UTC(year, month, day, hour, minute, second));
+        if (!isNaN(d)) return d;
+      } else {
+        const d = new Date(year, month, day, hour, minute, second);
+        if (!isNaN(d)) return d;
+      }
     }
 
     const finalParsed = new Date(str.replace(' ', 'T'));

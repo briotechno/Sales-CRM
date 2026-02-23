@@ -246,9 +246,9 @@ const Lead = {
 
         // Subview logic
         if (subview === 'new') {
-            query += " AND (l.tag = 'Not Contacted' OR l.created_at >= DATE_SUB(NOW(), INTERVAL 2 DAY) OR (l.tag = 'Not Connected' AND l.next_call_at <= NOW()))";
+            query += " AND (l.tag = 'Not Contacted' OR l.created_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL 2 DAY) OR (l.tag = 'Not Connected' AND l.next_call_at <= UTC_TIMESTAMP()))";
         } else if (subview === 'not-connected') {
-            query += " AND l.tag = 'Not Connected' AND (l.next_call_at IS NULL OR l.next_call_at > NOW())";
+            query += " AND l.tag = 'Not Connected' AND (l.next_call_at IS NULL OR l.next_call_at > UTC_TIMESTAMP())";
         } else if (subview === 'follow-up') {
             query += " AND (l.tag = 'Follow Up' OR l.tag = 'Missed')";
         } else if (subview === 'missed') {
@@ -284,8 +284,8 @@ const Lead = {
             countParams.push(term, term, term);
         }
 
-        if (subview === 'new') { countQuery += " AND (l.tag = 'Not Contacted' OR l.created_at >= DATE_SUB(NOW(), INTERVAL 2 DAY) OR (l.tag = 'Not Connected' AND l.next_call_at <= NOW()))"; }
-        else if (subview === 'not-connected') { countQuery += " AND l.tag = 'Not Connected' AND (l.next_call_at IS NULL OR l.next_call_at > NOW())"; }
+        if (subview === 'new') { countQuery += " AND (l.tag = 'Not Contacted' OR l.created_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL 2 DAY) OR (l.tag = 'Not Connected' AND l.next_call_at <= UTC_TIMESTAMP()))"; }
+        else if (subview === 'not-connected') { countQuery += " AND l.tag = 'Not Connected' AND (l.next_call_at IS NULL OR l.next_call_at > UTC_TIMESTAMP())"; }
         else if (subview === 'follow-up') { countQuery += " AND (l.tag = 'Follow Up' OR l.tag = 'Missed')"; }
         else if (subview === 'missed') { countQuery += " AND l.tag = 'Missed'"; }
         else if (subview === 'assigned') { countQuery += " AND l.assigned_to IS NOT NULL"; }
@@ -476,7 +476,7 @@ const Lead = {
         const displayStatus = callStatusMap[status] || status;
 
         await pool.query(
-            'INSERT INTO lead_calls (lead_id, user_id, status, call_date, note, duration, created_at) VALUES (?, ?, ?, NOW(), ?, ?, NOW())',
+            'INSERT INTO lead_calls (lead_id, user_id, status, call_date, note, duration, created_at) VALUES (?, ?, ?, UTC_TIMESTAMP(), ?, ?, UTC_TIMESTAMP())',
             [id, userId, displayStatus.substring(0, 50), safeRemarks, duration]
         );
 
@@ -494,7 +494,7 @@ const Lead = {
 
             await pool.query(
                 `INSERT INTO tasks (user_id, title, description, priority, due_date, due_time, category, status, completed, created_at)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, NOW())`,
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, UTC_TIMESTAMP())`,
                 [
                     userId,
                     `Follow-up call: ${lead[0].name}`,
@@ -567,7 +567,7 @@ const Lead = {
              LEFT JOIN pipelines p ON l.pipeline_id = p.id
              LEFT JOIN pipeline_stages s ON l.stage_id = s.id
              WHERE l.user_id = ? 
-             AND l.next_call_at <= NOW() 
+             AND l.next_call_at <= UTC_TIMESTAMP() 
              AND l.tag = 'Follow Up'
              ORDER BY l.next_call_at DESC`,
             [userId]
@@ -601,7 +601,7 @@ const Lead = {
              SET tag = 'Missed' 
              WHERE user_id = ? 
              AND next_call_at IS NOT NULL 
-             AND next_call_at <= DATE_SUB(NOW(), INTERVAL 5 MINUTE)
+             AND next_call_at <= DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 MINUTE)
              AND tag = 'Follow Up'`,
             [userId]
         );
