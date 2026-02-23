@@ -326,12 +326,12 @@ export default function LeadsList() {
         <div className="max-w-8xl mx-auto px-4 py-4 border-b">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-gray-800">All Leads</h1>
+              <h1 className="text-2xl font-bold text-gray-800">New Leads</h1>
               <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
                 <FiHome className="text-gray-700" size={14} />
                 <span className="text-gray-400">CRM / </span>
                 <span className="text-[#FF7B1D] font-medium">
-                  All Leads
+                  New Leads
                 </span>
               </p>
             </div>
@@ -723,7 +723,7 @@ export default function LeadsList() {
                   handleHitCall={openCallAction}
                 />
               ) : (
-                <LeadsGridView leadsData={leadsData} filterStatus={filterStatus} handleLeadClick={handleLeadClick} selectedLeads={selectedLeads} handleSelectLead={handleSelectLead} handleHitCall={openCallAction} groupTags={["New Lead", "Not Connected", "Follow-up", "Trading"]} />
+                <LeadsGridView leadsData={leadsData} filterStatus={filterStatus} handleLeadClick={handleLeadClick} selectedLeads={selectedLeads} handleSelectLead={handleSelectLead} handleHitCall={openCallAction} />
               )}
 
               {totalPages > 1 && (

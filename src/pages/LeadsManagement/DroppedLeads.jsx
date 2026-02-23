@@ -717,7 +717,7 @@ export default function DroppedLeads() {
                     handleHitCall={openCallAction}
                   />
                 ) : (
-                  <LeadsGridView leadsData={leadsData} filterStatus={filterStatus} handleLeadClick={handleLeadClick} selectedLeads={selectedLeads} handleSelectLead={handleSelectLead} handleHitCall={openCallAction} groupTags={["Drop", "New Lead", "Follow-up", "Trading"]} />
+                  <LeadsGridView leadsData={leadsData} filterStatus={filterStatus} handleLeadClick={handleLeadClick} selectedLeads={selectedLeads} handleSelectLead={handleSelectLead} handleHitCall={openCallAction} />
                 )}
 
                 {totalPages > 1 && (

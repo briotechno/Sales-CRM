@@ -222,7 +222,14 @@ export default function LeadSidebar({
           <div className="space-y-1">
             <div className="flex justify-between items-center pb-2 border-b border-gray-100 py-1">
               <span className="text-gray-500 font-medium text-sm">Lead ID:</span>
-              <span className="text-gray-900 font-mono font-bold text-sm">#{leadData?.id || "N/A"}</span>
+              <div className="flex items-center gap-2">
+                <span className="text-gray-900 font-mono font-bold text-sm">#{leadData?.id || "N/A"}</span>
+                {(leadData?.tag === 'Duplicate' || leadData?.duplicate_count > 1) && (
+                  <span className="text-[10px] text-rose-600 font-bold px-1.5 py-0.5 rounded-sm bg-rose-50 border border-rose-100 capitalize tracking-wide w-fit animate-pulse">
+                    Duplicate {leadData?.duplicate_count > 1 ? `(${leadData.duplicate_count - 1})` : ''}
+                  </span>
+                )}
+              </div>
             </div>
             {renderEditableField("Gender", "gender", leadData?.gender, "select", [
               { label: "Male", value: "Male" },

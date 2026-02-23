@@ -59,17 +59,6 @@ const Lead = {
             }
         }
 
-        // Check for duplicate mobile number
-        if (mobile_number) {
-            const [duplicates] = await pool.query(
-                'SELECT id FROM leads WHERE user_id = ? AND mobile_number = ? LIMIT 1',
-                [userId, mobile_number]
-            );
-            if (duplicates.length > 0) {
-                tag = 'Duplicate';
-            }
-        }
-
         // Generate Lead ID (e.g. L001)
         const [rows] = await pool.query('SELECT lead_id FROM leads WHERE user_id = ? ORDER BY id DESC LIMIT 1', [userId]);
         let nextId = 'L001';
@@ -79,6 +68,24 @@ const Lead = {
             nextId = 'L' + num.toString().padStart(3, '0');
         }
 
+        // Check for duplicate mobile number
+        if (mobile_number) {
+            const [duplicates] = await pool.query(
+                'SELECT id, lead_id FROM leads WHERE user_id = ? AND mobile_number = ? LIMIT 1',
+                [userId, mobile_number]
+            );
+            if (duplicates.length > 0) {
+                tag = 'Duplicate';
+                const reason = `Mobile number already exists (Lead ID: ${duplicates[0].lead_id})`;
+                data.duplicate_reason = reason;
+                // Record duplicate reason on existing lead without changing its status/tag
+                await pool.query(
+                    'UPDATE leads SET duplicate_reason = ? WHERE mobile_number = ? AND user_id = ?',
+                    [`Mobile number duplicated by new Lead: ${nextId}`, mobile_number, userId]
+                );
+            }
+        }
+
         // Handle custom_fields and contact_persons - ensure they're JSON strings
         const customFieldsJson = typeof custom_fields === 'string' ? custom_fields : JSON.stringify(custom_fields || []);
         const contactPersonsJson = typeof contact_persons === 'string' ? contact_persons : JSON.stringify(contact_persons || []);
@@ -86,7 +93,7 @@ const Lead = {
         const [result] = await pool.query(
             `INSERT INTO leads (
                 lead_id, name, mobile_number, email, value, pipeline_id, stage_id, 
-                status, type, tag, location, user_id,
+                status, type, tag, duplicate_reason, location, user_id,
                 lead_source, visibility,
                 full_name, gender, dob, alt_mobile_number, address, city, state, pincode, interested_in,
                 profile_image, whatsapp_number, country,
@@ -94,10 +101,10 @@ const Lead = {
                 org_address, org_city, org_state, org_pincode, company_address, org_country,
                 primary_contact_name, primary_dob, designation, primary_mobile, primary_email,
                 description, assigned_to, owner_name, referral_mobile, custom_fields, contact_persons, lead_owner, assigner_name
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 nextId, name, mobile_number, email, value || 0, pipeline_id, stage_id,
-                status || 'Open', type || 'Individual', tag || 'New Lead', location, userId,
+                status || 'Open', type || 'Individual', tag || 'New Lead', data.duplicate_reason || null, location, userId,
                 lead_source, visibility,
                 full_name, gender, dob, alt_mobile_number, address, city, state, pincode, interested_in,
                 profile_image, whatsapp_number, country,
@@ -131,8 +138,9 @@ const Lead = {
         }
 
         // Fetch existing mobile numbers for duplicate check
-        const [existingLeads] = await pool.query('SELECT mobile_number FROM leads WHERE user_id = ?', [userId]);
-        const existingNumbers = new Set(existingLeads.map(l => l.mobile_number).filter(Boolean));
+        // Fetch existing numbers with their lead IDs for better duplicate reason
+        const [existingLeads] = await pool.query('SELECT mobile_number, lead_id FROM leads WHERE user_id = ?', [userId]);
+        const existingNumbersMap = new Map(existingLeads.map(l => [l.mobile_number, l.lead_id]));
 
         const values = leadsArray.map((data, index) => {
             let {
@@ -153,12 +161,14 @@ const Lead = {
             const customFieldsJson = typeof custom_fields === 'string' ? custom_fields : JSON.stringify(custom_fields || []);
             const contactPersonsJson = typeof contact_persons === 'string' ? contact_persons : JSON.stringify(contact_persons || []);
 
-            const isDuplicate = mobile_number && existingNumbers.has(mobile_number);
+            const leadIdFromMap = mobile_number ? existingNumbersMap.get(mobile_number) : null;
+            const isDuplicate = !!leadIdFromMap;
             const finalTag = isDuplicate ? 'Duplicate' : (tag || 'New Lead');
+            const dupReason = isDuplicate ? `Mobile number already exists (Lead ID: ${leadIdFromMap})` : null;
 
             return [
                 nextId, name || full_name, mobile_number, email, value || 0, pipeline_id || defaultPipelineId, stage_id || defaultStageId,
-                status || 'Open', type || 'Individual', finalTag, location, userId,
+                status || 'Open', type || 'Individual', finalTag, dupReason, location, userId,
                 lead_source || 'Bulk Upload', visibility || 'Public',
                 full_name || name, gender, dob, alt_mobile_number, address || company_address, city, state, pincode, interested_in,
                 profile_image, whatsapp_number, country,
@@ -172,7 +182,7 @@ const Lead = {
         const [result] = await pool.query(
             `INSERT INTO leads (
                 lead_id, name, mobile_number, email, value, pipeline_id, stage_id, 
-                status, type, tag, location, user_id,
+                status, type, tag, duplicate_reason, location, user_id,
                 lead_source, visibility,
                 full_name, gender, dob, alt_mobile_number, address, city, state, pincode, interested_in,
                 profile_image, whatsapp_number, country,
@@ -183,13 +193,28 @@ const Lead = {
             ) VALUES ?`,
             [values]
         );
+
+        // Update existing leads that now have duplicates
+        const duplicateMobileNumbers = leadsArray
+            .filter((_, idx) => values[idx][9] === 'Duplicate')
+            .map(l => l.mobile_number)
+            .filter(Boolean);
+
+        if (duplicateMobileNumbers.length > 0) {
+            await pool.query(
+                'UPDATE leads SET duplicate_reason = "Duplicated during bulk entry/matching" WHERE user_id = ? AND mobile_number IN (?)',
+                [userId, duplicateMobileNumbers]
+            );
+        }
+
         return result.affectedRows;
     },
 
     findAll: async (userId, page = 1, limit = 10, search = '', status = 'All', pipelineId = null, tag = null, type = null, subview = 'All', priority = 'All', services = 'All', dateFrom = null, dateTo = null) => {
         const offset = (page - 1) * limit;
         let query = `
-            SELECT l.*, l.lead_owner, p.name as pipeline_name, s.name as stage_name, COALESCE(e.employee_name, l.assigned_to) as employee_name
+            SELECT l.*, l.lead_owner, p.name as pipeline_name, s.name as stage_name, COALESCE(e.employee_name, l.assigned_to) as employee_name,
+            (SELECT COUNT(*) FROM leads l2 WHERE l2.mobile_number = l.mobile_number AND l2.user_id = l.user_id AND l.mobile_number IS NOT NULL AND l.mobile_number != '') as duplicate_count
             FROM leads l
             LEFT JOIN pipelines p ON l.pipeline_id = p.id
             LEFT JOIN pipeline_stages s ON l.stage_id = s.id
@@ -232,7 +257,7 @@ const Lead = {
         } else if (subview === 'won') {
             query += " AND (l.tag = 'Won' OR l.tag = 'Closed' OR s.name = 'Won')";
         } else if (subview === 'duplicates') {
-            query += " AND l.mobile_number IN (SELECT mobile_number FROM leads GROUP BY mobile_number HAVING COUNT(*) > 1)";
+            query += " AND l.tag = 'Duplicate'";
         }
 
         // Count query construction
@@ -262,7 +287,7 @@ const Lead = {
         else if (subview === 'dropped') { countQuery += " AND l.tag IN ('Lost', 'Dropped', 'Lost Lead')"; }
         else if (subview === 'trending') { countQuery += " AND (l.priority = 'High' OR l.is_trending = 1)"; }
         else if (subview === 'won') { countQuery += " AND (l.tag = 'Won' OR l.tag = 'Closed' OR s.name = 'Won')"; }
-        else if (subview === 'duplicates') { countQuery += " AND l.mobile_number IN (SELECT mobile_number FROM leads GROUP BY mobile_number HAVING COUNT(*) > 1)"; }
+        else if (subview === 'duplicates') { countQuery += " AND l.tag = 'Duplicate'"; }
 
         const [totalRows] = await pool.query(countQuery, countParams);
         const totalFiltered = totalRows[0].total;
@@ -296,7 +321,8 @@ const Lead = {
 
     findById: async (id, userId) => {
         const [rows] = await pool.query(
-            `SELECT l.*, l.lead_owner, p.name as pipeline_name, s.name as stage_name, COALESCE(e.employee_name, l.assigned_to) as employee_name
+            `SELECT l.*, l.lead_owner, p.name as pipeline_name, s.name as stage_name, COALESCE(e.employee_name, l.assigned_to) as employee_name,
+             (SELECT COUNT(*) FROM leads l2 WHERE l2.mobile_number = l.mobile_number AND l2.user_id = l.user_id AND l.mobile_number IS NOT NULL AND l.mobile_number != '') as duplicate_count
              FROM leads l
              LEFT JOIN pipelines p ON l.pipeline_id = p.id
              LEFT JOIN pipeline_stages s ON l.stage_id = s.id
@@ -308,6 +334,11 @@ const Lead = {
     },
 
     update: async (id, data, userId) => {
+        // Fetch current lead data to check current tag and mobile number
+        const [existingLeads] = await pool.query('SELECT mobile_number, tag, lead_id FROM leads WHERE id = ? AND user_id = ?', [id, userId]);
+        if (existingLeads.length === 0) return;
+        const currentLead = existingLeads[0];
+
         const allowedFields = [
             'name', 'mobile_number', 'email', 'value', 'pipeline_id', 'stage_id',
             'status', 'type', 'tag', 'location',
@@ -320,8 +351,26 @@ const Lead = {
             'description', 'assigned_to', 'assigned_at', 'is_read', 'priority', 'last_call_at', 'next_call_at', 'call_count',
             'not_connected_count', 'connected_count', 'drop_reason', 'call_success_rate',
             'follow_up_frequency', 'response_quality', 'conversion_probability', 'is_trending',
-            'referral_mobile', 'custom_fields', 'contact_persons', 'owner_name', 'lead_owner', 'assigner_name'
+            'referral_mobile', 'custom_fields', 'contact_persons', 'owner_name', 'lead_owner', 'assigner_name', 'duplicate_reason'
         ];
+
+        // Handle mobile_number change logic
+        if (data.mobile_number && data.mobile_number !== currentLead.mobile_number) {
+            const [duplicates] = await pool.query(
+                'SELECT id, lead_id FROM leads WHERE user_id = ? AND mobile_number = ? AND id != ? LIMIT 1',
+                [userId, data.mobile_number, id]
+            );
+
+            if (duplicates.length > 0) {
+                data.tag = 'Duplicate';
+                data.duplicate_reason = `Mobile number already exists (Lead ID: ${duplicates[0].lead_id})`;
+            } else if (currentLead.tag === 'Duplicate') {
+                // If it was a duplicate and now it's unique, change to New Lead
+                data.tag = 'New Lead';
+                data.duplicate_reason = null;
+            }
+        }
+
         const updates = [];
         const values = [];
 

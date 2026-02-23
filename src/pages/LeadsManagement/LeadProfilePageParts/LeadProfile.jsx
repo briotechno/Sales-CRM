@@ -55,10 +55,37 @@ export default function CRMLeadDetail() {
   const safeParseDate = (dateStr) => {
     if (!dateStr) return null;
     if (dateStr instanceof Date) return dateStr;
-    const normalized = String(dateStr).replace(' ', 'T');
-    const date = new Date(normalized);
-    if (!isNaN(date)) return date;
-    return new Date(dateStr);
+
+    const str = String(dateStr).trim();
+    if (!str) return null;
+
+    // If it has explicit timezone info (Z or offset), parse as is
+    if (str.includes('Z') || /[+-]\d{2}(:?\d{2})?$/.test(str)) {
+      const d = new Date(str.replace(' ', 'T'));
+      if (!isNaN(d)) return d;
+    }
+
+    // Treat "YYYY-MM-DD HH:mm:ss" or ISO-without-Z as LOCAL time
+    const parts = str.split(/[- T:]/);
+    if (parts.length >= 3) {
+      const year = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const day = parseInt(parts[2], 10);
+      const hour = parts[3] ? parseInt(parts[3], 10) : 0;
+      const minute = parts[4] ? parseInt(parts[4], 10) : 0;
+      const second = parts[5] ? parseInt(parts[5], 10) : 0;
+      const d = new Date(year, month, day, hour, minute, second);
+      if (!isNaN(d)) return d;
+    }
+
+    return new Date(str);
+  };
+
+  const getImageUrl = (path) => {
+    if (!path) return null;
+    if (path.startsWith('data:') || path.startsWith('http')) return path;
+    const baseUrl = (import.meta.env?.VITE_API_BASE_URL || 'http://localhost:5000/api/').replace('/api/', '');
+    return `${baseUrl}${path.startsWith('/') ? '' : '/'}${path}`;
   };
 
   // State Management
@@ -151,10 +178,10 @@ export default function CRMLeadDetail() {
         name: leadFromQuery.name,
         address: leadFromQuery.address || leadFromQuery.location,
         company: leadFromQuery.type === "Person" ? "Individual" : leadFromQuery.organization_name || leadFromQuery.name,
-        dateCreated: leadFromQuery.created_at ? safeParseDate(leadFromQuery.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : "-",
+        dateCreated: leadFromQuery.created_at ? (safeParseDate(leadFromQuery.created_at)?.toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) || "-") : "-",
         value: formatCurrency(leadFromQuery.value || leadFromQuery.estimated_value),
-        dueDate: leadFromQuery.created_at ? safeParseDate(leadFromQuery.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : "-",
-        followUp: leadFromQuery.next_call_at ? String(leadFromQuery.next_call_at).split(" ")[0].split("T")[0] : "-",
+        dueDate: leadFromQuery.created_at ? (safeParseDate(leadFromQuery.created_at)?.toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) || "-") : "-",
+        followUp: leadFromQuery.next_call_at ? (safeParseDate(leadFromQuery.next_call_at)?.toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) || "-") : "-",
         source: leadFromQuery.lead_source || "-",
         email: leadFromQuery.email,
         phone: leadFromQuery.mobile_number || leadFromQuery.phone,
@@ -174,7 +201,7 @@ export default function CRMLeadDetail() {
         altMobileNumber: leadFromQuery.alt_mobile_number || "-",
         gender: leadFromQuery.gender || "Male",
         fullName: leadFromQuery.full_name || leadFromQuery.name,
-        profileImage: leadFromQuery.profile_image || null,
+        profileImage: getImageUrl(leadFromQuery.profile_image),
         assigned_to: leadFromQuery.assigned_to,
         call_count: leadFromQuery.call_count || 0
       });
