@@ -16,14 +16,37 @@ import { FaWhatsapp } from "react-icons/fa";
 const safeParseDate = (dateStr) => {
   if (!dateStr) return null;
   if (dateStr instanceof Date) return dateStr;
-  if (typeof dateStr === 'string' && (dateStr.includes('T') || dateStr.includes('Z'))) {
-    const date = new Date(dateStr);
-    if (!isNaN(date)) return date;
+
+  const str = String(dateStr).trim();
+  if (!str) return null;
+
+  // If it has explicit timezone info (Z or offset), parse as is
+  if (str.includes('Z') || /[+-]\d{2}(:?\d{2})?$/.test(str)) {
+    const d = new Date(str.replace(' ', 'T'));
+    if (!isNaN(d)) return d;
   }
-  const normalized = String(dateStr).replace(' ', 'T');
-  const date = new Date(normalized);
-  if (!isNaN(date)) return date;
-  return new Date(dateStr);
+
+  // Treat "YYYY-MM-DD HH:mm:ss" or ISO-without-Z as LOCAL time
+  const parts = str.split(/[- T:]/);
+  if (parts.length >= 3) {
+    const year = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1;
+    const day = parseInt(parts[2], 10);
+    const hour = parts[3] ? parseInt(parts[3], 10) : 0;
+    const minute = parts[4] ? parseInt(parts[4], 10) : 0;
+    const second = parts[5] ? parseInt(parts[5], 10) : 0;
+    const d = new Date(year, month, day, hour, minute, second);
+    if (!isNaN(d)) return d;
+  }
+
+  return new Date(str);
+};
+
+const getImageUrl = (path) => {
+  if (!path) return null;
+  if (path.startsWith('data:') || path.startsWith('http')) return path;
+  const baseUrl = (import.meta.env?.VITE_API_BASE_URL || 'http://localhost:5000/api/').replace('/api/', '');
+  return `${baseUrl}${path.startsWith('/') ? '' : '/'}${path}`;
 };
 
 const calculateProfileCompletion = (lead) => {
@@ -206,7 +229,7 @@ export default function LeadsGridView({
                           <div className="flex items-start gap-3 flex-1 min-w-0">
                             <div className="w-11 h-11 rounded-sm flex-shrink-0 border border-gray-100 overflow-hidden bg-white shadow-sm">
                               {lead.profile_image ? (
-                                <img src={lead.profile_image} alt={leadDisplayName} className="w-full h-full object-cover" />
+                                <img src={getImageUrl(lead.profile_image)} alt={leadDisplayName} className="w-full h-full object-cover" />
                               ) : (
                                 <div className={`w-full h-full ${getAvatarBg(lead.tag)} flex items-center justify-center text-white text-base font-bold capitalize`}>
                                   {initials}
@@ -237,32 +260,38 @@ export default function LeadsGridView({
                         {/* Timeline */}
                         <div className="grid grid-cols-2 gap-2 w-full">
                           <div className="flex flex-col items-center justify-center gap-1 px-2 py-2 bg-slate-50 text-slate-500 rounded-sm font-bold border border-slate-100 shadow-sm transition-all hover:bg-slate-100 min-w-0">
-                            <span className="text-[10px] font-bold text-slate-400 capitalize tracking-tight font-primary truncate w-full text-center">Born</span>
+                            <span className="text-[11px] font-semibold text-orange-400 capitalize tracking-tight truncate w-full text-center">Born</span>
                             <div className="flex items-center gap-1.5 min-w-0 w-full justify-center">
                               <Calendar size={12} className="text-slate-400 shrink-0" />
-                              <span className="text-[11px] text-gray-800 font-bold font-primary truncate" title={(lead.rawCreated || lead.created_at) ? safeParseDate(lead.rawCreated || lead.created_at).toLocaleString('en-IN') : "--"}>
-                                {(lead.rawCreated || lead.created_at) ? safeParseDate(lead.rawCreated || lead.created_at).toLocaleString('en-IN', {
-                                  day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true
-                                }) : "--"}
+                              <span className="text-[11px] text-gray-800 font-bold font-primary truncate" title={(() => {
+                                const parsed = safeParseDate(lead.rawCreated || lead.created_at);
+                                return parsed ? parsed.toLocaleString('en-IN') : "--";
+                              })()}>
+                                {(() => {
+                                  const parsed = safeParseDate(lead.rawCreated || lead.created_at);
+                                  return parsed ? parsed.toLocaleString('en-IN', {
+                                    day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true
+                                  }) : "--";
+                                })()}
                               </span>
                             </div>
                           </div>
 
                           {lead.next_call_at ? (
                             <div className="flex flex-col items-center justify-center gap-1 px-2 py-2 bg-orange-50 text-orange-600 rounded-sm font-bold border border-orange-100 shadow-sm transition-all hover:bg-orange-100/50 min-w-0">
-                              <span className="text-[10px] font-bold text-orange-400 capitalize tracking-tight font-primary truncate w-full text-center">Next Call</span>
+                              <span className="text-[12px] font-semibold text-orange-400 capitalize tracking-tight truncate w-full text-center">Next Call</span>
                               <div className="flex items-center gap-1.5 min-w-0 w-full justify-center">
                                 <Clock size={12} className="text-orange-400 shrink-0" />
-                                <span className="text-[11px] text-orange-700 font-bold font-primary truncate" title={safeParseDate(lead.next_call_at).toLocaleString('en-IN')}>
-                                  {safeParseDate(lead.next_call_at).toLocaleString('en-IN', {
+                                <span className="text-[11px] text-orange-700 font-bold font-primary truncate" title={lead.next_call_at ? (safeParseDate(lead.next_call_at)?.toLocaleString('en-IN') || "--") : "--"}>
+                                  {lead.next_call_at ? (safeParseDate(lead.next_call_at)?.toLocaleString('en-IN', {
                                     day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true
-                                  })}
+                                  }) || "--") : "--"}
                                 </span>
                               </div>
                             </div>
                           ) : (
                             <div className="flex flex-col items-center justify-center gap-1 px-2 py-2 bg-gray-50 text-gray-400 rounded-sm font-bold border border-gray-100 italic">
-                              <span className="text-[10px] opacity-60 capitalize">Next Call</span>
+                              <span className="text-[12px] opacity-60 capitalize">Next Call</span>
                               <span className="text-[12px]">No Schedule</span>
                             </div>
                           )}
@@ -272,13 +301,13 @@ export default function LeadsGridView({
                         <div className="bg-slate-50/80 rounded-sm p-2 border border-slate-200 transition-colors">
                           <div className="flex justify-between items-center gap-3">
                             <div className="flex flex-col min-w-0 flex-1">
-                              <span className="text-[11px] text-gray-400 font-bold capitalize mb-1">Pipeline</span>
+                              <span className="text-[12px] text-orange-400 font-semibold capitalize mb-1">Pipeline</span>
                               <h4 className="text-[14px] font-bold text-gray-800 truncate capitalize font-primary" title={lead.pipeline_name || "General"}>
                                 {lead.pipeline_name || "General"}
                               </h4>
                             </div>
                             <div className="flex flex-col items-end min-w-0 text-right flex-1">
-                              <span className="text-[11px] text-gray-400 font-bold capitalize mb-1">Stage</span>
+                              <span className="text-[12px] text-orange-400 font-semibold capitalize mb-1">Stage</span>
                               <div className="flex items-center gap-1.5 max-w-full">
                                 <div className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse shrink-0"></div>
                                 <h4 className="text-[14px] font-bold text-orange-600 truncate capitalize font-primary" title={lead.stage_name || "New"}>
@@ -292,7 +321,7 @@ export default function LeadsGridView({
                         {/* Status */}
                         <div className="bg-slate-50/80 rounded-sm px-2 py-1.5 border border-slate-200">
                           <div className="flex justify-between items-center">
-                            <span className="text-[11px] font-bold text-gray-500 capitalize font-primary">Status</span>
+                            <span className="text-[12px] font-semibold text-orange-400 capitalize">Status</span>
                             <span className={`text-[12px] font-bold capitalize px-3 py-0.5 rounded-sm border shadow-sm ${displayStatus.color}`} title={displayStatus.text}>
                               {displayStatus.text}
                             </span>
@@ -305,7 +334,7 @@ export default function LeadsGridView({
                             className="flex flex-col gap-1 px-2 py-1.5 bg-slate-50/80 rounded-sm border border-slate-200 cursor-pointer hover:bg-orange-50 transition-all"
                             onClick={() => handleShowAssignmentHistory && handleShowAssignmentHistory(lead)}
                           >
-                            <span className="text-[11px] font-bold text-gray-500 capitalize font-primary">Assignee</span>
+                            <span className="text-[12px] font-semibold text-orange-400 capitalize">Assignee</span>
                             <div className="flex items-center justify-between gap-1">
                               <span className="text-[13px] font-bold text-gray-800 capitalize truncate" title={lead.employee_name || "Unassigned"}>
                                 {lead.employee_name || "Unassigned"}
@@ -314,7 +343,7 @@ export default function LeadsGridView({
                             </div>
                           </div>
                           <div className="flex flex-col gap-1 px-2 py-1.5 bg-slate-50/80 rounded-sm border border-slate-200">
-                            <span className="text-[11px] font-bold text-gray-500 capitalize font-primary">Owner</span>
+                            <span className="text-[12px] font-semibold text-orange-400 capitalize">Owner</span>
                             <span className="text-[13px] font-bold text-gray-800 capitalize truncate" title={lead.lead_owner || "-"}>
                               {lead.lead_owner || "-"}
                             </span>
@@ -336,13 +365,13 @@ export default function LeadsGridView({
                       <div className="bg-slate-50/90 px-3 py-2 border-t border-gray-200 mt-auto flex items-center justify-between gap-3">
                         <div className="flex items-center gap-6 min-w-0">
                           <div className="flex flex-col min-w-0">
-                            <span className="text-[10px] text-gray-400 font-bold capitalize mb-1">Priority</span>
+                            <span className="text-[11px] text-orange-400 font-semibold capitalize mb-1">Priority</span>
                             <span className={`inline-flex px-2 py-0.5 text-[10px] font-bold rounded-sm capitalize border ${getPriorityColor(lead.priority)} whitespace-nowrap`}>
                               {lead.priority || 'Medium'}
                             </span>
                           </div>
                           <div className="flex flex-col min-w-0">
-                            <span className="text-[10px] text-gray-400 font-bold capitalize mb-1">Source</span>
+                            <span className="text-[11px] text-orange-400 font-semibold capitalize mb-1">Source</span>
                             <p className="text-[12px] font-bold text-gray-700 truncate max-w-[80px] font-primary capitalize italic" title={lead.lead_source || "-"}>
                               {lead.lead_source || "-"}
                             </p>
