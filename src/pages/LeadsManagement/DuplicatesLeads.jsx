@@ -18,6 +18,91 @@ import CallActionPopup from "../../components/AddNewLeads/CallActionPopup";
 import CallQrModal from "../../components/LeadManagement/CallQrModal";
 import { toast } from "react-hot-toast";
 
+const DuplicatesListView = ({
+    currentLeads,
+    selectedLeads,
+    handleSelectAll,
+    handleSelectLead,
+    handleLeadClick,
+}) => {
+    return (
+        <div className="overflow-x-auto border border-gray-200 rounded-sm shadow-sm bg-white">
+            <table className="w-full border-collapse text-left">
+                <thead>
+                    <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm">
+                        <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 w-10">
+                            <input
+                                type="checkbox"
+                                checked={
+                                    selectedLeads.length === currentLeads.length &&
+                                    currentLeads.length > 0
+                                }
+                                onChange={handleSelectAll}
+                                className="w-4 h-4 cursor-pointer accent-orange-500"
+                            />
+                        </th>
+                        <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 capitalize whitespace-nowrap">Lead ID</th>
+                        <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 capitalize whitespace-nowrap">Full Name</th>
+                        <th className="py-3 px-4 font-semibold text-center border-b border-orange-400 capitalize whitespace-nowrap">Status</th>
+                        <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 capitalize whitespace-nowrap">Duplicate Reason</th>
+                        <th className="py-3 px-4 font-semibold text-right border-b border-orange-400 capitalize whitespace-nowrap">Date & Time</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {currentLeads.length > 0 ? (
+                        currentLeads.map((lead) => (
+                            <tr key={lead.id} className="border-t hover:bg-gray-50 transition-colors group">
+                                <td className="py-3 px-4 text-left">
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedLeads.includes(lead.id)}
+                                        onChange={() => handleSelectLead(lead.id)}
+                                        className="w-4 h-4 cursor-pointer accent-orange-500"
+                                    />
+                                </td>
+                                <td
+                                    className="py-3 px-4 text-orange-600 hover:text-orange-800 cursor-pointer font-semibold text-sm text-left whitespace-nowrap"
+                                    onClick={() => handleLeadClick(lead)}
+                                >
+                                    {lead.lead_id || lead.id}
+                                </td>
+                                <td className="py-3 px-4 text-gray-800 hover:text-orange-600 cursor-pointer text-sm text-left" onClick={() => handleLeadClick(lead)}>
+                                    <div className="flex flex-col">
+                                        <span className="font-bold truncate max-w-[150px]" title={lead.name || lead.full_name}>
+                                            {lead.name || lead.full_name || "Untitled Lead"}
+                                        </span>
+                                        <span className="text-[10px] text-gray-400 font-medium">{lead.mobile_number || "--"}</span>
+                                    </div>
+                                </td>
+                                <td className="py-3 px-4 text-center">
+                                    <span className="px-2 py-1 bg-gray-100 text-gray-500 border border-gray-200 rounded-[2px] text-[10px] font-bold uppercase tracking-wider">
+                                        {lead.tag || lead.status}
+                                    </span>
+                                </td>
+                                <td className="py-3 px-4 text-sm text-gray-700">
+                                    <span className="bg-rose-50 text-rose-600 px-2 py-1 rounded-sm border border-rose-100 font-medium italic">
+                                        {lead.duplicate_reason || "Potential Duplicate (Mobile match)"}
+                                    </span>
+                                </td>
+                                <td className="py-3 px-4 text-right text-sm text-gray-600 whitespace-nowrap font-medium">
+                                    {lead.created_at ? new Date(lead.created_at).toLocaleString('en-IN', {
+                                        day: '2-digit', month: 'short', year: 'numeric',
+                                        hour: '2-digit', minute: '2-digit', hour12: true
+                                    }) : "--"}
+                                </td>
+                            </tr>
+                        ))
+                    ) : (
+                        <tr>
+                            <td colSpan="6" className="py-12 text-center text-gray-500 font-medium text-sm">No duplicate leads found.</td>
+                        </tr>
+                    )}
+                </tbody>
+            </table>
+        </div>
+    );
+};
+
 export default function DuplicatesLeads() {
     const isLocked = useSelector((state) => state.ui.sidebarLocked);
     const navigate = useNavigate();
@@ -702,20 +787,15 @@ export default function DuplicatesLeads() {
                         ) : (
                             <>
                                 {view === "list" ? (
-                                    <LeadsListView
+                                    <DuplicatesListView
                                         currentLeads={leadsData}
                                         selectedLeads={selectedLeads}
                                         handleSelectAll={handleSelectAll}
                                         handleSelectLead={handleSelectLead}
                                         handleLeadClick={handleLeadClick}
-                                        currentPage={currentPage}
-                                        itemsPerPage={itemsPerPage}
-                                        handleDeleteLead={handleDeleteLead}
-                                        handleEditLead={handleEditLead}
-                                        handleHitCall={openCallAction}
                                     />
                                 ) : (
-                                    <LeadsGridView leadsData={leadsData} filterStatus={filterStatus} handleLeadClick={handleLeadClick} selectedLeads={selectedLeads} handleSelectLead={handleSelectLead} handleHitCall={openCallAction} groupTags={["Duplicate", "New Lead", "Follow-up", "Trading"]} />
+                                    <LeadsGridView leadsData={leadsData} filterStatus={filterStatus} handleLeadClick={handleLeadClick} selectedLeads={selectedLeads} handleSelectLead={handleSelectLead} handleHitCall={openCallAction} />
                                 )}
 
                                 {totalPages > 1 && (

@@ -684,7 +684,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
 
         {/* Navigation Panel - Right */}
         <div className="flex-1 flex flex-col min-w-0 bg-white shadow-[-10px_0_15px_-3px_rgba(0,0,0,0.02)] overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-50 mb-0 bg-gradient-to-r from-white to-gray-50/30">
+          <div className="px-6 pt-4 pb-2 border-b border-gray-50 mb-0 bg-gradient-to-r from-white to-gray-50/30">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-extrabold text-gray-900 flex items-center gap-2 tracking-tight">
                 {availableModules.find(m => m.id === activeModule)?.name}
@@ -710,7 +710,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           </div>
 
           {/* Menu Items */}
-          <div className="flex-1 overflow-y-auto px-3 pb-4 custom-scrollbar">
+          <div className="flex-1 overflow-y-auto pt-2 px-3 pb-4 custom-scrollbar">
             {filteredMenuItems.map((section, idx) => (
               <div key={idx} className="mb-8 last:mb-0">
 

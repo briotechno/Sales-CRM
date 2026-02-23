@@ -467,9 +467,16 @@ const WorkStationLeadsGridView = ({
                             >
                               {leadDisplayName}
                             </h3>
-                            <span className="text-[11px] text-orange-600 font-bold px-2 py-0.5 rounded-sm bg-orange-50 border border-orange-100 capitalize tracking-wide w-fit mt-1">
-                              {lead.lead_id || lead.id}
-                            </span>
+                            <div className="flex gap-2 items-center mt-1">
+                              <span className="text-[11px] text-orange-600 font-bold px-2 py-0.5 rounded-sm bg-orange-50 border border-orange-100 capitalize tracking-wide w-fit">
+                                {lead.lead_id || lead.id}
+                              </span>
+                              {(lead.tag === 'Duplicate' || lead.duplicate_count > 1) && (
+                                <span className="text-[10px] text-rose-600 font-bold px-2 py-0.5 rounded-sm bg-rose-50 border border-rose-100 capitalize tracking-wide w-fit animate-pulse">
+                                  Duplicate {lead.duplicate_count > 1 ? `(${lead.duplicate_count - 1})` : ''}
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
 

@@ -717,7 +717,7 @@ export default function TrendingLeads() {
                     handleHitCall={openCallAction}
                   />
                 ) : (
-                  <LeadsGridView leadsData={leadsData} filterStatus={filterStatus} handleLeadClick={handleLeadClick} selectedLeads={selectedLeads} handleSelectLead={handleSelectLead} handleHitCall={openCallAction} groupTags={["Trading", "New Lead", "Not Connected", "Follow-up"]} />
+                  <LeadsGridView leadsData={leadsData} filterStatus={filterStatus} handleLeadClick={handleLeadClick} selectedLeads={selectedLeads} handleSelectLead={handleSelectLead} handleHitCall={openCallAction} />
                 )}
 
                 {totalPages > 1 && (
