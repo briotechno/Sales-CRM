@@ -90,6 +90,8 @@ const Lead = {
         const customFieldsJson = typeof custom_fields === 'string' ? custom_fields : JSON.stringify(custom_fields || []);
         const contactPersonsJson = typeof contact_persons === 'string' ? contact_persons : JSON.stringify(contact_persons || []);
 
+        const nextCallDate = data.next_call_at ? new Date(data.next_call_at) : null;
+
         const [result] = await pool.query(
             `INSERT INTO leads (
                 lead_id, name, mobile_number, email, value, pipeline_id, stage_id, 
@@ -100,8 +102,8 @@ const Lead = {
                 organization_name, industry_type, website, company_email, company_phone, gst_pan_number, gst_number,
                 org_address, org_city, org_state, org_pincode, company_address, org_country,
                 primary_contact_name, primary_dob, designation, primary_mobile, primary_email,
-                description, assigned_to, owner_name, referral_mobile, custom_fields, contact_persons, lead_owner, assigner_name
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                description, assigned_to, owner_name, referral_mobile, custom_fields, contact_persons, lead_owner, assigner_name, next_call_at, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 nextId, name, mobile_number, email, value || 0, pipeline_id, stage_id,
                 status || 'Open', type || 'Individual', tag || 'New Lead', data.duplicate_reason || null, location, userId,
@@ -111,7 +113,8 @@ const Lead = {
                 organization_name, industry_type, website, company_email, company_phone, gst_pan_number || gst_number, gst_number,
                 org_address || company_address, org_city, org_state, org_pincode, company_address, org_country,
                 primary_contact_name, primary_dob, designation, primary_mobile, primary_email,
-                description, owner || assigned_to, owner_name, referral_mobile, customFieldsJson, contactPersonsJson, lead_owner || null, assigner_name || null
+                description, owner || assigned_to, owner_name, referral_mobile, customFieldsJson, contactPersonsJson, lead_owner || null, assigner_name || null,
+                nextCallDate, new Date()
             ]
         );
         return result.insertId;
@@ -175,7 +178,9 @@ const Lead = {
                 organization_name, industry_type, website, company_email, company_phone, gst_pan_number || gst_number, gst_number,
                 org_address || company_address, org_city, org_state, org_pincode, company_address, org_country,
                 primary_contact_name, primary_dob, designation, primary_mobile, primary_email,
-                description, owner || assigned_to, owner_name, referral_mobile, customFieldsJson, contactPersonsJson, lead_owner || null, assigner_name || null
+                description, owner || assigned_to, owner_name, referral_mobile, customFieldsJson, contactPersonsJson, lead_owner || null, assigner_name || null,
+                data.next_call_at ? new Date(data.next_call_at) : null,
+                new Date()
             ];
         });
 
@@ -189,7 +194,7 @@ const Lead = {
                 organization_name, industry_type, website, company_email, company_phone, gst_pan_number, gst_number,
                 org_address, org_city, org_state, org_pincode, company_address, org_country,
                 primary_contact_name, primary_dob, designation, primary_mobile, primary_email,
-                description, assigned_to, owner_name, referral_mobile, custom_fields, contact_persons, lead_owner, assigner_name
+                description, assigned_to, owner_name, referral_mobile, custom_fields, contact_persons, lead_owner, assigner_name, next_call_at, created_at
             ) VALUES ?`,
             [values]
         );
@@ -381,6 +386,9 @@ const Lead = {
                     const jsonValue = typeof data[key] === 'string' ? data[key] : JSON.stringify(data[key] || []);
                     updates.push(`${key} = ?`);
                     values.push(jsonValue);
+                } else if (key === 'next_call_at' && data[key]) {
+                    updates.push(`${key} = ?`);
+                    values.push(new Date(data[key]));
                 } else {
                     updates.push(`${key} = ?`);
                     values.push(data[key]);
@@ -420,7 +428,7 @@ const Lead = {
         let updateData = {
             call_count,
             last_call_at: new Date(),
-            next_call_at: nextCallAt || null,
+            next_call_at: nextCallAt ? new Date(nextCallAt) : null,
             call_remarks: safeRemarks,
             last_call_duration: duration || null
         };

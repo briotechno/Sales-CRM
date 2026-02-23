@@ -48,16 +48,17 @@ const safeParseDate = (dateStr) => {
   if (!dateStr) return null;
   if (dateStr instanceof Date) return dateStr;
 
-  const str = String(dateStr).trim();
+  let str = String(dateStr).trim();
   if (!str) return null;
 
-  // If it has explicit timezone info (Z or offset), parse as is
+  // Handle ISO strings with Z or offsets correctly
   if (str.includes('Z') || /[+-]\d{2}(:?\d{2})?$/.test(str)) {
     const d = new Date(str.replace(' ', 'T'));
     if (!isNaN(d)) return d;
   }
 
-  // Treat "YYYY-MM-DD HH:mm:ss" or ISO-without-Z as LOCAL time
+  // Treat "YYYY-MM-DD HH:mm:ss" as local time for maximum compatibility
+  // with existing data that might be in IST/local timezone.
   const parts = str.split(/[- T:]/);
   if (parts.length >= 3) {
     const year = parseInt(parts[0], 10);
@@ -66,11 +67,13 @@ const safeParseDate = (dateStr) => {
     const hour = parts[3] ? parseInt(parts[3], 10) : 0;
     const minute = parts[4] ? parseInt(parts[4], 10) : 0;
     const second = parts[5] ? parseInt(parts[5], 10) : 0;
+
     const d = new Date(year, month, day, hour, minute, second);
     if (!isNaN(d)) return d;
   }
 
-  return new Date(str);
+  const finalParsed = new Date(str.replace(' ', 'T'));
+  return isNaN(finalParsed) ? new Date(str) : finalParsed;
 };
 
 const getImageUrl = (path) => {
@@ -344,8 +347,8 @@ const WorkStationLeadsGridView = ({
         let tagLeads = leadsData.filter((lead) => {
           const isTrending = lead.is_trending === 1 || lead.priority === "High" || (lead.tag && (lead.tag === "Trending" || lead.tag === "High Priority"));
           const isFollowUp = lead.tag === "Follow Up" || lead.tag === "Missed";
-          const isNotConnected = lead.tag === "Not Connected" && (!lead.next_call_at || new Date(lead.next_call_at) > currentTime);
-          const isNew = lead.tag === "Not Contacted" || lead.tag === "New Lead" || lead.tag === "New Leads" || lead.stage_name === "New" || !lead.tag || (lead.tag === "Not Connected" && lead.next_call_at && new Date(lead.next_call_at) <= currentTime);
+          const isNotConnected = lead.tag === "Not Connected" && (!lead.next_call_at || safeParseDate(lead.next_call_at) > currentTime);
+          const isNew = lead.tag === "Not Contacted" || lead.tag === "New Lead" || lead.tag === "New Leads" || lead.stage_name === "New" || !lead.tag || (lead.tag === "Not Connected" && lead.next_call_at && safeParseDate(lead.next_call_at) <= currentTime);
 
           if (groupTag === "Trending") return isTrending;
           if (groupTag === "Follow Up") return isFollowUp;
@@ -359,7 +362,7 @@ const WorkStationLeadsGridView = ({
           tagLeads = [...tagLeads].sort((a, b) => {
             if (!a.next_call_at) return 1;
             if (!b.next_call_at) return -1;
-            return new Date(a.next_call_at) - new Date(b.next_call_at);
+            return safeParseDate(a.next_call_at) - safeParseDate(b.next_call_at);
           });
         }
 

@@ -33,11 +33,45 @@ export default function LeadsListView({
     }
   };
 
+  const safeParseDate = (dateStr) => {
+    if (!dateStr) return null;
+    if (dateStr instanceof Date) return dateStr;
+
+    let str = String(dateStr).trim();
+    if (!str) return null;
+
+    if (str.includes('Z') || /[+-]\d{2}(:?\d{2})?$/.test(str)) {
+      const d = new Date(str.replace(' ', 'T'));
+      if (!isNaN(d)) return d;
+    }
+
+    const parts = str.split(/[- T:]/);
+    if (parts.length >= 3) {
+      const year = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const day = parseInt(parts[2], 10);
+      const hour = parts[3] ? parseInt(parts[3], 10) : 0;
+      const minute = parts[4] ? parseInt(parts[4], 10) : 0;
+      const second = parts[5] ? parseInt(parts[5], 10) : 0;
+
+      if (str.length > 10) {
+        const d = new Date(Date.UTC(year, month, day, hour, minute, second));
+        if (!isNaN(d)) return d;
+      } else {
+        const d = new Date(year, month, day);
+        if (!isNaN(d)) return d;
+      }
+    }
+
+    const finalParsed = new Date(str);
+    return isNaN(finalParsed) ? null : finalParsed;
+  };
+
   const formatDateTime = (dateStr) => {
     if (!dateStr) return "--";
     try {
-      const d = new Date(dateStr);
-      if (isNaN(d)) return "--";
+      const d = safeParseDate(dateStr);
+      if (!d) return "--";
       return d.toLocaleString('en-IN', {
         day: '2-digit', month: 'short', year: 'numeric',
         hour: '2-digit', minute: '2-digit', hour12: true
@@ -275,8 +309,8 @@ export default function LeadsListView({
                         return (
                           <td key={col.id} className="py-3 px-4 text-center">
                             <span className={`px-2 py-0.5 text-[10px] font-bold rounded-sm border ${lead.priority === 'High' ? 'bg-red-50 text-red-600 border-red-100' :
-                                lead.priority === 'Medium' ? 'bg-amber-50 text-amber-600 border-amber-100' :
-                                  'bg-green-50 text-green-600 border-green-100'
+                              lead.priority === 'Medium' ? 'bg-amber-50 text-amber-600 border-amber-100' :
+                                'bg-green-50 text-green-600 border-green-100'
                               }`}>
                               {lead.priority || 'Medium'}
                             </span>

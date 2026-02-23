@@ -56,16 +56,16 @@ export default function CRMLeadDetail() {
     if (!dateStr) return null;
     if (dateStr instanceof Date) return dateStr;
 
-    const str = String(dateStr).trim();
+    let str = String(dateStr).trim();
     if (!str) return null;
 
-    // If it has explicit timezone info (Z or offset), parse as is
+    // Handle ISO strings with Z or offsets correctly
     if (str.includes('Z') || /[+-]\d{2}(:?\d{2})?$/.test(str)) {
       const d = new Date(str.replace(' ', 'T'));
       if (!isNaN(d)) return d;
     }
 
-    // Treat "YYYY-MM-DD HH:mm:ss" or ISO-without-Z as LOCAL time
+    // Treat "YYYY-MM-DD HH:mm:ss" as local time for maximum compatibility
     const parts = str.split(/[- T:]/);
     if (parts.length >= 3) {
       const year = parseInt(parts[0], 10);
@@ -74,11 +74,13 @@ export default function CRMLeadDetail() {
       const hour = parts[3] ? parseInt(parts[3], 10) : 0;
       const minute = parts[4] ? parseInt(parts[4], 10) : 0;
       const second = parts[5] ? parseInt(parts[5], 10) : 0;
+
       const d = new Date(year, month, day, hour, minute, second);
       if (!isNaN(d)) return d;
     }
 
-    return new Date(str);
+    const finalParsed = new Date(str.replace(' ', 'T'));
+    return isNaN(finalParsed) ? new Date(str) : finalParsed;
   };
 
   const getImageUrl = (path) => {

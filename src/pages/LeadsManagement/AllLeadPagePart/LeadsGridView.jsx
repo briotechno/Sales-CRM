@@ -23,25 +23,40 @@ const getImageUrl = (path) => {
   return `${baseUrl}${path.startsWith('/') ? '' : '/'}${path}`;
 };
 
-const safeParseDate = (str) => {
+const safeParseDate = (dateStr) => {
+  if (!dateStr) return null;
+  if (dateStr instanceof Date) return dateStr;
+
+  let str = String(dateStr).trim();
   if (!str) return null;
-  const d = new Date(str);
-  if (!isNaN(d)) return d;
 
-  const parts = str.split(/[\/\s:]/);
-  if (parts.length >= 3) {
-    const day = parseInt(parts[0]);
-    const month = parseInt(parts[1]) - 1;
-    const year = parseInt(parts[2]);
-    const hours = parts[3] ? parseInt(parts[3]) : 0;
-    const minutes = parts[4] ? parseInt(parts[4]) : 0;
-    const isPM = str.toUpperCase().includes('PM');
-
-    const d = new Date(year, month, day, isPM && hours < 12 ? hours + 12 : hours, minutes);
+  // Handle ISO strings with Z or offsets correctly
+  if (str.includes('Z') || /[+-]\d{2}(:?\d{2})?$/.test(str)) {
+    const d = new Date(str.replace(' ', 'T'));
     if (!isNaN(d)) return d;
   }
 
-  return new Date(str);
+  // Handle "YYYY-MM-DD HH:mm:ss" or incomplete ISO strings
+  const parts = str.split(/[- T:]/);
+  if (parts.length >= 3) {
+    const year = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1;
+    const day = parseInt(parts[2], 10);
+    const hour = parts[3] ? parseInt(parts[3], 10) : 0;
+    const minute = parts[4] ? parseInt(parts[4], 10) : 0;
+    const second = parts[5] ? parseInt(parts[5], 10) : 0;
+
+    if (str.length > 10) {
+      const d = new Date(Date.UTC(year, month, day, hour, minute, second));
+      if (!isNaN(d)) return d;
+    } else {
+      const d = new Date(year, month, day);
+      if (!isNaN(d)) return d;
+    }
+  }
+
+  const finalParsed = new Date(str);
+  return isNaN(finalParsed) ? null : finalParsed;
 };
 
 const calculateProfileCompletion = (lead) => {
@@ -416,8 +431,8 @@ export default function LeadsGridView({
           // Specific logic for workstation columns
           const isTrending = lead.is_trending === 1 || lead.priority === "High" || (lead.tag && (lead.tag === "Trending" || lead.tag === "High Priority"));
           const isFollowUp = lead.tag === "Follow Up" || lead.tag === "Missed";
-          const isNotConnected = lead.tag === "Not Connected" && (!lead.next_call_at || new Date(lead.next_call_at) > currentTime);
-          const isNew = lead.tag === "Not Contacted" || lead.tag === "New Lead" || lead.tag === "New Leads" || lead.stage_name === "New" || !lead.tag || (lead.tag === "Not Connected" && lead.next_call_at && new Date(lead.next_call_at) <= currentTime);
+          const isNotConnected = lead.tag === "Not Connected" && (!lead.next_call_at || safeParseDate(lead.next_call_at) > currentTime);
+          const isNew = lead.tag === "Not Contacted" || lead.tag === "New Lead" || lead.tag === "New Leads" || lead.stage_name === "New" || !lead.tag || (lead.tag === "Not Connected" && lead.next_call_at && safeParseDate(lead.next_call_at) <= currentTime);
 
           const normalizedGroupTag = groupTag.toLowerCase().replace('-', ' ').trim();
 
@@ -439,7 +454,7 @@ export default function LeadsGridView({
           tagLeads = [...tagLeads].sort((a, b) => {
             if (!a.next_call_at) return 1;
             if (!b.next_call_at) return -1;
-            return new Date(a.next_call_at) - new Date(b.next_call_at);
+            return safeParseDate(a.next_call_at) - safeParseDate(b.next_call_at);
           });
         }
 

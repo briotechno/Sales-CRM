@@ -42,8 +42,16 @@ export default function CallActionPopup({ isOpen, onClose, lead, onHitCall, init
         { label: "+3 Hours", value: 3, unit: "hour" },
     ];
 
+    const getIsoNextCall = () => {
+        if (!nextCallAt) return "";
+        try {
+            const d = new Date(nextCallAt);
+            return isNaN(d.getTime()) ? "" : d.toISOString();
+        } catch (e) { return ""; }
+    };
+
     const { data: conflicts } = useCheckCallConflictQuery(
-        { dateTime: nextCallAt, excludeId: lead?.id },
+        { dateTime: getIsoNextCall(), excludeId: lead?.id },
         { skip: !nextCallAt || finalAction !== "follow_up" || !isOpen }
     );
 
@@ -155,7 +163,7 @@ export default function CallActionPopup({ isOpen, onClose, lead, onHitCall, init
             if (new Date(nextCallAt) < new Date()) return toast.error("Next call cannot be in the past");
             submitCall({
                 status: response || "follow_up",
-                next_call_at: nextCallAt,
+                next_call_at: new Date(nextCallAt).toISOString(),
                 priority,
                 duration: parseInt(durationMin) || 0,
                 tag: response === "connected" ? "Follow Up" : "Not Connected"
