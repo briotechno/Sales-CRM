@@ -1,5 +1,6 @@
 const Lead = require('../models/leadModel');
 const Employee = require('../models/employeeModel');
+const Client = require('../models/clientModel');
 const { pool } = require('../config/db');
 const LeadResources = require('../models/leadResourcesModel'); // Added
 const leadAssignmentService = require('../services/leadAssignmentService');
@@ -330,12 +331,42 @@ const updateLeadStatus = async (req, res) => {
 
         await Lead.update(req.params.id, updateData, req.user.id);
 
-        // If there are remarks, add them as a note automatically
-        if (remarks) {
-            await LeadResources.addNote({
-                lead_id: req.params.id,
-                content: `[Status Update: ${status}${drop_reason ? ' - ' + drop_reason : ''}] ${remarks}`
-            }, req.user.id);
+        // If tag is "Won", automatically create a client
+        if (tag === 'Won') {
+            const lead = await Lead.findById(req.params.id, req.user.id);
+            if (lead) {
+                // Check if client already exists (by email or phone)
+                const existingClient = await Client.findByEmailOrPhone(req.user.id, lead.email, lead.mobile_number);
+
+                if (!existingClient) {
+                    const nameParts = (lead.name || lead.full_name || '').split(' ');
+                    const firstName = nameParts[0] || '';
+                    const lastName = nameParts.slice(1).join(' ') || '';
+
+                    // Map lead type to client type (Individual -> person)
+                    const clientType = lead.type === 'Individual' ? 'person' : (lead.type || 'person');
+
+                    await Client.create({
+                        type: clientType,
+                        first_name: firstName,
+                        last_name: lastName,
+                        email: lead.email,
+                        phone: lead.mobile_number,
+                        company_name: lead.organization_name || lead.company || lead.company_name,
+                        position: lead.designation,
+                        source: lead.lead_source || lead.source,
+                        industry: lead.industry_type || lead.industry,
+                        website: lead.website,
+                        address: lead.address,
+                        city: lead.city,
+                        state: lead.state,
+                        zip_code: lead.pincode,
+                        country: lead.country,
+                        status: 'active',
+                        notes: `Automatically converted from Lead ${lead.lead_id}`
+                    }, req.user.id);
+                }
+            }
         }
 
         res.status(200).json({ message: 'Status updated' });

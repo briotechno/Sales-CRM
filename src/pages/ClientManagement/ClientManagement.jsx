@@ -829,106 +829,97 @@ export default function AllClientPage() {
                   )}
                 </div>
               ) : (
-                <div className="bg-white rounded-sm shadow-sm overflow-hidden border border-gray-200">
-                  <div className="overflow-x-auto">
-                    <table className="w-full border-collapse">
-                      <thead>
-                        <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm">
-                          <th className="py-3 px-4 font-semibold text-left w-[25%]">Client Name</th>
-                          <th className="py-3 px-4 font-semibold text-left w-[20%]">Contact</th>
-                          <th className="py-3 px-4 font-semibold text-left w-[10%]">Type</th>
-                          <th className="py-3 px-4 font-semibold text-left w-[15%]">Status</th>
-                          {/* <th className="py-3 px-4 font-semibold text-left w-[20%]">Location</th> */}
-                          <th className="py-3 px-4 font-semibold text-right w-[10%]">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-100">
-                        {clients.length === 0 ? (
-                          <tr>
-                            <td colSpan="6" className="py-16 text-center">
-                              <div className="flex flex-col items-center justify-center text-gray-500">
-                                <User className="w-12 h-12 text-gray-300 mb-3" />
-                                <p className="text-lg font-semibold">No Clients Found</p>
-                                <button onClick={openAddModal} className="mt-4 px-6 py-2 bg-orange-500 text-white rounded-sm text-sm font-bold hover:bg-orange-600 transition">
-                                  Add First Client
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ) : (
-                          clients.map((client, idx) => (
-                            <tr key={client.id} className={`${idx % 2 === 0 ? "bg-white" : "bg-gray-50/30"} hover:bg-orange-50/50 transition-colors group`}>
-                              <td className="py-3 px-4 text-left">
-                                <div className="flex items-center gap-3">
-                                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${client.type === 'person' ? 'bg-blue-100 text-blue-600' : 'bg-purple-100 text-purple-600'}`}>
-                                    {client.type === 'person' ? 'P' : 'C'}
-                                  </div>
-                                  <div>
-                                    <p className="text-sm font-bold text-gray-900 capitalize">
-                                      {client.type === 'person' ? `${client.first_name} ${client.last_name || ''}` : client.company_name}
-                                    </p>
-                                    {client.company_name && client.type === 'person' && (
-                                      <p className="text-xs text-gray-500 capitalize">{client.company_name}</p>
-                                    )}
-                                  </div>
-                                </div>
-                              </td>
-                              <td className="py-3 px-4 text-left">
-                                <div className="space-y-0.5">
-                                  {client.email && (
-                                    <div className="flex items-center gap-1.5 text-xs text-gray-600">
-                                      <Mail size={12} className="text-gray-400" />
-                                      <span className="truncate max-w-[150px]" title={client.email}>{client.email}</span>
-                                    </div>
-                                  )}
-                                  {client.phone && (
-                                    <div className="flex items-center gap-1.5 text-xs text-gray-600">
-                                      <Phone size={12} className="text-gray-400" />
-                                      <span>{client.phone}</span>
-                                    </div>
-                                  )}
-                                </div>
-                              </td>
-                              <td className="py-3 px-4 text-left">
-                                <span className={`px-2 py-1 rounded-sm text-xs font-bold capitalize ${client.type === 'person' ? 'bg-blue-50 text-blue-600 border border-blue-100' : 'bg-purple-50 text-purple-600 border border-purple-100'}`}>
+                <div className="space-y-3">
+                  {clients.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-20 bg-gray-50 rounded-xl border-dashed border-2 border-gray-200">
+                      <User className="w-16 h-16 text-gray-300 mb-4" />
+                      <h3 className="text-lg font-semibold text-gray-700">No Clients Found</h3>
+                      <button onClick={openAddModal} className="mt-4 px-6 py-2 bg-orange-500 text-white rounded-sm text-sm font-bold hover:bg-orange-600 transition">
+                        Add First Client
+                      </button>
+                    </div>
+                  ) : (
+                    clients.map((client) => {
+                      const name = client.type === 'person' ? `${client.first_name} ${client.last_name || ''}` : client.company_name;
+                      const avatar = client.type === 'person'
+                        ? ((client.first_name?.[0] || '') + (client.last_name?.[0] || '')).toUpperCase()
+                        : (client.company_name?.slice(0, 2) || 'CO').toUpperCase();
+
+                      return (
+                        <div
+                          key={client.id}
+                          className="flex items-center justify-between p-4 bg-gradient-to-r from-orange-50 to-amber-50 rounded-lg hover:shadow-md transition-shadow duration-200 border border-orange-200 group"
+                        >
+                          <div className="flex items-center space-x-4">
+                            <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white font-bold text-base shadow-md">
+                              {avatar}
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <h4 className="font-bold text-gray-800 text-base capitalize">
+                                  {name}
+                                </h4>
+                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-tighter ${client.type === 'person' ? 'bg-blue-100 text-blue-600 border border-blue-200' : 'bg-purple-100 text-purple-600 border border-purple-200'}`}>
                                   {client.type}
                                 </span>
-                              </td>
-                              <td className="py-3 px-4 text-left">
-                                <span className={`px-2 py-1 rounded-sm text-xs font-bold capitalize border ${getStatusColor(client.status)}`}>
-                                  {client.status}
-                                </span>
-                              </td>
-                              {/* <td className="py-3 px-4 text-left">
-                                <div className="flex items-center gap-1.5 text-xs text-gray-600">
-                                  <MapPin size={12} className="text-gray-400" />
-                                  <span className="truncate max-w-[150px] capitalize">
-                                    {client.city}{client.state ? `, ${client.state}` : ''}
-                                  </span>
-                                </div>
-                              </td> */}
-                              <td className="py-3 px-4 text-right">
-                                <div className="flex items-center justify-end gap-2">
-                                  <button onClick={() => openViewModal(client)} className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-sm transition-all" title="View">
-                                    <Eye size={16} />
-                                  </button>
-                                  <button onClick={() => navigate('/additional/invoice', { state: { client } })} className="p-1.5 text-gray-500 hover:text-orange-600 hover:bg-orange-50 rounded-sm transition-all" title="Invoice">
-                                    <FileText size={16} />
-                                  </button>
-                                  <button onClick={() => openEditModal(client)} className="p-1.5 text-green-600 hover:bg-green-50 rounded-sm transition-all" title="Edit">
-                                    <SquarePen size={16} />
-                                  </button>
-                                  <button onClick={() => openDeleteModal(client.id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded-sm transition-all" title="Delete">
-                                    <Trash2 size={16} />
-                                  </button>
-                                </div>
-                              </td>
-                            </tr>
-                          ))
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
+                              </div>
+                              <p className="text-sm text-gray-600 lowercase">{client.email}</p>
+                              <p className="text-xs text-orange-600 mt-0.5 font-medium flex items-center gap-1">
+                                <Building2 size={12} className="text-orange-400" />
+                                {client.type === 'person' ? (client.company_name || 'Individual') : (client.industry || 'Organization')}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center space-x-4">
+                            <div className="hidden md:flex items-center space-x-3">
+                              <span
+                                className={`px-3 py-1.5 rounded-full text-xs font-bold border capitalize ${getStatusColor(client.status)}`}
+                              >
+                                {client.status}
+                              </span>
+                              <span className="text-xs text-gray-600 flex items-center bg-gray-50 px-3 py-1.5 rounded-full border border-gray-200">
+                                <Clock className="w-3.5 h-3.5 mr-1.5" />
+                                {client.created_at ? new Date(client.created_at).toLocaleDateString() : 'Recent'}
+                              </span>
+                            </div>
+
+                            {/* Actions toggle on hover for cleaner look, but kept visible for small screens */}
+                            <div className="flex items-center gap-1 sm:gap-2 bg-white/60 backdrop-blur-sm p-1.5 rounded-lg border border-orange-100 shadow-sm opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button
+                                onClick={() => openViewModal(client)}
+                                className="p-2 text-blue-600 hover:bg-blue-100 rounded-md transition-all"
+                                title="View Details"
+                              >
+                                <Eye size={18} />
+                              </button>
+                              <button
+                                onClick={() => navigate('/additional/invoice', { state: { client } })}
+                                className="p-2 text-orange-600 hover:bg-orange-100 rounded-md transition-all"
+                                title="Generate Invoice"
+                              >
+                                <FileText size={18} />
+                              </button>
+                              <button
+                                onClick={() => openEditModal(client)}
+                                className="p-2 text-green-600 hover:bg-green-100 rounded-md transition-all"
+                                title="Edit Client"
+                              >
+                                <SquarePen size={18} />
+                              </button>
+                              <button
+                                onClick={() => openDeleteModal(client.id)}
+                                className="p-2 text-red-600 hover:bg-red-100 rounded-md transition-all"
+                                title="Delete Client"
+                              >
+                                <Trash2 size={18} />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
                 </div>
               )}
             </>

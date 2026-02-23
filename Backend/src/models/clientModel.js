@@ -104,6 +104,27 @@ const Client = {
             ...row,
             line_items: typeof row.line_items === 'string' ? JSON.parse(row.line_items) : (row.line_items || [])
         }));
+    },
+
+    findByEmailOrPhone: async (userId, email, phone) => {
+        if (!email && !phone) return null;
+        let query = 'SELECT * FROM clients WHERE user_id = ? AND (';
+        const params = [userId];
+
+        if (email && phone) {
+            query += 'email = ? OR phone = ?';
+            params.push(email, phone);
+        } else if (email) {
+            query += 'email = ?';
+            params.push(email);
+        } else {
+            query += 'phone = ?';
+            params.push(phone);
+        }
+        query += ') LIMIT 1';
+
+        const [rows] = await pool.query(query, params);
+        return rows[0];
     }
 };
 
