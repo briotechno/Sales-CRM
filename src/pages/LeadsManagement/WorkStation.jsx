@@ -48,16 +48,17 @@ const safeParseDate = (dateStr) => {
   if (!dateStr) return null;
   if (dateStr instanceof Date) return dateStr;
 
-  const str = String(dateStr).trim();
+  let str = String(dateStr).trim();
   if (!str) return null;
 
-  // If it has explicit timezone info (Z or offset), parse as is
+  // Handle ISO strings with Z or offsets correctly
   if (str.includes('Z') || /[+-]\d{2}(:?\d{2})?$/.test(str)) {
     const d = new Date(str.replace(' ', 'T'));
     if (!isNaN(d)) return d;
   }
 
-  // Treat "YYYY-MM-DD HH:mm:ss" or ISO-without-Z as LOCAL time
+  // Treat "YYYY-MM-DD HH:mm:ss" as local time for maximum compatibility
+  // with existing data that might be in IST/local timezone.
   const parts = str.split(/[- T:]/);
   if (parts.length >= 3) {
     const year = parseInt(parts[0], 10);
@@ -66,11 +67,18 @@ const safeParseDate = (dateStr) => {
     const hour = parts[3] ? parseInt(parts[3], 10) : 0;
     const minute = parts[4] ? parseInt(parts[4], 10) : 0;
     const second = parts[5] ? parseInt(parts[5], 10) : 0;
-    const d = new Date(year, month, day, hour, minute, second);
-    if (!isNaN(d)) return d;
+
+    if (str.length > 10) {
+      const d = new Date(Date.UTC(year, month, day, hour, minute, second));
+      if (!isNaN(d)) return d;
+    } else {
+      const d = new Date(year, month, day, hour, minute, second);
+      if (!isNaN(d)) return d;
+    }
   }
 
-  return new Date(str);
+  const finalParsed = new Date(str.replace(' ', 'T'));
+  return isNaN(finalParsed) ? new Date(str) : finalParsed;
 };
 
 const getImageUrl = (path) => {
@@ -109,7 +117,7 @@ const WorkStationLeadsListView = ({
             <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 capitalize whitespace-nowrap">Interested In</th>
             <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 capitalize whitespace-nowrap">Lead Status</th>
             <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 capitalize whitespace-nowrap">Pipeline Stages</th>
-            <th className="py-3 px-4 font-semibold text-right border-b border-orange-400 capitalize whitespace-nowrap">Call Hits</th>
+            <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 capitalize whitespace-nowrap">Call Hits</th>
             <th className="py-3 px-4 font-semibold text-right border-b border-orange-400 capitalize whitespace-nowrap">Action</th>
           </tr>
         </thead>
@@ -344,8 +352,8 @@ const WorkStationLeadsGridView = ({
         let tagLeads = leadsData.filter((lead) => {
           const isTrending = lead.is_trending === 1 || lead.priority === "High" || (lead.tag && (lead.tag === "Trending" || lead.tag === "High Priority"));
           const isFollowUp = lead.tag === "Follow Up" || lead.tag === "Missed";
-          const isNotConnected = lead.tag === "Not Connected" && (!lead.next_call_at || new Date(lead.next_call_at) > currentTime);
-          const isNew = lead.tag === "Not Contacted" || lead.tag === "New Lead" || lead.tag === "New Leads" || lead.stage_name === "New" || !lead.tag || (lead.tag === "Not Connected" && lead.next_call_at && new Date(lead.next_call_at) <= currentTime);
+          const isNotConnected = lead.tag === "Not Connected" && (!lead.next_call_at || safeParseDate(lead.next_call_at) > currentTime);
+          const isNew = lead.tag === "Not Contacted" || lead.tag === "New Lead" || lead.tag === "New Leads" || lead.stage_name === "New" || !lead.tag || (lead.tag === "Not Connected" && lead.next_call_at && safeParseDate(lead.next_call_at) <= currentTime);
 
           if (groupTag === "Trending") return isTrending;
           if (groupTag === "Follow Up") return isFollowUp;
@@ -359,7 +367,7 @@ const WorkStationLeadsGridView = ({
           tagLeads = [...tagLeads].sort((a, b) => {
             if (!a.next_call_at) return 1;
             if (!b.next_call_at) return -1;
-            return new Date(a.next_call_at) - new Date(b.next_call_at);
+            return safeParseDate(a.next_call_at) - safeParseDate(b.next_call_at);
           });
         }
 
@@ -437,6 +445,9 @@ const WorkStationLeadsGridView = ({
                     return { text: s, color: c };
                   })();
 
+                  const pType = (groupTag || "").toLowerCase();
+                  const isNew = pType.includes("new lead");
+                  const isWon = pType.includes("won");
                   const isMissed = lead.tag === "Missed" || displayStatus.text === "Missed";
 
                   return (
@@ -500,46 +511,50 @@ const WorkStationLeadsGridView = ({
                             </div>
                           </div>
 
-                          {lead.next_call_at ? (
-                            <div className="flex flex-col items-center justify-center gap-1 px-2 py-2 bg-orange-50 text-orange-600 rounded-sm font-bold border border-orange-100 shadow-sm transition-all hover:bg-orange-100/50 min-w-0">
-                              <span className="text-[12px] font-semibold text-orange-400 capitalize tracking-tight truncate w-full text-center">Next Call</span>
-                              <div className="flex items-center gap-1.5 min-w-0 w-full justify-center">
-                                <Clock size={12} className="text-orange-400 shrink-0" />
-                                <span className="text-[11px] text-orange-700 font-bold font-primary truncate" title={lead.next_call_at ? (safeParseDate(lead.next_call_at)?.toLocaleString('en-IN') || "--") : "--"}>
-                                  {lead.next_call_at ? (safeParseDate(lead.next_call_at)?.toLocaleString('en-IN', {
-                                    day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true
-                                  }) || "--") : "--"}
-                                </span>
+                          {!isWon && (
+                            lead.next_call_at ? (
+                              <div className="flex flex-col items-center justify-center gap-1 px-2 py-2 bg-orange-50 text-orange-600 rounded-sm font-bold border border-orange-100 shadow-sm transition-all hover:bg-orange-100/50 min-w-0">
+                                <span className="text-[12px] font-semibold text-orange-400 capitalize tracking-tight truncate w-full text-center">Next Call</span>
+                                <div className="flex items-center gap-1.5 min-w-0 w-full justify-center">
+                                  <Clock size={12} className="text-orange-400 shrink-0" />
+                                  <span className="text-[11px] text-orange-700 font-bold font-primary truncate" title={lead.next_call_at ? (safeParseDate(lead.next_call_at)?.toLocaleString('en-IN') || "--") : "--"}>
+                                    {lead.next_call_at ? (safeParseDate(lead.next_call_at)?.toLocaleString('en-IN', {
+                                      day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true
+                                    }) || "--") : "--"}
+                                  </span>
+                                </div>
                               </div>
-                            </div>
-                          ) : (
-                            <div className="flex flex-col items-center justify-center gap-1 px-2 py-2 bg-gray-50 text-gray-400 rounded-sm font-bold border border-gray-100 italic">
-                              <span className="text-[12px] opacity-60 capitalize">Next Call</span>
-                              <span className="text-[12px]">No Schedule</span>
-                            </div>
+                            ) : (
+                              <div className="flex flex-col items-center justify-center gap-1 px-2 py-2 bg-gray-50 text-gray-400 rounded-sm font-bold border border-gray-100 italic">
+                                <span className="text-[12px] opacity-60 capitalize">Next Call</span>
+                                <span className="text-[12px]">Not Scheduled</span>
+                              </div>
+                            )
                           )}
                         </div>
 
                         {/* Pipeline Section */}
-                        <div className="bg-slate-50/80 rounded-sm p-2 border border-slate-200 transition-colors">
-                          <div className="flex justify-between items-center gap-3">
-                            <div className="flex flex-col min-w-0">
-                              <span className="text-[12px] text-orange-400 font-semibold capitalize mb-1">Pipeline</span>
-                              <h4 className="text-[14px] font-bold text-gray-800 truncate capitalize font-primary" title={lead.pipeline_name || "General"}>
-                                {lead.pipeline_name || "General"}
-                              </h4>
-                            </div>
-                            <div className="flex flex-col items-end min-w-0 text-right">
-                              <span className="text-[12px] font-semibold text-orange-400 capitalize mb-1">Stage</span>
-                              <div className="flex items-center gap-1.5 max-w-full">
-                                <div className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse shrink-0"></div>
-                                <h4 className="text-[14px] font-bold text-orange-600 truncate capitalize font-primary" title={lead.stage_name || "New"}>
-                                  {lead.stage_name || "New"}
+                        {!isWon && (
+                          <div className="bg-slate-50/80 rounded-sm p-2 border border-slate-200 transition-colors">
+                            <div className="flex justify-between items-center gap-3">
+                              <div className="flex flex-col min-w-0">
+                                <span className="text-[12px] text-orange-400 font-semibold capitalize mb-1">Pipeline</span>
+                                <h4 className="text-[14px] font-bold text-gray-800 truncate capitalize font-primary" title={lead.pipeline_name || "General"}>
+                                  {lead.pipeline_name || "General"}
                                 </h4>
+                              </div>
+                              <div className="flex flex-col items-end min-w-0 text-right">
+                                <span className="text-[12px] font-semibold text-orange-400 capitalize mb-1">Stage</span>
+                                <div className="flex items-center gap-1.5 max-w-full">
+                                  <div className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse shrink-0"></div>
+                                  <h4 className="text-[14px] font-bold text-orange-600 truncate capitalize font-primary" title={lead.stage_name || "New"}>
+                                    {lead.stage_name || "New"}
+                                  </h4>
+                                </div>
                               </div>
                             </div>
                           </div>
-                        </div>
+                        )}
 
                         {/* Status Section */}
                         <div className="bg-slate-50/80 rounded-sm px-2 py-1.5 border border-slate-200">
@@ -574,14 +589,16 @@ const WorkStationLeadsGridView = ({
                         </div>
 
                         {/* Progress Bar */}
-                        <div className="group/strength relative mt-1">
-                          <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden border border-gray-200">
-                            <div
-                              className={`h-full rounded-full transition-all duration-700 ease-out ${calculateProfileCompletion(lead) > 70 ? 'bg-gradient-to-r from-green-400 to-green-600' : 'bg-gradient-to-r from-orange-400 to-[#FF7B1D]'}`}
-                              style={{ width: `${calculateProfileCompletion(lead)}%` }}
-                            />
+                        {!isWon && (
+                          <div className="group/strength relative mt-1">
+                            <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden border border-gray-200">
+                              <div
+                                className={`h-full rounded-full transition-all duration-700 ease-out ${calculateProfileCompletion(lead) > 70 ? 'bg-gradient-to-r from-green-400 to-green-600' : 'bg-gradient-to-r from-orange-400 to-[#FF7B1D]'}`}
+                                style={{ width: `${calculateProfileCompletion(lead)}%` }}
+                              />
+                            </div>
                           </div>
-                        </div>
+                        )}
                       </div>
 
                       {/* ── CARD FOOTER ── */}

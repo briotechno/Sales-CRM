@@ -18,6 +18,37 @@ import CallActionPopup from "../../components/AddNewLeads/CallActionPopup";
 import CallQrModal from "../../components/LeadManagement/CallQrModal";
 import { toast } from "react-hot-toast";
 
+const safeParseDate = (dateStr) => {
+    if (!dateStr) return null;
+    if (dateStr instanceof Date) return dateStr;
+
+    let str = String(dateStr).trim();
+    if (!str) return null;
+
+    // Handle ISO strings with Z or offsets correctly
+    if (str.includes('Z') || /[+-]\d{2}(:?\d{2})?$/.test(str)) {
+        const d = new Date(str.replace(' ', 'T'));
+        if (!isNaN(d)) return d;
+    }
+
+    // Treat "YYYY-MM-DD HH:mm:ss" as local time for maximum compatibility
+    const parts = str.split(/[- T:]/);
+    if (parts.length >= 3) {
+        const year = parseInt(parts[0], 10);
+        const month = parseInt(parts[1], 10) - 1;
+        const day = parseInt(parts[2], 10);
+        const hour = parts[3] ? parseInt(parts[3], 10) : 0;
+        const minute = parts[4] ? parseInt(parts[4], 10) : 0;
+        const second = parts[5] ? parseInt(parts[5], 10) : 0;
+
+        const d = new Date(year, month, day, hour, minute, second);
+        if (!isNaN(d)) return d;
+    }
+
+    const finalParsed = new Date(str.replace(' ', 'T'));
+    return isNaN(finalParsed) ? new Date(str) : finalParsed;
+};
+
 const DuplicatesListView = ({
     currentLeads,
     selectedLeads,
@@ -85,7 +116,7 @@ const DuplicatesListView = ({
                                     </span>
                                 </td>
                                 <td className="py-3 px-4 text-right text-sm text-gray-600 whitespace-nowrap font-medium">
-                                    {lead.created_at ? new Date(lead.created_at).toLocaleString('en-IN', {
+                                    {lead.created_at ? safeParseDate(lead.created_at)?.toLocaleString('en-IN', {
                                         day: '2-digit', month: 'short', year: 'numeric',
                                         hour: '2-digit', minute: '2-digit', hour12: true
                                     }) : "--"}

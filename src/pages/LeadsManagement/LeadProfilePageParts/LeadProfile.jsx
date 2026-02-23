@@ -56,16 +56,16 @@ export default function CRMLeadDetail() {
     if (!dateStr) return null;
     if (dateStr instanceof Date) return dateStr;
 
-    const str = String(dateStr).trim();
+    let str = String(dateStr).trim();
     if (!str) return null;
 
-    // If it has explicit timezone info (Z or offset), parse as is
+    // Handle ISO strings with Z or offsets correctly
     if (str.includes('Z') || /[+-]\d{2}(:?\d{2})?$/.test(str)) {
       const d = new Date(str.replace(' ', 'T'));
       if (!isNaN(d)) return d;
     }
 
-    // Treat "YYYY-MM-DD HH:mm:ss" or ISO-without-Z as LOCAL time
+    // Treat "YYYY-MM-DD HH:mm:ss" as local time for maximum compatibility
     const parts = str.split(/[- T:]/);
     if (parts.length >= 3) {
       const year = parseInt(parts[0], 10);
@@ -74,11 +74,18 @@ export default function CRMLeadDetail() {
       const hour = parts[3] ? parseInt(parts[3], 10) : 0;
       const minute = parts[4] ? parseInt(parts[4], 10) : 0;
       const second = parts[5] ? parseInt(parts[5], 10) : 0;
-      const d = new Date(year, month, day, hour, minute, second);
-      if (!isNaN(d)) return d;
+
+      if (str.length > 10) {
+        const d = new Date(Date.UTC(year, month, day, hour, minute, second));
+        if (!isNaN(d)) return d;
+      } else {
+        const d = new Date(year, month, day, hour, minute, second);
+        if (!isNaN(d)) return d;
+      }
     }
 
-    return new Date(str);
+    const finalParsed = new Date(str.replace(' ', 'T'));
+    return isNaN(finalParsed) ? new Date(str) : finalParsed;
   };
 
   const getImageUrl = (path) => {
@@ -656,6 +663,9 @@ export default function CRMLeadDetail() {
       if (status === "In Progress") {
         backendStatus = "In Progress";
         backendTag = "Follow Up";
+      } else if (status === "Won") {
+        backendStatus = "Closed";
+        backendTag = "Won";
       } else if (status === "Not Connected" || status === "New Lead") {
         openCallAction(); // Just open call action choice
         return;
@@ -761,8 +771,9 @@ export default function CRMLeadDetail() {
             handleSingleFieldUpdate={handleSingleFieldUpdate}
             formatCurrency={formatCurrency}
             setShowModal={setShowQuotationModal}
-            handleHitCall={openCallAction}
+            handleQrCall={openQrCall}
             employees={employees}
+            handleUpdateStatus={handleUpdateStatus}
           />
 
           {/* Main Content */}
@@ -1130,38 +1141,26 @@ export default function CRMLeadDetail() {
         </div>
       )}
       {/* Floating Action Buttons */}
-      <div className="fixed bottom-8 right-8 flex flex-col gap-4 z-50">
+      <div className="fixed bottom-10 right-10 flex flex-row gap-4 z-50">
         <a
           href={leadData?.email ? `mailto:${leadData.email}` : '#'}
-          className="w-14 h-14 bg-blue-500 rounded-full flex items-center justify-center text-white shadow-lg hover:bg-blue-600 transition-all hover:scale-110 group"
-          title="Email"
+          className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 border-2 border-white rounded-xl flex items-center justify-center text-white shadow-xl hover:shadow-blue-500/40 transition-all transform hover:-translate-y-1 active:scale-95"
         >
           <Mail size={24} />
-          <span className="absolute right-full mr-4 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-            Email
-          </span>
         </a>
         <a
           href={leadData?.phone ? `https://wa.me/${leadData.phone.replace(/\D/g, '')}` : '#'}
           target="_blank"
           rel="noopener noreferrer"
-          className="w-14 h-14 bg-green-500 rounded-full flex items-center justify-center text-white shadow-lg hover:bg-green-600 transition-all hover:scale-110 group"
-          title="WhatsApp"
+          className="w-14 h-14 bg-gradient-to-br from-green-500 to-green-600 border-2 border-white rounded-xl flex items-center justify-center text-white shadow-xl hover:shadow-green-500/40 transition-all transform hover:-translate-y-1 active:scale-95"
         >
-          <FaWhatsapp size={24} />
-          <span className="absolute right-full mr-4 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-            WhatsApp
-          </span>
+          <FaWhatsapp size={26} />
         </a>
         <button
           onClick={openQrCall}
-          className="w-14 h-14 bg-orange-500 rounded-full flex items-center justify-center text-white shadow-lg hover:bg-orange-600 transition-all hover:scale-110 group"
-          title="Call"
+          className="w-14 h-14 bg-gradient-to-br from-orange-500 to-orange-600 border-2 border-white rounded-xl flex items-center justify-center text-white shadow-xl hover:shadow-orange-500/40 transition-all transform hover:-translate-y-1 active:scale-95"
         >
           <Phone size={24} />
-          <span className="absolute right-full mr-4 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-            Call
-          </span>
         </button>
       </div>
     </>

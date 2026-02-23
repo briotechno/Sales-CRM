@@ -16,7 +16,9 @@ import {
   Zap,
   Clock,
   Video,
-  Plus
+  Plus,
+  Bell,
+  MoreVertical
 } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
 import {
@@ -24,7 +26,10 @@ import {
   useGetLeadNotesQuery,
   useGetLeadCallsQuery,
   useGetLeadFilesQuery,
-  useGetLeadMeetingsQuery
+  useGetLeadMeetingsQuery,
+  useGetLeadByIdQuery,
+  useUpdateLeadMeetingMutation,
+  useUpdateLeadMutation
 } from "../../../store/api/leadApi";
 
 const ExpandableText = ({ text, limit = 150 }) => {
@@ -73,6 +78,10 @@ export default function LeadTabs({
   const { data: fetchedFiles, isLoading: filesLoading } = useGetLeadFilesQuery(leadId, { skip: !leadId });
   const { data: fetchedActivities, isLoading: activitiesLoading } = useGetLeadActivitiesQuery(leadId, { skip: !leadId });
   const { data: fetchedMeetings, isLoading: meetingsLoading } = useGetLeadMeetingsQuery(leadId, { skip: !leadId });
+  const { data: leadData } = useGetLeadByIdQuery(leadId, { skip: !leadId });
+
+  const [updateMeeting] = useUpdateLeadMeetingMutation();
+  const [updateLead] = useUpdateLeadMutation();
 
   const notes = (fetchedNotes || []).map((note, idx) => {
     let parsedFiles = [];
@@ -144,45 +153,119 @@ export default function LeadTabs({
 
   const activities = React.useMemo(() => {
     if (!fetchedActivities || fetchedActivities.length === 0) return [];
-    return [
-      {
-        date: "Recent Activities",
-        items: fetchedActivities.map(act => {
-          let icon = MessageCircle;
-          let color = "bg-blue-400";
-          let titlePrefix = "Activity";
 
-          if (act.type === "call") {
-            icon = Phone;
-            color = "bg-green-500";
-            titlePrefix = "Call Log";
-          } else if (act.type === "note") {
-            icon = MessageCircle;
-            color = "bg-indigo-500";
-            titlePrefix = "Note Created";
-          } else if (act.type === "file") {
-            icon = FileText;
-            color = "bg-orange-500";
-            titlePrefix = "File Uploaded";
-          } else if (act.type === "meeting") {
-            icon = Users;
-            color = "bg-purple-500";
-            titlePrefix = "Meeting Scheduled";
-          }
+    // Group activities by date
+    const grouped = fetchedActivities.reduce((acc, act) => {
+      const date = act.created_at ? new Date(act.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : "Recent";
+      if (!acc[date]) acc[date] = [];
 
-          return {
-            icon,
-            color,
-            title: (`${titlePrefix}: ${act.title || ""}`).toLowerCase(),
-            subtitle: (act.user_name || "").toLowerCase(),
-            profilePicture: act.profile_picture,
-            description: act.description || "",
-            time: act.created_at ? new Date(act.created_at).toLocaleTimeString() : "",
-          };
-        })
+      let icon = MessageCircle;
+      let color = "bg-blue-400";
+      let titlePrefix = "Activity";
+
+      if (act.type === "call") {
+        icon = Phone;
+        color = "bg-green-500";
+        titlePrefix = "Call Log";
+      } else if (act.type === "note") {
+        icon = MessageCircle;
+        color = "bg-indigo-500";
+        titlePrefix = "Note Created";
+      } else if (act.type === "file") {
+        icon = FileText;
+        color = "bg-orange-500";
+        titlePrefix = "File Uploaded";
+      } else if (act.type === "meeting") {
+        icon = Users;
+        color = "bg-purple-500";
+        titlePrefix = "Meeting Scheduled";
       }
-    ];
+
+      acc[date].push({
+        icon,
+        color,
+        title: (`${titlePrefix}: ${act.title || ""}`).toLowerCase(),
+        subtitle: (act.user_name || "").toLowerCase(),
+        profilePicture: act.profile_picture,
+        description: act.description || "",
+        time: act.created_at ? new Date(act.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "",
+      });
+      return acc;
+    }, {});
+
+    return Object.entries(grouped).map(([date, items]) => ({ date, items }));
   }, [fetchedActivities]);
+
+  const upcomingActivities = React.useMemo(() => {
+    const list = [];
+    const now = new Date();
+
+    // 1. Future Meetings
+    if (fetchedMeetings) {
+      fetchedMeetings.forEach(m => {
+        const mDate = new Date(`${m.meeting_date}T${m.meeting_time || '00:00:00'}`);
+        if (mDate > now) {
+          list.push({
+            type: 'meeting',
+            id: m.id,
+            title: m.title,
+            description: m.description,
+            date: m.meeting_date,
+            time: m.meeting_time ? new Date(`2000-01-01T${m.meeting_time}`).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }) : 'TBD',
+            priority: m.priority || 'Medium',
+            assigned_to: m.created_by,
+            profilePicture: m.profile_picture,
+            originalData: m
+          });
+        }
+      });
+    }
+
+    // 2. Future Follow-up
+    if (leadData?.next_call_at) {
+      const fDate = new Date(leadData.next_call_at);
+      if (fDate > now) {
+        list.push({
+          type: 'follow_up',
+          id: leadData.id,
+          title: "Follow-up Call",
+          description: leadData.call_remarks || `Scheduled follow-up call with client regarding the previous discussion.`,
+          date: fDate.toLocaleDateString(),
+          time: fDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }),
+          priority: leadData.priority || 'Medium',
+          assigned_to: leadData.employee_name || "Agent",
+          profilePicture: leadData.profile_image
+        });
+      }
+    }
+
+    return list.sort((a, b) => new Date(`${a.date}T${a.time || '00:00:00'}`) - new Date(`${b.date}T${b.time || '00:00:00'}`));
+  }, [fetchedMeetings, leadData]);
+
+  const handlePriorityChange = async (upcoming, newPriority) => {
+    try {
+      if (upcoming.type === 'meeting') {
+        const data = upcoming.originalData;
+        await updateMeeting({
+          leadId: leadId,
+          meetingId: upcoming.id,
+          data: {
+            ...data,
+            priority: newPriority,
+            date: data.meeting_date,
+            time: data.meeting_time
+          }
+        }).unwrap();
+      } else if (upcoming.type === 'follow_up') {
+        await updateLead({
+          id: upcoming.id,
+          data: { priority: newPriority }
+        }).unwrap();
+      }
+    } catch (err) {
+      console.error("Failed to update priority:", err);
+    }
+  };
 
   const renderTabContent = () => {
     const normalizedTab = activeTab.toLowerCase().endsWith('s') ? activeTab.toLowerCase() : activeTab.toLowerCase() + 's';
@@ -244,22 +327,60 @@ export default function LeadTabs({
           <div className="flex-1 bg-[#F9FBFC] overflow-auto animate-fadeIn min-h-[500px]">
             <TabHeader title="Activities" showSort={true} />
             <div className="p-6 space-y-8">
+              {/* Upcoming Activity Section */}
+              {upcomingActivities.length > 0 && (
+                <div className="space-y-4 mb-10">
+                  <div className="flex items-center gap-2">
+                    <span className="px-3 py-1.5 bg-[#F5ECF8] text-[#9333EA] rounded-sm text-sm font-bold font-primary shadow-sm inline-flex items-center gap-2 border border-[#E9D5FF] tracking-wide">
+                      <Calendar size={13} className="text-[#A855F7]" /> Upcoming Activity
+                    </span>
+                  </div>
+
+                  <div className="space-y-5">
+                    {upcomingActivities.map((upcoming, uIdx) => (
+                      <div key={uIdx} className="bg-white rounded-lg border border-gray-100 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] hover:border-orange-200 transition-all overflow-hidden font-primary group/card">
+                        <div className="p-6 flex gap-5 items-start">
+                          <div className={`w-14 h-14 ${upcoming.type === 'meeting' ? 'bg-[#9333EA]' : 'bg-orange-500'} rounded-full flex items-center justify-center flex-shrink-0 shadow-xl transition-transform group-hover/card:scale-105`}>
+                            {upcoming.type === 'meeting' ? <Users size={24} className="text-white fill-white/20" /> : <Phone size={24} className="text-white fill-white/20" />}
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-extrabold text-[#1E293B] text-[17px] leading-tight mb-1.5">
+                              {upcoming.title}
+                            </h4>
+                            <p className="text-[14px] text-[#64748B] font-medium leading-relaxed mb-4 max-w-2xl">
+                              {upcoming.description || "No description provided for this scheduled activity."}
+                            </p>
+                            <div className="flex items-center gap-2 text-[13px] font-bold text-slate-400">
+                              <span className="text-orange-500/80 font-black">Scheduled on</span>
+                              <span className="text-slate-600 bg-slate-100/50 px-2 py-0.5 rounded-sm">{upcoming.time}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Activity List */}
               {activitiesLoading ? (
                 <div className="flex flex-col items-center justify-center py-20 gap-4">
                   <div className="w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
                   <p className="text-gray-400 font-bold font-primary text-sm tracking-wide">Tracking activities...</p>
                 </div>
               ) : activities.length === 0 ? (
-                <div className="text-center py-24 bg-white rounded-sm border-2 border-dashed border-gray-100 mx-6">
-                  <Zap size={48} className="mx-auto text-gray-200 mb-4" />
-                  <p className="text-gray-400 font-bold font-primary capitalize tracking-wide text-sm">No activity history yet</p>
-                </div>
+                !activitiesLoading && upcomingActivities.length === 0 && (
+                  <div className="text-center py-24 bg-white rounded-sm border-2 border-dashed border-gray-100 mx-6">
+                    <Zap size={48} className="mx-auto text-gray-200 mb-4" />
+                    <p className="text-gray-400 font-bold font-primary capitalize tracking-wide text-sm">No activity history yet</p>
+                  </div>
+                )
               ) : (
                 activities.map((section, idx) => (
                   <div key={idx} className="relative">
                     <div className="mb-6">
-                      <span className="px-3 py-1 bg-[#F5ECF8] text-[#9333EA] rounded-sm text-[11px] font-bold font-primary shadow-sm inline-flex items-center gap-2">
-                        <Calendar size={12} /> 15 Feb 2024
+                      <span className="px-3 py-1 bg-[#F5ECF8] text-[#9333EA] rounded-sm text-[11px] font-bold font-primary shadow-sm inline-flex items-center gap-2 border border-[#E9D5FF]">
+                        <Calendar size={12} /> {section.date}
                       </span>
                     </div>
 
@@ -270,7 +391,7 @@ export default function LeadTabs({
                             <activity.icon size={18} className="text-white fill-white/20" />
                           </div>
                           <div className="flex-1">
-                            <h4 className="font-bold text-gray-800 font-primary text-[14px] leading-tight mb-0.5">
+                            <h4 className="font-bold text-gray-800 font-primary text-[14px] leading-tight mb-0.5 capitalize">
                               {activity.title}
                             </h4>
                             <p className="text-[12px] font-bold text-gray-400 font-primary">{activity.time}</p>
