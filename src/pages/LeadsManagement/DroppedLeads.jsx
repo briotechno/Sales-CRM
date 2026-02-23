@@ -715,9 +715,18 @@ export default function DroppedLeads() {
                     handleDeleteLead={handleDeleteLead}
                     handleEditLead={handleEditLead}
                     handleHitCall={openCallAction}
+                    pageType="Dropped"
                   />
                 ) : (
-                  <LeadsGridView leadsData={leadsData} filterStatus={filterStatus} handleLeadClick={handleLeadClick} selectedLeads={selectedLeads} handleSelectLead={handleSelectLead} handleHitCall={openCallAction} />
+                  <LeadsGridView
+                    leadsData={leadsData}
+                    filterStatus={filterStatus}
+                    handleLeadClick={handleLeadClick}
+                    selectedLeads={selectedLeads}
+                    handleSelectLead={handleSelectLead}
+                    handleHitCall={openCallAction}
+                    pageType="Dropped"
+                  />
                 )}
 
                 {totalPages > 1 && (

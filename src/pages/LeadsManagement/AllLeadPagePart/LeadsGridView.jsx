@@ -65,13 +65,21 @@ const LeadCard = ({
   currentTime,
   displayStatus,
   getAvatarBg,
-  getPriorityColor
+  getPriorityColor,
+  pageType = "All"
 }) => {
   const leadDisplayName = lead.name || lead.full_name || lead.organization_name || "L";
   const initials = leadDisplayName.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
   const cleanNumber = (lead.mobile_number || lead.phone || '').replace(/\D/g, '');
   const waLink = cleanNumber ? `https://wa.me/${cleanNumber}` : '#';
   const isMissed = lead.tag === "Missed" || displayStatus.text === "Missed";
+
+  const pType = (pageType || "").toLowerCase();
+  const isNew = pType.includes("new lead");
+  const isWon = pType.includes("won");
+  const isDropped = pType.includes("dropped") || pType === "drop";
+  const isTrading = pType.includes("trading") || pType.includes("trending");
+  const isFollowUp = pType.includes("follow up") || pType.includes("follow-up");
 
   return (
     <div
@@ -107,6 +115,11 @@ const LeadCard = ({
                     Duplicate {lead.duplicate_count > 1 ? `(${lead.duplicate_count - 1})` : ''}
                   </span>
                 )}
+                {isDropped && (lead.duplicate_reason || lead.drop_reason) && (
+                  <span className="text-[10px] text-rose-500 font-medium px-2 py-0.5 rounded-sm bg-rose-50/50 border border-rose-100 truncate max-w-[120px]" title={lead.duplicate_reason || lead.drop_reason}>
+                    {lead.duplicate_reason || lead.drop_reason}
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -124,10 +137,7 @@ const LeadCard = ({
             <span className="text-[11px] font-semibold text-orange-400 capitalize tracking-tight truncate w-full text-center">Born</span>
             <div className="flex items-center gap-1.5 min-w-0 w-full justify-center">
               <Calendar size={12} className="text-slate-400 shrink-0" />
-              <span className="text-[11px] text-gray-800 font-bold font-primary truncate" title={(() => {
-                const parsed = safeParseDate(lead.rawCreated || lead.created_at);
-                return parsed ? parsed.toLocaleString('en-IN') : "--";
-              })()}>
+              <span className="text-[11px] text-gray-800 font-bold font-primary truncate">
                 {(() => {
                   const parsed = safeParseDate(lead.rawCreated || lead.created_at);
                   return parsed ? parsed.toLocaleString('en-IN', {
@@ -138,46 +148,63 @@ const LeadCard = ({
             </div>
           </div>
 
-          {lead.next_call_at ? (
-            <div className="flex flex-col items-center justify-center gap-1 px-2 py-2 bg-orange-50 text-orange-600 rounded-sm font-bold border border-orange-100 shadow-sm transition-all hover:bg-orange-100/50 min-w-0">
-              <span className="text-[12px] font-semibold text-orange-400 capitalize tracking-tight truncate w-full text-center">Next Call</span>
-              <div className="flex items-center gap-1.5 min-w-0 w-full justify-center">
-                <Clock size={12} className="text-orange-400 shrink-0" />
-                <span className="text-[11px] text-orange-700 font-bold font-primary truncate" title={lead.next_call_at ? (safeParseDate(lead.next_call_at)?.toLocaleString('en-IN') || "--") : "--"}>
-                  {lead.next_call_at ? (safeParseDate(lead.next_call_at)?.toLocaleString('en-IN', {
-                    day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true
-                  }) || "--") : "--"}
+          {!isWon && (
+            lead.next_call_at ? (
+              <div className="flex flex-col items-center justify-center gap-1 px-2 py-2 bg-orange-50 text-orange-600 rounded-sm font-bold border border-orange-100 shadow-sm transition-all hover:bg-orange-100/50 min-w-0">
+                <span className="text-[12px] font-semibold text-orange-400 capitalize tracking-tight truncate w-full text-center">Next Call</span>
+                <div className="flex items-center gap-1.5 min-w-0 w-full justify-center">
+                  <Clock size={12} className="text-orange-400 shrink-0" />
+                  <span className="text-[11px] text-orange-700 font-bold font-primary truncate">
+                    {(() => {
+                      const d = safeParseDate(lead.next_call_at);
+                      return d ? d.toLocaleString('en-IN', {
+                        day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true
+                      }) : "--";
+                    })()}
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center gap-1 px-2 py-2 bg-gray-50 text-gray-400 rounded-sm font-bold border border-gray-100 italic">
+                <span className="text-[12px] opacity-60 capitalize">Next Call</span>
+                <span className="text-[12px]">Not Scheduled</span>
+              </div>
+            )
+          )}
+          {isWon && (
+            <div className="flex flex-col items-center justify-center gap-1 px-2 py-2 bg-emerald-50 text-emerald-600 rounded-sm font-bold border border-emerald-100 shadow-sm min-w-0">
+              <span className="text-[11px] font-semibold text-emerald-400 capitalize tracking-tight truncate w-full text-center">Value</span>
+              <div className="flex items-center gap-1 min-w-0 w-full justify-center">
+                <span className="text-[13px] text-emerald-700 font-black font-primary truncate">
+                  ₹{lead.value || "0"}
                 </span>
               </div>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center gap-1 px-2 py-2 bg-gray-50 text-gray-400 rounded-sm font-bold border border-gray-100 italic">
-              <span className="text-[12px] opacity-60 capitalize">Next Call</span>
-              <span className="text-[12px]">No Schedule</span>
             </div>
           )}
         </div>
 
-        {/* Pipeline Section */}
-        <div className="bg-slate-50/80 rounded-sm p-2 border border-slate-200 transition-colors">
-          <div className="flex justify-between items-center gap-3">
-            <div className="flex flex-col min-w-0 flex-1">
-              <span className="text-[12px] text-orange-400 font-semibold capitalize mb-1">Pipeline</span>
-              <h4 className="text-[14px] font-bold text-gray-800 truncate capitalize font-primary" title={lead.pipeline_name || "General"}>
-                {lead.pipeline_name || "General"}
-              </h4>
-            </div>
-            <div className="flex flex-col items-end min-w-0 text-right flex-1">
-              <span className="text-[12px] text-orange-400 font-semibold capitalize mb-1">Stage</span>
-              <div className="flex items-center gap-1.5 max-w-full">
-                <div className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse shrink-0"></div>
-                <h4 className="text-[14px] font-bold text-orange-600 truncate capitalize font-primary" title={lead.stage_name || "New"}>
-                  {lead.stage_name || "New"}
+        {/* Pipeline Section - Show for everyone except Won */}
+        {!isWon && (
+          <div className="bg-slate-50/80 rounded-sm p-2 border border-slate-200 transition-colors">
+            <div className="flex justify-between items-center gap-3">
+              <div className="flex flex-col min-w-0 flex-1">
+                <span className="text-[12px] text-orange-400 font-semibold capitalize mb-1">Pipeline</span>
+                <h4 className="text-[14px] font-bold text-gray-800 truncate capitalize font-primary">
+                  {lead.pipeline_name || "General"}
                 </h4>
+              </div>
+              <div className="flex flex-col items-end min-w-0 text-right flex-1">
+                <span className="text-[12px] text-orange-400 font-semibold capitalize mb-1">Stage</span>
+                <div className="flex items-center gap-1.5 max-w-full">
+                  <div className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse shrink-0"></div>
+                  <h4 className="text-[14px] font-bold text-orange-600 truncate capitalize font-primary">
+                    {lead.stage_name || "New"}
+                  </h4>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Status */}
         <div className="bg-slate-50/80 rounded-sm px-2 py-1.5 border border-slate-200">
@@ -211,15 +238,17 @@ const LeadCard = ({
           </div>
         </div>
 
-        {/* Progress */}
-        <div className="relative mt-1">
-          <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden border border-gray-200">
-            <div
-              className={`h-full rounded-full transition-all duration-700 ease-out ${calculateProfileCompletion(lead) > 70 ? 'bg-gradient-to-r from-green-400 to-green-600' : 'bg-gradient-to-r from-orange-400 to-[#FF7B1D]'}`}
-              style={{ width: `${calculateProfileCompletion(lead)}%` }}
-            />
+        {/* Progress Bar - Hide on Won/New */}
+        {!isWon && !isNew && (
+          <div className="relative mt-1">
+            <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden border border-gray-200">
+              <div
+                className={`h-full rounded-full transition-all duration-700 ease-out ${calculateProfileCompletion(lead) > 70 ? 'bg-gradient-to-r from-green-400 to-green-600' : 'bg-gradient-to-r from-orange-400 to-[#FF7B1D]'}`}
+                style={{ width: `${calculateProfileCompletion(lead)}%` }}
+              />
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Footer */}
@@ -264,7 +293,8 @@ export default function LeadsGridView({
   handleHitCall,
   groupTags,
   handleShowAssignmentHistory,
-  currentTime = new Date()
+  currentTime = new Date(),
+  pageType = "All"
 }) {
   const getAvatarBg = (tag) => {
     switch (tag) {
@@ -367,11 +397,9 @@ export default function LeadsGridView({
             handleShowAssignmentHistory={handleShowAssignmentHistory}
             currentTime={currentTime}
             displayStatus={getDisplayStatus(lead)}
-            getImageUrl={getImageUrl}
             getAvatarBg={getAvatarBg}
             getPriorityColor={getPriorityColor}
-            calculateProfileCompletion={calculateProfileCompletion}
-            safeParseDate={safeParseDate}
+            pageType={pageType}
           />
         ))}
       </div>
@@ -442,11 +470,9 @@ export default function LeadsGridView({
                     handleShowAssignmentHistory={handleShowAssignmentHistory}
                     currentTime={currentTime}
                     displayStatus={getDisplayStatus(lead, groupTag)}
-                    getImageUrl={getImageUrl}
                     getAvatarBg={getAvatarBg}
                     getPriorityColor={getPriorityColor}
-                    calculateProfileCompletion={calculateProfileCompletion}
-                    safeParseDate={safeParseDate}
+                    pageType={groupTag} // Use groupTag as context for workstation
                   />
                 ))
               ) : (

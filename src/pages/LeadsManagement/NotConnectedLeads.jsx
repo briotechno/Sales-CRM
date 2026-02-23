@@ -714,9 +714,18 @@ export default function NotConnectedLeads() {
                                         handleDeleteLead={handleDeleteLead}
                                         handleEditLead={handleEditLead}
                                         handleHitCall={openCallAction}
+                                        pageType="Not Connected"
                                     />
                                 ) : (
-                                    <LeadsGridView leadsData={leadsData} filterStatus={filterStatus} handleLeadClick={handleLeadClick} selectedLeads={selectedLeads} handleSelectLead={handleSelectLead} handleHitCall={openCallAction} />
+                                    <LeadsGridView
+                                        leadsData={leadsData}
+                                        filterStatus={filterStatus}
+                                        handleLeadClick={handleLeadClick}
+                                        selectedLeads={selectedLeads}
+                                        handleSelectLead={handleSelectLead}
+                                        handleHitCall={openCallAction}
+                                        pageType="Not Connected"
+                                    />
                                 )}
 
                                 {totalPages > 1 && (

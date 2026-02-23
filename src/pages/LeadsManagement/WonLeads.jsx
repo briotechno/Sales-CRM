@@ -715,9 +715,18 @@ export default function WonLeads() {
                                         handleDeleteLead={handleDeleteLead}
                                         handleEditLead={handleEditLead}
                                         handleHitCall={openCallAction}
+                                        pageType="Won"
                                     />
                                 ) : (
-                                    <LeadsGridView leadsData={leadsData} filterStatus={filterStatus} handleLeadClick={handleLeadClick} selectedLeads={selectedLeads} handleSelectLead={handleSelectLead} handleHitCall={handleHitCall} />
+                                    <LeadsGridView
+                                        leadsData={leadsData}
+                                        filterStatus={filterStatus}
+                                        handleLeadClick={handleLeadClick}
+                                        selectedLeads={selectedLeads}
+                                        handleSelectLead={handleSelectLead}
+                                        handleHitCall={handleHitCall}
+                                        pageType="Won"
+                                    />
                                 )}
 
                                 {totalPages > 1 && (
