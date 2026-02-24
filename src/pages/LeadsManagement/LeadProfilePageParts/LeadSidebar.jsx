@@ -24,9 +24,14 @@ import {
   TrendingUp,
   UserCheck,
   AlertCircle,
+  Upload,
+  X,
 } from "lucide-react";
 import { FaBuilding, FaWhatsapp } from "react-icons/fa";
 import Modal from "../../../components/common/Modal";
+
+import { toast } from "react-hot-toast";
+import ConvertClientModal from "../../../components/LeadManagement/ConvertClientModal";
 
 const interestedInOptions = [
   "Product Demo",
@@ -131,13 +136,6 @@ export default function LeadSidebar({
     setEditingField(null);
     setEditValue("");
     setOpenMultiSelect(null);
-  };
-
-  const confirmConversion = async () => {
-    if (handleUpdateStatus) {
-      await handleUpdateStatus("Won");
-    }
-    setShowConvertModal(false);
   };
 
   const getInitials = (name) => {
@@ -286,23 +284,44 @@ export default function LeadSidebar({
       </div>
 
       {/* Profile Basic Info */}
-      <div className="pt-16 pb-6 px-6 text-center border-b border-gray-100">
-        <div className="flex items-center justify-center gap-2 mb-1">
-          <h2 className="text-2xl font-bold text-slate-800 uppercase truncate max-w-[300px]" title={leadData?.name}>
-            {leadData?.name || "Lead Name"}
-          </h2>
-          <Star
-            size={18}
-            className={`cursor-pointer hover:scale-110 transition-transform flex-shrink-0 ${leadData?.isFavorite ? 'text-yellow-400 fill-yellow-400' : 'text-slate-300'}`}
-          />
+      <div className="pt-16 pb-6 px-6 text-center border-b border-gray-100 min-h-[160px] flex flex-col items-center justify-center">
+        {editingField === 'name' ? (
+          <div className="flex flex-col gap-2 items-center mb-2 w-full animate-in fade-in slide-in-from-top-1 duration-200">
+            <input
+              type="text"
+              className="w-full max-w-[280px] p-2 text-xl border border-orange-200 rounded-sm focus:border-orange-500 outline-none bg-white font-bold text-center"
+              value={editValue}
+              onChange={(e) => setEditValue(e.target.value)}
+              autoFocus
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') saveEditing('name');
+                if (e.key === 'Escape') cancelEditing();
+              }}
+            />
+            <div className="flex gap-2">
+              <button onClick={cancelEditing} className="text-[10px] font-bold text-gray-500 bg-white px-2 py-1 rounded-sm border border-gray-200 shadow-sm transition-all hover:bg-gray-50">Cancel</button>
+              <button onClick={() => saveEditing('name')} className="text-[10px] font-bold text-white bg-orange-500 px-3 py-1 rounded-sm shadow-sm hover:bg-orange-600 transition-all">Save Name</button>
+            </div>
+          </div>
+        ) : (
+          <div className="relative flex items-center justify-center w-full mb-1 group/name">
+            <h2 className="text-2xl font-bold text-slate-800 uppercase truncate px-6" title={leadData?.name}>
+              {leadData?.name || "Lead Name"}
+            </h2>
+            <Edit2
+              size={15}
+              className="absolute right-[15%] text-slate-400 cursor-pointer opacity-0 group-hover/name:opacity-100 transition-all hover:text-orange-500 translate-x-1/2"
+              onClick={() => startEditing('name', leadData?.name)}
+            />
+          </div>
+        )}
+
+        <div className="flex items-center justify-center gap-2 mt-1 w-full">
+          <p className="text-slate-600 font-bold text-[14px] flex items-center gap-2">
+            <Phone size={14} className="text-orange-500" />
+            {leadData?.phone || "N/A"}
+          </p>
         </div>
-        <p className="text-orange-600 font-bold text-sm uppercase tracking-wider flex items-center justify-center gap-1">
-          <FaBuilding className="text-[14px]" />
-          {leadData?.company || "Individual"}
-        </p>
-        <p className="text-slate-500 text-[13px] mt-1 italic">
-          Source: {leadData?.source || "Direct"}
-        </p>
       </div>
 
       {/* Action Buttons Row */}
@@ -543,40 +562,11 @@ export default function LeadSidebar({
       </div>
 
       {/* Convert Client Confirmation Modal */}
-      <Modal
+      <ConvertClientModal
         isOpen={showConvertModal}
         onClose={() => setShowConvertModal(false)}
-        headerVariant="simple"
-        maxWidth="max-w-md"
-        footer={
-          <div className="flex gap-4 w-full">
-            <button
-              onClick={() => setShowConvertModal(false)}
-              className="flex-1 px-6 py-3 border-2 border-gray-200 text-gray-700 font-bold rounded-sm hover:bg-gray-100 transition-all font-primary text-sm tracking-normal"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={confirmConversion}
-              className="flex-1 px-6 py-3 bg-orange-500 text-white font-bold rounded-sm hover:bg-orange-600 transition-all shadow-lg flex items-center justify-center gap-2 font-primary text-sm tracking-wider"
-            >
-              <CheckCircle size={18} />
-              Confirm
-            </button>
-          </div>
-        }
-      >
-        <div className="flex flex-col items-center text-center text-black font-primary">
-          <div className="w-20 h-20 bg-orange-50 rounded-full flex items-center justify-center mb-6">
-            <UserCheck className="text-orange-500" size={48} />
-          </div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Convert to Client</h2>
-          <p className="text-gray-600 mb-2 leading-relaxed px-4">
-            Are you sure you want to convert <span className="font-bold text-gray-800">"{leadData?.name}"</span> into a Client?
-          </p>
-          <p className="text-xs text-orange-500 italic font-medium">This action will update the lead's status to Won and move them to your client portfolio.</p>
-        </div>
-      </Modal>
+        leadData={leadData}
+      />
     </div>
   );
 }

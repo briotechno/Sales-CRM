@@ -7,23 +7,29 @@ const Client = {
             company_name, position, birthday, source,
             industry, website, number_of_employees, tax_id,
             address, city, state, zip_code, country,
-            status, notes
+            status, notes,
+            agreement_url, quotation_id, quotation_url, budget, services,
+            project_type, start_date, end_date, subscription_date, lead_id
         } = data;
 
         const [result] = await pool.query(
             `INSERT INTO clients (
-        user_id, type, first_name, last_name, email, phone,
-        company_name, position, birthday, source,
-        industry, website, number_of_employees, tax_id,
-        address, city, state, zip_code, country,
-        status, notes
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                user_id, type, first_name, last_name, email, phone,
+                company_name, position, birthday, source,
+                industry, website, number_of_employees, tax_id,
+                address, city, state, zip_code, country,
+                status, notes,
+                agreement_url, quotation_id, quotation_url, budget, services,
+                project_type, start_date, end_date, subscription_date, lead_id
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 userId, type, first_name, last_name, email, phone,
                 company_name, position, birthday, source,
                 industry, website, number_of_employees, tax_id,
                 address, city, state, zip_code, country,
-                status || 'active', notes
+                status || 'active', notes,
+                agreement_url, quotation_id, quotation_url, budget, services,
+                project_type, start_date, end_date, subscription_date, lead_id
             ]
         );
         return result.insertId;

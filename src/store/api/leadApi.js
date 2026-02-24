@@ -273,6 +273,14 @@ export const leadApi = createApi({
             }),
             invalidatesTags: (result, error, { id }) => ['Lead', { type: 'Lead', id }],
         }),
+        convertLeadToClient: builder.mutation({
+            query: ({ id, data }) => ({
+                url: `leads/${id}/convert`,
+                method: 'POST',
+                body: data,
+            }),
+            invalidatesTags: (result, error, { id }) => ['Lead', { type: 'Lead', id }],
+        }),
     }),
 });
 
@@ -312,4 +320,5 @@ export const {
     useGetDueRemindersQuery,
     useGetDueMeetingsQuery,
     useSnoozeLeadMutation,
+    useConvertLeadToClientMutation,
 } = leadApi;

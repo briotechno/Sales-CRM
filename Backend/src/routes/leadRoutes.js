@@ -31,7 +31,8 @@ const {
     getAssignmentHistory,
     getDueReminders,
     snoozeLead,
-    getDueMeetings
+    getDueMeetings,
+    convertLeadToClient
 } = require('../controllers/leadController');
 const { protect } = require('../middleware/authMiddleware');
 const { checkLimit } = require('../middleware/limitMiddleware');
@@ -80,5 +81,6 @@ router.delete('/:id/meetings/:meetingId', protect, deleteLeadMeeting);
 
 // Status
 router.put('/:id/status', protect, updateLeadStatus);
+router.post('/:id/convert', protect, upload.fields([{ name: 'agreement', maxCount: 1 }, { name: 'quotation', maxCount: 1 }]), convertLeadToClient);
 
 module.exports = router;
