@@ -96,14 +96,15 @@ const LeadCard = ({
   const isDropped = pType.includes("dropped") || pType === "drop";
   const isTrading = pType.includes("trading") || pType.includes("trending");
   const isFollowUp = pType.includes("follow up") || pType.includes("follow-up");
+  const showAssigned = pType.includes("all") || pType.includes("not connected") || isFollowUp || pType.includes("assigned");
 
   return (
     <div
       className={`group flex flex-col h-auto bg-white border ${isMissed ? 'border-red-500 ring-1 ring-red-500/10' : 'border-gray-200'} rounded-sm shadow-sm transition-all duration-300 relative overflow-hidden`}
     >
-      <div className="pt-3 px-3 pb-2 flex flex-col gap-2 text-xs">
-        {/* Top Section */}
-        <div className="flex items-start justify-between gap-3">
+      <div className="pt-3 px-3 pb-2 flex flex-col gap-2 text-xs h-full">
+        {/* Top Section: Avatar, Name, ID, Contact */}
+        <div className="flex items-start justify-between gap-3 mb-1">
           <div className="flex items-start gap-3 flex-1 min-w-0">
             <div className="w-11 h-11 rounded-sm flex-shrink-0 border border-gray-100 overflow-hidden bg-white shadow-sm">
               {lead.profile_image ? (
@@ -114,7 +115,7 @@ const LeadCard = ({
                 </div>
               )}
             </div>
-            <div className="flex-1 min-w-0 flex flex-col">
+            <div className="flex-1 min-w-0 flex flex-col pt-0.5">
               <h3
                 className="text-[15px] font-bold text-gray-900 capitalize font-primary cursor-pointer hover:text-orange-600 transition-colors leading-tight truncate"
                 onClick={() => handleLeadClick(lead)}
@@ -122,18 +123,16 @@ const LeadCard = ({
               >
                 {leadDisplayName}
               </h3>
-              <div className="flex gap-2 items-center mt-1">
+              <div className="flex flex-wrap gap-2 items-center mt-1">
                 <span className="text-[11px] text-orange-600 font-bold px-2 py-0.5 rounded-sm bg-orange-50 border border-orange-100 capitalize tracking-wide w-fit">
                   {lead.lead_id || lead.id}
                 </span>
-                {(lead.tag === 'Duplicate' || lead.duplicate_count > 1) && (
+                <span className="text-[11px] text-gray-500 font-semibold font-primary">
+                  {lead.mobile_number || lead.phone || "--"}
+                </span>
+                {(pageType === "Duplicate" && (lead.tag === 'Duplicate' || lead.duplicate_count > 1)) && (
                   <span className="text-[10px] text-rose-600 font-bold px-2 py-0.5 rounded-sm bg-rose-50 border border-rose-100 capitalize tracking-wide w-fit animate-pulse">
                     Duplicate {lead.duplicate_count > 1 ? `(${lead.duplicate_count - 1})` : ''}
-                  </span>
-                )}
-                {isDropped && (lead.duplicate_reason || lead.drop_reason) && (
-                  <span className="text-[10px] text-rose-500 font-medium px-2 py-0.5 rounded-sm bg-rose-50/50 border border-rose-100 truncate max-w-[120px]" title={lead.duplicate_reason || lead.drop_reason}>
-                    {lead.duplicate_reason || lead.drop_reason}
                   </span>
                 )}
               </div>
@@ -147,15 +146,18 @@ const LeadCard = ({
           />
         </div>
 
-        {/* Timeline */}
+        {/* Timeline Row: Born & Next Call */}
         <div className="grid grid-cols-2 gap-2 w-full">
           <div className="flex flex-col items-center justify-center gap-1 px-2 py-2 bg-slate-50 text-slate-500 rounded-sm font-bold border border-slate-100 shadow-sm transition-all hover:bg-slate-100 min-w-0">
-            <span className="text-[11px] font-semibold text-orange-400 capitalize tracking-tight truncate w-full text-center">Born</span>
+            <span className="text-[11px] font-semibold text-orange-400 capitalize tracking-tight truncate w-full text-center">
+              {pageType === "Dropped" ? "Drop Date" : "Lead Born"}
+            </span>
             <div className="flex items-center gap-1.5 min-w-0 w-full justify-center">
               <Calendar size={12} className="text-slate-400 shrink-0" />
               <span className="text-[11px] text-gray-800 font-bold font-primary truncate">
                 {(() => {
-                  const parsed = safeParseDate(lead.rawCreated || lead.created_at);
+                  const dateToUse = pageType === "Dropped" ? (lead.updated_at || lead.created_at) : (lead.rawCreated || lead.created_at);
+                  const parsed = safeParseDate(dateToUse);
                   return parsed ? parsed.toLocaleString('en-IN', {
                     day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true
                   }) : "--";
@@ -164,7 +166,7 @@ const LeadCard = ({
             </div>
           </div>
 
-          {!isWon && (
+          {!isWon && pageType !== "Dropped" && (
             lead.next_call_at ? (
               <div className="flex flex-col items-center justify-center gap-1 px-2 py-2 bg-orange-50 text-orange-600 rounded-sm font-bold border border-orange-100 shadow-sm transition-all hover:bg-orange-100/50 min-w-0">
                 <span className="text-[12px] font-semibold text-orange-400 capitalize tracking-tight truncate w-full text-center">Next Call</span>
@@ -182,11 +184,12 @@ const LeadCard = ({
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center gap-1 px-2 py-2 bg-gray-50 text-gray-400 rounded-sm font-bold border border-gray-100 italic">
-                <span className="text-[12px] opacity-60 capitalize">Next Call</span>
-                <span className="text-[12px]">Not Scheduled</span>
+                <span className="text-[12px] opacity-60 capitalize text-center">Next Call</span>
+                <span className="text-[11px] text-center">Not Scheduled</span>
               </div>
             )
           )}
+
           {isWon && (
             <div className="flex flex-col items-center justify-center gap-1 px-2 py-2 bg-emerald-50 text-emerald-600 rounded-sm font-bold border border-emerald-100 shadow-sm min-w-0">
               <span className="text-[11px] font-semibold text-emerald-400 capitalize tracking-tight truncate w-full text-center">Value</span>
@@ -197,67 +200,85 @@ const LeadCard = ({
               </div>
             </div>
           )}
-        </div>
 
-        {/* Status */}
-        <div className="bg-slate-50/80 rounded-sm px-2 py-1.5 border border-slate-200">
-          <div className="flex justify-between items-center">
-            <span className="text-[12px] font-semibold text-orange-400 capitalize">Status</span>
-            <span className={`text-[12px] font-bold capitalize px-3 py-0.5 rounded-sm border shadow-sm ${displayStatus.color}`} title={displayStatus.text}>
-              {displayStatus.text}
-            </span>
-          </div>
-        </div>
-
-        {/* Dynamic Fields based on pageType */}
-        <div className="grid grid-cols-1 gap-2">
-          {(isNew || pType.includes("all") || pType.includes("not connected") || pType.includes("assigned")) && (
-            <div className="flex flex-col gap-1 px-2 py-1.5 bg-slate-50/80 rounded-sm border border-slate-200">
-              <span className="text-[12px] font-semibold text-orange-400 capitalize">Lead Owner</span>
-              <span className="text-[13px] font-bold text-gray-800 capitalize truncate" title={lead.lead_owner || "-"}>
-                {lead.lead_owner || "-"}
-              </span>
-            </div>
-          )}
-          {(pType.includes("all") || pType.includes("not connected") || isFollowUp || pType.includes("assigned")) && (
-            <div className="flex flex-col gap-1 px-2 py-1.5 bg-slate-50/80 rounded-sm border border-slate-200">
-              <span className="text-[12px] font-semibold text-orange-400 capitalize">Assigned To</span>
-              <span className="text-[13px] font-bold text-gray-800 capitalize truncate" title={lead.employee_name || "Unassigned"}>
-                {lead.employee_name || "Unassigned"}
-              </span>
-            </div>
-          )}
-          {isDropped && (
-            <>
-              <div className="flex flex-col gap-1 px-2 py-1.5 bg-rose-50/30 rounded-sm border border-rose-100">
-                <span className="text-[12px] font-semibold text-rose-400 capitalize">Drop Reason</span>
-                <span className="text-[13px] font-bold text-rose-700 truncate" title={lead.drop_reason || "-"}>
-                  {lead.drop_reason || "-"}
+          {pageType === "Dropped" && (
+            <div className="flex flex-col items-center justify-center gap-1 px-2 py-2 bg-rose-50 text-rose-600 rounded-sm font-bold border border-rose-100 shadow-sm min-w-0">
+              <span className="text-[11px] font-semibold text-rose-400 capitalize tracking-tight truncate w-full text-center">Status</span>
+              <div className="flex items-center gap-1 min-w-0 w-full justify-center">
+                <span className="text-[11px] text-rose-700 font-bold font-primary truncate">
+                  Dropped Lead
                 </span>
               </div>
-              <div className="flex flex-col gap-1 px-2 py-1.5 bg-slate-50/80 rounded-sm border border-slate-200">
-                <span className="text-[12px] font-semibold text-orange-400 capitalize">Last Owner</span>
-                <span className="text-[13px] font-bold text-gray-800 capitalize truncate">
-                  {lead.lead_owner || "-"}
-                </span>
-              </div>
-            </>
+            </div>
           )}
         </div>
 
-        {/* Attempt Count for Not Connected / Follow Up */}
-        {(pType.includes("not connected") || isFollowUp) && (
+        {/* Status Section (for non-dropped) */}
+        {pageType !== "Dropped" && (
           <div className="bg-slate-50/80 rounded-sm px-2 py-1.5 border border-slate-200">
-            <div className="flex justify-between items-center text-[12px]">
-              <span className="font-semibold text-orange-400 capitalize">{isFollowUp ? "Call Hit" : "Attempt Count"}</span>
-              <span className="font-bold text-gray-800">{lead.call_count || 0}</span>
+            <div className="flex justify-between items-center">
+              <span className="text-[12px] font-semibold text-orange-400 capitalize">Status</span>
+              <span className={`text-[12px] font-bold capitalize px-3 py-0.5 rounded-sm border shadow-sm ${displayStatus.color}`} title={displayStatus.text}>
+                {displayStatus.text}
+              </span>
             </div>
           </div>
         )}
 
-        {/* Progress Bar - Hide on Won/New */}
-        {!isWon && !isNew && (
-          <div className="relative mt-1">
+        {/* People & Info Section: Standardized rows based on pageType */}
+        <div className="flex flex-col gap-1.5 mt-0.5">
+          {/* Lead Owner & Assigned To Grid */}
+          <div className={showAssigned ? "grid grid-cols-2 gap-2" : "flex flex-col"}>
+            {/* Lead Owner / Last Owner */}
+            <div className="flex flex-col gap-1 px-2 py-1.5 bg-slate-50/80 rounded-sm border border-slate-200">
+              <span className="text-[12px] font-semibold text-orange-400 capitalize">
+                {pageType === "Dropped" ? "Last Owner" : "Lead Owner"}
+              </span>
+              <span className="text-[13px] font-bold text-gray-800 capitalize truncate" title={lead.lead_owner || "-"}>
+                {lead.lead_owner || "-"}
+              </span>
+            </div>
+
+            {/* Assigned To (if applicable) */}
+            {showAssigned && (
+              <div className="flex flex-col gap-1 px-2 py-1.5 bg-slate-50/80 rounded-sm border border-slate-200">
+                <span className="text-[12px] font-semibold text-orange-400 capitalize">Assigned To</span>
+                <span className="text-[13px] font-bold text-gray-800 capitalize truncate" title={lead.employee_name || "Unassigned"}>
+                  {lead.employee_name || "Unassigned"}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Full-width sections below the grid */}
+          <div className="flex flex-col gap-1.5">
+            {/* Drop Reason / Duplicate Reason */}
+            {((pageType === "Dropped" && lead.drop_reason) || (pageType === "Duplicate" && (lead.duplicate_reason || lead.duplicate_count > 1))) && (
+              <div className="flex flex-col gap-1 px-2 py-1.5 bg-rose-50/30 rounded-sm border border-rose-100">
+                <span className="text-[12px] font-semibold text-rose-400 capitalize">
+                  {pageType === "Dropped" ? "Drop Reason" : "Duplicate Reason"}
+                </span>
+                <span className="text-[13px] font-bold text-rose-700 truncate" title={lead.drop_reason || lead.duplicate_reason || "-"}>
+                  {pageType === "Dropped" ? (lead.drop_reason || "No reason specified") : (lead.duplicate_reason || "No reason specified")}
+                </span>
+              </div>
+            )}
+
+            {/* Call Hit / Attempt Count */}
+            {(pType.includes("not connected") || isFollowUp || pType.includes("assigned") || pType.includes("all")) && (
+              <div className="bg-slate-50/80 rounded-sm px-2 py-1.5 border border-slate-200">
+                <div className="flex justify-between items-center text-[12px]">
+                  <span className="font-semibold text-orange-400 capitalize">Call Hit (Hits)</span>
+                  <span className="font-bold text-gray-800">{lead.call_count || 0}</span>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Progress Bar */}
+        {!isWon && pageType !== "Dropped" && (
+          <div className="relative mt-auto pt-1">
             <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden border border-gray-200">
               <div
                 className={`h-full rounded-full transition-all duration-700 ease-out ${calculateProfileCompletion(lead) > 70 ? 'bg-gradient-to-r from-green-400 to-green-600' : 'bg-gradient-to-r from-orange-400 to-[#FF7B1D]'}`}
@@ -289,27 +310,37 @@ const LeadCard = ({
           {isDropped ? (
             <button
               onClick={(e) => { e.stopPropagation(); handleReborn && handleReborn(lead); }}
-              className="px-3 py-2 bg-green-50 hover:bg-green-600 rounded-sm text-green-600 hover:text-white transition-all border border-green-100 shadow-sm text-[10px] font-bold uppercase flex items-center gap-1.5"
-              title="Reactivate Lead"
+              className="px-3 py-1.5 bg-green-50 hover:bg-green-600 rounded-sm text-green-600 hover:text-white transition-all border border-green-100 shadow-sm text-[10px] font-bold uppercase flex items-center gap-1.5 active:scale-95"
             >
-              <TrendingUp size={14} />
+              <TrendingUp size={12} />
               Re-Born
             </button>
           ) : (
             <>
               <button
                 onClick={(e) => { e.stopPropagation(); handleHitCall && handleHitCall(lead); }}
-                className="p-2 bg-white hover:bg-[#FF7B1D] rounded-sm text-[#FF7B1D] hover:text-white transition-all border border-orange-100 hover:border-[#FF7B1D] shadow-sm"
+                className="p-2 bg-white hover:bg-[#FF7B1D] rounded-sm text-[#FF7B1D] hover:text-white transition-all border border-orange-100 shadow-sm active:scale-95"
                 title={`Calls: ${lead.call_count || 0}`}
               >
                 <Phone size={14} />
               </button>
-              <a href={waLink} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="p-2 bg-white hover:bg-green-600 rounded-sm text-green-600 hover:text-white transition-all border border-green-100 shadow-sm"><FaWhatsapp size={14} /></a>
-              <a href={lead.email ? `mailto:${lead.email}` : '#'} onClick={(e) => e.stopPropagation()} className="p-2 bg-white hover:bg-blue-600 rounded-sm text-blue-600 hover:text-white transition-all border border-blue-100 shadow-sm"><Mail size={14} /></a>
+              <button
+                onClick={(e) => { e.stopPropagation(); const phone = lead.mobile_number || lead.phone; if (phone) window.open(`https://wa.me/${phone.replace(/\D/g, "")}`, "_blank"); }}
+                className="p-2 bg-white hover:bg-green-600 rounded-sm text-green-600 hover:text-white transition-all border border-green-100 shadow-sm active:scale-95"
+              >
+                <FaWhatsapp size={14} />
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); if (lead.email) window.location.href = `mailto:${lead.email}`; }}
+                className="p-2 bg-white hover:bg-blue-600 rounded-sm text-blue-600 hover:text-white transition-all border border-blue-100 shadow-sm active:scale-95"
+              >
+                <Mail size={14} />
+              </button>
             </>
           )}
         </div>
       </div>
+
     </div>
   );
 };
