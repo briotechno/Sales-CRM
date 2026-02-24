@@ -81,6 +81,7 @@ const LeadCard = ({
   displayStatus,
   getAvatarBg,
   getPriorityColor,
+  handleReborn,
   pageType = "All"
 }) => {
   const leadDisplayName = lead.name || lead.full_name || lead.organization_name || "L";
@@ -198,29 +199,6 @@ const LeadCard = ({
           )}
         </div>
 
-        {/* Pipeline Section - Show for everyone except Won */}
-        {!isWon && (
-          <div className="bg-slate-50/80 rounded-sm p-2 border border-slate-200 transition-colors">
-            <div className="flex justify-between items-center gap-3">
-              <div className="flex flex-col min-w-0 flex-1">
-                <span className="text-[12px] text-orange-400 font-semibold capitalize mb-1">Pipeline</span>
-                <h4 className="text-[14px] font-bold text-gray-800 truncate capitalize font-primary">
-                  {lead.pipeline_name || "General"}
-                </h4>
-              </div>
-              <div className="flex flex-col items-end min-w-0 text-right flex-1">
-                <span className="text-[12px] text-orange-400 font-semibold capitalize mb-1">Stage</span>
-                <div className="flex items-center gap-1.5 max-w-full">
-                  <div className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse shrink-0"></div>
-                  <h4 className="text-[14px] font-bold text-orange-600 truncate capitalize font-primary">
-                    {lead.stage_name || "New"}
-                  </h4>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Status */}
         <div className="bg-slate-50/80 rounded-sm px-2 py-1.5 border border-slate-200">
           <div className="flex justify-between items-center">
@@ -231,27 +209,51 @@ const LeadCard = ({
           </div>
         </div>
 
-        {/* Assignment */}
-        <div className="grid grid-cols-2 gap-2">
-          <div
-            className="flex flex-col gap-1 px-2 py-1.5 bg-slate-50/80 rounded-sm border border-slate-200 cursor-pointer hover:bg-orange-50 transition-all"
-            onClick={() => handleShowAssignmentHistory && handleShowAssignmentHistory(lead)}
-          >
-            <span className="text-[12px] font-semibold text-orange-400 capitalize">Assignee</span>
-            <div className="flex items-center justify-between gap-1">
+        {/* Dynamic Fields based on pageType */}
+        <div className="grid grid-cols-1 gap-2">
+          {(isNew || pType.includes("all") || pType.includes("not connected") || pType.includes("assigned")) && (
+            <div className="flex flex-col gap-1 px-2 py-1.5 bg-slate-50/80 rounded-sm border border-slate-200">
+              <span className="text-[12px] font-semibold text-orange-400 capitalize">Lead Owner</span>
+              <span className="text-[13px] font-bold text-gray-800 capitalize truncate" title={lead.lead_owner || "-"}>
+                {lead.lead_owner || "-"}
+              </span>
+            </div>
+          )}
+          {(pType.includes("all") || pType.includes("not connected") || isFollowUp || pType.includes("assigned")) && (
+            <div className="flex flex-col gap-1 px-2 py-1.5 bg-slate-50/80 rounded-sm border border-slate-200">
+              <span className="text-[12px] font-semibold text-orange-400 capitalize">Assigned To</span>
               <span className="text-[13px] font-bold text-gray-800 capitalize truncate" title={lead.employee_name || "Unassigned"}>
                 {lead.employee_name || "Unassigned"}
               </span>
-              <History size={12} className="text-gray-300 group-hover:text-orange-500 flex-shrink-0" />
+            </div>
+          )}
+          {isDropped && (
+            <>
+              <div className="flex flex-col gap-1 px-2 py-1.5 bg-rose-50/30 rounded-sm border border-rose-100">
+                <span className="text-[12px] font-semibold text-rose-400 capitalize">Drop Reason</span>
+                <span className="text-[13px] font-bold text-rose-700 truncate" title={lead.drop_reason || "-"}>
+                  {lead.drop_reason || "-"}
+                </span>
+              </div>
+              <div className="flex flex-col gap-1 px-2 py-1.5 bg-slate-50/80 rounded-sm border border-slate-200">
+                <span className="text-[12px] font-semibold text-orange-400 capitalize">Last Owner</span>
+                <span className="text-[13px] font-bold text-gray-800 capitalize truncate">
+                  {lead.lead_owner || "-"}
+                </span>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Attempt Count for Not Connected / Follow Up */}
+        {(pType.includes("not connected") || isFollowUp) && (
+          <div className="bg-slate-50/80 rounded-sm px-2 py-1.5 border border-slate-200">
+            <div className="flex justify-between items-center text-[12px]">
+              <span className="font-semibold text-orange-400 capitalize">{isFollowUp ? "Call Hit" : "Attempt Count"}</span>
+              <span className="font-bold text-gray-800">{lead.call_count || 0}</span>
             </div>
           </div>
-          <div className="flex flex-col gap-1 px-2 py-1.5 bg-slate-50/80 rounded-sm border border-slate-200">
-            <span className="text-[12px] font-semibold text-orange-400 capitalize">Owner</span>
-            <span className="text-[13px] font-bold text-gray-800 capitalize truncate" title={lead.lead_owner || "-"}>
-              {lead.lead_owner || "-"}
-            </span>
-          </div>
-        </div>
+        )}
 
         {/* Progress Bar - Hide on Won/New */}
         {!isWon && !isNew && (
@@ -284,15 +286,28 @@ const LeadCard = ({
         </div>
 
         <div className="flex items-center gap-2 flex-shrink-0">
-          <button
-            onClick={(e) => { e.stopPropagation(); handleHitCall && handleHitCall(lead); }}
-            className="p-2 bg-white hover:bg-[#FF7B1D] rounded-sm text-[#FF7B1D] hover:text-white transition-all border border-orange-100 hover:border-[#FF7B1D] shadow-sm"
-            title={`Calls: ${lead.call_count || 0}`}
-          >
-            <Phone size={14} />
-          </button>
-          <a href={waLink} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="p-2 bg-white hover:bg-green-600 rounded-sm text-green-600 hover:text-white transition-all border border-green-100 shadow-sm"><FaWhatsapp size={14} /></a>
-          <a href={lead.email ? `mailto:${lead.email}` : '#'} onClick={(e) => e.stopPropagation()} className="p-2 bg-white hover:bg-blue-600 rounded-sm text-blue-600 hover:text-white transition-all border border-blue-100 shadow-sm"><Mail size={14} /></a>
+          {isDropped ? (
+            <button
+              onClick={(e) => { e.stopPropagation(); handleReborn && handleReborn(lead); }}
+              className="px-3 py-2 bg-green-50 hover:bg-green-600 rounded-sm text-green-600 hover:text-white transition-all border border-green-100 shadow-sm text-[10px] font-bold uppercase flex items-center gap-1.5"
+              title="Reactivate Lead"
+            >
+              <TrendingUp size={14} />
+              Re-Born
+            </button>
+          ) : (
+            <>
+              <button
+                onClick={(e) => { e.stopPropagation(); handleHitCall && handleHitCall(lead); }}
+                className="p-2 bg-white hover:bg-[#FF7B1D] rounded-sm text-[#FF7B1D] hover:text-white transition-all border border-orange-100 hover:border-[#FF7B1D] shadow-sm"
+                title={`Calls: ${lead.call_count || 0}`}
+              >
+                <Phone size={14} />
+              </button>
+              <a href={waLink} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="p-2 bg-white hover:bg-green-600 rounded-sm text-green-600 hover:text-white transition-all border border-green-100 shadow-sm"><FaWhatsapp size={14} /></a>
+              <a href={lead.email ? `mailto:${lead.email}` : '#'} onClick={(e) => e.stopPropagation()} className="p-2 bg-white hover:bg-blue-600 rounded-sm text-blue-600 hover:text-white transition-all border border-blue-100 shadow-sm"><Mail size={14} /></a>
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -309,6 +324,7 @@ export default function LeadsGridView({
   groupTags,
   handleShowAssignmentHistory,
   currentTime = new Date(),
+  handleReborn,
   pageType = "All"
 }) {
   const getAvatarBg = (tag) => {
@@ -414,6 +430,7 @@ export default function LeadsGridView({
             displayStatus={getDisplayStatus(lead)}
             getAvatarBg={getAvatarBg}
             getPriorityColor={getPriorityColor}
+            handleReborn={handleReborn}
             pageType={pageType}
           />
         ))}
@@ -487,6 +504,7 @@ export default function LeadsGridView({
                     displayStatus={getDisplayStatus(lead, groupTag)}
                     getAvatarBg={getAvatarBg}
                     getPriorityColor={getPriorityColor}
+                    handleReborn={handleReborn}
                     pageType={groupTag} // Use groupTag as context for workstation
                   />
                 ))

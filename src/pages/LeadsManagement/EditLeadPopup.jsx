@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { useGetEmployeesQuery } from "../../store/api/employeeApi";
+import { useGetPipelinesQuery } from "../../store/api/pipelineApi";
 import {
   X,
   User,
@@ -15,12 +16,27 @@ import {
   Trash2,
   ChevronDown,
   Globe,
-  Activity
+  Activity,
+  Workflow,
+  Layers,
+  FileText
 } from "lucide-react";
+
+const interestedInOptions = [
+  "Product Demo",
+  "Pricing Info",
+  "Support",
+  "Partnership",
+  "Consultation",
+  "Training",
+  "Other"
+];
 
 export default function EditLeadModal({ open, onClose, leadData, onSave }) {
   const { data: employeesData } = useGetEmployeesQuery({ limit: 1000, status: 'Active' });
   const employees = employeesData?.employees || [];
+  const { data: pipelinesData } = useGetPipelinesQuery({ limit: 1000 });
+  const pipelines = pipelinesData?.pipelines || [];
 
   const [formData, setFormData] = useState({
     id: "",
@@ -44,11 +60,27 @@ export default function EditLeadModal({ open, onClose, leadData, onSave }) {
     company: "",
     tag: "Contacted",
     tags: "",
-    services: "",
+    interested_in: [],
     priority: "High",
     ownerName: "",
-    leadOwner: ""
+    leadOwner: "",
+    pipeline_id: "",
+    stage_id: ""
   });
+
+  const [openMultiSelect, setOpenMultiSelect] = useState(null);
+
+  const handleInterestedInToggle = (item) => {
+    setFormData(prev => ({
+      ...prev,
+      interested_in: prev.interested_in.includes(item)
+        ? prev.interested_in.filter(s => s !== item)
+        : [...prev.interested_in, item]
+    }));
+  };
+
+  const selectedPipeline = pipelines.find(p => p.id == formData.pipeline_id);
+  const filteredStages = selectedPipeline?.stages || [];
 
   const [profileImage, setProfileImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
@@ -79,10 +111,16 @@ export default function EditLeadModal({ open, onClose, leadData, onSave }) {
         company: leadData.company || "",
         tag: leadData.tag || "Contacted",
         tags: Array.isArray(leadData.tags) ? leadData.tags.join(', ') : (leadData.tags || ""),
-        services: Array.isArray(leadData.services) ? leadData.services.join(', ') : (leadData.services || ""),
+        interested_in: Array.isArray(leadData.services)
+          ? leadData.services
+          : (typeof leadData.services === 'string' && leadData.services.trim() !== ""
+            ? leadData.services.split(',').map(s => s.trim())
+            : []),
         priority: leadData.priority || "High",
         ownerName: leadData.assigned_to || "",
-        leadOwner: leadData.lead_owner || (leadData.owner && leadData.owner.name) || ""
+        leadOwner: leadData.lead_owner || (leadData.owner && leadData.owner.name) || "",
+        pipeline_id: leadData.pipeline_id || "",
+        stage_id: leadData.stage_id || ""
       });
       setImagePreview(leadData.profileImage || null);
       setProfileImage(null);
@@ -547,17 +585,104 @@ export default function EditLeadModal({ open, onClose, leadData, onSave }) {
               />
             </div>
 
-            <div>
-              <label className="flex items-center gap-2 text-[15px] font-semibold text-gray-700 mb-2 capitalize">
-                <Activity size={14} className="text-[#FF7B1D]" /> Services (Comma separated)
+            {/* Interested In — custom multi-select dropdown */}
+            <div className="group" style={{ position: 'relative', zIndex: openMultiSelect === 'interested_in' ? 50 : 1 }}>
+              <label className="flex items-center gap-2 text-[15px] font-semibold text-gray-700 mb-2">
+                <FileText size={14} className="text-[#FF7B1D]" />
+                Interested In
+                <span className="text-[10px] text-gray-400 font-normal">(select multiple)</span>
               </label>
-              <input
-                type="text"
-                value={formData.services}
-                onChange={(e) => handleChange("services", e.target.value)}
-                className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 shadow-sm"
-                placeholder="Ex: Product Demo, Pricing Info"
-              />
+
+              {/* Trigger button */}
+              <div
+                onClick={() => setOpenMultiSelect(prev => prev === 'interested_in' ? null : 'interested_in')}
+                className="w-full min-h-[46px] px-3 py-2 border border-gray-200 rounded-sm cursor-pointer flex flex-wrap gap-1.5 items-center bg-white hover:border-[#FF7B1D] transition-all shadow-sm"
+              >
+                {formData.interested_in.length === 0 ? (
+                  <span className="text-sm text-gray-400 font-medium">Select options...</span>
+                ) : (
+                  formData.interested_in.map(item => (
+                    <span
+                      key={item}
+                      className="inline-flex items-center gap-1 px-2 py-0.5 bg-orange-100 text-orange-600 text-[11px] font-bold rounded-sm border border-orange-200"
+                    >
+                      {item}
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); handleInterestedInToggle(item); }}
+                        className="hover:text-orange-800 leading-none"
+                      >
+                        <X size={10} />
+                      </button>
+                    </span>
+                  ))
+                )}
+                <span className="ml-auto text-gray-400 text-[10px]">{openMultiSelect === 'interested_in' ? '▲' : '▼'}</span>
+              </div>
+
+              {/* Dropdown list */}
+              {openMultiSelect === 'interested_in' && (
+                <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-sm shadow-xl z-[100] max-h-52 overflow-y-auto ring-1 ring-black ring-opacity-5">
+                  {interestedInOptions.map(option => (
+                    <label
+                      key={option}
+                      className="flex items-center gap-3 px-4 py-2.5 hover:bg-orange-50 cursor-pointer transition-colors border-b last:border-0 border-gray-50"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={formData.interested_in.includes(option)}
+                        onChange={() => handleInterestedInToggle(option)}
+                        className="w-4 h-4 accent-[#FF7B1D] cursor-pointer"
+                      />
+                      <span className="text-[13px] text-gray-700 font-semibold">{option}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Pipeline and Stage Selection */}
+            <div className="md:col-span-2 grid grid-cols-2 gap-6 bg-slate-50 p-4 border border-slate-200 rounded-sm shadow-inner mb-2">
+              <div>
+                <label className="flex items-center gap-2 text-[13px] font-bold text-slate-600 mb-2 capitalize">
+                  <Workflow size={14} className="text-orange-500" /> Sales Pipeline
+                </label>
+                <div className="relative group">
+                  <select
+                    value={formData.pipeline_id}
+                    onChange={(e) => {
+                      const pid = e.target.value;
+                      setFormData(prev => ({ ...prev, pipeline_id: pid, stage_id: "" }));
+                    }}
+                    className="w-full px-3 py-2 text-xs font-bold border border-slate-200 rounded-sm bg-white text-slate-700 outline-none appearance-none cursor-pointer focus:border-orange-500 transition-all shadow-sm"
+                  >
+                    <option value="">Select Pipeline</option>
+                    {pipelines.map(p => (
+                      <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                  </select>
+                  <ChevronDown size={12} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none group-hover:text-orange-600" />
+                </div>
+              </div>
+              <div>
+                <label className="flex items-center gap-2 text-[13px] font-bold text-slate-600 mb-2 capitalize">
+                  <Layers size={14} className="text-orange-500" /> Current Stage
+                </label>
+                <div className="relative group">
+                  <select
+                    value={formData.stage_id}
+                    onChange={(e) => handleChange("stage_id", e.target.value)}
+                    className="w-full px-3 py-2 text-xs font-bold border border-slate-200 rounded-sm bg-white text-slate-700 outline-none appearance-none cursor-pointer focus:border-orange-500 transition-all shadow-sm disabled:bg-gray-50 disabled:cursor-not-allowed"
+                    disabled={!formData.pipeline_id}
+                  >
+                    <option value="">Select Stage</option>
+                    {filteredStages.map(s => (
+                      <option key={s.id} value={s.id}>{s.name}</option>
+                    ))}
+                  </select>
+                  <ChevronDown size={12} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none group-hover:text-orange-600" />
+                </div>
+              </div>
             </div>
 
             {/* Owner & Assign to */}

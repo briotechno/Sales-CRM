@@ -11,7 +11,7 @@ import AssignLeadsModal from "../../pages/LeadsManagement/AllLeadPagePart/Assign
 import LeadsListView from "../../pages/LeadsManagement/AllLeadPagePart/LeadsList";
 import LeadsGridView from "../../pages/LeadsManagement/AllLeadPagePart/LeadsGridView";
 import NumberCard from "../../components/NumberCard";
-import { useGetLeadsQuery, useDeleteLeadMutation, useUpdateLeadMutation, useHitCallMutation } from "../../store/api/leadApi";
+import { useGetLeadsQuery, useDeleteLeadMutation, useUpdateLeadMutation, useHitCallMutation, useUpdateLeadStatusMutation } from "../../store/api/leadApi";
 import { useGetPipelinesQuery } from "../../store/api/pipelineApi";
 import { useGetEmployeesQuery } from "../../store/api/employeeApi";
 import CallActionPopup from "../../components/AddNewLeads/CallActionPopup";
@@ -173,6 +173,20 @@ export default function DroppedLeads() {
 
   const [deleteLead] = useDeleteLeadMutation();
   const [updateLead] = useUpdateLeadMutation();
+  const [updateLeadStatus] = useUpdateLeadStatusMutation();
+
+  const handleReborn = async (lead) => {
+    try {
+      await updateLeadStatus({
+        id: lead.id,
+        status: "New",
+        tag: "New Lead"
+      }).unwrap();
+      toast.success("Lead reactivated successfully!");
+    } catch (err) {
+      toast.error(err?.data?.message || "Failed to reactivate lead");
+    }
+  };
 
   const leadsData = leadsResponse?.leads || [];
   const totalLeads = leadsResponse?.pagination?.total || 0;
@@ -715,6 +729,7 @@ export default function DroppedLeads() {
                     handleDeleteLead={handleDeleteLead}
                     handleEditLead={handleEditLead}
                     handleHitCall={openCallAction}
+                    handleReborn={handleReborn}
                     pageType="Dropped"
                   />
                 ) : (
@@ -725,6 +740,7 @@ export default function DroppedLeads() {
                     selectedLeads={selectedLeads}
                     handleSelectLead={handleSelectLead}
                     handleHitCall={openCallAction}
+                    handleReborn={handleReborn}
                     pageType="Dropped"
                   />
                 )}

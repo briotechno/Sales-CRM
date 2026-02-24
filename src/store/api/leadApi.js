@@ -261,6 +261,10 @@ export const leadApi = createApi({
             query: () => 'leads/due-reminders',
             providesTags: ['Lead'],
         }),
+        getDueMeetings: builder.query({
+            query: () => 'leads/due-meetings',
+            providesTags: ['LeadMeetings'],
+        }),
         snoozeLead: builder.mutation({
             query: ({ id, minutes }) => ({
                 url: `leads/${id}/snooze`,
@@ -306,5 +310,6 @@ export const {
     useGetLeadAssignmentHistoryQuery,
     useCheckCallConflictQuery,
     useGetDueRemindersQuery,
+    useGetDueMeetingsQuery,
     useSnoozeLeadMutation,
 } = leadApi;

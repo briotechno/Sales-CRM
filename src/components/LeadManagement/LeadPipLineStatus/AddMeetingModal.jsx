@@ -12,14 +12,32 @@ export default function AddMeetingModal({ open, onClose, onSave, editData }) {
     useEffect(() => {
         if (editData && open) {
             setTitle(editData.title || "");
-            setDate(editData.date || "");
-            setTime(editData.time || "");
+            const rawDate = editData.date || editData.meeting_date || "";
+            setDate(rawDate ? (typeof rawDate === "string" ? rawDate.split('T')[0] : rawDate) : "");
+            setTime(editData.time || editData.meeting_time || "");
             setDescription(editData.description || "");
-            setAttendees(editData.attendees ? editData.attendees.join(", ") : "");
+            let attendeesList = "";
+            if (editData.attendees) {
+                if (Array.isArray(editData.attendees)) {
+                    attendeesList = editData.attendees.join(", ");
+                } else if (typeof editData.attendees === "string") {
+                    try {
+                        const parsed = JSON.parse(editData.attendees);
+                        attendeesList = Array.isArray(parsed) ? parsed.join(", ") : editData.attendees;
+                    } catch (e) {
+                        attendeesList = editData.attendees;
+                    }
+                }
+            }
+            setAttendees(attendeesList);
         } else if (open) {
+            const now = new Date();
+            const currentDate = now.toISOString().split('T')[0];
+            const currentTime = now.toTimeString().split(' ')[0].substring(0, 5);
+
             setTitle("");
-            setDate("");
-            setTime("");
+            setDate(currentDate);
+            setTime(currentTime);
             setDescription("");
             setAttendees("");
         }
@@ -36,7 +54,6 @@ export default function AddMeetingModal({ open, onClose, onSave, editData }) {
             description,
             attendees: attendees.split(",").map(s => s.trim()).filter(Boolean)
         });
-        onClose();
     };
 
     return ReactDOM.createPortal(

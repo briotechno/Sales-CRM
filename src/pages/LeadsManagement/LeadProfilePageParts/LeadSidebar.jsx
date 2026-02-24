@@ -28,6 +28,16 @@ import {
 import { FaBuilding, FaWhatsapp } from "react-icons/fa";
 import Modal from "../../../components/common/Modal";
 
+const interestedInOptions = [
+  "Product Demo",
+  "Pricing Info",
+  "Support",
+  "Partnership",
+  "Consultation",
+  "Training",
+  "Other"
+];
+
 export default function LeadSidebar({
   leadData,
   isEditingLead,
@@ -46,16 +56,35 @@ export default function LeadSidebar({
   const [editingSection, setEditingSection] = useState(null);
   const [sectionValues, setSectionValues] = useState({});
   const [showConvertModal, setShowConvertModal] = useState(false);
+  const [openMultiSelect, setOpenMultiSelect] = useState(null);
 
   const startEditing = (field, value) => {
     setEditingField(field);
-    setEditValue(value || "");
+    if (field === 'services') {
+      // Convert comma-separated string to array for multi-select
+      const initialArray = typeof value === 'string' && value.trim() !== ""
+        ? value.split(',').map(s => s.trim())
+        : [];
+      setEditValue(initialArray);
+    } else {
+      setEditValue(value || "");
+    }
     setEditingSection(null);
+  };
+
+  const handleInterestedInToggle = (item) => {
+    setEditValue(prev => {
+      const current = Array.isArray(prev) ? prev : [];
+      return current.includes(item)
+        ? current.filter(s => s !== item)
+        : [...current, item];
+    });
   };
 
   const cancelEditing = () => {
     setEditingField(null);
     setEditValue("");
+    setOpenMultiSelect(null);
   };
 
   const startSectionEditing = (section, fields) => {
@@ -93,10 +122,15 @@ export default function LeadSidebar({
 
   const saveEditing = async (field) => {
     if (handleSingleFieldUpdate) {
-      await handleSingleFieldUpdate(field, editValue);
+      let finalValue = editValue;
+      if (field === 'services' && Array.isArray(editValue)) {
+        finalValue = editValue.join(', ');
+      }
+      await handleSingleFieldUpdate(field, finalValue);
     }
     setEditingField(null);
     setEditValue("");
+    setOpenMultiSelect(null);
   };
 
   const confirmConversion = async () => {
@@ -130,7 +164,7 @@ export default function LeadSidebar({
         </div>
 
         {isEditing || isSectionEditing ? (
-          <div className="flex flex-col gap-1 items-end flex-1 max-w-[200px]">
+          <div className="flex flex-col gap-1 items-end flex-1 max-w-[200px] relative">
             {type === "select" ? (
               <select
                 className="w-full p-1.5 text-xs border border-orange-200 rounded-sm focus:border-orange-500 outline-none bg-white font-bold"
@@ -143,6 +177,45 @@ export default function LeadSidebar({
                   <option key={opt.value} value={opt.value}>{opt.label}</option>
                 ))}
               </select>
+            ) : type === "multi-select" ? (
+              <div className="w-full relative">
+                <div
+                  onClick={() => setOpenMultiSelect(prev => prev === field ? null : field)}
+                  className="w-full min-h-[30px] p-1.5 border border-orange-200 rounded-sm cursor-pointer flex flex-wrap gap-1 items-center bg-white hover:border-orange-500 transition-all shadow-sm"
+                >
+                  {(!Array.isArray(value) || value.length === 0) ? (
+                    <span className="text-[10px] text-gray-400 font-bold uppercase">Select Options...</span>
+                  ) : (
+                    value.map(item => (
+                      <span key={item} className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-orange-100 text-orange-600 text-[10px] font-black rounded-sm border border-orange-200">
+                        {item}
+                        <Plus
+                          size={10}
+                          className="rotate-45 hover:text-orange-800 cursor-pointer"
+                          onClick={(e) => { e.stopPropagation(); handleInterestedInToggle(item); }}
+                        />
+                      </span>
+                    ))
+                  )}
+                  <ChevronDown size={10} className={`ml-auto text-gray-400 transition-transform ${openMultiSelect === field ? 'rotate-180' : ''}`} />
+                </div>
+
+                {openMultiSelect === field && (
+                  <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-sm shadow-xl z-[100] w-[200px] max-h-48 overflow-y-auto ring-1 ring-black ring-opacity-5">
+                    {interestedInOptions.map(option => (
+                      <label key={option} className="flex items-center gap-2 px-3 py-2 hover:bg-orange-50 cursor-pointer transition-colors border-b last:border-0 border-gray-50">
+                        <input
+                          type="checkbox"
+                          checked={Array.isArray(value) && value.includes(option)}
+                          onChange={() => handleInterestedInToggle(option)}
+                          className="w-3.5 h-3.5 accent-orange-500 cursor-pointer"
+                        />
+                        <span className="text-[11px] text-slate-700 font-bold uppercase">{option}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
             ) : type === "textarea" ? (
               <textarea
                 className="w-full p-1.5 text-xs border border-orange-200 rounded-sm focus:border-orange-500 outline-none bg-white font-bold min-h-[60px] resize-none"
@@ -171,13 +244,15 @@ export default function LeadSidebar({
             )}
           </div>
         ) : (
-          <div className="flex items-center gap-2 group/value">
-            <span className={`font-bold text-xs text-right break-words max-w-[180px] capitalize ${field === 'email' ? 'text-blue-600' : 'text-slate-800'}`}>
-              {currentValue || "N/A"}
+          <div className="flex items-center gap-2 group/value flex-1 justify-end truncate">
+            <span className={`font-bold text-xs text-right break-words max-w-[180px] capitalize truncate ${field === 'email' ? 'text-blue-600' : 'text-slate-800'}`}>
+              {Array.isArray(currentValue)
+                ? (currentValue.length > 0 ? currentValue.join(', ') : "N/A")
+                : (currentValue || "N/A")}
             </span>
             <Edit2
               size={12}
-              className="text-slate-400 cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 hover:text-orange-500"
+              className="text-slate-400 cursor-pointer opacity-0 group-hover/value:opacity-100 transition-opacity flex-shrink-0 hover:text-orange-500"
               onClick={() => startEditing(field, currentValue)}
             />
           </div>
@@ -236,8 +311,8 @@ export default function LeadSidebar({
           onClick={() => setShowConvertModal(true)}
           disabled={leadData?.tag !== 'Follow Up'}
           className={`py-2.5 rounded-sm text-sm font-semibold flex items-center justify-center gap-2 transition-all ${leadData?.tag === 'Follow Up'
-              ? "bg-slate-800 hover:bg-slate-900 text-white shadow-sm"
-              : "bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200"
+            ? "bg-slate-800 hover:bg-slate-900 text-white shadow-sm"
+            : "bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200"
             }`}
         >
           <UserCheck className={`w-4 h-4 ${leadData?.tag === 'Follow Up' ? 'text-orange-500' : 'text-slate-300'}`} /> Convert Client
@@ -377,6 +452,7 @@ export default function LeadSidebar({
           <div className="space-y-0">
             {renderEditableField("Follow Up", "followUp", leadData?.followUp, "date", [], Clock)}
             {renderEditableField("Source", "source", leadData?.source, "text", [], TrendingUp)}
+            {renderEditableField("Interested In", "services", leadData?.services, "multi-select", [], FileText)}
             {renderEditableField("Priority", "priority", leadData?.priority, "select", [
               { label: "High", value: "High" },
               { label: "Medium", value: "Medium" },

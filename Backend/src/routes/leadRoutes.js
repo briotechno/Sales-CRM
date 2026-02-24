@@ -30,7 +30,8 @@ const {
     bulkCreateLeads,
     getAssignmentHistory,
     getDueReminders,
-    snoozeLead
+    snoozeLead,
+    getDueMeetings
 } = require('../controllers/leadController');
 const { protect } = require('../middleware/authMiddleware');
 const { checkLimit } = require('../middleware/limitMiddleware');
@@ -41,6 +42,7 @@ router.post('/', protect, checkLimit('leads'), createLead);
 router.get('/', protect, getLeads);
 router.get('/check-call-conflict', protect, checkCallConflict);
 router.get('/due-reminders', protect, getDueReminders);
+router.get('/due-meetings', protect, getDueMeetings);
 router.get('/:id', protect, getLeadById);
 router.put('/:id', protect, updateLead);
 router.delete('/:id', protect, deleteLead);

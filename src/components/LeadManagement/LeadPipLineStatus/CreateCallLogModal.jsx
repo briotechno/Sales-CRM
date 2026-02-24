@@ -9,6 +9,17 @@ const CreateCallLogModal = ({ open, onClose, onSave }) => {
   const [note, setNote] = useState("");
   const [followTask, setFollowTask] = useState(false);
 
+  React.useEffect(() => {
+    if (open) {
+      const now = new Date();
+      const currentDate = now.toISOString().split('T')[0];
+      const currentTime = now.toTimeString().split(' ')[0].substring(0, 5);
+
+      setSelectedDate(currentDate);
+      setSelectedTime(currentTime);
+    }
+  }, [open]);
+
   if (!open) return null;
 
   const handleSubmit = (e) => {

@@ -726,9 +726,10 @@ export default function LeadsList() {
                   handleDeleteLead={handleDeleteLead}
                   handleEditLead={handleEditLead}
                   handleHitCall={openCallAction}
+                  pageType="All Leads"
                 />
               ) : (
-                <LeadsGridView leadsData={leadsData} filterStatus={filterStatus} handleLeadClick={handleLeadClick} selectedLeads={selectedLeads} handleSelectLead={handleSelectLead} handleHitCall={openCallAction} groupTags={["New Lead", "Not Connected", "Follow-up", "Trading"]} />
+                <LeadsGridView leadsData={leadsData} filterStatus={filterStatus} handleLeadClick={handleLeadClick} selectedLeads={selectedLeads} handleSelectLead={handleSelectLead} handleHitCall={openCallAction} groupTags={["New Lead", "Not Connected", "Follow-up", "Trading"]} pageType="All Leads" />
               )}
 
               {totalPages > 1 && (

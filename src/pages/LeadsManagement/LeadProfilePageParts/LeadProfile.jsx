@@ -195,7 +195,7 @@ export default function CRMLeadDetail() {
         status: leadFromQuery.status,
         tag: leadFromQuery.tag || "Not Contacted",
         tags: leadFromQuery.tags || [],
-        services: leadFromQuery.services || [],
+        services: leadFromQuery.interested_in || "",
         priority: leadFromQuery.priority || "High",
         visibility: leadFromQuery.visibility,
         id: leadFromQuery.id,
@@ -256,9 +256,10 @@ export default function CRMLeadDetail() {
         ? updatedData.tags.split(',').map(t => t.trim()).filter(t => t !== "")
         : (Array.isArray(updatedData.tags) ? updatedData.tags : []);
 
-      const processedServices = typeof updatedData.services === 'string'
-        ? updatedData.services.split(',').map(s => s.trim()).filter(s => s !== "")
-        : (Array.isArray(updatedData.services) ? updatedData.services : []);
+      const rawServices = updatedData.interested_in || updatedData.services;
+      const processedServices = typeof rawServices === 'string'
+        ? rawServices.split(',').map(s => s.trim()).filter(s => s !== "")
+        : (Array.isArray(rawServices) ? rawServices : []);
 
       // Map frontend fields back to backend expected fields
       const apiData = {
@@ -277,7 +278,7 @@ export default function CRMLeadDetail() {
         visibility: updatedData.visibility,
         tag: updatedData.tag,
         tags: processedTags,
-        services: processedServices,
+        interested_in: processedServices.join(', '),
         priority: updatedData.priority,
         owner_name: updatedData.ownerNameText || updatedData.ownerName,
         owner: updatedData.ownerName, // Maps to assigned_to in backend
@@ -295,7 +296,7 @@ export default function CRMLeadDetail() {
           ...prev,
           ...updatedData,
           tags: processedTags,
-          services: processedServices,
+          services: processedServices.join(', '),
           assigned_to: updatedData.ownerName,
           assignee: {
             ...prev.assignee,
@@ -338,6 +339,7 @@ export default function CRMLeadDetail() {
         assigned_to: 'assigned_to',
         lead_owner: 'lead_owner',
         name: 'name',
+        services: 'interested_in',
         followUp: 'next_call_at'
       };
 
@@ -624,7 +626,8 @@ export default function CRMLeadDetail() {
       setEditItem(null);
       setActiveModal({ type: null, isOpen: false });
     } catch (error) {
-      toast.error(`Failed to ${editItem ? 'update' : 'schedule'} meeting`);
+      const errorMsg = error?.data?.message || `Failed to ${editItem ? 'update' : 'schedule'} meeting`;
+      toast.error(errorMsg);
       console.error(error);
     }
   };

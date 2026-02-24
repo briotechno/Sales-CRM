@@ -566,6 +566,9 @@ const WorkStationLeadsGridView = ({
                           </div>
                         </div>
 
+                        {/* Interested In Section */}
+
+
                         {/* People Section */}
                         <div className="grid grid-cols-2 gap-2">
                           <div

@@ -12,17 +12,19 @@ ReactDOM.createRoot(document.getElementById("root")).render(
       <Toaster
         position="top-right"
         reverseOrder={false}
+        containerStyle={{
+          zIndex: 1000000,
+        }}
         toastOptions={{
           style: {
-            background: 'rgba(255, 255, 255, 0.9)',
+            background: '#ffffff',
             color: '#1f2937',
-            backdropFilter: 'blur(8px)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.15)',
-            borderRadius: '12px',
-            padding: '12px 24px',
+            border: '1px solid #e5e7eb',
+            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+            borderRadius: '8px',
+            padding: '16px 24px',
             fontSize: '14px',
-            fontWeight: '500',
+            fontWeight: '600',
           },
           success: {
             iconTheme: {

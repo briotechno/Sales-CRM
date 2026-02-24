@@ -304,6 +304,17 @@ const getLeadMeetings = async (req, res) => {
 const addLeadMeeting = async (req, res) => {
     try {
         const { title, description, date, time, attendees } = req.body;
+
+        // Check for conflicts
+        const conflicts = await LeadResources.checkMeetingConflict(req.user.id, date, time);
+        if (conflicts.length > 0) {
+            return res.status(409).json({
+                status: false,
+                message: 'Meeting conflict detected. Another meeting is already scheduled at this time.',
+                conflicts
+            });
+        }
+
         const result = await LeadResources.addMeeting({
             lead_id: req.params.id,
             title,
@@ -313,6 +324,15 @@ const addLeadMeeting = async (req, res) => {
             attendees: Array.isArray(attendees) ? attendees : (attendees ? attendees.split(',').map(s => s.trim()) : [])
         }, req.user.id);
         res.status(201).json(result);
+    } catch (error) {
+        res.status(500).json({ status: false, message: error.message });
+    }
+};
+
+const getDueMeetings = async (req, res) => {
+    try {
+        const meetings = await LeadResources.getDueMeetings(req.user.id);
+        res.status(200).json(meetings);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -406,7 +426,19 @@ const updateLeadFile = async (req, res) => {
 const updateLeadMeeting = async (req, res) => {
     try {
         const { title, description, date, time, attendees } = req.body;
-        const result = await LeadResources.updateMeeting(req.params.meetingId, {
+        const meetingId = req.params.meetingId;
+
+        // Check for conflicts
+        const conflicts = await LeadResources.checkMeetingConflict(req.user.id, date, time, meetingId);
+        if (conflicts.length > 0) {
+            return res.status(409).json({
+                status: false,
+                message: 'Meeting conflict detected. Another meeting is already scheduled at this time.',
+                conflicts
+            });
+        }
+
+        const result = await LeadResources.updateMeeting(meetingId, {
             title,
             description,
             date,
@@ -415,7 +447,7 @@ const updateLeadMeeting = async (req, res) => {
         }, req.user.id);
         res.status(200).json(result);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ status: false, message: error.message });
     }
 };
 
@@ -499,6 +531,7 @@ module.exports = {
     updateLeadCall,
     updateLeadFile,
     updateLeadMeeting,
+    getDueMeetings,
     deleteLeadNote,
     deleteLeadCall,
     deleteLeadFile,

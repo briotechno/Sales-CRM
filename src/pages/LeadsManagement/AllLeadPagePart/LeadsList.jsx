@@ -12,6 +12,7 @@ export default function LeadsListView({
   handleEditLead,
   handleDeleteLead,
   handleHitCall,
+  handleReborn,
   pageType = "All" // New prop to determine column layout
 }) {
   const getStatusBadge = (tag, isTrending, stageName) => {
@@ -85,73 +86,69 @@ export default function LeadsListView({
       { id: 'checkbox', label: '', width: 'w-10' },
       { id: 'lead_id', label: 'Lead ID', align: 'left' },
       { id: 'name', label: 'Full Name', align: 'left' },
+      { id: 'contact', label: 'Contact Number', align: 'left' },
     ];
 
     let middle = [];
     switch (pageType) {
+      case "All Leads":
+        middle = [
+          { id: 'source', label: 'Source', align: 'left' },
+          { id: 'status', label: 'Status', align: 'left' },
+          { id: 'created_at', label: 'Lead Born', align: 'left' },
+          { id: 'next_call', label: 'Next Call', align: 'left' },
+
+        ];
+        break;
       case "New Lead":
         middle = [
-          { id: 'source', label: 'Source', align: 'center' },
-          { id: 'status', label: 'Status', align: 'center' },
-          { id: 'created_at', label: 'Born Date', align: 'right' },
+          { id: 'created_at', label: 'Lead Born', align: 'left' },
+          { id: 'source', label: 'Source', align: 'left' },
+          { id: 'owner', label: 'Lead Owner', align: 'left' },
+          { id: 'status', label: 'Status', align: 'left' },
         ];
         break;
       case "Not Connected":
         middle = [
-          { id: 'hits', label: 'Hits', align: 'center' },
-          { id: 'status', label: 'Status', align: 'center' },
-          { id: 'next_call', label: 'Next Call', align: 'right' },
+          { id: 'owner', label: 'Lead Owner', align: 'left' },
+          { id: 'assignee', label: 'Assigned To', align: 'left' },
+          { id: 'created_date', label: 'Lead Born', align: 'left' },
+          { id: 'next_call', label: 'Next Call', align: 'left' },
+
         ];
         break;
       case "Follow Up":
         middle = [
-          { id: 'pipeline', label: 'Pipeline/Stage', align: 'left' },
-          { id: 'status', label: 'Status', align: 'center' },
-          { id: 'next_call', label: 'Next Call', align: 'right' },
-        ];
-        break;
-      case "Missed":
-        middle = [
-          { id: 'hits', label: 'Hits', align: 'center' },
-          { id: 'status', label: 'Status', align: 'center' },
-          { id: 'last_update', label: 'Last Activity', align: 'right' },
+          { id: 'created_at', label: 'Lead Born', align: 'left' },
+          { id: 'next_call', label: 'Next Call', align: 'left' },
+          { id: 'priority', label: 'Priority', align: 'left' },
+          { id: 'hits', label: 'Call Hit', align: 'left' },
+          { id: 'assignee', label: 'Assignee', align: 'left' },
         ];
         break;
       case "Assigned":
         middle = [
-          { id: 'assignee', label: 'Assigned Agent', align: 'left' },
-          { id: 'status', label: 'Status', align: 'center' },
-          { id: 'source', label: 'Source', align: 'right' },
+          { id: 'assignee', label: 'Assigned To', align: 'left' },
+          { id: 'priority', label: 'Priority', align: 'left' },
+          { id: 'created_at', label: 'Lead Born', align: 'left' },
+          { id: 'next_call', label: 'Next Action Date', align: 'left' },
+          { id: 'hits', label: 'Call Hit', align: 'left' },
+          { id: 'owner', label: 'Lead Owner', align: 'left' },
         ];
         break;
       case "Dropped":
         middle = [
-          { id: 'source', label: 'Source', align: 'center' },
-          { id: 'reason', label: 'Dropped Reason', align: 'left' },
-          { id: 'updated_at', label: 'Dropped At', align: 'right' },
-        ];
-        break;
-      case "Trading":
-      case "Trending":
-        middle = [
-          { id: 'source', label: 'Source', align: 'center' },
-          { id: 'priority', label: 'Priority', align: 'center' },
-          { id: 'status', label: 'Status', align: 'center' },
-        ];
-        break;
-      case "Won":
-        middle = [
-          { id: 'value', label: 'Lead Value', align: 'center' },
-          { id: 'status', label: 'Status', align: 'center' },
-          { id: 'updated_at', label: 'Won Date', align: 'right' },
+          { id: 'updated_at', label: 'Drop Date & Time', align: 'left' },
+          { id: 'reason', label: 'Drop Reason', align: 'left' },
+          { id: 'owner', label: 'Last Owner', align: 'left' },
+          { id: 'status', label: 'Status', align: 'left' },
         ];
         break;
       default:
         middle = [
-          { id: 'source', label: 'Source', align: 'center' },
-          { id: 'pipeline', label: 'Pipeline/Stage', align: 'left' },
-          { id: 'status', label: 'Status', align: 'center' },
-          { id: 'hits', label: 'Hits', align: 'center' },
+          { id: 'source', label: 'Source', align: 'left' },
+          { id: 'status', label: 'Status', align: 'left' },
+          { id: 'created_at', label: 'Lead Born', align: 'left' },
         ];
     }
 
@@ -211,21 +208,39 @@ export default function LeadsListView({
                         );
                       case 'name':
                         return (
-                          <td key={col.id} className="py-3 px-4 text-gray-800 hover:text-orange-600 cursor-pointer text-sm text-left" onClick={() => handleLeadClick(lead)}>
-                            <div className="flex flex-col">
-                              <div className="flex items-center gap-2">
-                                <span className="font-bold truncate max-w-[150px]" title={lead.name || lead.full_name}>
-                                  {lead.name || lead.full_name || "Untitled Lead"}
-                                </span>
-                                {lead.is_trending === 1 && <span className="p-1 bg-orange-100 text-orange-600 rounded-full" title="Trending"><TrendingUp size={12} /></span>}
-                              </div>
-                              <span className="text-[10px] text-gray-400 font-medium">{lead.mobile_number || lead.phone || "--"}</span>
+                          <td key={col.id} className="py-3 px-4 text-gray-800 hover:text-orange-600 cursor-pointer text-sm text-left font-bold" onClick={() => handleLeadClick(lead)}>
+                            <div className="flex items-center gap-2">
+                              <span className="truncate max-w-[200px]" title={lead.name || lead.full_name}>
+                                {lead.name || lead.full_name || "Untitled Lead"}
+                              </span>
+                              {lead.is_trending === 1 && <span className="p-1 bg-orange-100 text-orange-600 rounded-full" title="Trending"><TrendingUp size={12} /></span>}
                             </div>
+                          </td>
+                        );
+                      case 'contact':
+                        return (
+                          <td key={col.id} className="py-3 px-4 text-gray-800 text-sm text-left font-medium">
+                            {lead.mobile_number || lead.phone || "--"}
+                          </td>
+                        );
+                      case 'owner':
+                        return (
+                          <td key={col.id} className="py-3 px-4 text-left">
+                            <div className="flex items-center gap-2">
+                              <div className="w-6 h-6 rounded-full bg-orange-50 flex items-center justify-center text-orange-600"><User size={12} /></div>
+                              <span className="text-xs font-bold text-gray-700 capitalize">{lead.lead_owner || "-"}</span>
+                            </div>
+                          </td>
+                        );
+                      case 'created_date':
+                        return (
+                          <td key={col.id} className="py-3 px-4 text-left text-xs text-gray-600 font-medium">
+                            {formatDateTime(lead.created_at).split(',')[0]}
                           </td>
                         );
                       case 'source':
                         return (
-                          <td key={col.id} className="py-3 px-4 text-center">
+                          <td key={col.id} className="py-3 px-4 text-left">
                             <span className="px-2 py-1 bg-gray-50 text-gray-600 rounded-sm text-[10px] font-bold border border-gray-100 capitalize tracking-tighter">
                               {lead.lead_source || "-"}
                             </span>
@@ -242,7 +257,7 @@ export default function LeadsListView({
                         );
                       case 'status':
                         return (
-                          <td key={col.id} className="py-3 px-4 text-center">
+                          <td key={col.id} className="py-3 px-4 text-left">
                             <span className={`px-2 py-1 rounded-[2px] text-[10px] font-bold border uppercase tracking-wider ${getStatusBadge(lead.tag, lead.is_trending, lead.stage_name)}`}>
                               {displayStatus}
                             </span>
@@ -250,8 +265,8 @@ export default function LeadsListView({
                         );
                       case 'hits':
                         return (
-                          <td key={col.id} className="py-3 px-4 font-bold text-gray-700 text-center">
-                            <div className="flex flex-col items-center">
+                          <td key={col.id} className="py-3 px-4 font-bold text-gray-700 text-left">
+                            <div className="flex flex-col items-start">
                               <span className="text-sm">{lead.call_count || 0}</span>
                               <span className="text-[9px] text-gray-400 font-normal">Hits</span>
                             </div>
@@ -259,20 +274,20 @@ export default function LeadsListView({
                         );
                       case 'created_at':
                         return (
-                          <td key={col.id} className="py-3 px-4 text-right text-xs text-gray-600 font-medium">
+                          <td key={col.id} className="py-3 px-4 text-left text-xs text-gray-600 font-medium">
                             {formatDateTime(lead.created_at)}
                           </td>
                         );
                       case 'updated_at':
                         return (
-                          <td key={col.id} className="py-3 px-4 text-right text-xs text-gray-600 font-medium">
+                          <td key={col.id} className="py-3 px-4 text-left text-xs text-gray-600 font-medium">
                             {formatDateTime(lead.updated_at)}
                           </td>
                         );
                       case 'next_call':
                         return (
-                          <td key={col.id} className="py-3 px-4 text-right">
-                            <div className="flex flex-col items-end">
+                          <td key={col.id} className="py-3 px-4 text-left">
+                            <div className="flex flex-col items-start">
                               <span className="text-xs font-bold text-orange-600 whitespace-nowrap">
                                 {lead.next_call_at ? formatDateTime(lead.next_call_at) : "Not Scheduled"}
                               </span>
@@ -299,15 +314,15 @@ export default function LeadsListView({
                         );
                       case 'value':
                         return (
-                          <td key={col.id} className="py-3 px-4 text-center">
-                            <span className="text-sm font-black text-emerald-600 flex items-center justify-center gap-0.5">
+                          <td key={col.id} className="py-3 px-4 text-left">
+                            <span className="text-sm font-black text-emerald-600 flex items-center justify-start gap-0.5">
                               <DollarSign size={14} />{lead.value || "0"}
                             </span>
                           </td>
                         );
                       case 'priority':
                         return (
-                          <td key={col.id} className="py-3 px-4 text-center">
+                          <td key={col.id} className="py-3 px-4 text-left">
                             <span className={`px-2 py-0.5 text-[10px] font-bold rounded-sm border ${lead.priority === 'High' ? 'bg-red-50 text-red-600 border-red-100' :
                               lead.priority === 'Medium' ? 'bg-amber-50 text-amber-600 border-amber-100' :
                                 'bg-green-50 text-green-600 border-green-100'
@@ -318,7 +333,7 @@ export default function LeadsListView({
                         );
                       case 'last_update':
                         return (
-                          <td key={col.id} className="py-3 px-4 text-right text-xs text-gray-500 font-medium">
+                          <td key={col.id} className="py-3 px-4 text-left text-xs text-gray-500 font-medium">
                             {formatDateTime(lead.updated_at || lead.created_at)}
                           </td>
                         );
@@ -326,12 +341,25 @@ export default function LeadsListView({
                         return (
                           <td key={col.id} className="py-3 px-4 text-right">
                             <div className="flex justify-end gap-2">
-                              <button onClick={() => handleHitCall && handleHitCall(lead)} className="p-1.5 bg-orange-50 hover:bg-orange-500 rounded-sm text-orange-600 hover:text-white transition-all border border-orange-100 shadow-sm"><Phone size={14} /></button>
-                              <button onClick={() => {
-                                const phone = lead.mobile_number || lead.phone;
-                                if (phone) window.open(`https://wa.me/${phone.replace(/\D/g, "")}`, "_blank");
-                              }} className="p-1.5 bg-green-50 hover:bg-green-500 rounded-sm text-green-600 hover:text-white transition-all border border-green-100 shadow-sm"><FaWhatsapp size={14} /></button>
-                              <button onClick={() => { if (lead.email) window.location.href = `mailto:${lead.email}`; }} className="p-1.5 bg-blue-50 hover:bg-blue-500 rounded-sm text-blue-600 hover:text-white transition-all border border-blue-100 shadow-sm"><Mail size={14} /></button>
+                              {pageType === "Dropped" ? (
+                                <button
+                                  onClick={() => handleReborn && handleReborn(lead)}
+                                  className="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 hover:bg-green-500 rounded-sm text-green-600 hover:text-white transition-all border border-green-100 shadow-sm text-[10px] font-bold uppercase tracking-wider"
+                                  title="Reactivate Lead"
+                                >
+                                  <TrendingUp size={14} />
+                                  Re-Born
+                                </button>
+                              ) : (
+                                <>
+                                  <button onClick={() => handleHitCall && handleHitCall(lead)} className="p-1.5 bg-orange-50 hover:bg-orange-500 rounded-sm text-orange-600 hover:text-white transition-all border border-orange-100 shadow-sm"><Phone size={14} /></button>
+                                  <button onClick={() => {
+                                    const phone = lead.mobile_number || lead.phone;
+                                    if (phone) window.open(`https://wa.me/${phone.replace(/\D/g, "")}`, "_blank");
+                                  }} className="p-1.5 bg-green-50 hover:bg-green-500 rounded-sm text-green-600 hover:text-white transition-all border border-green-100 shadow-sm"><FaWhatsapp size={14} /></button>
+                                  <button onClick={() => { if (lead.email) window.location.href = `mailto:${lead.email}`; }} className="p-1.5 bg-blue-50 hover:bg-blue-500 rounded-sm text-blue-600 hover:text-white transition-all border border-blue-100 shadow-sm"><Mail size={14} /></button>
+                                </>
+                              )}
                             </div>
                           </td>
                         );

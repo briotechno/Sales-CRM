@@ -32,6 +32,27 @@ import {
   useUpdateLeadMutation
 } from "../../../store/api/leadApi";
 
+const formatDateUTC = (dateStr) => {
+  if (!dateStr) return "Just now";
+  let date = new Date(dateStr);
+
+  if (typeof dateStr === 'string' && !dateStr.includes('T') && !dateStr.includes('Z')) {
+    const utcDate = new Date(dateStr.replace(' ', 'T') + 'Z');
+    if (!isNaN(utcDate.getTime())) {
+      date = utcDate;
+    }
+  }
+
+  return date.toLocaleString('en-IN', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true
+  });
+};
+
 const ExpandableText = ({ text, limit = 150 }) => {
   const [isExpanded, setIsExpanded] = React.useState(false);
   if (!text) return null;
@@ -98,7 +119,7 @@ export default function LeadTabs({
       id: note.id || idx,
       author: (note.created_by || "Unknown User").toLowerCase(),
       profilePicture: note.profile_picture,
-      date: note.created_at ? new Date(note.created_at).toLocaleString() : "Just now",
+      date: formatDateUTC(note.created_at),
       title: (note.title || "Note").toLowerCase(),
       description: note.description || "",
       files: parsedFiles.map(f => ({ name: f.name || "File", size: f.size || "0 KB", type: f.type || "file", path: f.path })),
@@ -110,7 +131,7 @@ export default function LeadTabs({
     id: call.id || idx,
     author: (call.created_by || "Unknown User").toLowerCase(),
     profilePicture: call.profile_picture,
-    date: call.created_at ? new Date(call.created_at).toLocaleString() : "Just now",
+    date: formatDateUTC(call.created_at),
     status: call.status || "Completed",
     content: call.note || "No notes",
     originalData: call
@@ -143,8 +164,8 @@ export default function LeadTabs({
       description: meeting.description || "",
       host: (meeting.created_by || "Unknown User").toLowerCase(),
       profilePicture: meeting.profile_picture,
-      date: meeting.meeting_date ? new Date(meeting.meeting_date).toLocaleDateString() : "TBD",
-      time: meeting.meeting_time || "TBD",
+      date: meeting.meeting_date ? new Date(meeting.meeting_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : "TBD",
+      time: meeting.meeting_time ? new Date(`2000-01-01T${meeting.meeting_time}`).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }) : "TBD",
       attendees: parsedAttendees,
       priority: meeting.priority || "Medium",
       originalData: meeting
@@ -188,7 +209,7 @@ export default function LeadTabs({
         subtitle: (act.user_name || "").toLowerCase(),
         profilePicture: act.profile_picture,
         description: act.description || "",
-        time: act.created_at ? new Date(act.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "",
+        time: act.created_at ? formatDateUTC(act.created_at).split(', ')[1] : "",
       });
       return acc;
     }, {});
