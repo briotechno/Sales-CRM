@@ -19,7 +19,7 @@ const LeadResources = {
         // files might be JSON string or handled separately. For now assumed passed as string/json if text.
         // If files are uploaded, handled in controller.
         const [result] = await pool.query(
-            'INSERT INTO lead_notes (lead_id, user_id, title, description, files, created_at) VALUES (?, ?, ?, ?, ?, NOW())',
+            'INSERT INTO lead_notes (lead_id, user_id, title, description, files, created_at) VALUES (?, ?, ?, ?, ?, UTC_TIMESTAMP())',
             [lead_id, userId, title, description, JSON.stringify(files || [])]
         );
         return { id: result.insertId, ...data, created_at: new Date() };
@@ -41,7 +41,7 @@ const LeadResources = {
     addCall: async (data, userId) => {
         const { lead_id, status, date, note, follow_task, duration } = data;
         const [result] = await pool.query(
-            'INSERT INTO lead_calls (lead_id, user_id, status, call_date, note, follow_task, duration, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())',
+            'INSERT INTO lead_calls (lead_id, user_id, status, call_date, note, follow_task, duration, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, UTC_TIMESTAMP())',
             [lead_id, userId, status, date, note, follow_task ? 1 : 0, duration || null]
         );
         return { id: result.insertId, ...data, created_at: new Date() };
@@ -63,7 +63,7 @@ const LeadResources = {
     addFile: async (data, userId) => {
         const { lead_id, name, path, type, size, description } = data;
         const [result] = await pool.query(
-            'INSERT INTO lead_files (lead_id, user_id, name, path, type, size, description, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())',
+            'INSERT INTO lead_files (lead_id, user_id, name, path, type, size, description, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, UTC_TIMESTAMP())',
             [lead_id, userId, name, path, type, size, description || '']
         );
         return { id: result.insertId, ...data, created_at: new Date() };
@@ -125,7 +125,7 @@ const LeadResources = {
     addMeeting: async (data, userId) => {
         const { lead_id, title, description, date, time, attendees } = data;
         const [result] = await pool.query(
-            'INSERT INTO lead_meetings (lead_id, user_id, title, description, meeting_date, meeting_time, attendees, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())',
+            'INSERT INTO lead_meetings (lead_id, user_id, title, description, meeting_date, meeting_time, attendees, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, UTC_TIMESTAMP())',
             [lead_id, userId, title, description, date, time, JSON.stringify(attendees || [])]
         );
         return { id: result.insertId, ...data, created_at: new Date() };
@@ -187,6 +187,37 @@ const LeadResources = {
     deleteMeeting: async (meetingId, userId) => {
         await pool.query('DELETE FROM lead_meetings WHERE id = ? AND user_id = ?', [meetingId, userId]);
         return { id: meetingId };
+    },
+
+    checkMeetingConflict: async (userId, date, time, excludeMeetingId = null) => {
+        // Check for meetings at the exact same date and time (or within a 15-minute window)
+        // For simplicity, let's check for the exact same date and time first as requested
+        let query = 'SELECT id, title, meeting_date, meeting_time FROM lead_meetings WHERE user_id = ? AND meeting_date = ? AND meeting_time = ?';
+        let params = [userId, date, time];
+
+        if (excludeMeetingId) {
+            query += ' AND id != ?';
+            params.push(excludeMeetingId);
+        }
+
+        const [rows] = await pool.query(query, params);
+        return rows;
+    },
+
+    getDueMeetings: async (userId) => {
+        // Get meetings due within the last 5 minutes that haven't been completed/cancelled
+        // and link with lead info
+        const [rows] = await pool.query(
+            `SELECT lm.*, l.name as lead_name, l.lead_id as lead_identifier, l.type as lead_type, l.priority as lead_priority
+             FROM lead_meetings lm
+             LEFT JOIN leads l ON lm.lead_id = l.id
+             WHERE lm.user_id = ? 
+             AND lm.meeting_date = CURRENT_DATE()
+             AND lm.meeting_time BETWEEN DATE_SUB(CURRENT_TIME(), INTERVAL 5 MINUTE) AND CURRENT_TIME()
+             ORDER BY lm.meeting_time DESC`,
+            [userId]
+        );
+        return rows;
     }
 };
 

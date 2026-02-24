@@ -21,7 +21,8 @@ import {
   CheckCircle,
   XCircle,
 } from "lucide-react";
-import { FaWhatsapp } from "react-icons/fa";
+import { useGetLeadByIdQuery, useUpdateLeadMutation } from "../../store/api/leadApi";
+import { useGetPipelineByIdQuery } from "../../store/api/pipelineApi";
 
 export default function CRMLeadDetail() {
   const location = useLocation();
@@ -38,6 +39,19 @@ export default function CRMLeadDetail() {
 
   // Get lead data from navigation state
   const passedLead = location.state?.lead;
+  const leadId = passedLead?.id;
+
+  // Fetch latest lead data
+  const { data: lead, isLoading: isLeadLoading } = useGetLeadByIdQuery(leadId, {
+    skip: !leadId,
+    refetchOnMountOrArgChange: true
+  });
+
+  const { data: pipelineData } = useGetPipelineByIdQuery(lead?.pipeline_id, {
+    skip: !lead?.pipeline_id
+  });
+
+  const [updateLead] = useUpdateLeadMutation();
 
   const [open, setOpen] = useState(false);
 
@@ -47,6 +61,7 @@ export default function CRMLeadDetail() {
 
   // Format currency to match the display format
   const formatCurrency = (value) => {
+    if (typeof value !== 'number') return value || "₹0";
     const [intPart] = value.toFixed(0).split(".");
     const lastThree = intPart.substring(intPart.length - 3);
     const otherNumbers = intPart.substring(0, intPart.length - 3);
@@ -57,62 +72,84 @@ export default function CRMLeadDetail() {
     return "₹" + formatted;
   };
 
-  // Convert lead data to the format expected by the detail page
-  const [leadData, setLeadData] = useState(() => {
-    if (passedLead) {
-      return {
-        name: passedLead.name,
-        address: passedLead.location,
-        company: passedLead.type === "Person" ? "Individual" : passedLead.name,
-        dateCreated: passedLead.createdAt,
-        value: formatCurrency(passedLead.value),
-        dueDate: passedLead.createdAt,
-        followUp: passedLead.createdAt.split(" ")[0],
-        source: "Google",
-        email: passedLead.email,
-        phone: passedLead.phone,
-        status: passedLead.status,
-        tag: passedLead.tag,
-        visibility: passedLead.visibility,
-        id: passedLead.id,
-      };
-    }
-    return {
-      name: "Tremblay and Rathspan",
-      address: "1861 Bayonne Ave, Manchester, NJ, 08759",
-      company: "BrightWave Innovations",
-      dateCreated: "10 Jan 2024, 11:45 pm",
-      value: "₹4,50,000",
-      dueDate: "25 Jan 2024, 11:45 pm",
-      followUp: "25 Jan 2024",
-      source: "Google",
-    };
+  const [leadData, setLeadData] = useState({
+    name: "",
+    address: "",
+    company: "",
+    dateCreated: "",
+    value: "₹0",
+    dueDate: "",
+    followUp: "",
+    source: "",
+    email: "",
+    phone: "",
+    status: "",
+    tag: "",
+    visibility: "",
+    id: "",
   });
 
-  const handleLeadInfoSave = (updatedData) => {
-    setLeadData((prev) => ({
-      ...prev,
-      id: updatedData.id,
-      name: updatedData.name,
-      fullName: updatedData.fullName,
-      gender: updatedData.gender,
-      email: updatedData.email,
-      phone: updatedData.phone,
-      address: updatedData.address,
-      city: updatedData.city,
-      state: updatedData.state,
-      pincode: updatedData.pincode,
-      dateCreated: updatedData.dateCreated,
-      value: updatedData.value,
-      dueDate: updatedData.dueDate,
-      followUp: updatedData.followUp,
-      source: updatedData.source,
-      status: updatedData.status,
-      visibility: updatedData.visibility,
-      company: updatedData.company
-    }));
-    setShowEditLeadModal(false);
-    console.log("Lead information updated:", updatedData);
+  // Sync leadData with fetched lead
+  useEffect(() => {
+    if (lead) {
+      setLeadData({
+        id: lead.id,
+        name: lead.name,
+        fullName: lead.full_name || lead.name,
+        gender: lead.gender || "Male",
+        email: lead.email,
+        phone: lead.mobile_number,
+        address: lead.location || lead.address,
+        city: lead.city || "Manchester",
+        state: lead.state || "New Jersey",
+        pincode: lead.pincode || "08759",
+        dateCreated: new Date(lead.created_at).toLocaleDateString('en-GB', {
+          day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+        }),
+        value: formatCurrency(lead.value),
+        dueDate: lead.created_at,
+        followUp: lead.next_call_at ? new Date(lead.next_call_at).toISOString().split('T')[0] : "",
+        source: lead.lead_source || "Direct",
+        status: lead.status || "Active",
+        visibility: lead.visibility || "Private",
+        company: lead.type === "Person" ? "Individual" : lead.name,
+        tag: lead.tag,
+        pipeline_id: lead.pipeline_id,
+        stage_id: lead.stage_id,
+        services: lead.interested_in || "" // Keep key name if modal expects it, or use interested_in
+      });
+    }
+  }, [lead]);
+
+  const handleLeadInfoSave = async (updatedData) => {
+    try {
+      const payload = {
+        name: updatedData.name,
+        full_name: updatedData.fullName,
+        gender: updatedData.gender,
+        email: updatedData.email,
+        mobile_number: updatedData.phone,
+        location: updatedData.address,
+        city: updatedData.city,
+        state: updatedData.state,
+        pincode: updatedData.pincode,
+        next_call_at: updatedData.followUp,
+        lead_source: updatedData.source,
+        status: updatedData.status,
+        visibility: updatedData.visibility,
+        value: typeof updatedData.value === 'string' ? parseFloat(updatedData.value.replace(/[^\d.]/g, '')) : updatedData.value,
+        tag: updatedData.tag,
+        pipeline_id: updatedData.pipeline_id,
+        stage_id: updatedData.stage_id,
+        interested_in: Array.isArray(updatedData.interested_in) ? updatedData.interested_in.join(', ') : updatedData.interested_in,
+        assigned_to: updatedData.ownerName
+      };
+
+      await updateLead({ id: leadId, data: payload }).unwrap();
+      setShowEditLeadModal(false);
+    } catch (error) {
+      console.error("Failed to update lead:", error);
+    }
   };
 
   const handleLeadUpdate = (field, value) => {
@@ -1091,62 +1128,60 @@ export default function CRMLeadDetail() {
           <div className="flex-1 flex flex-col">
             <div className="p-8 bg-white">
               <div className="max-w-6xl">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                  Lead Pipeline Status
-                </h2>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-2xl font-bold text-gray-900">
+                    Lead Pipeline Status ({pipelineData?.name || "Pipeline"})
+                  </h2>
+                  {pipelineData?.name === 'Default Pipeline' && (
+                    <div className="flex items-center gap-2">
+                      <div className="w-48 h-3 bg-gray-100 rounded-full overflow-hidden border border-gray-200">
+                        <div
+                          className="h-full bg-orange-500 transition-all duration-500"
+                          style={{
+                            width: `${(pipelineData.stages.findIndex(s => s.id === lead?.stage_id) + 1) * 20}%`
+                          }}
+                        ></div>
+                      </div>
+                      <span className="text-sm font-bold text-orange-600">
+                        {Math.round((pipelineData.stages.findIndex(s => s.id === lead?.stage_id) + 1) * 20)}% Progress
+                      </span>
+                    </div>
+                  )}
+                </div>
 
                 <div className="flex items-stretch" style={{ height: "60px" }}>
-                  {/* Not Contacted */}
-                  <div
-                    className="relative flex-1 bg-purple-600 rounded-l-lg flex items-center justify-center"
-                    style={{
-                      clipPath:
-                        "polygon(0 0, calc(100% - 24px) 0, 100% 50%, calc(100% - 24px) 100%, 0 100%, 0 0)",
-                    }}
-                  >
-                    <span className="text-white font-semibold text-base pr-4">
-                      Not Contacted
-                    </span>
-                  </div>
+                  {pipelineData?.stages?.map((stage, index) => {
+                    const currentStageIndex = pipelineData.stages.findIndex(s => s.id === lead?.stage_id);
+                    const isCompleted = currentStageIndex > index;
+                    const isActive = currentStageIndex === index;
 
-                  {/* Contacted */}
-                  <div
-                    className="relative flex-1 bg-blue-500 flex items-center justify-center -ml-6"
-                    style={{
-                      clipPath:
-                        "polygon(24px 0, calc(100% - 24px) 0, 100% 50%, calc(100% - 24px) 100%, 24px 100%, 0 50%)",
-                    }}
-                  >
-                    <span className="text-white font-semibold text-base">
-                      Contacted
-                    </span>
-                  </div>
+                    let bgClass = "bg-gray-100";
+                    if (isCompleted) bgClass = "bg-green-500";
+                    else if (isActive) bgClass = "bg-orange-500 shadow-lg z-10 scale-105";
 
-                  {/* Closed */}
-                  <div
-                    className="relative flex-1 bg-yellow-400 flex items-center justify-center -ml-6"
-                    style={{
-                      clipPath:
-                        "polygon(24px 0, calc(100% - 24px) 0, 100% 50%, calc(100% - 24px) 100%, 24px 100%, 0 50%)",
-                    }}
-                  >
-                    <span className="text-white font-semibold text-base">
-                      Closed
-                    </span>
-                  </div>
-
-                  {/* Lost */}
-                  <div
-                    className="relative flex-1 bg-red-600 rounded-r-lg flex items-center justify-center -ml-6"
-                    style={{
-                      clipPath:
-                        "polygon(24px 0, 100% 0, 100% 100%, 24px 100%, 0 50%)",
-                    }}
-                  >
-                    <span className="text-white font-semibold text-base pl-2">
-                      Lost
-                    </span>
-                  </div>
+                    return (
+                      <div
+                        key={stage.id}
+                        className={`relative flex-1 ${bgClass} flex items-center justify-center transition-all duration-300 ${index !== 0 ? "-ml-6" : "rounded-l-lg"} ${index === pipelineData.stages.length - 1 ? "rounded-r-lg" : ""}`}
+                        style={{
+                          clipPath: index === 0
+                            ? "polygon(0 0, calc(100% - 24px) 0, 100% 50%, calc(100% - 24px) 100%, 0 100%, 0 0)"
+                            : (index === pipelineData.stages.length - 1 && pipelineData.stages.length > 1)
+                              ? "polygon(24px 0, 100% 0, 100% 100%, 24px 100%, 0 50%)"
+                              : "polygon(24px 0, calc(100% - 24px) 0, 100% 50%, calc(100% - 24px) 100%, 24px 100%, 0 50%)",
+                        }}
+                      >
+                        <span className={`font-bold text-xs text-center px-4 ${isCompleted || isActive ? "text-white" : "text-gray-400"}`}>
+                          {stage.name}
+                        </span>
+                      </div>
+                    );
+                  })}
+                  {(!pipelineData?.stages || pipelineData.stages.length === 0) && (
+                    <div className="flex-1 bg-gray-100 rounded-lg flex items-center justify-center italic text-gray-400 font-bold">
+                      No stages defined for this pipeline
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

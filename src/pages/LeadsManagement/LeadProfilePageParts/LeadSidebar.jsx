@@ -24,9 +24,24 @@ import {
   TrendingUp,
   UserCheck,
   AlertCircle,
+  Upload,
+  X,
 } from "lucide-react";
 import { FaBuilding, FaWhatsapp } from "react-icons/fa";
 import Modal from "../../../components/common/Modal";
+
+import { toast } from "react-hot-toast";
+import ConvertClientModal from "../../../components/LeadManagement/ConvertClientModal";
+
+const interestedInOptions = [
+  "Product Demo",
+  "Pricing Info",
+  "Support",
+  "Partnership",
+  "Consultation",
+  "Training",
+  "Other"
+];
 
 export default function LeadSidebar({
   leadData,
@@ -46,16 +61,35 @@ export default function LeadSidebar({
   const [editingSection, setEditingSection] = useState(null);
   const [sectionValues, setSectionValues] = useState({});
   const [showConvertModal, setShowConvertModal] = useState(false);
+  const [openMultiSelect, setOpenMultiSelect] = useState(null);
 
   const startEditing = (field, value) => {
     setEditingField(field);
-    setEditValue(value || "");
+    if (field === 'services') {
+      // Convert comma-separated string to array for multi-select
+      const initialArray = typeof value === 'string' && value.trim() !== ""
+        ? value.split(',').map(s => s.trim())
+        : [];
+      setEditValue(initialArray);
+    } else {
+      setEditValue(value || "");
+    }
     setEditingSection(null);
+  };
+
+  const handleInterestedInToggle = (item) => {
+    setEditValue(prev => {
+      const current = Array.isArray(prev) ? prev : [];
+      return current.includes(item)
+        ? current.filter(s => s !== item)
+        : [...current, item];
+    });
   };
 
   const cancelEditing = () => {
     setEditingField(null);
     setEditValue("");
+    setOpenMultiSelect(null);
   };
 
   const startSectionEditing = (section, fields) => {
@@ -93,17 +127,15 @@ export default function LeadSidebar({
 
   const saveEditing = async (field) => {
     if (handleSingleFieldUpdate) {
-      await handleSingleFieldUpdate(field, editValue);
+      let finalValue = editValue;
+      if (field === 'services' && Array.isArray(editValue)) {
+        finalValue = editValue.join(', ');
+      }
+      await handleSingleFieldUpdate(field, finalValue);
     }
     setEditingField(null);
     setEditValue("");
-  };
-
-  const confirmConversion = async () => {
-    if (handleUpdateStatus) {
-      await handleUpdateStatus("Won");
-    }
-    setShowConvertModal(false);
+    setOpenMultiSelect(null);
   };
 
   const getInitials = (name) => {
@@ -130,7 +162,7 @@ export default function LeadSidebar({
         </div>
 
         {isEditing || isSectionEditing ? (
-          <div className="flex flex-col gap-1 items-end flex-1 max-w-[200px]">
+          <div className="flex flex-col gap-1 items-end flex-1 max-w-[200px] relative">
             {type === "select" ? (
               <select
                 className="w-full p-1.5 text-xs border border-orange-200 rounded-sm focus:border-orange-500 outline-none bg-white font-bold"
@@ -143,6 +175,45 @@ export default function LeadSidebar({
                   <option key={opt.value} value={opt.value}>{opt.label}</option>
                 ))}
               </select>
+            ) : type === "multi-select" ? (
+              <div className="w-full relative">
+                <div
+                  onClick={() => setOpenMultiSelect(prev => prev === field ? null : field)}
+                  className="w-full min-h-[30px] p-1.5 border border-orange-200 rounded-sm cursor-pointer flex flex-wrap gap-1 items-center bg-white hover:border-orange-500 transition-all shadow-sm"
+                >
+                  {(!Array.isArray(value) || value.length === 0) ? (
+                    <span className="text-[10px] text-gray-400 font-bold uppercase">Select Options...</span>
+                  ) : (
+                    value.map(item => (
+                      <span key={item} className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-orange-100 text-orange-600 text-[10px] font-black rounded-sm border border-orange-200">
+                        {item}
+                        <Plus
+                          size={10}
+                          className="rotate-45 hover:text-orange-800 cursor-pointer"
+                          onClick={(e) => { e.stopPropagation(); handleInterestedInToggle(item); }}
+                        />
+                      </span>
+                    ))
+                  )}
+                  <ChevronDown size={10} className={`ml-auto text-gray-400 transition-transform ${openMultiSelect === field ? 'rotate-180' : ''}`} />
+                </div>
+
+                {openMultiSelect === field && (
+                  <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-sm shadow-xl z-[100] w-[200px] max-h-48 overflow-y-auto ring-1 ring-black ring-opacity-5">
+                    {interestedInOptions.map(option => (
+                      <label key={option} className="flex items-center gap-2 px-3 py-2 hover:bg-orange-50 cursor-pointer transition-colors border-b last:border-0 border-gray-50">
+                        <input
+                          type="checkbox"
+                          checked={Array.isArray(value) && value.includes(option)}
+                          onChange={() => handleInterestedInToggle(option)}
+                          className="w-3.5 h-3.5 accent-orange-500 cursor-pointer"
+                        />
+                        <span className="text-[11px] text-slate-700 font-bold uppercase">{option}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
             ) : type === "textarea" ? (
               <textarea
                 className="w-full p-1.5 text-xs border border-orange-200 rounded-sm focus:border-orange-500 outline-none bg-white font-bold min-h-[60px] resize-none"
@@ -171,13 +242,15 @@ export default function LeadSidebar({
             )}
           </div>
         ) : (
-          <div className="flex items-center gap-2 group/value">
-            <span className={`font-bold text-xs text-right break-words max-w-[180px] capitalize ${field === 'email' ? 'text-blue-600' : 'text-slate-800'}`}>
-              {currentValue || "N/A"}
+          <div className="flex items-center gap-2 group/value flex-1 justify-end truncate">
+            <span className={`font-bold text-xs text-right break-words max-w-[180px] capitalize truncate ${field === 'email' ? 'text-blue-600' : 'text-slate-800'}`}>
+              {Array.isArray(currentValue)
+                ? (currentValue.length > 0 ? currentValue.join(', ') : "N/A")
+                : (currentValue || "N/A")}
             </span>
             <Edit2
               size={12}
-              className="text-slate-400 cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 hover:text-orange-500"
+              className="text-slate-400 cursor-pointer opacity-0 group-hover/value:opacity-100 transition-opacity flex-shrink-0 hover:text-orange-500"
               onClick={() => startEditing(field, currentValue)}
             />
           </div>
@@ -211,23 +284,44 @@ export default function LeadSidebar({
       </div>
 
       {/* Profile Basic Info */}
-      <div className="pt-16 pb-6 px-6 text-center border-b border-gray-100">
-        <div className="flex items-center justify-center gap-2 mb-1">
-          <h2 className="text-2xl font-bold text-slate-800 uppercase truncate max-w-[300px]" title={leadData?.name}>
-            {leadData?.name || "Lead Name"}
-          </h2>
-          <Star
-            size={18}
-            className={`cursor-pointer hover:scale-110 transition-transform flex-shrink-0 ${leadData?.isFavorite ? 'text-yellow-400 fill-yellow-400' : 'text-slate-300'}`}
-          />
+      <div className="pt-16 pb-6 px-6 text-center border-b border-gray-100 min-h-[160px] flex flex-col items-center justify-center">
+        {editingField === 'name' ? (
+          <div className="flex flex-col gap-2 items-center mb-2 w-full animate-in fade-in slide-in-from-top-1 duration-200">
+            <input
+              type="text"
+              className="w-full max-w-[280px] p-2 text-xl border border-orange-200 rounded-sm focus:border-orange-500 outline-none bg-white font-bold text-center"
+              value={editValue}
+              onChange={(e) => setEditValue(e.target.value)}
+              autoFocus
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') saveEditing('name');
+                if (e.key === 'Escape') cancelEditing();
+              }}
+            />
+            <div className="flex gap-2">
+              <button onClick={cancelEditing} className="text-[10px] font-bold text-gray-500 bg-white px-2 py-1 rounded-sm border border-gray-200 shadow-sm transition-all hover:bg-gray-50">Cancel</button>
+              <button onClick={() => saveEditing('name')} className="text-[10px] font-bold text-white bg-orange-500 px-3 py-1 rounded-sm shadow-sm hover:bg-orange-600 transition-all">Save Name</button>
+            </div>
+          </div>
+        ) : (
+          <div className="relative flex items-center justify-center w-full mb-1 group/name">
+            <h2 className="text-2xl font-bold text-slate-800 uppercase truncate px-6" title={leadData?.name}>
+              {leadData?.name || "Lead Name"}
+            </h2>
+            <Edit2
+              size={15}
+              className="absolute right-[15%] text-slate-400 cursor-pointer opacity-0 group-hover/name:opacity-100 transition-all hover:text-orange-500 translate-x-1/2"
+              onClick={() => startEditing('name', leadData?.name)}
+            />
+          </div>
+        )}
+
+        <div className="flex items-center justify-center gap-2 mt-1 w-full">
+          <p className="text-slate-600 font-bold text-[14px] flex items-center gap-2">
+            <Phone size={14} className="text-orange-500" />
+            {leadData?.phone || "N/A"}
+          </p>
         </div>
-        <p className="text-orange-600 font-bold text-sm uppercase tracking-wider flex items-center justify-center gap-1">
-          <FaBuilding className="text-[14px]" />
-          {leadData?.company || "Individual"}
-        </p>
-        <p className="text-slate-500 text-[13px] mt-1 italic">
-          Source: {leadData?.source || "Direct"}
-        </p>
       </div>
 
       {/* Action Buttons Row */}
@@ -236,8 +330,8 @@ export default function LeadSidebar({
           onClick={() => setShowConvertModal(true)}
           disabled={leadData?.tag !== 'Follow Up'}
           className={`py-2.5 rounded-sm text-sm font-semibold flex items-center justify-center gap-2 transition-all ${leadData?.tag === 'Follow Up'
-              ? "bg-slate-800 hover:bg-slate-900 text-white shadow-sm"
-              : "bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200"
+            ? "bg-slate-800 hover:bg-slate-900 text-white shadow-sm"
+            : "bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200"
             }`}
         >
           <UserCheck className={`w-4 h-4 ${leadData?.tag === 'Follow Up' ? 'text-orange-500' : 'text-slate-300'}`} /> Convert Client
@@ -377,6 +471,7 @@ export default function LeadSidebar({
           <div className="space-y-0">
             {renderEditableField("Follow Up", "followUp", leadData?.followUp, "date", [], Clock)}
             {renderEditableField("Source", "source", leadData?.source, "text", [], TrendingUp)}
+            {renderEditableField("Interested In", "services", leadData?.services, "multi-select", [], FileText)}
             {renderEditableField("Priority", "priority", leadData?.priority, "select", [
               { label: "High", value: "High" },
               { label: "Medium", value: "Medium" },
@@ -467,40 +562,11 @@ export default function LeadSidebar({
       </div>
 
       {/* Convert Client Confirmation Modal */}
-      <Modal
+      <ConvertClientModal
         isOpen={showConvertModal}
         onClose={() => setShowConvertModal(false)}
-        headerVariant="simple"
-        maxWidth="max-w-md"
-        footer={
-          <div className="flex gap-4 w-full">
-            <button
-              onClick={() => setShowConvertModal(false)}
-              className="flex-1 px-6 py-3 border-2 border-gray-200 text-gray-700 font-bold rounded-sm hover:bg-gray-100 transition-all font-primary text-sm tracking-normal"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={confirmConversion}
-              className="flex-1 px-6 py-3 bg-orange-500 text-white font-bold rounded-sm hover:bg-orange-600 transition-all shadow-lg flex items-center justify-center gap-2 font-primary text-sm tracking-wider"
-            >
-              <CheckCircle size={18} />
-              Confirm
-            </button>
-          </div>
-        }
-      >
-        <div className="flex flex-col items-center text-center text-black font-primary">
-          <div className="w-20 h-20 bg-orange-50 rounded-full flex items-center justify-center mb-6">
-            <UserCheck className="text-orange-500" size={48} />
-          </div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Convert to Client</h2>
-          <p className="text-gray-600 mb-2 leading-relaxed px-4">
-            Are you sure you want to convert <span className="font-bold text-gray-800">"{leadData?.name}"</span> into a Client?
-          </p>
-          <p className="text-xs text-orange-500 italic font-medium">This action will update the lead's status to Won and move them to your client portfolio.</p>
-        </div>
-      </Modal>
+        leadData={leadData}
+      />
     </div>
   );
 }

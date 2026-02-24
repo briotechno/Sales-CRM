@@ -24,12 +24,14 @@ import {
 } from "../../../store/api/leadApi";
 import { useGetEmployeesQuery } from "../../../store/api/employeeApi";
 import { useCreateQuotationMutation } from "../../../store/api/quotationApi";
+import { useGetPipelineByIdQuery } from "../../../store/api/pipelineApi";
 import CreateQuotationModal from "../../QuotationPart/CreateQuotationModal";
 import LeadSidebar from "./LeadSidebar";
 import LeadTabs from "./LeadTable";
 import CallActionPopup from "../../../components/AddNewLeads/CallActionPopup";
 import CallQrModal from "../../../components/LeadManagement/CallQrModal";
 import LeadDeleteConfirmationModal from "../../../components/LeadManagement/LeadPipLineStatus/LeadDeleteConfirmationModal";
+import ConvertClientModal from "../../../components/LeadManagement/ConvertClientModal";
 import { toast } from "react-hot-toast";
 import { FaWhatsapp } from "react-icons/fa";
 import {
@@ -46,11 +48,15 @@ import {
   Users,
   Zap,
   X,
+  UserCheck,
 } from "lucide-react";
 
 export default function CRMLeadDetail() {
   const location = useLocation();
   const navigate = useNavigate();
+
+  // State
+  const [showConvertModal, setShowConvertModal] = useState(false);
 
   const safeParseDate = (dateStr) => {
     if (!dateStr) return null;
@@ -195,7 +201,7 @@ export default function CRMLeadDetail() {
         status: leadFromQuery.status,
         tag: leadFromQuery.tag || "Not Contacted",
         tags: leadFromQuery.tags || [],
-        services: leadFromQuery.services || [],
+        services: leadFromQuery.interested_in || "",
         priority: leadFromQuery.priority || "High",
         visibility: leadFromQuery.visibility,
         id: leadFromQuery.id,
@@ -224,6 +230,30 @@ export default function CRMLeadDetail() {
   const isFollowUp = (leadData?.tag === "Follow Up" || leadData?.status === "In Progress");
   const isWon = (leadData?.status === "Closed" || leadData?.tag === "Won");
   const isDropped = (leadData?.status === "Dropped" || leadData?.tag === "Lost" || leadData?.tag === "Dropped" || leadData?.status === "Not Qualified");
+
+  // Fetch Pipeline Details for dynamic stages
+  const { data: pipelineData } = useGetPipelineByIdQuery(leadData?.pipeline_id, { skip: !leadData?.pipeline_id });
+
+  // Define effective stages (Dynamic or Default)
+  const stageColors = ["bg-purple-600", "bg-blue-600", "bg-cyan-600", "bg-indigo-600", "bg-orange-600", "bg-green-600", "bg-red-600"];
+
+  const effectiveStages = (pipelineData?.stages?.length > 0)
+    ? pipelineData.stages.map((s, idx) => ({
+      label: s.name,
+      id: s.id,
+      status: s.is_final ? "Won" : "In Progress",
+      color: stageColors[idx % stageColors.length],
+      active: leadData?.stage_id === s.id || leadData?.stage_name === s.name || leadData?.tag === s.name,
+      raw: s
+    }))
+    : [
+      { label: "Not Contacted", status: "New Lead", color: "bg-purple-600", active: (leadData?.tag === "Not Contacted" || leadData?.tag === "New Lead") },
+      { label: "Contacted", status: "In Progress", color: "bg-blue-600", active: (leadData?.tag === "Not Connected" || leadData?.tag === "Follow Up" || leadData?.status === "In Progress") && !isWon && !isDropped },
+      { label: "Closed", status: "Won", color: "bg-yellow-500", active: isWon },
+      { label: "Lost", status: "Not Qualified", color: "bg-red-600", active: isDropped },
+    ];
+
+  const currentStageIndex = isWon ? 2 : isDropped ? 3 : (isFollowUp || leadData?.tag === "Not Connected") ? 1 : 0;
 
   const isOnlyCallTabEnabled = (leadData?.call_count > 0) && !isFollowUp && !isWon && !isDropped;
   const isTabsEnabled = isFollowUp || isWon || isDropped || (leadData?.call_count > 0);
@@ -256,9 +286,10 @@ export default function CRMLeadDetail() {
         ? updatedData.tags.split(',').map(t => t.trim()).filter(t => t !== "")
         : (Array.isArray(updatedData.tags) ? updatedData.tags : []);
 
-      const processedServices = typeof updatedData.services === 'string'
-        ? updatedData.services.split(',').map(s => s.trim()).filter(s => s !== "")
-        : (Array.isArray(updatedData.services) ? updatedData.services : []);
+      const rawServices = updatedData.interested_in || updatedData.services;
+      const processedServices = typeof rawServices === 'string'
+        ? rawServices.split(',').map(s => s.trim()).filter(s => s !== "")
+        : (Array.isArray(rawServices) ? rawServices : []);
 
       // Map frontend fields back to backend expected fields
       const apiData = {
@@ -277,7 +308,7 @@ export default function CRMLeadDetail() {
         visibility: updatedData.visibility,
         tag: updatedData.tag,
         tags: processedTags,
-        services: processedServices,
+        interested_in: processedServices.join(', '),
         priority: updatedData.priority,
         owner_name: updatedData.ownerNameText || updatedData.ownerName,
         owner: updatedData.ownerName, // Maps to assigned_to in backend
@@ -295,7 +326,7 @@ export default function CRMLeadDetail() {
           ...prev,
           ...updatedData,
           tags: processedTags,
-          services: processedServices,
+          services: processedServices.join(', '),
           assigned_to: updatedData.ownerName,
           assignee: {
             ...prev.assignee,
@@ -338,6 +369,7 @@ export default function CRMLeadDetail() {
         assigned_to: 'assigned_to',
         lead_owner: 'lead_owner',
         name: 'name',
+        services: 'interested_in',
         followUp: 'next_call_at'
       };
 
@@ -624,7 +656,8 @@ export default function CRMLeadDetail() {
       setEditItem(null);
       setActiveModal({ type: null, isOpen: false });
     } catch (error) {
-      toast.error(`Failed to ${editItem ? 'update' : 'schedule'} meeting`);
+      const errorMsg = error?.data?.message || `Failed to ${editItem ? 'update' : 'schedule'} meeting`;
+      toast.error(errorMsg);
       console.error(error);
     }
   };
@@ -648,7 +681,39 @@ export default function CRMLeadDetail() {
     }
   };
 
-  const [updateLeadStatus] = useUpdateLeadStatusMutation();
+  const handleStageClick = async (stage) => {
+    if (stage.status === "Not Qualified") {
+      setShowConfirmDrop(false);
+      setShowDropModal(true);
+      return;
+    }
+
+    try {
+      let backendStatus = stage.status;
+      let backendTag = leadData?.tag;
+
+      if (stage.status === "In Progress") {
+        backendStatus = "In Progress";
+        backendTag = "Follow Up";
+      } else if (stage.status === "Won") {
+        backendStatus = "Closed";
+        backendTag = "Won";
+      } else if (stage.status === "Not Connected" || stage.status === "New Lead") {
+        openCallAction();
+        return;
+      }
+
+      const updateData = { status: backendStatus, tag: backendTag };
+      if (stage.id) {
+        updateData.stage_id = stage.id;
+      }
+
+      await updateLead({ id: leadData?.id, data: updateData }).unwrap();
+      toast.success(`Moved to ${stage.label}`);
+    } catch (err) {
+      toast.error("Failed to update stage");
+    }
+  };
 
   const handleUpdateStatus = async (status) => {
     if (status === "Not Qualified") {
@@ -779,84 +844,148 @@ export default function CRMLeadDetail() {
           {/* Main Content */}
           <div className="flex-1 flex flex-col">
             {/* Pipeline Status */}
-            <div className="p-8 bg-white border-b shadow-sm">
-              <div className="w-full">
-                <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
-                  <div className="flex-1">
-                    <h2 className="text-xl font-bold text-gray-800 mb-4 capitalize tracking-wide flex items-center gap-2">
-                      <Zap className="w-5 h-5 text-orange-500 fill-orange-500" /> Lead Status
-                    </h2>
-                    <div className="flex flex-wrap items-center gap-3 w-full">
-                      {[
-                        {
-                          label: "New Lead",
-                          isActive: (leadData?.tag === "New Lead" || leadData?.tag === "Not Contacted" || leadData?.status === "New Lead") &&
-                            !(leadData?.tag === "Not Connected" || leadData?.status === "Not Connected") &&
-                            !(leadData?.tag === "Follow Up" || leadData?.status === "In Progress") &&
-                            !(leadData?.status === "Closed" || leadData?.tag === "Won") &&
-                            !(leadData?.status === "Dropped" || leadData?.tag === "Lost" || leadData?.status === "Not Qualified"),
-                          activeClass: "bg-purple-500 text-white border-purple-500",
-                          inactiveClass: "bg-purple-100/20 text-purple-300 border-purple-100"
-                        },
-                        {
-                          label: "Not Connected",
-                          isActive: (leadData?.tag === "Not Connected" || leadData?.status === "Not Connected") &&
-                            !(leadData?.tag === "Follow Up" || leadData?.status === "In Progress") &&
-                            !(leadData?.status === "Closed" || leadData?.tag === "Won") &&
-                            !(leadData?.status === "Dropped" || leadData?.tag === "Lost" || leadData?.status === "Not Qualified"),
-                          activeClass: "bg-orange-500 text-white border-orange-500",
-                          inactiveClass: "bg-orange-100/20 text-orange-300 border-orange-100"
-                        },
-                        {
-                          label: "Follow Up",
-                          isActive: (leadData?.tag === "Follow Up" || leadData?.status === "In Progress") &&
-                            !(leadData?.status === "Closed" || leadData?.tag === "Won") &&
-                            !(leadData?.status === "Dropped" || leadData?.tag === "Lost" || leadData?.status === "Not Qualified"),
-                          activeClass: "bg-blue-500 text-white border-blue-500",
-                          inactiveClass: "bg-blue-100/20 text-blue-300 border-blue-100"
-                        },
-                        {
-                          label: "Won",
-                          isActive: (leadData?.status === "Closed" || leadData?.tag === "Won") &&
-                            !(leadData?.status === "Dropped" || leadData?.tag === "Lost" || leadData?.status === "Not Qualified"),
-                          activeClass: "bg-green-600 text-white border-green-600",
-                          inactiveClass: "bg-green-100/20 text-green-300 border-green-100"
-                        },
-                        {
-                          label: "Drop",
-                          isActive: (leadData?.status === "Dropped" || leadData?.tag === "Lost" || leadData?.tag === "Dropped" || leadData?.status === "Not Qualified"),
-                          activeClass: "bg-red-500 text-white border-red-500",
-                          inactiveClass: "bg-red-100/20 text-red-300 border-red-100"
-                        }
-                      ].map((status) => (
-                        <div
-                          key={status.label}
-                          className={`px-4 py-2 rounded-sm text-sm font-semibold font-primary capitalize tracking-wide border transition-all shadow-sm flex items-center justify-center min-w-[120px] ${status.isActive
-                            ? `${status.activeClass} shadow-md ring-2 ring-orange-500/10`
-                            : `${status.inactiveClass} cursor-default`
-                            }`}
-                        >
-                          {status.label}
-                        </div>
-                      ))}
+            <div className="px-8 pb-8 pt-2 bg-white border-b shadow-sm">
+              <div className="w-full space-y-8">
+                {/* 1. Progress Step Status Indicator */}
+                <div className="relative w-full mb-20 mt-0">
+                  {/* Progress Line Background */}
+                  <div className="absolute top-1/2 left-0 w-full h-1 bg-gray-100 -translate-y-1/2 rounded-full"></div>
 
-                      {/* Action Button: Drop Lead */}
-                      <div className="ml-auto">
-                        <button
-                          disabled={!canNotQualified}
-                          onClick={() => handleUpdateStatus("Not Qualified")}
-                          className={`px-6 py-2 rounded-sm text-sm font-semibold font-primary capitalize tracking-widest border transition-all active:scale-95 shadow-sm ${leadData?.status === "Not Qualified" || leadData?.tag === "Lost" || leadData?.tag === "Dropped"
-                            ? "bg-red-600 text-white border-red-600 shadow-md"
-                            : canNotQualified
-                              ? "bg-white text-gray-400 border-gray-100 hover:border-red-500 hover:text-red-500 hover:bg-red-50"
-                              : "bg-gray-50 text-gray-200 border-gray-50 cursor-not-allowed"
-                            }`}
-                        >
-                          Drop Lead
-                        </button>
-                      </div>
-                    </div>
+                  {/* Active Progress Line */}
+                  <div
+                    className="absolute top-1/2 left-0 h-1 transition-all duration-700 ease-in-out -translate-y-1/2 rounded-full"
+                    style={{
+                      width: isWon ? '75%' : isDropped ? '100%' : isFollowUp ? '50%' : (leadData?.tag === "Not Connected" ? '25%' : '0%'),
+                      backgroundColor: isDropped ? '#ef4444' : isWon ? '#16a34a' : '#2563eb'
+                    }}
+                  ></div>
+
+                  <div className="relative flex justify-between items-center w-full">
+                    {[
+                      {
+                        label: "New Lead",
+                        isActive: leadData?.tag === "Not Contacted" || leadData?.tag === "New Lead",
+                        color: "text-purple-600",
+                        bgColor: "bg-purple-600",
+                        borderColor: "border-purple-600",
+                        lightBg: "bg-purple-50"
+                      },
+                      {
+                        label: "Not Connected",
+                        isActive: leadData?.tag === "Not Connected",
+                        color: "text-orange-500",
+                        bgColor: "bg-orange-500",
+                        borderColor: "border-orange-500",
+                        lightBg: "bg-orange-50"
+                      },
+                      {
+                        label: "Follow Up",
+                        isActive: isFollowUp && !isWon && !isDropped,
+                        color: "text-blue-600",
+                        bgColor: "bg-blue-600",
+                        borderColor: "border-blue-600",
+                        lightBg: "bg-blue-50"
+                      },
+                      {
+                        label: "Won",
+                        isActive: isWon,
+                        color: "text-green-600",
+                        bgColor: "bg-green-600",
+                        borderColor: "border-green-600",
+                        lightBg: "bg-green-50"
+                      },
+                      {
+                        label: "Drop",
+                        isActive: isDropped,
+                        color: "text-red-500",
+                        bgColor: "bg-red-500",
+                        borderColor: "border-red-500",
+                        lightBg: "bg-red-50"
+                      }
+                    ].map((status, index, arr) => {
+                      const isPast = (index < arr.findIndex(s => s.isActive)) || (isWon && index < 3) || (isDropped && index < 4);
+                      const isCurrent = status.isActive;
+
+                      return (
+                        <div key={status.label} className="flex flex-col items-center z-10">
+                          {/* Step Point */}
+                          <div
+                            className={`w-10 h-10 rounded-full flex items-center justify-center border-4 transition-all duration-500 ${isCurrent
+                              ? `${status.bgColor} ${status.borderColor} scale-110 shadow-lg shadow-${status.color}/20`
+                              : isPast
+                                ? `${status.bgColor} ${status.borderColor}`
+                                : `bg-white border-gray-100`
+                              }`}
+                          >
+                            {(isPast || isCurrent) && (
+                              <div className="w-2 h-2 bg-white rounded-full"></div>
+                            )}
+                          </div>
+
+                          {/* Step Label */}
+                          <div className={`absolute -bottom-7 whitespace-nowrap text-[11px] font-black uppercase tracking-widest transition-all duration-300 ${isCurrent ? status.color : isPast ? 'text-gray-600' : 'text-gray-300'
+                            }`}>
+                            {status.label}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
+                </div>
+
+                {/* 2. Heading and Drop Button */}
+                <div className="flex items-center justify-between gap-4">
+                  <h2 className="text-xl font-bold text-gray-800 capitalize tracking-wide flex items-center gap-2">
+                    <Zap className="w-5 h-5 text-orange-500 fill-orange-500" /> Lead Status
+                  </h2>
+
+                  <div className="flex items-center gap-3">
+                    {/* Active Stage Badge */}
+                    <div className={`px-4 py-2 rounded-sm text-[12px] font-semibold capitalize tracking-wider shadow-md text-white ${effectiveStages.find(s => s.active)?.color || 'bg-slate-700'} flex items-center justify-center min-w-[130px]`}>
+                      {effectiveStages.find(s => s.active)?.label || "Initial"}
+                    </div>
+
+                    <button
+                      disabled={!canNotQualified}
+                      onClick={() => handleUpdateStatus("Not Qualified")}
+                      className={`px-8 py-2 rounded-sm text-sm font-semibold font-primary capitalize tracking-widest border transition-all active:scale-95 shadow-sm ${leadData?.status === "Not Qualified" || leadData?.tag === "Lost" || leadData?.tag === "Dropped"
+                        ? "bg-red-600 text-white border-red-600 shadow-md"
+                        : canNotQualified
+                          ? "bg-white text-gray-400 border-gray-100 hover:border-red-500 hover:text-red-500 hover:bg-red-50"
+                          : "bg-gray-50 text-gray-200 border-gray-50 cursor-not-allowed"
+                        }`}
+                    >
+                      Drop Lead
+                    </button>
+                  </div>
+                </div>
+
+                {/* 3. Pipeline Stages Visualization */}
+                <div className="flex items-center w-full h-12 gap-1 mt-4 px-2 py-1 bg-gray-50/50 rounded-xl overflow-visible">
+                  {effectiveStages.map((stage, idx, arr) => (
+                    <div
+                      key={stage.label + idx}
+                      className={`flex-1 flex items-center justify-center relative h-10 transition-all duration-300 shadow-sm ${stage.color}
+                        ${stage.active
+                          ? `z-10 scale-[1.05] ring-2 ring-white ring-offset-1 shadow-lg`
+                          : 'opacity-90'
+                        }
+                        ${idx === 0 ? 'rounded-l-xl' : ''}
+                        ${idx === arr.length - 1 ? 'rounded-r-xl' : ''}
+                      `}
+                      style={{
+                        clipPath: idx === 0
+                          ? "polygon(0% 0%, 93% 0%, 100% 50%, 93% 100%, 0% 100%)"
+                          : idx === arr.length - 1
+                            ? "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%, 7% 50%)"
+                            : "polygon(0% 0%, 93% 0%, 100% 50%, 93% 100%, 0% 100%, 7% 50%)"
+                      }}
+                    >
+                      <span className={`text-[13px] font-semibold capitalize tracking-wider transition-all text-white ${stage.active ? 'drop-shadow-sm scale-105' : ''}`}>
+                        {stage.label}
+                      </span>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
@@ -942,7 +1071,7 @@ export default function CRMLeadDetail() {
             />
           </div>
         </div>
-      </div>
+      </div >
 
       <LeadDeleteConfirmationModal
         isOpen={deleteModal.isOpen}
@@ -954,72 +1083,84 @@ export default function CRMLeadDetail() {
       />
 
       {/* Modals */}
-      {activeModal.type === 'note' && (
-        <AddNoteModal
-          open={activeModal.isOpen}
-          onClose={() => {
-            setActiveModal({ type: null, isOpen: false });
-            setEditItem(null);
-          }}
-          onSave={handleSaveNote}
-          editData={editItem}
-        />
-      )}
+      {
+        activeModal.type === 'note' && (
+          <AddNoteModal
+            open={activeModal.isOpen}
+            onClose={() => {
+              setActiveModal({ type: null, isOpen: false });
+              setEditItem(null);
+            }}
+            onSave={handleSaveNote}
+            editData={editItem}
+          />
+        )
+      }
 
-      {activeModal.type === 'file' && (
-        <AddNoteModal
-          open={activeModal.isOpen}
-          onClose={() => {
-            setActiveModal({ type: null, isOpen: false });
-            setEditItem(null);
-          }}
-          onSave={handleSaveFile}
-          title={editItem ? "Edit File Info" : "Upload File"}
-          editData={editItem}
-        />
-      )}
+      {
+        activeModal.type === 'file' && (
+          <AddNoteModal
+            open={activeModal.isOpen}
+            onClose={() => {
+              setActiveModal({ type: null, isOpen: false });
+              setEditItem(null);
+            }}
+            onSave={handleSaveFile}
+            title={editItem ? "Edit File Info" : "Upload File"}
+            editData={editItem}
+          />
+        )
+      }
 
-      {activeModal.type === 'call' && (
-        <CreateCallLogModal
-          open={activeModal.isOpen}
-          onClose={() => setActiveModal({ type: null, isOpen: false })}
-          onSave={handleSaveCall}
-        />
-      )}
+      {
+        activeModal.type === 'call' && (
+          <CreateCallLogModal
+            open={activeModal.isOpen}
+            onClose={() => setActiveModal({ type: null, isOpen: false })}
+            onSave={handleSaveCall}
+          />
+        )
+      }
 
-      {activeModal.type === 'meeting' && (
-        <AddMeetingModal
-          open={activeModal.isOpen}
-          onClose={() => {
-            setActiveModal({ type: null, isOpen: false });
-            setEditItem(null);
-          }}
-          onSave={handleSaveMeeting}
-          editData={editItem}
-        />
-      )}
+      {
+        activeModal.type === 'meeting' && (
+          <AddMeetingModal
+            open={activeModal.isOpen}
+            onClose={() => {
+              setActiveModal({ type: null, isOpen: false });
+              setEditItem(null);
+            }}
+            onSave={handleSaveMeeting}
+            editData={editItem}
+          />
+        )
+      }
 
-      {showQuotationModal && (
-        <CreateQuotationModal
-          showModal={showQuotationModal}
-          setShowModal={setShowQuotationModal}
-          formData={quotationFormData}
-          handleInputChange={handleQuotationInputChange}
-          handleCreateQuotation={handleCreateQuotation}
-          setFormData={setQuotationFormData}
-        />
-      )}
+      {
+        showQuotationModal && (
+          <CreateQuotationModal
+            showModal={showQuotationModal}
+            setShowModal={setShowQuotationModal}
+            formData={quotationFormData}
+            handleInputChange={handleQuotationInputChange}
+            handleCreateQuotation={handleCreateQuotation}
+            setFormData={setQuotationFormData}
+          />
+        )
+      }
 
-      {callPopupData.isOpen && (
-        <CallActionPopup
-          isOpen={callPopupData.isOpen}
-          onClose={() => setCallPopupData({ isOpen: false, lead: null, initialResponse: null })}
-          lead={callPopupData.lead}
-          rules={rules}
-          onHitCall={handleHitCall}
-          onConnectedSelect={callPopupData.onConnectedSelect}
-        />
-      )}
+      {
+        callPopupData.isOpen && (
+          <CallActionPopup
+            isOpen={callPopupData.isOpen}
+            onClose={() => setCallPopupData({ isOpen: false, lead: null, initialResponse: null })}
+            lead={callPopupData.lead}
+            rules={rules}
+            onHitCall={handleHitCall}
+            onConnectedSelect={callPopupData.onConnectedSelect}
+          />
+        )
+      }
 
       {/* QR scan modal — shown before the call log form for the floating call button */}
       <CallQrModal
@@ -1030,116 +1171,124 @@ export default function CRMLeadDetail() {
         onViewProfile={() => { }}
       />
 
+      <ConvertClientModal
+        isOpen={showConvertModal}
+        onClose={() => setShowConvertModal(false)}
+        leadData={leadData}
+      />
+
       {/* Disqualify Lead Modal */}
-      {showDropModal && (
-        <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-[100] p-4 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-white w-full max-w-xl rounded-sm shadow-2xl overflow-hidden animate-slideUp font-primary">
-            {/* Header */}
-            <div className="bg-gradient-to-r from-red-600 to-red-700 px-6 py-4 flex items-center justify-between shadow-md">
-              <div className="flex items-center gap-4">
-                <div className="bg-white bg-opacity-20 p-2.5 rounded-sm">
-                  <Zap size={24} className="text-white fill-white" />
+      {
+        showDropModal && (
+          <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-[100] p-4 backdrop-blur-sm animate-fadeIn">
+            <div className="bg-white w-full max-w-xl rounded-sm shadow-2xl overflow-hidden animate-slideUp font-primary">
+              {/* Header */}
+              <div className="bg-gradient-to-r from-red-600 to-red-700 px-6 py-4 flex items-center justify-between shadow-md">
+                <div className="flex items-center gap-4">
+                  <div className="bg-white bg-opacity-20 p-2.5 rounded-sm">
+                    <Zap size={24} className="text-white fill-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-white capitalize tracking-wide leading-tight">
+                      Disqualify Lead
+                    </h2>
+                    <p className="text-xs text-red-50 font-medium opacity-90">
+                      {showConfirmDrop ? "Final confirmation for lead investigation" : "Provide details to move lead to investigation"}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h2 className="text-2xl font-bold text-white capitalize tracking-wide leading-tight">
-                    Disqualify Lead
-                  </h2>
-                  <p className="text-xs text-red-50 font-medium opacity-90">
-                    {showConfirmDrop ? "Final confirmation for lead investigation" : "Provide details to move lead to investigation"}
-                  </p>
-                </div>
+                <button
+                  onClick={() => setShowDropModal(false)}
+                  className="text-white hover:bg-white hover:bg-opacity-20 p-2 transition-all rounded-full"
+                >
+                  <X size={24} />
+                </button>
               </div>
-              <button
-                onClick={() => setShowDropModal(false)}
-                className="text-white hover:bg-white hover:bg-opacity-20 p-2 transition-all rounded-full"
-              >
-                <X size={24} />
-              </button>
-            </div>
 
-            <div className="p-8 space-y-6">
-              {!showConfirmDrop ? (
-                <>
-                  <div className="bg-red-50 p-4 border border-red-100 rounded-sm flex items-start gap-3 shadow-sm">
-                    <div className="w-1.5 h-1.5 bg-red-600 rounded-full mt-1.5 animate-pulse shrink-0"></div>
-                    <div>
-                      <p className="text-[13px] text-red-700 font-bold uppercase tracking-wider mb-0.5">
-                        Marking as Not Qualified
-                      </p>
-                      <p className="text-[11px] text-red-600 font-medium opacity-80 leading-relaxed text-left">
-                        Please select a reason and provide mandatory remarks. This lead will be automatically assigned to the Investigation Officer.
-                      </p>
+              <div className="p-8 space-y-6">
+                {!showConfirmDrop ? (
+                  <>
+                    <div className="bg-red-50 p-4 border border-red-100 rounded-sm flex items-start gap-3 shadow-sm">
+                      <div className="w-1.5 h-1.5 bg-red-600 rounded-full mt-1.5 animate-pulse shrink-0"></div>
+                      <div>
+                        <p className="text-[13px] text-red-700 font-bold uppercase tracking-wider mb-0.5">
+                          Marking as Not Qualified
+                        </p>
+                        <p className="text-[11px] text-red-600 font-medium opacity-80 leading-relaxed text-left">
+                          Please select a reason and provide mandatory remarks. This lead will be automatically assigned to the Investigation Officer.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="flex items-center gap-2 text-[15px] font-semibold text-gray-700 mb-2 capitalize">
+                        <ChevronDown size={14} className="text-red-500" />
+                        Reason for Disqualification <span className="text-red-500 font-black">*</span>
+                      </label>
+                      <select
+                        value={dropReason}
+                        onChange={(e) => setDropReason(e.target.value)}
+                        className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-red-500 focus:ring-2 focus:ring-red-500 focus:ring-opacity-20 outline-none transition-all text-sm font-semibold bg-white hover:border-gray-300 shadow-sm"
+                      >
+                        <option value="">Select a specific reason</option>
+                        {dropReasons.map(reason => (
+                          <option key={reason} value={reason}>{reason}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="flex items-center gap-2 text-[15px] font-semibold text-gray-700 mb-2 capitalize">
+                        <FileText size={14} className="text-red-500" />
+                        Detailed Remarks <span className="text-red-500 font-black">*</span>
+                      </label>
+                      <textarea
+                        value={dropRemarks}
+                        onChange={(e) => setDropRemarks(e.target.value)}
+                        placeholder="Explain why this lead isn't a good fit..."
+                        className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-red-500 focus:ring-2 focus:ring-red-500 focus:ring-opacity-20 outline-none transition-all text-sm font-medium h-32 resize-none bg-white placeholder-gray-400 shadow-sm hover:border-gray-300"
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <div className="py-6 animate-fadeIn">
+                    <div className="flex flex-col items-center text-center space-y-6">
+                      <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center text-red-600 shadow-inner border-2 border-red-100">
+                        <Zap size={40} className="fill-red-600" />
+                      </div>
+                      <div className="space-y-3 px-4">
+                        <h3 className="text-xl font-black text-gray-800 uppercase tracking-tighter">Final Commitment</h3>
+                        <p className="text-sm text-gray-600 font-medium leading-relaxed">
+                          Are you sure you want to drop this lead? Once dropped, it will be <span className="text-red-600 font-bold border-b border-red-200">automatically assigned to the Leads Investigation Officer</span> for further review.
+                        </p>
+                      </div>
                     </div>
                   </div>
+                )}
 
-                  <div className="space-y-2">
-                    <label className="flex items-center gap-2 text-[15px] font-semibold text-gray-700 mb-2 capitalize">
-                      <ChevronDown size={14} className="text-red-500" />
-                      Reason for Disqualification <span className="text-red-500 font-black">*</span>
-                    </label>
-                    <select
-                      value={dropReason}
-                      onChange={(e) => setDropReason(e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-red-500 focus:ring-2 focus:ring-red-500 focus:ring-opacity-20 outline-none transition-all text-sm font-semibold bg-white hover:border-gray-300 shadow-sm"
-                    >
-                      <option value="">Select a specific reason</option>
-                      {dropReasons.map(reason => (
-                        <option key={reason} value={reason}>{reason}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="flex items-center gap-2 text-[15px] font-semibold text-gray-700 mb-2 capitalize">
-                      <FileText size={14} className="text-red-500" />
-                      Detailed Remarks <span className="text-red-500 font-black">*</span>
-                    </label>
-                    <textarea
-                      value={dropRemarks}
-                      onChange={(e) => setDropRemarks(e.target.value)}
-                      placeholder="Explain why this lead isn't a good fit..."
-                      className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-red-500 focus:ring-2 focus:ring-red-500 focus:ring-opacity-20 outline-none transition-all text-sm font-medium h-32 resize-none bg-white placeholder-gray-400 shadow-sm hover:border-gray-300"
-                    />
-                  </div>
-                </>
-              ) : (
-                <div className="py-6 animate-fadeIn">
-                  <div className="flex flex-col items-center text-center space-y-6">
-                    <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center text-red-600 shadow-inner border-2 border-red-100">
-                      <Zap size={40} className="fill-red-600" />
-                    </div>
-                    <div className="space-y-3 px-4">
-                      <h3 className="text-xl font-black text-gray-800 uppercase tracking-tighter">Final Commitment</h3>
-                      <p className="text-sm text-gray-600 font-medium leading-relaxed">
-                        Are you sure you want to drop this lead? Once dropped, it will be <span className="text-red-600 font-bold border-b border-red-200">automatically assigned to the Leads Investigation Officer</span> for further review.
-                      </p>
-                    </div>
-                  </div>
+                <div className="flex gap-4 pt-4 border-t border-gray-100">
+                  <button
+                    onClick={() => showConfirmDrop ? setShowConfirmDrop(false) : setShowDropModal(false)}
+                    className="flex-1 px-6 py-3 border-2 border-gray-200 text-gray-700 font-bold rounded-sm hover:bg-gray-100 transition-all text-xs uppercase tracking-widest active:scale-95 bg-white shadow-sm"
+                  >
+                    {showConfirmDrop ? "Back To Edit" : "Cancel"}
+                  </button>
+                  <button
+                    onClick={handleDropLead}
+                    disabled={!dropReason || !dropRemarks.trim()}
+                    className={`flex-1 px-6 py-3 font-bold rounded-sm transition-all text-xs uppercase tracking-widest active:scale-95 shadow-lg flex items-center justify-center gap-2 ${!dropReason || !dropRemarks.trim()
+                      ? "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none"
+                      : "bg-gradient-to-r from-red-600 to-red-700 text-white hover:from-red-700 hover:to-red-800"
+                      }`}
+                  >
+                    {showConfirmDrop ? "Yes, Drop Lead Now" : "Continue Drop"}
+                  </button>
                 </div>
-              )}
-
-              <div className="flex gap-4 pt-4 border-t border-gray-100">
-                <button
-                  onClick={() => showConfirmDrop ? setShowConfirmDrop(false) : setShowDropModal(false)}
-                  className="flex-1 px-6 py-3 border-2 border-gray-200 text-gray-700 font-bold rounded-sm hover:bg-gray-100 transition-all text-xs uppercase tracking-widest active:scale-95 bg-white shadow-sm"
-                >
-                  {showConfirmDrop ? "Back To Edit" : "Cancel"}
-                </button>
-                <button
-                  onClick={handleDropLead}
-                  disabled={!dropReason || !dropRemarks.trim()}
-                  className={`flex-1 px-6 py-3 font-bold rounded-sm transition-all text-xs uppercase tracking-widest active:scale-95 shadow-lg flex items-center justify-center gap-2 ${!dropReason || !dropRemarks.trim()
-                    ? "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none"
-                    : "bg-gradient-to-r from-red-600 to-red-700 text-white hover:from-red-700 hover:to-red-800"
-                    }`}
-                >
-                  {showConfirmDrop ? "Yes, Drop Lead Now" : "Continue Drop"}
-                </button>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
       {/* Floating Action Buttons */}
       <div className="fixed bottom-10 right-10 flex flex-row gap-4 z-50">
         <a

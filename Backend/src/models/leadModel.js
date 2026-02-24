@@ -23,22 +23,23 @@ const Lead = {
 
         // If pipeline_id or stage_id is missing, handle default
         if (!pipeline_id || !stage_id) {
-            let [pipes] = await pool.query('SELECT id FROM pipelines WHERE user_id = ? ORDER BY id ASC LIMIT 1', [userId]);
+            let [pipes] = await pool.query('SELECT id FROM pipelines WHERE user_id = ? AND name = ? LIMIT 1', [userId, 'Default Pipeline']);
             let targetPipelineId = pipeline_id || (pipes.length > 0 ? pipes[0].id : null);
 
             if (!targetPipelineId) {
-                // Create Default Pipeline
+                // Create Default Pipeline with new requested stages
                 const [result] = await pool.query(
                     'INSERT INTO pipelines (name, status, description, user_id) VALUES (?, ?, ?, ?)',
-                    ['Default Pipeline', 'Active', 'Automatically created default pipeline', userId]
+                    ['Default Pipeline', 'Active', 'Automatically assigned pipeline for unqualified leads', userId]
                 );
                 targetPipelineId = result.insertId;
 
                 const stages = [
-                    ['New', 'Initial stage', 10, 0, 0],
-                    ['Contacted', 'Lead contacted', 30, 0, 1],
-                    ['Interested', 'Lead interested', 60, 0, 2],
-                    ['Won', 'Lead won', 100, 1, 3]
+                    ['Lead Created (Unqualified)', 'Initial entry point for all leads', 20, 0, 0],
+                    ['Minimum Info Pending', 'Waiting for Name and Contact Number', 40, 0, 1],
+                    ['Contact Attempted', 'At least one contact attempt logged', 60, 0, 2],
+                    ['Identify Interest', 'Identify services or requirement', 80, 0, 3],
+                    ['Select Pipeline', 'Move to specialized sales pipeline', 100, 1, 4]
                 ];
 
                 const stageValues = stages.map(s => [targetPipelineId, ...s]);
@@ -52,10 +53,25 @@ const Lead = {
 
             if (!stage_id) {
                 const [stgs] = await pool.query(
-                    'SELECT id FROM pipeline_stages WHERE pipeline_id = ? ORDER BY stage_order ASC LIMIT 1',
+                    'SELECT id, name FROM pipeline_stages WHERE pipeline_id = ? ORDER BY stage_order ASC',
                     [pipeline_id]
                 );
-                stage_id = stgs.length > 0 ? stgs[0].id : null;
+
+                // Automatic Stage Selection Logic for new leads in Default Pipeline
+                const [pipeInfo] = await pool.query('SELECT name FROM pipelines WHERE id = ?', [pipeline_id]);
+                if (pipeInfo.length > 0 && pipeInfo[0].name === 'Default Pipeline' && stgs.length >= 2) {
+                    const hasBasicInfo = name && mobile_number;
+                    // If name and number are present, skip "Minimum Info Pending" (Stage 2) and go to "Contact Attempted" (Stage 3)?
+                    // Or just stay at Stage 1? The requirement says Stage 2 auto-completes.
+                    // Let's land on Stage 3 if info is there, otherwise Stage 2.
+                    if (hasBasicInfo) {
+                        stage_id = stgs[2].id; // Contact Attempted (waiting for the actually attempt, but Step 2 is done)
+                    } else {
+                        stage_id = stgs[1].id; // Minimum Info Pending
+                    }
+                } else {
+                    stage_id = stgs.length > 0 ? stgs[0].id : null;
+                }
             }
         }
 
@@ -412,6 +428,48 @@ const Lead = {
             `UPDATE leads SET ${updates.join(', ')} WHERE id = ? AND user_id = ?`,
             values
         );
+
+        // --- Post-update Automatic Stage Transition Logic for Default Pipeline ---
+        // We fetch the latest state to decide if we need to bump the stage
+        const [updatedLead] = await pool.query(`
+            SELECT l.id, l.name, l.mobile_number, l.interested_in, l.pipeline_id, l.stage_id, p.name as pipeline_name 
+            FROM leads l 
+            LEFT JOIN pipelines p ON l.pipeline_id = p.id 
+            WHERE l.id = ?
+        `, [id]);
+
+        if (updatedLead.length > 0 && updatedLead[0].pipeline_name === 'Default Pipeline') {
+            const lead = updatedLead[0];
+            const hasBasicInfo = lead.name && lead.mobile_number;
+            const hasServices = lead.interested_in && lead.interested_in.trim().length > 0;
+
+            const [stgs] = await pool.query(
+                'SELECT id, stage_order FROM pipeline_stages WHERE pipeline_id = ? ORDER BY stage_order ASC',
+                [lead.pipeline_id]
+            );
+
+            if (stgs.length >= 4) {
+                let newStageId = lead.stage_id;
+
+                // If we have services, we should be at least in "Identify Interest" (Stage 4)
+                if (hasServices) {
+                    newStageId = stgs[3].id;
+                }
+                // Else if we have basic info, we should be at least in "Contact Attempted" (Stage 3)
+                // (Wait, Stage 3 technically requires a call, but Stage 2 "auto-completes" if info is there)
+                else if (hasBasicInfo) {
+                    // If current stage is Stage 1 or 2, move to Stage 3
+                    const currentStage = stgs.find(s => s.id === lead.stage_id);
+                    if (!currentStage || currentStage.stage_order < 2) {
+                        newStageId = stgs[2].id;
+                    }
+                }
+
+                if (newStageId && newStageId !== lead.stage_id) {
+                    await pool.query('UPDATE leads SET stage_id = ? WHERE id = ?', [newStageId, id]);
+                }
+            }
+        }
     },
 
     hitCall: async (id, status, nextCallAt, dropReason, userId, createReminder = false, notConnectedReason = null, remarks = null, priority = null, duration = null) => {
@@ -479,6 +537,29 @@ const Lead = {
             'INSERT INTO lead_calls (lead_id, user_id, status, call_date, note, duration, created_at) VALUES (?, ?, ?, UTC_TIMESTAMP(), ?, ?, UTC_TIMESTAMP())',
             [id, userId, displayStatus.substring(0, 50), safeRemarks, duration]
         );
+
+        // --- Automatic Stage Transition for Default Pipeline on Call ---
+        const [pipelineInfo] = await pool.query(`
+            SELECT l.pipeline_id, l.stage_id, p.name as pipeline_name 
+            FROM leads l 
+            LEFT JOIN pipelines p ON l.pipeline_id = p.id 
+            WHERE l.id = ?
+        `, [id]);
+
+        if (pipelineInfo.length > 0 && pipelineInfo[0].pipeline_name === 'Default Pipeline') {
+            const [stgs] = await pool.query(
+                'SELECT id, stage_order FROM pipeline_stages WHERE pipeline_id = ? ORDER BY stage_order ASC',
+                [pipelineInfo[0].pipeline_id]
+            );
+
+            if (stgs.length >= 3) {
+                const currentStage = stgs.find(s => s.id === pipelineInfo[0].stage_id);
+                // If stage is below "Contact Attempted" (stage_order 2), move to stage_order 2
+                if (!currentStage || currentStage.stage_order < 2) {
+                    await pool.query('UPDATE leads SET stage_id = ? WHERE id = ?', [stgs[2].id, id]);
+                }
+            }
+        }
 
         // Create Task Reminder if requested
         if (createReminder && updateData.next_call_at) {

@@ -304,6 +304,17 @@ const getLeadMeetings = async (req, res) => {
 const addLeadMeeting = async (req, res) => {
     try {
         const { title, description, date, time, attendees } = req.body;
+
+        // Check for conflicts
+        const conflicts = await LeadResources.checkMeetingConflict(req.user.id, date, time);
+        if (conflicts.length > 0) {
+            return res.status(409).json({
+                status: false,
+                message: 'Meeting conflict detected. Another meeting is already scheduled at this time.',
+                conflicts
+            });
+        }
+
         const result = await LeadResources.addMeeting({
             lead_id: req.params.id,
             title,
@@ -313,6 +324,15 @@ const addLeadMeeting = async (req, res) => {
             attendees: Array.isArray(attendees) ? attendees : (attendees ? attendees.split(',').map(s => s.trim()) : [])
         }, req.user.id);
         res.status(201).json(result);
+    } catch (error) {
+        res.status(500).json({ status: false, message: error.message });
+    }
+};
+
+const getDueMeetings = async (req, res) => {
+    try {
+        const meetings = await LeadResources.getDueMeetings(req.user.id);
+        res.status(200).json(meetings);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -406,7 +426,19 @@ const updateLeadFile = async (req, res) => {
 const updateLeadMeeting = async (req, res) => {
     try {
         const { title, description, date, time, attendees } = req.body;
-        const result = await LeadResources.updateMeeting(req.params.meetingId, {
+        const meetingId = req.params.meetingId;
+
+        // Check for conflicts
+        const conflicts = await LeadResources.checkMeetingConflict(req.user.id, date, time, meetingId);
+        if (conflicts.length > 0) {
+            return res.status(409).json({
+                status: false,
+                message: 'Meeting conflict detected. Another meeting is already scheduled at this time.',
+                conflicts
+            });
+        }
+
+        const result = await LeadResources.updateMeeting(meetingId, {
             title,
             description,
             date,
@@ -415,7 +447,7 @@ const updateLeadMeeting = async (req, res) => {
         }, req.user.id);
         res.status(200).json(result);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ status: false, message: error.message });
     }
 };
 
@@ -466,6 +498,62 @@ const getDueReminders = async (req, res) => {
     }
 };
 
+const convertLeadToClient = async (req, res) => {
+    try {
+        const leadId = req.params.id;
+        const userId = req.user.id;
+        const { budget, project_type, start_date, end_date, subscription_date, services, quotation_id } = req.body;
+
+        const lead = await Lead.findById(leadId, userId);
+        if (!lead) return res.status(404).json({ message: 'Lead not found' });
+
+        // Handle file paths from upload middleware
+        const agreement_url = req.files && req.files['agreement'] ? req.files['agreement'][0].path : null;
+        let quotation_url = req.files && req.files['quotation'] ? req.files['quotation'][0].path : null;
+
+        // Create client data
+        const clientData = {
+            type: lead.type === 'Individual' ? 'person' : (lead.type || 'person'),
+            first_name: (lead.name || lead.full_name || '').split(' ')[0] || '',
+            last_name: (lead.name || lead.full_name || '').split(' ').slice(1).join(' ') || '',
+            email: lead.email,
+            phone: lead.mobile_number || lead.phone,
+            company_name: lead.organization_name || lead.company || lead.company_name,
+            position: lead.designation,
+            source: lead.lead_source || lead.source,
+            industry: lead.industry_type || lead.industry,
+            website: lead.website,
+            address: lead.address,
+            city: lead.city,
+            state: lead.state,
+            zip_code: lead.pincode,
+            country: lead.country,
+            status: 'active',
+            notes: `Converted from Lead ${lead.lead_id || lead.id}`,
+            // New fields
+            agreement_url,
+            quotation_id: quotation_id || null,
+            quotation_url: quotation_url || null,
+            budget: budget || lead.value || lead.estimated_value || 0,
+            services: services || lead.interested_in || '',
+            project_type,
+            start_date: start_date || null,
+            end_date: end_date || null,
+            subscription_date: subscription_date || null,
+            lead_id: leadId
+        };
+
+        const clientId = await Client.create(clientData, userId);
+
+        // Update Lead status to Won
+        await Lead.update(leadId, { status: 'Closed', tag: 'Won' }, userId);
+
+        res.status(201).json({ status: true, message: 'Lead converted to client successfully', clientId });
+    } catch (error) {
+        res.status(500).json({ status: false, message: error.message });
+    }
+};
+
 const snoozeLead = async (req, res) => {
     try {
         const { minutes } = req.body;
@@ -499,6 +587,7 @@ module.exports = {
     updateLeadCall,
     updateLeadFile,
     updateLeadMeeting,
+    getDueMeetings,
     deleteLeadNote,
     deleteLeadCall,
     deleteLeadFile,
@@ -522,5 +611,6 @@ module.exports = {
         }
     },
     getDueReminders,
-    snoozeLead
+    snoozeLead,
+    convertLeadToClient
 };
