@@ -1027,11 +1027,14 @@ export default function CRMLeadDetail() {
             {/* Tab Content */}
             <LeadTabs
               activeTab={activeTab}
+              isDisabled={isOnlyCallTabEnabled ? (activeTab !== "calls" && activeTab !== "activities") : !isTabsEnabled}
               selectedSort={selectedSort}
               setSelectedSort={setSelectedSort}
               showSortDropdown={showSortDropdown}
               setShowSortDropdown={setShowSortDropdown}
               onAddClick={(type) => {
+                const isTabDisabled = isOnlyCallTabEnabled ? (activeTab !== "calls" && activeTab !== "activities") : !isTabsEnabled;
+                if (isTabDisabled) return;
                 if (type === 'call') {
                   const isNotConnected = (leadData?.tag === "Not Connected" || leadData?.status === "Not Connected");
                   const hasAttempts = (leadData?.call_count || 0) > 0;
@@ -1065,8 +1068,14 @@ export default function CRMLeadDetail() {
                 setEditItem(null);
                 setActiveModal({ type, isOpen: true });
               }}
-              onEditClick={handleEditItem}
-              onDeleteClick={handleDeleteClick}
+              onEditClick={(type, data) => {
+                const isTabDisabled = isOnlyCallTabEnabled ? (activeTab !== "calls" && activeTab !== "activities") : !isTabsEnabled;
+                if (!isTabDisabled) handleEditItem(type, data);
+              }}
+              onDeleteClick={(type, id) => {
+                const isTabDisabled = isOnlyCallTabEnabled ? (activeTab !== "calls" && activeTab !== "activities") : !isTabsEnabled;
+                if (!isTabDisabled) handleDeleteClick(type, id);
+              }}
               onDownloadClick={handleDownload}
               leadId={passedLead?.id}
             />

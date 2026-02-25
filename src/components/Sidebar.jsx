@@ -241,6 +241,12 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           path: "/crm/dashboard",
           permission: "CRM Dashboard"
         },
+        {
+          name: "Lead Dashboard",
+          icon: <LayoutDashboard size={22} />,
+          path: "/crm/leads/dashboard",
+          permission: "Lead Dashboard"
+        },
       ],
     },
     {

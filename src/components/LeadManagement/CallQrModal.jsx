@@ -66,30 +66,32 @@ export default function CallQrModal({ isOpen, onClose, lead, onProceedToLog, onV
                         </div>
 
                         <div className="flex flex-col gap-2.5">
-                            <button
-                                onClick={() => { if (onProceedToLog) onProceedToLog(); }}
-                                className="w-full py-2.5 rounded-sm font-semibold transition shadow-lg hover:shadow-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 flex items-center justify-center gap-2 active:scale-[0.98] capitalize font-primary"
-                            >
-                                <Phone size={17} />
-                                Call With IVR
-                            </button>
-
+                            {/* Primary Action Buttons (Moved Up) */}
                             <div className="grid grid-cols-2 gap-2.5">
                                 <button
                                     onClick={() => { if (onViewProfile) onViewProfile(); onClose(); }}
-                                    className="py-2.5 rounded-sm font-semibold transition shadow-md hover:shadow-lg bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 flex items-center justify-center gap-2 active:scale-[0.98] capitalize font-primary text-sm"
+                                    className="py-2.5 rounded-sm font-bold transition shadow-md hover:shadow-lg bg-white border border-orange-200 text-gray-700 hover:bg-orange-50 flex items-center justify-center gap-2 active:scale-[0.98] capitalize font-primary text-sm group"
                                 >
-                                    <User size={15} className="text-[#FF7B1D]" />
+                                    <User size={15} className="text-[#FF7B1D] group-hover:scale-110 transition-transform" />
                                     View Profile
                                 </button>
                                 <button
                                     onClick={() => { if (onProceedToLog) onProceedToLog(); }}
-                                    className="py-2.5 rounded-sm font-semibold transition shadow-md hover:shadow-lg bg-orange-50 border border-orange-100 text-[#FF7B1D] hover:bg-orange-100 flex items-center justify-center gap-2 active:scale-[0.98] capitalize font-primary text-sm"
+                                    className="py-2.5 rounded-sm font-bold transition shadow-md hover:shadow-lg bg-orange-50 border border-orange-200 text-[#FF7B1D] hover:bg-orange-100/80 flex items-center justify-center gap-2 active:scale-[0.98] capitalize font-primary text-sm group"
                                 >
-                                    <FileText size={15} />
+                                    <FileText size={15} className="group-hover:scale-110 transition-transform" />
                                     Add Call Logs
                                 </button>
                             </div>
+
+                            {/* IVR Button (Moved Down) */}
+                            <button
+                                onClick={() => { if (onProceedToLog) onProceedToLog(); }}
+                                className="w-full py-2.5 rounded-sm font-bold transition shadow-lg hover:shadow-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 flex items-center justify-center gap-2 active:scale-[0.98] capitalize font-primary"
+                            >
+                                <Phone size={17} />
+                                Call With IVR
+                            </button>
                         </div>
 
                         <p className="text-[10px] text-gray-400 font-bold capitalize tracking-tight">
