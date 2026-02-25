@@ -77,6 +77,7 @@ const ExpandableText = ({ text, limit = 150 }) => {
 
 export default function LeadTabs({
   activeTab,
+  setActiveTab,
   selectedSort,
   setSelectedSort,
   showSortDropdown,
@@ -204,6 +205,8 @@ export default function LeadTabs({
       }
 
       acc[date].push({
+        id: act.id,
+        type: act.type,
         icon,
         color,
         title: (`${titlePrefix}: ${act.title || ""}`).toLowerCase(),
@@ -362,7 +365,14 @@ export default function LeadTabs({
 
                   <div className="space-y-5">
                     {upcomingActivities.map((upcoming, uIdx) => (
-                      <div key={uIdx} className="bg-white rounded-lg border border-gray-100 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] hover:border-orange-200 transition-all overflow-hidden font-primary group/card">
+                      <div
+                        key={uIdx}
+                        onClick={() => {
+                          if (upcoming.type === 'meeting') setActiveTab('meeting');
+                          else if (upcoming.type === 'follow_up') setActiveTab('calls');
+                        }}
+                        className="bg-white rounded-lg border border-gray-100 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] hover:border-orange-200 cursor-pointer transition-all overflow-hidden font-primary group/card"
+                      >
                         <div className="p-6 flex gap-5 items-start">
                           <div className={`w-14 h-14 ${upcoming.type === 'meeting' ? 'bg-[#9333EA]' : 'bg-orange-500'} rounded-full flex items-center justify-center flex-shrink-0 shadow-xl transition-transform group-hover/card:scale-105`}>
                             {upcoming.type === 'meeting' ? <Users size={24} className="text-white fill-white/20" /> : <Phone size={24} className="text-white fill-white/20" />}
@@ -371,9 +381,6 @@ export default function LeadTabs({
                             <h4 className="font-extrabold text-[#1E293B] text-[17px] leading-tight mb-1.5">
                               {upcoming.title}
                             </h4>
-                            <p className="text-[14px] text-[#64748B] font-medium leading-relaxed mb-4 max-w-2xl">
-                              {upcoming.description || "No description provided for this scheduled activity."}
-                            </p>
                             <div className="flex items-center gap-2 text-[13px] font-bold text-slate-400">
                               <span className="text-orange-500/80 font-black">Scheduled on</span>
                               <span className="text-slate-600 bg-slate-100/50 px-2 py-0.5 rounded-sm">{upcoming.time}</span>
@@ -408,9 +415,18 @@ export default function LeadTabs({
                       </span>
                     </div>
 
-                    <div className="space-y-6">
+                    <div className="space-y-4">
                       {section.items.map((activity, actIdx) => (
-                        <div key={actIdx} className="bg-white rounded-sm border border-gray-100 p-5 hover:border-orange-200 transition-all hover:shadow-sm group flex gap-4 items-start">
+                        <div
+                          key={actIdx}
+                          onClick={() => {
+                            if (activity.type === 'call') setActiveTab('calls');
+                            else if (activity.type === 'note') setActiveTab('notes');
+                            else if (activity.type === 'file') setActiveTab('files');
+                            else if (activity.type === 'meeting') setActiveTab('meeting');
+                          }}
+                          className="bg-white rounded-sm border border-gray-100 p-5 hover:border-orange-200 cursor-pointer transition-all hover:shadow-sm group flex gap-4 items-start"
+                        >
                           <div className={`w-10 h-10 ${activity.color} rounded-full flex items-center justify-center flex-shrink-0 shadow-sm transition-transform group-hover:scale-105`}>
                             <activity.icon size={18} className="text-white fill-white/20" />
                           </div>
@@ -419,11 +435,6 @@ export default function LeadTabs({
                               {activity.title}
                             </h4>
                             <p className="text-[12px] font-bold text-gray-400 font-primary">{activity.time}</p>
-                            {activity.description && (
-                              <div className="text-[13px] text-gray-500 font-medium font-primary mt-2 leading-relaxed bg-gray-50/50 p-3 rounded-sm border border-gray-50">
-                                <ExpandableText text={activity.description} limit={120} />
-                              </div>
-                            )}
                           </div>
                         </div>
                       ))}

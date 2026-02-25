@@ -1027,6 +1027,7 @@ export default function CRMLeadDetail() {
             {/* Tab Content */}
             <LeadTabs
               activeTab={activeTab}
+              setActiveTab={setActiveTab}
               isDisabled={isOnlyCallTabEnabled ? (activeTab !== "calls" && activeTab !== "activities") : !isTabsEnabled}
               selectedSort={selectedSort}
               setSelectedSort={setSelectedSort}
