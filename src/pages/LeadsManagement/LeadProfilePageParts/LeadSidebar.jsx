@@ -328,13 +328,13 @@ export default function LeadSidebar({
       <div className="p-4 grid grid-cols-2 gap-3 border-b border-gray-100">
         <button
           onClick={() => setShowConvertModal(true)}
-          disabled={leadData?.tag !== 'Follow Up'}
-          className={`py-2.5 rounded-sm text-sm font-semibold flex items-center justify-center gap-2 transition-all ${leadData?.tag === 'Follow Up'
+          disabled={leadData?.tag !== 'Follow Up' && leadData?.tag !== 'Missed'}
+          className={`py-2.5 rounded-sm text-sm font-semibold flex items-center justify-center gap-2 transition-all ${leadData?.tag === 'Follow Up' || leadData?.tag === 'Missed'
             ? "bg-slate-800 hover:bg-slate-900 text-white shadow-sm"
             : "bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200"
             }`}
         >
-          <UserCheck className={`w-4 h-4 ${leadData?.tag === 'Follow Up' ? 'text-orange-500' : 'text-slate-300'}`} /> Convert Client
+          <UserCheck className={`w-4 h-4 ${leadData?.tag === 'Follow Up' || leadData?.tag === 'Missed' ? 'text-orange-500' : 'text-slate-300'}`} /> Convert Client
         </button>
         <button
           onClick={() => handleQrCall && handleQrCall()}

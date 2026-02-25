@@ -227,7 +227,7 @@ export default function CRMLeadDetail() {
       });
     }
   }, [leadFromQuery, passedLead]);
-  const isFollowUp = (leadData?.tag === "Follow Up" || leadData?.status === "In Progress");
+  const isFollowUp = (leadData?.tag === "Follow Up" || leadData?.tag === "Missed" || leadData?.status === "In Progress");
   const isWon = (leadData?.status === "Closed" || leadData?.tag === "Won");
   const isDropped = (leadData?.status === "Dropped" || leadData?.tag === "Lost" || leadData?.tag === "Dropped" || leadData?.status === "Not Qualified");
 
@@ -845,9 +845,34 @@ export default function CRMLeadDetail() {
           <div className="flex-1 flex flex-col">
             {/* Pipeline Status */}
             <div className="px-8 pb-8 pt-2 bg-white border-b shadow-sm">
-              <div className="w-full space-y-8">
+              <div className="flex items-center justify-between gap-4">
+                <h2 className="text-2xl font-bold text-gray-800 capitalize tracking-wide flex items-center gap-2">
+                  <Zap className="w-5 h-5 text-orange-500 fill-orange-500" /> Lead Status
+                </h2>
+
+                <div className="flex items-center gap-3">
+                  {/* Active Stage Badge */}
+                  <div className={`px-4 py-2 rounded-sm text-[12px] font-semibold capitalize tracking-wider shadow-md text-white ${effectiveStages.find(s => s.active)?.color || 'bg-slate-700'} flex items-center justify-center min-w-[130px]`}>
+                    Current Stage : {effectiveStages.find(s => s.active)?.label || "Initial"}
+                  </div>
+
+                  <button
+                    disabled={!canNotQualified}
+                    onClick={() => handleUpdateStatus("Not Qualified")}
+                    className={`px-8 py-2 rounded-sm text-sm font-semibold font-primary capitalize tracking-widest border transition-all active:scale-95 shadow-sm ${leadData?.status === "Not Qualified" || leadData?.tag === "Lost" || leadData?.tag === "Dropped"
+                      ? "bg-red-600 text-white border-red-600 shadow-md"
+                      : canNotQualified
+                        ? "bg-white text-gray-400 border-gray-100 hover:border-red-500 hover:text-red-500 hover:bg-red-50"
+                        : "bg-gray-50 text-gray-200 border-gray-50 cursor-not-allowed"
+                      }`}
+                  >
+                    Drop Lead
+                  </button>
+                </div>
+              </div>
+              <div className="w-full ">
                 {/* 1. Progress Step Status Indicator */}
-                <div className="relative w-full mb-20 mt-0">
+                <div className="relative w-full mt-10 ">
                   {/* Progress Line Background */}
                   <div className="absolute top-1/2 left-0 w-full h-1 bg-gray-100 -translate-y-1/2 rounded-full"></div>
 
@@ -934,34 +959,10 @@ export default function CRMLeadDetail() {
                 </div>
 
                 {/* 2. Heading and Drop Button */}
-                <div className="flex items-center justify-between gap-4">
-                  <h2 className="text-xl font-bold text-gray-800 capitalize tracking-wide flex items-center gap-2">
-                    <Zap className="w-5 h-5 text-orange-500 fill-orange-500" /> Lead Status
-                  </h2>
 
-                  <div className="flex items-center gap-3">
-                    {/* Active Stage Badge */}
-                    <div className={`px-4 py-2 rounded-sm text-[12px] font-semibold capitalize tracking-wider shadow-md text-white ${effectiveStages.find(s => s.active)?.color || 'bg-slate-700'} flex items-center justify-center min-w-[130px]`}>
-                      {effectiveStages.find(s => s.active)?.label || "Initial"}
-                    </div>
-
-                    <button
-                      disabled={!canNotQualified}
-                      onClick={() => handleUpdateStatus("Not Qualified")}
-                      className={`px-8 py-2 rounded-sm text-sm font-semibold font-primary capitalize tracking-widest border transition-all active:scale-95 shadow-sm ${leadData?.status === "Not Qualified" || leadData?.tag === "Lost" || leadData?.tag === "Dropped"
-                        ? "bg-red-600 text-white border-red-600 shadow-md"
-                        : canNotQualified
-                          ? "bg-white text-gray-400 border-gray-100 hover:border-red-500 hover:text-red-500 hover:bg-red-50"
-                          : "bg-gray-50 text-gray-200 border-gray-50 cursor-not-allowed"
-                        }`}
-                    >
-                      Drop Lead
-                    </button>
-                  </div>
-                </div>
 
                 {/* 3. Pipeline Stages Visualization */}
-                <div className="flex items-center w-full h-12 gap-1 mt-4 px-2 py-1 bg-gray-50/50 rounded-xl overflow-visible">
+                <div className="flex items-center w-full h-12 gap-1 mt-16  py-1 bg-gray-50/50 rounded-xl overflow-visible">
                   {effectiveStages.map((stage, idx, arr) => (
                     <div
                       key={stage.label + idx}
