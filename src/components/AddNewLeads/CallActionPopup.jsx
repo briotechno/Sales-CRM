@@ -13,7 +13,7 @@ export default function CallActionPopup({ isOpen, onClose, lead, onHitCall, init
     const [notConnectedReason, setNotConnectedReason] = useState("");
     const [remarks, setRemarks] = useState("");
     const [priority, setPriority] = useState("Medium");
-    const [durationMin, setDurationMin] = useState(0);
+    const [durationMin, setDurationMin] = useState("");
     const [loading, setLoading] = useState(false);
     const [selectedDate, setSelectedDate] = useState("");
     const [selectedTime, setSelectedTime] = useState("");
@@ -322,7 +322,10 @@ export default function CallActionPopup({ isOpen, onClose, lead, onHitCall, init
                                         <input
                                             type="number"
                                             value={durationMin}
-                                            onChange={(e) => setDurationMin(parseInt(e.target.value) || 0)}
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                setDurationMin(val === "" ? "" : parseInt(val) || 0);
+                                            }}
                                             min="0"
                                             className="w-full bg-transparent outline-none text-sm font-semibold text-gray-800 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                             placeholder="0"
