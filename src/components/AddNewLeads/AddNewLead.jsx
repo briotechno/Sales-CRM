@@ -304,15 +304,33 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
     const { name, value, type, checked } = e.target;
 
     if (type === "checkbox") {
-      if (name === "mobile_same_as_whatsapp" && checked) {
-        setFormData(prev => ({ ...prev, [name]: checked, whatsapp_number: prev.mobile_number }));
-      } else if (name === "alt_mobile_same_as_whatsapp" && checked) {
-        setFormData(prev => ({ ...prev, [name]: checked, whatsapp_number: prev.alt_mobile_number }));
+      if (name === "mobile_same_as_whatsapp") {
+        setFormData((prev) => ({
+          ...prev,
+          mobile_same_as_whatsapp: checked,
+          alt_mobile_same_as_whatsapp: checked ? false : prev.alt_mobile_same_as_whatsapp,
+          whatsapp_number: checked ? prev.mobile_number : "",
+        }));
+      } else if (name === "alt_mobile_same_as_whatsapp") {
+        setFormData((prev) => ({
+          ...prev,
+          alt_mobile_same_as_whatsapp: checked,
+          mobile_same_as_whatsapp: checked ? false : prev.mobile_same_as_whatsapp,
+          whatsapp_number: checked ? prev.alt_mobile_number : "",
+        }));
       } else {
-        setFormData(prev => ({ ...prev, [name]: checked }));
+        setFormData((prev) => ({ ...prev, [name]: checked }));
       }
     } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
+      setFormData((prev) => {
+        const updated = { ...prev, [name]: value };
+        if (name === "mobile_number" && prev.mobile_same_as_whatsapp) {
+          updated.whatsapp_number = value;
+        } else if (name === "alt_mobile_number" && prev.alt_mobile_same_as_whatsapp) {
+          updated.whatsapp_number = value;
+        }
+        return updated;
+      });
 
       if (name === "pincode" && value.length === 6) {
         handlePincodeLookup(value, false);
@@ -400,13 +418,25 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
     const updated = [...contactPersons];
     updated[index][field] = value;
 
-    // Handle "same as WhatsApp" checkboxes
-    if (field === "mobile_same_as_whatsapp" && value) {
-      updated[index].whatsapp_number = updated[index].mobile_number;
-      updated[index].alt_mobile_same_as_whatsapp = false;
-    } else if (field === "alt_mobile_same_as_whatsapp" && value) {
-      updated[index].whatsapp_number = updated[index].alt_mobile_number;
-      updated[index].mobile_same_as_whatsapp = false;
+    // Handle "same as WhatsApp" checkboxes and sync logic
+    if (field === "mobile_same_as_whatsapp") {
+      if (value) {
+        updated[index].whatsapp_number = updated[index].mobile_number;
+        updated[index].alt_mobile_same_as_whatsapp = false;
+      } else {
+        updated[index].whatsapp_number = "";
+      }
+    } else if (field === "alt_mobile_same_as_whatsapp") {
+      if (value) {
+        updated[index].whatsapp_number = updated[index].alt_mobile_number;
+        updated[index].mobile_same_as_whatsapp = false;
+      } else {
+        updated[index].whatsapp_number = "";
+      }
+    } else if (field === "mobile_number" && updated[index].mobile_same_as_whatsapp) {
+      updated[index].whatsapp_number = value;
+    } else if (field === "alt_mobile_number" && updated[index].alt_mobile_same_as_whatsapp) {
+      updated[index].whatsapp_number = value;
     }
 
     setContactPersons(updated);

@@ -39,7 +39,6 @@ export default function CallActionPopup({ isOpen, onClose, lead, onHitCall, init
         { label: "+30 Mins", value: 30, unit: "minute" },
         { label: "+1 Hour", value: 1, unit: "hour" },
         { label: "+2 Hours", value: 2, unit: "hour" },
-        { label: "+3 Hours", value: 3, unit: "hour" },
     ];
 
     const getIsoNextCall = () => {
@@ -195,7 +194,7 @@ export default function CallActionPopup({ isOpen, onClose, lead, onHitCall, init
     );
 
     /* ── Shortcut pill style ── */
-    const pillCls = "px-2.5 py-1 bg-orange-50/50 text-orange-600 text-[11px] font-bold rounded-sm border border-orange-100 hover:bg-orange-500 hover:text-white hover:border-orange-500 transition-all shadow-sm active:scale-95 whitespace-nowrap";
+    const pillCls = "px-2.5 py-1.5 bg-white text-gray-700 text-[10px] font-bold rounded-sm border border-gray-200 hover:border-[#FF7B1D] hover:text-[#FF7B1D] hover:bg-orange-50 transition-all shadow-sm active:scale-95 whitespace-nowrap flex-1 text-center";
 
     return (
         <Modal
@@ -206,7 +205,7 @@ export default function CallActionPopup({ isOpen, onClose, lead, onHitCall, init
             footer={footer}
             maxWidth="max-w-2xl"
         >
-            <div className="font-primary space-y-3">
+            <div className="font-primary space-y-2">
 
                 {/* ── Session Header ── */}
                 <div className="px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-sm">
@@ -259,7 +258,7 @@ export default function CallActionPopup({ isOpen, onClose, lead, onHitCall, init
 
                 {/* ── Step 2: Response form ── */}
                 {step === 2 && (
-                    <div className="space-y-3">
+                    <div className="space-y-2">
 
                         {/* Why not connected? */}
                         {response === "not_connected" && (
@@ -271,7 +270,7 @@ export default function CallActionPopup({ isOpen, onClose, lead, onHitCall, init
                                 <select
                                     value={notConnectedReason}
                                     onChange={(e) => setNotConnectedReason(e.target.value)}
-                                    className="w-full px-3 py-2.5 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-10 outline-none transition-all text-sm font-semibold bg-white shadow-sm"
+                                    className="w-full px-3 py-2.5 border border-orange-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-10 outline-none transition-all text-sm font-semibold bg-white shadow-sm"
                                 >
                                     <option value="">Select Call Status</option>
                                     {notConnectedStatuses.map(s => <option key={s} value={s}>{s}</option>)}
@@ -290,8 +289,8 @@ export default function CallActionPopup({ isOpen, onClose, lead, onHitCall, init
                                     value={remarks}
                                     onChange={(e) => setRemarks(e.target.value)}
                                     placeholder="Enter detailed call summary here..."
-                                    className="w-full px-3 py-2.5 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-10 outline-none transition-all text-sm font-medium bg-white placeholder-gray-400 shadow-sm hover:border-gray-300 resize-none"
-                                    rows="3"
+                                    className="w-full px-3 py-2.5 border border-orange-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-10 outline-none transition-all text-sm font-medium bg-white placeholder-gray-400 shadow-sm hover:border-orange-300 resize-none"
+                                    rows="2"
                                 />
                             </div>
                         )}
@@ -307,7 +306,7 @@ export default function CallActionPopup({ isOpen, onClose, lead, onHitCall, init
                                     <select
                                         value={priority}
                                         onChange={(e) => setPriority(e.target.value)}
-                                        className="w-full px-3 py-2.5 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-10 outline-none transition-all text-sm font-semibold bg-white shadow-sm"
+                                        className="w-full px-3 py-2.5 border border-orange-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-10 outline-none transition-all text-sm font-semibold bg-white shadow-sm"
                                     >
                                         <option value="High">High</option>
                                         <option value="Medium">Medium</option>
@@ -319,7 +318,7 @@ export default function CallActionPopup({ isOpen, onClose, lead, onHitCall, init
                                         <Clock size={14} className="text-[#FF7B1D]" />
                                         Call Duration (Min)
                                     </label>
-                                    <div className="flex items-center gap-2 px-3 py-2.5 border border-gray-200 rounded-sm bg-white focus-within:border-[#FF7B1D] focus-within:ring-2 focus-within:ring-[#FF7B1D] focus-within:ring-opacity-10 transition-all shadow-sm">
+                                    <div className="flex items-center gap-2 px-3 py-2.5 border border-orange-200 rounded-sm bg-white focus-within:border-[#FF7B1D] focus-within:ring-2 focus-within:ring-[#FF7B1D] focus-within:ring-opacity-10 transition-all shadow-sm">
                                         <input
                                             type="number"
                                             value={durationMin}
@@ -345,7 +344,7 @@ export default function CallActionPopup({ isOpen, onClose, lead, onHitCall, init
                                     value={remarks}
                                     onChange={(e) => setRemarks(e.target.value)}
                                     placeholder="Add any quick remarks here..."
-                                    className="w-full px-3 py-2.5 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-10 outline-none transition-all text-sm font-medium bg-white placeholder-gray-400 shadow-sm hover:border-gray-300 resize-none"
+                                    className="w-full px-3 py-2.5 border border-orange-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-10 outline-none transition-all text-sm font-medium bg-white placeholder-gray-400 shadow-sm hover:border-orange-300 resize-none"
                                     rows="2"
                                 />
                             </div>
@@ -353,7 +352,7 @@ export default function CallActionPopup({ isOpen, onClose, lead, onHitCall, init
 
                         {/* ── Follow-up Date & Time ── */}
                         {finalAction === "follow_up" && (
-                            <div className="space-y-2.5 border-t border-gray-100 pt-3">
+                            <div className="space-y-2 border-t border-gray-100 pt-2">
 
                                 <label className="flex items-center gap-1.5 text-[13px] font-bold text-gray-700 capitalize">
                                     <Calendar size={14} className="text-[#FF7B1D]" />
@@ -373,7 +372,7 @@ export default function CallActionPopup({ isOpen, onClose, lead, onHitCall, init
                                             value={selectedDate}
                                             min={formatDateTime(new Date()).split('T')[0]}
                                             onChange={(e) => handleDateChange(e.target.value)}
-                                            className="w-full px-3 py-2.5 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-10 outline-none transition-all text-sm font-semibold bg-white shadow-sm hover:border-gray-300"
+                                            className="w-full px-3 py-2.5 border border-orange-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-10 outline-none transition-all text-sm font-semibold bg-white shadow-sm hover:border-orange-300"
                                         />
                                         {/* Date shortcuts */}
                                         <div className="flex flex-wrap gap-1.5">
@@ -394,7 +393,7 @@ export default function CallActionPopup({ isOpen, onClose, lead, onHitCall, init
                                             type="time"
                                             value={selectedTime}
                                             onChange={(e) => handleTimeChange(e.target.value)}
-                                            className="w-full px-3 py-2.5 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-10 outline-none transition-all text-sm font-semibold bg-white shadow-sm hover:border-gray-300"
+                                            className="w-full px-3 py-2.5 border border-orange-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-10 outline-none transition-all text-sm font-semibold bg-white shadow-sm hover:border-orange-300"
                                         />
                                         {/* Time shortcuts */}
                                         <div className="flex flex-wrap gap-1.5">

@@ -77,6 +77,7 @@ const ExpandableText = ({ text, limit = 150 }) => {
 
 export default function LeadTabs({
   activeTab,
+  setActiveTab,
   selectedSort,
   setSelectedSort,
   showSortDropdown,
@@ -86,6 +87,7 @@ export default function LeadTabs({
   onDeleteClick = () => { },
   onDownloadClick = () => { },
   leadId,
+  isDisabled = false,
 }) {
   const sortOptions = [
     "Last 7 Days",
@@ -203,6 +205,8 @@ export default function LeadTabs({
       }
 
       acc[date].push({
+        id: act.id,
+        type: act.type,
         icon,
         color,
         title: (`${titlePrefix}: ${act.title || ""}`).toLowerCase(),
@@ -303,8 +307,9 @@ export default function LeadTabs({
           {showSort && (
             <div className="relative">
               <button
-                onClick={() => setShowSortDropdown(!showSortDropdown)}
-                className="flex items-center gap-2 bg-white border border-gray-200 px-4 py-1.5 rounded-sm text-[12px] font-bold text-gray-600 hover:bg-gray-50 transition-all font-primary shadow-sm"
+                disabled={isDisabled}
+                onClick={() => !isDisabled && setShowSortDropdown(!showSortDropdown)}
+                className={`flex items-center gap-2 bg-white border border-gray-200 px-4 py-1.5 rounded-sm text-[12px] font-bold text-gray-600 transition-all font-primary shadow-sm ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'}`}
               >
                 Sort By : {selectedSort}
                 <ChevronDown size={14} className="text-gray-400" />
@@ -329,10 +334,11 @@ export default function LeadTabs({
           )}
           {showAdd && (
             <button
-              onClick={() => onAddClick(addType)}
-              className="flex items-center gap-1.5 text-orange-600 hover:text-orange-700 transition-all font-bold text-[13px] font-primary active:scale-95"
+              disabled={isDisabled}
+              onClick={() => !isDisabled && onAddClick(addType)}
+              className={`flex items-center gap-1.5 transition-all font-bold text-[13px] font-primary ${isDisabled ? 'text-gray-300 cursor-not-allowed' : 'text-orange-600 hover:text-orange-700 active:scale-95'}`}
             >
-              <div className="w-5 h-5 rounded-full border-2 border-orange-500 flex items-center justify-center">
+              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${isDisabled ? 'border-gray-200' : 'border-orange-500'}`}>
                 <Plus size={12} className="stroke-[3px]" />
               </div>
               {addLabel}
@@ -359,7 +365,14 @@ export default function LeadTabs({
 
                   <div className="space-y-5">
                     {upcomingActivities.map((upcoming, uIdx) => (
-                      <div key={uIdx} className="bg-white rounded-lg border border-gray-100 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] hover:border-orange-200 transition-all overflow-hidden font-primary group/card">
+                      <div
+                        key={uIdx}
+                        onClick={() => {
+                          if (upcoming.type === 'meeting') setActiveTab('meeting');
+                          else if (upcoming.type === 'follow_up') setActiveTab('calls');
+                        }}
+                        className="bg-white rounded-lg border border-gray-100 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] hover:border-orange-200 cursor-pointer transition-all overflow-hidden font-primary group/card"
+                      >
                         <div className="p-6 flex gap-5 items-start">
                           <div className={`w-14 h-14 ${upcoming.type === 'meeting' ? 'bg-[#9333EA]' : 'bg-orange-500'} rounded-full flex items-center justify-center flex-shrink-0 shadow-xl transition-transform group-hover/card:scale-105`}>
                             {upcoming.type === 'meeting' ? <Users size={24} className="text-white fill-white/20" /> : <Phone size={24} className="text-white fill-white/20" />}
@@ -368,9 +381,6 @@ export default function LeadTabs({
                             <h4 className="font-extrabold text-[#1E293B] text-[17px] leading-tight mb-1.5">
                               {upcoming.title}
                             </h4>
-                            <p className="text-[14px] text-[#64748B] font-medium leading-relaxed mb-4 max-w-2xl">
-                              {upcoming.description || "No description provided for this scheduled activity."}
-                            </p>
                             <div className="flex items-center gap-2 text-[13px] font-bold text-slate-400">
                               <span className="text-orange-500/80 font-black">Scheduled on</span>
                               <span className="text-slate-600 bg-slate-100/50 px-2 py-0.5 rounded-sm">{upcoming.time}</span>
@@ -405,9 +415,18 @@ export default function LeadTabs({
                       </span>
                     </div>
 
-                    <div className="space-y-6">
+                    <div className="space-y-4">
                       {section.items.map((activity, actIdx) => (
-                        <div key={actIdx} className="bg-white rounded-sm border border-gray-100 p-5 hover:border-orange-200 transition-all hover:shadow-sm group flex gap-4 items-start">
+                        <div
+                          key={actIdx}
+                          onClick={() => {
+                            if (activity.type === 'call') setActiveTab('calls');
+                            else if (activity.type === 'note') setActiveTab('notes');
+                            else if (activity.type === 'file') setActiveTab('files');
+                            else if (activity.type === 'meeting') setActiveTab('meeting');
+                          }}
+                          className="bg-white rounded-sm border border-gray-100 p-5 hover:border-orange-200 cursor-pointer transition-all hover:shadow-sm group flex gap-4 items-start"
+                        >
                           <div className={`w-10 h-10 ${activity.color} rounded-full flex items-center justify-center flex-shrink-0 shadow-sm transition-transform group-hover:scale-105`}>
                             <activity.icon size={18} className="text-white fill-white/20" />
                           </div>
@@ -416,11 +435,6 @@ export default function LeadTabs({
                               {activity.title}
                             </h4>
                             <p className="text-[12px] font-bold text-gray-400 font-primary">{activity.time}</p>
-                            {activity.description && (
-                              <div className="text-[13px] text-gray-500 font-medium font-primary mt-2 leading-relaxed bg-gray-50/50 p-3 rounded-sm border border-gray-50">
-                                <ExpandableText text={activity.description} limit={120} />
-                              </div>
-                            )}
                           </div>
                         </div>
                       ))}
@@ -578,8 +592,9 @@ export default function LeadTabs({
                   <p className="text-[13px] text-gray-400 font-medium font-primary">Send customizable quotes, proposals and contracts to close deals faster.</p>
                 </div>
                 <button
-                  onClick={() => onAddClick('file')}
-                  className="bg-orange-500 text-white px-6 py-2.5 rounded-sm hover:bg-orange-600 transition-all font-bold text-[13px] font-primary shadow-lg shadow-orange-500/20 active:scale-95"
+                  disabled={isDisabled}
+                  onClick={() => !isDisabled && onAddClick('file')}
+                  className={`px-6 py-2.5 rounded-sm transition-all font-bold text-[13px] font-primary shadow-lg active:scale-95 ${isDisabled ? 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none' : 'bg-orange-500 text-white hover:bg-orange-600 shadow-orange-500/20'}`}
                 >
                   Create Document
                 </button>
@@ -737,7 +752,10 @@ export default function LeadTabs({
                   <h3 className="text-[18px] font-bold text-gray-800 font-primary mb-2">Manage Emails</h3>
                   <p className="text-[14px] text-gray-400 font-medium font-primary">You can send and reply to emails directly via this section.</p>
                 </div>
-                <button className="bg-orange-500 text-white px-8 py-3 rounded-sm hover:bg-orange-600 transition-all font-bold text-[14px] font-primary shadow-lg shadow-orange-500/20 active:scale-95">
+                <button
+                  disabled={isDisabled}
+                  className={`px-8 py-3 rounded-sm transition-all font-bold text-[14px] font-primary shadow-lg active:scale-95 ${isDisabled ? 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none' : 'bg-orange-500 text-white hover:bg-orange-600 shadow-orange-500/20'}`}
+                >
                   Connect Account
                 </button>
               </div>
@@ -756,7 +774,10 @@ export default function LeadTabs({
                 </div>
                 <h3 className="text-[20px] font-bold text-gray-800 font-primary mb-3">WhatsApp Integration</h3>
                 <p className="text-[15px] text-gray-400 font-medium font-primary max-w-md mx-auto mb-8">Connect your WhatsApp Business account to send messages, templates, and track conversations directly within the lead profile.</p>
-                <button className="bg-[#25D366] text-white px-10 py-3.5 rounded-sm hover:bg-[#128C7E] transition-all font-bold text-[14px] font-primary shadow-lg shadow-[#25D366]/20 active:scale-95 flex items-center gap-2">
+                <button
+                  disabled={isDisabled}
+                  className={`px-10 py-3.5 rounded-sm transition-all font-bold text-[14px] font-primary shadow-lg active:scale-95 flex items-center gap-2 ${isDisabled ? 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none' : 'bg-[#25D366] text-white hover:bg-[#128C7E] shadow-[#25D366]/20'}`}
+                >
                   Connect WhatsApp
                 </button>
               </div>
@@ -774,7 +795,11 @@ export default function LeadTabs({
     }
   };
 
-  return renderTabContent();
+  return (
+    <div className={isDisabled ? "opacity-60 pointer-events-none select-none transition-opacity duration-300" : "transition-opacity duration-300"}>
+      {renderTabContent()}
+    </div>
+  );
 }
 
 const UserAvatar = ({ name, profilePicture, size = "w-10 h-10 border" }) => {
