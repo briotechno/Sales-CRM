@@ -203,7 +203,7 @@ export default function CRMDashboard() {
       </div>
 
       {/* Dashboard Content */}
-      <div className="max-w-9xl mx-auto px-6 py-6 flex flex-col xl:flex-row gap-3">
+      <div className="max-w-9xl mx-auto px-4 mt-2 flex flex-col xl:flex-row gap-3">
 
         {/* Main Content Area */}
         <div className="flex-1 space-y-4">
