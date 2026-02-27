@@ -71,42 +71,77 @@ const LeadResources = {
 
     // Activities (Combined)
     getActivities: async (leadId, userId) => {
-        // Union of notes, calls, files, and meetings to show timeline with user details
+        // Union of notes, calls, files, meetings AND generic activities
         const [notes] = await pool.query(
             `SELECT ln.id, "note" as type, ln.title, ln.description, ln.created_at, ln.user_id, 
              CONCAT(u.firstName, ' ', u.lastName) as user_name, u.profile_picture
              FROM lead_notes ln 
              LEFT JOIN users u ON ln.user_id = u.id 
-             WHERE ln.lead_id = ? AND ln.user_id = ?`,
-            [leadId, userId]
+             WHERE ln.lead_id = ?`,
+            [leadId]
         );
         const [calls] = await pool.query(
             `SELECT lc.id, "call" as type, lc.status as title, lc.note as description, lc.created_at, lc.user_id, 
              CONCAT(u.firstName, ' ', u.lastName) as user_name, u.profile_picture, lc.duration
              FROM lead_calls lc 
              LEFT JOIN users u ON lc.user_id = u.id 
-             WHERE lc.lead_id = ? AND lc.user_id = ?`,
-            [leadId, userId]
+             WHERE lc.lead_id = ?`,
+            [leadId]
         );
         const [files] = await pool.query(
             `SELECT lf.id, "file" as type, lf.name as title, lf.description, lf.created_at, lf.user_id, 
              CONCAT(u.firstName, ' ', u.lastName) as user_name, u.profile_picture
              FROM lead_files lf 
              LEFT JOIN users u ON lf.user_id = u.id 
-             WHERE lf.lead_id = ? AND lf.user_id = ?`,
-            [leadId, userId]
+             WHERE lf.lead_id = ?`,
+            [leadId]
         );
         const [meetings] = await pool.query(
             `SELECT lm.id, "meeting" as type, lm.title, lm.description, lm.created_at, lm.user_id, 
              CONCAT(u.firstName, ' ', u.lastName) as user_name, u.profile_picture
              FROM lead_meetings lm 
              LEFT JOIN users u ON lm.user_id = u.id 
-             WHERE lm.lead_id = ? AND lm.user_id = ?`,
-            [leadId, userId]
+             WHERE lm.lead_id = ?`,
+            [leadId]
         );
 
-        const activities = [...notes, ...calls, ...files, ...meetings].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        // New generic activities table
+        const [generic] = await pool.query(
+            `SELECT la.id, la.activity_type as type, la.title, la.description, la.created_at, la.user_id, 
+             CONCAT(u.firstName, ' ', u.lastName) as user_name, u.profile_picture
+             FROM lead_activities la 
+             LEFT JOIN users u ON la.user_id = u.id 
+             WHERE la.lead_id = ?`,
+            [leadId]
+        );
+
+        const activities = [...notes, ...calls, ...files, ...meetings, ...generic]
+            .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
         return activities;
+    },
+
+    addActivity: async (data, userId) => {
+        const { lead_id, activity_type, title, description } = data;
+
+        // Ensure table exists (internal check or assume exists after setup)
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS lead_activities (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                lead_id INT NOT NULL,
+                user_id INT NOT NULL,
+                activity_type VARCHAR(50) NOT NULL,
+                title VARCHAR(255),
+                description TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (lead_id) REFERENCES leads(id) ON DELETE CASCADE
+            )
+        `);
+
+        await pool.query(
+            'INSERT INTO lead_activities (lead_id, user_id, activity_type, title, description, created_at) VALUES (?, ?, ?, ?, ?, UTC_TIMESTAMP())',
+            [lead_id, userId, activity_type, title, description]
+        );
+        return { success: true };
     },
 
     // Meetings

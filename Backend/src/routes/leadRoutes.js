@@ -32,7 +32,8 @@ const {
     getDueReminders,
     snoozeLead,
     getDueMeetings,
-    convertLeadToClient
+    convertLeadToClient,
+    addLeadActivity
 } = require('../controllers/leadController');
 const { protect } = require('../middleware/authMiddleware');
 const { checkLimit } = require('../middleware/limitMiddleware');
@@ -72,6 +73,7 @@ router.delete('/:id/files/:fileId', protect, deleteLeadFile);
 
 // Activities
 router.get('/:id/activities', protect, getLeadActivities);
+router.post('/:id/activities', protect, addLeadActivity);
 
 // Meetings
 router.get('/:id/meetings', protect, getLeadMeetings);

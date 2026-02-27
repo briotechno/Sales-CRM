@@ -12,7 +12,16 @@ export const leadApi = createApi({
             return headers;
         },
     }),
-    tagTypes: ['Lead', 'LeadAssignmentSettings', 'LeadAssignmentLogs'],
+    tagTypes: [
+        'Lead',
+        'LeadAssignmentSettings',
+        'LeadAssignmentLogs',
+        'LeadActivities',
+        'LeadNotes',
+        'LeadCalls',
+        'LeadFiles',
+        'LeadMeetings'
+    ],
     endpoints: (builder) => ({
         getLeads: builder.query({
             query: ({
@@ -80,7 +89,7 @@ export const leadApi = createApi({
                 method: 'PUT',
                 body: data,
             }),
-            invalidatesTags: (result, error, { id }) => ['Lead', { type: 'Lead', id }, { type: 'LeadAssignmentLogs', id }],
+            invalidatesTags: (result, error, { id }) => ['Lead', { type: 'Lead', id }, { type: 'LeadAssignmentLogs', id }, { type: 'LeadActivities', id }],
         }),
         deleteLead: builder.mutation({
             query: (id) => ({
@@ -129,7 +138,11 @@ export const leadApi = createApi({
                 method: 'POST',
                 body: data,
             }),
-            invalidatesTags: ['Lead', 'LeadAssignmentLogs'],
+            invalidatesTags: (result, error, { leadIds }) => [
+                'Lead',
+                'LeadAssignmentLogs',
+                ...(leadIds || []).map(id => ({ type: 'LeadActivities', id }))
+            ],
         }),
         getLeadNotes: builder.query({
             query: (id) => `leads/${id}/notes`,
@@ -167,6 +180,14 @@ export const leadApi = createApi({
             }),
             invalidatesTags: (result, error, { id }) => [{ type: 'LeadFiles', id }, 'Lead', { type: 'LeadActivities', id }],
         }),
+        addLeadActivity: builder.mutation({
+            query: ({ id, data }) => ({
+                url: `leads/${id}/activities`,
+                method: 'POST',
+                body: data,
+            }),
+            invalidatesTags: (result, error, { id }) => [{ type: 'LeadActivities', id }],
+        }),
         getLeadActivities: builder.query({
             query: (id) => `leads/${id}/activities`,
             providesTags: (result, error, id) => [{ type: 'LeadActivities', id }],
@@ -189,7 +210,7 @@ export const leadApi = createApi({
                 method: 'PUT',
                 body: { status, tag },
             }),
-            invalidatesTags: (result, error, { id }) => ['Lead', { type: 'Lead', id }],
+            invalidatesTags: (result, error, { id }) => ['Lead', { type: 'Lead', id }, { type: 'LeadActivities', id }],
         }),
         // Update mutations
         updateLeadNote: builder.mutation({
@@ -198,7 +219,7 @@ export const leadApi = createApi({
                 method: 'PUT',
                 body: data,
             }),
-            invalidatesTags: (result, error, { leadId }) => [{ type: 'LeadNotes', id: leadId }],
+            invalidatesTags: (result, error, { leadId }) => [{ type: 'LeadNotes', id: leadId }, { type: 'LeadActivities', id: leadId }],
         }),
         updateLeadCall: builder.mutation({
             query: ({ leadId, callId, data }) => ({
@@ -206,7 +227,7 @@ export const leadApi = createApi({
                 method: 'PUT',
                 body: data,
             }),
-            invalidatesTags: (result, error, { leadId }) => [{ type: 'LeadCalls', id: leadId }],
+            invalidatesTags: (result, error, { leadId }) => [{ type: 'LeadCalls', id: leadId }, { type: 'LeadActivities', id: leadId }],
         }),
         updateLeadFile: builder.mutation({
             query: ({ leadId, fileId, data }) => ({
@@ -214,7 +235,7 @@ export const leadApi = createApi({
                 method: 'PUT',
                 body: data,
             }),
-            invalidatesTags: (result, error, { leadId }) => [{ type: 'LeadFiles', id: leadId }],
+            invalidatesTags: (result, error, { leadId }) => [{ type: 'LeadFiles', id: leadId }, { type: 'LeadActivities', id: leadId }],
         }),
         updateLeadMeeting: builder.mutation({
             query: ({ leadId, meetingId, data }) => ({
@@ -222,7 +243,7 @@ export const leadApi = createApi({
                 method: 'PUT',
                 body: data,
             }),
-            invalidatesTags: (result, error, { leadId }) => [{ type: 'LeadMeetings', id: leadId }],
+            invalidatesTags: (result, error, { leadId }) => [{ type: 'LeadMeetings', id: leadId }, { type: 'LeadActivities', id: leadId }],
         }),
         // Delete mutations
         deleteLeadNote: builder.mutation({
@@ -230,28 +251,28 @@ export const leadApi = createApi({
                 url: `leads/${leadId}/notes/${noteId}`,
                 method: 'DELETE',
             }),
-            invalidatesTags: (result, error, { leadId }) => [{ type: 'LeadNotes', id: leadId }],
+            invalidatesTags: (result, error, { leadId }) => [{ type: 'LeadNotes', id: leadId }, { type: 'LeadActivities', id: leadId }],
         }),
         deleteLeadCall: builder.mutation({
             query: ({ leadId, callId }) => ({
                 url: `leads/${leadId}/calls/${callId}`,
                 method: 'DELETE',
             }),
-            invalidatesTags: (result, error, { leadId }) => [{ type: 'LeadCalls', id: leadId }],
+            invalidatesTags: (result, error, { leadId }) => [{ type: 'LeadCalls', id: leadId }, { type: 'LeadActivities', id: leadId }],
         }),
         deleteLeadFile: builder.mutation({
             query: ({ leadId, fileId }) => ({
                 url: `leads/${leadId}/files/${fileId}`,
                 method: 'DELETE',
             }),
-            invalidatesTags: (result, error, { leadId }) => [{ type: 'LeadFiles', id: leadId }],
+            invalidatesTags: (result, error, { leadId }) => [{ type: 'LeadFiles', id: leadId }, { type: 'LeadActivities', id: leadId }],
         }),
         deleteLeadMeeting: builder.mutation({
             query: ({ leadId, meetingId }) => ({
                 url: `leads/${leadId}/meetings/${meetingId}`,
                 method: 'DELETE',
             }),
-            invalidatesTags: (result, error, { leadId }) => [{ type: 'LeadMeetings', id: leadId }],
+            invalidatesTags: (result, error, { leadId }) => [{ type: 'LeadMeetings', id: leadId }, { type: 'LeadActivities', id: leadId }],
         }),
         getLeadAssignmentHistory: builder.query({
             query: (id) => `leads/${id}/assignment-history`,
@@ -271,7 +292,7 @@ export const leadApi = createApi({
                 method: 'POST',
                 body: { minutes },
             }),
-            invalidatesTags: (result, error, { id }) => ['Lead', { type: 'Lead', id }],
+            invalidatesTags: (result, error, { id }) => ['Lead', { type: 'Lead', id }, { type: 'LeadActivities', id }],
         }),
         convertLeadToClient: builder.mutation({
             query: ({ id, data }) => ({
@@ -279,7 +300,7 @@ export const leadApi = createApi({
                 method: 'POST',
                 body: data,
             }),
-            invalidatesTags: (result, error, { id }) => ['Lead', { type: 'Lead', id }],
+            invalidatesTags: (result, error, { id }) => ['Lead', { type: 'Lead', id }, { type: 'LeadActivities', id }],
         }),
     }),
 });
@@ -321,4 +342,5 @@ export const {
     useGetDueMeetingsQuery,
     useSnoozeLeadMutation,
     useConvertLeadToClientMutation,
+    useAddLeadActivityMutation,
 } = leadApi;

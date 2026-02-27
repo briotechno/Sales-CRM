@@ -228,6 +228,31 @@ const Lead = {
             );
         }
 
+        // Log activities for each lead
+        const LeadResources = require('./leadResourcesModel');
+        const [newLeads] = await pool.query(
+            'SELECT id, name, next_call_at FROM leads WHERE user_id = ? AND created_at >= NOW() - INTERVAL 1 MINUTE',
+            [userId]
+        );
+
+        for (const lead of newLeads) {
+            await LeadResources.addActivity({
+                lead_id: lead.id,
+                activity_type: 'notification',
+                title: 'New Lead Created',
+                description: `Lead ${lead.name || 'New Lead'} was created via bulk import.`
+            }, userId);
+
+            if (lead.next_call_at) {
+                await LeadResources.addActivity({
+                    lead_id: lead.id,
+                    activity_type: 'notification',
+                    title: 'Follow-up Reminder Set',
+                    description: `A follow-up task has been scheduled for ${new Date(lead.next_call_at).toLocaleString()}.`
+                }, userId);
+            }
+        }
+
         return result.affectedRows;
     },
 
@@ -587,6 +612,15 @@ const Lead = {
                     'Pending' // Use default status
                 ]
             );
+
+            // Log activity for reminder
+            const LeadResources = require('./leadResourcesModel');
+            await LeadResources.addActivity({
+                lead_id: id,
+                activity_type: 'notification',
+                title: 'Follow-up Reminder Set',
+                description: `A follow-up task has been scheduled for ${new Date(updateData.next_call_at).toLocaleString()}.`
+            }, userId);
         }
 
         return updateData;
@@ -677,17 +711,36 @@ const Lead = {
     },
 
     checkMissedLeads: async (userId) => {
-        // Automatically change status to 'Missed' if next_call_at is older than 5 minutes
-        // and current status is 'Follow Up'
-        await pool.query(
-            `UPDATE leads 
-             SET tag = 'Missed' 
+        // Find leads that are about to be marked as missed
+        const [leadsToMiss] = await pool.query(
+            `SELECT id FROM leads 
              WHERE user_id = ? 
              AND next_call_at IS NOT NULL 
              AND next_call_at <= DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 MINUTE)
              AND tag = 'Follow Up'`,
             [userId]
         );
+
+        if (leadsToMiss.length > 0) {
+            const leadIds = leadsToMiss.map(l => l.id);
+
+            // Update status to 'Missed'
+            await pool.query(
+                `UPDATE leads SET tag = 'Missed' WHERE id IN (?)`,
+                [leadIds]
+            );
+
+            // Log activity for each missed lead
+            const LeadResources = require('./leadResourcesModel');
+            for (const id of leadIds) {
+                await LeadResources.addActivity({
+                    lead_id: id,
+                    activity_type: 'missed',
+                    title: 'Lead Follow-up Missed',
+                    description: 'Scheduled follow-up time was missed. Lead tag updated to Missed.'
+                }, userId);
+            }
+        }
     }
 };
 

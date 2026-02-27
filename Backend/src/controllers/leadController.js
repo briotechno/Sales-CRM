@@ -29,6 +29,24 @@ const createLead = async (req, res) => {
         }
         // Removed autoAssign call to ensure Assign To remains null unless explicitly assigned
 
+        // Log Activity
+        await LeadResources.addActivity({
+            lead_id: id,
+            activity_type: 'notification',
+            title: 'New Lead Created',
+            description: `Lead ${req.body.name || 'New Lead'} was created and added to the system.`
+        }, req.user.id);
+
+        // Log Reminder if set
+        if (req.body.next_call_at) {
+            await LeadResources.addActivity({
+                lead_id: id,
+                activity_type: 'notification',
+                title: 'Follow-up Reminder Set',
+                description: `A follow-up task has been scheduled for ${new Date(req.body.next_call_at).toLocaleString()}.`
+            }, req.user.id);
+        }
+
         res.status(201).json({ status: true, message: 'Lead created successfully', id });
     } catch (error) {
         res.status(500).json({ status: false, message: error.message });
@@ -82,6 +100,88 @@ const updateLead = async (req, res) => {
         }
 
         await Lead.update(leadId, req.body, userId);
+
+        // Build a specific, meaningful activity title based on what changed
+        const fieldLabels = {
+            name: 'Name',
+            full_name: 'Full Name',
+            mobile_number: 'Mobile Number',
+            email: 'Email',
+            alt_mobile_number: 'Alternate Mobile',
+            whatsapp_number: 'WhatsApp Number',
+            gender: 'Gender',
+            dob: 'Date of Birth',
+            address: 'Address',
+            city: 'City',
+            state: 'State',
+            pincode: 'Pincode',
+            country: 'Country',
+            organization_name: 'Organization',
+            industry_type: 'Industry',
+            website: 'Website',
+            company_email: 'Company Email',
+            company_phone: 'Company Phone',
+            designation: 'Designation',
+            lead_source: 'Lead Source',
+            interested_in: 'Interested In',
+            value: 'Lead Value',
+            priority: 'Priority',
+            tag: 'Tag',
+            status: 'Status',
+            description: 'Description',
+            pipeline_id: 'Pipeline',
+            stage_id: 'Stage',
+            type: 'Lead Type',
+            visibility: 'Visibility',
+            gst_number: 'GST Number',
+            gst_pan_number: 'PAN/GST Number',
+            primary_contact_name: 'Primary Contact',
+            primary_mobile: 'Primary Mobile',
+            primary_email: 'Primary Email',
+        };
+
+        const changedFields = [];
+        for (const [key, label] of Object.entries(fieldLabels)) {
+            if (req.body[key] !== undefined && String(req.body[key]) !== String(currentLead[key] ?? '')) {
+                changedFields.push(label);
+            }
+        }
+
+        // Handle assignment change explicitly
+        let activityTitle = '';
+        let activityDescription = `Updated by ${req.user.employee_name || req.user.username || 'admin'}.`;
+
+        if (newOwnerId && String(newOwnerId) !== String(oldOwnerId)) {
+            const assignedName = req.body.owner_name || newOwnerId;
+            activityTitle = `Lead Profile Update: Assigned To ${assignedName}`;
+            activityDescription = `Lead was assigned to ${assignedName} by ${req.user.employee_name || req.user.username || 'admin'}.`;
+        } else if (changedFields.length === 1) {
+            activityTitle = `Lead Profile Update: ${changedFields[0]} Updated`;
+            activityDescription = `${changedFields[0]} was updated by ${req.user.employee_name || req.user.username || 'admin'}.`;
+        } else if (changedFields.length > 1) {
+            activityTitle = `Lead Profile Update: ${changedFields.slice(0, 2).join(' & ')} Updated`;
+            activityDescription = `${changedFields.join(', ')} were updated by ${req.user.employee_name || req.user.username || 'admin'}.`;
+        } else {
+            activityTitle = 'Lead Profile Update';
+            activityDescription = `Lead details were updated by ${req.user.employee_name || req.user.username || 'admin'}.`;
+        }
+
+        await LeadResources.addActivity({
+            lead_id: leadId,
+            activity_type: 'notification',
+            title: activityTitle,
+            description: activityDescription
+        }, userId);
+
+        // Check for reminder update
+        if (req.body.next_call_at && req.body.next_call_at !== currentLead.next_call_at) {
+            await LeadResources.addActivity({
+                lead_id: leadId,
+                activity_type: 'notification',
+                title: 'Follow-up Reminder Rescheduled',
+                description: `Follow-up has been rescheduled to ${new Date(req.body.next_call_at).toLocaleString()}.`
+            }, userId);
+        }
 
         // Create assignment log if owner changed
         // Use loose comparison via String() to handle ID type mismatches (int vs string)
@@ -161,6 +261,14 @@ const hitCall = async (req, res) => {
                     reassigned_from: currentLead?.assigned_to || null,
                     reason: `Max attempts reached (${maxAttempts})`
                 });
+
+                // Log into Activity Timeline
+                await LeadResources.addActivity({
+                    lead_id: leadId,
+                    activity_type: 'notification',
+                    title: 'Lead Auto-Reassigned (Max Attempts)',
+                    description: `Lead auto-updated. ${updateData.tag === 'Lost' ? 'Marked as Lost.' : 'Unassigned.'} Reason: Max call attempts reached (${maxAttempts}).`
+                }, userId);
 
                 if (settings?.mode === 'auto' && (settings?.reassignment_on_disqualified || !settings?.auto_disqualification)) {
                     await leadAssignmentService.autoAssign(leadId, userId, currentLead?.assigned_to);
@@ -323,6 +431,15 @@ const addLeadMeeting = async (req, res) => {
             time,
             attendees: Array.isArray(attendees) ? attendees : (attendees ? attendees.split(',').map(s => s.trim()) : [])
         }, req.user.id);
+
+        // Log Meeting Scheduled Activity
+        await LeadResources.addActivity({
+            lead_id: req.params.id,
+            activity_type: 'notification',
+            title: 'Meeting Scheduled',
+            description: `A new meeting "${title}" has been scheduled for ${new Date(date).toLocaleDateString()} at ${time}.`
+        }, req.user.id);
+
         res.status(201).json(result);
     } catch (error) {
         res.status(500).json({ status: false, message: error.message });
@@ -390,6 +507,14 @@ const updateLeadStatus = async (req, res) => {
         }
 
         res.status(200).json({ message: 'Status updated' });
+
+        // Log Activity
+        await LeadResources.addActivity({
+            lead_id: req.params.id,
+            activity_type: tag === 'Won' ? 'won' : (tag === 'Dropped' ? 'dropped' : 'status_change'),
+            title: `Status Changed to ${tag || status}`,
+            description: `Status updated to ${status}${tag ? ` (${tag})` : ''}.${remarks ? ` Remarks: ${remarks}` : ''}`
+        }, req.user.id);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -400,6 +525,21 @@ const updateLeadNote = async (req, res) => {
     try {
         const result = await LeadResources.updateNote(req.params.noteId, req.body, req.user.id);
         res.status(200).json(result);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+const addLeadActivity = async (req, res) => {
+    try {
+        const { activity_type, title, description } = req.body;
+        const result = await LeadResources.addActivity({
+            lead_id: req.params.id,
+            activity_type,
+            title,
+            description
+        }, req.user.id);
+        res.status(201).json(result);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -548,6 +688,14 @@ const convertLeadToClient = async (req, res) => {
         // Update Lead status to Won
         await Lead.update(leadId, { status: 'Closed', tag: 'Won' }, userId);
 
+        // Log Activity for conversion
+        await LeadResources.addActivity({
+            lead_id: leadId,
+            activity_type: 'won',
+            title: 'Lead Converted to Client',
+            description: `Lead "${lead.name || lead.full_name || 'Unknown'}" was successfully converted to a client by ${req.user.employee_name || req.user.username || 'admin'}. Client ID: ${clientId}.`
+        }, userId);
+
         res.status(201).json({ status: true, message: 'Lead converted to client successfully', clientId });
     } catch (error) {
         res.status(500).json({ status: false, message: error.message });
@@ -559,6 +707,14 @@ const snoozeLead = async (req, res) => {
         const { minutes } = req.body;
         const nextCall = await Lead.snoozeLead(req.params.id, req.user.id, minutes);
         res.status(200).json({ status: true, message: `Lead snoozed for ${minutes || 10} minutes`, next_call_at: nextCall });
+
+        // Log Activity
+        await LeadResources.addActivity({
+            lead_id: req.params.id,
+            activity_type: 'snooze',
+            title: `Lead Snoozed (${minutes || 10} min)`,
+            description: `Lead has been snoozed for ${minutes || 10} minutes. Next follow-up at ${new Date(nextCall).toLocaleString()}`
+        }, req.user.id);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -612,5 +768,6 @@ module.exports = {
     },
     getDueReminders,
     snoozeLead,
-    convertLeadToClient
+    convertLeadToClient,
+    addLeadActivity
 };

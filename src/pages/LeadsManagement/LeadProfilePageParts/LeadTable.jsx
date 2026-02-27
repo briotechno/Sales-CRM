@@ -53,6 +53,24 @@ const formatDateUTC = (dateStr) => {
   });
 };
 
+const getFriendlyDate = (dateStr) => {
+  if (!dateStr || dateStr === "Recent") return dateStr;
+
+  // Parse the date (assuming dd MMM yyyy from locale)
+  const [day, month, year] = dateStr.split(' ');
+  const monthMap = { Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5, Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11 };
+  const d = new Date(year, monthMap[month], day);
+
+  const today = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(today.getDate() - 1);
+
+  if (d.toDateString() === today.toDateString()) return "Today";
+  if (d.toDateString() === yesterday.toDateString()) return "Yesterday";
+
+  return dateStr;
+};
+
 const ExpandableText = ({ text, limit = 150 }) => {
   const [isExpanded, setIsExpanded] = React.useState(false);
   if (!text) return null;
@@ -72,6 +90,43 @@ const ExpandableText = ({ text, limit = 150 }) => {
         {isExpanded ? "Show Less" : "Read More"}
       </button>
     </span>
+  );
+};
+
+const UserAvatar = ({ name, profilePicture, size = "w-10 h-10 border" }) => {
+  const [imgError, setImgError] = React.useState(false);
+  React.useEffect(() => { setImgError(false); }, [profilePicture]);
+
+  const getInitials = (fullName) => {
+    if (!fullName) return "??";
+    const names = fullName.trim().split(" ");
+    return (names.length >= 2 ? (names[0][0] + names[1][0]) : names[0].substring(0, 2)).toUpperCase();
+  };
+
+  const getColorFromName = (name) => {
+    const colors = ["bg-blue-500", "bg-green-500", "bg-purple-500", "bg-pink-500", "bg-indigo-500", "bg-red-500", "bg-slate-500", "bg-teal-500"];
+    let hash = 0;
+    const str = String(name || "U");
+    for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    return colors[Math.abs(hash) % colors.length];
+  };
+
+  const baseUrl = (import.meta.env?.VITE_API_BASE_URL || 'http://localhost:5000/api/').replace('/api/', '');
+  const cleanPath = (profilePicture && typeof profilePicture === 'string' && profilePicture !== 'null') ? profilePicture.trim() : null;
+  const imageUrl = cleanPath ? (cleanPath.startsWith('http') ? cleanPath : `${baseUrl}${cleanPath.startsWith('/') ? '' : '/'}${cleanPath}`) : null;
+
+  if (!imageUrl || imgError) {
+    return (
+      <div className={`${size} rounded-sm ${getColorFromName(name)} flex items-center justify-center text-white font-bold text-[8px] border-gray-100 shadow-sm`} title={name}>
+        {getInitials(name)}
+      </div>
+    );
+  }
+
+  return (
+    <div className={`${size} rounded-sm overflow-hidden flex items-center justify-center border-gray-200 bg-gray-50 shadow-sm`} title={name}>
+      <img src={imageUrl} alt={name} className="w-full h-full object-cover" onError={() => setImgError(true)} />
+    </div>
   );
 };
 
@@ -179,8 +234,11 @@ export default function LeadTabs({
 
     // Group activities by date
     const grouped = fetchedActivities.reduce((acc, act) => {
-      const date = act.created_at ? new Date(act.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : "Recent";
-      if (!acc[date]) acc[date] = [];
+      const fullDate = act.created_at ? new Date(act.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : "Recent";
+      const friendlyDate = getFriendlyDate(fullDate);
+
+      if (!acc[friendlyDate]) acc[friendlyDate] = [];
+      const dateKey = friendlyDate;
 
       let icon = MessageCircle;
       let color = "bg-blue-400";
@@ -191,26 +249,58 @@ export default function LeadTabs({
         color = "bg-green-500";
         titlePrefix = "Call Log";
       } else if (act.type === "note") {
-        icon = MessageCircle;
-        color = "bg-indigo-500";
-        titlePrefix = "Note Created";
-      } else if (act.type === "file") {
         icon = FileText;
+        color = "bg-indigo-500";
+        titlePrefix = "Note";
+      } else if (act.type === "file") {
+        icon = File;
         color = "bg-orange-500";
-        titlePrefix = "File Uploaded";
+        titlePrefix = "File";
       } else if (act.type === "meeting") {
         icon = Users;
         color = "bg-purple-500";
-        titlePrefix = "Meeting Scheduled";
+        titlePrefix = "Meeting";
+      } else if (act.type === "snooze") {
+        icon = Clock;
+        color = "bg-amber-500";
+        titlePrefix = "Snoozed";
+      } else if (act.type === "status_change") {
+        icon = Zap;
+        color = "bg-blue-500";
+        titlePrefix = "Status Updated";
+      } else if (act.type === "won") {
+        icon = Zap;
+        color = "bg-green-600";
+        titlePrefix = "Lead Won";
+      } else if (act.type === "dropped") {
+        icon = Trash2;
+        color = "bg-red-500";
+        titlePrefix = "Lead Dropped";
+      } else if (act.type === "missed") {
+        icon = Bell;
+        color = "bg-red-400";
+        titlePrefix = "Follow-up Missed";
+      } else if (act.type === "notification") {
+        icon = Bell;
+        color = "bg-cyan-500";
+        titlePrefix = "System";
       }
 
-      acc[date].push({
+      let finalTitle = "";
+      if (["note", "call", "file", "meeting"].includes(act.type)) {
+        finalTitle = act.title ? `${titlePrefix}: ${act.title}` : titlePrefix;
+      } else {
+        // For notifications, status changes, snooze, etc - the title provided by backend is already descriptive
+        finalTitle = act.title || titlePrefix;
+      }
+
+      acc[friendlyDate].push({
         id: act.id,
         type: act.type,
         icon,
         color,
-        title: (`${titlePrefix}: ${act.title || ""}`).toLowerCase(),
-        subtitle: (act.user_name || "").toLowerCase(),
+        title: finalTitle,
+        subtitle: act.user_name || "System",
         profilePicture: act.profile_picture,
         description: act.description || "",
         time: act.created_at ? formatDateUTC(act.created_at).split(', ')[1] : "",
@@ -425,16 +515,26 @@ export default function LeadTabs({
                             else if (activity.type === 'file') setActiveTab('files');
                             else if (activity.type === 'meeting') setActiveTab('meeting');
                           }}
-                          className="bg-white rounded-sm border border-gray-100 p-5 hover:border-orange-200 cursor-pointer transition-all hover:shadow-sm group flex gap-4 items-start"
+                          className="bg-white rounded-sm border border-gray-100 p-5 hover:border-orange-200 cursor-pointer transition-all hover:shadow-sm group flex gap-5 items-start"
                         >
                           <div className={`w-10 h-10 ${activity.color} rounded-full flex items-center justify-center flex-shrink-0 shadow-sm transition-transform group-hover:scale-105`}>
                             <activity.icon size={18} className="text-white fill-white/20" />
                           </div>
-                          <div className="flex-1">
-                            <h4 className="font-bold text-gray-800 font-primary text-[14px] leading-tight mb-0.5 capitalize">
-                              {activity.title}
-                            </h4>
-                            <p className="text-[12px] font-bold text-gray-400 font-primary">{activity.time}</p>
+                          <div className="flex-1 space-y-3">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <h4 className="font-bold text-gray-800 font-primary text-[15px] leading-tight mb-1 capitalize">
+                                  {activity.title}
+                                </h4>
+                                <p className="text-[12px] font-bold text-gray-400 font-primary">{activity.time}</p>
+                              </div>
+                              <div className="flex items-center gap-2 bg-gray-50 px-2 py-1 rounded-sm border border-gray-100">
+                                <UserAvatar name={activity.subtitle} profilePicture={activity.profilePicture} size="w-6 h-6 border border-white" />
+                                <span className="text-[11px] font-bold text-gray-600 capitalize">{activity.subtitle}</span>
+                              </div>
+                            </div>
+
+
                           </div>
                         </div>
                       ))}
@@ -802,39 +902,3 @@ export default function LeadTabs({
   );
 }
 
-const UserAvatar = ({ name, profilePicture, size = "w-10 h-10 border" }) => {
-  const [imgError, setImgError] = React.useState(false);
-  React.useEffect(() => { setImgError(false); }, [profilePicture]);
-
-  const getInitials = (fullName) => {
-    if (!fullName) return "??";
-    const names = fullName.trim().split(" ");
-    return (names.length >= 2 ? (names[0][0] + names[1][0]) : names[0].substring(0, 2)).toUpperCase();
-  };
-
-  const getColorFromName = (name) => {
-    const colors = ["bg-blue-500", "bg-green-500", "bg-purple-500", "bg-pink-500", "bg-indigo-500", "bg-red-500", "bg-slate-500", "bg-teal-500"];
-    let hash = 0;
-    const str = String(name || "U");
-    for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
-    return colors[Math.abs(hash) % colors.length];
-  };
-
-  const baseUrl = (import.meta.env?.VITE_API_BASE_URL || 'http://localhost:5000/api/').replace('/api/', '');
-  const cleanPath = (profilePicture && typeof profilePicture === 'string' && profilePicture !== 'null') ? profilePicture.trim() : null;
-  const imageUrl = cleanPath ? (cleanPath.startsWith('http') ? cleanPath : `${baseUrl}${cleanPath.startsWith('/') ? '' : '/'}${cleanPath}`) : null;
-
-  if (!imageUrl || imgError) {
-    return (
-      <div className={`${size} rounded-sm ${getColorFromName(name)} flex items-center justify-center text-white font-bold text-[8px] border-gray-100 shadow-sm`} title={name}>
-        {getInitials(name)}
-      </div>
-    );
-  }
-
-  return (
-    <div className={`${size} rounded-sm overflow-hidden flex items-center justify-center border-gray-200 bg-gray-50 shadow-sm`} title={name}>
-      <img src={imageUrl} alt={name} className="w-full h-full object-cover" onError={() => setImgError(true)} />
-    </div>
-  );
-};

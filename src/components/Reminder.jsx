@@ -14,7 +14,7 @@ import {
   Clock,
   Star,
 } from "lucide-react";
-import { useGetDueRemindersQuery, useSnoozeLeadMutation, useUpdateLeadStatusMutation } from "../store/api/leadApi";
+import { useGetDueRemindersQuery, useSnoozeLeadMutation, useUpdateLeadStatusMutation, useAddLeadActivityMutation } from "../store/api/leadApi";
 import { toast } from "react-hot-toast";
 
 export default function LeadsReminder() {
@@ -31,6 +31,7 @@ export default function LeadsReminder() {
 
   const [snoozeLead] = useSnoozeLeadMutation();
   const [updateLeadStatus] = useUpdateLeadStatusMutation();
+  const [addLeadActivity] = useAddLeadActivityMutation();
 
   // Reference to track if we've already notified for a specific lead
   const notifiedLeads = useRef(new Set());
@@ -63,6 +64,17 @@ export default function LeadsReminder() {
         setCurrentReminder(nextOne);
         setIsVisible(true);
         notifiedLeads.current.add(nextOne.id);
+
+        // Log notification in activity timeline
+        addLeadActivity({
+          id: nextOne.id,
+          data: {
+            activity_type: 'notification',
+            title: 'Lead Reminder Notified',
+            description: `A system reminder was shown for this lead at ${new Date().toLocaleTimeString()}.`
+          }
+        });
+
         // Play sound after a short delay to ensure DOM is ready
         setTimeout(() => {
           playNotificationSound();

@@ -26,6 +26,7 @@ import {
   AlertCircle,
   Upload,
   X,
+  Check,
 } from "lucide-react";
 import { FaBuilding, FaWhatsapp } from "react-icons/fa";
 import Modal from "../../../components/common/Modal";
@@ -235,9 +236,21 @@ export default function LeadSidebar({
               />
             )}
             {isEditing && (
-              <div className="flex gap-2">
-                <button onClick={cancelEditing} className="text-[10px] font-bold text-gray-500 bg-white px-2 py-0.5 rounded-sm border border-gray-200">Close</button>
-                <button onClick={() => saveEditing(field)} className="text-[10px] font-bold text-white bg-orange-500 px-3 py-0.5 rounded-sm">Save</button>
+              <div className="flex gap-1 mt-1">
+                <button
+                  onClick={cancelEditing}
+                  title="Cancel"
+                  className="w-6 h-6 flex items-center justify-center bg-rose-500 hover:bg-rose-600 text-white rounded-sm shadow-sm transition-all active:scale-95"
+                >
+                  <X size={12} strokeWidth={3} />
+                </button>
+                <button
+                  onClick={() => saveEditing(field)}
+                  title="Save Change"
+                  className="w-6 h-6 flex items-center justify-center bg-emerald-500 hover:bg-emerald-600 text-white rounded-sm shadow-sm transition-all active:scale-95"
+                >
+                  <Check size={12} strokeWidth={3} />
+                </button>
               </div>
             )}
           </div>
@@ -249,7 +262,7 @@ export default function LeadSidebar({
                 : (currentValue || "N/A")}
             </span>
             <Edit2
-              size={12}
+              size={14}
               className="text-slate-400 cursor-pointer opacity-0 group-hover/value:opacity-100 transition-opacity flex-shrink-0 hover:text-orange-500"
               onClick={() => startEditing(field, currentValue)}
             />
@@ -299,8 +312,20 @@ export default function LeadSidebar({
               }}
             />
             <div className="flex gap-2">
-              <button onClick={cancelEditing} className="text-[10px] font-bold text-gray-500 bg-white px-2 py-1 rounded-sm border border-gray-200 shadow-sm transition-all hover:bg-gray-50">Cancel</button>
-              <button onClick={() => saveEditing('name')} className="text-[10px] font-bold text-white bg-orange-500 px-3 py-1 rounded-sm shadow-sm hover:bg-orange-600 transition-all">Save Name</button>
+              <button
+                onClick={cancelEditing}
+                title="Cancel"
+                className="w-7 h-7 flex items-center justify-center bg-rose-500 hover:bg-rose-600 text-white rounded-sm shadow-md transition-all active:scale-95"
+              >
+                <X size={14} strokeWidth={3} />
+              </button>
+              <button
+                onClick={() => saveEditing('name')}
+                title="Save Name"
+                className="w-7 h-7 flex items-center justify-center bg-emerald-500 hover:bg-emerald-600 text-white rounded-sm shadow-md transition-all active:scale-95"
+              >
+                <Check size={14} strokeWidth={3} />
+              </button>
             </div>
           </div>
         ) : (
@@ -308,11 +333,12 @@ export default function LeadSidebar({
             <h2 className="text-2xl font-bold text-slate-800 uppercase truncate px-6" title={leadData?.name}>
               {leadData?.name || "Lead Name"}
             </h2>
-            <Edit2
-              size={15}
-              className="absolute right-[15%] text-slate-400 cursor-pointer opacity-0 group-hover/name:opacity-100 transition-all hover:text-orange-500 translate-x-1/2"
+            <button
               onClick={() => startEditing('name', leadData?.name)}
-            />
+              className="absolute right-[15%] w-7 h-7 flex items-center justify-center bg-orange-500 text-white rounded-sm opacity-0 group-hover/name:opacity-100 transition-all hover:bg-orange-600 shadow-lg translate-x-1/2"
+            >
+              <Edit2 size={12} />
+            </button>
           </div>
         )}
 
@@ -389,17 +415,30 @@ export default function LeadSidebar({
               Basic Information
             </h3>
             {editingSection === 'basic' ? (
-              <div className="flex gap-2 animate-in fade-in slide-in-from-right-1 duration-200">
-                <button onClick={cancelSectionEditing} className="text-[10px] font-bold text-gray-500 bg-white px-2 py-0.5 rounded-sm border border-gray-200 shadow-sm hover:bg-gray-50 transition-colors">Cancel</button>
-                <button onClick={saveSectionEditing} className="text-[10px] font-bold text-white bg-orange-500 px-3 py-0.5 rounded-sm shadow-sm hover:bg-orange-600 transition-colors">Save All</button>
+              <div className="flex gap-1.5 animate-in fade-in slide-in-from-right-1 duration-200">
+                <button
+                  onClick={cancelSectionEditing}
+                  title="Cancel All"
+                  className="w-6 h-6 flex items-center justify-center bg-rose-500 hover:bg-rose-600 text-white rounded-sm shadow-sm transition-all active:scale-95"
+                >
+                  <X size={12} strokeWidth={3} />
+                </button>
+                <button
+                  onClick={saveSectionEditing}
+                  title="Save All Changes"
+                  className="w-6 h-6 flex items-center justify-center bg-emerald-500 hover:bg-emerald-600 text-white rounded-sm shadow-sm transition-all active:scale-95"
+                >
+                  <Check size={12} strokeWidth={3} />
+                </button>
               </div>
             ) : (
               !editingSection && !editingField && (
-                <Edit2
-                  size={14}
-                  className="text-slate-400 hover:text-orange-500 cursor-pointer"
+                <button
                   onClick={() => startSectionEditing('basic', ['gender', 'email', 'phone', 'altMobileNumber', 'dateOfBirth'])}
-                />
+                  className="w-6 h-6 flex items-center justify-center bg-orange-500 text-white rounded-sm hover:bg-orange-600 transition-all shadow-md active:scale-95"
+                >
+                  <Edit2 size={13} />
+                </button>
               )
             )}
           </div>
@@ -424,17 +463,30 @@ export default function LeadSidebar({
               Location Details
             </h3>
             {editingSection === 'location' ? (
-              <div className="flex gap-2 animate-in fade-in slide-in-from-right-1 duration-200">
-                <button onClick={cancelSectionEditing} className="text-[10px] font-bold text-gray-500 bg-white px-2 py-0.5 rounded-sm border border-gray-200 shadow-sm hover:bg-gray-50 transition-colors">Cancel</button>
-                <button onClick={saveSectionEditing} className="text-[10px] font-bold text-white bg-orange-500 px-3 py-0.5 rounded-sm shadow-sm hover:bg-orange-600 transition-colors">Save All</button>
+              <div className="flex gap-1.5 animate-in fade-in slide-in-from-right-1 duration-200">
+                <button
+                  onClick={cancelSectionEditing}
+                  title="Cancel All"
+                  className="w-6 h-6 flex items-center justify-center bg-rose-500 hover:bg-rose-600 text-white rounded-sm shadow-sm transition-all active:scale-95"
+                >
+                  <X size={12} strokeWidth={3} />
+                </button>
+                <button
+                  onClick={saveSectionEditing}
+                  title="Save All Changes"
+                  className="w-6 h-6 flex items-center justify-center bg-emerald-500 hover:bg-emerald-600 text-white rounded-sm shadow-sm transition-all active:scale-95"
+                >
+                  <Check size={12} strokeWidth={3} />
+                </button>
               </div>
             ) : (
               !editingSection && !editingField && (
-                <Edit2
-                  size={14}
-                  className="text-slate-400 hover:text-orange-500 cursor-pointer"
+                <button
                   onClick={() => startSectionEditing('location', ['address', 'city', 'state', 'pincode'])}
-                />
+                  className="w-6 h-6 flex items-center justify-center bg-orange-500 text-white rounded-sm hover:bg-orange-600 transition-all shadow-md active:scale-95"
+                >
+                  <Edit2 size={13} />
+                </button>
               )
             )}
           </div>
@@ -454,17 +506,30 @@ export default function LeadSidebar({
               Lead Specifics
             </h3>
             {editingSection === 'business' ? (
-              <div className="flex gap-2 animate-in fade-in slide-in-from-right-1 duration-200">
-                <button onClick={cancelSectionEditing} className="text-[10px] font-bold text-gray-500 bg-white px-2 py-0.5 rounded-sm border border-gray-200 shadow-sm hover:bg-gray-50 transition-colors">Cancel</button>
-                <button onClick={saveSectionEditing} className="text-[10px] font-bold text-white bg-orange-500 px-3 py-0.5 rounded-sm shadow-sm hover:bg-orange-600 transition-colors">Save All</button>
+              <div className="flex gap-1.5 animate-in fade-in slide-in-from-right-1 duration-200">
+                <button
+                  onClick={cancelSectionEditing}
+                  title="Cancel All"
+                  className="w-6 h-6 flex items-center justify-center bg-rose-500 hover:bg-rose-600 text-white rounded-sm shadow-sm transition-all active:scale-95"
+                >
+                  <X size={12} strokeWidth={3} />
+                </button>
+                <button
+                  onClick={saveSectionEditing}
+                  title="Save All Changes"
+                  className="w-6 h-6 flex items-center justify-center bg-emerald-500 hover:bg-emerald-600 text-white rounded-sm shadow-sm transition-all active:scale-95"
+                >
+                  <Check size={12} strokeWidth={3} />
+                </button>
               </div>
             ) : (
               !editingSection && !editingField && (
-                <Edit2
-                  size={14}
-                  className="text-slate-400 hover:text-orange-500 cursor-pointer"
+                <button
                   onClick={() => startSectionEditing('business', ['followUp', 'source', 'priority'])}
-                />
+                  className="w-6 h-6 flex items-center justify-center bg-orange-500 text-white rounded-sm hover:bg-orange-600 transition-all shadow-md active:scale-95"
+                >
+                  <Edit2 size={13} />
+                </button>
               )
             )}
           </div>
@@ -507,11 +572,12 @@ export default function LeadSidebar({
               <div className="flex justify-between items-center mb-3">
                 <p className="text-[10px] text-orange-500 font-black uppercase tracking-widest">Assigned To</p>
                 {!editingSection && !editingField && (
-                  <Edit2
-                    size={14}
-                    className="text-slate-400 cursor-pointer opacity-0 group-hover/agent:opacity-100 transition-opacity hover:text-orange-500"
+                  <button
                     onClick={() => startEditing('assigned_to', leadData?.assigned_to)}
-                  />
+                    className="w-6 h-6 flex items-center justify-center bg-orange-500 text-white rounded-sm opacity-0 group-hover/agent:opacity-100 transition-all hover:bg-orange-600 shadow-md active:scale-95"
+                  >
+                    <Edit2 size={13} />
+                  </button>
                 )}
               </div>
 
@@ -528,9 +594,21 @@ export default function LeadSidebar({
                       <option key={emp.id} value={emp.id}>{emp.employee_name}</option>
                     ))}
                   </select>
-                  <div className="flex gap-2">
-                    <button onClick={cancelEditing} className="text-[10px] font-bold text-gray-500 hover:text-gray-700 transition-all bg-white px-2 py-1 rounded-sm border border-gray-200 shadow-sm">Close</button>
-                    <button onClick={() => saveEditing('assigned_to')} className="text-[10px] font-bold text-white bg-orange-500 hover:bg-orange-600 px-3 py-1 rounded-sm shadow-md">Save</button>
+                  <div className="flex gap-1.5">
+                    <button
+                      onClick={cancelEditing}
+                      title="Cancel"
+                      className="w-6 h-6 flex items-center justify-center bg-rose-500 hover:bg-rose-600 text-white rounded-sm shadow-sm transition-all active:scale-95"
+                    >
+                      <X size={12} strokeWidth={3} />
+                    </button>
+                    <button
+                      onClick={() => saveEditing('assigned_to')}
+                      title="Save Assignment"
+                      className="w-6 h-6 flex items-center justify-center bg-emerald-500 hover:bg-emerald-600 text-white rounded-sm shadow-sm transition-all active:scale-95"
+                    >
+                      <Check size={12} strokeWidth={3} />
+                    </button>
                   </div>
                 </div>
               ) : (
