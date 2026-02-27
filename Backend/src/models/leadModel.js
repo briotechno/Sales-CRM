@@ -643,7 +643,9 @@ const Lead = {
         // Get leads where next_call_at is due (within last 1 minute to prevent skipping)
         // and lead is not already Won/Lost/Closed/Missed
         const [rows] = await pool.query(
-            `SELECT l.*, p.name as pipeline_name, s.name as stage_name 
+            `SELECT l.*, p.name as pipeline_name, s.name as stage_name,
+             (SELECT COUNT(*) FROM pipeline_stages ps WHERE ps.pipeline_id = l.pipeline_id) as total_stages,
+             (SELECT COUNT(*) FROM pipeline_stages ps2 WHERE ps2.pipeline_id = l.pipeline_id AND ps2.stage_order <= s.stage_order) as current_stage
              FROM leads l
              LEFT JOIN pipelines p ON l.pipeline_id = p.id
              LEFT JOIN pipeline_stages s ON l.stage_id = s.id

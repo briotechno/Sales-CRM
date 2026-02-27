@@ -63,7 +63,10 @@ export default function LeadsReminder() {
         setCurrentReminder(nextOne);
         setIsVisible(true);
         notifiedLeads.current.add(nextOne.id);
-        playNotificationSound();
+        // Play sound after a short delay to ensure DOM is ready
+        setTimeout(() => {
+          playNotificationSound();
+        }, 150);
       }
     } else if (currentReminder) {
       // If already visible, update current reminder data if it's still in the list
@@ -142,10 +145,8 @@ export default function LeadsReminder() {
     }
   };
 
-  if (!isVisible || !currentReminder) return null;
-
-  const leadName = currentReminder.name || currentReminder.full_name || "N/A";
-  const displayDate = currentReminder.next_call_at
+  const leadName = currentReminder?.name || currentReminder?.full_name || "N/A";
+  const displayDate = currentReminder?.next_call_at
     ? new Date(currentReminder.next_call_at).toLocaleString('en-IN', {
       day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true
     })
@@ -155,164 +156,214 @@ export default function LeadsReminder() {
     <>
       <audio ref={audioRef} preload="auto">
         <source
-          src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSp+zPDTgjMGHm7A7+OZUA0PVbPoypZXEwxJoeHwtWcdBzKO1vPLey4FKYbN8NuQQw0RXK/m85tWEwtJoeHwuGgcB0SM1vLLezAFKYLM8NuVRw0RWK3m9JlbFg1Kn+HwuGgeB0CP1vLMfDQFKH/M8NqXTAwRU7Ll9KNcGBBJnODvumkeCj+M1fHNgDcHKYLO8N6ZVQwQT7Pi9KlgHBBImeDvvGsbCT+L1fHOhjsHLIXQ8N+cWQ4PWLPm9K5jHRJKnd/vvmwcCUCN1PHPiT4INYnU8OCfWw4QULjl9K5jHhFKnt7vv2sZCkKP1PHNiD8HLIfQ8N+dWw4PVLTm9K5jHhFKnd7vv2sZCkKP1fHPiUEHL4fR8N6cWQ0OWLTk9K1hHRBJnd7wvWwbCkGR1PHOiUEHL4rS8N6dXA4QU7nk9KtgHRBJnt7wvWscCkOQ1PHPiUEHL43S8N6dWw4PWrHk9KpgHBFJnt7vvWwaCkSQ1PHOiD8IMYnS8N+bWA0PVrPk9KxeHRBJneDvvWscCkSQ1PHOiD8HMInS8OCdXQ4PWK/k9KpeGxBJneDvvW0aCkSQ0/HPhEAHMozT8N+bVg0OV7rl9Kxd"
-          type="audio/wav"
+          src="https://cdn.freesound.org/previews/320/320655_5260872-lq.mp3"
+          type="audio/mpeg"
         />
       </audio>
 
-      <div className="fixed top-4 right-4 z-[9999] animate-slideInFromRight">
-        <div className="bg-white rounded-2xl shadow-2xl border-2 border-orange-200 w-96 overflow-hidden transform transition-all hover:scale-[1.02]">
-          <div className="bg-gradient-to-r from-orange-500 via-orange-600 to-red-500 px-5 py-4 relative overflow-hidden">
-            <div className="absolute inset-0 opacity-10">
-              <div className="absolute top-0 left-0 w-40 h-40 bg-white rounded-full -translate-x-20 -translate-y-20"></div>
-              <div className="absolute bottom-0 right-0 w-32 h-32 bg-white rounded-full translate-x-16 translate-y-16"></div>
-            </div>
-
-            <div className="relative flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="bg-white bg-opacity-20 backdrop-blur-sm p-2.5 rounded-xl animate-bounce">
-                  <Bell size={22} className="text-white" />
-                </div>
-                <div>
-                  <h3 className="text-white font-bold text-lg flex items-center gap-2">
-                    Leads Reminder
-                    <span className="bg-white bg-opacity-20 px-2 py-0.5 rounded-full text-xs font-semibold animate-pulse">
-                      New
-                    </span>
-                  </h3>
-                  <p className="text-white text-opacity-90 text-xs mt-0.5">
-                    Follow-up notification 🔔
-                  </p>
-                </div>
+      {isVisible && currentReminder && (
+        <div className="fixed top-4 right-4 z-[9999] animate-slideInFromRight">
+          <div className="bg-white rounded-2xl shadow-2xl border-2 border-orange-200 w-96 overflow-hidden transform transition-all hover:scale-[1.02]">
+            <div className="bg-gradient-to-r from-orange-500 via-orange-600 to-red-500 px-5 py-4 relative overflow-hidden">
+              <div className="absolute inset-0 opacity-10">
+                <div className="absolute top-0 left-0 w-40 h-40 bg-white rounded-full -translate-x-20 -translate-y-20"></div>
+                <div className="absolute bottom-0 right-0 w-32 h-32 bg-white rounded-full translate-x-16 translate-y-16"></div>
               </div>
 
-              <button
-                onClick={handleClose}
-                className="bg-white bg-opacity-20 hover:bg-opacity-30 p-1.5 rounded-lg transition-all backdrop-blur-sm"
-              >
-                <X size={18} className="text-white" />
-              </button>
-            </div>
-          </div>
-
-          <div className="p-5 space-y-3 bg-gradient-to-br from-orange-50 to-white">
-            <div className="flex items-center justify-between bg-white rounded-xl p-3 border-2 border-orange-100 shadow-sm">
-              <div className="flex items-center gap-2">
-                <div className="bg-orange-100 p-2 rounded-lg">
-                  <AlertCircle size={16} className="text-orange-600" />
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500 font-medium">Lead ID</p>
-                  <p className="text-sm font-bold text-gray-800">
-                    {currentReminder.lead_id || currentReminder.id}
-                  </p>
-                </div>
-              </div>
-              <div
-                className={`px-3 py-1 rounded-full text-xs font-bold border-2 ${getPriorityColor(
-                  currentReminder.priority || "Medium"
-                )}`}
-              >
-                {currentReminder.priority || "Medium"}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="bg-white rounded-xl p-3 border border-orange-100 shadow-sm">
-                <div className="flex items-center gap-2 mb-1">
-                  <User size={14} className="text-orange-600" />
-                  <p className="text-xs text-gray-500 font-medium">Profile</p>
-                </div>
-                <p className="text-sm font-bold text-gray-800 truncate">
-                  {leadName}
-                </p>
-              </div>
-
-              {currentReminder.type && (
-                <div className="bg-white rounded-xl p-3 border border-orange-100 shadow-sm">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Star size={14} className="text-orange-600" />
-                    <p className="text-xs text-gray-500 font-medium">
-                      Lead Type
+              <div className="relative flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="bg-white bg-opacity-20 backdrop-blur-sm p-2.5 rounded-xl animate-bounce">
+                    <Bell size={22} className="text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-white font-bold text-lg flex items-center gap-2">
+                      Leads Reminder
+                      <span className="bg-white bg-opacity-20 px-2 py-0.5 rounded-full text-xs font-semibold animate-pulse">
+                        New
+                      </span>
+                    </h3>
+                    <p className="text-white text-opacity-90 text-xs mt-0.5">
+                      Follow-up notification 🔔
                     </p>
                   </div>
-                  <p className="text-sm font-bold text-gray-800">
-                    {currentReminder.type}
-                  </p>
                 </div>
-              )}
-            </div>
 
-            <div className="bg-gradient-to-r from-orange-100 to-red-100 rounded-xl p-3 border-2 border-orange-200 animate-pulse-slow">
-              <div className="flex items-center gap-2 mb-1">
-                <Calendar size={14} className="text-orange-700" />
-                <p className="text-xs text-orange-700 font-bold">
-                  Scheduled Date & Time
-                </p>
-              </div>
-              <div className="flex items-center gap-2 mt-1">
-                <Clock size={16} className="text-orange-600" />
-                <p className="text-sm font-bold text-orange-900">
-                  {displayDate}
-                </p>
+                <button
+                  onClick={handleClose}
+                  className="bg-white bg-opacity-20 hover:bg-opacity-30 p-1.5 rounded-lg transition-all backdrop-blur-sm"
+                >
+                  <X size={18} className="text-white" />
+                </button>
               </div>
             </div>
 
-            {currentReminder.interested_in && (
-              <div className="bg-white rounded-xl p-3 border border-orange-100 shadow-sm">
-                <div className="flex items-center gap-2 mb-1">
-                  <Target size={14} className="text-orange-600" />
-                  <p className="text-xs text-gray-500 font-medium">
-                    Interested In
+            <div className="p-5 space-y-3 bg-gradient-to-br from-orange-50 to-white">
+              <div className="flex items-center justify-between bg-white rounded-xl p-3 border-2 border-orange-100 shadow-sm">
+                <div className="flex items-center gap-2">
+                  <div className="bg-orange-100 p-2 rounded-lg">
+                    <AlertCircle size={16} className="text-orange-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 font-medium">Lead ID</p>
+                    <p className="text-sm font-bold text-gray-800">
+                      {currentReminder.lead_id || currentReminder.id}
+                    </p>
+                  </div>
+                </div>
+                <div
+                  className={`px-3 py-1 rounded-full text-xs font-bold border-2 ${getPriorityColor(
+                    currentReminder.priority || "Medium"
+                  )}`}
+                >
+                  {currentReminder.priority || "Medium"}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-white rounded-xl p-3 border border-orange-100 shadow-sm">
+                  <div className="flex items-center gap-2 mb-1">
+                    <User size={14} className="text-orange-600" />
+                    <p className="text-xs text-gray-500 font-medium">Profile</p>
+                  </div>
+                  <p className="text-sm font-bold text-gray-800 truncate">
+                    {leadName}
                   </p>
                 </div>
-                <p className="text-sm font-bold text-gray-800">
-                  {currentReminder.interested_in}
-                </p>
-              </div>
-            )}
 
-            {currentReminder.pipeline_name && (
-              <div className="bg-white rounded-xl p-3 border border-orange-100 shadow-sm">
-                <div className="flex items-center gap-2 mb-2">
-                  <TrendingUp size={14} className="text-orange-600" />
-                  <p className="text-xs text-gray-500 font-medium">Pipeline</p>
-                </div>
-                <p className="text-sm font-bold text-gray-800 mb-2">
-                  {currentReminder.pipeline_name}
-                </p>
-
-                {currentReminder.stage_name && (
-                  <div className="space-y-1">
-                    <p className="text-[11px] font-bold text-gray-500 uppercase tracking-tight">Stage</p>
-                    <p className="text-sm font-bold text-orange-600 italic">
-                      {currentReminder.stage_name}
+                {currentReminder.type && (
+                  <div className="bg-white rounded-xl p-3 border border-orange-100 shadow-sm">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Star size={14} className="text-orange-600" />
+                      <p className="text-xs text-gray-500 font-medium">
+                        Lead Type
+                      </p>
+                    </div>
+                    <p className="text-sm font-bold text-gray-800">
+                      {currentReminder.type}
                     </p>
                   </div>
                 )}
               </div>
-            )}
 
-            <div className="flex gap-2 pt-2">
-              <button
-                onClick={handleViewLead}
-                className="flex-1 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-bold py-3 rounded-xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2"
-              >
-                <Briefcase size={16} />
-                View Lead
-              </button>
-              <button
-                onClick={handleSnooze}
-                className="flex-1 bg-white border-2 border-orange-500 text-orange-600 hover:bg-orange-50 font-bold py-3 rounded-xl transition-all flex items-center justify-center gap-2"
-              >
-                <Clock size={16} />
-                Snooze
-              </button>
+              <div className="bg-gradient-to-r from-orange-100 to-red-100 rounded-xl p-3 border-2 border-orange-200 animate-pulse-slow">
+                <div className="flex items-center gap-2 mb-1">
+                  <Calendar size={14} className="text-orange-700" />
+                  <p className="text-xs text-orange-700 font-bold">
+                    Scheduled Date & Time
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 mt-1">
+                  <Clock size={16} className="text-orange-600" />
+                  <p className="text-sm font-bold text-orange-900">
+                    {displayDate}
+                  </p>
+                </div>
+              </div>
+
+              {currentReminder.interested_in && (
+                <div className="bg-white rounded-xl p-3 border border-orange-100 shadow-sm">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Target size={14} className="text-orange-600" />
+                    <p className="text-xs text-gray-500 font-medium">
+                      Interested In
+                    </p>
+                  </div>
+                  <p className="text-sm font-bold text-gray-800">
+                    {currentReminder.interested_in}
+                  </p>
+                </div>
+              )}
+              <div className="bg-white rounded-xl p-3 border border-orange-100 shadow-sm">
+                <div className="flex items-center gap-2 mb-2">
+                  <TrendingUp size={14} className="text-orange-600" />
+                  <p className="text-xs text-gray-500 font-medium">PIPELINE</p>
+                </div>
+                <p className="text-sm font-bold text-gray-800 mb-2">
+                  {currentReminder.pipeline_name || "N/A"}
+                </p>
+
+                {/* Pipeline Stages Progress */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-gray-600">
+                      Stage: <span className="text-gray-900 font-extrabold">{currentReminder.stage_name || "N/A"}</span>
+                    </span>
+                    {currentReminder.total_stages > 0 && (
+                      <span className="text-xs font-bold text-orange-600 italic">
+                        {currentReminder.current_stage}/{currentReminder.total_stages}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Progress Bar */}
+                  {currentReminder.total_stages > 0 && (
+                    <div className="relative h-3 bg-gray-100 rounded-full overflow-hidden border border-gray-50">
+                      <div
+                        className="absolute h-full bg-gradient-to-r from-orange-400 via-orange-500 to-red-500 rounded-full transition-all duration-700 ease-out shadow-sm"
+                        style={{
+                          width: `${(currentReminder.current_stage / currentReminder.total_stages) * 100}%`,
+                        }}
+                      >
+                        <div className="absolute inset-0 bg-white opacity-20 animate-shimmer"></div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Stage Indicators */}
+                  {currentReminder.total_stages > 0 && (
+                    <div className="flex justify-between items-start pt-2 px-1">
+                      {Array.from({ length: currentReminder.total_stages }).map(
+                        (_, index) => {
+                          const isCompleted = index < currentReminder.current_stage;
+                          const isActive = index === currentReminder.current_stage - 1;
+
+                          return (
+                            <div key={index} className="flex flex-col items-center">
+                              <div
+                                className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-[10px] transition-all duration-500 shadow-sm ${isCompleted
+                                  ? "bg-gradient-to-br from-orange-400 to-red-500 text-white"
+                                  : "bg-gray-100 text-gray-400 border border-gray-200"
+                                  } ${isActive ? "ring-4 ring-orange-100 scale-110 z-10" : ""}`}
+                              >
+                                {isCompleted ? (
+                                  <CheckCircle size={14} className="animate-in zoom-in duration-300" />
+                                ) : (
+                                  index + 1
+                                )}
+                              </div>
+                              <span className={`text-[9px] mt-2 font-bold ${isCompleted ? "text-gray-700" : "text-gray-400"}`}>
+                                Stage {index + 1}
+                              </span>
+                            </div>
+                          );
+                        }
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+
+              <div className="flex gap-2 pt-2">
+                <button
+                  onClick={handleViewLead}
+                  className="flex-1 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-bold py-3 rounded-xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2"
+                >
+                  <Briefcase size={16} />
+                  View Lead
+                </button>
+                <button
+                  onClick={handleSnooze}
+                  className="flex-1 bg-white border-2 border-orange-500 text-orange-600 hover:bg-orange-50 font-bold py-3 rounded-xl transition-all flex items-center justify-center gap-2"
+                >
+                  <Clock size={16} />
+                  Snooze
+                </button>
+              </div>
             </div>
           </div>
-        </div>
 
-        <style>{`
+          <style>{`
           @keyframes slideInFromRight {
             from {
               transform: translateX(100%);
@@ -324,24 +375,38 @@ export default function LeadsReminder() {
             }
           }
 
-          @keyframes pulse-slow {
-            0%, 100% {
-              opacity: 1;
+            @keyframes shimmer {
+              0% {
+                transform: translateX(-100%);
+              }
+              100% {
+                transform: translateX(100%);
+              }
             }
-            50% {
-              opacity: 0.8;
+
+            @keyframes pulse-slow {
+              0%, 100% {
+                opacity: 1;
+              }
+              50% {
+                opacity: 0.8;
+              }
             }
-          }
 
-          .animate-slideInFromRight {
-            animation: slideInFromRight 0.6s ease-out;
-          }
+            .animate-slideInFromRight {
+              animation: slideInFromRight 0.6s ease-out;
+            }
 
-          .animate-pulse-slow {
-            animation: pulse-slow 2s ease-in-out infinite;
-          }
+            .animate-shimmer {
+              animation: shimmer 2s infinite;
+            }
+
+            .animate-pulse-slow {
+              animation: pulse-slow 2s ease-in-out infinite;
+            }
         `}</style>
-      </div>
+        </div>
+      )}
     </>
   );
 }

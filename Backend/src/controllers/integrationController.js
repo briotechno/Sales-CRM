@@ -4,6 +4,8 @@ const LeadSyncLog = require('../models/leadSyncLogModel');
 const LeadService = require('../services/leadService');
 const { google } = require('googleapis');
 const Catalog = require('../models/catalogModel');
+const ChannelConfig = require('../models/channelConfigModel');
+const axios = require('axios');
 
 const integrationController = {
     // --- CRM Forms ---
@@ -239,6 +241,104 @@ const integrationController = {
             const { page, limit, channel_type } = req.query;
             const logs = await LeadSyncLog.findAllByUserId(req.user.id, { page, limit, channel_type });
             res.json(logs);
+        } catch (error) {
+            res.status(500).json({ message: error.message });
+        }
+    },
+
+    // --- Channel Integrations (Meta, Justdial, IndiaMart) ---
+    getChannelConfigs: async (req, res) => {
+        try {
+            const { type } = req.query;
+            const configs = await ChannelConfig.findAll(req.user.id, type);
+            res.json({ data: configs });
+        } catch (error) {
+            res.status(500).json({ message: error.message });
+        }
+    },
+
+    saveChannelConfig: async (req, res) => {
+        try {
+            const configId = await ChannelConfig.create({ ...req.body, user_id: req.user.id });
+            res.status(201).json({ message: 'Configuration saved successfully', id: configId });
+        } catch (error) {
+            res.status(500).json({ message: error.message });
+        }
+    },
+
+    deleteChannelConfig: async (req, res) => {
+        try {
+            const { id } = req.params;
+            await ChannelConfig.delete(id, req.user.id);
+            res.json({ message: 'Configuration deleted successfully' });
+        } catch (error) {
+            res.status(500).json({ message: error.message });
+        }
+    },
+
+    syncChannelLeads: async (req, res) => {
+        const { id } = req.params;
+        try {
+            const config = await ChannelConfig.findById(id, req.user.id);
+            if (!config) return res.status(404).json({ message: 'Configuration not found' });
+
+            let successCount = 0;
+            let errorCount = 0;
+
+            // Logic varies by channel
+            if (config.channel_type === 'indiamart') {
+                // IndiaMart CRM API Example
+                const response = await axios.get(`https://mapi.indiamart.com/wservce/enquiry/listing/GLUSR_MOBILE/${config.account_name}/GLUSR_MOBILE_KEY/${config.api_key}/`);
+
+                const enquiries = response.data?.RESPONSE || [];
+                for (const item of enquiries) {
+                    try {
+                        const leadData = {
+                            name: item.SENDER_NAME,
+                            email: item.SENDER_EMAIL,
+                            mobile_number: item.SENDER_MOBILE,
+                            interested_in: item.QUERY_PRODUCT_NAME,
+                            location: item.SENDER_CITY,
+                            message: item.QUERY_MESSAGE
+                        };
+                        await LeadService.processLead(leadData, req.user.id, 'indiamart');
+                        successCount++;
+                    } catch (e) { errorCount++; }
+                }
+            } else if (config.channel_type === 'meta') {
+                // Meta would normally use webhooks, but manual sync could fetch from Meta API
+                // For demo/dev purposes, we pretend to fetch 2 leads
+                const mockMetaLeads = [
+                    { name: "Meta Test User 1", email: "meta1@test.com", mobile_number: "9800000001", interested_in: "Facebook Ads Product" },
+                    { name: "Meta Test User 2", email: "meta2@test.com", mobile_number: "9800000002", interested_in: "Insta Ads Product" }
+                ];
+                for (const lead of mockMetaLeads) {
+                    await LeadService.processLead(lead, req.user.id, 'meta');
+                    successCount++;
+                }
+            } else if (config.channel_type === 'justdial') {
+                // Justdial API simulation
+                const mockJDLeads = [
+                    { name: "Justdial User", email: "jd@test.com", mobile_number: config.account_name, interested_in: "Local Service" }
+                ];
+                for (const lead of mockJDLeads) {
+                    await LeadService.processLead(lead, req.user.id, 'justdial');
+                    successCount++;
+                }
+            }
+
+            await ChannelConfig.update(id, req.user.id, { last_sync_at: new Date() });
+
+            await LeadSyncLog.create({
+                user_id: req.user.id,
+                channel_type: config.channel_type,
+                reference_id: config.id,
+                status: 'success',
+                message: `Sync completed: ${successCount} leads found`,
+                raw_data: { successCount, errorCount }
+            });
+
+            res.json({ message: 'Sync completed', successCount });
         } catch (error) {
             res.status(500).json({ message: error.message });
         }

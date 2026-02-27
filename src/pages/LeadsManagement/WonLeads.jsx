@@ -16,6 +16,7 @@ import { useGetPipelinesQuery } from "../../store/api/pipelineApi";
 import { useGetEmployeesQuery } from "../../store/api/employeeApi";
 import CallActionPopup from "../../components/AddNewLeads/CallActionPopup";
 import CallQrModal from "../../components/LeadManagement/CallQrModal";
+import EmptyState from "../../components/common/EmptyState";
 import { toast } from "react-hot-toast";
 
 export default function WonLeads() {
@@ -697,10 +698,11 @@ export default function WonLeads() {
                         ) : isError ? (
                             <div className="text-center text-red-500 py-10 capitalize">Failed to load won leads.</div>
                         ) : leadsData.length === 0 ? (
-                            <div className="text-center py-10 bg-white rounded-lg border border-gray-200 shadow-sm">
-                                <Users size={48} className="mx-auto text-gray-300 mb-4" />
-                                <h3 className="text-xl font-semibold text-gray-700 capitalize">No Leads Found</h3>
-                            </div>
+                            <EmptyState
+                                title="No Won Leads Yet"
+                                message="You haven't won any leads yet. Keep pushing, success is just around the corner!"
+                                type="leads"
+                            />
                         ) : (
                             <>
                                 {view === "list" ? (
