@@ -87,7 +87,7 @@ const leadAssignmentController = {
                     assigned_at: new Date()
                 }, userId);
 
-                // Log assignment
+                // Log assignment history
                 await LeadAssignmentLog.create({
                     user_id: userId,
                     lead_id: leadId,
@@ -97,6 +97,15 @@ const leadAssignmentController = {
                     reassigned_from: reassignedFrom,
                     reason: 'Manual Assignment (Bulk/Workspace)'
                 });
+
+                // Log into Activity Timeline
+                const LeadResources = require('../models/leadResourcesModel');
+                await LeadResources.addActivity({
+                    lead_id: leadId,
+                    activity_type: 'notification',
+                    title: `Lead Assigned to ${empName || 'Employee'}`,
+                    description: `Lead assigned to ${empName || 'Employee (ID: ' + employeeId + ')'} by ${req.user.employee_name || req.user.username || 'admin'}.`
+                }, userId);
             }
 
             res.json({ message: `${leadIds.length} lead(s) assigned successfully` });

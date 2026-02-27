@@ -14,7 +14,7 @@ import {
   Briefcase,
   MapPin,
 } from "lucide-react";
-import { useGetDueMeetingsQuery } from "../store/api/leadApi";
+import { useGetDueMeetingsQuery, useAddLeadActivityMutation } from "../store/api/leadApi";
 import { useSelector } from "react-redux";
 
 export default function MeetingReminder() {
@@ -22,6 +22,7 @@ export default function MeetingReminder() {
   const { user } = useSelector((state) => state.auth);
   const [isVisible, setIsVisible] = useState(false);
   const [currentMeeting, setCurrentMeeting] = useState(null);
+  const [addLeadActivity] = useAddLeadActivityMutation();
   const audioRef = useRef(null);
 
   // Reference to track if we've already notified for a specific meeting
@@ -63,6 +64,17 @@ export default function MeetingReminder() {
         setCurrentMeeting(nextOne);
         setIsVisible(true);
         notifiedMeetings.current.add(nextOne.id);
+
+        // Log notification in activity timeline
+        addLeadActivity({
+          id: nextOne.lead_id,
+          data: {
+            activity_type: 'notification',
+            title: 'Meeting Reminder Notified',
+            description: `A meeting notification "${nextOne.title}" was shown to the user at ${new Date().toLocaleTimeString()}.`
+          }
+        });
+
         playNotificationSound();
       }
     } else if (currentMeeting) {
