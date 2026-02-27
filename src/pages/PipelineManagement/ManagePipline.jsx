@@ -21,6 +21,8 @@ import {
   ChevronDown,
   SquarePen,
   AlertCircle,
+  LayoutGrid,
+  List,
 } from "lucide-react";
 import Modal from "../../components/common/Modal";
 import NumberCard from "../../components/NumberCard";
@@ -43,6 +45,7 @@ const PipelineList = () => {
   const [selectedPipeline, setSelectedPipeline] = useState(null);
   const [tempSearch, setTempSearch] = useState("");
   const [isStatusFilterOpen, setIsStatusFilterOpen] = useState(false);
+  const [viewMode, setViewMode] = useState("list"); // "list" or "grid"
   const statusDropdownRef = useRef(null);
 
   // Pipeline data
@@ -243,6 +246,30 @@ const PipelineList = () => {
                   )}
                 </div>
 
+                {/* View Multi-Toggle */}
+                <div className="flex items-center bg-gray-100 p-1 rounded-sm border border-gray-200 shadow-inner">
+                  <button
+                    onClick={() => setViewMode("list")}
+                    className={`p-2 rounded-sm transition-all flex items-center gap-2 ${viewMode === "list"
+                      ? "bg-white text-orange-600 shadow-sm"
+                      : "text-gray-400 hover:text-gray-600 hover:bg-gray-50"
+                      }`}
+                    title="List View"
+                  >
+                    <List size={20} />
+                  </button>
+                  <button
+                    onClick={() => setViewMode("grid")}
+                    className={`p-2 rounded-sm transition-all flex items-center gap-2 ${viewMode === "grid"
+                      ? "bg-white text-orange-600 shadow-sm"
+                      : "text-gray-400 hover:text-gray-600 hover:bg-gray-50"
+                      }`}
+                    title="Grid View"
+                  >
+                    <LayoutGrid size={20} />
+                  </button>
+                </div>
+
 
 
                 <button
@@ -302,133 +329,266 @@ const PipelineList = () => {
             />
           </div>
 
-          {/* Table Container */}
-          <div className="overflow-x-auto border border-gray-200 rounded-sm shadow-sm bg-white mt-4">
-            {/* Table */}
-            <table className="w-full border-collapse text-left text-sm">
-              <thead>
-                <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
-                  <th className="py-3 px-4 font-semibold border-b border-orange-400">S.N</th>
-                  <th className="py-3 px-4 font-semibold border-b border-orange-400">Pipeline Name</th>
-                  <th className="py-3 px-4 font-semibold border-b border-orange-400">Number of Stages</th>
-                  <th className="py-3 px-4 font-semibold border-b border-orange-400">Total Deal Value</th>
-                  <th className="py-3 px-4 font-semibold border-b border-orange-400">No of Deals</th>
-                  <th className="py-3 px-4 font-semibold border-b border-orange-400">Created Date</th>
-                  <th className="py-3 px-4 font-semibold border-b border-orange-400 text-center">Status</th>
-                  <th className="py-3 px-4 font-semibold border-b border-orange-400 text-right">Action</th>
-                </tr>
-              </thead>
+          {/* Conditionally Render List or Grid View */}
+          {viewMode === "list" ? (
+            <div className="overflow-x-auto border border-gray-200 rounded-sm shadow-sm bg-white mt-4">
+              <table className="w-full border-collapse text-left text-sm">
+                <thead>
+                  <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
+                    <th className="py-3 px-4 font-semibold border-b border-orange-400">S.N</th>
+                    <th className="py-3 px-4 font-semibold border-b border-orange-400">Pipeline Name</th>
+                    <th className="py-3 px-4 font-semibold border-b border-orange-400">Number of Stages</th>
+                    <th className="py-3 px-4 font-semibold border-b border-orange-400">Total Deal Value</th>
+                    <th className="py-3 px-4 font-semibold border-b border-orange-400">No of Deals</th>
+                    <th className="py-3 px-4 font-semibold border-b border-orange-400">Created Date</th>
+                    <th className="py-3 px-4 font-semibold border-b border-orange-400 text-center">Status</th>
+                    <th className="py-3 px-4 font-semibold border-b border-orange-400 text-right">Action</th>
+                  </tr>
+                </thead>
 
-              <tbody>
-                {currentPipelines.length > 0 ? (
-                  currentPipelines.map((pipeline, index) => (
-                    <tr
-                      key={pipeline.id}
-                      className="border-t hover:bg-gray-50 transition-colors"
-                    >
-                      <td className="py-4 px-4 font-medium text-gray-500">
-                        {indexOfFirstItem + index + 1}
-                      </td>
-                      <td className="py-4 px-4 font-bold text-gray-800 hover:text-orange-600 cursor-pointer transition-colors"
-                        onClick={() => {
-                          setSelectedPipeline(pipeline);
-                          setIsViewOpen(true);
-                        }}
+                <tbody>
+                  {currentPipelines.length > 0 ? (
+                    currentPipelines.map((pipeline, index) => (
+                      <tr
+                        key={pipeline.id}
+                        className="border-t hover:bg-gray-50 transition-colors"
                       >
-                        {pipeline.name}
-                      </td>
-                      <td className="py-4 px-4 font-medium text-gray-600 text-center md:text-left">
-                        <span className="bg-orange-50 text-orange-600 px-3 py-1 rounded-sm text-xs font-bold border border-orange-100 uppercase tracking-tight">
-                          {Array.isArray(pipeline.stages) ? pipeline.stages.length : (pipeline.stages || 0)} Stages
-                        </span>
-                      </td>
-                      <td className="py-4 px-4 font-bold text-gray-900">
-                        {formatCurrency(pipeline.totalDealValue)}
-                      </td>
-                      <td className="py-4 px-4 font-bold text-gray-700">
-                        {pipeline.noOfDeals || 0}
-                      </td>
-                      <td className="py-4 px-4 text-xs font-semibold text-gray-400 uppercase tracking-tighter">
-                        {pipeline.createdDate}
-                      </td>
-                      <td className="py-4 px-4 text-center">
-                        <span
-                          className={`px-3 py-1 text-[10px] font-bold rounded-sm border uppercase tracking-wider ${pipeline.status === "Active"
-                            ? "bg-green-50 text-green-700 border-green-200"
-                            : "bg-red-50 text-red-700 border-red-200"
-                            }`}
+                        <td className="py-4 px-4 font-medium text-gray-500">
+                          {indexOfFirstItem + index + 1}
+                        </td>
+                        <td className="py-4 px-4 font-bold text-gray-800 hover:text-orange-600 cursor-pointer transition-colors"
+                          onClick={() => {
+                            setSelectedPipeline(pipeline);
+                            setIsViewOpen(true);
+                          }}
                         >
-                          {pipeline.status}
-                        </span>
-                      </td>
-                      <td className="py-4 px-4">
-                        <div className="flex justify-end gap-2 text-gray-400">
-                          <button
-                            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-sm transition-all"
-                            onClick={() => {
-                              setSelectedPipeline(pipeline);
-                              setIsViewOpen(true);
-                            }}
-                            title="View"
+                          <div className="max-w-[200px] truncate" title={pipeline.name}>
+                            {pipeline.name}
+                          </div>
+                        </td>
+                        <td className="py-4 px-4 font-medium text-gray-600 text-center md:text-left">
+                          <span className="bg-orange-50 text-orange-600 px-3 py-1 rounded-sm text-xs font-bold border border-orange-100 uppercase tracking-tight">
+                            {Array.isArray(pipeline.stages) ? pipeline.stages.length : (pipeline.stages || 0)} Stages
+                          </span>
+                        </td>
+                        <td className="py-4 px-4 font-bold text-gray-900">
+                          {formatCurrency(pipeline.totalDealValue)}
+                        </td>
+                        <td className="py-4 px-4 font-bold text-gray-700">
+                          <span
+                            className="cursor-pointer hover:text-orange-600 transition-colors decoration-orange-600/30 hover:underline"
+                            onClick={() => navigate(`/crm/leads/all?pipeline_id=${pipeline.id}`)}
+                            title={`View leads for ${pipeline.name}`}
                           >
-                            <Eye size={18} />
-                          </button>
+                            {pipeline.noOfDeals || 0}
+                          </span>
+                        </td>
+                        <td className="py-4 px-4 text-xs font-semibold text-gray-400 uppercase tracking-tighter">
+                          {pipeline.createdDate}
+                        </td>
+                        <td className="py-4 px-4 text-center">
+                          <span
+                            className={`px-3 py-1 text-[10px] font-bold rounded-sm border uppercase tracking-wider ${pipeline.status === "Active"
+                              ? "bg-green-50 text-green-700 border-green-200"
+                              : "bg-red-50 text-red-700 border-red-200"
+                              }`}
+                          >
+                            {pipeline.status}
+                          </span>
+                        </td>
+                        <td className="py-4 px-4">
+                          <div className="flex justify-end gap-2 text-gray-400">
+                            <button
+                              className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-sm transition-all"
+                              onClick={() => {
+                                setSelectedPipeline(pipeline);
+                                setIsViewOpen(true);
+                              }}
+                              title="View"
+                            >
+                              <Eye size={18} />
+                            </button>
+                            <button
+                              className="p-1.5 text-green-600 hover:bg-green-50 rounded-sm transition-all"
+                              onClick={() => {
+                                setSelectedPipeline(pipeline);
+                                setIsAddPipelineOpen(true);
+                              }}
+                              title="Edit"
+                            >
+                              <SquarePen size={18} />
+                            </button>
+                            <button
+                              onClick={() => {
+                                setSelectedPipeline(pipeline);
+                                setIsDeleteOpen(true);
+                              }}
+                              className={`p-1.5 rounded-sm transition-all ${pipeline.name === "Default Pipeline"
+                                ? "text-gray-300 cursor-not-allowed opacity-50"
+                                : "text-red-600 hover:bg-red-50"
+                                }`}
+                              title={pipeline.name === "Default Pipeline" ? "Default Pipeline (Cannot Delete)" : "Delete"}
+                              disabled={pipeline.name === "Default Pipeline"}
+                            >
+                              <Trash2 size={18} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="8" className="py-20 text-center">
+                        <div className="flex flex-col items-center justify-center text-gray-400 gap-4">
+                          <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center shadow-inner text-gray-200">
+                            <Target size={32} />
+                          </div>
+                          <div className="space-y-1">
+                            <p className="font-bold text-gray-500 uppercase tracking-widest text-xs">No pipelines found.</p>
+                            <p className="text-xs text-gray-400">Try adjusting your search or add a new pipeline.</p>
+                          </div>
                           <button
-                            className="p-1.5 text-green-600 hover:bg-green-50 rounded-sm transition-all"
                             onClick={() => {
-                              setSelectedPipeline(pipeline);
+                              setSelectedPipeline(null);
                               setIsAddPipelineOpen(true);
                             }}
-                            title="Edit"
+                            className="mt-2 px-6 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm text-xs font-bold hover:shadow-lg transition-all active:scale-95 shadow-md"
                           >
-                            <SquarePen size={18} />
-                          </button>
-                          {console.log(pipeline.name)}
-                          <button
-                            onClick={() => {
-                              setSelectedPipeline(pipeline);
-                              setIsDeleteOpen(true);
-                            }}
-                            className={`p-1.5 rounded-sm transition-all ${pipeline.name === "Default Pipeline"
-                              ? "text-gray-300 cursor-not-allowed opacity-50"
-                              : "text-red-600 hover:bg-red-50"
-                              }`}
-                            title={pipeline.name === "Default Pipeline" ? "Default Pipeline (Cannot Delete)" : "Delete"}
-                            disabled={pipeline.name === "Default Pipeline"}
-                          >
-                            <Trash2 size={18} />
+                            Add Pipeline
                           </button>
                         </div>
                       </td>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="8" className="py-20 text-center">
-                      <div className="flex flex-col items-center justify-center text-gray-400 gap-4">
-                        <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center shadow-inner text-gray-200">
-                          <Target size={32} />
-                        </div>
-                        <div className="space-y-1">
-                          <p className="font-bold text-gray-500 uppercase tracking-widest text-xs">No pipelines found.</p>
-                          <p className="text-xs text-gray-400">Try adjusting your search or add a new pipeline.</p>
-                        </div>
-                        <button
-                          onClick={() => {
-                            setSelectedPipeline(null);
-                            setIsAddPipelineOpen(true);
-                          }}
-                          className="mt-2 px-6 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm text-xs font-bold hover:shadow-lg transition-all active:scale-95 shadow-md"
-                        >
-                          Add Pipeline
-                        </button>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            /* Grid View */
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
+              {currentPipelines.length > 0 ? (
+                currentPipelines.map((pipeline) => (
+                  <div
+                    key={pipeline.id}
+                    className="group relative bg-white rounded-sm border border-orange-100 hover:border-orange-300 transition-all shadow-sm hover:shadow-md overflow-hidden flex flex-col h-full"
+                  >
+                    {/* Action Icons - Top Right (Visible on hover) */}
+                    <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 z-10">
+                      <button
+                        onClick={() => {
+                          setSelectedPipeline(pipeline);
+                          setIsViewOpen(true);
+                        }}
+                        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-sm bg-white shadow-sm border border-blue-100"
+                        title="View Details"
+                      >
+                        <Eye size={16} />
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSelectedPipeline(pipeline);
+                          setIsAddPipelineOpen(true);
+                        }}
+                        className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-sm bg-white shadow-sm border border-emerald-100"
+                        title="Edit"
+                      >
+                        <SquarePen size={16} />
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSelectedPipeline(pipeline);
+                          setIsDeleteOpen(true);
+                        }}
+                        className={`p-1.5 rounded-sm bg-white shadow-sm border transition-all ${pipeline.name === "Default Pipeline"
+                          ? "text-gray-300 cursor-not-allowed border-gray-100"
+                          : "text-red-600 hover:bg-red-50 border-red-100"
+                          }`}
+                        disabled={pipeline.name === "Default Pipeline"}
+                        title="Delete"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                    <div className="p-4 flex items-center gap-3">
+                      {/* Initials Box */}
+                      <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-sm flex items-center justify-center text-white font-bold text-2xl shadow-lg shrink-0 group-hover:scale-105 transition-transform">
+                        {pipeline.name
+                          ?.split(" ")
+                          .map((n) => n[0])
+                          .slice(0, 2)
+                          .join("")
+                          .toUpperCase()}
                       </div>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between items-start gap-2">
+                          <h3
+                            className="font-semibold text-gray-800 text-lg hover:text-orange-600 cursor-pointer transition-colors truncate"
+                            onClick={() => {
+                              setSelectedPipeline(pipeline);
+                              setIsViewOpen(true);
+                            }}
+                          >
+                            {pipeline.name}
+                          </h3>
+                        </div>
+
+                        <div className="mt-1 flex flex-wrap items-center gap-2">
+                          <span
+                            className={`px-2 py-0.5 text-[9px] font-black rounded-sm border uppercase tracking-wider ${pipeline.status === "Active"
+                              ? "bg-green-50 text-green-700 border-green-100"
+                              : "bg-red-50 text-red-700 border-red-100"
+                              }`}
+                          >
+                            {pipeline.status}
+                          </span>
+                          <span className="text-[10px] text-gray-400 font-bold uppercase flex items-center gap-1">
+                            {pipeline.createdDate}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Stats Section - Compact One Line & No BG */}
+                    <div className="px-4 py-3 border-t border-gray-100 flex items-center justify-between mt-auto">
+                      <div className="flex-1">
+                        <p className="text-[10px] text-orange-600 font-bold uppercase tracking-tight">Value</p>
+                        <p className="text-sm font-bold text-gray-800">{formatCurrency(pipeline.totalDealValue)}</p>
+                      </div>
+                      <div className="flex-1 text-center border-l border-r border-gray-100 px-2">
+                        <p className="text-[10px] text-orange-600 font-bold uppercase tracking-tight">Deals</p>
+                        <p
+                          className="text-sm font-bold text-gray-800 cursor-pointer hover:text-orange-600 transition-colors hover:underline decoration-orange-600/30"
+                          onClick={() => navigate(`/crm/leads/all?pipeline_id=${pipeline.id}`)}
+                          title={`View leads for ${pipeline.name}`}
+                        >
+                          {pipeline.noOfDeals || 0}
+                        </p>
+                      </div>
+                      <div className="flex-1 text-right">
+                        <p className="text-[10px] text-orange-600 font-bold uppercase tracking-tight">Stages</p>
+                        <p className="text-sm font-bold text-gray-800">
+                          {Array.isArray(pipeline.stages) ? pipeline.stages.length : (pipeline.stages || 0)}
+                        </p>
+                      </div>
+                    </div>
+
+
+                  </div>
+                ))
+              ) : (
+                <div className="col-span-full py-20 bg-white border border-dashed border-gray-200 rounded-sm flex flex-col items-center justify-center text-gray-400 gap-4 shadow-sm">
+                  <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center text-gray-200">
+                    <Target size={32} />
+                  </div>
+                  <div className="text-center">
+                    <p className="font-bold text-gray-500 uppercase tracking-widest text-xs">No pipelines found.</p>
+                    <p className="text-xs text-gray-400">Try adjusting your search or add a new pipeline.</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Pagination Section */}
           {totalPages > 0 && (

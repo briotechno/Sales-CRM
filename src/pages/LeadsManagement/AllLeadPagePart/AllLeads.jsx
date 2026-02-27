@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useSelector } from "react-redux";
 import { FiHome, FiGrid } from "react-icons/fi";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Download, Upload, Filter, UserPlus, List, Trash2, Users, Server, Type, Phone, Loader2, ChevronLeft, ChevronRight, Mail, AlertCircle, PlusIcon } from "lucide-react";
 import Modal from "../../../components/common/Modal";
 import AddLeadPopup from "../../../components/AddNewLeads/AddNewLead";
@@ -21,6 +21,8 @@ import { toast } from "react-hot-toast";
 export default function LeadsList() {
   const isLocked = useSelector((state) => state.ui.sidebarLocked);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const urlPipelineId = searchParams.get("pipeline_id");
   const [view, setView] = useState("list");
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("All");
@@ -106,6 +108,12 @@ export default function LeadsList() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    if (urlPipelineId) {
+      setFilterPipeline(urlPipelineId);
+    }
+  }, [urlPipelineId]);
 
   const handleApplyFilters = () => {
     setFilterType(tempFilters.type);
