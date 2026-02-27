@@ -14,6 +14,7 @@ import Assigned from "./pages/LeadsManagement/Assigned";
 import DroppedLeads from "./pages/LeadsManagement/DroppedLeads";
 import TrendingLeads from "./pages/LeadsManagement/Trending";
 import Analysis from "./pages/LeadsManagement/Analysis";
+import EmployeePerformanceDetail from "./pages/LeadsManagement/EmployeePerformanceDetail";
 import NotConnectedLeads from "./pages/LeadsManagement/NotConnectedLeads";
 import FollowUpLeads from "./pages/LeadsManagement/FollowUpLeads";
 import MissedLeads from "./pages/LeadsManagement/MissedLeads";
@@ -180,6 +181,7 @@ function App() {
             <Route path="/crm/leads/trending" element={<TrendingLeads />} />
             <Route path="/crm/leads/won" element={<WonLeads />} />
             <Route path="/crm/leads/analysis" element={<Analysis />} />
+            <Route path="/crm/leads/team-performance/:id" element={<EmployeePerformanceDetail />} />
             <Route path="/crm/leads/assignment-settings" element={<AssignmentSettings />} />
             <Route path="/crm/leads/lead-rules-config" element={<LeadRulesConfig />} />
             <Route path="/crm/leads/profile/:id" element={<LeadProfile />} />

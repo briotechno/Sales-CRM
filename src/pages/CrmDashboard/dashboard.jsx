@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import {
   BarChart3,
   Users,
@@ -43,6 +44,7 @@ import { useGetCRMStatsQuery } from "../../store/api/crmDashboardApi";
 import { Loader2, RefreshCw } from "lucide-react";
 
 export default function CRMDashboard() {
+  const navigate = useNavigate();
   const { data: stats, isLoading, isFetching, refetch } = useGetCRMStatsQuery();
 
   if (isLoading) {
@@ -164,6 +166,14 @@ export default function CRMDashboard() {
     { month: "Apr", expected: 1500000, weighted: 1100000, bestCase: 1900000 },
     { month: "May", expected: 1800000, weighted: 1400000, bestCase: 2200000 },
     { month: "Jun", expected: 2100000, weighted: 1650000, bestCase: 2600000 },
+  ];
+
+  const teamPerformance = [
+    { id: 1, name: "Sarah Johnson", leads: 156, converted: 67, rate: 43, avatar: "SJ" },
+    { id: 2, name: "Michael Chen", leads: 142, converted: 58, rate: 41, avatar: "MC" },
+    { id: 3, name: "Emily Rodriguez", leads: 134, converted: 52, rate: 39, avatar: "ER" },
+    { id: 4, name: "David Kim", leads: 128, converted: 48, rate: 38, avatar: "DK" },
+    { id: 5, name: "Lisa Anderson", leads: 119, converted: 45, rate: 38, avatar: "LA" },
   ];
 
   return (
@@ -711,6 +721,59 @@ export default function CRMDashboard() {
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Team Performance - New Section */}
+          <div className="bg-white rounded-sm border border-gray-100 shadow-lg p-6">
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center">
+                <div className="p-3 rounded-lg bg-gradient-to-br from-orange-500 to-orange-600 mr-4 shadow-md">
+                  <Users className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-800">Team Performance</h2>
+                  <p className="text-gray-500 text-sm font-medium">Top performing consultants this month</p>
+                </div>
+              </div>
+              <button
+                onClick={() => navigate("/crm/leads/analysis")}
+                className="text-orange-600 text-[11px] font-bold hover:bg-orange-50 px-4 py-2 border border-orange-200 rounded-sm shadow-sm transition-all uppercase tracking-widest"
+              >
+                In-Depth Analysis
+              </button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
+              {teamPerformance.map((member, index) => (
+                <div
+                  key={index}
+                  onClick={() => navigate(`/crm/leads/team-performance/${member.id}`)}
+                  className="p-6 bg-white border border-gray-100 rounded-sm hover:border-orange-500 hover:shadow-xl transition-all duration-300 group cursor-pointer flex flex-col items-center text-center"
+                >
+                  <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center text-gray-800 font-bold text-xl mb-4 group-hover:bg-orange-600 group-hover:text-white transition-all shadow-sm border border-gray-100">
+                    {member.avatar}
+                  </div>
+                  <h4 className="font-bold text-gray-800 mb-4 group-hover:text-orange-600 transition-colors">
+                    {member.name}
+                  </h4>
+                  <div className="w-full space-y-3">
+                    <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider">
+                      <span className="text-gray-400">Converted</span>
+                      <span className="text-green-600 bg-green-50 px-2 py-0.5 rounded-sm">
+                        {member.converted}
+                      </span>
+                    </div>
+                    <div className="pt-4 border-t border-gray-100 group-hover:border-orange-100">
+                      <div className="text-3xl font-black text-gray-800 group-hover:text-orange-600">
+                        {member.rate}%
+                      </div>
+                      <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">
+                        Success Rate
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 

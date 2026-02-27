@@ -124,33 +124,35 @@ export default function AnalysisPage() {
     },
   ];
 
-  const monthlyTrends = [
-    { month: "Jan", leads: 245, converted: 89, revenue: 45000 },
-    { month: "Feb", leads: 312, converted: 121, revenue: 58000 },
-    { month: "Mar", leads: 289, converted: 98, revenue: 52000 },
-    { month: "Apr", leads: 356, converted: 145, revenue: 72000 },
-    { month: "May", leads: 398, converted: 167, revenue: 84000 },
-    { month: "Jun", leads: 423, converted: 189, revenue: 96000 },
+  const weeklyTrends = [
+    { week: "Week 1", new: 120, notConnected: 80, followUp: 60, trending: 45, won: 30 },
+    { week: "Week 2", new: 150, notConnected: 95, followUp: 85, trending: 60, won: 42 },
+    { week: "Week 3", new: 135, notConnected: 70, followUp: 110, trending: 75, won: 58 },
+    { week: "Week 4", new: 180, notConnected: 110, followUp: 95, trending: 90, won: 65 },
+    { week: "Week 5", new: 210, notConnected: 125, followUp: 140, trending: 110, won: 88 },
   ];
 
   const teamPerformance = [
     {
+      id: 1,
       name: "Sarah Johnson",
       leads: 156,
       converted: 67,
       rate: 43,
       avatar: "SJ",
     },
-    { name: "Michael Chen", leads: 142, converted: 58, rate: 41, avatar: "MC" },
+    { id: 2, name: "Michael Chen", leads: 142, converted: 58, rate: 41, avatar: "MC" },
     {
+      id: 3,
       name: "Emily Rodriguez",
       leads: 134,
       converted: 52,
       rate: 39,
       avatar: "ER",
     },
-    { name: "David Kim", leads: 128, converted: 48, rate: 38, avatar: "DK" },
+    { id: 4, name: "David Kim", leads: 128, converted: 48, rate: 38, avatar: "DK" },
     {
+      id: 5,
       name: "Lisa Anderson",
       leads: 119,
       converted: 45,
@@ -434,63 +436,69 @@ export default function AnalysisPage() {
                 </div>
                 <div>
                   <h2 className="text-xl font-bold text-gray-800">
-                    6-Month Trend Analysis
+                    Weekly Trend Analysis
                   </h2>
                   <p className="text-gray-400 text-xs font-semibold">
-                    Lead generation and conversion dynamics
+                    Lead progression and conversion across stages
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <div className="flex items-center space-x-2 bg-gray-50 px-3 py-1.5 rounded-sm border border-gray-100">
-                  <div className="w-2.5 h-2.5 rounded-full bg-orange-500"></div>
-                  <span className="text-[10px] font-bold text-gray-600 uppercase">
-                    Total Leads
-                  </span>
-                </div>
-                <div className="flex items-center space-x-2 bg-gray-50 px-3 py-1.5 rounded-sm border border-gray-100">
-                  <div className="w-2.5 h-2.5 rounded-full bg-green-500"></div>
-                  <span className="text-[10px] font-bold text-gray-600 uppercase">
-                    Converted
-                  </span>
-                </div>
+              <div className="flex flex-wrap items-center gap-3">
+                {[
+                  { label: "New Lead", color: "bg-blue-500" },
+                  { label: "Not Connected", color: "bg-gray-400" },
+                  { label: "Follow Up", color: "bg-orange-500" },
+                  { label: "Trending", color: "bg-purple-500" },
+                  { label: "Won", color: "bg-green-500" },
+                ].map((item, i) => (
+                  <div key={i} className="flex items-center space-x-2 bg-gray-50 px-2 py-1.5 rounded-sm border border-gray-100">
+                    <div className={`w-2.5 h-2.5 rounded-full ${item.color}`}></div>
+                    <span className="text-[9px] font-bold text-gray-600 uppercase">
+                      {item.label}
+                    </span>
+                  </div>
+                ))}
               </div>
             </div>
             <div className="bg-gray-50/30 rounded-sm p-8 border border-gray-100 relative">
-              <div className="h-80 flex items-end justify-around gap-6">
-                {monthlyTrends.map((data, index) => {
-                  const maxVal = 500;
-                  const leadsHeight = (data.leads / maxVal) * 250;
-                  const convertedHeight = (data.converted / maxVal) * 250;
+              <div className="h-96 flex items-end justify-around gap-4">
+                {weeklyTrends.map((data, index) => {
+                  const maxVal = 230;
+                  const categories = [
+                    { key: 'new', color: 'from-blue-600 to-blue-400', label: 'New Lead' },
+                    { key: 'notConnected', color: 'from-gray-500 to-gray-300', label: 'Not Connected' },
+                    { key: 'followUp', color: 'from-orange-600 to-orange-400', label: 'Follow Up' },
+                    { key: 'trending', color: 'from-purple-600 to-purple-400', label: 'Trending' },
+                    { key: 'won', color: 'from-green-600 to-green-400', label: 'Won' }
+                  ];
+
                   return (
                     <div
                       key={index}
                       className="flex-1 flex flex-col items-center group relative h-full justify-end"
                     >
-                      <div className="w-full flex justify-center items-end gap-1 mb-6">
-                        {/* Leads Bar */}
-                        <div className="relative group/bar flex flex-col items-center w-12">
-                          <div className="absolute -top-6 opacity-0 group-hover/bar:opacity-100 transition-opacity bg-gray-800 text-white text-[10px] px-2 py-1 rounded-sm mb-1 font-bold z-10 whitespace-nowrap">
-                            {data.leads} Leads
-                          </div>
-                          <div
-                            className="w-full bg-gradient-to-t from-orange-600 to-orange-400 rounded-t-sm transition-all duration-500 shadow-sm border-x border-t border-orange-500 group-hover:brightness-110"
-                            style={{ height: `${leadsHeight}px` }}
-                          ></div>
-                        </div>
-                        {/* Converted Bar */}
-                        <div className="relative group/bar-alt flex flex-col items-center w-12">
-                          <div className="absolute -top-6 opacity-0 group-hover/bar-alt:opacity-100 transition-opacity bg-green-800 text-white text-[10px] px-2 py-1 rounded-sm mb-1 font-bold z-10 whitespace-nowrap">
-                            {data.converted} Won
-                          </div>
-                          <div
-                            className="w-full bg-gradient-to-t from-green-600 to-green-400 rounded-t-sm transition-all duration-500 shadow-sm border-x border-t border-green-500 group-hover:brightness-110"
-                            style={{ height: `${convertedHeight}px` }}
-                          ></div>
-                        </div>
+                      <div className="w-full flex justify-center items-end gap-1.5 mb-6">
+                        {categories.map((cat) => {
+                          const height = (data[cat.key] / maxVal) * 320;
+                          return (
+                            <div key={cat.key} className="relative group/bar flex flex-col items-center flex-1 min-w-[20px] max-w-[40px]">
+                              <div className="absolute -top-10 opacity-0 group-hover/bar:opacity-100 transition-all duration-200 bg-gray-900 text-white text-[10px] px-3 py-1.5 rounded-sm mb-1 font-bold z-20 whitespace-nowrap shadow-xl border border-white/10 pointer-events-none">
+                                <div className="flex flex-col items-center">
+                                  <span className="text-orange-400">{data[cat.key]}</span>
+                                  <span>{cat.label}</span>
+                                </div>
+                                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-900 rotate-45 border-r border-b border-white/10"></div>
+                              </div>
+                              <div
+                                className={`w-full bg-gradient-to-t ${cat.color} rounded-t-sm transition-all duration-500 shadow-md border-x border-t border-white/10 group-hover:brightness-110 group-hover:scale-x-105 origin-bottom`}
+                                style={{ height: `${height}px` }}
+                              ></div>
+                            </div>
+                          );
+                        })}
                       </div>
-                      <div className="text-xs font-bold text-gray-500 uppercase tracking-tighter pt-4 border-t border-gray-200 w-full text-center">
-                        {data.month}
+                      <div className="text-[11px] font-bold text-gray-500 uppercase tracking-widest pt-4 border-t border-gray-200 w-full text-center bg-white/50">
+                        {data.week}
                       </div>
                     </div>
                   );
@@ -518,6 +526,7 @@ export default function AnalysisPage() {
               {teamPerformance.map((member, index) => (
                 <div
                   key={index}
+                  onClick={() => navigate(`/crm/leads/team-performance/${member.id}`)}
                   className="p-6 bg-white border border-gray-100 rounded-sm hover:border-orange-500 hover:shadow-xl transition-all duration-300 group cursor-pointer"
                 >
                   <div className="flex flex-col items-center text-center">
