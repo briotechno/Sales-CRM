@@ -381,7 +381,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           ],
         },
         {
-          name: "Lead Settings",
+          name: "Settings",
           icon: <Settings size={22} />,
           path: "/crm/channel/settings",
           permission: "Leads Management"
