@@ -844,7 +844,7 @@ export default function CRMLeadDetail() {
           {/* Main Content */}
           <div className="flex-1 flex flex-col">
             {/* Pipeline Status */}
-            <div className="px-8 pb-8 pt-2 bg-white border-b shadow-sm">
+            <div className="px-8 pt-5 pb-10 bg-white border-b shadow-sm flex flex-col gap-5">
               <div className="flex items-center justify-between gap-4">
                 <h2 className="text-2xl font-bold text-gray-800 capitalize tracking-wide flex items-center gap-2">
                   <Zap className="w-5 h-5 text-orange-500 fill-orange-500" /> Lead Status
@@ -870,124 +870,259 @@ export default function CRMLeadDetail() {
                   </button>
                 </div>
               </div>
-              <div className="w-full ">
-                {/* 1. Progress Step Status Indicator */}
-                <div className="relative w-full mt-10 ">
-                  {/* Progress Line Background */}
-                  <div className="absolute top-1/2 left-0 w-full h-1 bg-gray-100 -translate-y-1/2 rounded-full"></div>
+              {/* ══════════ Lead Status Flow Diagram ══════════ */}
+              {(() => {
+                // ── Node state helpers ──
+                const isNewLead = !isFollowUp && !isWon && !isDropped && leadData?.tag !== "Not Connected";
+                const isNotConn = leadData?.tag === "Not Connected";
+                const isConnected = isFollowUp || isWon || isDropped;
 
-                  {/* Active Progress Line */}
-                  <div
-                    className="absolute top-1/2 left-0 h-1 transition-all duration-700 ease-in-out -translate-y-1/2 rounded-full"
-                    style={{
-                      width: isWon ? '75%' : isDropped ? '100%' : isFollowUp ? '50%' : (leadData?.tag === "Not Connected" ? '25%' : '0%'),
-                      backgroundColor: isDropped ? '#ef4444' : isWon ? '#16a34a' : '#2563eb'
-                    }}
-                  ></div>
+                // "Reached Connected" = in Follow Up OR has call_count > 0 and not stuck at NC/New
+                // This captures the intermediate "Contact Attempted" state too
+                const hasBeenConnected = isConnected
+                  || (!isNotConn && !isNewLead && (leadData?.call_count || 0) > 0)
+                  || leadData?.status === "In Progress";
 
-                  <div className="relative flex justify-between items-center w-full">
-                    {[
-                      {
-                        label: "New Lead",
-                        isActive: leadData?.tag === "Not Contacted" || leadData?.tag === "New Lead",
-                        color: "text-purple-600",
-                        bgColor: "bg-purple-600",
-                        borderColor: "border-purple-600",
-                        lightBg: "bg-purple-50"
-                      },
-                      {
-                        label: "Not Connected",
-                        isActive: leadData?.tag === "Not Connected",
-                        color: "text-orange-500",
-                        bgColor: "bg-orange-500",
-                        borderColor: "border-orange-500",
-                        lightBg: "bg-orange-50"
-                      },
-                      {
-                        label: "Follow Up",
-                        isActive: isFollowUp && !isWon && !isDropped,
-                        color: "text-blue-600",
-                        bgColor: "bg-blue-600",
-                        borderColor: "border-blue-600",
-                        lightBg: "bg-blue-50"
-                      },
-                      {
-                        label: "Won",
-                        isActive: isWon,
-                        color: "text-green-600",
-                        bgColor: "bg-green-600",
-                        borderColor: "border-green-600",
-                        lightBg: "bg-green-50"
-                      },
-                      {
-                        label: "Drop",
-                        isActive: isDropped,
-                        color: "text-red-500",
-                        bgColor: "bg-red-500",
-                        borderColor: "border-red-500",
-                        lightBg: "bg-red-50"
-                      }
-                    ].map((status, index, arr) => {
-                      const isPast = (index < arr.findIndex(s => s.isActive)) || (isWon && index < 3) || (isDropped && index < 4);
-                      const isCurrent = status.isActive;
+                const isFollowUpActive = isFollowUp && !isWon && !isDropped;
 
-                      return (
-                        <div key={status.label} className="flex flex-col items-center z-10">
-                          {/* Step Point */}
-                          <div
-                            className={`w-10 h-10 rounded-full flex items-center justify-center border-4 transition-all duration-500 ${isCurrent
-                              ? `${status.bgColor} ${status.borderColor} scale-110 shadow-lg shadow-${status.color}/20`
-                              : isPast
-                                ? `${status.bgColor} ${status.borderColor}`
-                                : `bg-white border-gray-100`
-                              }`}
-                          >
-                            {(isPast || isCurrent) && (
-                              <div className="w-2 h-2 bg-white rounded-full"></div>
-                            )}
-                          </div>
+                // Detect if lead went via "Not Connected" path:
+                // - Currently tagged "Not Connected", OR
+                // - call_count > 1 means NC was attempted first, then got connected
+                const wentViaNc = isNotConn
+                  || ((leadData?.call_count || 0) > 1 && hasBeenConnected);
 
-                          {/* Step Label */}
-                          <div className={`absolute -bottom-7 whitespace-nowrap text-[11px] font-black uppercase tracking-widest transition-all duration-300 ${isCurrent ? status.color : isPast ? 'text-gray-600' : 'text-gray-300'
-                            }`}>
-                            {status.label}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
+                // Completed = visited in past (stepper logic)
+                const nlCompleted = !isNewLead;
+                const ncCompleted = wentViaNc && (hasBeenConnected || isNotConn);  // NC visited + moved past
+                const coCompleted = isWon || isDropped;
+                const fuCompleted = isWon || isDropped;
 
-                {/* 2. Heading and Drop Button */}
+                // ── Color helpers ──
+                // nodeStyle(active, completed, color)
+                const nodeStyle = (active, completed, color) => {
+                  if (active) return {
+                    circle: { stroke: color, fill: color + '18', strokeWidth: 2.5, filter: `drop-shadow(0 0 8px ${color}55)` },
+                    text: color,
+                  };
+                  if (completed) return {
+                    circle: { stroke: color, fill: color + '12', strokeWidth: 1.8 },
+                    text: color + 'bb',
+                  };
+                  return {
+                    circle: { stroke: '#d1d5db', fill: 'white', strokeWidth: 1.5 },
+                    text: '#9ca3af',
+                  };
+                };
+
+                const lineColor = (active, color) => active ? color : '#d1d5db';
+                const lineDash = (active) => active ? '0' : '6,4';
+
+                // ── Uniform radius for all nodes ──
+                const R = 40;
+
+                // Positions: cx, cy
+                const NL = { cx: 85, cy: 120 };
+                const NC = { cx: 285, cy: 60 };
+                const CO = { cx: 285, cy: 185 };
+                const FU = { cx: 510, cy: 122 };
+                const DR = { cx: 730, cy: 62 };
+                const WON = { cx: 730, cy: 182 };
+
+                // Arrow endpoint helpers (point on circle edge toward target)
+                const edge = (from, to, r) => {
+                  const dx = to.cx - from.cx, dy = to.cy - from.cy;
+                  const d = Math.sqrt(dx * dx + dy * dy);
+                  return { x: from.cx + dx / d * r, y: from.cy + dy / d * r };
+                };
+
+                // ── Arrow active states ──
+                // Orange: NL → NC — only when lead actually went via NC path
+                const nlToNC = isNotConn || ncCompleted;           // orange
+                // Green: NL → CO DIRECT — ONLY when lead did NOT go via NC
+                const nlToCO = hasBeenConnected && !wentViaNc;     // green (mutually exclusive with NC path)
+                // Green: NC ↓ CO vertical — ONLY when lead went via NC path
+                const ncToCO = ncCompleted || isNotConn;            // green (mutually exclusive with direct path)
+                const ncToFU = false;
+                // Blue: CO → Follow Ups — once in Follow Up stage
+                const coToFU = isFollowUp || isWon || isDropped;
+                const fuToDR = isDropped;
+                const fuToWON = isWon;
 
 
-                {/* 3. Pipeline Stages Visualization */}
-                <div className="flex items-center w-full h-12 gap-1 mt-16  py-1 bg-gray-50/50 rounded-xl overflow-visible">
-                  {effectiveStages.map((stage, idx, arr) => (
-                    <div
-                      key={stage.label + idx}
-                      className={`flex-1 flex items-center justify-center relative h-10 transition-all duration-300 shadow-sm ${stage.color}
-                        ${stage.active
-                          ? `z-10 scale-[1.05] ring-2 ring-white ring-offset-1 shadow-lg`
-                          : 'opacity-90'
-                        }
-                        ${idx === 0 ? 'rounded-l-xl' : ''}
-                        ${idx === arr.length - 1 ? 'rounded-r-xl' : ''}
-                      `}
-                      style={{
-                        clipPath: idx === 0
-                          ? "polygon(0% 0%, 93% 0%, 100% 50%, 93% 100%, 0% 100%)"
-                          : idx === arr.length - 1
-                            ? "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%, 7% 50%)"
-                            : "polygon(0% 0%, 93% 0%, 100% 50%, 93% 100%, 0% 100%, 7% 50%)"
-                      }}
+                return (
+                  <div className="w-full overflow-x-auto">
+                    <svg
+                      viewBox="0 0 840 240"
+                      className="w-full"
+                      style={{ minWidth: 600, minHeight: 200 }}
                     >
-                      <span className={`text-[13px] font-semibold capitalize tracking-wider transition-all text-white ${stage.active ? 'drop-shadow-sm scale-105' : ''}`}>
-                        {stage.label}
-                      </span>
-                    </div>
-                  ))}
-                </div>
+                      <defs>
+                        {[
+                          { id: 'mOr', color: lineColor(nlToNC, '#f97316') },  // orange  NL→NC
+                          { id: 'mGr', color: lineColor(nlToCO, '#22c55e') },  // green   NL→CO
+                          { id: 'mGr2', color: lineColor(ncToCO, '#22c55e') },  // green   NC→CO
+                          { id: 'mBl2', color: lineColor(coToFU, '#3b82f6') },  // blue    CO→FU
+                          { id: 'mRed', color: lineColor(fuToDR, '#ef4444') },  // red     FU→Drop
+                          { id: 'mDg', color: lineColor(fuToWON, '#16a34a') },  // dkgreen FU→Won
+                          { id: 'mGy', color: '#d1d5db' },                       // gray    fallback
+                        ].map(({ id, color }) => (
+                          <marker key={id} id={id} markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+                            <polygon points="0 0, 8 4, 0 8" fill={color} />
+                          </marker>
+                        ))}
+                      </defs>
+
+                      {/* ══ ARROWS ══ */}
+
+                      {/* New Leads → Not Connected */}
+                      <path
+                        d="M 122,98 C 165,72 225,58 245,60"
+                        fill="none" stroke={lineColor(nlToNC, '#f97316')}
+                        strokeWidth="1.8" strokeDasharray={lineDash(nlToNC)}
+                        markerEnd="url(#mOr)" className="transition-all duration-500"
+                      />
+                      {/* New Leads → Connected */}
+                      <path
+                        d="M 122,143 C 165,165 225,183 245,185"
+                        fill="none" stroke={lineColor(nlToCO, '#22c55e')}
+                        strokeWidth="1.8" strokeDasharray={lineDash(nlToCO)}
+                        markerEnd="url(#mGr)" className="transition-all duration-500"
+                      />
+                      {/* Not Connected ↓ Connected — GREEN (leads to green Connected node) */}
+                      <path
+                        d="M 285,100 L 285,145"
+                        fill="none" stroke={lineColor(ncToCO, '#22c55e')}
+                        strokeWidth="1.8" strokeDasharray={lineDash(ncToCO)}
+                        markerEnd="url(#mGr2)" className="transition-all duration-500"
+                      />
+
+                      {/* Connected → Follow Ups */}
+                      <path
+                        d="M 325,180 C 375,200 430,148 470,124"
+                        fill="none" stroke={lineColor(coToFU, '#3b82f6')}
+                        strokeWidth="1.8" strokeDasharray={lineDash(coToFU)}
+                        markerEnd="url(#mBl2)" className="transition-all duration-500"
+                      />
+                      {/* Follow Ups → Drop */}
+                      <path
+                        d="M 549,100 C 593,74 642,60 690,62"
+                        fill="none" stroke={lineColor(fuToDR, '#ef4444')}
+                        strokeWidth="1.8" strokeDasharray={lineDash(fuToDR)}
+                        markerEnd="url(#mRed)" className="transition-all duration-500"
+                      />
+                      {/* Follow Ups → Won */}
+                      <path
+                        d="M 549,145 C 593,167 642,178 690,182"
+                        fill="none" stroke={lineColor(fuToWON, '#16a34a')}
+                        strokeWidth="1.8" strokeDasharray={lineDash(fuToWON)}
+                        markerEnd="url(#mDg)" className="transition-all duration-500"
+                      />
+
+                      {/* ══ NODE: New Leads ══ */}
+                      {(() => {
+                        const s = nodeStyle(isNewLead, nlCompleted, '#7c3aed');
+                        return (
+                          <g>
+                            <circle cx={NL.cx} cy={NL.cy} r={R} style={s.circle} className="transition-all duration-500" />
+                            <text x={NL.cx} y={NL.cy - 6} textAnchor="middle" fontSize="11" fontWeight="700" fill={s.text} className="transition-all duration-500">New</text>
+                            <text x={NL.cx} y={NL.cy + 9} textAnchor="middle" fontSize="11" fontWeight="700" fill={s.text} className="transition-all duration-500">Leads</text>
+                          </g>
+                        );
+                      })()}
+
+                      {/* ══ NODE: Not Connected ══ */}
+                      {(() => {
+                        const s = nodeStyle(isNotConn, ncCompleted, '#f97316');
+                        return (
+                          <g onClick={() => openCallAction()} style={{ cursor: 'pointer' }}>
+                            <circle cx={NC.cx} cy={NC.cy} r={R} style={s.circle} className="transition-all duration-500" />
+                            <text x={NC.cx} y={NC.cy - 6} textAnchor="middle" fontSize="10" fontWeight="700" fill={s.text} className="transition-all duration-500">Not</text>
+                            <text x={NC.cx} y={NC.cy + 7} textAnchor="middle" fontSize="10" fontWeight="700" fill={s.text} className="transition-all duration-500">Connected</text>
+                          </g>
+                        );
+                      })()}
+
+                      {/* ══ NODE: Connected ══ */}
+                      {(() => {
+                        // Active = has been connected but not yet at Follow Up (intermediate state)
+                        const isCoActive = hasBeenConnected && !isConnected && !coCompleted;
+                        const isCoCompleted = isConnected && !coCompleted; // was connected and now in FU
+                        const s = nodeStyle(isCoActive, isCoCompleted || coCompleted || hasBeenConnected, '#16a34a');
+                        return (
+                          <g onClick={() => openCallAction('connected')} style={{ cursor: 'pointer' }}>
+                            <circle cx={CO.cx} cy={CO.cy} r={R} style={s.circle} className="transition-all duration-500" />
+                            <text x={CO.cx} y={CO.cy + 5} textAnchor="middle" fontSize="11" fontWeight="700" fill={s.text} className="transition-all duration-500">Connected</text>
+                          </g>
+                        );
+                      })()}
+
+                      {/* ══ NODE: Follow Ups ══ */}
+                      {(() => {
+                        const s = nodeStyle(isFollowUpActive, fuCompleted, '#2563eb');
+                        return (
+                          <g>
+                            <circle cx={FU.cx} cy={FU.cy} r={R} style={s.circle} className="transition-all duration-500" />
+                            <text x={FU.cx} y={FU.cy - 6} textAnchor="middle" fontSize="11" fontWeight="700" fill={s.text} className="transition-all duration-500">Follow</text>
+                            <text x={FU.cx} y={FU.cy + 9} textAnchor="middle" fontSize="11" fontWeight="700" fill={s.text} className="transition-all duration-500">Ups</text>
+                          </g>
+                        );
+                      })()}
+
+                      {/* ══ NODE: Drop ══ */}
+                      {(() => {
+                        const s = nodeStyle(isDropped, false, '#ef4444');
+                        const clickable = canNotQualified && !isDropped;
+                        return (
+                          <g onClick={() => clickable && handleUpdateStatus("Not Qualified")} style={{ cursor: clickable ? 'pointer' : 'default', opacity: !canNotQualified && !isDropped ? 0.35 : 1 }}>
+                            <circle cx={DR.cx} cy={DR.cy} r={R} style={s.circle} className="transition-all duration-500" />
+                            <text x={DR.cx} y={DR.cy + 5} textAnchor="middle" fontSize="11" fontWeight="700" fill={s.text} className="transition-all duration-500">Drop</text>
+                          </g>
+                        );
+                      })()}
+
+                      {/* ══ NODE: Won ══ */}
+                      {(() => {
+                        const s = nodeStyle(isWon, false, '#16a34a');
+                        const clickable = isFollowUp && !isWon && !isDropped;
+                        return (
+                          <g onClick={() => clickable && handleUpdateStatus("Won")} style={{ cursor: clickable ? 'pointer' : 'default', opacity: !isFollowUp && !isWon ? 0.35 : 1 }}>
+                            <circle cx={WON.cx} cy={WON.cy} r={R} style={s.circle} className="transition-all duration-500" />
+                            <text x={WON.cx} y={WON.cy + 5} textAnchor="middle" fontSize="11" fontWeight="700" fill={s.text} className="transition-all duration-500">Won</text>
+                          </g>
+                        );
+                      })()}
+                    </svg>
+                  </div>
+                );
+              })()}
+
+              {/* ── Pipeline Stages Visualization (Chevron Bar) ── */}
+              <div className="flex items-center w-full h-12 gap-1 mt-2 py-1 bg-gray-50/50 rounded-xl overflow-visible">
+                {effectiveStages.map((stage, idx, arr) => (
+                  <div
+                    key={stage.label + idx}
+                    onClick={() => handleStageClick(stage)}
+                    className={`flex-1 flex items-center justify-center relative h-10 transition-all duration-300 shadow-sm cursor-pointer ${stage.color}
+                      ${stage.active
+                        ? 'z-10 scale-[1.05] ring-2 ring-white ring-offset-1 shadow-lg'
+                        : 'opacity-90 hover:opacity-100'
+                      }
+                      ${idx === 0 ? 'rounded-l-xl' : ''}
+                      ${idx === arr.length - 1 ? 'rounded-r-xl' : ''}
+                    `}
+                    style={{
+                      clipPath: idx === 0
+                        ? "polygon(0% 0%, 93% 0%, 100% 50%, 93% 100%, 0% 100%)"
+                        : idx === arr.length - 1
+                          ? "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%, 7% 50%)"
+                          : "polygon(0% 0%, 93% 0%, 100% 50%, 93% 100%, 0% 100%, 7% 50%)"
+                    }}
+                  >
+                    <span className={`text-[13px] font-semibold capitalize tracking-wider transition-all text-white ${stage.active ? 'drop-shadow-sm scale-105' : ''}`}>
+                      {stage.label}
+                    </span>
+                  </div>
+                ))}
               </div>
             </div>
 
