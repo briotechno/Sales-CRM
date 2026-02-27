@@ -10,9 +10,12 @@ const io = initializeSocket(server);
 
 const PORT = process.env.PORT || 5000;
 
+const syncDatabase = require('./utils/syncDb');
+
 // Connect to Database and start server
 const startServer = async () => {
     await connectDB();
+    await syncDatabase();
 
     server.listen(PORT, () => {
         console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);

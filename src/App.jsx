@@ -103,6 +103,9 @@ import CatalogCategory from "./pages/CatelogsPart/CatalogCategory";
 // Channel Integration
 import CRMFormPage from "./pages/ChannelIntegration/CRMForm";
 import GoogleDocsPage from "./pages/ChannelIntegration/GoogleDocs";
+import MetaIntegration from "./pages/ChannelIntegration/MetaIntegration";
+import JustdialIntegration from "./pages/ChannelIntegration/JustdialIntegration";
+import IndiamartIntegration from "./pages/ChannelIntegration/IndiamartIntegration";
 import PublicForm from "./pages/Public/PublicForm";
 import ChannelSettings from "./pages/ChannelIntegration/ChannelSettings";
 // Team Management
@@ -226,9 +229,9 @@ function App() {
             <Route path="/additional/messenger" element={<Messenger />} />
             <Route path="/crm/channel/form" element={<CRMFormPage />} />
             <Route path="/crm/channel/google-docs" element={<GoogleDocsPage />} />
-            <Route path="/crm/channel/meta" element={<ComingSoon title="Meta Integration" />} />
-            <Route path="/crm/channel/justdial" element={<ComingSoon title="Justdial Integration" />} />
-            <Route path="/crm/channel/indiamart" element={<ComingSoon title="Indiamart Integration" />} />
+            <Route path="/crm/channel/meta" element={<MetaIntegration />} />
+            <Route path="/crm/channel/justdial" element={<JustdialIntegration />} />
+            <Route path="/crm/channel/indiamart" element={<IndiamartIntegration />} />
             <Route path="/crm/channel/settings" element={<ChannelSettings />} />
             <Route path="/additional/catelogs" element={<Catelogs />} />
 

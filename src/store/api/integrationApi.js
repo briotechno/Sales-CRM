@@ -13,7 +13,7 @@ export const integrationApi = createApi({
             return headers;
         },
     }),
-    tagTypes: ['CRMForm', 'GoogleSheet', 'SyncLog'],
+    tagTypes: ['CRMForm', 'GoogleSheet', 'SyncLog', 'ChannelConfig'],
     endpoints: (builder) => ({
         // CRM Forms
         getForms: builder.query({
@@ -96,6 +96,37 @@ export const integrationApi = createApi({
             invalidatesTags: ['SyncLog'],
         }),
 
+        // Generic Channels
+        getChannelConfigs: builder.query({
+            query: (type) => ({
+                url: 'channels',
+                params: { type }
+            }),
+            providesTags: ['ChannelConfig'],
+        }),
+        saveChannelConfig: builder.mutation({
+            query: (data) => ({
+                url: 'channels',
+                method: 'POST',
+                body: data,
+            }),
+            invalidatesTags: ['ChannelConfig'],
+        }),
+        deleteChannelConfig: builder.mutation({
+            query: (id) => ({
+                url: `channels/${id}`,
+                method: 'DELETE',
+            }),
+            invalidatesTags: ['ChannelConfig'],
+        }),
+        syncChannelLeads: builder.mutation({
+            query: (id) => ({
+                url: `channels/${id}/sync`,
+                method: 'POST',
+            }),
+            invalidatesTags: ['SyncLog'],
+        }),
+
         // Logs
         getLogs: builder.query({
             query: (params) => ({
@@ -121,5 +152,9 @@ export const {
     useUpdateSheetConfigMutation,
     useDeleteSheetConfigMutation,
     useSyncSheetMutation,
+    useGetChannelConfigsQuery,
+    useSaveChannelConfigMutation,
+    useDeleteChannelConfigMutation,
+    useSyncChannelLeadsMutation,
     useGetLogsQuery,
 } = integrationApi;
