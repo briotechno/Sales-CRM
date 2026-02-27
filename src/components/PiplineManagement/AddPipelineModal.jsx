@@ -13,23 +13,29 @@ import {
   RotateCcw,
   Check,
   ChevronDown,
+  AlertCircle,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import Modal from "../common/Modal";
 import { useCreatePipelineMutation, useUpdatePipelineMutation } from "../../store/api/pipelineApi";
 import { useGetCatalogsQuery } from "../../store/api/catalogApi";
-import { useGetStagesQuery } from "../../store/api/stageApi";
+import { useGetStagesQuery, useCreateStageMutation, useDeleteStageMutation } from "../../store/api/stageApi";
 
 const AddPipelineModal = ({ isOpen, onClose, pipelineToEdit }) => {
   const [createPipeline, { isLoading: isCreating }] = useCreatePipelineMutation();
   const [updatePipeline, { isLoading: isUpdating }] = useUpdatePipelineMutation();
   const { data: stagesResponse, isLoading: isLoadingStages } = useGetStagesQuery({ limit: 1000 }); // Fetch all master stages
+  const [createStage, { isLoading: isCreatingMasterStage }] = useCreateStageMutation();
+  const [deleteMasterStageMutation] = useDeleteStageMutation();
   const masterStages = stagesResponse?.stages || [];
   const { data: catalogsData } = useGetCatalogsQuery({ limit: 1000, status: 'Active' }); // Fetch all active catalogs
 
   const [pipelineName, setPipelineName] = useState("");
   const [selectedService, setSelectedService] = useState("");
   const [stages, setStages] = useState([]);
+  const [isAddMasterModalOpen, setIsAddMasterModalOpen] = useState(false);
+  const [isDeleteMasterModalOpen, setIsDeleteMasterModalOpen] = useState(false);
+  const [masterStageToDelete, setMasterStageToDelete] = useState(null);
 
   React.useEffect(() => {
     if (pipelineToEdit && isOpen) {
@@ -50,6 +56,7 @@ const AddPipelineModal = ({ isOpen, onClose, pipelineToEdit }) => {
       setPipelineName("");
       setSelectedService("");
       setStages([]);
+      setIsAddMasterModalOpen(false);
     }
   }, [pipelineToEdit, isOpen]);
 
@@ -75,6 +82,34 @@ const AddPipelineModal = ({ isOpen, onClose, pipelineToEdit }) => {
     setStageProbability(0);
     setStageIsFinal(false);
     setIsStageDropdownOpen(false);
+  };
+
+  const handleCreateMasterStage = async (stageData) => {
+    try {
+      await createStage(stageData).unwrap();
+      toast.success("Master stage created successfully");
+      setIsAddMasterModalOpen(false);
+      // The masterStages will be automatically updated via tag invalidation in RTK Query
+    } catch (err) {
+      toast.error(err?.data?.message || "Failed to create master stage");
+    }
+  };
+
+  const handleDeleteMasterStage = (stage) => {
+    setMasterStageToDelete(stage);
+    setIsDeleteMasterModalOpen(true);
+  };
+
+  const confirmDeleteMasterStage = async () => {
+    if (!masterStageToDelete) return;
+    try {
+      await deleteMasterStageMutation(masterStageToDelete.id).unwrap();
+      toast.success("Master stage deleted");
+      setIsDeleteMasterModalOpen(false);
+      setMasterStageToDelete(null);
+    } catch (err) {
+      toast.error(err?.data?.message || "Failed to delete stage");
+    }
   };
 
   const openEditStage = (index) => {
@@ -137,7 +172,7 @@ const AddPipelineModal = ({ isOpen, onClose, pipelineToEdit }) => {
     resetStageForm();
   };
 
-  const deleteStage = (index) => {
+  const deleteStageFromList = (index) => {
     setStages(stages.filter((_, i) => i !== index));
     if (editIndex === index) {
       resetStageForm();
@@ -306,20 +341,33 @@ const AddPipelineModal = ({ isOpen, onClose, pipelineToEdit }) => {
             </div>
 
             {/* Stage Name Select/Input */}
-            {/* Stage Name Select/Input */}
             <div className="space-y-1.5">
-              <label className="flex items-center gap-2 text-xs font-bold text-gray-700 capitalize tracking-normal">
-                <Workflow size={14} className="text-[#FF7B1D]" />
-                Stage Name <span className="text-red-500">*</span>
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="flex items-center gap-2 text-xs font-bold text-gray-700 capitalize tracking-normal">
+                  <Workflow size={14} className="text-[#FF7B1D]" />
+                  Stage Name <span className="text-red-500">*</span>
+                </label>
+                <button
+                  onClick={() => {
+                    setIsAddMasterModalOpen(true);
+                  }}
+                  className="text-[10px] bg-orange-100 text-[#FF7B1D] px-2 py-1 rounded-sm font-bold hover:bg-orange-200 transition-all flex items-center gap-1"
+                >
+                  <Plus size={12} /> Add Stage
+                </button>
+              </div>
 
               <div className="relative" ref={dropdownRef}>
                 <button
                   type="button"
-                  onClick={() => setIsStageDropdownOpen(!isStageDropdownOpen)}
+                  onClick={() =>
+                    setIsStageDropdownOpen(!isStageDropdownOpen)
+                  }
                   className="w-full flex items-center justify-between px-4 py-2.5 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-1 focus:ring-[#FF7B1D]/20 outline-none transition-all text-sm font-medium text-gray-700 bg-white hover:border-gray-300"
                 >
-                  <span className={!stageName ? "text-gray-400" : "text-gray-800"}>
+                  <span
+                    className={!stageName ? "text-gray-400" : "text-gray-800"}
+                  >
                     {stageName || "Select a Stage"}
                   </span>
                   <ChevronDown
@@ -341,21 +389,33 @@ const AddPipelineModal = ({ isOpen, onClose, pipelineToEdit }) => {
                         masterStages.map((ms) => (
                           <div
                             key={ms.id}
-                            onClick={() => handleStageSelect(ms.name)}
-                            className={`px-4 py-2 text-sm cursor-pointer transition-colors flex items-center justify-between group ${stageName === ms.name
+                            className={`px-4 py-2 text-sm transition-colors flex items-center justify-between group ${stageName === ms.name
                               ? "bg-orange-50 text-[#FF7B1D] font-bold"
                               : "text-gray-700 hover:bg-gray-50"
                               }`}
                           >
-                            <div className="flex items-center gap-2 flex-1">
+                            <div
+                              onClick={() => handleStageSelect(ms.name)}
+                              className="flex-1 cursor-pointer"
+                            >
                               <span>{ms.name}</span>
                             </div>
                             <div className="flex items-center gap-3">
                               {ms.probability && (
-                                <span className="text-xs text-gray-400 font-normal group-hover:text-gray-500">
+                                <span className="text-xs text-gray-400 font-normal group-hover:text-gray-500 mr-2">
                                   {ms.probability}%
                                 </span>
                               )}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteMasterStage(ms);
+                                }}
+                                className="p-1 text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
+                                title="Delete Master Stage"
+                              >
+                                <Trash2 size={12} />
+                              </button>
                             </div>
                           </div>
                         ))
@@ -384,7 +444,7 @@ const AddPipelineModal = ({ isOpen, onClose, pipelineToEdit }) => {
                     max="100"
                     value={stageProbability}
                     readOnly
-                    className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-sm bg-gray-100 text-gray-500 focus:outline-none cursor-not-allowed text-sm font-medium"
+                    className="w-full pl-9 pr-4 py-3 border border-gray-200 rounded-sm bg-gray-100 text-gray-500 focus:outline-none cursor-not-allowed text-sm font-medium transition-all"
                   />
                   <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
                     <Percent size={14} className="text-gray-400" />
@@ -402,7 +462,7 @@ const AddPipelineModal = ({ isOpen, onClose, pipelineToEdit }) => {
                     type="checkbox"
                     checked={stageIsFinal}
                     onChange={(e) => setStageIsFinal(e.target.checked)}
-                    className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
+                    className="w-4 h-4 text-orange-600 border-gray-200 rounded focus:ring-orange-500"
                   />
                   <span className="text-xs font-bold text-gray-700 capitalize tracking-normal">
                     Final Stage?
@@ -422,24 +482,26 @@ const AddPipelineModal = ({ isOpen, onClose, pipelineToEdit }) => {
                 value={stageDescription}
                 readOnly
                 placeholder="Brief description of this stage..."
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-sm resize-none bg-gray-100 text-gray-500 focus:outline-none cursor-not-allowed text-sm font-medium"
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-sm resize-none bg-gray-100 text-gray-500 focus:outline-none cursor-not-allowed text-sm font-medium transition-all shadow-sm"
               />
             </div>
 
-            <button
-              onClick={saveStage}
-              className="w-full py-2.5 bg-gray-800 text-white text-xs font-bold capitalize rounded-sm hover:bg-gray-900 transition-all flex items-center justify-center gap-2 shadow-sm"
-            >
-              {editIndex !== null ? (
-                <>
-                  <Save size={16} /> Update Stage
-                </>
-              ) : (
-                <>
-                  <Plus size={16} /> Add Stage to List
-                </>
-              )}
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={saveStage}
+                className="w-full py-3 bg-gray-800 text-white text-xs font-bold capitalize rounded-sm hover:bg-gray-900 transition-all flex items-center justify-center gap-2 shadow-sm"
+              >
+                {editIndex !== null ? (
+                  <>
+                    <Save size={16} /> Update Stage
+                  </>
+                ) : (
+                  <>
+                    <Plus size={16} /> Add Stage to List
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
 
@@ -517,7 +579,7 @@ const AddPipelineModal = ({ isOpen, onClose, pipelineToEdit }) => {
                       <Edit2 size={14} />
                     </button>
                     <button
-                      onClick={() => deleteStage(i)}
+                      onClick={() => deleteStageFromList(i)}
                       className="p-1.5 hover:bg-red-50 text-gray-400 hover:text-red-600 rounded transition-all"
                       title="Remove Stage"
                     >
@@ -529,6 +591,164 @@ const AddPipelineModal = ({ isOpen, onClose, pipelineToEdit }) => {
             )}
           </div>
         </div>
+      </div>
+      <AddNewStageModal
+        isOpen={isAddMasterModalOpen}
+        onClose={() => setIsAddMasterModalOpen(false)}
+        onSave={handleCreateMasterStage}
+        isLoading={isCreatingMasterStage}
+      />
+
+      <DeleteMasterStageModal
+        isOpen={isDeleteMasterModalOpen}
+        onClose={() => {
+          setIsDeleteMasterModalOpen(false);
+          setMasterStageToDelete(null);
+        }}
+        onConfirm={confirmDeleteMasterStage}
+        stageName={masterStageToDelete?.name}
+      />
+    </Modal>
+  );
+};
+
+const AddNewStageModal = ({ isOpen, onClose, onSave, isLoading }) => {
+  const [name, setName] = useState("");
+  const [probability, setProbability] = useState(0);
+  const [description, setDescription] = useState("");
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!name.trim()) return toast.error("Stage name is required");
+    onSave({ name, probability, description });
+    setName("");
+    setProbability(0);
+    setDescription("");
+  };
+
+  const footer = (
+    <div className="flex justify-end gap-3 w-full">
+      <button
+        onClick={onClose}
+        className="px-6 py-2.5 border border-gray-300 text-gray-700 font-bold rounded-sm hover:bg-gray-50 transition-all capitalize text-xs tracking-normal"
+      >
+        Cancel
+      </button>
+      <button
+        onClick={handleSubmit}
+        disabled={isLoading}
+        className="px-8 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold rounded-sm hover:shadow-lg transition-all flex items-center gap-2 capitalize text-xs tracking-normal"
+      >
+        {isLoading ? (
+          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+        ) : (
+          <Plus size={16} />
+        )}
+        {isLoading ? "Saving..." : "Save Master Stage"}
+      </button>
+    </div>
+  );
+
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Add Master Stage"
+      subtitle="Create a new stage for use in any pipeline"
+      icon={<Layers size={24} />}
+      footer={footer}
+      maxWidth="max-w-md"
+    >
+      <div className="space-y-4 py-2">
+        <div className="space-y-1.5">
+          <label className="text-[11px] font-extrabold text-gray-400 uppercase tracking-wider">
+            Stage Name <span className="text-red-500">*</span>
+          </label>
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="e.g. Negotiation"
+            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-orange-500 outline-none transition-all text-sm font-semibold"
+          />
+        </div>
+        <div className="space-y-1.5">
+          <label className="text-[11px] font-extrabold text-gray-400 uppercase tracking-wider">
+            Default Probability (%)
+          </label>
+          <input
+            type="number"
+            min="0"
+            max="100"
+            value={probability}
+            onChange={(e) => setProbability(e.target.value)}
+            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-orange-500 outline-none transition-all text-sm font-semibold"
+          />
+        </div>
+        <div className="space-y-1.5">
+          <label className="text-[11px] font-extrabold text-gray-400 uppercase tracking-wider">
+            Description
+          </label>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            rows={3}
+            placeholder="What happens in this stage?"
+            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-orange-500 outline-none transition-all text-sm font-semibold resize-none"
+          />
+        </div>
+      </div>
+    </Modal>
+  );
+};
+
+const DeleteMasterStageModal = ({ isOpen, onClose, onConfirm, stageName }) => {
+  const footer = (
+    <div className="flex gap-4 w-full">
+      <button
+        onClick={onClose}
+        className="flex-1 px-6 py-3 border-2 border-gray-200 text-gray-700 font-bold rounded-sm hover:bg-gray-100 transition-all font-primary text-xs capitalize tracking-normal"
+      >
+        Cancel
+      </button>
+
+      <button
+        onClick={onConfirm}
+        className="flex-1 px-6 py-3 bg-red-600 text-white font-bold rounded-sm hover:bg-red-700 transition-all shadow-lg shadow-red-500/30 flex items-center justify-center gap-2 font-primary text-xs capitalize tracking-normal"
+      >
+        <Trash2 size={18} />
+        Delete Now
+      </button>
+    </div>
+  );
+
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      headerVariant="simple"
+      maxWidth="max-w-md"
+      footer={footer}
+    >
+      <div className="flex flex-col items-center text-center text-black font-primary pt-4">
+        <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-6">
+          <AlertCircle size={40} className="text-red-600" />
+        </div>
+
+        <h2 className="text-xl font-bold text-gray-800 mb-2 font-primary">
+          Confirm Delete
+        </h2>
+
+        <p className="text-gray-600 mb-2 leading-relaxed text-sm">
+          Are you sure you want to delete the stage{" "}
+          <span className="font-bold text-gray-800">
+            "{stageName}"
+          </span>
+          ?
+        </p>
+
+        <p className="text-xs text-red-500 italic">
+          This action cannot be undone and will affect all pipelines.
+        </p>
       </div>
     </Modal>
   );

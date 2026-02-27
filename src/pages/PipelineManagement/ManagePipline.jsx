@@ -383,13 +383,18 @@ const PipelineList = () => {
                           >
                             <SquarePen size={18} />
                           </button>
+                          {console.log(pipeline.name)}
                           <button
                             onClick={() => {
                               setSelectedPipeline(pipeline);
                               setIsDeleteOpen(true);
                             }}
-                            className="p-1.5 text-red-600 hover:bg-red-50 rounded-sm transition-all"
-                            title="Delete"
+                            className={`p-1.5 rounded-sm transition-all ${pipeline.name === "Default Pipeline"
+                              ? "text-gray-300 cursor-not-allowed opacity-50"
+                              : "text-red-600 hover:bg-red-50"
+                              }`}
+                            title={pipeline.name === "Default Pipeline" ? "Default Pipeline (Cannot Delete)" : "Delete"}
+                            disabled={pipeline.name === "Default Pipeline"}
                           >
                             <Trash2 size={18} />
                           </button>
