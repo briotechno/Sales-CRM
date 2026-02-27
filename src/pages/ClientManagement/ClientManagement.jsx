@@ -850,66 +850,105 @@ export default function AllClientPage() {
                           key={client.id}
                           className="flex items-center justify-between p-4 bg-gradient-to-r from-orange-50 to-amber-50 rounded-lg hover:shadow-md transition-shadow duration-200 border border-orange-200 group"
                         >
-                          <div className="flex items-center space-x-4">
-                            <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white font-bold text-base shadow-md">
+                          {/* Left Section: Avatar & Name - Fixed Width */}
+                          <div className="flex items-center gap-4 w-[300px] flex-shrink-0">
+                            <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white font-bold text-lg shadow-md flex-shrink-0 border border-orange-300">
                               {avatar}
                             </div>
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <h4 className="font-bold text-gray-800 text-base capitalize">
-                                  {name}
-                                </h4>
-                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-tighter ${client.type === 'person' ? 'bg-blue-100 text-blue-600 border border-blue-200' : 'bg-purple-100 text-purple-600 border border-purple-200'}`}>
-                                  {client.type}
-                                </span>
-                              </div>
-                              <p className="text-sm text-gray-600 lowercase">{client.email}</p>
-                              <p className="text-xs text-orange-600 mt-0.5 font-medium flex items-center gap-1">
-                                <Building2 size={12} className="text-orange-400" />
-                                {client.type === 'person' ? (client.company_name || 'Individual') : (client.industry || 'Organization')}
-                              </p>
+                            <div className="flex flex-col justify-center min-w-0">
+                              <h4 className="font-bold text-gray-800 text-[17px] capitalize truncate max-w-[200px] mb-0.5">
+                                {name}
+                              </h4>
+                              <p className="text-sm text-gray-500 lowercase truncate max-w-[200px] font-medium">{client.email || 'no-email@found.com'}</p>
                             </div>
                           </div>
 
-                          <div className="flex items-center space-x-4">
-                            <div className="hidden md:flex items-center space-x-3">
-                              <span
-                                className={`px-3 py-1.5 rounded-full text-xs font-bold border capitalize ${getStatusColor(client.status)}`}
-                              >
-                                {client.status}
-                              </span>
-                              <span className="text-xs text-gray-600 flex items-center bg-gray-50 px-3 py-1.5 rounded-full border border-gray-200">
-                                <Clock className="w-3.5 h-3.5 mr-1.5" />
-                                {client.created_at ? new Date(client.created_at).toLocaleDateString() : 'Recent'}
-                              </span>
+                          {/* Middle Info Section: 3-Column Grid */}
+                          <div className="hidden lg:grid grid-cols-3 flex-1 gap-6 px-8 border-l border-orange-100/50 ml-2">
+                            {/* Phone Column */}
+                            <div className="flex items-center gap-3 text-gray-600 group/info">
+                              <div className="p-2.5 bg-white rounded-xl shadow-sm border border-orange-100 group-hover/info:bg-orange-50 transition-colors flex-shrink-0">
+                                <Phone size={14} className="text-orange-500" />
+                              </div>
+                              <div className="flex flex-col min-w-0">
+                                <span className="text-[10px] text-gray-400 font-extrabold uppercase tracking-widest leading-none mb-1.5">Contact Number</span>
+                                <span className="text-sm font-bold text-gray-800 truncate">{client.phone || 'N/A'}</span>
+                              </div>
                             </div>
 
-                            {/* Actions toggle on hover for cleaner look, but kept visible for small screens */}
-                            <div className="flex items-center gap-1 sm:gap-2 bg-white/60 backdrop-blur-sm p-1.5 rounded-lg border border-orange-100 shadow-sm opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+                            {/* Client Type Column - Moved Badge here */}
+                            <div className="flex items-center gap-3 text-gray-600 group/info border-l border-orange-100/30 pl-6">
+                              <div className="p-2.5 bg-white rounded-xl shadow-sm border border-orange-100 group-hover/info:bg-orange-50 transition-colors flex-shrink-0">
+                                {client.type === 'person' ? <User size={14} className="text-orange-500" /> : <Building2 size={14} className="text-orange-500" />}
+                              </div>
+                              <div className="flex flex-col min-w-0">
+                                <span className="text-[10px] text-gray-400 font-extrabold uppercase tracking-widest leading-none mb-1.5">Client Category</span>
+                                <div>
+                                  <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm border ${client.type === 'person' ? 'bg-blue-100 text-blue-600 border-blue-200' : 'bg-purple-100 text-purple-600 border-purple-200'}`}>
+                                    {client.type}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Source Column - Replaced Location */}
+                            <div className="flex items-center gap-3 text-gray-600 group/info border-l border-orange-100/30 pl-6">
+                              <div className="p-2.5 bg-white rounded-xl shadow-sm border border-orange-100 group-hover/info:bg-orange-50 transition-colors flex-shrink-0">
+                                <Globe size={14} className="text-orange-500" />
+                              </div>
+                              <div className="flex flex-col min-w-0">
+                                <span className="text-[10px] text-gray-400 font-extrabold uppercase tracking-widest leading-none mb-1.5">Lead Source</span>
+                                <span className="text-sm font-bold text-gray-800 capitalize truncate">
+                                  {client.source || 'General'}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Right Section: Status, Date & Actions */}
+                          <div className="flex items-center gap-4 flex-shrink-0 ml-6">
+                            <div className="hidden xl:flex items-center gap-8 border-l border-orange-100/50 pl-8">
+                              <div className="flex flex-col items-center w-24">
+                                <span className="text-[10px] text-gray-400 font-extrabold uppercase tracking-widest mb-2">Status</span>
+                                <span className={`px-3 py-1 rounded-full text-[11px] font-black border capitalize shadow-sm ${getStatusColor(client.status)}`}>
+                                  {client.status}
+                                </span>
+                              </div>
+                              <div className="flex flex-col items-start w-28 border-l border-gray-100 pl-6">
+                                <span className="text-[10px] text-gray-400 font-extrabold uppercase tracking-widest mb-2">Since</span>
+                                <span className="text-xs text-gray-700 font-bold flex items-center">
+                                  <Calendar className="w-4 h-4 mr-1.5 text-orange-400" />
+                                  {client.created_at ? new Date(client.created_at).toLocaleDateString() : 'Recent'}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Actions always visible now as requested */}
+                            <div className="flex items-center gap-1 sm:gap-2 bg-white/80 backdrop-blur-sm p-1.5 rounded-lg border border-orange-100 shadow-sm transition-all">
                               <button
                                 onClick={() => openViewModal(client)}
-                                className="p-2 text-blue-600 hover:bg-blue-100 rounded-md transition-all"
+                                className="p-2 text-blue-600 hover:bg-blue-100 rounded-md transition-all hover:scale-110"
                                 title="View Details"
                               >
                                 <Eye size={18} />
                               </button>
                               <button
                                 onClick={() => navigate('/additional/invoice', { state: { client } })}
-                                className="p-2 text-orange-600 hover:bg-orange-100 rounded-md transition-all"
+                                className="p-2 text-orange-600 hover:bg-orange-100 rounded-md transition-all hover:scale-110"
                                 title="Generate Invoice"
                               >
                                 <FileText size={18} />
                               </button>
                               <button
                                 onClick={() => openEditModal(client)}
-                                className="p-2 text-green-600 hover:bg-green-100 rounded-md transition-all"
+                                className="p-2 text-green-600 hover:bg-green-100 rounded-md transition-all hover:scale-110"
                                 title="Edit Client"
                               >
                                 <SquarePen size={18} />
                               </button>
                               <button
                                 onClick={() => openDeleteModal(client.id)}
-                                className="p-2 text-red-600 hover:bg-red-100 rounded-md transition-all"
+                                className="p-2 text-red-600 hover:bg-red-100 rounded-md transition-all hover:scale-110"
                                 title="Delete Client"
                               >
                                 <Trash2 size={18} />
