@@ -330,10 +330,14 @@ const CampaignList = ({ externalFilterOpen, setExternalFilterOpen }) => {
                                         </span>
                                     </td>
                                     <td className="py-4 px-4 whitespace-nowrap">
-                                        <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-700">
-                                            <Users size={12} className="text-blue-500" />
+                                        <button
+                                            onClick={() => handleView(campaign)}
+                                            className="flex items-center gap-1.5 text-xs font-semibold text-gray-700 hover:text-orange-600 transition-colors group px-2 py-1 hover:bg-orange-50 rounded-sm -ml-2"
+                                            title="View Audience Details"
+                                        >
+                                            <Users size={12} className="text-blue-500 group-hover:text-orange-500 transition-colors" />
                                             <span className="truncate max-w-[120px] uppercase">{campaign.audience_type} Model</span>
-                                        </div>
+                                        </button>
                                     </td>
                                     <td className="py-4 px-4">
                                         <div className="flex justify-end gap-2 text-gray-400">

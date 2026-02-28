@@ -25,9 +25,10 @@ const CampaignAudience = {
 
     findByCampaignId: async (campaignId) => {
         const [rows] = await pool.query(
-            `SELECT ca.*, e.employee_name 
+            `SELECT ca.*, e.employee_name, e.profile_picture_url, t.team_name, t.id as team_id
              FROM campaign_audience ca
              JOIN employees e ON ca.employee_id = e.id
+             LEFT JOIN teams t ON e.team_id = t.id
              WHERE ca.campaign_id = ?`,
             [campaignId]
         );

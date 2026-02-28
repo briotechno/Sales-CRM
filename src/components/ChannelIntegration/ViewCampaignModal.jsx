@@ -158,38 +158,83 @@ const ViewCampaignModal = ({ isOpen, onClose, campaign }) => {
                             </span>
                         </div>
 
-                        <div className="border border-gray-200 rounded-sm overflow-hidden bg-white max-h-[350px] flex flex-col">
-                            <div className="p-3 bg-gray-50 border-b border-gray-200 grid grid-cols-12 gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                                <div className="col-span-6">Participant</div>
-                                <div className="col-span-3 text-center">Limit</div>
-                                <div className="col-span-3 text-right">Role</div>
-                            </div>
+                        <div className="border border-gray-200 rounded-sm overflow-hidden bg-white max-h-[450px] flex flex-col">
+                            {/* Participant Logic - Grouped for Teams, Flat for Individuals */}
                             <div className="overflow-y-auto custom-scrollbar flex-1 divide-y divide-gray-100">
                                 {campaign.audience?.length > 0 ? (
-                                    campaign.audience.map((member, idx) => (
-                                        <div key={idx} className="p-4 grid grid-cols-12 gap-2 items-center hover:bg-gray-50 transition-colors">
-                                            <div className="col-span-6 flex flex-col">
-                                                <span className="text-[13px] font-bold text-gray-800 leading-tight">{member.employee_name}</span>
-                                                <span className="text-[10px] text-gray-400 capitalize leading-relaxed">ID: EMP-{member.employee_id}</span>
-                                            </div>
-                                            <div className="col-span-3 text-center">
-                                                {member.is_unlimited ? (
-                                                    <span className="text-[11px] font-bold text-green-600 block">Unlimited</span>
-                                                ) : (
-                                                    <span className="text-[11px] font-bold text-gray-700 block">
-                                                        {member.daily_limit_override ? member.daily_limit_override : 'Global'}
+                                    campaign.audience_type === "Team" ? (
+                                        // Grouped by Team
+                                        Object.entries(
+                                            campaign.audience.reduce((acc, member) => {
+                                                const tName = member.team_name || "Unassigned Teams";
+                                                if (!acc[tName]) acc[tName] = [];
+                                                acc[tName].push(member);
+                                                return acc;
+                                            }, {})
+                                        ).map(([teamName, members]) => (
+                                            <div key={teamName} className="mb-4 last:mb-0">
+                                                <div className="sticky top-0 z-10 p-3 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
+                                                    <span className="text-[10px] font-black text-gray-800 uppercase tracking-widest flex items-center gap-2">
+                                                        <div className="w-1.5 h-1.5 rounded-full bg-orange-500"></div>
+                                                        {teamName}
                                                     </span>
-                                                )}
+                                                    <span className="text-[9px] font-bold text-gray-400">{members.length} Members</span>
+                                                </div>
+                                                <div className="divide-y divide-gray-50">
+                                                    {members.map((member, mIdx) => (
+                                                        <div key={mIdx} className="p-4 flex items-center justify-between hover:bg-gray-50/50 transition-colors">
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="w-10 h-10 rounded-sm bg-gray-100 overflow-hidden border border-gray-200 flex items-center justify-center text-[10px] font-bold text-gray-400">
+                                                                    {member.profile_picture_url ? (
+                                                                        <img src={member.profile_picture_url} className="w-full h-full object-cover" alt="" />
+                                                                    ) : (
+                                                                        member.employee_name?.charAt(0)
+                                                                    )}
+                                                                </div>
+                                                                <div className="flex flex-col">
+                                                                    <span className="text-[13px] font-bold text-gray-800 leading-tight">{member.employee_name}</span>
+                                                                    <span className="text-[10px] text-gray-400 font-medium">ID: #{member.employee_id}</span>
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex flex-col items-end gap-1">
+                                                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-sm ${member.is_investigation_officer ? "text-blue-600 bg-blue-50" : "text-gray-400 bg-gray-50"}`}>
+                                                                    {member.is_investigation_officer ? "IO Expert" : "Officer"}
+                                                                </span>
+                                                                <span className="text-[10px] font-bold text-orange-600">
+                                                                    {member.is_unlimited ? "Unlimited" : (member.daily_limit_override || "Global")}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
                                             </div>
-                                            <div className="col-span-3 text-right">
-                                                {member.is_investigation_officer ? (
-                                                    <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-sm">IO Expert</span>
-                                                ) : (
-                                                    <span className="text-[10px] font-bold text-gray-400 bg-gray-50 px-2 py-1 rounded-sm">Officer</span>
-                                                )}
+                                        ))
+                                    ) : (
+                                        // Flat for Individual
+                                        campaign.audience.map((member, idx) => (
+                                            <div key={idx} className="p-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-10 h-10 rounded-sm bg-gray-100 overflow-hidden border border-gray-200 flex items-center justify-center text-[10px] font-bold text-gray-400">
+                                                        {member.profile_picture_url ? (
+                                                            <img src={member.profile_picture_url} className="w-full h-full object-cover" alt="" />
+                                                        ) : (
+                                                            member.employee_name?.charAt(0)
+                                                        )}
+                                                    </div>
+                                                    <div className="flex flex-col">
+                                                        <span className="text-[13px] font-bold text-gray-800 leading-tight">{member.employee_name}</span>
+                                                        <span className="text-[10px] text-gray-400 font-medium">EMP-{member.employee_id}</span>
+                                                    </div>
+                                                </div>
+                                                <div className="flex flex-col items-end gap-1">
+                                                    <span className="text-[10px] font-bold text-gray-400 bg-gray-50 px-2 py-0.5 rounded-sm">Individual</span>
+                                                    <span className="text-[10px] font-bold text-orange-600">
+                                                        {member.is_unlimited ? "Unlimited" : (member.daily_limit_override || "Global")}
+                                                    </span>
+                                                </div>
                                             </div>
-                                        </div>
-                                    ))
+                                        ))
+                                    )
                                 ) : (
                                     <div className="p-10 text-center">
                                         <p className="text-[13px] font-bold text-gray-400 italic">No participants found</p>
