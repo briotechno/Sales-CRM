@@ -24,7 +24,9 @@ const campaignController = {
                 timing_type: timingType,
                 lead_limit_type: leadLimitType,
                 leads_per_day: leadsPerDay || 0,
-                audience_type: audienceType
+                audience_type: audienceType,
+                selectedAudiences: selectedAudiences || [],
+                hierarchySettings: hierarchySettings || {}
             });
 
             // 2. Prepare audience data with overrides
@@ -131,7 +133,9 @@ const campaignController = {
                 timing_type: timingType,
                 lead_limit_type: leadLimitType,
                 leads_per_day: leadsPerDay || 0,
-                audience_type: audienceType
+                audience_type: audienceType,
+                selectedAudiences: selectedAudiences || [],
+                hierarchySettings: hierarchySettings || {}
             }, userId);
 
             // 2. Clear old audience
