@@ -330,6 +330,14 @@ export const leadApi = createApi({
             }),
             invalidatesTags: ['Campaign'],
         }),
+        updateCampaign: builder.mutation({
+            query: ({ id, data }) => ({
+                url: `campaigns/${id}`,
+                method: 'PUT',
+                body: data,
+            }),
+            invalidatesTags: ['Campaign'],
+        }),
     }),
 });
 
@@ -375,4 +383,5 @@ export const {
     useCreateCampaignMutation,
     useToggleCampaignStatusMutation,
     useDeleteCampaignMutation,
+    useUpdateCampaignMutation,
 } = leadApi;

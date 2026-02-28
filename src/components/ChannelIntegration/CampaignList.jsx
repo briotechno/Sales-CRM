@@ -18,6 +18,7 @@ import {
     AlertCircle
 } from "lucide-react";
 import ViewCampaignModal from "./ViewCampaignModal";
+import CreateCampaignModal from "./CreateCampaignModal";
 import Modal from "../common/Modal";
 import {
     useGetCampaignsQuery,
@@ -25,7 +26,7 @@ import {
     useDeleteCampaignMutation
 } from "../../store/api/leadApi";
 import { toast } from "react-hot-toast";
-import { useSocket } from "../../hooks/useSocket"; // Assuming there's a useSocket hook
+import { useSocket } from "../../hooks/useSocket";
 
 const CampaignList = ({ externalFilterOpen, setExternalFilterOpen }) => {
     const [searchTerm, setSearchTerm] = useState("");
@@ -51,8 +52,14 @@ const CampaignList = ({ externalFilterOpen, setExternalFilterOpen }) => {
     const filterRef = useRef(null);
     const [selectedCampaign, setSelectedCampaign] = useState(null);
     const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [campaignToDelete, setCampaignToDelete] = useState(null);
+
+    const handleEdit = (campaign) => {
+        setSelectedCampaign(campaign);
+        setIsEditModalOpen(true);
+    };
 
     // Real-time hits state
     const [liveHits, setLiveHits] = useState({});
@@ -118,12 +125,26 @@ const CampaignList = ({ externalFilterOpen, setExternalFilterOpen }) => {
     };
 
     const getStatusBadge = (status) => {
-        switch (status) {
-            case "active": return "bg-green-100 text-green-700 border-green-200";
-            case "scheduled": return "bg-blue-100 text-blue-700 border-blue-200";
-            case "paused": return "bg-amber-100 text-amber-700 border-amber-200";
-            case "ended": return "bg-red-100 text-red-700 border-red-200";
-            default: return "bg-gray-100 text-gray-700 border-gray-200";
+        const lowerStatus = status?.toLowerCase();
+        if (lowerStatus === "active" || lowerStatus === "running") return "bg-green-50 text-green-600 border-green-200";
+        if (lowerStatus === "paused") return "bg-amber-50 text-amber-600 border-amber-200";
+        if (lowerStatus === "scheduled") return "bg-blue-50 text-blue-600 border-blue-200";
+        if (lowerStatus === "completed") return "bg-gray-50 text-gray-600 border-gray-200";
+        return "bg-gray-50 text-gray-500 border-gray-200";
+    };
+
+    const formatTime12h = (timeStr) => {
+        if (!timeStr) return "";
+        try {
+            const [hours, minutes] = timeStr.split(':');
+            let h = parseInt(hours);
+            const m = minutes;
+            const ampm = h >= 12 ? 'PM' : 'AM';
+            h = h % 12;
+            h = h ? h : 12; // the hour '0' should be '12'
+            return `${h}:${m} ${ampm}`;
+        } catch (e) {
+            return timeStr;
         }
     };
 
@@ -252,13 +273,13 @@ const CampaignList = ({ externalFilterOpen, setExternalFilterOpen }) => {
                 <table className="w-full border-collapse text-left text-sm font-primary">
                     <thead>
                         <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
-                            <th className="py-3 px-4 font-semibold border-b border-orange-400">ID</th>
-                            <th className="py-3 px-4 font-semibold border-b border-orange-400">Campaign Name</th>
-                            <th className="py-3 px-4 font-semibold border-b border-orange-400">Source</th>
-                            <th className="py-3 px-4 font-semibold border-b border-orange-400 text-center">Status</th>
-                            <th className="py-3 px-4 font-semibold border-b border-orange-400">Duration</th>
-                            <th className="py-3 px-4 font-semibold border-b border-orange-400">Hits</th>
-                            <th className="py-3 px-4 font-semibold border-b border-orange-400">Audience</th>
+                            <th className="py-3 px-4 font-semibold border-b border-orange-400 text-left">ID</th>
+                            <th className="py-3 px-4 font-semibold border-b border-orange-400 text-left">Campaign Name</th>
+                            <th className="py-3 px-4 font-semibold border-b border-orange-400 text-left">Source</th>
+                            <th className="py-3 px-4 font-semibold border-b border-orange-400 text-left">Status</th>
+                            <th className="py-3 px-4 font-semibold border-b border-orange-400 text-left">Duration</th>
+                            <th className="py-3 px-4 font-semibold border-b border-orange-400 text-left">Hits</th>
+                            <th className="py-3 px-4 font-semibold border-b border-orange-400 text-left">Audience</th>
                             <th className="py-3 px-4 font-semibold border-b border-orange-400 text-right">Action</th>
                         </tr>
                     </thead>
@@ -282,35 +303,36 @@ const CampaignList = ({ externalFilterOpen, setExternalFilterOpen }) => {
                                             <span className="text-xs font-bold text-gray-600 italic tracking-tight">{campaign.source}</span>
                                         </div>
                                     </td>
-                                    <td className="py-4 px-4 text-center whitespace-nowrap">
-                                        <span className={`px-3 py-1 rounded-sm text-[10px] font-bold border uppercase tracking-wider ${getStatusBadge(campaign.status)}`}>
+                                    <td className="py-4 px-4 text-left whitespace-nowrap">
+                                        <span className={`px-3 py-1 rounded-sm text-[11px] font-bold border uppercase tracking-wider ${getStatusBadge(campaign.status)}`}>
                                             {campaign.status}
                                         </span>
                                     </td>
                                     <td className="py-4 px-4 whitespace-nowrap">
-                                        <div className="flex flex-col gap-1 text-[10px] font-bold text-gray-500">
-                                            <div className="flex items-center gap-1.5 ">
-                                                <Calendar size={10} className="text-orange-500" />
-                                                <span>{new Date(campaign.start_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}</span>
-                                            </div>
-                                            <div className="flex items-center gap-1.5 ">
-                                                <Clock size={10} className="text-blue-500" />
-                                                <span>{new Date(campaign.end_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}</span>
+                                        <div className="flex items-center gap-3 text-[14px] font-medium text-gray-700">
+                                            <Calendar size={18} className="text-orange-500 shrink-0" />
+                                            <div className="flex items-center gap-2 flex-nowrap">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-gray-800 font-semibold">{new Date(campaign.start_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}</span>
+                                                    <span className="text-[13px] text-orange-600 font-bold uppercase bg-orange-50 px-2 py-0.5 rounded-sm border border-orange-100">{formatTime12h(campaign.start_time)}</span>
+                                                </div>
+                                                <span className="text-gray-300 font-light mx-1">→</span>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-gray-800 font-semibold">{new Date(campaign.end_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}</span>
+                                                    <span className="text-[13px] text-orange-600 font-bold uppercase bg-orange-50 px-2 py-0.5 rounded-sm border border-orange-100">{formatTime12h(campaign.end_time)}</span>
+                                                </div>
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="py-4 px-4 whitespace-nowrap">
-                                        <div className="flex flex-col">
-                                            <span className="text-sm font-black text-orange-600 leading-none mr-2">
-                                                {liveHits[campaign.id] !== undefined ? liveHits[campaign.id] : campaign.leads_generated}
-                                            </span>
-                                            <span className="text-[9px] text-gray-400 font-black uppercase tracking-widest mt-1">Total Hits</span>
-                                        </div>
+                                    <td className="py-4 px-4 whitespace-nowrap text-left">
+                                        <span className="text-base font-medium text-orange-600">
+                                            {liveHits[campaign.id] !== undefined ? liveHits[campaign.id] : campaign.leads_generated}
+                                        </span>
                                     </td>
                                     <td className="py-4 px-4 whitespace-nowrap">
-                                        <div className="flex items-center gap-1.5 text-xs font-bold text-gray-700">
+                                        <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-700">
                                             <Users size={12} className="text-blue-500" />
-                                            <span className="truncate max-w-[120px] uppercase font-black">{campaign.audience_type} Model</span>
+                                            <span className="truncate max-w-[120px] uppercase">{campaign.audience_type} Model</span>
                                         </div>
                                     </td>
                                     <td className="py-4 px-4">
@@ -322,7 +344,11 @@ const CampaignList = ({ externalFilterOpen, setExternalFilterOpen }) => {
                                             >
                                                 <Eye size={18} />
                                             </button>
-                                            <button className="p-1.5 text-green-600 hover:bg-green-50 rounded-sm transition-all" title="Edit Campaign">
+                                            <button
+                                                onClick={() => handleEdit(campaign)}
+                                                className="p-1.5 text-green-600 hover:bg-green-50 rounded-sm transition-all"
+                                                title="Edit Campaign"
+                                            >
                                                 <Edit size={18} />
                                             </button>
                                             {campaign.status === "paused" || campaign.status === "scheduled" ? (
@@ -437,6 +463,16 @@ const CampaignList = ({ externalFilterOpen, setExternalFilterOpen }) => {
                     <p className="text-xs text-red-500 italic font-medium">This action cannot be undone. All associated data will be permanently removed.</p>
                 </div>
             </Modal>
+
+            {/* Edit Modal */}
+            <CreateCampaignModal
+                isOpen={isEditModalOpen}
+                onClose={() => {
+                    setIsEditModalOpen(false);
+                    setSelectedCampaign(null);
+                }}
+                initialData={selectedCampaign}
+            />
 
             <style jsx>{`
                 .animate-campaignFadeIn {

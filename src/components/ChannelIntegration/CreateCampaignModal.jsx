@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
     Clock,
     Calendar,
@@ -23,7 +23,7 @@ import {
     FileText
 } from "lucide-react";
 import Modal from "../common/Modal";
-import { useGetLeadsQuery, useCreateCampaignMutation } from "../../store/api/leadApi";
+import { useGetLeadsQuery, useCreateCampaignMutation, useUpdateCampaignMutation } from "../../store/api/leadApi";
 import { useGetTeamsQuery, useGetTeamByIdQuery } from "../../store/api/teamApi";
 import { useGetEmployeesQuery } from "../../store/api/employeeApi";
 import { toast } from "react-hot-toast";
@@ -154,14 +154,14 @@ const TeamHierarchyConfig = ({ teamId, hierarchySettings, setHierarchySettings }
                         <Users size={16} className="text-white" />
                     </div>
                     <div>
-                        <h4 className="text-sm font-bold text-gray-800 capitalize">{team?.team_name} Matrix</h4>
-                        <p className="text-[10px] font-semibold text-gray-400 capitalize">Define flow-based lead distribution</p>
+                        <h4 className="text-[15px] font-bold text-gray-900 capitalize leading-tight">{team?.team_name} Matrix</h4>
+                        <p className="text-[11px] font-semibold text-gray-500 capitalize">Define flow-based lead distribution</p>
                     </div>
                 </div>
                 <div className="flex items-center gap-4">
                     <div className="flex flex-col items-end">
-                        <span className="text-[9px] font-bold text-gray-300 capitalize italic opacity-70 leading-none">Strategy</span>
-                        <span className="text-[10px] font-bold text-[#222] capitalize">Round Robin</span>
+                        <span className="text-[10px] font-bold text-gray-400 capitalize italic opacity-90 leading-none">Strategy</span>
+                        <span className="text-[11px] font-bold text-gray-800 capitalize">Round Robin</span>
                     </div>
                 </div>
             </div>
@@ -177,16 +177,16 @@ const TeamHierarchyConfig = ({ teamId, hierarchySettings, setHierarchySettings }
                                 <div className="h-[1px] w-12 bg-gradient-to-r from-gray-200 to-transparent"></div>
                             </div>
                             <div className="flex items-center gap-3">
-                                <span className="text-[10px] font-bold text-gray-300 capitalize">Bulk:</span>
+                                <span className="text-[11px] font-bold text-gray-500 capitalize">Bulk:</span>
                                 <button
                                     onClick={() => applyToLevel(level, 'dailyLimitUnlimited', true)}
-                                    className="text-[10px] font-bold text-orange-600 hover:bg-orange-50 px-3 py-1.5 rounded-sm transition-all border border-orange-200 capitalize bg-white"
+                                    className="text-[11px] font-bold text-orange-600 hover:bg-orange-50 px-3.5 py-1.5 rounded-sm transition-all border border-orange-200 capitalize bg-white shadow-sm"
                                 >
                                     Unlimited All
                                 </button>
                                 <button
                                     onClick={() => applyToLevel(level, 'isInvestigationOfficer', true)}
-                                    className="text-[10px] font-bold text-blue-600 hover:bg-blue-50 px-3 py-1.5 rounded-sm transition-all border border-blue-200 capitalize bg-white"
+                                    className="text-[11px] font-bold text-blue-600 hover:bg-blue-50 px-3.5 py-1.5 rounded-sm transition-all border border-blue-200 capitalize bg-white shadow-sm"
                                 >
                                     Investigation Officer All
                                 </button>
@@ -217,7 +217,9 @@ const TeamHierarchyConfig = ({ teamId, hierarchySettings, setHierarchySettings }
     );
 };
 
-const CreateCampaignModal = ({ isOpen, onClose }) => {
+const CreateCampaignModal = ({ isOpen, onClose, initialData = null }) => {
+    const isEditMode = !!initialData;
+
     const [formData, setFormData] = useState({
         campaignName: "",
         source: "All",
@@ -236,8 +238,56 @@ const CreateCampaignModal = ({ isOpen, onClose }) => {
     const [hierarchySettings, setHierarchySettings] = useState({});
 
     const [createCampaign, { isLoading: isCreating }] = useCreateCampaignMutation();
+    const [updateCampaign, { isLoading: isUpdating }] = useUpdateCampaignMutation();
+
+    const isLoading = isCreating || isUpdating;
+
     const { data: teamsData, isLoading: isLoadingTeams } = useGetTeamsQuery({ limit: 1000 });
     const { data: employeesData, isLoading: isLoadingEmployees } = useGetEmployeesQuery({ limit: 1000, status: 'Active' });
+
+    // Pre-fill data for Edit Mode
+    useEffect(() => {
+        if (isEditMode && initialData && isOpen) {
+            // Basic Info
+            setFormData({
+                campaignName: initialData.name || "",
+                source: initialData.source || "All",
+                startDate: initialData.start_date ? new Date(initialData.start_date).toISOString().split('T')[0] : "",
+                startTime: initialData.start_time || "",
+                endDate: initialData.end_date ? new Date(initialData.end_date).toISOString().split('T')[0] : "",
+                endTime: initialData.end_time || "",
+                timingType: initialData.timing_type || "Every Working Day & Working Time",
+                leadLimitType: initialData.lead_limit_type || "Unlimited",
+                leadsPerDay: initialData.leads_per_day || "",
+                audienceType: initialData.audience_type || "Team",
+                selectedAudiences: typeof initialData.selected_audiences === 'string'
+                    ? JSON.parse(initialData.selected_audiences)
+                    : (initialData.selected_audiences || [])
+            });
+
+            // Reconstruct Hierarchy Settings
+            const savedSettings = typeof initialData.hierarchy_settings === 'string'
+                ? JSON.parse(initialData.hierarchy_settings)
+                : (initialData.hierarchy_settings || {});
+            setHierarchySettings(savedSettings);
+        } else if (!isEditMode && isOpen) {
+            // Reset for Create Mode
+            setFormData({
+                campaignName: "",
+                source: "All",
+                startDate: "",
+                startTime: "",
+                endDate: "",
+                endTime: "",
+                timingType: "Every Working Day & Working Time",
+                leadLimitType: "Unlimited",
+                leadsPerDay: "",
+                audienceType: "Team",
+                selectedAudiences: [],
+            });
+            setHierarchySettings({});
+        }
+    }, [isEditMode, initialData, isOpen]);
 
     const teams = useMemo(() => {
         const raw = teamsData?.teams || [];
@@ -290,18 +340,28 @@ const CreateCampaignModal = ({ isOpen, onClose }) => {
         }
 
         try {
-            const result = await createCampaign({
+            const payload = {
                 ...formData,
                 hierarchySettings
-            }).unwrap();
+            };
+
+            let result;
+            if (isEditMode) {
+                result = await updateCampaign({
+                    id: initialData.id,
+                    data: payload
+                }).unwrap();
+            } else {
+                result = await createCampaign(payload).unwrap();
+            }
 
             if (result.success) {
-                toast.success("Campaign created successfully");
+                toast.success(`Campaign ${isEditMode ? 'updated' : 'created'} successfully`);
                 onClose();
             }
         } catch (error) {
-            console.error("Failed to create campaign:", error);
-            toast.error(error.data?.message || "Failed to create campaign");
+            console.error(`Failed to ${isEditMode ? 'update' : 'create'} campaign:`, error);
+            toast.error(error.data?.message || `Failed to ${isEditMode ? 'update' : 'create'} campaign`);
         }
     };
 
@@ -309,18 +369,18 @@ const CreateCampaignModal = ({ isOpen, onClose }) => {
         <div className="flex justify-end gap-3 w-full">
             <button
                 onClick={onClose}
-                disabled={isCreating}
-                className="px-6 py-2.5 rounded-sm border-2 border-gray-300 text-gray-700 font-bold hover:bg-gray-50 transition-all font-primary text-xs capitalize disabled:opacity-50"
+                disabled={isLoading}
+                className="px-6 py-2.5 rounded-sm border border-gray-300 text-gray-600 font-bold hover:bg-gray-50 transition-all font-primary text-xs capitalize disabled:opacity-50"
             >
                 Cancel
             </button>
             <button
                 className="px-6 py-2.5 rounded-sm bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold hover:shadow-md transition-all font-primary text-xs capitalize flex items-center gap-2 shadow-lg disabled:opacity-50"
                 onClick={handleSubmit}
-                disabled={isCreating}
+                disabled={isLoading}
             >
-                {isCreating ? <RefreshCw size={18} className="animate-spin" /> : <Plus size={18} />}
-                {isCreating ? "Creating..." : "Create Campaign"}
+                {isLoading ? <RefreshCw size={18} className="animate-spin" /> : (isEditMode ? <Settings size={18} /> : <Plus size={18} />)}
+                {isLoading ? (isEditMode ? "Updating..." : "Creating...") : (isEditMode ? "Update Campaign" : "Create Campaign")}
             </button>
         </div>
     );
@@ -329,13 +389,13 @@ const CreateCampaignModal = ({ isOpen, onClose }) => {
         <Modal
             isOpen={isOpen}
             onClose={onClose}
-            title="Create New Campaign"
-            subtitle="Setup campaign details, timing, and assign audience"
+            title={isEditMode ? "Update Campaign" : "Create New Campaign"}
+            subtitle={isEditMode ? `Modifying configuration for #${initialData.id}` : "Setup campaign details, timing, and assign audience"}
             icon={<Settings size={24} />}
             maxWidth="max-w-5xl"
             footer={footer}
         >
-            <div className="space-y-8 py-2 font-primary">
+            <div className="space-y-6 py-2 font-primary">
                 {/* Campaign Basic Info */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-1.5">
@@ -372,7 +432,7 @@ const CreateCampaignModal = ({ isOpen, onClose }) => {
                 </div>
 
                 {/* Dates & Timing */}
-                <div className="space-y-6 pt-4 border-t border-gray-100">
+                <div className="space-y-5 pt-3 border-t border-gray-100">
                     <div className="flex items-center gap-2">
                         <Calendar className="text-orange-500" size={18} />
                         <h3 className="text-lg font-bold text-gray-800 capitalize">Schedule & Timing</h3>
@@ -489,7 +549,7 @@ const CreateCampaignModal = ({ isOpen, onClose }) => {
                 </div>
 
                 {/* Audience Selection */}
-                <div className="space-y-6 pt-4 border-t border-gray-100">
+                <div className="space-y-5 pt-3 border-t border-gray-100">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                             <Users className="text-orange-500" size={18} />
@@ -560,9 +620,9 @@ const CreateCampaignModal = ({ isOpen, onClose }) => {
                                                             {team.team_name}
                                                         </p>
                                                         <div className="flex items-center gap-2">
-                                                            <span className="text-[10px] font-semibold text-gray-400 capitalize">{team.total_members || 0} Members</span>
+                                                            <span className="text-[11px] font-semibold text-gray-500 capitalize">{team.total_members || 0} Members</span>
                                                             <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
-                                                            <span className="text-[10px] font-bold text-orange-500 capitalize">Hierarchy 1-4</span>
+                                                            <span className="text-[11px] font-bold text-orange-500 capitalize">Hierarchy 1-4</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -634,8 +694,8 @@ const CreateCampaignModal = ({ isOpen, onClose }) => {
 
                         {formData.selectedAudiences?.length > 0 && (
                             <div className="p-3 bg-orange-500 flex items-center gap-2">
-                                <CheckCircle2 size={14} className="text-white" />
-                                <span className="text-[10px] font-bold text-white capitalize tracking-wide">{formData.selectedAudiences.length} Audiences Selected</span>
+                                <CheckCircle2 size={16} className="text-white" />
+                                <span className="text-[11px] font-bold text-white capitalize tracking-wide">{formData.selectedAudiences.length} Audiences Selected</span>
                             </div>
                         )}
                     </div>
@@ -643,10 +703,10 @@ const CreateCampaignModal = ({ isOpen, onClose }) => {
 
                 {/* Team Hierarchy Config Section */}
                 {formData.audienceType === "Team" && formData.selectedAudiences?.length > 0 && (
-                    <div className="space-y-6 animate-fadeIn pt-8 border-t border-gray-100">
+                    <div className="space-y-5 animate-fadeIn pt-4 border-t border-gray-100">
                         <div className="flex items-center gap-2 transition-transform">
-                            <Workflow className="text-orange-500" size={18} />
-                            <h3 className="text-lg font-bold text-gray-800 capitalize">Team Flow Matrix Configuration</h3>
+                            <Workflow className="text-orange-500" size={20} />
+                            <h3 className="text-lg font-bold text-gray-900 capitalize">Team Flow Matrix Configuration</h3>
                         </div>
                         <div className="grid grid-cols-1 gap-6">
                             {formData.selectedAudiences?.map(teamId => (
