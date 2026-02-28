@@ -27,12 +27,27 @@ import {
 import { toast } from "react-hot-toast";
 import { useSocket } from "../../hooks/useSocket"; // Assuming there's a useSocket hook
 
-const CampaignList = () => {
+const CampaignList = ({ externalFilterOpen, setExternalFilterOpen }) => {
     const [searchTerm, setSearchTerm] = useState("");
     const [statusFilter, setStatusFilter] = useState("All");
     const [tempSearch, setTempSearch] = useState("");
     const [tempStatus, setTempStatus] = useState("All");
     const [isFilterOpen, setIsFilterOpen] = useState(false);
+
+    // Sync internal filter state with external prop
+    useEffect(() => {
+        if (externalFilterOpen !== undefined) {
+            setIsFilterOpen(externalFilterOpen);
+        }
+    }, [externalFilterOpen]);
+
+    // Update external state when internal changes
+    const toggleFilter = (val) => {
+        setIsFilterOpen(val);
+        if (setExternalFilterOpen) {
+            setExternalFilterOpen(val);
+        }
+    };
     const filterRef = useRef(null);
     const [selectedCampaign, setSelectedCampaign] = useState(null);
     const [isViewModalOpen, setIsViewModalOpen] = useState(false);
@@ -55,6 +70,15 @@ const CampaignList = () => {
                         ...prev,
                         [data.campaignId]: data.newHits
                     }));
+
+                    // Show notification for the hit
+                    const campaign = campaigns.find(c => c.id === data.campaignId);
+                    if (campaign) {
+                        toast.success(`New Lead assigned to ${campaign.name}`, {
+                            icon: '🎯',
+                            duration: 3000
+                        });
+                    }
                 }
             });
             return () => socket.off('campaign_update');
@@ -78,7 +102,7 @@ const CampaignList = () => {
     const handleApplyFilters = () => {
         setSearchTerm(tempSearch);
         setStatusFilter(tempStatus);
-        setIsFilterOpen(false);
+        toggleFilter(false);
     };
 
     const handleResetFilters = () => {
@@ -150,101 +174,81 @@ const CampaignList = () => {
     );
 
     return (
-        <div className="max-w-7xl mx-auto px-6 py-6 space-y-6">
-            {/* Filters Header */}
-            <div className="flex justify-end bg-white p-4 rounded-sm shadow-sm border border-gray-100">
-                <div className="relative" ref={filterRef}>
-                    <button
-                        onClick={() => {
-                            if (hasActiveFilters) {
-                                handleClearAll();
-                            } else {
-                                setTempSearch(searchTerm);
-                                setTempStatus(statusFilter);
-                                setIsFilterOpen(!isFilterOpen);
-                            }
-                        }}
-                        className={`px-3 py-3 rounded-sm border transition shadow-sm ${isFilterOpen || hasActiveFilters
-                            ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
-                            : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
-                            }`}
-                    >
-                        {hasActiveFilters ? <X size={18} /> : <Filter size={18} />}
-                    </button>
+        <div className="w-full space-y-6">
+            {/* Filters Menu Container (Only show when open) */}
+            <div className="relative" ref={filterRef}>
+                {isFilterOpen && (
+                    <div className="absolute right-0 top-0 w-full md:w-[400px] bg-white border border-gray-200 rounded-sm shadow-2xl z-50 animate-campaignFadeIn overflow-hidden text-left">
+                        <div className="p-4 bg-gray-50 border-b flex justify-between items-center text-left">
+                            <span className="text-sm font-bold text-gray-800 tracking-tight">Filter Options</span>
+                            <button
+                                onClick={handleResetFilters}
+                                className="text-[10px] font-bold text-orange-600 hover:underline hover:text-orange-700 capitalize tracking-wider"
+                            >
+                                Reset All
+                            </button>
+                        </div>
 
-                    {isFilterOpen && (
-                        <div className="absolute right-0 mt-2 w-[400px] bg-white border border-gray-200 rounded-sm shadow-2xl z-50 animate-campaignFadeIn overflow-hidden text-left">
-                            <div className="p-4 bg-gray-50 border-b flex justify-between items-center text-left">
-                                <span className="text-sm font-bold text-gray-800 tracking-tight">Filter Options</span>
-                                <button
-                                    onClick={handleResetFilters}
-                                    className="text-[10px] font-bold text-orange-600 hover:underline hover:text-orange-700 capitalize tracking-wider"
-                                >
-                                    Reset All
-                                </button>
-                            </div>
-
-                            <div className="p-5 space-y-6 text-left">
-                                {/* Search Input */}
-                                <div className="group">
-                                    <label className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-2 border-b pb-1">Search Campaign</label>
-                                    <div className="relative">
-                                        <input
-                                            type="text"
-                                            value={tempSearch}
-                                            onChange={(e) => setTempSearch(e.target.value)}
-                                            placeholder="Search by name or ID..."
-                                            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500/20 outline-none transition-all text-xs font-semibold text-gray-700 bg-gray-50 hover:bg-white"
-                                        />
-                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                                    </div>
-                                </div>
-
-                                <div className="space-y-4">
-                                    <span className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-2 border-b pb-1">Select Status</span>
-                                    <div className="space-y-2">
-                                        {["All", "Active", "Scheduled", "Paused", "Ended"].map((option) => (
-                                            <label key={option} className="flex items-center group cursor-pointer">
-                                                <div className="relative flex items-center">
-                                                    <input
-                                                        type="radio"
-                                                        name="status_filter_campaign"
-                                                        checked={tempStatus === option}
-                                                        onChange={() => setTempStatus(option)}
-                                                        className="peer h-4 w-4 cursor-pointer appearance-none rounded-full border-2 border-gray-200 transition-all checked:border-[#FF7B1D] checked:border-[5px] hover:border-orange-300"
-                                                    />
-                                                </div>
-                                                <span className={`ml-3 text-sm font-medium transition-colors ${tempStatus === option ? "text-[#FF7B1D] font-bold" : "text-gray-600 group-hover:text-gray-900"}`}>
-                                                    {option} Status
-                                                </span>
-                                            </label>
-                                        ))}
-                                    </div>
+                        <div className="p-5 space-y-6 text-left">
+                            {/* Search Input */}
+                            <div className="group">
+                                <label className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-2 border-b pb-1">Search Campaign</label>
+                                <div className="relative">
+                                    <input
+                                        type="text"
+                                        value={tempSearch}
+                                        onChange={(e) => setTempSearch(e.target.value)}
+                                        placeholder="Search by name or ID..."
+                                        className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500/20 outline-none transition-all text-xs font-semibold text-gray-700 bg-gray-50 hover:bg-white"
+                                    />
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                                 </div>
                             </div>
 
-                            {/* Filter Actions */}
-                            <div className="p-4 bg-gray-50 border-t flex gap-3">
-                                <button
-                                    onClick={() => setIsFilterOpen(false)}
-                                    className="flex-1 py-2.5 text-[11px] font-bold text-gray-500 capitalize tracking-wider hover:bg-gray-200 transition-colors rounded-sm border border-gray-200 bg-white shadow-sm"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    onClick={handleApplyFilters}
-                                    className="flex-1 py-2.5 text-[11px] font-bold text-white capitalize tracking-wider bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 transition-all rounded-sm shadow-md active:scale-95"
-                                >
-                                    Apply Filters
-                                </button>
+                            <div className="space-y-4">
+                                <span className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-2 border-b pb-1">Select Status</span>
+                                <div className="space-y-2">
+                                    {["All", "Active", "Scheduled", "Paused", "Ended"].map((option) => (
+                                        <label key={option} className="flex items-center group cursor-pointer">
+                                            <div className="relative flex items-center">
+                                                <input
+                                                    type="radio"
+                                                    name="status_filter_campaign"
+                                                    checked={tempStatus === option}
+                                                    onChange={() => setTempStatus(option)}
+                                                    className="peer h-4 w-4 cursor-pointer appearance-none rounded-full border-2 border-gray-200 transition-all checked:border-[#FF7B1D] checked:border-[5px] hover:border-orange-300"
+                                                />
+                                            </div>
+                                            <span className={`ml-3 text-sm font-medium transition-colors ${tempStatus === option ? "text-[#FF7B1D] font-bold" : "text-gray-600 group-hover:text-gray-900"}`}>
+                                                {option} Status
+                                            </span>
+                                        </label>
+                                    ))}
+                                </div>
                             </div>
                         </div>
-                    )}
-                </div>
+
+                        {/* Filter Actions */}
+                        <div className="p-4 bg-gray-50 border-t flex gap-3">
+                            <button
+                                onClick={() => toggleFilter(false)}
+                                className="flex-1 py-2.5 text-[11px] font-bold text-gray-500 capitalize tracking-wider hover:bg-gray-200 transition-colors rounded-sm border border-gray-200 bg-white shadow-sm"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleApplyFilters}
+                                className="flex-1 py-2.5 text-[11px] font-bold text-white capitalize tracking-wider bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 transition-all rounded-sm shadow-md active:scale-95"
+                            >
+                                Apply Filters
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Campaign Table */}
-            <div className="overflow-x-auto border border-gray-200 rounded-sm shadow-sm bg-white">
+            <div className="overflow-x-auto border border-gray-200 rounded-sm shadow-sm bg-white !mt-0">
                 <table className="w-full border-collapse text-left text-sm font-primary">
                     <thead>
                         <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">

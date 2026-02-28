@@ -1,42 +1,60 @@
 import React, { useState } from "react";
-import { Settings, ShieldCheck, Zap, UserX, Plus } from "lucide-react";
+import { Settings, ShieldCheck, Zap, UserX, Plus, List, Filter, Home } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import AssignmentSettings from "../LeadsManagement/AssignmentSettings";
 import LeadRulesConfig from "../LeadsManagement/LeadRulesConfig";
 import DropLeadRules from "../LeadsManagement/DropLeadRules";
 import CreateCampaignModal from "../../components/ChannelIntegration/CreateCampaignModal";
 import CampaignList from "../../components/ChannelIntegration/CampaignList";
-import { List } from "lucide-react";
 
 export default function ChannelSettings() {
     const [activeTab, setActiveTab] = useState("campaign-list");
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isFilterOpen, setIsFilterOpen] = useState(false);
+    const navigate = useNavigate();
 
     return (
         <div className="min-h-screen bg-gray-50/50 pb-12 font-primary">
             {/* Page Header */}
-            <div className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-30">
-                <div className="max-w-7xl mx-auto px-6 py-4">
-                    <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg flex items-center justify-center text-white shadow-lg">
-                                <Settings size={22} />
-                            </div>
-                            <div>
-                                <h1 className="text-xl font-bold text-gray-900 tracking-tight">Campaign</h1>
-                                <p className="text-sm text-gray-500 font-medium">Configure campaign assignment logic and automated rules</p>
-                            </div>
+            <div className="bg-white border-b border-gray-200 sticky top-0 z-30">
+                <div className="px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                        <div>
+                            <h1 className="text-2xl font-bold text-gray-800 tracking-tight">Campaign Integration</h1>
+                            <p className="text-xs text-gray-500 mt-1 flex items-center gap-2">
+                                <Home className="text-gray-400" size={14} />
+                                <span className="text-gray-400">CRM / </span>
+                                <span className="text-[#FF7B1D] font-bold">Campaign Integration</span>
+                            </p>
                         </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                        {activeTab === "campaign-list" && (
+                            <button
+                                onClick={() => setIsFilterOpen(!isFilterOpen)}
+                                className={`flex items-center justify-center w-11 h-11 rounded-sm border transition shadow-sm ${isFilterOpen
+                                    ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
+                                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
+                                    }`}
+                                title="Toggle Filters"
+                            >
+                                <Filter size={20} />
+                            </button>
+                        )}
                         <button
                             onClick={() => setIsModalOpen(true)}
-                            className="flex items-center gap-2 px-6 py-3 rounded-sm font-semibold transition shadow-lg hover:shadow-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 active:scale-95"
+                            className="flex items-center gap-2 px-6 py-3 rounded-sm font-semibold transition shadow-lg hover:shadow-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
                         >
                             <Plus size={20} />
                             Create Campaign
                         </button>
                     </div>
+                </div>
 
-                    {/* Tabs */}
-                    <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-lg w-fit">
+                {/* Tabs Bar */}
+                <div className="px-6 py-2 border-t border-gray-100 bg-white overflow-x-auto flex justify-start">
+                    <div className="flex items-center gap-2 p-1 rounded-sm w-fit">
                         <button
                             onClick={() => setActiveTab("assignment")}
                             className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-bold transition-all duration-300 ${activeTab === "assignment"
@@ -84,20 +102,27 @@ export default function ChannelSettings() {
             {/* Content Area */}
             <div className="animate-fadeIn">
                 {activeTab === "assignment" && (
-                    <AssignmentSettings />
+                    <div className="px-6 py-6 font-primary">
+                        <AssignmentSettings />
+                    </div>
                 )}
                 {activeTab === "rules" && (
-                    <div className="max-w-7xl mx-auto px-6 py-6">
+                    <div className="px-6 py-6">
                         <LeadRulesConfig />
                     </div>
                 )}
                 {activeTab === "drop" && (
-                    <div className="max-w-7xl mx-auto px-6 py-6">
+                    <div className="px-6 py-6">
                         <DropLeadRules />
                     </div>
                 )}
                 {activeTab === "campaign-list" && (
-                    <CampaignList />
+                    <div className="px-6 py-6">
+                        <CampaignList
+                            externalFilterOpen={isFilterOpen}
+                            setExternalFilterOpen={setIsFilterOpen}
+                        />
+                    </div>
                 )}
             </div>
 

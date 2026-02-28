@@ -22,7 +22,7 @@ export const useSocket = () => {
             socketInstance.on('connect', () => {
                 console.log('Frontend Socket Connected');
                 // Basic setup
-                const type = user.role === 'Admin' ? 'user' : 'employee';
+                const type = (user.role === 'Admin' || user.role === 'Super Admin') ? 'user' : 'employee';
                 socketInstance.emit("setup", { id: user.id, type: type });
             });
 
