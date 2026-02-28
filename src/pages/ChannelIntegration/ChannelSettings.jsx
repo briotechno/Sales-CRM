@@ -8,7 +8,7 @@ import CampaignList from "../../components/ChannelIntegration/CampaignList";
 import { List } from "lucide-react";
 
 export default function ChannelSettings() {
-    const [activeTab, setActiveTab] = useState("assignment");
+    const [activeTab, setActiveTab] = useState("campaign-list");
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     return (
@@ -28,7 +28,7 @@ export default function ChannelSettings() {
                         </div>
                         <button
                             onClick={() => setIsModalOpen(true)}
-                            className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white px-5 py-2.5 rounded-lg font-bold shadow-lg hover:from-orange-600 hover:to-orange-700 transition-all active:scale-95"
+                            className="flex items-center gap-2 px-6 py-3 rounded-sm font-semibold transition shadow-lg hover:shadow-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 active:scale-95"
                         >
                             <Plus size={20} />
                             Create Campaign
