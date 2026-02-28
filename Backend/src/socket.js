@@ -1,6 +1,8 @@
 const { Server } = require('socket.io');
 const Messenger = require('./models/messengerModel');
 
+let ioInstance;
+
 const initializeSocket = (server) => {
     const io = new Server(server, {
         cors: {
@@ -9,6 +11,8 @@ const initializeSocket = (server) => {
         }
     });
 
+    ioInstance = io;
+
     // Map to track online users: { userId_type: socketId }
     const onlineUsers = new Map();
 
@@ -16,10 +20,17 @@ const initializeSocket = (server) => {
         console.log('New client connected:', socket.id);
 
         socket.on('setup', async (userData) => {
-            // userData should have { id: employeeId, type: 'employee' }
+            // userData should have { id: employeeId, type: 'employee' } or { id: adminId, type: 'user' }
             const userKey = `${userData.id}_${userData.type}`;
             socket.join(userKey);
             onlineUsers.set(userKey, socket.id);
+
+            // If it's an admin (type 'user'), join the admin room for campaign updates
+            if (userData.type === 'user') {
+                const adminRoom = `user_${userData.id}_admin`;
+                socket.join(adminRoom);
+                console.log('Admin joined room:', adminRoom);
+            }
 
             // Mark all messages for this user as delivered
             await Messenger.markAllAsDeliveredForUser(userData.id, userData.type);
@@ -156,4 +167,6 @@ const initializeSocket = (server) => {
     return io;
 };
 
-module.exports = initializeSocket;
+const getIO = () => ioInstance;
+
+module.exports = { initializeSocket, getIO };

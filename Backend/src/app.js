@@ -69,6 +69,7 @@ app.use('/api/messenger', require('./routes/messengerRoutes'));
 app.use('/api/offer-letters', require('./routes/offerLetterRoutes'));
 app.use('/api/integrations', require('./routes/integrationRoutes'));
 app.use('/api/lead-assignment', require('./routes/leadAssignmentRoutes'));
+app.use('/api/campaigns', require('./routes/campaignRoutes'));
 
 
 

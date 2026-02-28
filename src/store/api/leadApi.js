@@ -20,7 +20,8 @@ export const leadApi = createApi({
         'LeadNotes',
         'LeadCalls',
         'LeadFiles',
-        'LeadMeetings'
+        'LeadMeetings',
+        'Campaign'
     ],
     endpoints: (builder) => ({
         getLeads: builder.query({
@@ -302,6 +303,41 @@ export const leadApi = createApi({
             }),
             invalidatesTags: (result, error, { id }) => ['Lead', { type: 'Lead', id }, { type: 'LeadActivities', id }],
         }),
+        getCampaigns: builder.query({
+            query: () => 'campaigns',
+            providesTags: ['Campaign'],
+        }),
+        createCampaign: builder.mutation({
+            query: (data) => ({
+                url: 'campaigns',
+                method: 'POST',
+                body: data,
+            }),
+            invalidatesTags: ['Campaign'],
+        }),
+        toggleCampaignStatus: builder.mutation({
+            query: ({ id, status }) => ({
+                url: `campaigns/${id}/status`,
+                method: 'PATCH',
+                body: { status },
+            }),
+            invalidatesTags: ['Campaign'],
+        }),
+        deleteCampaign: builder.mutation({
+            query: (id) => ({
+                url: `campaigns/${id}`,
+                method: 'DELETE',
+            }),
+            invalidatesTags: ['Campaign'],
+        }),
+        updateCampaign: builder.mutation({
+            query: ({ id, data }) => ({
+                url: `campaigns/${id}`,
+                method: 'PUT',
+                body: data,
+            }),
+            invalidatesTags: ['Campaign'],
+        }),
     }),
 });
 
@@ -343,4 +379,9 @@ export const {
     useSnoozeLeadMutation,
     useConvertLeadToClientMutation,
     useAddLeadActivityMutation,
+    useGetCampaignsQuery,
+    useCreateCampaignMutation,
+    useToggleCampaignStatusMutation,
+    useDeleteCampaignMutation,
+    useUpdateCampaignMutation,
 } = leadApi;

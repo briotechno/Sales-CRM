@@ -381,7 +381,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           ],
         },
         {
-          name: "Settings",
+          name: "Campaign",
           icon: <Settings size={22} />,
           path: "/crm/channel/settings",
           permission: "Leads Management"
@@ -577,7 +577,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
   /* Filtering */
   const filteredMenuItems = menuItems
     .filter((section) => {
-      // Role-based filtering
+      // Role-based filtering - Only Super Admins can see the Super Admin section
       if (section.section === "Super Admin" && user?.role !== "Super Admin") {
         return false;
       }
@@ -585,44 +585,10 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       // Show Dashboard section only when in the main Dashboard rail
       if (section.section === "Dashboard") return activeModule === "dashboard";
 
-      // Module-wise filtering
+      // Module-wise filtering - Show sections belonging to the active module
       const currentModule = availableModules.find(m => m.id === activeModule);
       return currentModule?.section === section.section;
-    })
-    .map((section) => {
-      const filteredItems = section.items
-        .filter((item) => {
-          if (item.name === "Logout") return true;
-
-          if (item.permission) {
-            return checkPermission(item.permission);
-          }
-          if (!item.children) return true;
-          return true;
-        })
-        .map((item) => {
-          if (item.children) {
-            const filteredChildren = item.children.filter((child) => {
-              if (child.name === "Logout") return true;
-              if (!child.permission) return true;
-              return checkPermission(child.permission);
-            });
-
-            if (filteredChildren.length === 0 && !item.path && !item.permission) {
-              return null;
-            }
-
-            return {
-              ...item,
-              children: filteredChildren.length > 0 ? filteredChildren : undefined,
-            };
-          }
-          return item;
-        })
-        .filter(Boolean); // Remove null items
-      return { ...section, items: filteredItems };
-    })
-    .filter((section) => section.items.length > 0);
+    });
 
 
   return (
