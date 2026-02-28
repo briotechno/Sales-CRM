@@ -27,7 +27,8 @@ const createLead = async (req, res) => {
                 reason: 'Initial Assignment'
             });
         }
-        // Removed autoAssign call to ensure Assign To remains null unless explicitly assigned
+        // Trigger Auto-Assignment
+        await leadAssignmentService.autoAssign(id, req.user.id);
 
         // Log Activity
         await LeadResources.addActivity({
@@ -351,6 +352,11 @@ const addLeadCall = async (req, res) => {
             note,
             follow_task: followTask === 'true' || followTask === true
         }, req.user.id);
+
+        // Trigger Auto-Assignment Engine logic for call results
+        const leadAssignmentService = require('../services/leadAssignmentService');
+        await leadAssignmentService.handleCallResult(req.params.id, status === 'Connected', req.user.id);
+
         res.status(201).json(result);
     } catch (error) {
         res.status(500).json({ message: error.message });

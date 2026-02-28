@@ -1,12 +1,13 @@
 const http = require('http');
 const app = require('./app');
 const { connectDB } = require('./config/db');
-const initializeSocket = require('./socket');
+const { initializeSocket } = require('./socket');
 
 const leadAssignmentService = require('./services/leadAssignmentService');
 
 const server = http.createServer(app);
 const io = initializeSocket(server);
+app.set('socketio', io);
 
 const PORT = process.env.PORT || 5000;
 

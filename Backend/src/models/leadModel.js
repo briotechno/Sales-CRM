@@ -251,6 +251,10 @@ const Lead = {
                     description: `A follow-up task has been scheduled for ${new Date(lead.next_call_at).toLocaleString()}.`
                 }, userId);
             }
+
+            // Trigger Auto-Assignment for each lead
+            const leadAssignmentService = require('../services/leadAssignmentService');
+            await leadAssignmentService.autoAssign(lead.id, userId);
         }
 
         return result.affectedRows;

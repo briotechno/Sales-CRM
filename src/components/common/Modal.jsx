@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import ReactDOM from "react-dom";
 import { X } from "lucide-react";
 
 /**
@@ -25,7 +26,7 @@ const Modal = ({
     children,
     footer,
     maxWidth = "max-w-2xl",
-    zIndex = "z-50",
+    zIndex = "z-[9999]",
     showCloseButton = true,
     headerVariant = "orange",
     bodyClassName = "",
@@ -50,7 +51,7 @@ const Modal = ({
 
     if (!isOpen) return null;
 
-    return (
+    return ReactDOM.createPortal(
         <div className={`fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex justify-center items-center ${zIndex} animate-fadeIn p-4`}>
             <div
                 className={`bg-white rounded-sm shadow-2xl w-full ${maxWidth} relative transform transition-all animate-slideUp overflow-hidden`}
@@ -148,7 +149,8 @@ const Modal = ({
                     background: #ea580c;
                 }
             `}</style>
-        </div>
+        </div>,
+        document.body
     );
 };
 
