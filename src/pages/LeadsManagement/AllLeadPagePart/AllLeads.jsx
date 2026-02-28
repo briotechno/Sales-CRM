@@ -480,7 +480,6 @@ export default function LeadsList() {
                             </select>
                           </div>
 
-                          {/* Lead Source */}
                           <div>
                             <label className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-2 border-b pb-1">
                               Lead Source
@@ -491,11 +490,11 @@ export default function LeadsList() {
                               className="w-full px-3 py-2.5 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-1 focus:ring-orange-500/20 outline-none transition-all text-xs font-semibold text-gray-700 bg-gray-50 hover:bg-white"
                             >
                               <option value="All">All Sources</option>
+                              <option value="Indiamart">Indiamart</option>
+                              <option value="Direct">Direct</option>
+                              <option value="Meta">Meta</option>
+                              <option value="Justdial">Justdial</option>
                               <option value="Website">Website</option>
-                              <option value="Referral">Referral</option>
-                              <option value="Social Media">Social Media</option>
-                              <option value="Advertisement">Advertisement</option>
-                              <option value="Other">Other</option>
                             </select>
                           </div>
 

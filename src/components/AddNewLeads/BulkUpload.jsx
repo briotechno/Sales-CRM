@@ -243,12 +243,11 @@ export default function BulkUploadLeads({ onClose }) {
                     className={inputStyles + " appearance-none cursor-pointer"}
                   >
                     <option value="">Select lead source</option>
+                    <option value="Indiamart">Indiamart</option>
+                    <option value="Direct">Direct</option>
+                    <option value="Meta">Meta</option>
+                    <option value="Justdial">Justdial</option>
                     <option value="Website">Website</option>
-                    <option value="Referral">Referral</option>
-                    <option value="Social Media">Social Media</option>
-                    <option value="Email Campaign">Email Campaign</option>
-                    <option value="Cold Call">Cold Call</option>
-                    <option value="Other">Other</option>
                   </select>
                 </div>
               </div>

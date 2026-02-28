@@ -88,35 +88,35 @@ export default function AnalysisPage() {
 
   const sourceAnalysis = [
     {
-      source: "Website",
+      source: "Indiamart",
       leads: 842,
       conversion: 38,
       revenue: "$124,500",
       color: "bg-orange-500",
     },
     {
-      source: "Social Media",
+      source: "Direct",
       leads: 654,
       conversion: 31,
       revenue: "$98,200",
       color: "bg-orange-400",
     },
     {
-      source: "Email Campaign",
+      source: "Meta",
       leads: 523,
       conversion: 42,
       revenue: "$156,300",
       color: "bg-orange-600",
     },
     {
-      source: "Referrals",
+      source: "Justdial",
       leads: 387,
       conversion: 45,
       revenue: "$178,900",
       color: "bg-orange-700",
     },
     {
-      source: "Direct",
+      source: "Website",
       leads: 441,
       conversion: 29,
       revenue: "$87,600",
