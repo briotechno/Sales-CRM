@@ -4,7 +4,8 @@ import {
     RefreshCw,
     Save,
     Settings,
-    AlertCircle
+    AlertCircle,
+    Check
 } from "lucide-react";
 import {
     useGetAssignmentSettingsQuery,
@@ -70,11 +71,12 @@ export default function DropLeadRules() {
                 </button>
             </div>
             <div className="p-8 space-y-8 flex-1 text-left">
-                <div className="flex items-center justify-between p-6 bg-gray-50 rounded-sm border border-gray-100 shadow-inner">
-                    <div className="max-w-[70%]">
-                        <h4 className="text-[14px] font-bold text-gray-800 capitalize">Auto-Disqualification Logic</h4>
-                        <p className="text-[11px] text-gray-500 font-medium mt-1 leading-relaxed capitalize">
-                            Automatically mark lead as Not Qualified when max attempts are exceeded without connection.
+                {/* Auto Disqualification Section */}
+                <div className="flex items-center justify-between p-6 bg-white border border-gray-100 rounded-sm shadow-sm hover:shadow-md transition-all group">
+                    <div className="max-w-[75%]">
+                        <h4 className="text-[16px] font-bold text-gray-800 capitalize tracking-tight group-hover:text-orange-600 transition-colors">Automatic Lead Cleanup</h4>
+                        <p className="text-[13px] text-gray-500 font-medium mt-1.5 leading-relaxed">
+                            Automatically moves inactive leads to 'Dropped' status after maximum call attempts are reached, keeping your pipeline fresh.
                         </p>
                     </div>
                     <button
@@ -85,46 +87,82 @@ export default function DropLeadRules() {
                     </button>
                 </div>
 
-                <div className="flex items-center justify-between p-6 bg-gray-50 rounded-sm border border-gray-100 shadow-inner opacity-80 hover:opacity-100 transition-opacity">
-                    <div className="max-w-[70%]">
-                        <h4 className="text-[14px] font-bold text-gray-800 capitalize">Reassign Disqualified Leads</h4>
-                        <p className="text-[11px] text-gray-500 font-medium mt-1 leading-relaxed capitalize">
-                            Allow admins to reassign disqualified leads to different agents for a fresh attempt.
-                        </p>
-                    </div>
-                    <button
-                        onClick={() => setFormData({ ...formData, reassignment_on_disqualified: !formData.reassignment_on_disqualified })}
-                        className={`relative w-14 h-7 transition-all rounded-full flex items-center px-1 shadow-md ${formData.reassignment_on_disqualified ? 'bg-orange-500' : 'bg-gray-300'}`}
-                    >
-                        <div className={`w-5 h-5 bg-white rounded-full transition-all shadow-sm ${formData.reassignment_on_disqualified ? 'ml-7' : 'ml-0'}`} />
-                    </button>
-                </div>
-
+                {/* Reassignment Section */}
                 <div className="space-y-4">
-                    <h4 className="text-xs font-bold text-gray-400 capitalize tracking-wide border-b border-gray-100 pb-2">Workflow Summary</h4>
-                    <div className="space-y-4 relative pl-8 before:absolute before:left-3.5 before:top-2 before:bottom-2 before:w-[1px] before:bg-gray-100">
+                    <div className="flex items-center justify-between p-6 bg-white border border-gray-100 rounded-sm shadow-sm hover:shadow-md transition-all group">
+                        <div className="max-w-[75%]">
+                            <h4 className="text-[16px] font-bold text-gray-800 capitalize tracking-tight group-hover:text-orange-600 transition-colors">Smart Lead Reassignment</h4>
+                            <p className="text-[13px] text-gray-500 font-medium mt-1.5 leading-relaxed">
+                                Enable automatic rotation of dropped leads to different agents for a fresh series of contact attempts.
+                            </p>
+                        </div>
+                        <button
+                            onClick={() => setFormData({ ...formData, reassignment_on_disqualified: !formData.reassignment_on_disqualified })}
+                            className={`relative w-14 h-7 transition-all rounded-full flex items-center px-1 shadow-md ${formData.reassignment_on_disqualified ? 'bg-orange-500' : 'bg-gray-300'}`}
+                        >
+                            <div className={`w-5 h-5 bg-white rounded-full transition-all shadow-sm ${formData.reassignment_on_disqualified ? 'ml-7' : 'ml-0'}`} />
+                        </button>
+                    </div>
+
+                    {/* Reassign Limit Input - Conditional */}
+                    {Boolean(formData.reassignment_on_disqualified) && (
+                        <div className="mt-4 p-6 bg-orange-50/30 border border-orange-100/50 rounded-sm animate-fadeIn space-y-4">
+                            <div className="flex items-center justify-between">
+                                <div className="max-w-[70%] text-left">
+                                    <h5 className="text-[14px] font-bold text-gray-700 capitalize">Permanent Drop Threshold</h5>
+                                    <p className="text-[11px] text-gray-400 font-semibold mt-1">
+                                        Max reassignment cycles allowed before the lead is archived permanently.
+                                    </p>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        max="10"
+                                        className="w-16 px-2 py-1.5 border border-gray-300 rounded-sm text-sm font-bold text-gray-700 focus:border-orange-500 outline-none text-center"
+                                        value={formData.max_reassignment_limit || 5}
+                                        onChange={(e) => setFormData({ ...formData, max_reassignment_limit: parseInt(e.target.value) })}
+                                    />
+                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Cycles</span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                <div className="space-y-5 pt-2">
+                    <h4 className="text-xs font-bold text-gray-400 capitalize tracking-[0.1em] border-b border-gray-100 pb-2">Workflow Process Guide</h4>
+                    <div className="space-y-5 relative pl-8 before:absolute before:left-3.5 before:top-2 before:bottom-2 before:w-[1px] before:bg-gray-100">
                         <div className="relative flex items-center gap-4 group">
-                            <div className="absolute -left-[22px] w-3 h-3 rounded-full bg-orange-500 border-2 border-white shadow-sm z-10 transition-transform group-hover:scale-125"></div>
-                            <span className="text-[12px] font-bold text-gray-700 capitalize">Initial State</span>
-                            <span className="text-[11px] text-gray-400 font-medium capitalize">All tabs disabled, status pending</span>
+                            <div className="absolute -left-[22px] w-3 h-3 rounded-full bg-orange-500 border-2 border-white shadow-sm z-10"></div>
+                            <div>
+                                <span className="text-[13px] font-bold text-gray-700 block">1. Initial Assignment</span>
+                                <span className="text-[11px] text-gray-400 font-medium block mt-0.5">Lead enters pipeline and is assigned to the first agent.</span>
+                            </div>
                         </div>
                         <div className="relative flex items-center gap-4 group">
-                            <div className="absolute -left-[22px] w-3 h-3 rounded-full bg-blue-500 border-2 border-white shadow-sm z-10 transition-transform group-hover:scale-125"></div>
-                            <span className="text-[12px] font-bold text-gray-700 capitalize">Attempt Phase</span>
-                            <span className="text-[11px] text-gray-400 font-medium capitalize">Call attempt tracking active</span>
+                            <div className="absolute -left-[22px] w-3 h-3 rounded-full bg-blue-500 border-2 border-white shadow-sm z-10"></div>
+                            <div>
+                                <span className="text-[13px] font-bold text-gray-700 block">2. Status Monitoring</span>
+                                <span className="text-[11px] text-gray-400 font-medium block mt-0.5">Tracking pickup success and max attempts automatically.</span>
+                            </div>
                         </div>
                         <div className="relative flex items-center gap-4 group">
-                            <div className="absolute -left-[22px] w-3 h-3 rounded-full bg-green-500 border-2 border-white shadow-sm z-10 transition-transform group-hover:scale-125"></div>
-                            <span className="text-[12px] font-bold text-gray-700 capitalize">Qualification</span>
-                            <span className="text-[11px] text-gray-400 font-medium capitalize">mark as disqualified if rules met</span>
+                            <div className="absolute -left-[30px] w-5 h-5 rounded-full bg-green-500 flex items-center justify-center border-4 border-white shadow-sm z-10">
+                                <Check size={10} className="text-white" />
+                            </div>
+                            <div>
+                                <span className="text-[13px] font-bold text-gray-700 block">3. Final Resolution</span>
+                                <span className="text-[11px] text-gray-400 font-medium block mt-0.5">Re-distribution or permanent removal based on logic.</span>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div className="mt-4 p-4 bg-orange-50 border border-orange-100 rounded-sm flex items-start gap-4">
+                <div className="mt-6 p-4 bg-orange-50/50 border border-orange-100 rounded-sm flex items-start gap-4 shadow-sm">
                     <AlertCircle className="text-orange-600 mt-0.5 shrink-0" size={18} />
-                    <div className="text-[12px] text-orange-800 font-medium leading-relaxed capitalize">
-                        These settings control when a lead is automatically dropped from the active pipeline.
+                    <div className="text-[12px] text-orange-800 font-medium leading-relaxed">
+                        Adjust thresholds carefully to balance lead quality with agent workload.
                     </div>
                 </div>
             </div>

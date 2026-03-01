@@ -17,15 +17,17 @@ const LeadAssignmentSettings = {
             max_call_attempts,
             call_time_gap_minutes,
             auto_disqualification,
-            reassignment_on_disqualified
+            reassignment_on_disqualified,
+            max_reassignment_limit
         } = data;
 
         const [result] = await pool.query(
             `INSERT INTO lead_assignment_settings (
                 user_id, mode, leads_per_employee_per_day, max_active_leads_balance, 
                 revert_time_hours, load_balancing_strategy, priority_handling,
-                max_call_attempts, call_time_gap_minutes, auto_disqualification, reassignment_on_disqualified
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                max_call_attempts, call_time_gap_minutes, auto_disqualification, 
+                reassignment_on_disqualified, max_reassignment_limit
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON DUPLICATE KEY UPDATE
                 mode = VALUES(mode),
                 leads_per_employee_per_day = VALUES(leads_per_employee_per_day),
@@ -36,12 +38,14 @@ const LeadAssignmentSettings = {
                 max_call_attempts = VALUES(max_call_attempts),
                 call_time_gap_minutes = VALUES(call_time_gap_minutes),
                 auto_disqualification = VALUES(auto_disqualification),
-                reassignment_on_disqualified = VALUES(reassignment_on_disqualified)`,
+                reassignment_on_disqualified = VALUES(reassignment_on_disqualified),
+                max_reassignment_limit = VALUES(max_reassignment_limit)`,
             [
                 userId, mode, leads_per_employee_per_day, max_active_leads_balance,
                 revert_time_hours, load_balancing_strategy, priority_handling,
                 max_call_attempts || 5, call_time_gap_minutes || 60,
-                auto_disqualification || false, reassignment_on_disqualified || false
+                auto_disqualification || false, reassignment_on_disqualified || false,
+                max_reassignment_limit || 5
             ]
         );
         return result;

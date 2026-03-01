@@ -19,10 +19,12 @@ import {
   Shield,
   Heart,
   Globe,
+  Layers,
   CheckCircle,
   History,
   TrendingUp,
   UserCheck,
+  Users,
   AlertCircle,
   Upload,
   X,
@@ -57,6 +59,7 @@ export default function LeadSidebar({
   employees = [],
   handleUpdateStatus,
 }) {
+  const leadType = leadData?.type || "Individual";
   const [editingField, setEditingField] = useState(null);
   const [editValue, setEditValue] = useState("");
   const [editingSection, setEditingSection] = useState(null);
@@ -278,9 +281,17 @@ export default function LeadSidebar({
       <div className="bg-gradient-to-r from-orange-500 to-amber-500 h-32 relative">
         <div className="absolute -bottom-12 left-1/2 transform -translate-x-1/2">
           <div className="w-24 h-24 bg-white rounded-full p-1 shadow-xl relative group overflow-hidden">
-            {leadData?.profileImage ? (
+            {leadData?.type === 'Organization' ? (
+              leadData.company_logo ? (
+                <img src={leadData.company_logo} alt={leadData.organization_name} className="w-full h-full rounded-full object-contain bg-white p-1" />
+              ) : (
+                <div className="w-full h-full rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-bold text-3xl">
+                  <FaBuilding size={32} />
+                </div>
+              )
+            ) : leadData?.profileImage || leadData?.profile_image ? (
               <img
-                src={leadData.profileImage}
+                src={leadData.profileImage || leadData.profile_image}
                 alt={leadData.name}
                 className="w-full h-full rounded-full object-cover"
               />
@@ -329,23 +340,27 @@ export default function LeadSidebar({
             </div>
           </div>
         ) : (
-          <div className="relative flex items-center justify-center w-full mb-1 group/name">
+          <div className="relative flex flex-col items-center justify-center w-full mb-1 group/name">
             <h2 className="text-2xl font-bold text-slate-800 uppercase truncate px-6" title={leadData?.name}>
               {leadData?.name || "Lead Name"}
             </h2>
             <button
               onClick={() => startEditing('name', leadData?.name)}
-              className="absolute right-[15%] w-7 h-7 flex items-center justify-center bg-orange-500 text-white rounded-sm opacity-0 group-hover/name:opacity-100 transition-all hover:bg-orange-600 shadow-lg translate-x-1/2"
+              className="absolute right-[5%] top-0 w-7 h-7 flex items-center justify-center bg-orange-500 text-white rounded-sm opacity-0 group-hover/name:opacity-100 transition-all hover:bg-orange-600 shadow-lg"
             >
               <Edit2 size={12} />
             </button>
+            {/* Lead Type - Non Editable */}
+            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-1">
+              {leadData?.type || "Individual"} Lead
+            </span>
           </div>
         )}
 
-        <div className="flex items-center justify-center gap-2 mt-1 w-full">
+        <div className="flex items-center justify-center gap-2 mt-2 w-full">
           <p className="text-slate-600 font-bold text-[14px] flex items-center gap-2">
             <Phone size={14} className="text-orange-500" />
-            {leadData?.phone || "N/A"}
+            {leadType === 'Organization' ? leadData?.company_phone : (leadData?.phone || leadData?.mobile_number) || "N/A"}
           </p>
         </div>
       </div>
@@ -395,13 +410,43 @@ export default function LeadSidebar({
           </span>
         </div>
 
-        <div className="flex items-center justify-between text-xs">
+        <div className="flex items-center justify-between text-xs group/budget relative">
           <span className="text-slate-500 font-bold uppercase tracking-wider flex items-center gap-2">
             <DollarSign className="w-4 h-4 text-slate-400" /> Estimated Value
           </span>
-          <span className="font-bold text-emerald-600 text-sm">
-            {formatCurrency ? formatCurrency(leadData?.value) : `₹${leadData?.value || 0}`}
-          </span>
+          {editingField === 'budget' || editingField === 'value' ? (
+            <div className="flex items-center gap-1 animate-in fade-in slide-in-from-right-1 duration-200">
+              <input
+                type="text"
+                className="w-24 p-1 text-xs border border-orange-200 rounded-sm focus:border-orange-500 outline-none bg-white font-bold text-emerald-600 text-right"
+                value={editValue}
+                onChange={(e) => setEditValue(e.target.value)}
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') saveEditing('budget');
+                  if (e.key === 'Escape') cancelEditing();
+                }}
+              />
+              <button
+                onClick={() => saveEditing('budget')}
+                className="w-5 h-5 flex items-center justify-center bg-emerald-500 text-white rounded-sm shadow-sm"
+              >
+                <Check size={10} strokeWidth={3} />
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-emerald-600 text-sm">
+                {formatCurrency ? formatCurrency(leadData?.value) : `₹${leadData?.value || 0}`}
+              </span>
+              <button
+                onClick={() => startEditing('budget', leadData?.value)}
+                className="w-5 h-5 flex items-center justify-center bg-orange-500 text-white rounded-sm opacity-0 group-hover/budget:opacity-100 transition-all hover:bg-orange-600 shadow-sm"
+              >
+                <Edit2 size={10} />
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -434,7 +479,12 @@ export default function LeadSidebar({
             ) : (
               !editingSection && !editingField && (
                 <button
-                  onClick={() => startSectionEditing('basic', ['gender', 'email', 'phone', 'altMobileNumber', 'dateOfBirth'])}
+                  onClick={() => {
+                    const fields = leadType === 'Organization'
+                      ? ['industry_type', 'company_email', 'company_phone', 'website', 'gst_number', 'visibility']
+                      : ['gender', 'email', 'phone', 'altMobileNumber', 'whatsapp_number', 'dateOfBirth', 'visibility'];
+                    startSectionEditing('basic', fields);
+                  }}
                   className="w-6 h-6 flex items-center justify-center bg-orange-500 text-white rounded-sm hover:bg-orange-600 transition-all shadow-md active:scale-95"
                 >
                   <Edit2 size={13} />
@@ -443,15 +493,40 @@ export default function LeadSidebar({
             )}
           </div>
           <div className="space-y-0">
-            {renderEditableField("Gender", "gender", leadData?.gender, "select", [
-              { label: "Male", value: "Male" },
-              { label: "Female", value: "Female" },
-              { label: "Other", value: "Other" }
-            ], User)}
-            {renderEditableField("Email", "email", leadData?.email, "email", [], Mail)}
-            {renderEditableField("Phone", "phone", leadData?.phone, "tel", [], Phone)}
-            {renderEditableField("Alt. Phone", "altMobileNumber", leadData?.altMobileNumber, "tel", [], History)}
-            {renderEditableField("Birthday", "dateOfBirth", leadData?.dateOfBirth, "date", [], Calendar)}
+            {leadType === 'Organization' ? (
+              <>
+                {renderEditableField("Industry", "industry_type", leadData?.industry_type, "select", [
+                  { label: "IT", value: "Information Technology" },
+                  { label: "Finance", value: "Finance" },
+                  { label: "Healthcare", value: "Healthcare" },
+                  { label: "Manufacturing", value: "Manufacturing" },
+                  { label: "Retail", value: "Retail" },
+                  { label: "Education", value: "Education" },
+                  { label: "Other", value: "Other" }
+                ], Briefcase)}
+                {renderEditableField("Email", "company_email", leadData?.company_email, "email", [], Mail)}
+                {renderEditableField("Phone", "company_phone", leadData?.company_phone, "tel", [], Phone)}
+                {renderEditableField("Website", "website", leadData?.website, "text", [], Globe)}
+                {renderEditableField("GST No.", "gst_number", leadData?.gst_number, "text", [], FileText)}
+              </>
+            ) : (
+              <>
+                {renderEditableField("Gender", "gender", leadData?.gender, "select", [
+                  { label: "Male", value: "Male" },
+                  { label: "Female", value: "Female" },
+                  { label: "Other", value: "Other" }
+                ], User)}
+                {renderEditableField("Email", "email", leadData?.email, "email", [], Mail)}
+                {renderEditableField("Phone", "phone", (leadData?.phone || leadData?.mobile_number), "tel", [], Phone)}
+                {renderEditableField("Alt. Phone", "altMobileNumber", leadData?.altMobileNumber, "tel", [], History)}
+                {renderEditableField("WhatsApp", "whatsapp_number", leadData?.whatsapp_number, "tel", [], FaWhatsapp)}
+                {renderEditableField("Birthday", "dateOfBirth", leadData?.dateOfBirth, "date", [], Calendar)}
+              </>
+            )}
+            {renderEditableField("Visibility", "visibility", leadData?.visibility, "select", [
+              { label: "Public", value: "Public" },
+              { label: "Private", value: "Private" }
+            ], Shield)}
           </div>
         </section>
 
@@ -482,7 +557,12 @@ export default function LeadSidebar({
             ) : (
               !editingSection && !editingField && (
                 <button
-                  onClick={() => startSectionEditing('location', ['address', 'city', 'state', 'pincode'])}
+                  onClick={() => {
+                    const fields = leadType === 'Organization'
+                      ? ['company_address', 'org_city', 'org_state', 'org_pincode', 'org_country']
+                      : ['address', 'city', 'state', 'pincode', 'country'];
+                    startSectionEditing('location', fields);
+                  }}
                   className="w-6 h-6 flex items-center justify-center bg-orange-500 text-white rounded-sm hover:bg-orange-600 transition-all shadow-md active:scale-95"
                 >
                   <Edit2 size={13} />
@@ -491,10 +571,23 @@ export default function LeadSidebar({
             )}
           </div>
           <div className="space-y-0">
-            {renderEditableField("Address", "address", leadData?.address, "textarea", [], MapPin)}
-            {renderEditableField("City", "city", leadData?.city, "text", [], Globe)}
-            {renderEditableField("State", "state", leadData?.state, "text", [], Globe)}
-            {renderEditableField("Pincode", "pincode", leadData?.pincode, "text", [], Globe)}
+            {leadType === 'Organization' ? (
+              <>
+                {renderEditableField("Address", "company_address", leadData?.company_address, "textarea", [], MapPin)}
+                {renderEditableField("City", "org_city", leadData?.org_city, "text", [], Globe)}
+                {renderEditableField("State", "org_state", leadData?.org_state, "text", [], Globe)}
+                {renderEditableField("Pincode", "org_pincode", leadData?.org_pincode, "text", [], Globe)}
+                {renderEditableField("Country", "org_country", leadData?.org_country, "text", [], Globe)}
+              </>
+            ) : (
+              <>
+                {renderEditableField("Address", "address", leadData?.address, "textarea", [], MapPin)}
+                {renderEditableField("City", "city", leadData?.city, "text", [], Globe)}
+                {renderEditableField("State", "state", leadData?.state, "text", [], Globe)}
+                {renderEditableField("Pincode", "pincode", leadData?.pincode, "text", [], Globe)}
+                {renderEditableField("Country", "country", leadData?.country, "text", [], Globe)}
+              </>
+            )}
           </div>
         </section>
 
@@ -525,7 +618,7 @@ export default function LeadSidebar({
             ) : (
               !editingSection && !editingField && (
                 <button
-                  onClick={() => startSectionEditing('business', ['followUp', 'source', 'priority'])}
+                  onClick={() => startSectionEditing('business', ['followUp', 'source', 'priority', 'referral_mobile'])}
                   className="w-6 h-6 flex items-center justify-center bg-orange-500 text-white rounded-sm hover:bg-orange-600 transition-all shadow-md active:scale-95"
                 >
                   <Edit2 size={13} />
@@ -542,8 +635,68 @@ export default function LeadSidebar({
               { label: "Medium", value: "Medium" },
               { label: "Low", value: "Low" }
             ], Shield)}
+            {renderEditableField("Referral", "referral_mobile", leadData?.referral_mobile, "tel", [], Users)}
           </div>
         </section>
+
+        {/* Contact Persons Section (For Organizations) */}
+        {leadType === 'Organization' && leadData?.contact_persons && (
+          <section className="pt-2 border-t border-gray-100">
+            <h3 className="text-slate-800 font-bold text-sm tracking-tight flex items-center gap-2 mb-2">
+              <Users size={16} className="text-orange-500" />
+              Contact Persons
+            </h3>
+            <div className="space-y-2">
+              {(() => {
+                try {
+                  const persons = JSON.parse(leadData.contact_persons);
+                  return persons.map((p, i) => (
+                    <div key={i} className="p-3 rounded-sm bg-slate-50 border border-slate-100">
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-bold text-xs overflow-hidden">
+                          {p.profile_image ? (
+                            <img src={p.profile_image} className="w-full h-full object-cover" />
+                          ) : getInitials(p.name || "C")}
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-slate-800">{p.name || "N/A"}</p>
+                          <p className="text-[10px] text-slate-500 font-medium">{p.designation || "No Designation"}</p>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 gap-1 pl-11">
+                        {p.mobile_number && <p className="text-[10px] text-slate-600 flex items-center gap-1.5"><Phone size={10} className="text-orange-400" /> {p.mobile_number}</p>}
+                        {p.email && <p className="text-[10px] text-slate-600 flex items-center gap-1.5"><Mail size={10} className="text-orange-400" /> {p.email}</p>}
+                      </div>
+                    </div>
+                  ));
+                } catch (e) { return null; }
+              })()}
+            </div>
+          </section>
+        )}
+
+        {/* Custom Fields Section */}
+        {leadData?.custom_fields && (
+          <section className="pt-2 border-t border-gray-100">
+            <h3 className="text-slate-800 font-bold text-sm tracking-tight flex items-center gap-2 mb-2">
+              <Layers size={16} className="text-orange-500" />
+              Additional Details
+            </h3>
+            <div className="grid grid-cols-1 gap-2">
+              {(() => {
+                try {
+                  const custom = JSON.parse(leadData.custom_fields);
+                  return custom.map((f, i) => (
+                    <div key={i} className="flex flex-col p-2 bg-slate-50/50 rounded-sm border-l-2 border-orange-400">
+                      <span className="text-[10px] text-slate-500 font-bold uppercase tracking-tight">{f.label}</span>
+                      <span className="text-xs font-bold text-slate-800">{f.value}</span>
+                    </div>
+                  ));
+                } catch (e) { return null; }
+              })()}
+            </div>
+          </section>
+        )}
 
         {/* Stakeholders Section */}
         <section className="pt-2 border-t border-gray-100">

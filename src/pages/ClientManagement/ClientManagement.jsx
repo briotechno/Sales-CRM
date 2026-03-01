@@ -110,16 +110,34 @@ export default function AllClientPage() {
   const [deleteClient, { isLoading: isDeleting }] = useDeleteClientMutation();
 
   const handleDeleteClient = async () => {
-    if (!clientToDelete) return;
-    try {
-      await deleteClient(clientToDelete).unwrap();
-      toast.success("Client deleted successfully");
-      setIsDeleteModalOpen(false);
-      setClientToDelete(null);
-      refetch();
-    } catch (error) {
-      toast.error("Failed to delete client");
-      console.error(error);
+    if (isBulkDelete) {
+      if (selectedClients.size === 0) return;
+      try {
+        const deletePromises = Array.from(selectedClients).map((id) =>
+          deleteClient(id).unwrap()
+        );
+        await Promise.all(deletePromises);
+        toast.success(`${selectedClients.size} clients deleted successfully`);
+        setSelectedClients(new Set());
+        setIsDeleteModalOpen(false);
+        setIsBulkDelete(false);
+        refetch();
+      } catch (error) {
+        toast.error("Failed to delete some clients");
+        console.error(error);
+      }
+    } else {
+      if (!clientToDelete) return;
+      try {
+        await deleteClient(clientToDelete).unwrap();
+        toast.success("Client deleted successfully");
+        setIsDeleteModalOpen(false);
+        setClientToDelete(null);
+        refetch();
+      } catch (error) {
+        toast.error("Failed to delete client");
+        console.error(error);
+      }
     }
   };
 
@@ -579,69 +597,9 @@ export default function AllClientPage() {
             />
           </div>
 
-          {selectedClients.size > 0 && (
-            <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 mb-6 flex items-center justify-between animate-fadeIn">
-              <div className="flex items-center gap-4">
-                <div className="bg-white px-4 py-1.5 rounded-full border border-orange-300 shadow-sm">
-                  <span className="text-orange-700 font-bold text-sm">
-                    {selectedClients.size} Selected
-                  </span>
-                </div>
-                <button
-                  onClick={deselectAll}
-                  className="text-sm text-gray-600 hover:text-orange-600 font-medium underline transition-colors"
-                >
-                  Clear Selection
-                </button>
-              </div>
-              <div className="flex items-center gap-3">
-                <button className="flex items-center gap-2 px-4 py-2 bg-white border border-orange-300 text-orange-600 rounded-lg hover:bg-orange-50 transition-all font-semibold text-sm shadow-sm">
-                  <Mail size={16} />
-                  Email Selected
-                </button>
-                <button className="flex items-center gap-2 px-4 py-2 bg-white border border-orange-300 text-orange-600 rounded-lg hover:bg-orange-50 transition-all font-semibold text-sm shadow-sm">
-                  <Download size={16} />
-                  Export Selected
-                </button>
-                <button
-                  onClick={openBulkDeleteModal}
-                  className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all font-semibold text-sm shadow-md"
-                >
-                  <Trash2 size={16} />
-                  Delete Selected
-                </button>
-              </div>
-            </div>
-          )}
 
-          {/* Bulk Selection Bar */}
-          <div className="bg-white border border-gray-200 rounded-sm p-3 mb-6 flex items-center justify-between shadow-sm">
-            <div className="flex items-center gap-3">
-              <input
-                type="checkbox"
-                checked={
-                  clients.length > 0 &&
-                  selectedClients.size === clients.length
-                }
-                onChange={(e) => {
-                  if (e.target.checked) {
-                    selectAll();
-                  } else {
-                    deselectAll();
-                  }
-                }}
-                className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500 cursor-pointer"
-              />
-              <span className="text-sm font-medium text-gray-600">
-                Select All
-              </span>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className="text-xs text-gray-500 font-medium bg-gray-100 px-2 py-1 rounded">
-                Displaying {clients.length} results
-              </span>
-            </div>
-          </div>
+
+
 
           {/* Client Cards Grid */}
           {isLoading ? (
@@ -667,19 +625,19 @@ export default function AllClientPage() {
                       return (
                         <div
                           key={client.id}
-                          className={`bg-white rounded-sm border transition-all duration-300 group hover:shadow-lg flex flex-col min-h-[400px] ${isSelected
+                          className={`relative bg-white rounded-sm border transition-all duration-300 group hover:shadow-lg flex flex-col min-h-[400px] ${isSelected
                             ? "border-orange-400 shadow-lg bg-orange-50/10 ring-1 ring-orange-200"
                             : "border-gray-200 hover:border-orange-300"
                             }`}
                         >
                           <div className="p-6 flex flex-col flex-1">
                             {/* Selection Checkbox - Top Right */}
-                            <div className="absolute top-4 right-4 z-10">
+                            <div className="absolute top-4 right-4 z-20">
                               <input
                                 type="checkbox"
                                 checked={isSelected}
                                 onChange={() => toggleClientSelection(client.id)}
-                                className="w-5 h-5 text-orange-600 border-2 border-gray-300 rounded-lg focus:ring-orange-500 cursor-pointer hover:border-orange-400 transition-colors"
+                                className="w-4 h-4 cursor-pointer accent-[#FF7B1D] border-gray-300 rounded transition-all"
                               />
                             </div>
 
@@ -848,8 +806,17 @@ export default function AllClientPage() {
                       return (
                         <div
                           key={client.id}
-                          className="flex items-center justify-between p-4 bg-gradient-to-r from-orange-50 to-amber-50 rounded-lg hover:shadow-md transition-shadow duration-200 border border-orange-200 group"
+                          className={`flex items-center justify-between p-4 rounded-lg hover:shadow-md transition-all duration-200 border group ${selectedClients.has(client.id) ? 'bg-orange-50 border-orange-300 ring-1 ring-orange-200' : 'bg-gradient-to-r from-orange-50 to-amber-50 border-orange-200'}`}
                         >
+                          {/* Selection Checkbox */}
+                          <div className="flex items-center px-2">
+                            <input
+                              type="checkbox"
+                              checked={selectedClients.has(client.id)}
+                              onChange={() => toggleClientSelection(client.id)}
+                              className="w-4 h-4 cursor-pointer accent-[#FF7B1D] border-gray-300 rounded transition-all"
+                            />
+                          </div>
                           {/* Left Section: Avatar & Name - Fixed Width */}
                           <div className="flex items-center gap-4 w-[300px] flex-shrink-0">
                             <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white font-bold text-lg shadow-md flex-shrink-0 border border-orange-300">
@@ -1512,11 +1479,13 @@ export default function AllClientPage() {
             </div>
 
             <h2 className="text-2xl font-bold text-gray-800 mb-2">
-              Confirm Delete
+              Confirm {isBulkDelete ? "Bulk Delete" : "Delete"}
             </h2>
 
             <p className="text-gray-600 mb-2 leading-relaxed">
-              Are you sure you want to delete this client?
+              {isBulkDelete
+                ? `Are you sure you want to delete ${selectedClients.size} selected clients?`
+                : "Are you sure you want to delete this client?"}
             </p>
 
             <p className="text-xs text-red-500 italic">
@@ -1532,6 +1501,76 @@ export default function AllClientPage() {
           client={clientToView}
         />
       </div>
+      {/* Floating Action Bar for Selected Clients */}
+      {selectedClients.size > 0 && (
+        <div className="fixed bottom-10 inset-x-0 z-[100] flex justify-center px-4 animate-slideUp">
+          <div className="bg-white/95 backdrop-blur-xl border border-gray-200 rounded-sm shadow-[0_30px_70px_rgba(0,0,0,0.25)] flex items-center gap-8 px-8 py-4 flex-wrap md:flex-nowrap justify-between max-w-fit mx-auto">
+            <div className="flex items-center gap-4 border-r border-gray-200 pr-8">
+              <div className="bg-white px-4 py-1.5 rounded-full border border-orange-300 shadow-sm">
+                <span className="text-[#FF7B1D] font-black text-sm">
+                  {selectedClients.size} Selected
+                </span>
+              </div>
+              <button
+                onClick={deselectAll}
+                className="text-sm text-gray-400 hover:text-orange-600 font-bold underline transition-colors decoration-gray-300 hover:decoration-orange-600 underline-offset-4"
+              >
+                Clear Selection
+              </button>
+              {selectedClients.size < clients.length && (
+                <button
+                  onClick={selectAll}
+                  className="text-sm text-gray-400 hover:text-orange-600 font-bold underline transition-colors decoration-gray-300 hover:decoration-orange-600 underline-offset-4"
+                >
+                  Select All
+                </button>
+              )}
+            </div>
+
+            <div className="flex items-center gap-4">
+              <button className="flex items-center gap-2.5 px-6 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-sm hover:bg-orange-50 hover:border-orange-300 hover:text-orange-600 transition-all font-bold text-sm shadow-sm active:scale-95">
+                <Mail size={18} className="text-orange-500" />
+                Email Selected
+              </button>
+              <button className="flex items-center gap-2.5 px-6 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-sm hover:bg-orange-50 hover:border-orange-300 hover:text-orange-600 transition-all font-bold text-sm shadow-sm active:scale-95">
+                <Download size={18} className="text-orange-500" />
+                Export Selected
+              </button>
+              <button
+                onClick={openBulkDeleteModal}
+                className="flex items-center gap-2.5 px-6 py-2.5 bg-red-600 text-white rounded-sm hover:bg-red-700 transition-all font-bold text-sm shadow-md active:scale-95"
+              >
+                <Trash2 size={18} />
+                Delete Selected
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Global Animations Style */}
+      <style>{`
+        @keyframes slideUp {
+          from {
+            transform: translateY(100px);
+            opacity: 0;
+          }
+          to {
+            transform: translateY(0);
+            opacity: 1;
+          }
+        }
+        .animate-slideUp {
+          animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .animate-fadeIn {
+          animation: fadeIn 0.4s ease-out forwards;
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+      `}</style>
     </DashboardLayout>
   );
 }

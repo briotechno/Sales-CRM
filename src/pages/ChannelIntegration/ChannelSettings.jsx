@@ -155,42 +155,42 @@ export default function ChannelSettings() {
                     <div className="flex items-center gap-2 p-1 rounded-sm w-fit">
                         <button
                             onClick={() => setActiveTab("assignment")}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-bold transition-all duration-300 ${activeTab === "assignment"
+                            className={`flex items-center gap-2 px-5 py-2.5 rounded-md text-[15px] font-bold transition-all duration-300 ${activeTab === "assignment"
                                 ? "bg-white text-orange-600 shadow-sm"
                                 : "text-gray-500 hover:text-gray-700 hover:bg-gray-200/50"
                                 }`}
                         >
-                            <Zap size={16} className={activeTab === "assignment" ? "text-orange-500" : ""} />
-                            Assignment Settings
+                            <Zap size={18} className={activeTab === "assignment" ? "text-orange-500" : ""} />
+                            Assignment Rules
                         </button>
                         <button
                             onClick={() => setActiveTab("rules")}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-bold transition-all duration-300 ${activeTab === "rules"
+                            className={`flex items-center gap-2 px-5 py-2.5 rounded-md text-[15px] font-bold transition-all duration-300 ${activeTab === "rules"
                                 ? "bg-white text-orange-600 shadow-sm"
                                 : "text-gray-500 hover:text-gray-700 hover:bg-gray-200/50"
                                 }`}
                         >
-                            <ShieldCheck size={16} className={activeTab === "rules" ? "text-orange-500" : ""} />
-                            Lead Rules
+                            <ShieldCheck size={18} className={activeTab === "rules" ? "text-orange-500" : ""} />
+                            Connected Rules
                         </button>
                         <button
                             onClick={() => setActiveTab("drop")}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-bold transition-all duration-300 ${activeTab === "drop"
+                            className={`flex items-center gap-2 px-5 py-2.5 rounded-md text-[15px] font-bold transition-all duration-300 ${activeTab === "drop"
                                 ? "bg-white text-orange-600 shadow-sm"
                                 : "text-gray-500 hover:text-gray-700 hover:bg-gray-200/50"
                                 }`}
                         >
-                            <UserX size={16} className={activeTab === "drop" ? "text-orange-500" : ""} />
-                            Drop Lead Rule
+                            <UserX size={18} className={activeTab === "drop" ? "text-orange-500" : ""} />
+                            Lead Drop & Deletion
                         </button>
                         <button
                             onClick={() => setActiveTab("campaign-list")}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-bold transition-all duration-300 ${activeTab === "campaign-list"
+                            className={`flex items-center gap-2 px-5 py-2.5 rounded-md text-[15px] font-bold transition-all duration-300 ${activeTab === "campaign-list"
                                 ? "bg-white text-orange-600 shadow-sm"
                                 : "text-gray-500 hover:text-gray-700 hover:bg-gray-200/50"
                                 }`}
                         >
-                            <List size={16} className={activeTab === "campaign-list" ? "text-orange-500" : ""} />
+                            <List size={18} className={activeTab === "campaign-list" ? "text-orange-500" : ""} />
                             Campaign List
                         </button>
                     </div>

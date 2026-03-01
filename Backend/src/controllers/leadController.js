@@ -231,6 +231,9 @@ const hitCall = async (req, res) => {
         await Lead.analyzeLead(leadId, userId);
 
         // Auto-Reassignment Check
+        let reassigned = false;
+        let reassignMessage = '';
+
         if (status === 'not_connected') {
             const settings = await LeadAssignmentSettings.findByUserId(userId);
             const maxAttempts = settings?.max_call_attempts || 5;
@@ -241,14 +244,16 @@ const hitCall = async (req, res) => {
                 let updateData = {
                     assigned_to: null,
                     owner_name: null,
-                    assigned_at: null
+                    assigned_at: null,
+                    tag: 'Not Contacted', // Make it look like a New Lead
+                    status: 'New Lead',   // Reset status
+                    call_count: 0,        // Reset Attempts for new agent
+                    not_connected_count: 0
                 };
 
-                if (settings?.auto_disqualification) {
+                if (settings?.auto_disqualification && !settings?.reassignment_on_disqualified) {
                     updateData.tag = 'Lost';
                     updateData.drop_reason = `Auto-drop: Max attempts reached (${maxAttempts})`;
-                } else {
-                    updateData.tag = 'Not Contacted';
                 }
 
                 await Lead.update(leadId, updateData, userId);
@@ -267,17 +272,27 @@ const hitCall = async (req, res) => {
                 await LeadResources.addActivity({
                     lead_id: leadId,
                     activity_type: 'notification',
-                    title: 'Lead Auto-Reassigned (Max Attempts)',
-                    description: `Lead auto-updated. ${updateData.tag === 'Lost' ? 'Marked as Lost.' : 'Unassigned.'} Reason: Max call attempts reached (${maxAttempts}).`
+                    title: 'Lead Unassigned (Max Attempts)',
+                    description: `Limit reached (${maxAttempts}). ${updateData.tag === 'Lost' ? 'Marked as Lost.' : 'Moved to fresh pool.'}`
                 }, userId);
 
-                if (settings?.mode === 'auto' && (settings?.reassignment_on_disqualified || !settings?.auto_disqualification)) {
+                if (settings?.mode === 'auto' && settings?.reassignment_on_disqualified) {
                     await leadAssignmentService.autoAssign(leadId, userId, currentLead?.assigned_to);
+                    reassigned = true;
+                    reassignMessage = `Lead reached ${maxAttempts} attempts and has been reassigned to a new agent.`;
+                } else {
+                    reassigned = true; // Still marked as reassigned/moved even if just unassigned
+                    reassignMessage = `Lead reached ${maxAttempts} attempts and moved to fresh pool.`;
                 }
             }
         }
 
-        res.status(200).json({ status: true, message: 'Call status updated', data: result });
+        res.status(200).json({
+            status: true,
+            message: reassignMessage || 'Call status updated',
+            data: result,
+            reassigned: reassigned
+        });
     } catch (error) {
         res.status(500).json({ status: false, message: error.message });
     }

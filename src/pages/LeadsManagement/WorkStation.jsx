@@ -27,7 +27,8 @@ import {
   Clock,
   QrCode,
   Calendar,
-  History
+  History,
+  RefreshCw
 } from "lucide-react";
 import Modal from "../../components/common/Modal";
 import AddLeadPopup from "../../components/AddNewLeads/AddNewLead";
@@ -137,7 +138,14 @@ const WorkStationLeadsListView = ({
                   className="py-3 px-4 text-orange-600 hover:text-orange-800 cursor-pointer font-semibold text-sm text-left whitespace-nowrap font-primary"
                   onClick={() => handleLeadClick(lead)}
                 >
-                  {lead.lead_id || lead.id}
+                  <div className="flex flex-col gap-1">
+                    <span>{lead.lead_id || lead.id}</span>
+                    {lead.call_count === 0 && lead.last_call_at && (
+                      <span className="text-[9px] text-indigo-600 font-bold px-1.5 py-0.5 rounded-sm bg-indigo-50 border border-indigo-100 capitalize tracking-tight w-fit flex items-center gap-1 shadow-sm">
+                        <RefreshCw size={8} className="animate-spin-slow" /> Reassigned
+                      </span>
+                    )}
+                  </div>
                 </td>
                 <td className="py-3 px-4 text-gray-800 hover:text-orange-600 cursor-pointer text-sm font-bold text-left" onClick={() => handleLeadClick(lead)} title={lead.name || lead.full_name || lead.organization_name}>
                   {((name) => name.length > 25 ? name.substring(0, 25) + "..." : name)(lead.name || lead.full_name || lead.organization_name || "Untitled Lead")}
@@ -482,6 +490,11 @@ const WorkStationLeadsGridView = ({
                               <span className="text-[11px] text-orange-600 font-bold px-2 py-0.5 rounded-sm bg-orange-50 border border-orange-100 capitalize tracking-wide w-fit">
                                 {lead.lead_id || lead.id}
                               </span>
+                              {lead.call_count === 0 && lead.last_call_at && (
+                                <span className="text-[10px] text-indigo-600 font-bold px-2 py-0.5 rounded-sm bg-indigo-50 border border-indigo-100 capitalize tracking-wide w-fit flex items-center gap-1 shadow-sm">
+                                  <RefreshCw size={10} className="animate-spin-slow" /> Reassigned
+                                </span>
+                              )}
                               {(lead.tag === 'Duplicate' || lead.duplicate_count > 1) && (
                                 <span className="text-[10px] text-rose-600 font-bold px-2 py-0.5 rounded-sm bg-rose-50 border border-rose-100 capitalize tracking-wide w-fit animate-pulse">
                                   Duplicate {lead.duplicate_count > 1 ? `(${lead.duplicate_count - 1})` : ''}
@@ -855,8 +868,13 @@ export default function WorkStation() {
 
   const handleHitCall = async (callData) => {
     try {
-      await hitCallMutation(callData).unwrap();
-      toast.success("Lead status updated based on call response");
+      const res = await hitCallMutation(callData).unwrap();
+      if (res.reassigned) {
+        toast.error(res.message);
+      } else {
+        toast.success("Lead status updated based on call response");
+      }
+      refetch();
     } catch (err) {
       toast.error(err?.data?.message || "Failed to update call status");
     }

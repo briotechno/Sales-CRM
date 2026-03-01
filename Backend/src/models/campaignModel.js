@@ -4,20 +4,25 @@ const Campaign = {
     create: async (data) => {
         const {
             user_id, name, source, start_date, start_time,
-            end_date, end_time, timing_type, lead_limit_type,
-            leads_per_day, audience_type
+            end_date, end_time, timing_type, custom_days, custom_shift_config,
+            lead_limit_type, leads_per_day, audience_type
         } = data;
 
         const [result] = await pool.query(
             `INSERT INTO campaigns (
                 user_id, name, source, start_date, start_time, 
-                end_date, end_time, timing_type, lead_limit_type,
-                leads_per_day, audience_type, selected_audiences, hierarchy_settings
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                end_date, end_time, timing_type, custom_days, custom_shift_config,
+                lead_limit_type, leads_per_day, audience_type, 
+                selected_audiences, hierarchy_settings
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 user_id, name, source, start_date, start_time,
-                end_date, end_time, timing_type, lead_limit_type,
-                leads_per_day, audience_type,
+                end_date, end_time, timing_type,
+                custom_days || null,
+                JSON.stringify(custom_shift_config || {}),
+                lead_limit_type,
+                leads_per_day || 0,
+                audience_type,
                 JSON.stringify(data.selectedAudiences || []),
                 JSON.stringify(data.hierarchySettings || {})
             ]
@@ -48,21 +53,26 @@ const Campaign = {
     update: async (id, data, userId) => {
         const {
             name, source, start_date, start_time,
-            end_date, end_time, timing_type, lead_limit_type,
-            leads_per_day, audience_type
+            end_date, end_time, timing_type, custom_days, custom_shift_config,
+            lead_limit_type, leads_per_day, audience_type
         } = data;
 
         const [result] = await pool.query(
             `UPDATE campaigns SET 
                 name = ?, source = ?, start_date = ?, start_time = ?, 
-                end_date = ?, end_time = ?, timing_type = ?, lead_limit_type = ?,
-                leads_per_day = ?, audience_type = ?,
+                end_date = ?, end_time = ?, timing_type = ?, 
+                custom_days = ?, custom_shift_config = ?,
+                lead_limit_type = ?, leads_per_day = ?, audience_type = ?,
                 selected_audiences = ?, hierarchy_settings = ?
             WHERE id = ? AND user_id = ?`,
             [
                 name, source, start_date, start_time,
-                end_date, end_time, timing_type, lead_limit_type,
-                leads_per_day, audience_type,
+                end_date, end_time, timing_type,
+                custom_days || null,
+                JSON.stringify(custom_shift_config || {}),
+                lead_limit_type,
+                leads_per_day || 0,
+                audience_type,
                 JSON.stringify(data.selectedAudiences || []),
                 JSON.stringify(data.hierarchySettings || {}),
                 id, userId
@@ -70,6 +80,7 @@ const Campaign = {
         );
         return result;
     },
+
     delete: async (id) => {
         const [result] = await pool.query('DELETE FROM campaigns WHERE id = ?', [id]);
         return result;

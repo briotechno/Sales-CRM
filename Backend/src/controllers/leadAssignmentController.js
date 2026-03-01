@@ -18,7 +18,8 @@ const leadAssignmentController = {
                 max_call_attempts: 5,
                 call_time_gap_minutes: 60,
                 auto_disqualification: false,
-                reassignment_on_disqualified: false
+                reassignment_on_disqualified: false,
+                max_reassignment_limit: 5
             });
         } catch (error) {
             res.status(500).json({ message: error.message });
