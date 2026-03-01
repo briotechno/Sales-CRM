@@ -72,7 +72,12 @@ const Employee = {
             SELECT e.*, 
             d.department_name, d.department_id as department_uid,
             deg.designation_name, deg.designation_id as designation_uid,
-            t.team_name as assigned_team_name
+            t.team_name as assigned_team_name,
+            (
+                SELECT IFNULL(ROUND((SUM(CASE WHEN tag = 'Closed' THEN 1 ELSE 0 END) / COUNT(*)) * 100, 1), 0)
+                FROM leads
+                WHERE assigned_to = e.id
+            ) as conversion_rate
             FROM employees e 
             LEFT JOIN departments d ON e.department_id = d.id 
             LEFT JOIN designations deg ON e.designation_id = deg.id

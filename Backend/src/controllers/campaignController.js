@@ -7,8 +7,8 @@ const campaignController = {
             const userId = req.user.id;
             const {
                 campaignName, source, startDate, startTime,
-                endDate, endTime, timingType, leadLimitType,
-                leadsPerDay, audienceType, selectedAudiences,
+                endDate, endTime, timingType, customDays, customShiftConfig,
+                leadLimitType, leadsPerDay, audienceType, selectedAudiences,
                 hierarchySettings
             } = req.body;
 
@@ -22,26 +22,30 @@ const campaignController = {
                 end_date: endDate,
                 end_time: endTime,
                 timing_type: timingType,
+                custom_days: customDays,
+                custom_shift_config: customShiftConfig,
                 lead_limit_type: leadLimitType,
                 leads_per_day: leadsPerDay || 0,
-                audience_type: audienceType
+                audience_type: audienceType,
+                selectedAudiences: selectedAudiences || [],
+                hierarchySettings: hierarchySettings || {}
             });
 
             // 2. Prepare audience data with overrides
             let finalAudience = [];
 
             if (audienceType === "Individual") {
-                finalAudience = selectedAudiences.map(empId => ({
-                    employee_id: empId,
-                    max_balance_override: null,
-                    daily_limit_override: null,
-                    is_unlimited: false,
-                    is_investigation_officer: false
-                }));
+                finalAudience = selectedAudiences.map(empId => {
+                    const settings = hierarchySettings?.['Individual']?.[empId] || {};
+                    return {
+                        employee_id: empId,
+                        max_balance_override: settings.maxBalance || null,
+                        daily_limit_override: settings.dailyLimit || null,
+                        is_unlimited: settings.dailyLimitUnlimited || false,
+                        is_investigation_officer: settings.isInvestigationOfficer || false
+                    };
+                });
             } else {
-                // For Team type, selection is teams, but we need settings per employee
-                // selectedAudiences contains Team IDs
-                // hierarchySettings[teamId][empId] contains overrides
                 Object.keys(hierarchySettings).forEach(teamId => {
                     Object.keys(hierarchySettings[teamId]).forEach(empId => {
                         const settings = hierarchySettings[teamId][empId];
@@ -77,7 +81,6 @@ const campaignController = {
             const userId = req.user.id;
             const campaigns = await Campaign.findAll(userId);
 
-            // Fetch audience for each campaign
             const campaignsWithAudience = await Promise.all(campaigns.map(async (campaign) => {
                 const audience = await CampaignAudience.findByCampaignId(campaign.id);
                 return { ...campaign, audience };
@@ -109,14 +112,15 @@ const campaignController = {
             res.status(500).json({ success: false, message: error.message });
         }
     },
+
     updateCampaign: async (req, res) => {
         try {
             const { id } = req.params;
             const userId = req.user.id;
             const {
                 campaignName, source, startDate, startTime,
-                endDate, endTime, timingType, leadLimitType,
-                leadsPerDay, audienceType, selectedAudiences,
+                endDate, endTime, timingType, customDays, customShiftConfig,
+                leadLimitType, leadsPerDay, audienceType, selectedAudiences,
                 hierarchySettings
             } = req.body;
 
@@ -129,24 +133,31 @@ const campaignController = {
                 end_date: endDate,
                 end_time: endTime,
                 timing_type: timingType,
+                custom_days: customDays,
+                custom_shift_config: customShiftConfig,
                 lead_limit_type: leadLimitType,
                 leads_per_day: leadsPerDay || 0,
-                audience_type: audienceType
+                audience_type: audienceType,
+                selectedAudiences: selectedAudiences || [],
+                hierarchySettings: hierarchySettings || {}
             }, userId);
 
             // 2. Clear old audience
             await CampaignAudience.deleteByCampaignId(id);
 
-            // 3. Prepare audience data (same logic as create)
+            // 3. Prepare audience data
             let finalAudience = [];
             if (audienceType === "Individual") {
-                finalAudience = selectedAudiences.map(empId => ({
-                    employee_id: empId,
-                    max_balance_override: null,
-                    daily_limit_override: null,
-                    is_unlimited: false,
-                    is_investigation_officer: false
-                }));
+                finalAudience = selectedAudiences.map(empId => {
+                    const settings = hierarchySettings?.['Individual']?.[empId] || {};
+                    return {
+                        employee_id: empId,
+                        max_balance_override: settings.maxBalance || null,
+                        daily_limit_override: settings.dailyLimit || null,
+                        is_unlimited: settings.dailyLimitUnlimited || false,
+                        is_investigation_officer: settings.isInvestigationOfficer || false
+                    };
+                });
             } else {
                 Object.keys(hierarchySettings).forEach(teamId => {
                     Object.keys(hierarchySettings[teamId]).forEach(empId => {

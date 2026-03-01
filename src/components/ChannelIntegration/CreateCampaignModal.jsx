@@ -20,7 +20,13 @@ import {
     X,
     Zap,
     TrendingUp,
-    FileText
+    FileText,
+    Briefcase,
+    Infinity,
+    Settings2,
+    Shield,
+    ShieldCheck,
+    Info
 } from "lucide-react";
 import Modal from "../common/Modal";
 import { useGetLeadsQuery, useCreateCampaignMutation, useUpdateCampaignMutation } from "../../store/api/leadApi";
@@ -55,18 +61,33 @@ const TeamStructureCard = ({ member, level, onUpdate, settings }) => {
                 </div>
                 <button
                     onClick={() => onUpdate(member.id, 'isInvestigationOfficer', !settings?.isInvestigationOfficer)}
-                    className={`p-2 rounded-sm transition-all ${settings?.isInvestigationOfficer ? "bg-orange-500 text-white shadow-md" : "bg-gray-50 text-gray-300 hover:bg-gray-100 border border-gray-100"}`}
-                    title="Mark as Investigation Officer"
+                    className={`flex items-center gap-1.5 px-2 py-1.5 rounded-sm transition-all border ${settings?.isInvestigationOfficer
+                        ? "bg-blue-600 text-white border-blue-600 shadow-md"
+                        : "bg-white text-gray-400 border-gray-200 hover:border-blue-400 hover:text-blue-600"
+                        }`}
+                    title="Toggle Investigation Officer Status"
                 >
-                    <CheckCircle2 size={16} />
+                    {settings?.isInvestigationOfficer ? (
+                        <ShieldCheck size={12} fill="currentColor" fillOpacity={0.2} />
+                    ) : (
+                        <Shield size={12} />
+                    )}
+                    <span className="text-[10px] font-semibold capitalize tracking-normal">I.O.</span>
                 </button>
             </div>
 
             <div className="grid grid-cols-1 gap-3 pt-3 border-t border-gray-100">
                 <div className="space-y-1">
-                    <label className="flex items-center gap-2 text-[10px] font-bold text-gray-500 capitalize ml-1">
+                    <label className="flex items-center gap-2 text-[11px] font-semibold text-gray-600 capitalize ml-1">
                         <Activity size={10} className="text-[#FF7B1D]" />
-                        Max Balance
+                        <span>Max Balance</span>
+                        <div className="group relative inline-block">
+                            <Info size={10} className="text-gray-400 cursor-help hover:text-blue-500 transition-colors" />
+                            <div className="absolute left-1/2 bottom-full mb-1 -translate-x-1/2 w-32 p-1.5 bg-gray-800 text-white text-[9px] font-medium rounded-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-xl z-50 text-center leading-tight">
+                                0 lead so not show any lead
+                                <div className="absolute left-1/2 top-full -translate-x-1/2 w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[4px] border-t-gray-800"></div>
+                            </div>
+                        </div>
                     </label>
                     <input
                         type="number"
@@ -78,7 +99,7 @@ const TeamStructureCard = ({ member, level, onUpdate, settings }) => {
                 </div>
                 <div className="flex items-center justify-between gap-4">
                     <div className="flex-1 space-y-1">
-                        <label className="flex items-center gap-2 text-[10px] font-bold text-gray-500 capitalize ml-1">
+                        <label className="flex items-center gap-2 text-[11px] font-semibold text-gray-600 capitalize ml-1">
                             <TrendingUp size={10} className="text-[#FF7B1D]" />
                             Daily Limit
                         </label>
@@ -228,10 +249,13 @@ const CreateCampaignModal = ({ isOpen, onClose, initialData = null }) => {
         endDate: "",
         endTime: "",
         timingType: "Every Working Day & Working Time",
+        customDays: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+        customShiftConfig: { startTime: "09:00", endTime: "19:00" },
         leadLimitType: "Unlimited",
         leadsPerDay: "",
         audienceType: "Team",
         selectedAudiences: [], // IDs of teams or individuals
+        hasEndDate: true,
     });
 
     const [searchTerm, setSearchTerm] = useState("");
@@ -257,12 +281,17 @@ const CreateCampaignModal = ({ isOpen, onClose, initialData = null }) => {
                 endDate: initialData.end_date ? new Date(initialData.end_date).toISOString().split('T')[0] : "",
                 endTime: initialData.end_time || "",
                 timingType: initialData.timing_type || "Every Working Day & Working Time",
+                customDays: initialData.custom_days ? initialData.custom_days.split(',') : ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+                customShiftConfig: typeof initialData.custom_shift_config === 'string'
+                    ? JSON.parse(initialData.custom_shift_config)
+                    : (initialData.custom_shift_config || { startTime: "09:00", endTime: "19:00" }),
                 leadLimitType: initialData.lead_limit_type || "Unlimited",
                 leadsPerDay: initialData.leads_per_day || "",
                 audienceType: initialData.audience_type || "Team",
                 selectedAudiences: typeof initialData.selected_audiences === 'string'
                     ? JSON.parse(initialData.selected_audiences)
-                    : (initialData.selected_audiences || [])
+                    : (initialData.selected_audiences || []),
+                hasEndDate: !!initialData.end_date
             });
 
             // Reconstruct Hierarchy Settings
@@ -280,10 +309,13 @@ const CreateCampaignModal = ({ isOpen, onClose, initialData = null }) => {
                 endDate: "",
                 endTime: "",
                 timingType: "Every Working Day & Working Time",
+                customDays: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+                customShiftConfig: { startTime: "09:00", endTime: "19:00" },
                 leadLimitType: "Unlimited",
                 leadsPerDay: "",
                 audienceType: "Team",
                 selectedAudiences: [],
+                hasEndDate: true,
             });
             setHierarchySettings({});
         }
@@ -329,7 +361,7 @@ const CreateCampaignModal = ({ isOpen, onClose, initialData = null }) => {
     };
 
     const handleSubmit = async () => {
-        if (!formData.campaignName || !formData.startDate || !formData.endDate) {
+        if (!formData.campaignName || !formData.startDate || (formData.hasEndDate && !formData.endDate)) {
             toast.error("Please fill all required fields");
             return;
         }
@@ -342,6 +374,10 @@ const CreateCampaignModal = ({ isOpen, onClose, initialData = null }) => {
         try {
             const payload = {
                 ...formData,
+                endDate: formData.hasEndDate ? formData.endDate : null,
+                endTime: formData.hasEndDate ? formData.endTime : null,
+                customDays: formData.customDays.join(','),
+                customShiftConfig: formData.customShiftConfig,
                 hierarchySettings
             };
 
@@ -433,9 +469,20 @@ const CreateCampaignModal = ({ isOpen, onClose, initialData = null }) => {
 
                 {/* Dates & Timing */}
                 <div className="space-y-5 pt-3 border-t border-gray-100">
-                    <div className="flex items-center gap-2">
-                        <Calendar className="text-orange-500" size={18} />
-                        <h3 className="text-lg font-bold text-gray-800 capitalize">Schedule & Timing</h3>
+                    <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                            <Calendar className="text-orange-500" size={18} />
+                            <h3 className="text-lg font-bold text-gray-800 capitalize">Schedule & Timing</h3>
+                        </div>
+                        <label className="flex items-center gap-2 cursor-pointer group">
+                            <input
+                                type="checkbox"
+                                checked={formData.hasEndDate}
+                                onChange={(e) => setFormData(prev => ({ ...prev, hasEndDate: e.target.checked }))}
+                                className="w-4 h-4 text-orange-500 accent-orange-500 rounded-sm border-gray-300 transition-all"
+                            />
+                            <span className="text-xs font-bold text-gray-600 group-hover:text-orange-600 transition-colors">Set an end date for this campaign</span>
+                        </label>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -460,29 +507,31 @@ const CreateCampaignModal = ({ isOpen, onClose, initialData = null }) => {
                                 type="time"
                                 className={inputStyles}
                                 value={formData.startTime}
-                                onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
+                                onChange={(e) => setFormData(prev => ({ ...prev, startTime: e.target.value }))}
                             />
                         </div>
                         <div className="space-y-1.5">
-                            <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2 capitalize">
-                                <Calendar size={14} className="text-[#FF7B1D]" />
+                            <label className={`flex items-center gap-2 text-sm font-semibold mb-2 capitalize ${formData.hasEndDate ? "text-gray-700" : "text-gray-400"}`}>
+                                <Calendar size={14} className={formData.hasEndDate ? "text-[#FF7B1D]" : "text-gray-400"} />
                                 End Date
                             </label>
                             <input
                                 type="date"
-                                className={inputStyles}
+                                disabled={!formData.hasEndDate}
+                                className={`${inputStyles} ${!formData.hasEndDate ? "opacity-50 cursor-not-allowed bg-gray-50 text-gray-400" : ""}`}
                                 value={formData.endDate}
                                 onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
                             />
                         </div>
                         <div className="space-y-1.5">
-                            <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2 capitalize">
-                                <Clock size={14} className="text-[#FF7B1D]" />
+                            <label className={`flex items-center gap-2 text-sm font-semibold mb-2 capitalize ${formData.hasEndDate ? "text-gray-700" : "text-gray-400"}`}>
+                                <Clock size={14} className={formData.hasEndDate ? "text-[#FF7B1D]" : "text-gray-400"} />
                                 End Time
                             </label>
                             <input
                                 type="time"
-                                className={inputStyles}
+                                disabled={!formData.hasEndDate}
+                                className={`${inputStyles} ${!formData.hasEndDate ? "opacity-50 cursor-not-allowed bg-gray-50 text-gray-400" : ""}`}
                                 value={formData.endTime}
                                 onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
                             />
@@ -490,57 +539,175 @@ const CreateCampaignModal = ({ isOpen, onClose, initialData = null }) => {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-                        <div className="bg-orange-50/50 p-4 rounded-sm border border-orange-100 flex-1">
-                            <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-4 capitalize">
-                                <Zap size={14} className="text-[#FF7B1D]" />
-                                Timing Mode
+                        <div className="bg-orange-50/30 p-5 rounded-sm border border-orange-100 flex-1">
+                            <label className="flex items-center gap-2 text-sm font-semibold text-gray-800 mb-5 capitalize">
+                                <Zap size={16} className="text-[#FF7B1D]" />
+                                Timing Strategy Mode
                             </label>
-                            <div className="flex flex-col gap-3">
-                                {["Every Working Day & Working Time", "Sunday To Saturday & 24 Hours"].map(type => (
-                                    <label key={type} className="flex items-center cursor-pointer group">
-                                        <input
-                                            type="radio"
-                                            checked={formData.timingType === type}
-                                            onChange={() => setFormData(prev => ({ ...prev, timingType: type }))}
-                                            className="w-4 h-4 text-[#FF7B1D] accent-[#FF7B1D]"
-                                        />
-                                        <span className="ml-3 text-[13px] font-semibold text-gray-800 group-hover:text-[#FF7B1D] transition-colors leading-tight">
-                                            {type}
-                                        </span>
-                                    </label>
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                {[
+                                    {
+                                        id: "Every Working Day & Working Time",
+                                        label: "Working Days",
+                                        subtitle: "Mon-Sat (9AM-7PM)",
+                                        icon: <Briefcase size={18} />,
+                                        color: "text-blue-500",
+                                        bg: "bg-blue-50"
+                                    },
+                                    {
+                                        id: "Sunday To Saturday & 24 Hours",
+                                        label: "Full 24/7",
+                                        subtitle: "Non-stop processing",
+                                        icon: <Infinity size={18} />,
+                                        color: "text-green-500",
+                                        bg: "bg-green-50"
+                                    },
+                                    {
+                                        id: "Custom / Flexible Shift",
+                                        label: "Custom Shift",
+                                        subtitle: "Flexible target hours",
+                                        icon: <Settings2 size={18} />,
+                                        color: "text-orange-500",
+                                        bg: "bg-orange-50"
+                                    }
+                                ].map(type => (
+                                    <div
+                                        key={type.id}
+                                        onClick={() => setFormData(prev => ({ ...prev, timingType: type.id }))}
+                                        className={`relative p-3 rounded-sm border transition-all cursor-pointer group flex flex-col items-center text-center gap-2 ${formData.timingType === type.id
+                                            ? "bg-white border-orange-500"
+                                            : "bg-gray-50/50 border-gray-100 hover:border-orange-200 hover:bg-white"
+                                            }`}
+                                    >
+                                        <div className={`p-2 rounded-sm mb-1 transition-transform group-hover:scale-110 ${formData.timingType === type.id ? "bg-orange-500 text-white" : `${type.bg} ${type.color}`}`}>
+                                            {type.icon}
+                                        </div>
+                                        <div className="space-y-0.5">
+                                            <p className={`text-[12px] font-semibold capitalize tracking-normal ${formData.timingType === type.id ? "text-orange-600" : "text-gray-700"}`}>
+                                                {type.label}
+                                            </p>
+                                            <p className={`text-[10px] font-medium capitalize whitespace-nowrap ${formData.timingType === type.id ? "text-orange-400" : "text-gray-400"}`}>
+                                                {type.subtitle}
+                                            </p>
+                                        </div>
+                                        {formData.timingType === type.id && (
+                                            <div className="absolute -top-1.5 -right-1.5 bg-orange-500 text-white rounded-full p-0.5 shadow-sm">
+                                                <CheckCircle2 size={10} />
+                                            </div>
+                                        )}
+                                    </div>
                                 ))}
                             </div>
-                        </div>
-                        <div className="bg-blue-50/30 p-4 rounded-sm border border-blue-100 flex-1">
-                            <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-4 capitalize">
-                                <Activity size={14} className="text-blue-500" />
-                                Lead Limit Type
-                            </label>
-                            <div className="flex flex-col gap-3">
-                                <div className="flex items-center gap-6">
-                                    {["Unlimited", "Fixed Limit"].map(type => (
-                                        <label key={type} className="flex items-center cursor-pointer group">
+
+                            {/* Custom Shift Options */}
+                            {formData.timingType === "Custom / Flexible Shift" && (
+                                <div className="mt-4 p-4 bg-white border border-orange-200 rounded-sm space-y-4 animate-fadeIn">
+                                    <div className="space-y-2">
+                                        <label className="text-[11px] font-semibold text-gray-600 capitalize tracking-normal pl-1">Target Days</label>
+                                        <div className="flex gap-2">
+                                            {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(day => (
+                                                <button
+                                                    key={day}
+                                                    onClick={() => {
+                                                        setFormData(prev => ({
+                                                            ...prev,
+                                                            customDays: prev.customDays.includes(day)
+                                                                ? prev.customDays.filter(d => d !== day)
+                                                                : [...prev.customDays, day]
+                                                        }));
+                                                    }}
+                                                    className={`w-9 h-9 flex items-center justify-center rounded-sm text-[11px] font-black transition-all ${formData.customDays.includes(day)
+                                                        ? "bg-orange-500 text-white shadow-md shadow-orange-100"
+                                                        : "bg-gray-100 text-gray-400 hover:bg-gray-200"
+                                                        }`}
+                                                >
+                                                    {day.charAt(0)}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-1.5">
+                                            <label className="text-[11px] font-semibold text-gray-600 capitalize tracking-normal pl-1">Shift Start</label>
                                             <input
-                                                type="radio"
-                                                checked={formData.leadLimitType === type}
-                                                onChange={() => setFormData(prev => ({ ...prev, leadLimitType: type }))}
-                                                className="w-4 h-4 text-blue-500 accent-blue-500"
+                                                type="time"
+                                                className={inputStyles.replace("py-3", "py-2")}
+                                                value={formData.customShiftConfig.startTime}
+                                                onChange={(e) => setFormData(prev => ({
+                                                    ...prev,
+                                                    customShiftConfig: { ...prev.customShiftConfig, startTime: e.target.value }
+                                                }))}
                                             />
-                                            <span className="ml-3 text-[13px] font-semibold text-gray-800 group-hover:text-blue-500 transition-colors">
-                                                {type}
-                                            </span>
-                                        </label>
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <label className="text-[11px] font-semibold text-gray-600 capitalize tracking-normal pl-1">Shift End</label>
+                                            <input
+                                                type="time"
+                                                className={inputStyles.replace("py-3", "py-2")}
+                                                value={formData.customShiftConfig.endTime}
+                                                onChange={(e) => setFormData(prev => ({
+                                                    ...prev,
+                                                    customShiftConfig: { ...prev.customShiftConfig, endTime: e.target.value }
+                                                }))}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                        <div className="bg-blue-50/30 p-5 rounded-sm border border-blue-100 flex-1">
+                            <label className="flex items-center gap-2 text-sm font-semibold text-gray-800 mb-5 capitalize">
+                                <Activity size={16} className="text-blue-500" />
+                                Lead Limit Strategy <span className="text-[12px] text-blue-400 lowercase ml-1 font-bold">(Max Leads Per Day)</span>
+                            </label>
+
+                            <div className="flex flex-col gap-4">
+                                <div className="grid grid-cols-2 gap-3">
+                                    {[
+                                        { id: "Unlimited", label: "Unlimited Leads", icon: <Infinity size={18} />, desc: "No daily restrictions" },
+                                        { id: "Fixed Limit", label: "Set Daily Limit", icon: <TrendingUp size={18} />, desc: "Cap leads per day" }
+                                    ].map(type => (
+                                        <div
+                                            key={type.id}
+                                            onClick={() => setFormData(prev => ({ ...prev, leadLimitType: type.id }))}
+                                            className={`relative p-3 rounded-sm border transition-all cursor-pointer group flex flex-col items-center text-center gap-1.5 ${formData.leadLimitType === type.id
+                                                ? "bg-white border-blue-500"
+                                                : "bg-gray-50/50 border-gray-100 hover:border-blue-200 hover:bg-white"
+                                                }`}
+                                        >
+                                            <div className={`p-2 rounded-sm transition-transform group-hover:scale-110 ${formData.leadLimitType === type.id ? "bg-blue-500 text-white" : "bg-blue-50 text-blue-500"}`}>
+                                                {type.icon}
+                                            </div>
+                                            <div className="space-y-0.5">
+                                                <p className={`text-[12px] font-semibold capitalize tracking-normal ${formData.leadLimitType === type.id ? "text-blue-600" : "text-gray-700"}`}>
+                                                    {type.label}
+                                                </p>
+                                                <p className={`text-[10px] font-medium capitalize ${formData.leadLimitType === type.id ? "text-blue-400" : "text-gray-400"}`}>
+                                                    {type.desc}
+                                                </p>
+                                            </div>
+                                            {formData.leadLimitType === type.id && (
+                                                <div className="absolute -top-1.5 -right-1.5 bg-blue-500 text-white rounded-full p-0.5 shadow-sm">
+                                                    <CheckCircle2 size={10} />
+                                                </div>
+                                            )}
+                                        </div>
                                     ))}
                                 </div>
+
                                 {formData.leadLimitType === "Fixed Limit" && (
-                                    <div className="animate-fadeIn">
-                                        <input
-                                            type="number"
-                                            placeholder="Enter max leads per day"
-                                            className={inputStyles.replace("py-3", "py-2")}
-                                            value={formData.leadsPerDay}
-                                            onChange={(e) => setFormData(prev => ({ ...prev, leadsPerDay: e.target.value }))}
-                                        />
+                                    <div className="animate-fadeIn space-y-1.5 pt-1">
+                                        <label className="text-[11px] font-semibold text-gray-600 capitalize tracking-normal pl-1">Daily Maximum Leads</label>
+                                        <div className="relative group">
+                                            <Activity className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-300 group-focus-within:text-blue-500 transition-colors" size={14} />
+                                            <input
+                                                type="number"
+                                                placeholder="Enter max leads per day..."
+                                                className={inputStyles.replace("px-4", "pl-10 pr-4").replace("py-3", "py-2.5")}
+                                                value={formData.leadsPerDay}
+                                                onChange={(e) => setFormData(prev => ({ ...prev, leadsPerDay: e.target.value }))}
+                                            />
+                                        </div>
                                     </div>
                                 )}
                             </div>
@@ -674,14 +841,52 @@ const CreateCampaignModal = ({ isOpen, onClose, initialData = null }) => {
                                                         <p className={`text-xs font-bold capitalize ${formData.selectedAudiences.includes(emp.id) ? "text-orange-900" : "text-gray-700"}`}>
                                                             {emp.employee_name}
                                                         </p>
-                                                        <p className="text-[9px] text-gray-400 font-semibold capitalize truncate max-w-[100px]">{emp.designation_name || "Employee"}</p>
+                                                        <div className="flex items-center gap-2 mt-0.5">
+                                                            <p className="text-[9px] text-gray-400 font-semibold capitalize truncate max-w-[80px]">{emp.designation_name || "Employee"}</p>
+                                                            <span className="w-1 h-1 bg-gray-200 rounded-full"></span>
+                                                            <p className="text-[9px] font-bold text-orange-500 bg-orange-50 px-1.5 py-0.5 rounded-sm">
+                                                                Conv: {emp.conversion_rate || 0}%
+                                                            </p>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${formData.selectedAudiences.includes(emp.id)
-                                                    ? "bg-[#22C55E] border-[#22C55E]"
-                                                    : "border-gray-200"
-                                                    }`}>
-                                                    {formData.selectedAudiences.includes(emp.id) && <Check size={12} className="text-white" />}
+                                                <div className="flex items-center gap-2">
+                                                    {formData.selectedAudiences.includes(emp.id) && (
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                const currentVal = hierarchySettings['Individual']?.[emp.id]?.isInvestigationOfficer;
+                                                                setHierarchySettings(prev => ({
+                                                                    ...prev,
+                                                                    ['Individual']: {
+                                                                        ...(prev['Individual'] || {}),
+                                                                        [emp.id]: {
+                                                                            ...(prev['Individual']?.[emp.id] || {}),
+                                                                            isInvestigationOfficer: !currentVal
+                                                                        }
+                                                                    }
+                                                                }));
+                                                            }}
+                                                            className={`flex items-center gap-1 px-2 py-1 rounded-sm transition-all border ${hierarchySettings['Individual']?.[emp.id]?.isInvestigationOfficer
+                                                                ? "bg-blue-600 text-white border-blue-600 shadow-md"
+                                                                : "bg-white text-gray-400 border-gray-200 hover:border-blue-400 hover:text-blue-600"
+                                                                }`}
+                                                            title="Toggle Investigation Officer Status"
+                                                        >
+                                                            {hierarchySettings['Individual']?.[emp.id]?.isInvestigationOfficer ? (
+                                                                <ShieldCheck size={10} fill="currentColor" fillOpacity={0.2} />
+                                                            ) : (
+                                                                <Shield size={10} />
+                                                            )}
+                                                            <span className="text-[10px] font-semibold capitalize tracking-normal">I.O.</span>
+                                                        </button>
+                                                    )}
+                                                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${formData.selectedAudiences.includes(emp.id)
+                                                        ? "bg-[#22C55E] border-[#22C55E]"
+                                                        : "border-gray-200"
+                                                        }`}>
+                                                        {formData.selectedAudiences.includes(emp.id) && <Check size={12} className="text-white" />}
+                                                    </div>
                                                 </div>
                                             </div>
                                         ))
@@ -704,9 +909,18 @@ const CreateCampaignModal = ({ isOpen, onClose, initialData = null }) => {
                 {/* Team Hierarchy Config Section */}
                 {formData.audienceType === "Team" && formData.selectedAudiences?.length > 0 && (
                     <div className="space-y-5 animate-fadeIn pt-4 border-t border-gray-100">
-                        <div className="flex items-center gap-2 transition-transform">
-                            <Workflow className="text-orange-500" size={20} />
-                            <h3 className="text-lg font-bold text-gray-900 capitalize">Team Flow Matrix Configuration</h3>
+                        <div className="flex items-center justify-between transition-transform">
+                            <div className="flex items-center gap-2">
+                                <Workflow className="text-orange-500" size={20} />
+                                <h3 className="text-lg font-bold text-gray-900 capitalize">Team Flow Matrix Configuration</h3>
+                                <div className="group relative">
+                                    <Info size={14} className="text-gray-400 cursor-help hover:text-blue-500 transition-colors" />
+                                    <div className="absolute left-0 bottom-full mb-2 w-64 p-2 bg-gray-800 text-white text-[10px] font-medium rounded-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-xl z-50">
+                                        Configure lead distribution rules, daily limits, and assign Investigation Officers for each team member.
+                                        <div className="absolute left-2 top-full w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[4px] border-t-gray-800"></div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         <div className="grid grid-cols-1 gap-6">
                             {formData.selectedAudiences?.map(teamId => (
@@ -744,7 +958,7 @@ const CreateCampaignModal = ({ isOpen, onClose, initialData = null }) => {
                     to { opacity: 1; transform: translateY(0); }
                 }
             `}</style>
-        </Modal>
+        </Modal >
     );
 };
 

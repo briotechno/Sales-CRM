@@ -102,7 +102,7 @@ export default function CRMLeadDetail() {
   };
 
   // State Management
-  const [activeTab, setActiveTab] = useState("calls");
+  const [activeTab, setActiveTab] = useState("activities");
   const [isEditingLead, setIsEditingLead] = useState(false);
   const [isEditingOwner, setIsEditingOwner] = useState(false);
   const [showPriorityDropdown, setShowPriorityDropdown] = useState(false);
@@ -258,11 +258,7 @@ export default function CRMLeadDetail() {
   const isOnlyCallTabEnabled = (leadData?.call_count > 0) && !isFollowUp && !isWon && !isDropped;
   const isTabsEnabled = isFollowUp || isWon || isDropped || (leadData?.call_count > 0);
 
-  useEffect(() => {
-    if (isOnlyCallTabEnabled && activeTab !== "calls" && activeTab !== "activities") {
-      setActiveTab("calls");
-    }
-  }, [isOnlyCallTabEnabled, activeTab]);
+
   const canNotQualified = (leadData?.call_count || 0) >= (rules?.max_call_attempts || 5) || isFollowUp;
 
   const openCallAction = (initialResponse = null) => {
@@ -354,12 +350,15 @@ export default function CRMLeadDetail() {
       const fieldMapping = {
         phone: 'mobile_number',
         altMobileNumber: 'alt_mobile_number',
+        whatsapp_number: 'whatsapp_number',
+        budget: 'value',
         fullName: 'full_name',
         source: 'lead_source',
         value: 'value',
         address: 'address',
         city: 'city',
         state: 'state',
+        country: 'country',
         pincode: 'pincode',
         email: 'email',
         gender: 'gender',
@@ -370,7 +369,19 @@ export default function CRMLeadDetail() {
         lead_owner: 'lead_owner',
         name: 'name',
         services: 'interested_in',
-        followUp: 'next_call_at'
+        followUp: 'next_call_at',
+        industry_type: 'industry_type',
+        company_email: 'company_email',
+        company_phone: 'company_phone',
+        website: 'website',
+        gst_number: 'gst_number',
+        referral_mobile: 'referral_mobile',
+        visibility: 'visibility',
+        org_city: 'org_city',
+        org_state: 'org_state',
+        org_country: 'org_country',
+        org_pincode: 'org_pincode',
+        company_address: 'company_address'
       };
 
       const backendField = fieldMapping[field] || field;
@@ -780,9 +791,23 @@ export default function CRMLeadDetail() {
 
   const handleHitCall = async (callData) => {
     try {
-      await hitCallMutation({
+      const res = await hitCallMutation({
         ...callData
       }).unwrap();
+
+      if (res.reassigned) {
+        toast.error(res.message);
+        // If reassigned, we should probably redirect back to leads list or refresh the whole lead status
+        setLeadData(prev => ({
+          ...prev,
+          assigned_to: null,
+          owner_name: null,
+          status: 'New Lead',
+          tag: 'Not Contacted',
+          call_count: 0
+        }));
+        return;
+      }
 
       // If call was connected, automatically move to In Progress, update local state
       if (callData.response === "connected") {
@@ -935,18 +960,29 @@ export default function CRMLeadDetail() {
                   return { x: from.cx + dx / d * r, y: from.cy + dy / d * r };
                 };
 
+                const currentCalls = leadData?.call_count || 0;
+
                 // ── Arrow active states ──
-                // Orange: NL → NC — only when lead actually went via NC path
-                const nlToNC = isNotConn || ncCompleted;           // orange
+                // Orange: NL → NC — active if we've attempted contact or are in NC stage
+                const nlToNC = isNotConn || currentCalls > 0 || ncCompleted;
                 // Green: NL → CO DIRECT — ONLY when lead did NOT go via NC
-                const nlToCO = hasBeenConnected && !wentViaNc;     // green (mutually exclusive with NC path)
+                const nlToCO = hasBeenConnected && !wentViaNc;
                 // Green: NC ↓ CO vertical — ONLY when lead went via NC path
-                const ncToCO = ncCompleted || isNotConn;            // green (mutually exclusive with direct path)
+                const ncToCO = ncCompleted || isNotConn || (hasBeenConnected && wentViaNc);
                 const ncToFU = false;
                 // Blue: CO → Follow Ups — once in Follow Up stage
                 const coToFU = isFollowUp || isWon || isDropped;
                 const fuToDR = isDropped;
                 const fuToWON = isWon;
+
+                // ── NEW: Progressive NC Border Logic ──
+                const maxAttempts = rules?.max_call_attempts || 5;
+                const ncProgressPercentage = Math.min((currentCalls / maxAttempts), 1);
+                const circumference = 2 * Math.PI * R;
+                const ncStrokeOffset = circumference * (1 - ncProgressPercentage);
+
+                // Highlight NC → Drop if lead reached max attempts OR is dropped via NC path
+                const ncToDR = (currentCalls >= maxAttempts) || (isDropped && (wentViaNc || isNotConn));
 
 
                 return (
@@ -958,13 +994,12 @@ export default function CRMLeadDetail() {
                     >
                       <defs>
                         {[
-                          { id: 'mOr', color: lineColor(nlToNC, '#f97316') },  // orange  NL→NC
-                          { id: 'mGr', color: lineColor(nlToCO, '#22c55e') },  // green   NL→CO
-                          { id: 'mGr2', color: lineColor(ncToCO, '#22c55e') },  // green   NC→CO
-                          { id: 'mBl2', color: lineColor(coToFU, '#3b82f6') },  // blue    CO→FU
-                          { id: 'mRed', color: lineColor(fuToDR, '#ef4444') },  // red     FU→Drop
-                          { id: 'mDg', color: lineColor(fuToWON, '#16a34a') },  // dkgreen FU→Won
-                          { id: 'mGy', color: '#d1d5db' },                       // gray    fallback
+                          { id: 'mOrActive', color: '#f97316' },
+                          { id: 'mGrActive', color: '#22c55e' },
+                          { id: 'mBlActive', color: '#3b82f6' },
+                          { id: 'mRedActive', color: '#ef4444' },
+                          { id: 'mDgActive', color: '#16a34a' },
+                          { id: 'mGy', color: '#d1d5db' },
                         ].map(({ id, color }) => (
                           <marker key={id} id={id} markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
                             <polygon points="0 0, 8 4, 0 8" fill={color} />
@@ -979,21 +1014,29 @@ export default function CRMLeadDetail() {
                         d="M 122,98 C 165,72 225,58 245,60"
                         fill="none" stroke={lineColor(nlToNC, '#f97316')}
                         strokeWidth="1.8" strokeDasharray={lineDash(nlToNC)}
-                        markerEnd="url(#mOr)" className="transition-all duration-500"
+                        markerEnd={`url(#${nlToNC ? 'mOrActive' : 'mGy'})`} className="transition-all duration-500"
                       />
                       {/* New Leads → Connected */}
                       <path
                         d="M 122,143 C 165,165 225,183 245,185"
                         fill="none" stroke={lineColor(nlToCO, '#22c55e')}
                         strokeWidth="1.8" strokeDasharray={lineDash(nlToCO)}
-                        markerEnd="url(#mGr)" className="transition-all duration-500"
+                        markerEnd={`url(#${nlToCO ? 'mGrActive' : 'mGy'})`} className="transition-all duration-500"
                       />
-                      {/* Not Connected ↓ Connected — GREEN (leads to green Connected node) */}
+                      {/* Not Connected ↓ Connected (Progress line) */}
                       <path
                         d="M 285,100 L 285,145"
                         fill="none" stroke={lineColor(ncToCO, '#22c55e')}
                         strokeWidth="1.8" strokeDasharray={lineDash(ncToCO)}
-                        markerEnd="url(#mGr2)" className="transition-all duration-500"
+                        markerEnd={`url(#${ncToCO ? 'mGrActive' : 'mGy'})`} className="transition-all duration-500"
+                      />
+
+                      {/* Not Connected → Drop Direct (When max attempts hit) */}
+                      <path
+                        d={`M 325,60 L 690,62`}
+                        fill="none" stroke={lineColor(ncToDR, '#ef4444')}
+                        strokeWidth="1.8" strokeDasharray={lineDash(ncToDR)}
+                        markerEnd={`url(#${ncToDR ? 'mRedActive' : 'mGy'})`} className="transition-all duration-500"
                       />
 
                       {/* Connected → Follow Ups */}
@@ -1001,21 +1044,21 @@ export default function CRMLeadDetail() {
                         d="M 325,180 C 375,200 430,148 470,124"
                         fill="none" stroke={lineColor(coToFU, '#3b82f6')}
                         strokeWidth="1.8" strokeDasharray={lineDash(coToFU)}
-                        markerEnd="url(#mBl2)" className="transition-all duration-500"
+                        markerEnd={`url(#${coToFU ? 'mBlActive' : 'mGy'})`} className="transition-all duration-500"
                       />
                       {/* Follow Ups → Drop */}
                       <path
                         d="M 549,100 C 593,74 642,60 690,62"
                         fill="none" stroke={lineColor(fuToDR, '#ef4444')}
                         strokeWidth="1.8" strokeDasharray={lineDash(fuToDR)}
-                        markerEnd="url(#mRed)" className="transition-all duration-500"
+                        markerEnd={`url(#${fuToDR ? 'mRedActive' : 'mGy'})`} className="transition-all duration-500"
                       />
                       {/* Follow Ups → Won */}
                       <path
                         d="M 549,145 C 593,167 642,178 690,182"
                         fill="none" stroke={lineColor(fuToWON, '#16a34a')}
                         strokeWidth="1.8" strokeDasharray={lineDash(fuToWON)}
-                        markerEnd="url(#mDg)" className="transition-all duration-500"
+                        markerEnd={`url(#${fuToWON ? 'mDgActive' : 'mGy'})`} className="transition-all duration-500"
                       />
 
                       {/* ══ NODE: New Leads ══ */}
@@ -1033,11 +1076,32 @@ export default function CRMLeadDetail() {
                       {/* ══ NODE: Not Connected ══ */}
                       {(() => {
                         const s = nodeStyle(isNotConn, ncCompleted, '#f97316');
+                        const isActiveOrProgress = isNotConn || currentCalls > 0;
+
                         return (
                           <g onClick={() => openCallAction()} style={{ cursor: 'pointer' }}>
-                            <circle cx={NC.cx} cy={NC.cy} r={R} style={s.circle} className="transition-all duration-500" />
-                            <text x={NC.cx} y={NC.cy - 6} textAnchor="middle" fontSize="10" fontWeight="700" fill={s.text} className="transition-all duration-500">Not</text>
-                            <text x={NC.cx} y={NC.cy + 7} textAnchor="middle" fontSize="10" fontWeight="700" fill={s.text} className="transition-all duration-500">Connected</text>
+                            {/* Background Circle */}
+                            <circle cx={NC.cx} cy={NC.cy} r={R} fill="white" stroke="#e5e7eb" strokeWidth="1.5" />
+
+                            {/* Progressive Stroke Circle */}
+                            <circle
+                              cx={NC.cx}
+                              cy={NC.cy}
+                              r={R}
+                              fill="none"
+                              stroke={isActiveOrProgress ? '#f97316' : '#d1d5db'}
+                              strokeWidth={isActiveOrProgress ? "2.5" : "1.5"}
+                              strokeDasharray={circumference}
+                              strokeDashoffset={ncStrokeOffset}
+                              transform={`rotate(-90 ${NC.cx} ${NC.cy})`}
+                              style={{
+                                transition: 'stroke-dashoffset 0.8s ease-in-out, stroke 0.3s',
+                                filter: isActiveOrProgress ? 'drop-shadow(0 0 4px #f9731644)' : 'none'
+                              }}
+                            />
+
+                            <text x={NC.cx} y={NC.cy - 6} textAnchor="middle" fontSize="10" fontWeight="700" fill={isActiveOrProgress ? '#f97316' : '#9ca3af'} className="transition-all duration-500">Not</text>
+                            <text x={NC.cx} y={NC.cy + 7} textAnchor="middle" fontSize="10" fontWeight="700" fill={isActiveOrProgress ? '#f97316' : '#9ca3af'} className="transition-all duration-500">Connected</text>
                           </g>
                         );
                       })()}
@@ -1137,25 +1201,27 @@ export default function CRMLeadDetail() {
                   { id: "email", label: "Email", Icon: Mail },
                   { id: "whatsapp", label: "WhatsApp", Icon: FaWhatsapp },
                   { id: "meeting", label: "Meeting", Icon: Users },
-                ].map(({ id, label, Icon }) => (
-                  <button
-                    key={id}
-                    onClick={() => {
-                      const isTabDisabled = isOnlyCallTabEnabled ? (id !== "calls" && id !== "activities") : !isTabsEnabled;
-                      if (!isTabDisabled) setActiveTab(id);
-                    }}
-                    disabled={isOnlyCallTabEnabled ? (id !== "calls" && id !== "activities") : !isTabsEnabled}
-                    className={`flex-1 py-4 font-bold font-primary flex items-center justify-center gap-2 border-b-2 transition-all whitespace-nowrap text-sm tracking-wide ${(isOnlyCallTabEnabled ? (id !== "calls" && id !== "activities") : !isTabsEnabled)
-                      ? "opacity-30 cursor-not-allowed border-transparent text-gray-300"
-                      : activeTab === id
-                        ? "border-orange-500 text-orange-600 bg-orange-50/10"
-                        : "border-transparent text-gray-400 hover:text-gray-600 hover:bg-gray-50/50"
-                      }`}
-                  >
-                    <Icon size={id === 'whatsapp' ? 18 : 16} className={id === 'whatsapp' && activeTab === id ? 'text-[#25D366]' : (activeTab === id ? 'text-orange-500' : 'text-gray-400')} />
-                    {label}
-                  </button>
-                ))}
+                ].map(({ id, label, Icon }) => {
+                  const isTabDisabled = id === "activities" ? false : (isOnlyCallTabEnabled ? (id !== "calls" && id !== "activities") : !isTabsEnabled);
+                  return (
+                    <button
+                      key={id}
+                      onClick={() => {
+                        if (!isTabDisabled) setActiveTab(id);
+                      }}
+                      disabled={isTabDisabled}
+                      className={`flex-1 py-4 font-bold font-primary flex items-center justify-center gap-2 border-b-2 transition-all whitespace-nowrap text-sm tracking-wide ${isTabDisabled
+                        ? "opacity-30 cursor-not-allowed border-transparent text-gray-300"
+                        : activeTab === id
+                          ? "border-orange-500 text-orange-600 bg-orange-50/10"
+                          : "border-transparent text-gray-400 hover:text-gray-600 hover:bg-gray-50/50"
+                        }`}
+                    >
+                      <Icon size={id === 'whatsapp' ? 18 : 16} className={id === 'whatsapp' && activeTab === id ? 'text-[#25D366]' : (activeTab === id ? 'text-orange-500' : 'text-gray-400')} />
+                      {label}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
@@ -1163,7 +1229,7 @@ export default function CRMLeadDetail() {
             <LeadTabs
               activeTab={activeTab}
               setActiveTab={setActiveTab}
-              isDisabled={isOnlyCallTabEnabled ? (activeTab !== "calls" && activeTab !== "activities") : !isTabsEnabled}
+              isDisabled={activeTab === "activities" ? false : (isOnlyCallTabEnabled ? (activeTab !== "calls" && activeTab !== "activities") : !isTabsEnabled)}
               selectedSort={selectedSort}
               setSelectedSort={setSelectedSort}
               showSortDropdown={showSortDropdown}
