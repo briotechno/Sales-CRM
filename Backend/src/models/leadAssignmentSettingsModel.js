@@ -18,7 +18,8 @@ const LeadAssignmentSettings = {
             call_time_gap_minutes,
             auto_disqualification,
             reassignment_on_disqualified,
-            max_reassignment_limit
+            max_reassignment_limit,
+            auto_pool_employees
         } = data;
 
         const [result] = await pool.query(
@@ -26,8 +27,8 @@ const LeadAssignmentSettings = {
                 user_id, mode, leads_per_employee_per_day, max_active_leads_balance, 
                 revert_time_hours, load_balancing_strategy, priority_handling,
                 max_call_attempts, call_time_gap_minutes, auto_disqualification, 
-                reassignment_on_disqualified, max_reassignment_limit
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                reassignment_on_disqualified, max_reassignment_limit, auto_pool_employees
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON DUPLICATE KEY UPDATE
                 mode = VALUES(mode),
                 leads_per_employee_per_day = VALUES(leads_per_employee_per_day),
@@ -39,13 +40,15 @@ const LeadAssignmentSettings = {
                 call_time_gap_minutes = VALUES(call_time_gap_minutes),
                 auto_disqualification = VALUES(auto_disqualification),
                 reassignment_on_disqualified = VALUES(reassignment_on_disqualified),
-                max_reassignment_limit = VALUES(max_reassignment_limit)`,
+                max_reassignment_limit = VALUES(max_reassignment_limit),
+                auto_pool_employees = VALUES(auto_pool_employees)`,
             [
                 userId, mode, leads_per_employee_per_day, max_active_leads_balance,
                 revert_time_hours, load_balancing_strategy, priority_handling,
                 max_call_attempts || 5, call_time_gap_minutes || 60,
                 auto_disqualification || false, reassignment_on_disqualified || false,
-                max_reassignment_limit || 5
+                max_reassignment_limit || 5,
+                auto_pool_employees ? (typeof auto_pool_employees === 'string' ? auto_pool_employees : JSON.stringify(auto_pool_employees)) : null
             ]
         );
         return result;

@@ -39,6 +39,7 @@ import { mainDashboardApi } from './api/mainDashboardApi';
 import { offerLetterApi } from './api/offerLetterApi';
 import { applicantApi } from './api/applicantApi';
 import { integrationApi } from './api/integrationApi';
+import { goalApi } from './api/goalApi';
 
 
 
@@ -84,6 +85,7 @@ export const store = configureStore({
         [offerLetterApi.reducerPath]: offerLetterApi.reducer,
         [applicantApi.reducerPath]: applicantApi.reducer,
         [integrationApi.reducerPath]: integrationApi.reducer,
+        [goalApi.reducerPath]: goalApi.reducer,
 
 
 
@@ -128,6 +130,7 @@ export const store = configureStore({
             offerLetterApi.middleware,
             applicantApi.middleware,
             integrationApi.middleware,
+            goalApi.middleware,
             limitErrorMiddleware
 
         ),

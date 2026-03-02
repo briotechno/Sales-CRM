@@ -3,7 +3,7 @@ import { useSelector } from "react-redux";
 import { FiHome, FiGrid } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 
-import { Download, Upload, Filter, UserPlus, List, Trash2, Users, Server, Type, Phone, Loader2, ChevronLeft, ChevronRight, Mail, AlertCircle, PlusIcon } from "lucide-react";
+import { Download, Upload, Filter, UserPlus, List, Trash2, Users, Server, Type, Phone, Loader2, ChevronLeft, ChevronRight, Mail, AlertCircle, PlusIcon, QrCode } from "lucide-react";
 import Modal from "../../components/common/Modal";
 import AddLeadPopup from "../../components/AddNewLeads/AddNewLead";
 import BulkUploadLeads from "../../components/AddNewLeads/BulkUpload";
@@ -56,6 +56,7 @@ const DuplicatesListView = ({
     handleSelectAll,
     handleSelectLead,
     handleLeadClick,
+    openCallAction,
 }) => {
     return (
         <div className="overflow-x-auto border border-gray-200 rounded-sm shadow-sm bg-white">
@@ -103,7 +104,21 @@ const DuplicatesListView = ({
                                         <span className="font-bold truncate max-w-[150px]" title={lead.name || lead.full_name}>
                                             {lead.name || lead.full_name || "Untitled Lead"}
                                         </span>
-                                        <span className="text-[10px] text-gray-400 font-medium">{lead.mobile_number || "--"}</span>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-[10px] text-gray-400 font-medium">{lead.mobile_number || "--"}</span>
+                                            {lead.mobile_number && (
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        openCallAction(lead);
+                                                    }}
+                                                    className="p-1 bg-orange-50 text-orange-600 rounded-sm hover:bg-orange-600 hover:text-white transition-all shadow-sm border border-orange-100"
+                                                    title="View QR Code"
+                                                >
+                                                    <QrCode size={10} />
+                                                </button>
+                                            )}
+                                        </div>
                                     </div>
                                 </td>
                                 <td className="py-3 px-4 text-center">
@@ -831,6 +846,7 @@ export default function DuplicatesLeads() {
                                         handleSelectAll={handleSelectAll}
                                         handleSelectLead={handleSelectLead}
                                         handleLeadClick={handleLeadClick}
+                                        openCallAction={openCallAction}
                                     />
                                 ) : (
                                     <LeadsGridView leadsData={leadsData} filterStatus={filterStatus} handleLeadClick={handleLeadClick} selectedLeads={selectedLeads} handleSelectLead={handleSelectLead} handleHitCall={openCallAction} />

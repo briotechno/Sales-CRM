@@ -18,7 +18,8 @@ import {
   Video,
   Plus,
   Bell,
-  MoreVertical
+  MoreVertical,
+  MapPin
 } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
 import {
@@ -191,6 +192,9 @@ export default function LeadTabs({
     date: formatDateUTC(call.created_at),
     status: call.status || "Completed",
     content: call.note || "No notes",
+    duration: call.duration,
+    priority: call.priority || null,
+    nextFollowUp: call.follow_task ? call.call_date : null,
     originalData: call
   }));
 
@@ -225,6 +229,13 @@ export default function LeadTabs({
       time: meeting.meeting_time ? new Date(`2000-01-01T${meeting.meeting_time}`).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }) : "TBD",
       attendees: parsedAttendees,
       priority: meeting.priority || "Medium",
+      meeting_type: meeting.meeting_type || "Online",
+      meeting_link: meeting.meeting_link || "",
+      address_line1: meeting.address_line1 || "",
+      address_line2: meeting.address_line2 || "",
+      city: meeting.city || "",
+      state: meeting.state || "",
+      pincode: meeting.pincode || "",
       originalData: meeting
     };
   });
@@ -389,7 +400,7 @@ export default function LeadTabs({
         (activeTab === 'email' ? 'email' : normalizedTab));
 
     const TabHeader = ({ title, showAdd = false, addLabel = "", addType = "", showSort = true }) => (
-      <div className="flex items-center justify-between py-4 px-6 bg-white border-b border-gray-100 rounded-t-sm">
+      <div className="flex items-center justify-between py-3 px-6 bg-white border-b border-gray-100 rounded-t-sm">
         <h2 className="text-[15px] font-bold text-gray-800 font-primary capitalize tracking-tight flex items-center gap-2">
           {title}
         </h2>
@@ -670,9 +681,34 @@ export default function LeadTabs({
                         </button>
                       </div>
                     </div>
-                    <div className="text-[14px] text-gray-500 font-medium font-primary leading-relaxed pl-14">
+                    <div className="text-[14px] text-gray-500 font-medium font-primary leading-relaxed pl-14 mb-4">
                       <ExpandableText text={call.content} limit={250} />
                     </div>
+
+                    {/* Additional Details row */}
+                    {(call.priority || call.nextFollowUp) && (
+                      <div className="ml-14 flex flex-wrap gap-4 items-center py-2 px-3 bg-gray-50 rounded-sm border border-gray-100/50">
+                        {call.priority && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Priority:</span>
+                            <span className={`text-[11px] font-bold ${call.priority === 'High' ? 'text-red-600' :
+                                call.priority === 'Medium' ? 'text-orange-600' : 'text-green-600'
+                              }`}>
+                              {call.priority}
+                            </span>
+                          </div>
+                        )}
+                        {call.nextFollowUp && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Follow-up Set:</span>
+                            <span className="text-[11px] font-bold text-blue-600 flex items-center gap-1">
+                              <Calendar size={12} />
+                              {new Date(call.nextFollowUp).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 ))
               )}
@@ -784,12 +820,10 @@ export default function LeadTabs({
                       <div className="flex-1">
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center gap-4">
-                            <span className={`px-3 py-1 rounded-sm text-[10px] font-black font-primary uppercase tracking-widest ${meeting.priority === 'High' ? 'bg-red-50 text-red-600' :
-                              meeting.priority === 'Medium' ? 'bg-orange-50 text-orange-600' :
-                                'bg-green-50 text-green-600'
-                              }`}>
-                              {meeting.priority} Priority
-                            </span>
+                            <div className="flex items-center gap-1.5 px-3 py-1 bg-purple-50 text-purple-600 rounded-sm text-[10px] font-black font-primary uppercase tracking-widest border border-purple-100">
+                              {meeting.meeting_type === 'Online' ? <Video size={12} className="fill-purple-600/10" /> : <MapPin size={12} className="fill-purple-600/10" />}
+                              {meeting.meeting_type}
+                            </div>
                             <span className="flex items-center gap-1.5 text-[12px] font-bold text-gray-400 font-primary">
                               <Calendar size={12} /> {meeting.date}
                             </span>
@@ -809,10 +843,52 @@ export default function LeadTabs({
                         <h3 className="text-[16px] font-bold text-gray-800 mb-2 font-primary group-hover:text-purple-600 transition-colors">
                           Meeting With <span className="capitalize">{meeting.title}</span>
                         </h3>
-                        <div className="text-[14px] text-gray-500 font-medium font-primary leading-relaxed mb-6">
+                        <div className="text-[14px] text-gray-500 font-medium font-primary leading-relaxed mb-2.5">
                           <ExpandableText text={meeting.description} limit={250} />
                         </div>
-                        <div className="flex items-center justify-between pt-4 border-t border-gray-50">
+
+                        {/* Meeting Location Detail */}
+                        <div className="mb-3.5 p-3 bg-slate-50 border border-slate-100 rounded-sm flex items-start gap-3 group/loc transition-colors hover:border-purple-100 hover:bg-purple-50/30">
+                          {meeting.meeting_type === 'Online' ? (
+                            <>
+                              <div className="w-8 h-8 rounded-sm bg-blue-100 flex items-center justify-center flex-shrink-0 text-blue-600 shadow-sm">
+                                <Video size={16} />
+                              </div>
+                              <div className="flex-1 overflow-hidden">
+                                <p className="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-0.5">Meeting Link</p>
+                                {meeting.meeting_link ? (
+                                  <a href={meeting.meeting_link.startsWith('http') ? meeting.meeting_link : `https://${meeting.meeting_link}`} target="_blank" rel="noopener noreferrer" className="text-[13px] font-bold text-gray-700 hover:text-blue-600 underline truncate block">
+                                    {meeting.meeting_link}
+                                  </a>
+                                ) : (
+                                  <p className="text-[13px] font-bold text-gray-400 italic">No link provided</p>
+                                )}
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <div className="w-8 h-8 rounded-sm bg-orange-100 flex items-center justify-center flex-shrink-0 text-orange-600 shadow-sm">
+                                <MapPin size={16} />
+                              </div>
+                              <div className="flex-1 overflow-hidden">
+                                <p className="text-[10px] font-black text-orange-500 uppercase tracking-widest mb-0.5">Meeting Address</p>
+                                <div className="text-[13px] font-bold text-gray-700 leading-snug">
+                                  {meeting.address_line1 && <span>{meeting.address_line1}</span>}
+                                  {meeting.address_line2 && <span>, {meeting.address_line2}</span>}
+                                  {(meeting.city || meeting.state || meeting.pincode) && (
+                                    <p className="mt-0.5 text-gray-500 font-semibold">
+                                      {[meeting.city, meeting.state, meeting.pincode].filter(Boolean).join(', ')}
+                                    </p>
+                                  )}
+                                  {!meeting.address_line1 && !meeting.city && (
+                                    <p className="text-gray-400 italic">No address provided</p>
+                                  )}
+                                </div>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                        <div className="flex items-center justify-between pt-3 border-t border-gray-50">
                           <div className="flex items-center gap-6">
                             <div className="flex flex-col">
                               <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1 font-primary">Hosted By</span>

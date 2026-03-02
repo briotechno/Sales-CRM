@@ -1,5 +1,6 @@
-import { Phone, Mail, TrendingUp, Clock, User, Calendar, DollarSign, Info } from "lucide-react";
+import { Phone, Mail, TrendingUp, Clock, User, Calendar, DollarSign, Info, QrCode } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
+import EmptyState from "../../../components/common/EmptyState";
 
 export default function LeadsListView({
   currentLeads,
@@ -220,7 +221,18 @@ export default function LeadsListView({
                       case 'contact':
                         return (
                           <td key={col.id} className="py-3 px-4 text-gray-800 text-sm text-left font-medium">
-                            {lead.mobile_number || lead.phone || "--"}
+                            <div className="flex items-center gap-2">
+                              <span>{lead.mobile_number || lead.phone || "--"}</span>
+                              {(lead.mobile_number || lead.phone) && (
+                                <button
+                                  onClick={() => handleHitCall && handleHitCall(lead)}
+                                  className="p-1 hover:bg-orange-50 rounded-full text-orange-500 transition-colors"
+                                  title="View QR"
+                                >
+                                  <QrCode size={16} />
+                                </button>
+                              )}
+                            </div>
                           </td>
                         );
                       case 'owner':
@@ -371,7 +383,13 @@ export default function LeadsListView({
             })
           ) : (
             <tr>
-              <td colSpan={columns.length} className="py-12 text-center text-gray-500 font-medium text-sm">No leads found.</td>
+              <td colSpan={columns.length} className="py-4">
+                <EmptyState
+                  title="No Leads Found"
+                  message="We couldn't find any leads matching current criteria."
+                  type="leads"
+                />
+              </td>
             </tr>
           )}
         </tbody>

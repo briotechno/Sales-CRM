@@ -18,7 +18,61 @@ const syncDatabase = async () => {
         );
         `;
         await pool.query(sql);
-        console.log('Database synced: channel_configs table is ready.');
+
+        const goalsSql = `
+        CREATE TABLE IF NOT EXISTS goals (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            user_id INT NOT NULL,
+            employee_id INT,
+            team_id INT,
+            goal_title VARCHAR(255) NOT NULL,
+            goal_type ENUM('calls', 'revenue', 'meetings', 'leads', 'deals_won', 'followups', 'proposals', 'demos') NOT NULL,
+            target_value DECIMAL(15,2) NOT NULL,
+            period ENUM('daily', 'weekly', 'monthly', 'quarterly', 'yearly') NOT NULL,
+            start_date DATE NOT NULL,
+            end_date DATE NOT NULL,
+            reward VARCHAR(255),
+            description TEXT,
+            status ENUM('active', 'achieved', 'failed') DEFAULT 'active',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+        `;
+        await pool.query(goalsSql);
+
+        // Ensure team_id and other updates are reflected even if table exists
+        try {
+            await pool.query("ALTER TABLE goals ADD COLUMN team_id INT AFTER employee_id");
+        } catch (e) {
+            // Probably column already exists, safe to ignore
+        }
+
+        try {
+            await pool.query("ALTER TABLE goals ADD COLUMN reward VARCHAR(255) AFTER end_date");
+        } catch (e) {
+            // Probably column already exists, safe to ignore
+        }
+
+        try {
+            await pool.query("ALTER TABLE goals ADD COLUMN description TEXT AFTER reward");
+        } catch (e) {
+            // Probably column already exists, safe to ignore
+        }
+
+        try {
+            await pool.query("ALTER TABLE goals MODIFY COLUMN goal_type ENUM('calls', 'revenue', 'meetings', 'leads', 'deals_won', 'followups', 'proposals', 'demos') NOT NULL");
+        } catch (e) {
+            // Also safe to ignore
+        }
+
+        try {
+            await pool.query("ALTER TABLE goals ADD COLUMN priority ENUM('low', 'medium', 'high') DEFAULT 'medium' AFTER description");
+        } catch (e) {
+            // Already exists
+        }
+
+        console.log('Database synced: channel_configs and goals tables are ready.');
     } catch (error) {
         console.error('Error syncing database:', error);
     }

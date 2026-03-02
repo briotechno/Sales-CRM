@@ -206,10 +206,10 @@ export const leadApi = createApi({
             invalidatesTags: (result, error, { id }) => [{ type: 'LeadMeetings', id }, 'Lead', { type: 'LeadActivities', id }],
         }),
         updateLeadStatus: builder.mutation({
-            query: ({ id, status, tag }) => ({
+            query: ({ id, status, tag, drop_reason, remarks }) => ({
                 url: `leads/${id}/status`,
                 method: 'PUT',
-                body: { status, tag },
+                body: { status, tag, drop_reason, remarks },
             }),
             invalidatesTags: (result, error, { id }) => ['Lead', { type: 'Lead', id }, { type: 'LeadActivities', id }],
         }),

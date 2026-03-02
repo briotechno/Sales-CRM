@@ -12,9 +12,11 @@ import {
   ChevronLeft,
   ChevronRight,
   Filter,
-  AlertCircle
+  AlertCircle,
+  QrCode
 } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
+import EmptyState from "../../../components/common/EmptyState";
 
 const getImageUrl = (path) => {
   if (!path) return null;
@@ -127,9 +129,20 @@ const LeadCard = ({
                 <span className="text-[11px] text-orange-600 font-bold px-2 py-0.5 rounded-sm bg-orange-50 border border-orange-100 capitalize tracking-wide w-fit">
                   {lead.lead_id || lead.id}
                 </span>
-                <span className="text-[11px] text-gray-500 font-semibold font-primary">
-                  {lead.mobile_number || lead.phone || "--"}
-                </span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[11px] text-gray-500 font-semibold font-primary">
+                    {lead.mobile_number || lead.phone || "--"}
+                  </span>
+                  {(lead.mobile_number || lead.phone) && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleHitCall && handleHitCall(lead); }}
+                      className="p-0.5 hover:bg-orange-50 rounded-full text-orange-500 transition-colors"
+                      title="View QR"
+                    >
+                      <QrCode size={12} />
+                    </button>
+                  )}
+                </div>
                 {(pageType === "Duplicate" && (lead.tag === 'Duplicate' || lead.duplicate_count > 1)) && (
                   <span className="text-[10px] text-rose-600 font-bold px-2 py-0.5 rounded-sm bg-rose-50 border border-rose-100 capitalize tracking-wide w-fit animate-pulse">
                     Duplicate {lead.duplicate_count > 1 ? `(${lead.duplicate_count - 1})` : ''}
@@ -447,24 +460,34 @@ export default function LeadsGridView({
     const filteredLeads = leadsData.filter(lead => filterStatus === "All" || (lead.tag || lead.status) === filterStatus);
 
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {filteredLeads.map((lead) => (
-          <LeadCard
-            key={lead.id}
-            lead={lead}
-            handleLeadClick={handleLeadClick}
-            selectedLeads={selectedLeads}
-            handleSelectLead={handleSelectLead}
-            handleHitCall={handleHitCall}
-            handleShowAssignmentHistory={handleShowAssignmentHistory}
-            currentTime={currentTime}
-            displayStatus={getDisplayStatus(lead)}
-            getAvatarBg={getAvatarBg}
-            getPriorityColor={getPriorityColor}
-            handleReborn={handleReborn}
-            pageType={pageType}
-          />
-        ))}
+      <div className="w-full">
+        {filteredLeads.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {filteredLeads.map((lead) => (
+              <LeadCard
+                key={lead.id}
+                lead={lead}
+                handleLeadClick={handleLeadClick}
+                selectedLeads={selectedLeads}
+                handleSelectLead={handleSelectLead}
+                handleHitCall={handleHitCall}
+                handleShowAssignmentHistory={handleShowAssignmentHistory}
+                currentTime={currentTime}
+                displayStatus={getDisplayStatus(lead)}
+                getAvatarBg={getAvatarBg}
+                getPriorityColor={getPriorityColor}
+                handleReborn={handleReborn}
+                pageType={pageType}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-20 rounded-sm border-2 border-dashed border-gray-100 bg-gray-50/20">
+            <Inbox className="text-gray-300 mb-2" size={32} />
+            <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest font-primary">No Leads Found</h4>
+            <p className="text-[11px] text-gray-400 mt-1">There are no leads matching your current criteria.</p>
+          </div>
+        )}
       </div>
     );
   }

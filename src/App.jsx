@@ -139,6 +139,8 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Cashfree from "./pages/SuperAdmin/PaymentGateways/Cashfree.jsx";
 import Razorpay from "./pages/SuperAdmin/PaymentGateways/Razorpay.jsx";
 import PhonePay from "./pages/SuperAdmin/PaymentGateways/PhonePay.jsx";
+import GoalSetting from "./pages/GoalSetting/GoalSetting";
+
 
 import RoleProtectedRoute from "./components/RoleProtectedRoute";
 import GlobalModals from "./components/common/GlobalModals";
@@ -235,7 +237,9 @@ function App() {
             <Route path="/crm/channel/justdial" element={<JustdialIntegration />} />
             <Route path="/crm/channel/indiamart" element={<IndiamartIntegration />} />
             <Route path="/crm/channel/settings" element={<ChannelSettings />} />
+            <Route path="/crm/goals" element={<GoalSetting />} />
             <Route path="/additional/catelogs" element={<Catelogs />} />
+
 
             <Route path="/additional/catalog-categories" element={<CatalogCategory />} />
             <Route path="/hrm/teams" element={<TeamManagement />} />

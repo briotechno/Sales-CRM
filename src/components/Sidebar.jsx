@@ -40,6 +40,7 @@ import {
   Lock,
   Unlock,
   Zap,
+  Target,
 } from "lucide-react";
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
@@ -384,6 +385,12 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           name: "Campaign",
           icon: <Settings size={22} />,
           path: "/crm/channel/settings",
+          permission: "Leads Management"
+        },
+        {
+          name: "Goal Setting",
+          icon: <Target size={22} />,
+          path: "/crm/goals",
           permission: "Leads Management"
         },
       ],
