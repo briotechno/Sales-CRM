@@ -337,18 +337,18 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           permission: "Leads Management"
         },
 
-        {
-          name: "campaign",
-          icon: <Users size={16} />,
-          path: "/crm/champions",
-          permission: "Champions",
-          children: [
-            { name: "Lead", path: "/crm/champions/lead" },
-            { name: "Dialer ", path: "/crm/champions/dialer" },
-            { name: "Whatsapp", path: "/crm/champions/whatsapp" },
-            { name: "Mail", path: "/crm/champions/mail" },
-          ],
-        },
+        // {
+        //   name: "campaign",
+        //   icon: <Users size={16} />,
+        //   path: "/crm/champions",
+        //   permission: "Champions",
+        //   children: [
+        //     { name: "Lead", path: "/crm/champions/lead" },
+        //     { name: "Dialer ", path: "/crm/champions/dialer" },
+        //     { name: "Whatsapp", path: "/crm/champions/whatsapp" },
+        //     { name: "Mail", path: "/crm/champions/mail" },
+        //   ],
+        // },
         {
           name: "Pipeline Management",
           icon: <FolderKanban size={22} />,
