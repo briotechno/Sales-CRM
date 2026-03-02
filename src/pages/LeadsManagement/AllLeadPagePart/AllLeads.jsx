@@ -715,7 +715,7 @@ export default function LeadsList() {
             <div className="flex justify-center items-center h-64"><Loader2 size={40} className="animate-spin text-orange-500" /></div>
           ) : isError ? (
             <div className="text-center text-red-500 py-10 capitalize">Failed to load leads.</div>
-          ) : leadsData.length === 0 ? (
+          ) : leadsData.length === 0 && view === "list" ? (
             <EmptyState
               title="No Leads Found"
               message="We couldn't find any leads matching your criteria. Try adjusting your filters or adding a new lead."
@@ -723,22 +723,24 @@ export default function LeadsList() {
             />
           ) : (
             <>
-              {view === "list" ? (
-                <LeadsListView
-                  currentLeads={leadsData}
-                  selectedLeads={selectedLeads}
-                  handleSelectAll={handleSelectAll}
-                  handleSelectLead={handleSelectLead}
-                  handleLeadClick={handleLeadClick}
-                  currentPage={currentPage}
-                  itemsPerPage={itemsPerPage}
-                  handleDeleteLead={handleDeleteLead}
-                  handleEditLead={handleEditLead}
-                  handleHitCall={openCallAction}
-                  pageType="All Leads"
-                />
-              ) : (
-                <LeadsGridView leadsData={leadsData} filterStatus={filterStatus} handleLeadClick={handleLeadClick} selectedLeads={selectedLeads} handleSelectLead={handleSelectLead} handleHitCall={openCallAction} groupTags={["New Lead", "Not Connected", "Follow-up", "Trading"]} pageType="All Leads" />
+              {view === "list" && leadsData.length === 0 ? null : (
+                view === "list" ? (
+                  <LeadsListView
+                    currentLeads={leadsData}
+                    selectedLeads={selectedLeads}
+                    handleSelectAll={handleSelectAll}
+                    handleSelectLead={handleSelectLead}
+                    handleLeadClick={handleLeadClick}
+                    currentPage={currentPage}
+                    itemsPerPage={itemsPerPage}
+                    handleDeleteLead={handleDeleteLead}
+                    handleEditLead={handleEditLead}
+                    handleHitCall={openCallAction}
+                    pageType="All Leads"
+                  />
+                ) : (
+                  <LeadsGridView leadsData={leadsData} filterStatus={filterStatus} handleLeadClick={handleLeadClick} selectedLeads={selectedLeads} handleSelectLead={handleSelectLead} handleHitCall={openCallAction} groupTags={["New Lead", "Not Connected", "Follow-up", "Trading"]} pageType="All Leads" />
+                )
               )}
 
               {totalPages > 1 && (

@@ -20,6 +20,7 @@ import {
     useUpdateAssignmentSettingsMutation,
     useGetAssignmentLogsQuery
 } from "../../store/api/leadApi";
+import { useGetEmployeesQuery } from "../../store/api/employeeApi";
 import { toast } from "react-hot-toast";
 
 export default function AssignmentSettings() {
@@ -28,7 +29,7 @@ export default function AssignmentSettings() {
     const { data: logsData, isLoading: logsLoading, refetch: refetchLogs } = useGetAssignmentLogsQuery({ page: 1, limit: 20 });
 
     const [formData, setFormData] = useState({
-        mode: 'manual',
+        mode: 'auto', // Default to auto
         leads_per_employee_per_day: 10,
         max_active_leads_balance: 5,
         revert_time_hours: 24,
@@ -36,13 +37,21 @@ export default function AssignmentSettings() {
         priority_handling: true,
         max_call_attempts: 5,
         call_time_gap_minutes: 60,
-        auto_disqualification: false,
-        reassignment_on_disqualified: false
+        reassignment_on_disqualified: false,
+        auto_pool_employees: []
     });
+
+    const { data: employeesData } = useGetEmployeesQuery({ limit: 1000, status: 'Active' });
+    const employees = employeesData?.employees || [];
 
     useEffect(() => {
         if (settings) {
-            setFormData(settings);
+            setFormData({
+                ...settings,
+                auto_pool_employees: settings.auto_pool_employees
+                    ? (typeof settings.auto_pool_employees === 'string' ? JSON.parse(settings.auto_pool_employees) : settings.auto_pool_employees)
+                    : []
+            });
         }
     }, [settings]);
 
@@ -59,7 +68,6 @@ export default function AssignmentSettings() {
 
     return (
         <>
-
             <div className="p-6 max-w-7xl mx-auto space-y-8 font-primary pb-20 text-left">
                 {/* Header */}
                 <div className="flex items-center justify-between">
@@ -89,58 +97,121 @@ export default function AssignmentSettings() {
                         <div className="bg-white rounded-sm border border-gray-200 shadow-sm overflow-hidden">
                             <div className="bg-gray-50 px-6 py-4 border-b border-gray-200 flex items-center gap-3">
                                 <ShieldCheck className="text-orange-500" size={20} />
-                                <h2 className="font-bold text-[15px] text-gray-700 capitalize">Assignment Mode</h2>
+                                <h2 className="font-bold text-[15px] text-gray-700 capitalize">Auto-Assignment Employee Pool</h2>
                             </div>
                             <div className="p-8">
-                                <div className="flex items-center gap-8">
-                                    <button
-                                        onClick={() => setFormData({ ...formData, mode: 'manual' })}
-                                        className={`flex-1 group relative p-6 rounded-sm border-2 transition-all ${formData.mode === 'manual' ? 'border-orange-500 bg-orange-50/50' : 'border-gray-100 hover:border-gray-300'}`}
-                                    >
-                                        <div className="flex items-center gap-4">
-                                            <div className={`p-4 rounded-sm transition-all ${formData.mode === 'manual' ? 'bg-orange-500 text-white shadow-md' : 'bg-gray-100 text-gray-400'}`}>
-                                                <Users size={32} />
-                                            </div>
-                                            <div className="text-left">
-                                                <h3 className={`text-lg font-bold capitalize tracking-tight ${formData.mode === 'manual' ? 'text-orange-600' : 'text-gray-800'}`}>Manual</h3>
-                                                <p className="text-xs font-semibold text-gray-500 capitalize leading-relaxed">Full control over distribution</p>
-                                            </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    {/* Assignment Pool Selection */}
+                                    <div className="space-y-4">
+                                        <div className="flex items-center justify-between">
+                                            <label className="text-sm font-bold text-gray-700 capitalize flex items-center gap-2">
+                                                <Users size={16} className="text-orange-500" />
+                                                Select Active Pool Employees
+                                            </label>
+                                            <span className="text-[10px] font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full border border-orange-100 uppercase">
+                                                {formData.auto_pool_employees?.length || 0} Selected
+                                            </span>
                                         </div>
-                                        <div className="absolute top-4 right-4">
-                                            {formData.mode === 'manual' ? <ToggleRight className="text-orange-500" size={28} /> : <ToggleLeft className="text-gray-300" size={28} />}
-                                        </div>
-                                    </button>
 
-                                    <button
-                                        onClick={() => setFormData({ ...formData, mode: 'auto' })}
-                                        className={`flex-1 group relative p-6 rounded-sm border-2 transition-all ${formData.mode === 'auto' ? 'border-orange-500 bg-orange-50/50' : 'border-gray-100 hover:border-gray-300'}`}
-                                    >
-                                        <div className="flex items-center gap-4">
-                                            <div className={`p-4 rounded-sm transition-all ${formData.mode === 'auto' ? 'bg-orange-500 text-white shadow-md' : 'bg-gray-100 text-gray-400'}`}>
-                                                <RefreshCw size={32} />
-                                            </div>
-                                            <div className="text-left">
-                                                <h3 className={`text-lg font-bold capitalize tracking-tight ${formData.mode === 'auto' ? 'text-orange-600' : 'text-gray-800'}`}>Auto</h3>
-                                                <p className="text-xs font-semibold text-gray-500 capitalize leading-relaxed">Rule-based automation</p>
-                                            </div>
+                                        <div className="border border-gray-200 rounded-sm overflow-hidden bg-white shadow-inner max-h-[350px] overflow-y-auto custom-scrollbar">
+                                            {employees.length === 0 ? (
+                                                <div className="p-8 text-center text-gray-400 font-medium italic text-sm">
+                                                    No active employees found
+                                                </div>
+                                            ) : (
+                                                <div className="divide-y divide-gray-50">
+                                                    {employees.map(emp => (
+                                                        <label key={emp.id} className="flex items-center gap-3 p-3 hover:bg-orange-50/30 transition-all cursor-pointer group text-left">
+                                                            <input
+                                                                type="checkbox"
+                                                                className="w-4 h-4 rounded-sm border-gray-300 text-orange-600 focus:ring-orange-500 cursor-pointer"
+                                                                checked={formData.auto_pool_employees?.includes(emp.id)}
+                                                                onChange={(e) => {
+                                                                    const current = Array.isArray(formData.auto_pool_employees) ? [...formData.auto_pool_employees] : [];
+                                                                    if (e.target.checked) {
+                                                                        setFormData({ ...formData, auto_pool_employees: [...current, emp.id] });
+                                                                    } else {
+                                                                        setFormData({ ...formData, auto_pool_employees: current.filter(id => id !== emp.id) });
+                                                                    }
+                                                                }}
+                                                            />
+                                                            <div className="flex items-center gap-2">
+                                                                <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 font-bold text-xs uppercase border border-gray-200 group-hover:border-orange-200 group-hover:bg-white transition-all overflow-hidden">
+                                                                    {emp.profile_picture ? (
+                                                                        <img src={emp.profile_picture_url} alt="" className="w-full h-full object-cover" />
+                                                                    ) : emp.employee_name?.charAt(0)}
+                                                                </div>
+                                                                <div className="text-left">
+                                                                    <p className="text-sm font-bold text-gray-700 group-hover:text-orange-600 transition-colors capitalize">{emp.employee_name}</p>
+                                                                    <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">{emp.designation_name || emp.role || 'Agent'}</p>
+                                                                </div>
+                                                            </div>
+                                                        </label>
+                                                    ))}
+                                                </div>
+                                            )}
                                         </div>
-                                        <div className="absolute top-4 right-4">
-                                            {formData.mode === 'auto' ? <ToggleRight className="text-orange-500" size={28} /> : <ToggleLeft className="text-gray-300" size={28} />}
+                                        <div className="flex items-center gap-2 mt-2">
+                                            <button
+                                                onClick={() => setFormData({ ...formData, auto_pool_employees: employees.map(e => e.id) })}
+                                                className="text-[10px] font-bold text-orange-600 hover:text-orange-700 transition-all uppercase tracking-widest border-b border-orange-200 pb-0.5"
+                                            >
+                                                Select All
+                                            </button>
+                                            <span className="text-gray-300">|</span>
+                                            <button
+                                                onClick={() => setFormData({ ...formData, auto_pool_employees: [] })}
+                                                className="text-[10px] font-bold text-gray-400 hover:text-gray-600 transition-all uppercase tracking-widest border-b border-gray-200 pb-0.5"
+                                            >
+                                                Clear Selection
+                                            </button>
                                         </div>
-                                    </button>
-                                </div>
-
-                                {formData.mode === 'auto' && (
-                                    <div className="mt-8 p-6 bg-orange-50 border border-orange-100 rounded-sm flex items-start gap-4">
-                                        <div className="bg-orange-100 p-2 rounded-full">
-                                            <AlertCircle className="text-orange-600" size={20} />
-                                        </div>
-                                        <p className="text-[13px] text-orange-800 font-semibold leading-relaxed capitalize">
-                                            System will distribute leads automatically based on active balance and daily limits.
-                                            Manual assignment remains available for administrative overrides.
-                                        </p>
                                     </div>
-                                )}
+
+                                    {/* Selection Info / Preview */}
+                                    <div className="space-y-4">
+                                        <label className="text-sm font-bold text-gray-700 capitalize flex items-center gap-2">
+                                            <RefreshCw size={16} className="text-orange-500" />
+                                            Active Pool Preview
+                                        </label>
+                                        <div className="p-6 bg-orange-50/50 border border-orange-100 rounded-sm min-h-[100px] max-h-[250px] overflow-x-auto custom-scrollbar flex flex-col">
+                                            {formData.auto_pool_employees?.length === 0 ? (
+                                                <div className="flex-1 flex flex-col items-center justify-center text-center space-y-3">
+                                                    <div className="p-3 bg-white rounded-full shadow-sm">
+                                                        <AlertCircle className="text-orange-300" size={32} />
+                                                    </div>
+                                                    <p className="text-xs text-orange-400 font-semibold italic capitalize leading-relaxed">
+                                                        No employees selected.<br />System will fallback to global pool.
+                                                    </p>
+                                                </div>
+                                            ) : (
+                                                <div className="flex flex-nowrap gap-3 text-left pb-2">
+                                                    {formData.auto_pool_employees.map(id => {
+                                                        const emp = employees.find(e => e.id === id);
+                                                        if (!emp) return null;
+                                                        return (
+                                                            <div key={id} className="flex-shrink-0 flex items-center gap-3 bg-white px-4 py-2 rounded-sm border border-orange-200 shadow-sm animate-fadeIn min-w-[150px]">
+                                                                <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-xs font-bold text-orange-600 border border-orange-200 shadow-inner overflow-hidden">
+                                                                    {emp.profile_picture ? <img src={emp.profile_picture_url} className="w-full h-full object-cover" /> : emp.employee_name?.charAt(0)}
+                                                                </div>
+                                                                <div className="flex flex-col">
+                                                                    <span className="text-[12px] font-bold text-gray-800 capitalize leading-none">{emp.employee_name}</span>
+                                                                    <span className="text-[9px] text-orange-500 font-extrabold uppercase mt-1 tracking-tighter">{emp.designation_name || 'Agent'}</span>
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="mt-4 p-4 bg-white border border-gray-100 rounded-sm shadow-sm text-left">
+                                            <p className="text-[11px] text-gray-500 font-medium leading-relaxed italic">
+                                                <strong className="text-orange-600 font-bold block mb-1 uppercase tracking-tighter not-italic">Distribution Policy:</strong>
+                                                Leads will be cyclically distributed among these selected individuals only.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -148,7 +219,7 @@ export default function AssignmentSettings() {
                         <div className={`bg-white rounded-sm border border-gray-200 shadow-sm overflow-hidden transition-all ${formData.mode !== 'auto' ? 'opacity-50 pointer-events-none grayscale' : ''}`}>
                             <div className="bg-gray-50 px-6 py-4 border-b border-gray-200 flex items-center gap-3">
                                 <RefreshCw className="text-orange-500" size={20} />
-                                <h2 className="font-bold text-[15px] text-gray-700 capitalize">Distribution Rules</h2>
+                                <h2 className="font-bold text-[15px] text-gray-700 capitalize">Lead Distribution Rules</h2>
                             </div>
                             <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-10">
                                 <div className="space-y-2">
@@ -224,7 +295,7 @@ export default function AssignmentSettings() {
                         <div className={`bg-white rounded-sm border border-gray-200 shadow-sm overflow-hidden transition-all ${formData.mode !== 'auto' ? 'opacity-50 pointer-events-none grayscale' : ''}`}>
                             <div className="bg-gray-50 px-6 py-4 border-b border-gray-200 flex items-center gap-3">
                                 <Phone className="text-orange-500" size={20} />
-                                <h2 className="font-bold text-[15px] text-gray-700 capitalize">Call & Reassignment Rules</h2>
+                                <h2 className="font-bold text-[15px] text-gray-700 capitalize">Call Attempt & Rotation Rules</h2>
                             </div>
                             <div className="p-8 space-y-8">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
@@ -255,33 +326,7 @@ export default function AssignmentSettings() {
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div className="flex items-center justify-between p-6 bg-gray-50 rounded-sm border border-gray-100 shadow-inner">
-                                        <div>
-                                            <h4 className="text-[15px] font-bold text-gray-800 capitalize">Auto Disqualification</h4>
-                                            <p className="text-xs text-gray-500 font-medium capitalize mt-1">Mark lead as lost if attempts limit is reached</p>
-                                        </div>
-                                        <button
-                                            onClick={() => setFormData({ ...formData, auto_disqualification: !formData.auto_disqualification })}
-                                            className={`relative w-14 h-7 transition-all rounded-full flex items-center px-1 shadow-md ${formData.auto_disqualification ? 'bg-orange-500' : 'bg-gray-300'}`}
-                                        >
-                                            <div className={`w-5 h-5 bg-white rounded-full transition-all shadow-sm ${formData.auto_disqualification ? 'ml-7' : 'ml-0'}`} />
-                                        </button>
-                                    </div>
 
-                                    <div className="flex items-center justify-between p-6 bg-gray-50 rounded-sm border border-gray-100 shadow-inner">
-                                        <div>
-                                            <h4 className="text-[15px] font-bold text-gray-800 capitalize">Reassign to New Employee</h4>
-                                            <p className="text-xs text-gray-500 font-medium capitalize mt-1">Reassign as fresh lead on failure (current preference)</p>
-                                        </div>
-                                        <button
-                                            onClick={() => setFormData({ ...formData, reassignment_on_disqualified: !formData.reassignment_on_disqualified })}
-                                            className={`relative w-14 h-7 transition-all rounded-full flex items-center px-1 shadow-md ${formData.reassignment_on_disqualified ? 'bg-orange-500' : 'bg-gray-300'}`}
-                                        >
-                                            <div className={`w-5 h-5 bg-white rounded-full transition-all shadow-sm ${formData.reassignment_on_disqualified ? 'ml-7' : 'ml-0'}`} />
-                                        </button>
-                                    </div>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -350,6 +395,5 @@ export default function AssignmentSettings() {
                 </div>
             </div>
         </>
-
     );
 }

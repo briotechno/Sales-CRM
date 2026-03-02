@@ -39,10 +39,10 @@ const LeadResources = {
     },
 
     addCall: async (data, userId) => {
-        const { lead_id, status, date, note, follow_task, duration } = data;
+        const { lead_id, status, date, note, follow_task, duration, priority } = data;
         const [result] = await pool.query(
-            'INSERT INTO lead_calls (lead_id, user_id, status, call_date, note, follow_task, duration, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, UTC_TIMESTAMP())',
-            [lead_id, userId, status, date, note, follow_task ? 1 : 0, duration || null]
+            'INSERT INTO lead_calls (lead_id, user_id, status, call_date, note, follow_task, duration, priority, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, UTC_TIMESTAMP())',
+            [lead_id, userId, status, date, note, follow_task ? 1 : 0, duration || null, priority || null]
         );
         return { id: result.insertId, ...data, created_at: new Date() };
     },
@@ -158,10 +158,10 @@ const LeadResources = {
     },
 
     addMeeting: async (data, userId) => {
-        const { lead_id, title, description, date, time, attendees } = data;
+        const { lead_id, title, description, date, time, attendees, meeting_type, send_whatsapp_reminder, meeting_link, address_line1, address_line2, city, state, pincode } = data;
         const [result] = await pool.query(
-            'INSERT INTO lead_meetings (lead_id, user_id, title, description, meeting_date, meeting_time, attendees, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, UTC_TIMESTAMP())',
-            [lead_id, userId, title, description, date, time, JSON.stringify(attendees || [])]
+            'INSERT INTO lead_meetings (lead_id, user_id, title, description, meeting_date, meeting_time, attendees, meeting_type, send_whatsapp_reminder, meeting_link, address_line1, address_line2, city, state, pincode, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, UTC_TIMESTAMP())',
+            [lead_id, userId, title, description, date, time, JSON.stringify(attendees || []), meeting_type || 'Online', send_whatsapp_reminder ? 1 : 0, meeting_link || null, address_line1 || null, address_line2 || null, city || null, state || null, pincode || null]
         );
         return { id: result.insertId, ...data, created_at: new Date() };
     },
@@ -195,10 +195,10 @@ const LeadResources = {
     },
 
     updateMeeting: async (meetingId, data, userId) => {
-        const { title, description, date, time, attendees } = data;
+        const { title, description, date, time, attendees, meeting_type, send_whatsapp_reminder, meeting_link, address_line1, address_line2, city, state, pincode } = data;
         await pool.query(
-            'UPDATE lead_meetings SET title = ?, description = ?, meeting_date = ?, meeting_time = ?, attendees = ? WHERE id = ? AND user_id = ?',
-            [title, description, date, time, JSON.stringify(attendees || []), meetingId, userId]
+            'UPDATE lead_meetings SET title = ?, description = ?, meeting_date = ?, meeting_time = ?, attendees = ?, meeting_type = ?, send_whatsapp_reminder = ?, meeting_link = ?, address_line1 = ?, address_line2 = ?, city = ?, state = ?, pincode = ? WHERE id = ? AND user_id = ?',
+            [title, description, date, time, JSON.stringify(attendees || []), meeting_type || 'Online', send_whatsapp_reminder ? 1 : 0, meeting_link || null, address_line1 || null, address_line2 || null, city || null, state || null, pincode || null, meetingId, userId]
         );
         return { id: meetingId, ...data };
     },

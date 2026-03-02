@@ -291,7 +291,7 @@ const Lead = {
 
         // Subview logic
         if (subview === 'new') {
-            query += " AND (l.tag = 'Not Contacted' OR l.created_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL 2 DAY) OR (l.tag = 'Not Connected' AND l.next_call_at <= UTC_TIMESTAMP()))";
+            query += " AND (l.tag = 'Not Contacted' OR l.tag = 'Pass' OR l.created_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL 2 DAY) OR (l.tag = 'Not Connected' AND l.next_call_at <= UTC_TIMESTAMP()))";
         } else if (subview === 'not-connected') {
             query += " AND l.tag = 'Not Connected' AND (l.next_call_at IS NULL OR l.next_call_at > UTC_TIMESTAMP())";
         } else if (subview === 'follow-up') {
@@ -329,7 +329,7 @@ const Lead = {
             countParams.push(term, term, term);
         }
 
-        if (subview === 'new') { countQuery += " AND (l.tag = 'Not Contacted' OR l.created_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL 2 DAY) OR (l.tag = 'Not Connected' AND l.next_call_at <= UTC_TIMESTAMP()))"; }
+        if (subview === 'new') { countQuery += " AND (l.tag = 'Not Contacted' OR l.tag = 'Pass' OR l.created_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL 2 DAY) OR (l.tag = 'Not Connected' AND l.next_call_at <= UTC_TIMESTAMP()))"; }
         else if (subview === 'not-connected') { countQuery += " AND l.tag = 'Not Connected' AND (l.next_call_at IS NULL OR l.next_call_at > UTC_TIMESTAMP())"; }
         else if (subview === 'follow-up') { countQuery += " AND (l.tag = 'Follow Up' OR l.tag = 'Missed')"; }
         else if (subview === 'missed') { countQuery += " AND l.tag = 'Missed'"; }
@@ -563,8 +563,8 @@ const Lead = {
         const displayStatus = callStatusMap[status] || status;
 
         await pool.query(
-            'INSERT INTO lead_calls (lead_id, user_id, status, call_date, note, duration, created_at) VALUES (?, ?, ?, UTC_TIMESTAMP(), ?, ?, UTC_TIMESTAMP())',
-            [id, userId, displayStatus.substring(0, 50), safeRemarks, duration]
+            'INSERT INTO lead_calls (lead_id, user_id, status, call_date, note, duration, priority, created_at) VALUES (?, ?, ?, UTC_TIMESTAMP(), ?, ?, ?, UTC_TIMESTAMP())',
+            [id, userId, displayStatus.substring(0, 50), safeRemarks, duration, priority]
         );
 
         // --- Automatic Stage Transition for Default Pipeline on Call ---

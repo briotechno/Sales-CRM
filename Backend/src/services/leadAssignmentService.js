@@ -91,14 +91,32 @@ const leadAssignmentService = {
                 }
             } else if (mode === 'auto') {
                 // Use Global Pool
-                const [employees] = await pool.query(
-                    `SELECT id, employee_name,
+                let poolEmployeesIds = [];
+                if (settings?.auto_pool_employees) {
+                    try {
+                        poolEmployeesIds = typeof settings.auto_pool_employees === 'string'
+                            ? JSON.parse(settings.auto_pool_employees)
+                            : settings.auto_pool_employees;
+                    } catch (e) {
+                        console.error('Error parsing auto_pool_employees:', e);
+                    }
+                }
+
+                let query = `
+                    SELECT id, employee_name,
                         (SELECT COUNT(*) FROM leads l WHERE l.assigned_to = e.id AND l.user_id = ? AND DATE(l.assigned_at) = CURDATE()) as daily_count,
                         (SELECT COUNT(*) FROM leads l WHERE l.assigned_to = e.id AND l.user_id = ? AND l.tag NOT IN ('Closed', 'Lost', 'Won', 'Duplicate')) as active_balance
                      FROM employees e
-                     WHERE e.user_id = ? AND e.status = 'Active'`,
-                    [userId, userId, userId]
-                );
+                     WHERE e.user_id = ? AND e.status = 'Active'`;
+
+                let params = [userId, userId, userId];
+
+                if (Array.isArray(poolEmployeesIds) && poolEmployeesIds.length > 0) {
+                    query += ` AND e.id IN (?)`;
+                    params.push(poolEmployeesIds);
+                }
+
+                const [employees] = await pool.query(query, params);
 
                 candidates = employees.filter(emp => {
                     const dailyLimit = settings?.leads_per_employee_per_day || 10;
@@ -190,6 +208,8 @@ const leadAssignmentService = {
             );
             const failedAttempts = calls[0].count;
 
+            // DISABLED: Automatic transitions are now handled manually via the "Drop Lead" (Pass) button
+            /* 
             if (failedAttempts >= settings.max_call_attempts) {
                 if (settings.auto_disqualification) {
                     console.log(`Lead ${leadId} auto-disqualified after ${failedAttempts} attempts.`);
@@ -226,6 +246,7 @@ const leadAssignmentService = {
                     });
                 }
             }
+            */
         } catch (error) {
             console.error('Handle call result error:', error);
         }

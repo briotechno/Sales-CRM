@@ -234,6 +234,8 @@ const hitCall = async (req, res) => {
         let reassigned = false;
         let reassignMessage = '';
 
+        // Auto-Reassignment Check - DISABLED as per new manual "Pass" flow
+        /* 
         if (status === 'not_connected') {
             const settings = await LeadAssignmentSettings.findByUserId(userId);
             const maxAttempts = settings?.max_call_attempts || 5;
@@ -286,6 +288,7 @@ const hitCall = async (req, res) => {
                 }
             }
         }
+        */
 
         res.status(200).json({
             status: true,
@@ -359,18 +362,53 @@ const getLeadCalls = async (req, res) => {
 
 const addLeadCall = async (req, res) => {
     try {
-        const { status, date, note, followTask } = req.body;
+        const { status, date, note, followTask, priority, duration } = req.body;
+        const userId = req.user.id;
+        const leadId = req.params.id;
+
         const result = await LeadResources.addCall({
-            lead_id: req.params.id,
+            lead_id: leadId,
             status,
             date,
             note,
-            follow_task: followTask === 'true' || followTask === true
-        }, req.user.id);
+            follow_task: followTask === 'true' || followTask === true,
+            duration: parseInt(duration) || null
+        }, userId);
+
+        // Update Lead priority and next_call_at
+        const updateData = {
+            priority: priority || 'Medium',
+            last_call_at: new Date(),
+            last_call_duration: parseInt(duration) || null
+        };
+
+        if (date) {
+            updateData.next_call_at = new Date(date);
+        }
+
+        await Lead.update(leadId, updateData, userId);
+
+        // Create Task if followTask is true
+        if (followTask && date) {
+            await pool.query(
+                `INSERT INTO tasks (user_id, title, description, priority, due_date, due_time, category, status, completed, created_at)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, UTC_TIMESTAMP())`,
+                [
+                    userId,
+                    `Follow-up check: Manual log for ${status}`,
+                    note || 'No notes provided',
+                    (priority || 'Medium').toLowerCase(),
+                    date.split('T')[0],
+                    date.split('T')[1] || '09:00:00',
+                    'Follow-up',
+                    'Pending'
+                ]
+            );
+        }
 
         // Trigger Auto-Assignment Engine logic for call results
         const leadAssignmentService = require('../services/leadAssignmentService');
-        await leadAssignmentService.handleCallResult(req.params.id, status === 'Connected', req.user.id);
+        await leadAssignmentService.handleCallResult(leadId, true, userId); // Manual logs usually imply connection
 
         res.status(201).json(result);
     } catch (error) {
@@ -450,6 +488,14 @@ const addLeadMeeting = async (req, res) => {
             description,
             date,
             time,
+            meeting_type: req.body.meeting_type,
+            meeting_link: req.body.meeting_link,
+            address_line1: req.body.address_line1,
+            address_line2: req.body.address_line2,
+            city: req.body.city,
+            state: req.body.state,
+            pincode: req.body.pincode,
+            send_whatsapp_reminder: req.body.send_whatsapp_reminder,
             attendees: Array.isArray(attendees) ? attendees : (attendees ? attendees.split(',').map(s => s.trim()) : [])
         }, req.user.id);
 
@@ -479,22 +525,79 @@ const getDueMeetings = async (req, res) => {
 const updateLeadStatus = async (req, res) => {
     try {
         const { status, tag, drop_reason, remarks } = req.body;
+        const leadId = req.params.id;
+        const userId = req.user.id;
+
+        // Fetch current lead to see if it's assigned
+        const currentLead = await Lead.findById(leadId, userId);
+        const oldOwnerId = currentLead?.assigned_to || null;
+
+        // New Logic: If status is "Dropped" manually from Profile...
+        if (status === 'Dropped' || tag === 'Dropped') {
+            try {
+                console.log(`[DEBUG] Processing manual drop for lead ${leadId} by user ${userId}`);
+                const updateData = {
+                    status: 'New Lead',
+                    tag: 'Pass',
+                    assigned_to: null,
+                    owner_name: null,
+                    assigned_at: null,
+                    call_count: 0,
+                    not_connected_count: 0,
+                    drop_reason: drop_reason || 'Manual Pass/Reassign',
+                    duplicate_reason: remarks || null
+                };
+
+                await Lead.update(leadId, updateData, userId);
+                console.log(`[DEBUG] Lead ${leadId} updated to Pass/New Lead`);
+
+                // Create assignment log for "Pass"
+                await LeadAssignmentLog.create({
+                    user_id: userId,
+                    lead_id: leadId,
+                    employee_id: 0,
+                    assigned_by: req.user.employee_name || req.user.username || req.user.firstName || 'admin',
+                    assignment_type: 'manual',
+                    reassigned_from: oldOwnerId,
+                    reason: `Lead Passed (Manual Drop Triggered)`
+                });
+                console.log(`[DEBUG] Assignment log created for lead ${leadId}`);
+
+                // Log Activity
+                await LeadResources.addActivity({
+                    lead_id: leadId,
+                    activity_type: 'notification',
+                    title: 'Lead Passed for Re-assignment',
+                    description: `Reason: ${drop_reason || 'Manual Drop'}.${remarks ? ` Remarks: ${remarks}` : ''}`
+                }, userId);
+                console.log(`[DEBUG] Activity logged for lead ${leadId}`);
+
+                // Trigger immediate reassignment
+                console.log(`[DEBUG] Triggering auto-assignment for lead ${leadId}`);
+                await leadAssignmentService.autoAssign(leadId, userId, oldOwnerId);
+                console.log(`[DEBUG] Auto-assignment complete for lead ${leadId}`);
+
+                return res.status(200).json({ status: true, message: 'Lead passed to new agent successfully' });
+            } catch (innerError) {
+                console.error('[DEBUG ERROR] Error in manual drop block:', innerError);
+                throw innerError; // Rethrow to be caught by outer catch
+            }
+        }
+
+        // Default behavior for other statuses
         const updateData = {};
         if (status) updateData.status = status;
         if (tag) updateData.tag = tag;
         if (drop_reason) updateData.drop_reason = drop_reason;
 
-        // If remarks are provided and it's a disqualification, we could save them
-        // For now, let's just update the lead with the reason.
-
-        await Lead.update(req.params.id, updateData, req.user.id);
+        await Lead.update(leadId, updateData, userId);
 
         // If tag is "Won", automatically create a client
         if (tag === 'Won') {
-            const lead = await Lead.findById(req.params.id, req.user.id);
+            const lead = await Lead.findById(leadId, userId);
             if (lead) {
                 // Check if client already exists (by email or phone)
-                const existingClient = await Client.findByEmailOrPhone(req.user.id, lead.email, lead.mobile_number);
+                const existingClient = await Client.findByEmailOrPhone(userId, lead.email, lead.mobile_number);
 
                 if (!existingClient) {
                     const nameParts = (lead.name || lead.full_name || '').split(' ');
@@ -522,22 +625,23 @@ const updateLeadStatus = async (req, res) => {
                         country: lead.country,
                         status: 'active',
                         notes: `Automatically converted from Lead ${lead.lead_id}`
-                    }, req.user.id);
+                    }, userId);
                 }
             }
         }
 
-        res.status(200).json({ message: 'Status updated' });
+        res.status(200).json({ status: true, message: 'Status updated' });
 
         // Log Activity
         await LeadResources.addActivity({
-            lead_id: req.params.id,
+            lead_id: leadId,
             activity_type: tag === 'Won' ? 'won' : (tag === 'Dropped' ? 'dropped' : 'status_change'),
             title: `Status Changed to ${tag || status}`,
             description: `Status updated to ${status}${tag ? ` (${tag})` : ''}.${remarks ? ` Remarks: ${remarks}` : ''}`
-        }, req.user.id);
+        }, userId);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error('Error in updateLeadStatus:', error);
+        res.status(500).json({ status: false, message: error.message });
     }
 };
 
@@ -604,6 +708,14 @@ const updateLeadMeeting = async (req, res) => {
             description,
             date,
             time,
+            meeting_type: req.body.meeting_type,
+            meeting_link: req.body.meeting_link,
+            address_line1: req.body.address_line1,
+            address_line2: req.body.address_line2,
+            city: req.body.city,
+            state: req.body.state,
+            pincode: req.body.pincode,
+            send_whatsapp_reminder: req.body.send_whatsapp_reminder,
             attendees: Array.isArray(attendees) ? attendees : (attendees ? attendees.split(',').map(s => s.trim()) : [])
         }, req.user.id);
         res.status(200).json(result);

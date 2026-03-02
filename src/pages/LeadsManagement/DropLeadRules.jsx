@@ -71,22 +71,6 @@ export default function DropLeadRules() {
                 </button>
             </div>
             <div className="p-8 space-y-8 flex-1 text-left">
-                {/* Auto Disqualification Section */}
-                <div className="flex items-center justify-between p-6 bg-white border border-gray-100 rounded-sm shadow-sm hover:shadow-md transition-all group">
-                    <div className="max-w-[75%]">
-                        <h4 className="text-[16px] font-bold text-gray-800 capitalize tracking-tight group-hover:text-orange-600 transition-colors">Automatic Lead Cleanup</h4>
-                        <p className="text-[13px] text-gray-500 font-medium mt-1.5 leading-relaxed">
-                            Automatically moves inactive leads to 'Dropped' status after maximum call attempts are reached, keeping your pipeline fresh.
-                        </p>
-                    </div>
-                    <button
-                        onClick={() => setFormData({ ...formData, auto_disqualification: !formData.auto_disqualification })}
-                        className={`relative w-14 h-7 transition-all rounded-full flex items-center px-1 shadow-md ${formData.auto_disqualification ? 'bg-orange-500' : 'bg-gray-300'}`}
-                    >
-                        <div className={`w-5 h-5 bg-white rounded-full transition-all shadow-sm ${formData.auto_disqualification ? 'ml-7' : 'ml-0'}`} />
-                    </button>
-                </div>
-
                 {/* Reassignment Section */}
                 <div className="space-y-4">
                     <div className="flex items-center justify-between p-6 bg-white border border-gray-100 rounded-sm shadow-sm hover:shadow-md transition-all group">

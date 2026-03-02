@@ -9,7 +9,7 @@ const leadAssignmentController = {
         try {
             const settings = await LeadAssignmentSettings.findByUserId(req.user.id);
             res.json(settings || {
-                mode: 'manual',
+                mode: 'auto',
                 leads_per_employee_per_day: 10,
                 max_active_leads_balance: 5,
                 revert_time_hours: 24,
@@ -19,7 +19,8 @@ const leadAssignmentController = {
                 call_time_gap_minutes: 60,
                 auto_disqualification: false,
                 reassignment_on_disqualified: false,
-                max_reassignment_limit: 5
+                max_reassignment_limit: 5,
+                auto_pool_employees: []
             });
         } catch (error) {
             res.status(500).json({ message: error.message });

@@ -725,7 +725,7 @@ export default function WonLeads() {
                                         handleLeadClick={handleLeadClick}
                                         selectedLeads={selectedLeads}
                                         handleSelectLead={handleSelectLead}
-                                        handleHitCall={handleHitCall}
+                                        handleHitCall={openCallAction}
                                         pageType="Won"
                                     />
                                 )}

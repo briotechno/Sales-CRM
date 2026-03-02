@@ -114,39 +114,17 @@ export default function AssignLeadsModal({
         <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-4 flex items-center justify-between z-10 flex-shrink-0 shadow-md">
           <div className="flex items-center gap-4">
             <div className="bg-white bg-opacity-20 p-2.5 rounded-sm">
-              <Users size={24} className="text-white" />
+              <UserPlus size={24} className="text-white" />
             </div>
             <div>
               <h2 className="text-2xl font-bold text-white capitalize tracking-wide leading-tight">
                 {title}
               </h2>
               <p className="text-xs text-orange-50 font-medium opacity-90">
-                {title.toLowerCase().includes('change') ? 'Updating' : 'Assigning'} <strong className="text-white">{selectedLeadsCount}</strong> selected lead(s) to team members
+                {title.toLowerCase().includes('change') ? 'Updating' : 'Assigning'} <strong className="text-white">{selectedLeadsCount}</strong> selected lead(s) to employees
               </p>
             </div>
           </div>
-          {selectedLeadsList && selectedLeadsList.length > 0 && (
-            <div className="hidden lg:flex items-center gap-2 max-w-md overflow-hidden bg-white/10 px-3 py-1.5 rounded-sm">
-              <span className="text-[10px] text-orange-100 font-bold uppercase whitespace-nowrap">For:</span>
-              <div className="flex gap-1 overflow-x-auto pb-1 no-scrollbar items-center">
-                {selectedLeadsList.slice(0, 3).map(lead => (
-                  <div key={lead.id} className="flex flex-col">
-                    <span className="px-2 py-0.5 bg-white/20 rounded-full text-[10px] text-white font-bold whitespace-nowrap">
-                      {lead.name || lead.full_name}
-                      {lead.employee_name && (
-                        <span className="ml-1 opacity-60 font-normal">({lead.employee_name})</span>
-                      )}
-                    </span>
-                  </div>
-                ))}
-                {selectedLeadsList.length > 3 && (
-                  <span className="px-2 py-0.5 bg-white/20 rounded-full text-[10px] text-white font-bold whitespace-nowrap">
-                    +{selectedLeadsList.length - 3} more
-                  </span>
-                )}
-              </div>
-            </div>
-          )}
           <button
             onClick={onClose}
             className="text-white hover:bg-white hover:bg-opacity-20 p-2 transition-all rounded-full"
@@ -155,204 +133,58 @@ export default function AssignLeadsModal({
           </button>
         </div>
 
-        {/* View Toggle */}
-        <div className="flex bg-gray-50 border-b border-gray-200 flex-shrink-0">
-          <button
-            onClick={() => setAssignView("teams")}
-            className={`flex-1 py-4 flex items-center justify-center gap-2 font-bold text-sm transition-all border-b-2 ${assignView === "teams"
-              ? "bg-white text-[#FF7B1D] border-[#FF7B1D]"
-              : "text-gray-500 border-transparent hover:text-gray-700 hover:bg-white"
-              }`}
-          >
-            <Users size={18} />
-            TEAMS ({filteredTeams.length})
-          </button>
-
-          <button
-            onClick={() => setAssignView("employees")}
-            className={`flex-1 py-4 flex items-center justify-center gap-2 font-bold text-sm transition-all border-b-2 ${assignView === "employees"
-              ? "bg-white text-[#FF7B1D] border-[#FF7B1D]"
-              : "text-gray-500 border-transparent hover:text-gray-700 hover:bg-white"
-              }`}
-          >
-            <UserPlus size={18} />
-            EMPLOYEES ({filteredEmployees.length})
-          </button>
-
-          {selectedLeadsList.length > 0 && (
-            <div className="flex items-center justify-center px-4 border-l border-gray-200">
-              <button
-                onClick={() => setAssignView("selected")}
-                className={`flex-1 py-1 px-1 rounded-sm text-[10px] font-bold uppercase tracking-widest transition-all ${assignView === "selected"
-                  ? "bg-white text-orange-600 shadow-sm"
-                  : "text-gray-400 hover:text-gray-600"
-                  }`}
-              >
-                Selected Leads ({selectedLeadsList.length})
-              </button>
-            </div>
-          )}
-        </div>
-
         {/* Content Area */}
-        <div className="flex-1 overflow-y-auto bg-gray-50/50 custom-scrollbar">
-          {assignView === "selected" ? (
-            <div className="p-8">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Currently Assigned To</h3>
-                  <span className="text-[10px] text-gray-400 font-semibold italic">Individual lead details</span>
+        <div className="flex-1 overflow-hidden flex flex-col bg-gray-50/50">
+          <div className="p-6 pb-0 flex-shrink-0">
+            {/* Employee Search & Filters */}
+            <div className="bg-white p-5 rounded-sm border border-gray-200 shadow-sm space-y-4">
+              <div className="flex flex-wrap gap-4 items-center">
+                <div className="flex-1 min-w-[300px] relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                  <input
+                    type="text"
+                    placeholder="SEARCH BY NAME OR EMAIL..."
+                    value={employeeFilter.search}
+                    onChange={(e) => setEmployeeFilter({ ...employeeFilter, search: e.target.value })}
+                    className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-sm text-xs focus:outline-none focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 transition-all font-bold uppercase tracking-wider"
+                  />
                 </div>
-                <div className="max-h-[300px] overflow-y-auto space-y-2 pr-2 custom-scrollbar">
-                  {selectedLeadsList.map(lead => (
-                    <div key={lead.id} className="flex items-center justify-between p-3 bg-gray-50 border border-gray-100 rounded-sm group hover:bg-orange-50 hover:border-orange-100 transition-all">
-                      <div className="flex flex-col">
-                        <span className="text-sm font-bold text-gray-800 group-hover:text-orange-600 transition-colors uppercase">
-                          {lead.name || lead.full_name || "Unknown Lead"}
-                        </span>
-                        <div className="flex items-center gap-2 mt-0.5">
-                          <span className="text-[10px] text-gray-400 font-bold uppercase">{lead.lead_id || lead.id}</span>
-                          <span className="text-gray-300">•</span>
-                          <span className="text-[10px] text-[#FF7B1D] font-bold">{lead.pipeline_name || "General"}</span>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <span className="block text-[10px] text-gray-400 font-bold uppercase mb-0.5">Current Owner</span>
-                        <span className="px-2 py-1 bg-white border border-gray-200 rounded-sm text-xs font-bold text-gray-700 shadow-sm">
-                          {lead.employee_name || "Unassigned"}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          ) : assignView === "teams" ? (
-            <div className="p-6">
-              {/* Team Filters */}
-              <div className="mb-6 flex flex-wrap gap-4 items-center bg-white p-4 rounded-sm border border-gray-200 shadow-sm">
+
                 <div className="flex items-center gap-2">
-                  <Building2 size={18} className="text-[#FF7B1D]" />
-                  <span className="text-sm font-bold text-gray-700 uppercase tracking-tight">Department:</span>
+                  <Building2 size={16} className="text-[#FF7B1D]" />
+                  <select
+                    value={employeeFilter.department}
+                    onChange={(e) => setEmployeeFilter({ ...employeeFilter, department: e.target.value })}
+                    className="px-4 py-3 border border-gray-200 rounded-sm text-xs focus:outline-none focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 transition-all font-bold uppercase"
+                  >
+                    <option value="All">ALL DEPARTMENTS</option>
+                    {departments.map(dept => (
+                      <option key={dept.id} value={dept.id}>{dept.department_name}</option>
+                    ))}
+                  </select>
                 </div>
-                <select
-                  value={teamFilter}
-                  onChange={(e) => setTeamFilter(e.target.value)}
-                  className="min-w-[200px] px-4 py-2 border border-gray-200 rounded-sm text-sm focus:outline-none focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 transition-all font-medium"
-                >
-                  <option value="All">All Departments</option>
-                  {departments.map(dept => (
-                    <option key={dept.id} value={dept.id}>{dept.department_name}</option>
-                  ))}
-                </select>
 
-                {teamsLoading && <span className="text-xs text-gray-400 animate-pulse">Loading teams...</span>}
-              </div>
-
-              {/* Teams List */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredTeams.map((team) => {
-                  const isSelected = selectedTeams.includes(team.id);
-
-                  return (
-                    <div
-                      key={team.id}
-                      onClick={() => handleToggleTeam(team.id)}
-                      className={`relative group bg-white border-2 rounded-sm p-5 cursor-pointer transition-all duration-200 ${isSelected
-                        ? "border-[#FF7B1D] shadow-md ring-1 ring-[#FF7B1D] ring-opacity-10"
-                        : "border-gray-100 hover:border-gray-300 hover:shadow-sm"
-                        }`}
-                    >
-                      {isSelected && (
-                        <div className="absolute top-3 right-3 text-[#FF7B1D]">
-                          <CheckCircle2 size={20} fill="currentColor" className="text-white fill-[#FF7B1D]" />
-                        </div>
-                      )}
-
-                      <div className="flex flex-col h-full">
-                        <div className="flex items-center gap-3 mb-4">
-                          <div className={`p-2 rounded-sm ${isSelected ? 'bg-orange-100 text-[#FF7B1D]' : 'bg-gray-100 text-gray-400'}`}>
-                            <Users size={20} />
-                          </div>
-                          <h3 className="font-bold text-gray-800 text-base leading-tight uppercase tracking-wide">
-                            {team.team_name}
-                          </h3>
-                        </div>
-
-                        <div className="space-y-3 flex-1">
-                          <div className="flex items-center gap-2 text-xs">
-                            <Users size={14} className="text-gray-400" />
-                            <span className="text-gray-500 font-semibold uppercase">Members:</span>
-                            <span className="text-gray-800 font-bold">{team.total_members || 0}</span>
-                          </div>
-                        </div>
-
-                        {team.description && (
-                          <p className="mt-4 text-[10px] text-gray-400 line-clamp-2 italic border-t border-gray-50 pt-2">
-                            {team.description}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {!teamsLoading && filteredTeams.length === 0 && (
-                <div className="text-center py-20 bg-white rounded-sm border border-dashed border-gray-300">
-                  <Users size={40} className="mx-auto text-gray-300 mb-4" />
-                  <p className="text-gray-500 font-medium">No teams found matching your criteria</p>
+                <div className="flex items-center gap-2">
+                  <Briefcase size={16} className="text-[#FF7B1D]" />
+                  <select
+                    value={employeeFilter.designation}
+                    onChange={(e) => setEmployeeFilter({ ...employeeFilter, designation: e.target.value })}
+                    className="px-4 py-3 border border-gray-200 rounded-sm text-xs focus:outline-none focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 transition-all font-bold uppercase"
+                  >
+                    <option value="All">ALL DESIGNATIONS</option>
+                    {designations.map(desig => (
+                      <option key={desig.id} value={desig.id}>{desig.designation_name}</option>
+                    ))}
+                  </select>
                 </div>
-              )}
+              </div>
             </div>
-          ) : (
-            <div className="p-6">
-              {/* Employee Filters */}
-              <div className="mb-6 bg-white p-5 rounded-sm border border-gray-200 shadow-sm space-y-4">
-                <div className="flex flex-wrap gap-4 items-center">
-                  <div className="flex-1 min-w-[200px] relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                    <input
-                      type="text"
-                      placeholder="SEARCH BY NAME OR EMAIL..."
-                      value={employeeFilter.search}
-                      onChange={(e) => setEmployeeFilter({ ...employeeFilter, search: e.target.value })}
-                      className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-sm text-xs focus:outline-none focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 transition-all font-bold uppercase tracking-wider"
-                    />
-                  </div>
+          </div>
 
-                  <div className="flex items-center gap-2">
-                    <Building2 size={16} className="text-[#FF7B1D]" />
-                    <select
-                      value={employeeFilter.department}
-                      onChange={(e) => setEmployeeFilter({ ...employeeFilter, department: e.target.value })}
-                      className="px-3 py-2.5 border border-gray-200 rounded-sm text-xs focus:outline-none focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 transition-all font-bold uppercase"
-                    >
-                      <option value="All">ALL DEPARTMENTS</option>
-                      {departments.map(dept => (
-                        <option key={dept.id} value={dept.id}>{dept.department_name}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <Briefcase size={16} className="text-[#FF7B1D]" />
-                    <select
-                      value={employeeFilter.designation}
-                      onChange={(e) => setEmployeeFilter({ ...employeeFilter, designation: e.target.value })}
-                      className="px-3 py-2.5 border border-gray-200 rounded-sm text-xs focus:outline-none focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 transition-all font-bold uppercase"
-                    >
-                      <option value="All">ALL DESIGNATIONS</option>
-                      {designations.map(desig => (
-                        <option key={desig.id} value={desig.id}>{desig.designation_name}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              {/* Employees List */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="flex-1 flex overflow-hidden p-6 gap-6">
+            {/* Employee Selection List */}
+            <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {filteredEmployees.map((employee) => {
                   const isSelected = selectedEmployees.includes(employee.id);
                   const initials = employee.employee_name
@@ -377,7 +209,7 @@ export default function AssignLeadsModal({
                         </div>
                       )}
 
-                      <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-4 text-left">
                         <div className={`w-12 h-12 rounded-sm flex items-center justify-center font-bold text-sm tracking-tighter transition-colors ${isSelected ? 'bg-orange-500 text-white' : 'bg-orange-100 text-[#FF7B1D]'}`}>
                           {initials}
                         </div>
@@ -414,7 +246,54 @@ export default function AssignLeadsModal({
                 </div>
               )}
             </div>
-          )}
+
+            {/* Selected Summary Sidebar */}
+            <div className="w-80 bg-white rounded-sm border border-gray-200 shadow-sm flex flex-col overflow-hidden">
+              <div className="bg-gray-50 px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+                <span className="text-xs font-black text-gray-700 uppercase tracking-widest">Selected Employees</span>
+                <span className="bg-[#FF7B1D] text-white text-[10px] font-black px-2 py-0.5 rounded-full">{selectedEmployees.length}</span>
+              </div>
+              <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+                {selectedEmployees.length === 0 ? (
+                  <div className="h-full flex flex-col items-center justify-center text-center opacity-40">
+                    <Users size={32} className="text-gray-300 mb-2" />
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">No employees selected</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {selectedEmployees.map(id => {
+                      const emp = employees.find(e => e.id === id);
+                      if (!emp) return null;
+                      return (
+                        <div key={id} className="flex items-center justify-between p-2 bg-gray-50 rounded-sm border border-gray-100 group">
+                          <div className="flex items-center gap-3 text-left">
+                            <div className="w-8 h-8 rounded-sm bg-orange-100 text-[#FF7B1D] flex items-center justify-center text-[10px] font-black">
+                              {emp.employee_name?.charAt(0)}
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-[11px] font-bold text-gray-700 leading-none truncate max-w-[120px] uppercase">{emp.employee_name}</span>
+                              <span className="text-[8px] text-gray-400 font-bold uppercase mt-1">{emp.designation_name}</span>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => handleToggleEmployee(id)}
+                            className="text-gray-300 hover:text-red-500 transition-colors p-1"
+                          >
+                            <X size={14} />
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+              <div className="p-4 bg-orange-50 border-t border-orange-100">
+                <p className="text-[9px] text-orange-600 font-bold leading-relaxed uppercase tracking-tighter">
+                  Leads will be assigned equally among the selected employees.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Footer */}
@@ -422,9 +301,9 @@ export default function AssignLeadsModal({
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
             <div className="flex items-center gap-3">
               <div className="bg-orange-50 px-4 py-2 rounded-sm border border-orange-100">
-                <span className="text-[11px] font-black text-gray-500 uppercase tracking-widest mr-2">Selection:</span>
+                <span className="text-[11px] font-black text-gray-500 uppercase tracking-widest mr-2">Lead Selection:</span>
                 <span className="text-sm font-black text-[#FF7B1D]">
-                  {selectedTeams.length} TEAMS | {selectedEmployees.length} EMPLOYEES
+                  {selectedLeadsCount} LEAD(S) SELECTED
                 </span>
               </div>
             </div>
@@ -439,7 +318,7 @@ export default function AssignLeadsModal({
 
               <button
                 onClick={handleAssign}
-                disabled={selectedTeams.length === 0 && selectedEmployees.length === 0}
+                disabled={selectedEmployees.length === 0}
                 className="flex-1 sm:flex-none px-10 py-3 rounded-sm bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold text-xs uppercase tracking-widest shadow-md hover:shadow-xl hover:from-orange-600 hover:to-orange-700 transition-all transform active:scale-95 disabled:opacity-50 disabled:grayscale disabled:pointer-events-none"
               >
                 {buttonText}

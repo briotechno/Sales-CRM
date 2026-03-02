@@ -41,6 +41,7 @@ import { toast } from "react-hot-toast";
 import { FaWhatsapp } from "react-icons/fa";
 import NumberCard from "../../components/NumberCard";
 import CallActionPopup from "../../components/AddNewLeads/CallActionPopup";
+import EmptyState from "../../components/common/EmptyState";
 
 import CallQrModal from "../../components/LeadManagement/CallQrModal";
 import AssignmentHistoryModal from "../../components/LeadManagement/AssignmentHistoryModal";
@@ -302,7 +303,13 @@ const WorkStationLeadsListView = ({
             ))
           ) : (
             <tr>
-              <td colSpan="9" className="py-12 text-center text-gray-500 font-medium text-sm">No leads found.</td>
+              <td colSpan="9" className="py-4">
+                <EmptyState
+                  title="No Leads Found"
+                  message="We couldn't find any leads matching current criteria."
+                  type="leads"
+                />
+              </td>
             </tr>
           )}
         </tbody>
@@ -361,7 +368,7 @@ const WorkStationLeadsGridView = ({
           const isTrending = lead.is_trending === 1 || lead.priority === "High" || (lead.tag && (lead.tag === "Trending" || lead.tag === "High Priority"));
           const isFollowUp = lead.tag === "Follow Up" || lead.tag === "Missed";
           const isNotConnected = lead.tag === "Not Connected" && (!lead.next_call_at || safeParseDate(lead.next_call_at) > currentTime);
-          const isNew = lead.tag === "Not Contacted" || lead.tag === "New Lead" || lead.tag === "New Leads" || lead.stage_name === "New" || !lead.tag || (lead.tag === "Not Connected" && lead.next_call_at && safeParseDate(lead.next_call_at) <= currentTime);
+          const isNew = lead.tag === "Not Contacted" || lead.tag === "New Lead" || lead.tag === "New Leads" || lead.tag === "Pass" || lead.stage_name === "New" || !lead.tag || (lead.tag === "Not Connected" && lead.next_call_at && safeParseDate(lead.next_call_at) <= currentTime);
 
           if (groupTag === "Trending") return isTrending;
           if (groupTag === "Follow Up") return isFollowUp;
@@ -1377,37 +1384,40 @@ export default function WorkStation() {
             <div className="flex justify-center items-center h-64"><Loader2 size={40} className="animate-spin text-orange-500" /></div>
           ) : isError ? (
             <div className="text-center text-red-500 py-10 capitalize">Failed to load new leads.</div>
-          ) : leadsData.length === 0 ? (
-            <div className="text-center py-10 bg-white rounded-lg border border-gray-200 shadow-sm">
-              <Users size={48} className="mx-auto text-gray-300 mb-4" />
-              <h3 className="text-xl font-semibold text-gray-700 capitalize">No Leads Found</h3>
-            </div>
+          ) : leadsData.length === 0 && view === "list" ? (
+            <EmptyState
+              title="No Leads Found"
+              message={searchQuery ? `We couldn't find any results for "${searchQuery}"` : "You haven't added any leads to the workstation yet."}
+              type={searchQuery ? "search" : "leads"}
+            />
           ) : (
             <>
-              {view === "list" ? (
-                <WorkStationLeadsListView
-                  currentLeads={leadsData}
-                  selectedLeads={selectedLeads}
-                  handleSelectAll={handleSelectAll}
-                  handleSelectLead={handleSelectLead}
-                  handleLeadClick={handleLeadClick}
-                  handleDeleteLead={handleDeleteLead}
-                  handleEditLead={handleEditLead}
-                  handleHitCall={openCallAction}
-                />
-              ) : (
-                <WorkStationLeadsGridView
-                  leadsData={leadsData}
-                  filterStatus={filterStatus}
-                  handleLeadClick={handleLeadClick}
-                  selectedLeads={selectedLeads}
-                  handleSelectLead={handleSelectLead}
-                  handleHitCall={openCallAction}
-                  employees={employees}
-                  currentTime={currentTime}
-                  handleShowAssignmentHistory={handleShowAssignmentHistory}
-                  navigate={navigate}
-                />
+              {view === "list" && leadsData.length === 0 ? null : ( // Handled above for list view
+                view === "list" ? (
+                  <WorkStationLeadsListView
+                    currentLeads={leadsData}
+                    selectedLeads={selectedLeads}
+                    handleSelectAll={handleSelectAll}
+                    handleSelectLead={handleSelectLead}
+                    handleLeadClick={handleLeadClick}
+                    handleDeleteLead={handleDeleteLead}
+                    handleEditLead={handleEditLead}
+                    handleHitCall={openCallAction}
+                  />
+                ) : (
+                  <WorkStationLeadsGridView
+                    leadsData={leadsData}
+                    filterStatus={filterStatus}
+                    handleLeadClick={handleLeadClick}
+                    selectedLeads={selectedLeads}
+                    handleSelectLead={handleSelectLead}
+                    handleHitCall={openCallAction}
+                    employees={employees}
+                    currentTime={currentTime}
+                    handleShowAssignmentHistory={handleShowAssignmentHistory}
+                    navigate={navigate}
+                  />
+                )
               )}
 
               {totalPages > 1 && (

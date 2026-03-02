@@ -31,7 +31,7 @@ const ViewCampaignModal = ({ isOpen, onClose, campaign }) => {
         <div className="flex justify-end w-full gap-3">
             <button
                 onClick={onClose}
-                className="px-8 py-2.5 rounded-sm border border-gray-300 text-gray-600 font-bold hover:bg-gray-50 transition-all font-primary text-xs capitalize tracking-wide shadow-sm"
+                className="px-8 py-2.5 rounded-sm border border-gray-300 text-gray-600 font-bold hover:bg-gray-50 transition-all font-primary text-sm capitalize tracking-wide shadow-sm"
             >
                 Close Window
             </button>
@@ -56,10 +56,10 @@ const ViewCampaignModal = ({ isOpen, onClose, campaign }) => {
                             <div className="p-2 bg-orange-500 rounded-sm text-white shadow-md">
                                 <Target size={18} />
                             </div>
-                            <span className="text-[11px] font-bold text-orange-700 capitalize">Campaign Reference</span>
+                            <span className="text-[13px] font-bold text-orange-700 capitalize">Campaign Reference</span>
                         </div>
                         <p className="text-2xl font-black text-gray-900 tracking-tight leading-none mb-1">#{campaign.id}</p>
-                        <p className="text-[13px] font-bold text-gray-800 capitalize italic">{campaign.source}</p>
+                        <p className="text-sm font-bold text-gray-800 capitalize italic">{campaign.source}</p>
                     </div>
 
                     <div className="bg-blue-50/50 border border-blue-100 p-5 rounded-sm shadow-sm transition-all hover:shadow-md">
@@ -67,10 +67,10 @@ const ViewCampaignModal = ({ isOpen, onClose, campaign }) => {
                             <div className="p-2 bg-blue-500 rounded-sm text-white shadow-md">
                                 <Users size={18} />
                             </div>
-                            <span className="text-[11px] font-bold text-blue-700 capitalize">Total Lead Hits</span>
+                            <span className="text-[13px] font-bold text-blue-700 capitalize">Total Lead Hits</span>
                         </div>
                         <p className="text-2xl font-black text-gray-900 tracking-tight leading-none mb-1">{campaign.leads_generated.toLocaleString()}</p>
-                        <p className="text-[11px] font-semibold text-gray-500 capitalize leading-relaxed">Generated across lifecycle</p>
+                        <p className="text-[13px] font-semibold text-gray-500 capitalize leading-relaxed">Generated across lifecycle</p>
                     </div>
 
                     <div className="bg-green-50/50 border border-green-100 p-5 rounded-sm shadow-sm transition-all hover:shadow-md">
@@ -78,13 +78,13 @@ const ViewCampaignModal = ({ isOpen, onClose, campaign }) => {
                             <div className="p-2 bg-green-500 rounded-sm text-white shadow-md">
                                 <CheckCircle2 size={18} />
                             </div>
-                            <span className="text-[11px] font-bold text-green-700 capitalize">Engine Status</span>
+                            <span className="text-[13px] font-bold text-green-700 capitalize">Engine Status</span>
                         </div>
                         <div className="flex items-center gap-3">
-                            <span className={`inline-flex px-3 py-1 rounded-sm text-[11px] font-bold capitalize border ${getStatusBadge(campaign.status)} shadow-sm`}>
+                            <span className={`inline-flex px-3 py-1 rounded-sm text-[13px] font-bold capitalize border ${getStatusBadge(campaign.status)} shadow-sm`}>
                                 {campaign.status}
                             </span>
-                            <p className="text-[11px] font-semibold text-gray-500 capitalize italic">Till {new Date(campaign.end_date).toLocaleDateString()}</p>
+                            <p className="text-[13px] font-semibold text-gray-500 capitalize italic">Till {new Date(campaign.end_date).toLocaleDateString()}</p>
                         </div>
                     </div>
                 </div>
@@ -99,26 +99,26 @@ const ViewCampaignModal = ({ isOpen, onClose, campaign }) => {
 
                         <div className="grid grid-cols-2 gap-4">
                             <div className="p-4 bg-gray-50/50 border border-gray-100 rounded-sm">
-                                <p className="text-[10px] font-bold text-gray-400 capitalize mb-1">Campaign Name</p>
-                                <p className="text-[13px] font-bold text-gray-900">{campaign.name}</p>
+                                <p className="text-[13px] font-bold text-orange-600 capitalize mb-1.5">Campaign Name</p>
+                                <p className="text-sm font-bold text-gray-900">{campaign.name}</p>
                             </div>
                             <div className="p-4 bg-gray-50/50 border border-gray-100 rounded-sm">
-                                <p className="text-[10px] font-bold text-gray-400 capitalize mb-1">Lead Source</p>
+                                <p className="text-[13px] font-bold text-orange-600 capitalize mb-1.5">Lead Source</p>
                                 <div className="flex items-center gap-1.5 font-bold text-gray-900">
-                                    <Globe size={12} className="text-blue-500" />
-                                    <span className="text-[13px]">{campaign.source}</span>
+                                    <Globe size={14} className="text-blue-500" />
+                                    <span className="text-sm">{campaign.source}</span>
                                 </div>
                             </div>
                             <div className="p-4 bg-gray-50/50 border border-gray-100 rounded-sm">
-                                <p className="text-[10px] font-bold text-gray-400 capitalize mb-1">Audience type</p>
+                                <p className="text-[13px] font-bold text-orange-600 capitalize mb-1.5">Audience type</p>
                                 <div className="flex items-center gap-1.5 font-bold text-gray-900">
-                                    <Users size={12} className="text-orange-500" />
-                                    <span className="text-[13px] capitalize">{campaign.audience_type} Model</span>
+                                    <Users size={14} className="text-orange-500" />
+                                    <span className="text-sm capitalize">{campaign.audience_type} Model</span>
                                 </div>
                             </div>
                             <div className="p-4 bg-gray-50/50 border border-gray-100 rounded-sm">
-                                <p className="text-[10px] font-bold text-gray-400 capitalize mb-1">Daily Cap</p>
-                                <p className="text-[13px] font-bold text-orange-600">{campaign.daily_lead_limit || 'Unlimited'}</p>
+                                <p className="text-[13px] font-bold text-orange-600 capitalize mb-1.5">Daily Cap</p>
+                                <p className="text-sm font-bold  text-gray-900">{campaign.daily_lead_limit || 'Unlimited'}</p>
                             </div>
                         </div>
 
@@ -126,21 +126,21 @@ const ViewCampaignModal = ({ isOpen, onClose, campaign }) => {
                             <div className="flex items-center justify-between mb-4">
                                 <div className="flex items-center gap-2">
                                     <Clock size={16} className="text-orange-400" />
-                                    <span className="text-[12px] font-bold capitalize">Timeline Points</span>
+                                    <span className="text-sm font-bold capitalize">Timeline Points</span>
                                 </div>
-                                <span className="text-[10px] font-bold px-2 py-0.5 bg-white/10 rounded-sm capitalize">UTC Standard</span>
+                                <span className="text-[13px] font-bold px-2.5 py-0.5 bg-white/10 rounded-sm capitalize">UTC Standard</span>
                             </div>
                             <div className="flex items-center justify-between gap-6 relative">
                                 <div className="flex-1">
-                                    <p className="text-[9px] font-bold text-gray-400 capitalize mb-1">Activation Point</p>
-                                    <p className="text-[13px] font-bold">{new Date(campaign.start_date).toLocaleDateString('en-GB')}</p>
-                                    <p className="text-[11px] text-orange-400 font-bold">{campaign.start_time || '00:00'}</p>
+                                    <p className="text-[13px] font-bold text-gray-400 capitalize mb-1">Activation Point</p>
+                                    <p className="text-sm font-bold">{new Date(campaign.start_date).toLocaleDateString('en-GB')}</p>
+                                    <p className="text-[13px] text-orange-400 font-bold">{campaign.start_time || '00:00'}</p>
                                 </div>
                                 <div className="w-[1px] h-10 bg-white/10"></div>
                                 <div className="flex-1 text-right">
-                                    <p className="text-[9px] font-bold text-gray-400 capitalize mb-1">Termination Point</p>
-                                    <p className="text-[13px] font-bold">{new Date(campaign.end_date).toLocaleDateString('en-GB')}</p>
-                                    <p className="text-[11px] text-blue-400 font-bold">{campaign.end_time || '23:59'}</p>
+                                    <p className="text-[13px] font-bold text-gray-400 capitalize mb-1">Termination Point</p>
+                                    <p className="text-sm font-bold">{new Date(campaign.end_date).toLocaleDateString('en-GB')}</p>
+                                    <p className="text-[13px] text-blue-400 font-bold">{campaign.end_time || '23:59'}</p>
                                 </div>
                             </div>
                         </div>
@@ -153,7 +153,7 @@ const ViewCampaignModal = ({ isOpen, onClose, campaign }) => {
                                 <Users size={18} className="text-orange-500" />
                                 <h3 className="text-[15px] font-bold text-gray-900 capitalize">Active Participants</h3>
                             </div>
-                            <span className="text-[11px] font-bold bg-orange-100 text-orange-700 px-3 py-1 rounded-sm capitalize">
+                            <span className="text-[13px] font-bold bg-orange-100 text-orange-700 px-3 py-1 rounded-sm capitalize">
                                 {campaign.audience?.length || 0} Members
                             </span>
                         </div>
@@ -174,17 +174,17 @@ const ViewCampaignModal = ({ isOpen, onClose, campaign }) => {
                                         ).map(([teamName, members]) => (
                                             <div key={teamName} className="mb-4 last:mb-0">
                                                 <div className="sticky top-0 z-10 p-3 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
-                                                    <span className="text-[10px] font-black text-gray-800 uppercase tracking-widest flex items-center gap-2">
+                                                    <span className="text-[13px] font-black text-gray-800 uppercase tracking-widest flex items-center gap-2">
                                                         <div className="w-1.5 h-1.5 rounded-full bg-orange-500"></div>
                                                         {teamName}
                                                     </span>
-                                                    <span className="text-[9px] font-bold text-gray-400">{members.length} Members</span>
+                                                    <span className="text-[12px] font-bold text-gray-400">{members.length} Members</span>
                                                 </div>
                                                 <div className="divide-y divide-gray-50">
                                                     {members.map((member, mIdx) => (
                                                         <div key={mIdx} className="p-4 flex items-center justify-between hover:bg-gray-50/50 transition-colors">
                                                             <div className="flex items-center gap-3">
-                                                                <div className="w-10 h-10 rounded-sm bg-gray-100 overflow-hidden border border-gray-200 flex items-center justify-center text-[10px] font-bold text-gray-400">
+                                                                <div className="w-10 h-10 rounded-sm bg-gray-100 overflow-hidden border border-gray-200 flex items-center justify-center text-sm font-bold text-gray-500">
                                                                     {member.profile_picture_url ? (
                                                                         <img src={member.profile_picture_url} className="w-full h-full object-cover" alt="" />
                                                                     ) : (
@@ -192,15 +192,15 @@ const ViewCampaignModal = ({ isOpen, onClose, campaign }) => {
                                                                     )}
                                                                 </div>
                                                                 <div className="flex flex-col">
-                                                                    <span className="text-[13px] font-bold text-gray-800 leading-tight">{member.employee_name}</span>
-                                                                    <span className="text-[10px] text-gray-400 font-medium">ID: #{member.employee_id}</span>
+                                                                    <span className="text-sm font-bold text-gray-800 leading-tight">{member.employee_name}</span>
+                                                                    <span className="text-[13px] text-gray-400 font-medium">ID: #{member.employee_id}</span>
                                                                 </div>
                                                             </div>
                                                             <div className="flex flex-col items-end gap-1">
-                                                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-sm ${member.is_investigation_officer ? "text-blue-600 bg-blue-50" : "text-gray-400 bg-gray-50"}`}>
+                                                                <span className={`text-[13px] font-bold px-2 py-0.5 rounded-sm ${member.is_investigation_officer ? "text-blue-600 bg-blue-50" : "text-gray-400 bg-gray-50"}`}>
                                                                     {member.is_investigation_officer ? "IO Expert" : "Officer"}
                                                                 </span>
-                                                                <span className="text-[10px] font-bold text-orange-600">
+                                                                <span className="text-[13px] font-bold text-orange-600">
                                                                     {member.is_unlimited ? "Unlimited" : (member.daily_limit_override || "Global")}
                                                                 </span>
                                                             </div>
@@ -214,7 +214,7 @@ const ViewCampaignModal = ({ isOpen, onClose, campaign }) => {
                                         campaign.audience.map((member, idx) => (
                                             <div key={idx} className="p-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-10 h-10 rounded-sm bg-gray-100 overflow-hidden border border-gray-200 flex items-center justify-center text-[10px] font-bold text-gray-400">
+                                                    <div className="w-10 h-10 rounded-sm bg-gray-100 overflow-hidden border border-gray-200 flex items-center justify-center text-sm font-bold text-gray-500">
                                                         {member.profile_picture_url ? (
                                                             <img src={member.profile_picture_url} className="w-full h-full object-cover" alt="" />
                                                         ) : (
@@ -222,13 +222,13 @@ const ViewCampaignModal = ({ isOpen, onClose, campaign }) => {
                                                         )}
                                                     </div>
                                                     <div className="flex flex-col">
-                                                        <span className="text-[13px] font-bold text-gray-800 leading-tight">{member.employee_name}</span>
-                                                        <span className="text-[10px] text-gray-400 font-medium">EMP-{member.employee_id}</span>
+                                                        <span className="text-sm font-bold text-gray-800 leading-tight">{member.employee_name}</span>
+                                                        <span className="text-[13px] text-gray-400 font-medium">EMP-{member.employee_id}</span>
                                                     </div>
                                                 </div>
                                                 <div className="flex flex-col items-end gap-1">
-                                                    <span className="text-[10px] font-bold text-gray-400 bg-gray-50 px-2 py-0.5 rounded-sm">Individual</span>
-                                                    <span className="text-[10px] font-bold text-orange-600">
+                                                    <span className="text-[13px] font-bold text-gray-400 bg-gray-50 px-2 py-0.5 rounded-sm">Individual</span>
+                                                    <span className="text-[13px] font-bold text-orange-600">
                                                         {member.is_unlimited ? "Unlimited" : (member.daily_limit_override || "Global")}
                                                     </span>
                                                 </div>
@@ -244,7 +244,7 @@ const ViewCampaignModal = ({ isOpen, onClose, campaign }) => {
                         </div>
 
                         <div className="p-4 bg-orange-50 border-l-4 border-orange-500 rounded-sm">
-                            <p className="text-[11px] font-bold text-gray-600 leading-relaxed capitalize">
+                            <p className="text-sm font-bold text-gray-600 leading-relaxed capitalize">
                                 <span className="text-orange-600">Note:</span> Distribution is handled via Round Robin strategy within selected {campaign.audience_type?.toLowerCase()} hierarchy levels.
                             </p>
                         </div>

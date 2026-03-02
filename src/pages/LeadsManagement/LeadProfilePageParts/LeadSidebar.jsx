@@ -342,7 +342,7 @@ export default function LeadSidebar({
         ) : (
           <div className="relative flex flex-col items-center justify-center w-full mb-1 group/name">
             <h2 className="text-2xl font-bold text-slate-800 uppercase truncate px-6" title={leadData?.name}>
-              {leadData?.name || "Lead Name"}
+              {leadData?.name?.length > 15 ? leadData?.name?.slice(0, 15) + '...' : leadData?.name || "Lead Name"}
             </h2>
             <button
               onClick={() => startEditing('name', leadData?.name)}
