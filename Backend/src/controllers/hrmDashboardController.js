@@ -88,14 +88,82 @@ const getDashboardData = async (req, res) => {
             salary: joiner.salary !== 'N/A' ? `₹${(joiner.salary / 100000).toFixed(1)}L` : 'N/A'
         }));
 
-        // 5. Upcoming Tasks (Mocked for now as no tasks table exists)
-        const upcomingTasks = [
-            { task: "Performance Reviews - Q4", priority: "High", dueDate: "Nov 30, 2024", assignedTo: "HR Team" },
-            { task: "Salary Processing - November", priority: "High", dueDate: "Nov 28, 2024", assignedTo: "Finance" },
-            { task: "Policy Update Training", priority: "Medium", dueDate: "Dec 5, 2024", assignedTo: "HR Team" }
+        // 5. Announcements
+        const [announcementsRows] = await pool.query(
+            `SELECT a.id, a.title, DATE_FORMAT(a.created_at, '%b %d') as date, 
+             COALESCE(ac.category_name, 'General') as tag
+             FROM announcements a
+             LEFT JOIN announcement_categories ac ON a.category_id = ac.id
+             WHERE a.user_id = ?
+             ORDER BY a.created_at DESC LIMIT 3`,
+            [userId]
+        );
+
+        // 6. Upcoming Anniversaries/Birthdays
+        const [anniversariesRows] = await pool.query(
+            `SELECT employee_name as name, d.department_name as department, profile_picture as avatar,
+             CASE 
+                WHEN MONTH(date_of_birth) = MONTH(CURDATE()) AND DAY(date_of_birth) = DAY(CURDATE()) THEN 'Today'
+                ELSE DATE_FORMAT(date_of_birth, '%d %b') 
+             END as date,
+             TIMESTAMPDIFF(YEAR, joining_date, CURDATE()) as years
+             FROM employees e
+             LEFT JOIN departments d ON e.department_id = d.id
+             WHERE e.user_id = ? 
+             AND (
+                (MONTH(date_of_birth) = MONTH(CURDATE()) AND DAY(date_of_birth) >= DAY(CURDATE()))
+                OR (MONTH(joining_date) = MONTH(CURDATE()) AND DAY(joining_date) >= DAY(CURDATE()))
+             )
+             ORDER BY MONTH(date_of_birth), DAY(date_of_birth) LIMIT 3`,
+            [userId]
+        );
+
+        // 7. Hiring Pipeline
+        const [pipelineRows] = await pool.query(
+            `SELECT stage, COUNT(*) as count FROM applicants WHERE user_id = ? GROUP BY stage`,
+            [userId]
+        );
+        const hiringPipeline = pipelineRows.length > 0 ? pipelineRows.map(row => ({
+            stage: row.stage,
+            count: row.count,
+            color: row.stage === 'Screening' ? 'bg-blue-500' : row.stage === 'Interview' ? 'bg-orange-500' : 'bg-green-500'
+        })) : [
+            { stage: "Screening", count: 0, color: "bg-blue-500" },
+            { stage: "Interview", count: 0, color: "bg-orange-500" },
+            { stage: "Technical", count: 0, color: "bg-purple-500" },
+            { stage: "Offered", count: 0, color: "bg-green-500" },
         ];
 
-        // 6. Department Overview
+        // 8. Weekly Attendance Trend
+        const [attendanceTrendRows] = await pool.query(
+            `SELECT DATE_FORMAT(date, '%a') as day, 
+             SUM(CASE WHEN status IN ('present', 'late', 'half-day') THEN 1 ELSE 0 END) as present,
+             SUM(CASE WHEN status = 'absent' THEN 1 ELSE 0 END) as absent
+             FROM attendance 
+             WHERE user_id = ? AND date >= DATE_SUB(CURDATE(), INTERVAL 5 DAY)
+             GROUP BY date ORDER BY date ASC`,
+            [userId]
+        );
+
+        // 9. Growth Calculations (Comparing with last month)
+        const [prevMonthStats] = await pool.query(`
+            SELECT 
+                (SELECT COUNT(*) FROM employees WHERE user_id = ? AND created_at < DATE_SUB(NOW(), INTERVAL 1 MONTH)) as empCount,
+                (SELECT COUNT(*) FROM jobs WHERE user_id = ? AND created_at < DATE_SUB(NOW(), INTERVAL 1 MONTH) AND status = "Active") as jobCount,
+                (SELECT COUNT(*) FROM departments WHERE user_id = ? AND created_at < DATE_SUB(NOW(), INTERVAL 1 MONTH)) as deptCount
+            FROM DUAL
+        `, [userId, userId, userId]);
+
+        const calculateGrowth = (current, previous) => {
+            if (!previous || previous === 0) return current > 0 ? 100 : 0;
+            return Math.round(((current - previous) / previous) * 100);
+        };
+
+        const empGrowth = calculateGrowth(totalEmployees, prevMonthStats[0].empCount);
+        const jobGrowth = calculateGrowth(unreadLeads, prevMonthStats[0].jobCount);
+        const deptGrowth = calculateGrowth(totalDepartments, prevMonthStats[0].deptCount);
+
+        // 10. Department Overview
         const [deptOverviewRows] = await pool.query(
             `SELECT d.id, d.department_name as name, d.icon as color,
              COUNT(e.id) as totalEmployees
@@ -135,17 +203,26 @@ const getDashboardData = async (req, res) => {
             success: true,
             data: {
                 summary: {
-                    totalEmployees: { value: totalEmployees, trend: "+0%" },
-                    presentToday: { value: presentToday, trend: "+0%" },
-                    onLeave: { value: onLeave, trend: "+0%" },
-                    unreadLeads: { value: unreadLeads, trend: "+0%" },
-                    totalDepartments: { value: totalDepartments, trend: "+0%" },
-                    totalDesignations: { value: totalDesignations, trend: "+0%" }
+                    totalEmployees: { value: totalEmployees, trend: `${empGrowth >= 0 ? '+' : ''}${empGrowth}%` },
+                    presentToday: { value: presentToday, trend: `${presentToday >= (totalEmployees * 0.9) ? 'Stable' : 'Low'}` },
+                    onLeave: { value: onLeave, trend: `${onLeave > 0 ? 'Active' : 'Zero'}` },
+                    unreadLeads: { value: unreadLeads, trend: `${jobGrowth >= 0 ? '+' : ''}${jobGrowth}%` },
+                    totalDepartments: { value: totalDepartments, trend: `${deptGrowth >= 0 ? '+' : ''}${deptGrowth}%` },
+                    totalDesignations: { value: totalDesignations, trend: "Dynamic" }
                 },
                 departmentDistribution,
                 leaveRequests: leaveRequestsRows,
-                recentJoiners,
-                upcomingTasks,
+                recentJoiners: recentJoinersRows,
+                anniversaries: anniversariesRows,
+                announcements: announcementsRows,
+                hiringPipeline,
+                attendanceData: attendanceTrendRows.length > 0 ? attendanceTrendRows : [
+                    { day: "Mon", present: 0, absent: 0 },
+                    { day: "Tue", present: 0, absent: 0 },
+                    { day: "Wed", present: 0, absent: 0 },
+                    { day: "Thu", present: 0, absent: 0 },
+                    { day: "Fri", present: 0, absent: 0 },
+                ],
                 departmentOverview
             }
         });

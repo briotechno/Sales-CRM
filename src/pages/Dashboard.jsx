@@ -203,21 +203,21 @@ const CRMDashboard = () => {
     { name: "Google Docs", value: stats.channels.googleDocs, color: "#64748b" },
   ];
 
-  const recentDocuments = [
-    { id: "QUO-9821", type: "Quotation", client: "Tech Solutions", amount: 125000, date: "Today", status: "Sent" },
-    { id: "INV-4412", type: "Invoice", client: "Mumbai Logistics", amount: 89000, date: "Yesterday", status: "Paid" },
-    { id: "QUO-9755", type: "Quotation", client: "Green Energy Corp", amount: 450000, date: "2 Days ago", status: "Pending" },
-  ];
-
   const COLORS = ["#3b82f6", "#f97316", "#10b981", "#8b5cf6", "#64748b"];
 
-  const revenueGoal = {
+  const revenueGoal = dashboardData?.revenueGoal || {
     current: 12500000,
     target: 20000000,
     label: "Q1 Sales Target"
   };
 
-  const upcomingTasks = [
+  const recentDocuments = dashboardData?.recentDocuments?.length > 0 ? dashboardData.recentDocuments : [
+    { id: "QUO-9821", type: "Quotation", client: "Tech Solutions", amount: 125000, date: "Today", status: "Sent" },
+    { id: "INV-4412", type: "Invoice", client: "Mumbai Logistics", amount: 89000, date: "Yesterday", status: "Paid" },
+    { id: "QUO-9755", type: "Quotation", client: "Green Energy Corp", amount: 450000, date: "2 Days ago", status: "Pending" },
+  ];
+
+  const upcomingTasks = dashboardData?.upcomingTasks?.length > 0 ? dashboardData.upcomingTasks : [
     { id: 1, title: "Follow up with Tech Solutions", time: "10:30 AM", urgent: true },
     { id: 2, title: "Review Q1 Financial Report", time: "02:00 PM", urgent: false },
     { id: 3, title: "Team Strategy Sync", time: "04:30 PM", urgent: false },

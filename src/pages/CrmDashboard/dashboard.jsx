@@ -84,7 +84,58 @@ export default function CRMDashboard() {
   const upcomingTasks = stats?.upcomingTasks?.length > 0 ? stats.upcomingTasks : mockPriorityTasks;
   const pipelineData = stats?.pipelineData || [];
   const revenueData = stats?.revenueTrend?.length > 0 ? stats.revenueTrend : mockRevenueData;
+
+  const funnelData = stats?.funnelData?.length > 0 ? stats.funnelData : [
+    { name: "Total Leads", value: 1000, deals: 1000, fill: "#94a3b8" },
+    { name: "Contacted", value: 750, deals: 750, fill: "#60a5fa" },
+    { name: "Qualified", value: 450, deals: 450, fill: "#facc15" },
+    { name: "Proposal", value: 200, deals: 200, fill: "#fb923c" },
+    { name: "Won", value: 85, deals: 85, fill: "#22c55e" },
+  ];
+
+  const agingStats = stats?.agingStats?.length > 0 ? stats.agingStats : [
+    { label: "Leads Stagnant (3+ Days)", count: 34, status: "Warning" },
+    { label: "Leads Stagnant (7+ Days)", count: 12, status: "Critical" },
+    { label: "Overdue Follow-ups", count: 18, status: "Alert" },
+  ];
+
+  const winLossData = stats?.winLossData?.length > 0 ? stats.winLossData : [
+    { month: "Sep", won: 45, lost: 12 },
+    { month: "Oct", won: 52, lost: 15 },
+    { month: "Nov", won: 48, lost: 18 },
+    { month: "Dec", won: 61, lost: 10 },
+    { month: "Jan", won: 55, lost: 14 },
+    { month: "Feb", won: 72, lost: 11 },
+  ];
+
+  const regionSales = stats?.regionSales?.length > 0 ? stats.regionSales : [
+    { area: "North India", value: 45, color: "#fb923c" },
+    { area: "West India", value: 25, color: "#60a5fa" },
+    { area: "South India", value: 20, color: "#a855f7" },
+    { area: "East India", value: 10, color: "#94a3b8" },
+  ];
+
+  const workloadData = stats?.workloadData?.length > 0 ? stats.workloadData : [
+    { name: "Rahul Sharma", leads: 45, capacity: 85, color: "orange" },
+    { name: "Priya Kapoor", leads: 32, capacity: 60, color: "blue" },
+    { name: "Amit Verma", leads: 58, capacity: 95, color: "red" },
+    { name: "Sana Malik", leads: 22, capacity: 40, color: "green" },
+  ];
+
+  const dropAnalysis = stats?.dropAnalysis?.length > 0 ? stats.dropAnalysis : [
+    { name: "Budget Issue", value: 35, fill: "#f97316" },
+    { name: "No Response", value: 25, fill: "#60a5fa" },
+    { name: "Competitor Chosen", value: 20, fill: "#a855f7" },
+    { name: "Not Interested", value: 15, fill: "#f43f5e" },
+    { name: "Duplicate", value: 5, fill: "#94a3b8" },
+  ];
+
   const summary = stats?.summary || { totalQuotations: 0, conversions: 0, revenue: 0, champions: 0 };
+
+  const forecastData = [
+    { name: "Actual Sales", value: summary.revenue || 850000 },
+    { name: "Target Forecast", value: 1200000 },
+  ];
 
   const COLORS = ["#fb923c", "#f97316", "#ea580c", "#c2410c", "#9a3412"];
 
@@ -102,54 +153,12 @@ export default function CRMDashboard() {
     { label: "Marketing ROI", value: "5.2x", icon: <DollarSign size={18} className="text-orange-500" />, colorClass: "border-t-orange-500 bg-orange-50/50" },
   ];
 
-  const funnelData = [
-    { name: "Total Leads", value: 1000, deals: 1000, fill: "#94a3b8" },
-    { name: "Contacted", value: 750, deals: 750, fill: "#60a5fa" },
-    { name: "Qualified", value: 450, deals: 450, fill: "#facc15" },
-    { name: "Proposal", value: 200, deals: 200, fill: "#fb923c" },
-    { name: "Won", value: 85, deals: 85, fill: "#22c55e" },
-  ];
-
-  const agingStats = [
-    { label: "Leads Stagnant (3+ Days)", count: 34, status: "Warning" },
-    { label: "Leads Stagnant (7+ Days)", count: 12, status: "Critical" },
-    { label: "Overdue Follow-ups", count: 18, status: "Alert" },
-  ];
-
-  const winLossData = [
-    { month: "Sep", won: 45, lost: 12 },
-    { month: "Oct", won: 52, lost: 15 },
-    { month: "Nov", won: 48, lost: 18 },
-    { month: "Dec", won: 61, lost: 10 },
-    { month: "Jan", won: 55, lost: 14 },
-    { month: "Feb", won: 72, lost: 11 },
-  ];
-
-  const regionSales = [
-    { area: "North India", value: 45, color: "#fb923c" },
-    { area: "West India", value: 25, color: "#60a5fa" },
-    { area: "South India", value: 20, color: "#a855f7" },
-    { area: "East India", value: 10, color: "#94a3b8" },
-  ];
-
-  const workloadData = [
-    { name: "Rahul Sharma", leads: 45, capacity: 85, color: "orange" },
-    { name: "Priya Kapoor", leads: 32, capacity: 60, color: "blue" },
-    { name: "Amit Verma", leads: 58, capacity: 95, color: "red" },
-    { name: "Sana Malik", leads: 22, capacity: 40, color: "green" },
-  ];
-
-  const forecastData = [
-    { name: "Actual Sales", value: 850000 },
-    { name: "Target Forecast", value: 1200000 },
-  ];
-
-  const mockDropData = [
-    { name: "Budget Issue", value: 35, fill: "#f97316" },
-    { name: "No Response", value: 25, fill: "#60a5fa" },
-    { name: "Competitor Chosen", value: 20, fill: "#a855f7" },
-    { name: "Not Interested", value: 15, fill: "#f43f5e" },
-    { name: "Duplicate", value: 5, fill: "#94a3b8" },
+  const teamPerformanceData = stats?.teamPerformance?.length > 0 ? stats.teamPerformance : [
+    { id: 1, name: "Sarah Johnson", leads: 156, converted: 67, rate: 43, avatar: "SJ" },
+    { id: 2, name: "Michael Chen", leads: 142, converted: 58, rate: 41, avatar: "MC" },
+    { id: 3, name: "Emily Rodriguez", leads: 134, converted: 52, rate: 39, avatar: "ER" },
+    { id: 4, name: "David Kim", leads: 128, converted: 48, rate: 38, avatar: "DK" },
+    { id: 5, name: "Lisa Anderson", leads: 119, converted: 45, rate: 38, avatar: "LA" },
   ];
 
   const mockActivityFeed = [
@@ -166,14 +175,6 @@ export default function CRMDashboard() {
     { month: "Apr", expected: 1500000, weighted: 1100000, bestCase: 1900000 },
     { month: "May", expected: 1800000, weighted: 1400000, bestCase: 2200000 },
     { month: "Jun", expected: 2100000, weighted: 1650000, bestCase: 2600000 },
-  ];
-
-  const teamPerformance = [
-    { id: 1, name: "Sarah Johnson", leads: 156, converted: 67, rate: 43, avatar: "SJ" },
-    { id: 2, name: "Michael Chen", leads: 142, converted: 58, rate: 41, avatar: "MC" },
-    { id: 3, name: "Emily Rodriguez", leads: 134, converted: 52, rate: 39, avatar: "ER" },
-    { id: 4, name: "David Kim", leads: 128, converted: 48, rate: 38, avatar: "DK" },
-    { id: 5, name: "Lisa Anderson", leads: 119, converted: 45, rate: 38, avatar: "LA" },
   ];
 
   return (
@@ -519,14 +520,14 @@ export default function CRMDashboard() {
                 <div className="h-48 w-full relative">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
-                      <Pie data={mockDropData} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={4} dataKey="value">
-                        {mockDropData.map((entry, index) => <Cell key={`drop-cell-${index}`} fill={entry.fill} />)}
+                      <Pie data={dropAnalysis} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={4} dataKey="value">
+                        {dropAnalysis.map((entry, index) => <Cell key={`drop-cell-${index}`} fill={entry.fill} />)}
                       </Pie>
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
                 <div className="w-full mt-4 space-y-2">
-                  {mockDropData.map((d, i) => (
+                  {dropAnalysis.map((d, i) => (
                     <div key={i} className="flex items-center justify-between group">
                       <div className="flex items-center gap-2">
                         <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: d.fill }}></div>
@@ -744,7 +745,7 @@ export default function CRMDashboard() {
               </button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
-              {teamPerformance.map((member, index) => (
+              {teamPerformanceData.map((member, index) => (
                 <div
                   key={index}
                   onClick={() => navigate(`/crm/leads/team-performance/${member.id}`)}

@@ -118,19 +118,19 @@ export default function HRMDashboard() {
     }
   };
 
-  const anniversaries = [
+  const anniversaries = dashboardData.anniversaries?.length > 0 ? dashboardData.anniversaries : [
     { name: "Suresh Patil", department: "Operations", years: 5, date: "Today", avatar: "https://i.pravatar.cc/150?u=50" },
     { name: "Megha Shah", department: "HR", years: 2, date: "07 Mar", avatar: "https://i.pravatar.cc/150?u=51" },
     { name: "Arvin K.", department: "Sales", years: 10, date: "10 Mar", avatar: "https://i.pravatar.cc/150?u=52" },
   ];
 
-  const announcements = [
+  const announcements = dashboardData.announcements?.length > 0 ? dashboardData.announcements : [
     { id: 1, title: "New Health Insurance Policy", date: "2 Hours ago", tag: "Benefits" },
     { id: 2, title: "Quarterly Town Hall Meeting", date: "Tomorrow", tag: "Event" },
     { id: 3, title: "Office Renovation on 2nd Floor", date: "09 Mar", tag: "Facility" },
   ];
 
-  const hiringPipeline = [
+  const hiringPipeline = dashboardData.hiringPipeline?.length > 0 ? dashboardData.hiringPipeline : [
     { stage: "Screening", count: 24, color: "bg-blue-500" },
     { stage: "Interview", count: 8, color: "bg-orange-500" },
     { stage: "Technical", count: 3, color: "bg-purple-500" },
@@ -138,7 +138,7 @@ export default function HRMDashboard() {
   ];
 
 
-  const attendanceData = [
+  const attendanceData = dashboardData.attendanceData?.length > 0 ? dashboardData.attendanceData : [
     { day: "Mon", present: 1180, absent: 67 },
     { day: "Tue", present: 1165, absent: 82 },
     { day: "Wed", present: 1190, absent: 57 },
