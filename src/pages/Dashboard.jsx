@@ -22,7 +22,22 @@ import {
   Award,
   Home,
   Plus,
+  TrendingDown,
+  PieChart as PieIcon,
+  CreditCard,
+  FileCheck,
+  Zap,
+  Flag,
+  CheckCircle2,
+  MoreHorizontal,
 } from "lucide-react";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  Tooltip as RechartsTooltip,
+} from "recharts";
 import NumberCard from "../components/NumberCard";
 import { useGetMainDashboardStatsQuery } from "../store/api/mainDashboardApi";
 
@@ -179,6 +194,35 @@ const CRMDashboard = () => {
     { name: "Suresh P.", department: "Operations", date: "12 Mar", avatar: "https://i.pravatar.cc/150?u=12" },
     { name: "Meera Bai", department: "HR", date: "15 Mar", avatar: "https://i.pravatar.cc/150?u=13" },
   ];
+
+  const channelDistribution = [
+    { name: "Meta Ads", value: stats.channels.meta, color: "#3b82f6" },
+    { name: "JustDial", value: stats.channels.justdial, color: "#f97316" },
+    { name: "Indiamart", value: stats.channels.indiamart, color: "#10b981" },
+    { name: "CRM Form", value: stats.channels.crmForm, color: "#8b5cf6" },
+    { name: "Google Docs", value: stats.channels.googleDocs, color: "#64748b" },
+  ];
+
+  const recentDocuments = [
+    { id: "QUO-9821", type: "Quotation", client: "Tech Solutions", amount: 125000, date: "Today", status: "Sent" },
+    { id: "INV-4412", type: "Invoice", client: "Mumbai Logistics", amount: 89000, date: "Yesterday", status: "Paid" },
+    { id: "QUO-9755", type: "Quotation", client: "Green Energy Corp", amount: 450000, date: "2 Days ago", status: "Pending" },
+  ];
+
+  const COLORS = ["#3b82f6", "#f97316", "#10b981", "#8b5cf6", "#64748b"];
+
+  const revenueGoal = {
+    current: 12500000,
+    target: 20000000,
+    label: "Q1 Sales Target"
+  };
+
+  const upcomingTasks = [
+    { id: 1, title: "Follow up with Tech Solutions", time: "10:30 AM", urgent: true },
+    { id: 2, title: "Review Q1 Financial Report", time: "02:00 PM", urgent: false },
+    { id: 3, title: "Team Strategy Sync", time: "04:30 PM", urgent: false },
+  ];
+
 
   return (
     <>
@@ -585,6 +629,153 @@ const CRMDashboard = () => {
                     No pipeline stages available
                   </div>
                 )}
+              </div>
+            </div>
+
+            {/* NEW SECTION: Revenue Goal & Focus Tasks */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+              {/* Revenue Goal Progress */}
+              <div className="lg:col-span-1 bg-white rounded-sm border border-orange-100 shadow-lg p-6 flex flex-col relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-4 opacity-10">
+                  <Flag size={64} className="text-orange-600" />
+                </div>
+                <div className="mb-8">
+                  <h2 className="text-xl font-bold text-gray-800 leading-tight">Revenue Goal</h2>
+                  <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest">Monthly sales target</p>
+                </div>
+
+                <div className="flex-1 flex flex-col justify-center">
+                  <div className="flex justify-between items-end mb-2">
+                    <span className="text-2xl font-black text-gray-800">{formatCurrency(revenueGoal.current)}</span>
+                    <span className="text-[10px] font-bold text-gray-400 uppercase">Target: {formatCurrency(revenueGoal.target)}</span>
+                  </div>
+                  <div className="w-full bg-slate-100 h-3 rounded-full overflow-hidden shadow-inner border border-gray-100">
+                    <div
+                      className="h-full bg-gradient-to-r from-orange-500 to-orange-600 rounded-full transition-all duration-1000"
+                      style={{ width: `${(revenueGoal.current / revenueGoal.target) * 100}%` }}
+                    />
+                  </div>
+                  <div className="flex justify-between mt-2">
+                    <span className="text-[10px] font-black text-orange-600">{Math.round((revenueGoal.current / revenueGoal.target) * 100)}% COMPLETED</span>
+                    <span className="text-[10px] font-bold text-gray-400">{formatCurrency(revenueGoal.target - revenueGoal.current)} REMAINING</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Day Agenda/Tasks */}
+              <div className="lg:col-span-2 bg-slate-900 rounded-sm shadow-xl p-6 flex flex-col text-white">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-orange-500/20 rounded-sm">
+                      <CheckCircle2 size={20} className="text-orange-500" />
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-bold">Today's Focus</h2>
+                      <p className="text-[9px] text-slate-400 uppercase tracking-widest font-bold">Your agenda</p>
+                    </div>
+                  </div>
+                  <button className="p-2 hover:bg-white/5 rounded-full transition-colors text-slate-400">
+                    <MoreHorizontal size={20} />
+                  </button>
+                </div>
+
+                <div className="space-y-3">
+                  {upcomingTasks.map((task) => (
+                    <div key={task.id} className="flex items-center justify-between p-3 border border-white/5 rounded-sm hover:bg-white/5 transition-all group backdrop-blur-sm">
+                      <div className="flex items-center gap-4">
+                        <div className={`w-1.5 h-1.5 rounded-full ${task.urgent ? 'bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.6)]' : 'bg-slate-600'}`}></div>
+                        <div>
+                          <p className="text-sm font-bold text-slate-200 group-hover:text-white transition-colors">{task.title}</p>
+                          <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">{task.time}</p>
+                        </div>
+                      </div>
+                      <button className="text-[9px] font-black uppercase text-orange-500 hover:text-orange-400 bg-orange-500/10 px-3 py-1.5 rounded-sm border border-orange-500/20 transition-all opacity-0 group-hover:opacity-100">
+                        Mark Done
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* NEW: Lead Distribution & Revenue Forecast */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+              <div className="lg:col-span-1 bg-white rounded-sm border border-gray-100 shadow-lg p-6 flex flex-col">
+                <div className="flex items-center mb-8">
+                  <div className="p-3 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-600 mr-4 shadow-md">
+                    <PieIcon className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-800 leading-tight">Lead Distribution</h2>
+                    <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest">Leads by channel</p>
+                  </div>
+                </div>
+                <div className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={channelDistribution}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={80}
+                        paddingAngle={5}
+                        dataKey="value"
+                      >
+                        {channelDistribution.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <RechartsTooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="mt-4 grid grid-cols-2 gap-2">
+                  {channelDistribution.map((item, idx) => (
+                    <div key={idx} className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }}></div>
+                      <span className="text-[10px] font-bold text-gray-600 uppercase tracking-tighter">{item.name}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="lg:col-span-2 bg-white rounded-sm border border-gray-100 shadow-lg p-6 flex flex-col">
+                <div className="flex items-center justify-between mb-8">
+                  <div className="flex items-center">
+                    <div className="p-3 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 mr-4 shadow-md">
+                      <CreditCard className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-bold text-gray-800 leading-tight">Recent Financial Activity</h2>
+                      <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest">Quotations & Invoices</p>
+                    </div>
+                  </div>
+                  <button className="text-purple-600 text-[11px] font-bold hover:bg-purple-50 px-4 py-2 border border-purple-200 rounded-sm shadow-sm transition-all uppercase tracking-widest">
+                    Finance Hub
+                  </button>
+                </div>
+                <div className="space-y-4">
+                  {recentDocuments.map((doc, idx) => (
+                    <div key={idx} className="flex items-center justify-between p-4 bg-slate-50 rounded-sm border border-slate-100 hover:border-purple-500 hover:shadow-md transition-all group">
+                      <div className="flex items-center gap-4">
+                        <div className={`p-2 rounded-sm ${doc.type === 'Invoice' ? 'bg-blue-100 text-blue-600' : 'bg-orange-100 text-orange-600'}`}>
+                          <FileCheck size={20} />
+                        </div>
+                        <div>
+                          <p className="font-bold text-gray-800 text-sm">{doc.id} • {doc.client}</p>
+                          <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{doc.type} • Created {doc.date}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-black text-gray-800 text-sm">{formatCurrency(doc.amount)}</p>
+                        <span className={`px-2 py-0.5 rounded-[2px] text-[9px] font-black uppercase tracking-tighter shadow-sm ${doc.status === 'Paid' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-amber-50 text-amber-600 border border-amber-100'}`}>
+                          {doc.status}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
 
