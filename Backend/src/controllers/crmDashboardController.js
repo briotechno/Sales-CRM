@@ -204,8 +204,8 @@ const getDashboardStats = async (req, res) => {
                 e.id, e.employee_name as name,
                 LEFT(e.employee_name, 2) as avatar,
                 COUNT(l.id) as leads,
-                SUM(CASE WHEN l.tag IN ('Closed', 'Won') OR status IN ('Closed', 'Won') THEN 1 ELSE 0 END) as converted,
-                ROUND((SUM(CASE WHEN l.tag IN ('Closed', 'Won') OR status IN ('Closed', 'Won') THEN 1 ELSE 0 END) / NULLIF(COUNT(l.id), 0)) * 100, 1) as rate
+                SUM(CASE WHEN l.tag IN ('Closed', 'Won') OR l.status IN ('Closed', 'Won') THEN 1 ELSE 0 END) as converted,
+                ROUND((SUM(CASE WHEN l.tag IN ('Closed', 'Won') OR l.status IN ('Closed', 'Won') THEN 1 ELSE 0 END) / NULLIF(COUNT(l.id), 0)) * 100, 1) as rate
             FROM employees e
             LEFT JOIN leads l ON e.id = l.assigned_to OR e.employee_id = l.assigned_to
             WHERE e.user_id = ?

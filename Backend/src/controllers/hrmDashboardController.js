@@ -90,12 +90,11 @@ const getDashboardData = async (req, res) => {
 
         // 5. Announcements
         const [announcementsRows] = await pool.query(
-            `SELECT a.id, a.title, DATE_FORMAT(a.created_at, '%b %d') as date, 
-             COALESCE(ac.category_name, 'General') as tag
-             FROM announcements a
-             LEFT JOIN announcement_categories ac ON a.category_id = ac.id
-             WHERE a.user_id = ?
-             ORDER BY a.created_at DESC LIMIT 3`,
+            `SELECT id, title, DATE_FORMAT(created_at, '%b %d') as date, 
+             COALESCE(category, 'General') as tag
+             FROM announcements
+             WHERE user_id = ?
+             ORDER BY created_at DESC LIMIT 3`,
             [userId]
         );
 
@@ -120,7 +119,11 @@ const getDashboardData = async (req, res) => {
 
         // 7. Hiring Pipeline
         const [pipelineRows] = await pool.query(
-            `SELECT stage, COUNT(*) as count FROM applicants WHERE user_id = ? GROUP BY stage`,
+            `SELECT a.status as stage, COUNT(*) as count 
+             FROM applicants a
+             JOIN jobs j ON a.job_id = j.id
+             WHERE j.user_id = ? 
+             GROUP BY a.status`,
             [userId]
         );
         const hiringPipeline = pipelineRows.length > 0 ? pipelineRows.map(row => ({

@@ -177,11 +177,11 @@ const getMainDashboardStats = async (req, res) => {
 
         // 12. Recent Documents (Invoices + Quotations)
         const [docRows] = await pool.query(`
-            (SELECT id, 'Invoice' as type, organization_name as client, total_amount as amount, 
+            (SELECT id, 'Invoice' as type, client_name as client, total_amount as amount, 
              DATE_FORMAT(invoice_date, '%Y-%m-%d') as date, status
              FROM invoices WHERE user_id = ? ORDER BY invoice_date DESC LIMIT 3)
             UNION ALL
-            (SELECT id, 'Quotation' as type, organization_name as client, total_amount as amount,
+            (SELECT id, 'Quotation' as type, client_name as client, total_amount as amount,
              DATE_FORMAT(quotation_date, '%Y-%m-%d') as date, status
              FROM quotations WHERE user_id = ? ORDER BY quotation_date DESC LIMIT 3)
             ORDER BY date DESC LIMIT 5
