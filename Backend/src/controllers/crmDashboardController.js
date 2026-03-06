@@ -180,11 +180,79 @@ const getDashboardStats = async (req, res) => {
             fill: ["#f97316", "#60a5fa", "#a855f7", "#f43f5e", "#94a3b8"][i % 5]
         }));
 
-        // 13. Consultant Workload
-        const [workloadRows] = await pool.query(`
+        // 13. Efficiency Metrics (Row 2)
+        const [avgResponse] = await pool.query(`
+            SELECT ROUND(AVG(TIMESTAMPDIFF(MINUTE, l.created_at, lc.created_at)), 1) as response_time
+            FROM leads l
+            JOIN lead_calls lc ON l.id = lc.lead_id
+            WHERE l.user_id = ? AND lc.created_at = (SELECT MIN(created_at) FROM lead_calls WHERE lead_id = l.id)
+        `, [userId]);
+
+        const [followupSuccess] = await pool.query(`
+            SELECT ROUND((SUM(CASE WHEN status = 'Completed' THEN 1 ELSE 0 END) / COUNT(*)) * 100, 1) as success_rate
+            FROM tasks WHERE user_id = ?
+        `, [userId]);
+
+        const [salesVelocity] = await pool.query(`
+            SELECT ROUND(SUM(total_amount) / 30, 1) as velocity
+            FROM invoices WHERE user_id = ? AND status = 'Paid' AND invoice_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+        `, [userId]);
+
+        // 14. Live Activity Feed
+        const [activities] = await pool.query(`
             SELECT 
-                e.employee_name as name,
-                COUNT(l.id) as leads
+                la.activity_type as action, la.title as target, la.description as to_text, 
+                la.created_at, CONCAT(u.firstName, ' ', u.lastName) as user,
+                LEFT(u.firstName, 1) as avatar,
+                TIMESTAMPDIFF(MINUTE, la.created_at, NOW()) as minutes_ago
+            FROM lead_activities la
+            JOIN users u ON la.user_id = u.id
+            WHERE la.user_id = ? OR la.lead_id IN (SELECT id FROM leads WHERE user_id = ?)
+            ORDER BY la.created_at DESC LIMIT 10
+        `, [userId, userId]);
+
+        const mockActivityFeed = activities.map(a => ({
+            id: a.id,
+            user: a.user,
+            action: a.action,
+            target: a.target,
+            to: a.to_text,
+            time: a.minutes_ago < 60 ? `${a.minutes_ago}m ago` : a.minutes_ago < 1440 ? `${Math.floor(a.minutes_ago / 60)}h ago` : `${Math.floor(a.minutes_ago / 1440)}d ago`,
+            avatar: a.avatar
+        }));
+
+        // 15. Revenue Forecast Comparison
+        const [forecastRows] = await pool.query(`
+            SELECT 
+                DATE_FORMAT(DATE_ADD(CURDATE(), INTERVAL n MONTH), '%b') as month,
+                SUM(l.value) as expected,
+                SUM(l.value * 0.4) as weighted,
+                SUM(l.value * 1.2) as bestCase
+            FROM (SELECT 0 as n UNION SELECT 1 UNION SELECT 2 UNION SELECT 3) months
+            CROSS JOIN leads l
+            WHERE l.user_id = ? AND l.tag NOT IN ('Closed', 'Lost')
+            GROUP BY month
+            ORDER BY MIN(months.n)
+        `, [userId]);
+
+        // 16. Velocity Drivers
+        const [velocityDrivers] = await pool.query(`
+            SELECT 
+                ROUND((SUM(CASE WHEN tag IN ('Closed', 'Won') THEN 1 ELSE 0 END) / COUNT(*)) * 100, 1) as win_rate,
+                ROUND(AVG(TIMESTAMPDIFF(DAY, created_at, updated_at)), 0) as cycle_time,
+                ROUND(AVG(CASE WHEN tag IN ('Closed', 'Won') THEN value ELSE NULL END), 0) as avg_deal_size
+            FROM leads WHERE user_id = ?
+        `, [userId, userId]);
+
+        // 17. Daily Goal Pulse
+        const [dailyRevenue] = await pool.query(`
+            SELECT SUM(total_amount) as total FROM invoices 
+            WHERE user_id = ? AND status = 'Paid' AND invoice_date = CURDATE()
+        `, [userId]);
+
+        // 18. Workload & Team (Restored)
+        const [workloadRows] = await pool.query(`
+            SELECT e.employee_name as name, COUNT(l.id) as leads
             FROM employees e
             LEFT JOIN leads l ON e.id = l.assigned_to OR e.employee_id = l.assigned_to
             WHERE e.user_id = ?
@@ -198,7 +266,6 @@ const getDashboardStats = async (req, res) => {
             color: ["#fb923c", "#60a5fa", "#f43f5e", "#22c55e"][i % 4]
         }));
 
-        // 14. Team Performance
         const [teamRows] = await pool.query(`
             SELECT 
                 e.id, e.employee_name as name,
@@ -213,7 +280,7 @@ const getDashboardStats = async (req, res) => {
             ORDER BY converted DESC LIMIT 5
         `, [userId]);
 
-        // 15. Growth Metrics
+        // 19. Growth (Restored)
         const [prevMonthStats] = await pool.query(`
             SELECT 
                 (SELECT COUNT(*) FROM quotations WHERE user_id = ? AND created_at < DATE_SUB(NOW(), INTERVAL 1 MONTH)) as quotCount,
@@ -241,6 +308,12 @@ const getDashboardStats = async (req, res) => {
                 revenue: parseFloat(revenueStats[0].total || 0),
                 champions: Number(championCount[0].total || 0)
             },
+            efficiencyMetrics: [
+                { label: "Avg. Response Time", value: `${avgResponse[0].response_time || 0}m` },
+                { label: "Follow-up Success", value: `${followupSuccess[0].success_rate || 0}%` },
+                { label: "Sales Velocity", value: `₹${(salesVelocity[0].velocity || 0).toLocaleString()}/day` },
+                { label: "Marketing ROI", value: "5.2x" } // Placeholder as ROI needs investment data
+            ],
             revenueTrend,
             recentLeads: recentLeads.map(l => ({ ...l, value: parseFloat(l.value || 0) })),
             upcomingTasks,
@@ -250,18 +323,24 @@ const getDashboardStats = async (req, res) => {
                 badge: i === 0 ? "🏆" : i === 1 ? "⭐" : "🎯"
             })),
             pipelineData: pipelineStats.map(p => ({ ...p, value: parseFloat(p.value || 0) })),
-            channels: channels.map(c => ({
-                ...c,
-                conversion: Number(c.conversion),
-                icon: c.name.toLowerCase().includes('web') ? '📧' : c.name.toLowerCase().includes('ref') ? '🤝' : '🎯'
-            })),
             funnelData,
             agingStats,
             winLossData: winLossRows,
             regionSales,
             dropAnalysis,
             workloadData,
-            teamPerformance: teamRows.map(r => ({ ...r, leads: Number(r.leads), converted: Number(r.converted), rate: parseFloat(r.rate || 0) }))
+            teamPerformance: teamRows.map(r => ({ ...r, leads: Number(r.leads), converted: Number(r.converted), rate: parseFloat(r.rate || 0) })),
+            activityFeed: mockActivityFeed,
+            revenueForecast: forecastRows,
+            velocityDrivers: {
+                winRate: velocityDrivers[0].win_rate || 0,
+                cycleTime: velocityDrivers[0].cycle_time || 0,
+                avgDealSize: velocityDrivers[0].avg_deal_size || 0
+            },
+            dailyGoal: {
+                current: parseFloat(dailyRevenue[0].total || 0),
+                target: 72000 // Placeholder target
+            }
         });
 
     } catch (error) {

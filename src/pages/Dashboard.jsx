@@ -159,41 +159,21 @@ const CRMDashboard = () => {
       notes: Number(rawStats.activities?.notes || 0),
     },
   } : {
-    leads: { total: 1250, new: 42, unread: 15, dropped: 240, trending: 85, conversionRate: 12.5, growth: 18 },
-    pipeline: { totalValue: 85000000, activeDeals: 45, wonDeals: 120, lostDeals: 35, avgDealSize: 180000, growth: 15 },
-    clients: { total: 450, active: 412, inactive: 38, newThisMonth: 15, growth: 8 },
-    employees: { total: 950, active: 910, resigned: 12, onLeave: 28, present: 882 },
-    channels: { meta: 450, justdial: 280, indiamart: 320, googleDocs: 150, crmForm: 45 },
-    activities: { quotations: 85, invoices: 42, expenses: 125000, todos: 12, notes: 25 },
+    leads: { total: 0, new: 0, unread: 0, dropped: 0, trending: 0, conversionRate: 0, growth: 0 },
+    pipeline: { totalValue: 0, activeDeals: 0, wonDeals: 0, lostDeals: 0, avgDealSize: 0, growth: 0 },
+    clients: { total: 0, active: 0, inactive: 0, newThisMonth: 0, growth: 0 },
+    employees: { total: 0, active: 0, resigned: 0, onLeave: 0, present: 0 },
+    channels: { meta: 0, justdial: 0, indiamart: 0, googleDocs: 0, crmForm: 0 },
+    activities: { quotations: 0, invoices: 0, expenses: 0, todos: 0, notes: 0 },
   };
 
-  const recentLeads = dashboardData?.recentLeads?.length > 0 ? dashboardData.recentLeads : [
-    { id: 1, name: "Arjun Sharma", email: "arjun@v-trans.in", phone: "+91 98765 43210", source: "Meta Ads", value: 125000, status: "New", date: "2 Hours ago" },
-    { id: 2, name: "Priya Patel", email: "priya.p@gmail.com", phone: "+91 91234 56789", source: "JustDial", value: 45000, status: "Hot", date: "5 Hours ago" },
-    { id: 3, name: "Logistics Pro", email: "info@logisticspro.com", phone: "+91 88776 65544", source: "Indiamart", value: 890000, status: "Ongoing", date: "1 Day ago" },
-    { id: 4, name: "Karan Singh", email: "karan.s@vtrans.com", phone: "+91 77665 54433", source: "CRM Form", value: 75000, status: "New", date: "2 Days ago" },
-  ];
-
-  const pipelineStages = dashboardData?.pipelineStages?.length > 0 ? dashboardData.pipelineStages : [
-    { name: "Prospecting", count: 12, value: 4500000 },
-    { name: "Qualification", count: 8, value: 2800000 },
-    { name: "Proposal", count: 5, value: 6500000 },
-    { name: "Negotiation", count: 3, value: 4200000 },
-    { name: "Closed Won", count: 15, value: 12500000 },
-  ];
-
-  const topPerformers = dashboardData?.topPerformers?.length > 0 ? dashboardData.topPerformers : [
-    { name: "Vikram Mehta", department: "Sales North", sales: 4500000, leads: 42, growth: "+12.5%", avatar: "https://i.pravatar.cc/150?u=1" },
-    { name: "Sneha Reddy", department: "Inside Sales", sales: 3850000, leads: 38, growth: "+8.2%", avatar: "https://i.pravatar.cc/150?u=2" },
-    { name: "Rahul Deshpande", department: "Sales West", sales: 3200000, leads: 31, growth: "+5.1%", avatar: "https://i.pravatar.cc/150?u=3" },
-  ];
-
-  const upcomingBirthdays = dashboardData?.upcomingBirthdays?.length > 0 ? dashboardData.upcomingBirthdays : [
-    { name: "Amit Trivedi", department: "Logistics", date: "Tomorrow", avatar: "https://i.pravatar.cc/150?u=10" },
-    { name: "Anjali Gupta", department: "Customer Success", date: "08 Mar", avatar: "https://i.pravatar.cc/150?u=11" },
-    { name: "Suresh P.", department: "Operations", date: "12 Mar", avatar: "https://i.pravatar.cc/150?u=12" },
-    { name: "Meera Bai", department: "HR", date: "15 Mar", avatar: "https://i.pravatar.cc/150?u=13" },
-  ];
+  const recentLeads = dashboardData?.recentLeads || [];
+  const pipelineStages = dashboardData?.pipelineStages || [];
+  const topPerformers = dashboardData?.topPerformers || [];
+  const upcomingBirthdays = dashboardData?.upcomingBirthdays || [];
+  const revenueGoal = dashboardData?.revenueGoal || { current: 0, target: 10000000, label: "Revenue Goal" };
+  const recentDocuments = dashboardData?.recentDocuments || [];
+  const upcomingTasks = dashboardData?.upcomingTasks || [];
 
   const channelDistribution = [
     { name: "Meta Ads", value: stats.channels.meta, color: "#3b82f6" },
@@ -205,24 +185,10 @@ const CRMDashboard = () => {
 
   const COLORS = ["#3b82f6", "#f97316", "#10b981", "#8b5cf6", "#64748b"];
 
-  const revenueGoal = dashboardData?.revenueGoal || {
-    current: 12500000,
-    target: 20000000,
-    label: "Q1 Sales Target"
+  const getInitials = (name) => {
+    if (!name) return "";
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
-
-  const recentDocuments = dashboardData?.recentDocuments?.length > 0 ? dashboardData.recentDocuments : [
-    { id: "QUO-9821", type: "Quotation", client: "Tech Solutions", amount: 125000, date: "Today", status: "Sent" },
-    { id: "INV-4412", type: "Invoice", client: "Mumbai Logistics", amount: 89000, date: "Yesterday", status: "Paid" },
-    { id: "QUO-9755", type: "Quotation", client: "Green Energy Corp", amount: 450000, date: "2 Days ago", status: "Pending" },
-  ];
-
-  const upcomingTasks = dashboardData?.upcomingTasks?.length > 0 ? dashboardData.upcomingTasks : [
-    { id: 1, title: "Follow up with Tech Solutions", time: "10:30 AM", urgent: true },
-    { id: 2, title: "Review Q1 Financial Report", time: "02:00 PM", urgent: false },
-    { id: 3, title: "Team Strategy Sync", time: "04:30 PM", urgent: false },
-  ];
-
 
   return (
     <>
@@ -301,7 +267,7 @@ const CRMDashboard = () => {
             </div>
           </div>
 
-          <div className="max-w-[100%] mx-auto px-6 mt-4">
+          <div className="max-w-[100%] mx-auto px-4 mt-2">
             {/* Welcome Section */}
             <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-sm shadow-xl p-8 mb-8 relative overflow-hidden border border-slate-700">
               {/* Decorative background elements */}
@@ -312,11 +278,17 @@ const CRMDashboard = () => {
                 <div className="flex items-center gap-6">
                   <div className="relative group">
                     <div className="absolute -inset-1 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full blur opacity-40 group-hover:opacity-100 transition duration-1000 group-hover:duration-200"></div>
-                    <img
-                      src={user?.profile_picture || "https://i.pravatar.cc/100"}
-                      alt="Profile"
-                      className="relative w-24 h-24 rounded-full border-2 border-white/10 shadow-2xl object-cover"
-                    />
+                    <div className="relative w-24 h-24 rounded-full border-2 border-white/10 shadow-2xl overflow-hidden bg-slate-800 flex items-center justify-center text-white text-3xl font-black">
+                      {user?.profile_picture ? (
+                        <img
+                          src={user.profile_picture}
+                          alt="Profile"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        getInitials(user?.firstName || user?.name || 'User')
+                      )}
+                    </div>
                     <div className="absolute bottom-1.5 right-1.5 w-5 h-5 bg-green-500 border-2 border-slate-800 rounded-full shadow-lg"></div>
                   </div>
                   <div>
@@ -680,7 +652,7 @@ const CRMDashboard = () => {
                 </div>
 
                 <div className="space-y-3">
-                  {upcomingTasks.map((task) => (
+                  {upcomingTasks.length > 0 ? upcomingTasks.map((task) => (
                     <div key={task.id} className="flex items-center justify-between p-3 border border-white/5 rounded-sm hover:bg-white/5 transition-all group backdrop-blur-sm">
                       <div className="flex items-center gap-4">
                         <div className={`w-1.5 h-1.5 rounded-full ${task.urgent ? 'bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.6)]' : 'bg-slate-600'}`}></div>
@@ -693,7 +665,11 @@ const CRMDashboard = () => {
                         Mark Done
                       </button>
                     </div>
-                  ))}
+                  )) : (
+                    <div className="py-10 text-center text-slate-500 font-bold uppercase tracking-widest text-xs border-2 border-dashed border-white/5 rounded-sm">
+                      No Focus Items Today
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -756,7 +732,7 @@ const CRMDashboard = () => {
                   </button>
                 </div>
                 <div className="space-y-4">
-                  {recentDocuments.map((doc, idx) => (
+                  {recentDocuments.length > 0 ? recentDocuments.map((doc, idx) => (
                     <div key={idx} className="flex items-center justify-between p-4 bg-slate-50 rounded-sm border border-slate-100 hover:border-purple-500 hover:shadow-md transition-all group">
                       <div className="flex items-center gap-4">
                         <div className={`p-2 rounded-sm ${doc.type === 'Invoice' ? 'bg-blue-100 text-blue-600' : 'bg-orange-100 text-orange-600'}`}>
@@ -774,7 +750,11 @@ const CRMDashboard = () => {
                         </span>
                       </div>
                     </div>
-                  ))}
+                  )) : (
+                    <div className="py-12 text-center text-gray-400 font-bold uppercase tracking-widest text-xs bg-slate-50 border-2 border-dashed border-slate-100 rounded-sm">
+                      No Recent Activity
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -814,8 +794,12 @@ const CRMDashboard = () => {
                           <tr key={lead.id || idx} className="group hover:bg-slate-50 transition-colors">
                             <td className="py-4">
                               <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-sm bg-slate-900 flex items-center justify-center text-white text-[10px] font-black">
-                                  {lead.id?.toString().slice(-2) || 'LD'}
+                                <div className="w-10 h-10 rounded-sm bg-slate-100 flex items-center justify-center text-slate-800 font-bold text-sm border border-slate-200 group-hover:bg-gradient-to-br group-hover:from-orange-500 group-hover:to-orange-600 group-hover:text-white transition-all shadow-sm group-hover:border-orange-400 capitalize overflow-hidden">
+                                  {lead.profile_picture ? (
+                                    <img src={lead.profile_picture} alt={lead.name} className="w-full h-full object-cover" />
+                                  ) : (
+                                    getInitials(lead.name) || (lead.id?.toString().slice(-2) || 'LD')
+                                  )}
                                 </div>
                                 <div>
                                   <p className="text-sm font-bold text-gray-800">{lead.name || 'Unknown'}</p>
@@ -878,8 +862,12 @@ const CRMDashboard = () => {
                         className="flex items-center justify-between p-4 bg-slate-50 rounded-sm border border-slate-100 hover:border-orange-500 hover:shadow-md transition-all group"
                       >
                         <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-full bg-slate-900 border-2 border-slate-800 flex items-center justify-center text-white font-black text-sm shadow-lg group-hover:scale-110 transition-transform">
-                            {performer.name?.split(' ').map(n => n[0]).join('') || (index + 1)}
+                          <div className="w-10 h-10 rounded-full bg-slate-900 border-2 border-slate-800 flex items-center justify-center text-white font-black text-sm shadow-lg group-hover:scale-110 transition-transform overflow-hidden">
+                            {performer.avatar ? (
+                              <img src={performer.avatar} alt={performer.name} className="w-full h-full object-cover" />
+                            ) : (
+                              getInitials(performer.name) || (index + 1)
+                            )}
                           </div>
                           <div>
                             <p className="font-bold text-gray-800 text-sm group-hover:text-orange-600 transition-colors">
@@ -928,11 +916,13 @@ const CRMDashboard = () => {
                       key={index}
                       className="flex items-center gap-4 p-4 bg-slate-50 rounded-sm border border-slate-100 hover:border-pink-500 hover:shadow-md transition-all group"
                     >
-                      <img
-                        src={employee.avatar || "https://i.pravatar.cc/100"}
-                        alt={employee.name}
-                        className="w-12 h-12 rounded-sm border-2 border-pink-200 object-cover shadow-md group-hover:scale-105 transition-transform"
-                      />
+                      <div className="w-12 h-12 rounded-sm border-2 border-pink-200 bg-white flex items-center justify-center text-pink-500 font-black text-sm shadow-md group-hover:scale-105 transition-transform overflow-hidden">
+                        {employee.avatar ? (
+                          <img src={employee.avatar} alt={employee.name} className="w-full h-full object-cover" />
+                        ) : (
+                          getInitials(employee.name) || 'MB'
+                        )}
+                      </div>
                       <div className="min-w-0">
                         <p className="text-sm font-bold text-gray-800 truncate">
                           {employee.name || 'Member'}

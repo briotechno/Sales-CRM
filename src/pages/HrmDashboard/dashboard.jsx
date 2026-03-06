@@ -25,6 +25,7 @@ import {
   ChevronDown,
   ExternalLink,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import {
   BarChart,
   Bar,
@@ -41,6 +42,7 @@ import NumberCard from "../../components/NumberCard";
 import { useGetHRMDashboardDataQuery } from "../../store/api/hrmDashboardApi";
 
 export default function HRMDashboard() {
+  const navigate = useNavigate();
   const { data: dashboardResponse, isLoading, isFetching, isError, error, refetch } = useGetHRMDashboardDataQuery();
 
   // Handle loading state
@@ -80,71 +82,27 @@ export default function HRMDashboard() {
   const dashboardData = dashboardResponse?.data || {};
 
   // Static Data Fallbacks
-  const leaveRequests = dashboardData.leaveRequests?.length > 0 ? dashboardData.leaveRequests : [
-    { name: "Rahul Sharma", department: "Operations", type: "Sick Leave", status: "Pending", date: "05 Mar", days: 2 },
-    { name: "Priya Singh", department: "Inside Sales", type: "Annual Leave", status: "Approved", date: "08 Mar", days: 5 },
-    { name: "Amit Patel", department: "IT Support", type: "Casual Leave", status: "Rejected", date: "04 Mar", days: 1 },
-    { name: "Sneha Reddy", department: "HR", type: "Maternity Leave", status: "Pending", date: "15 Mar", days: 90 },
-    { name: "Vikram Mehta", department: "Finance", type: "Sick Leave", status: "Approved", date: "02 Mar", days: 3 },
-  ];
-
-  const recentJoiners = dashboardData.recentJoiners?.length > 0 ? dashboardData.recentJoiners : [
-    { name: "Kunal Ghosh", designation: "Software Engineer", department: "IT", joiningDate: "01 Mar", avatar: "https://i.pravatar.cc/150?u=40" },
-    { name: "Ishani Vyas", designation: "HR Executive", department: "HR", joiningDate: "02 Mar", avatar: "https://i.pravatar.cc/150?u=41" },
-    { name: "Rajesh Kumar", designation: "Fleet Manager", department: "Operations", joiningDate: "03 Mar", avatar: "https://i.pravatar.cc/150?u=42" },
-    { name: "Sanya Malhotra", designation: "Sales Associate", department: "Sales", joiningDate: "04 Mar", avatar: "https://i.pravatar.cc/150?u=43" },
-  ];
-
-  const departmentDistribution = (dashboardData.departmentDistribution || dashboardData.departmentOverview)?.length > 0
-    ? (dashboardData.departmentDistribution || dashboardData.departmentOverview)
-    : [
-      { name: "Operations", employees: 420, totalEmployees: 420, presentToday: 412, onLeave: 12, avgAttendance: "92%", color: "#f97316" },
-      { name: "Sales", employees: 280, totalEmployees: 280, presentToday: 265, onLeave: 5, avgAttendance: "95%", color: "#3b82f6" },
-      { name: "IT", employees: 120, totalEmployees: 120, presentToday: 115, onLeave: 2, avgAttendance: "96%", color: "#8b5cf6" },
-      { name: "HR", employees: 45, totalEmployees: 45, presentToday: 42, onLeave: 1, avgAttendance: "94%", color: "#ec4899" },
-      { name: "Finance", employees: 65, totalEmployees: 65, presentToday: 60, onLeave: 3, avgAttendance: "92%", color: "#10b981" },
-    ];
+  const leaveRequests = dashboardData.leaveRequests || [];
+  const recentJoiners = dashboardData.recentJoiners || [];
+  const departmentDistribution = (dashboardData.departmentDistribution || dashboardData.departmentOverview) || [];
 
   const summary = {
-    totalEmployees: dashboardData.summary?.totalEmployees?.value || 930,
-    presentToday: dashboardData.summary?.presentToday?.value || 894,
-    onLeave: dashboardData.summary?.onLeave?.value || 23,
-    newAlerts: dashboardData.summary?.unreadLeads?.value || 12,
+    totalEmployees: dashboardData.summary?.totalEmployees?.value || 0,
+    presentToday: dashboardData.summary?.presentToday?.value || 0,
+    onLeave: dashboardData.summary?.onLeave?.value || 0,
+    newAlerts: dashboardData.summary?.unreadLeads?.value || 0,
     trends: {
-      total: dashboardData.summary?.totalEmployees?.trend || "+12%",
-      present: dashboardData.summary?.presentToday?.trend || "96%",
-      leave: dashboardData.summary?.onLeave?.trend || "Low",
-      alerts: dashboardData.summary?.unreadLeads?.trend || "Priority"
+      total: dashboardData.summary?.totalEmployees?.trend || "0%",
+      present: dashboardData.summary?.presentToday?.trend || "0%",
+      leave: dashboardData.summary?.onLeave?.trend || "N/A",
+      alerts: dashboardData.summary?.unreadLeads?.trend || "N/A"
     }
   };
 
-  const anniversaries = dashboardData.anniversaries?.length > 0 ? dashboardData.anniversaries : [
-    { name: "Suresh Patil", department: "Operations", years: 5, date: "Today", avatar: "https://i.pravatar.cc/150?u=50" },
-    { name: "Megha Shah", department: "HR", years: 2, date: "07 Mar", avatar: "https://i.pravatar.cc/150?u=51" },
-    { name: "Arvin K.", department: "Sales", years: 10, date: "10 Mar", avatar: "https://i.pravatar.cc/150?u=52" },
-  ];
-
-  const announcements = dashboardData.announcements?.length > 0 ? dashboardData.announcements : [
-    { id: 1, title: "New Health Insurance Policy", date: "2 Hours ago", tag: "Benefits" },
-    { id: 2, title: "Quarterly Town Hall Meeting", date: "Tomorrow", tag: "Event" },
-    { id: 3, title: "Office Renovation on 2nd Floor", date: "09 Mar", tag: "Facility" },
-  ];
-
-  const hiringPipeline = dashboardData.hiringPipeline?.length > 0 ? dashboardData.hiringPipeline : [
-    { stage: "Screening", count: 24, color: "bg-blue-500" },
-    { stage: "Interview", count: 8, color: "bg-orange-500" },
-    { stage: "Technical", count: 3, color: "bg-purple-500" },
-    { stage: "Offered", count: 2, color: "bg-green-500" },
-  ];
-
-
-  const attendanceData = dashboardData.attendanceData?.length > 0 ? dashboardData.attendanceData : [
-    { day: "Mon", present: 1180, absent: 67 },
-    { day: "Tue", present: 1165, absent: 82 },
-    { day: "Wed", present: 1190, absent: 57 },
-    { day: "Thu", present: 1156, absent: 91 },
-    { day: "Fri", present: 1200, absent: 47 },
-  ];
+  const anniversaries = dashboardData.anniversaries || [];
+  const announcements = dashboardData.announcements || [];
+  const hiringPipeline = dashboardData.hiringPipeline || [];
+  const attendanceData = dashboardData.attendanceData || [];
 
   const COLORS = [
     "#f97316",
@@ -178,36 +136,29 @@ export default function HRMDashboard() {
                 </p>
               </div>
 
-              <div className="hidden lg:flex items-center bg-gray-50 border border-gray-200 rounded-sm px-3 py-2 focus-within:ring-2 focus-within:ring-orange-500/20 transition-all">
-                <Search size={16} className="text-gray-400 mr-2" />
-                <input
-                  type="text"
-                  placeholder="Search employees, departments..."
-                  className="bg-transparent border-none text-xs focus:outline-none w-64 text-gray-700"
-                />
+              {/* Right Action Section */}
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={refetch}
+                  className="p-3 bg-white border border-gray-200 rounded-sm hover:bg-gray-50 text-gray-600 transition-all shadow-sm active:scale-95 group"
+                  title="Refresh Dashboard"
+                >
+                  <RefreshCw size={18} className={`${isFetching ? "animate-spin text-orange-500" : "group-hover:text-orange-500"}`} />
+                </button>
+
+                <button
+                  onClick={() => navigate("/hrm/employee/all")}
+                  className="flex items-center gap-2 px-6 py-3 rounded-sm font-semibold transition shadow-lg hover:shadow-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 active:scale-95 whitespace-nowrap"
+                >
+                  <Users size={18} />
+                  Add New Employee
+                </button>
               </div>
-
-              <button
-                onClick={refetch}
-                className="p-3 bg-white border border-gray-300 rounded-sm hover:bg-gray-100 text-gray-700 transition-all shadow-sm active:scale-95"
-                title="Refresh Dashboard"
-              >
-                <RefreshCw size={18} className={isFetching ? "animate-spin" : ""} />
-              </button>
-
-              <button className="flex items-center gap-2 px-6 py-3 rounded-sm font-semibold transition shadow-lg hover:shadow-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700">
-                <Users size={20} />
-                Add New Employee
-              </button>
             </div>
           </div>
 
           {/* Dashboard Content */}
-          <div className="max-w-[100%] mx-auto px-6 pt-6 pb-32 space-y-8">
-            <div className="flex items-center justify-between px-1">
-              <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Real-time Metrics</h3>
-              <span className="text-[9px] font-bold text-gray-400 uppercase tracking-tight">Last sync: Just now</span>
-            </div>
+          <div className="max-w-[100%] mx-auto px-4 mt-2 pb-4 space-y-6">
             {/* KPI Matrices */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* Total Employees */}
@@ -298,19 +249,26 @@ export default function HRMDashboard() {
                   </div>
                 </div>
                 <div className="flex-1">
-                  <ResponsiveContainer width="100%" height={260}>
-                    <BarChart data={attendanceData}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
-                      <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 12, fontWeight: 600, fill: '#9ca3af' }} />
-                      <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fontWeight: 600, fill: '#9ca3af' }} />
-                      <Tooltip
-                        cursor={{ fill: '#f8fafc' }}
-                        contentStyle={{ borderRadius: '4px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', padding: '12px' }}
-                      />
-                      <Bar dataKey="present" fill="#f97316" radius={[2, 2, 0, 0]} barSize={20} />
-                      <Bar dataKey="absent" fill="#cbd5e1" radius={[2, 2, 0, 0]} barSize={20} />
-                    </BarChart>
-                  </ResponsiveContainer>
+                  {attendanceData.length > 0 ? (
+                    <ResponsiveContainer width="100%" height={260}>
+                      <BarChart data={attendanceData}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
+                        <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 12, fontWeight: 600, fill: '#9ca3af' }} />
+                        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fontWeight: 600, fill: '#9ca3af' }} />
+                        <Tooltip
+                          cursor={{ fill: '#f8fafc' }}
+                          contentStyle={{ borderRadius: '4px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', padding: '12px' }}
+                        />
+                        <Bar dataKey="present" fill="#f97316" radius={[2, 2, 0, 0]} barSize={20} />
+                        <Bar dataKey="absent" fill="#cbd5e1" radius={[2, 2, 0, 0]} barSize={20} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-[260px] text-gray-400">
+                      <Calendar size={48} className="mb-4 opacity-10" />
+                      <p className="text-xs font-bold uppercase tracking-widest">No attendance data</p>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -326,30 +284,40 @@ export default function HRMDashboard() {
                   </div>
                 </div>
                 <div className="flex-1 flex items-center justify-center">
-                  <div className="h-44 w-full relative">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={departmentDistribution}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={55}
-                          outerRadius={75}
-                          paddingAngle={4}
-                          dataKey="employees"
-                        >
-                          {departmentDistribution.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color || COLORS[index % COLORS.length]} />
-                          ))}
-                        </Pie>
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
+                  {departmentDistribution.length > 0 ? (
+                    <div className="h-44 w-full relative">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Tooltip
+                            contentStyle={{ borderRadius: '4px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', padding: '12px', fontSize: '12px', fontWeight: 'bold' }}
+                          />
+                          <Pie
+                            data={departmentDistribution}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={55}
+                            outerRadius={75}
+                            paddingAngle={4}
+                            dataKey="employees"
+                          >
+                            {departmentDistribution.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={entry.color || COLORS[index % COLORS.length]} />
+                            ))}
+                          </Pie>
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-44 text-gray-400">
+                      <Warehouse size={40} className="mb-2 opacity-10" />
+                      <p className="text-[10px] font-bold uppercase tracking-widest">No allocation data</p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
               {/* Leave Requests */}
               <div className="lg:col-span-2 bg-white rounded-sm border border-gray-100 shadow-lg p-6 flex flex-col">
                 <div className="flex items-center justify-between mb-8">
@@ -362,33 +330,50 @@ export default function HRMDashboard() {
                       <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest">Pending approvals</p>
                     </div>
                   </div>
-                  <button className="text-indigo-600 text-[11px] font-bold hover:bg-indigo-50 px-4 py-2 border border-indigo-200 rounded-sm shadow-sm transition-all uppercase tracking-widest">
+                  <button
+                    onClick={() => navigate("/hrm/leave/all")}
+                    className="text-indigo-600 text-[11px] font-bold hover:bg-indigo-50 px-4 py-2 border border-indigo-200 rounded-sm shadow-sm transition-all uppercase tracking-widest active:scale-95"
+                  >
                     View All
                   </button>
                 </div>
                 <div className="space-y-4">
-                  {leaveRequests.slice(0, 5).map((request, index) => (
-                    <div key={index} className="flex items-center justify-between p-4 bg-slate-50 rounded-sm border border-slate-100 hover:border-indigo-500 hover:shadow-md transition-all group">
-                      <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-sm bg-slate-900 flex items-center justify-center text-white font-black text-sm shadow-lg group-hover:scale-110 transition-transform">
-                          {request.name?.split(" ").map((n) => n[0]).join("")}
+                  {leaveRequests.length > 0 ? (
+                    leaveRequests.slice(0, 5).map((request, index) => (
+                      <div key={index} className="flex items-center justify-between p-4 bg-slate-50 rounded-sm border border-slate-100 hover:border-indigo-500 hover:shadow-md transition-all group">
+                        <div className="flex items-center gap-4">
+                          <div className="relative">
+                            <Avatar
+                              src={request.avatar}
+                              name={request.name}
+                              sizeClass="w-10 h-10"
+                              bgClass="bg-slate-900"
+                              colorClass="text-white"
+                              textClass="text-sm"
+                            />
+                          </div>
+                          <div>
+                            <p className="font-bold text-gray-800 text-sm">{request.name}</p>
+                            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{request.department} • {request.type}</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-bold text-gray-800 text-sm">{request.name}</p>
-                          <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{request.department} • {request.type}</p>
+                        <div className="text-right">
+                          <span className={`px-2 py-0.5 rounded-[2px] text-[9px] font-black uppercase tracking-tighter shadow-sm ${request.status?.toLowerCase() === "pending" ? "bg-amber-50 text-amber-600 border border-amber-100" :
+                            request.status?.toLowerCase() === "approved" ? "bg-emerald-50 text-emerald-600 border border-emerald-100" :
+                              "bg-rose-50 text-rose-600 border border-rose-100"
+                            }`}>
+                            {request.status}
+                          </span>
+                          <p className="text-[9px] text-gray-400 mt-2 font-bold uppercase tracking-widest">{request.date} • {request.days}D</p>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <span className={`px-2 py-0.5 rounded-[2px] text-[9px] font-black uppercase tracking-tighter shadow-sm ${request.status?.toLowerCase() === "pending" ? "bg-amber-50 text-amber-600 border border-amber-100" :
-                          request.status?.toLowerCase() === "approved" ? "bg-emerald-50 text-emerald-600 border border-emerald-100" :
-                            "bg-rose-50 text-rose-600 border border-rose-100"
-                          }`}>
-                          {request.status}
-                        </span>
-                        <p className="text-[9px] text-gray-400 mt-2 font-bold uppercase tracking-widest">{request.date} • {request.days}D</p>
-                      </div>
+                    ))
+                  ) : (
+                    <div className="flex flex-col items-center justify-center py-12 text-gray-400">
+                      <ClipboardList size={48} className="mb-4 opacity-10" />
+                      <p className="text-[10px] font-bold uppercase tracking-widest">No pending leave requests</p>
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
 
@@ -397,12 +382,16 @@ export default function HRMDashboard() {
                 <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Control Panel</h3>
                 <div className="grid grid-cols-2 gap-3">
                   {[
-                    { icon: <UserCheck className="w-6 h-6" />, label: "Attendance", color: "orange" },
-                    { icon: <ClipboardList className="w-6 h-6" />, label: "Leaves", color: "blue" },
-                    { icon: <DollarSign className="w-6 h-6" />, label: "Salary", color: "green" },
-                    { icon: <BookOpen className="w-6 h-6" />, label: "Policies", color: "purple" }
+                    { icon: <UserCheck className="w-6 h-6" />, label: "Attendance", color: "orange", path: "/hrm/attendance" },
+                    { icon: <ClipboardList className="w-6 h-6" />, label: "Leaves", color: "blue", path: "/hrm/leave/all" },
+                    { icon: <DollarSign className="w-6 h-6" />, label: "Salary", color: "green", path: "/hrm/salary" },
+                    { icon: <BookOpen className="w-6 h-6" />, label: "Policies", color: "purple", path: "/hrm/company-policy" }
                   ].map((action, i) => (
-                    <button key={i} className="flex flex-col items-center justify-center p-5 bg-white border border-gray-100 rounded-sm shadow-sm hover:shadow-xl hover:border-orange-500/50 transition-all group">
+                    <button
+                      key={i}
+                      onClick={() => navigate(action.path)}
+                      className="flex flex-col items-center justify-center p-5 bg-white border border-gray-100 rounded-sm shadow-sm hover:shadow-xl hover:border-orange-500/50 transition-all group active:scale-95"
+                    >
                       <div className={`p-3 rounded-sm mb-3 group-hover:scale-110 transition-transform bg-${action.color}-50 text-${action.color}-600`}>
                         {action.icon}
                       </div>
@@ -412,7 +401,7 @@ export default function HRMDashboard() {
                 </div>
 
                 {/* Monthly Performance Mini Card */}
-                <div className="bg-slate-900 rounded-sm p-6 text-white shadow-2xl relative overflow-hidden border border-slate-800 mt-6">
+                {/* <div className="bg-slate-900 rounded-sm p-6 text-white shadow-2xl relative overflow-hidden border border-slate-800 mt-6">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
                   <div className="flex items-center justify-between mb-6">
                     <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Efficiency Index</p>
@@ -438,13 +427,13 @@ export default function HRMDashboard() {
                       </div>
                     </div>
                   </div>
-                </div>
+                </div> */}
               </div>
             </div>
 
 
             {/* Dashboard Row: Joiners, Pulse, Pipeline */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-stretch">
               {/* Recent Joiners */}
               <div className="bg-white rounded-sm border border-gray-100 shadow-lg p-6 flex flex-col h-full">
                 <div className="flex items-center mb-8 text-wrap">
@@ -457,28 +446,40 @@ export default function HRMDashboard() {
                   </div>
                 </div>
                 <div className="space-y-4 flex-1">
-                  {recentJoiners.slice(0, 5).map((joiner, index) => (
-                    <div key={index} className="flex items-center justify-between p-4 bg-slate-50 rounded-sm border border-slate-100 hover:border-orange-500 hover:shadow-md transition-all group">
-                      <div className="flex items-center gap-4">
-                        <div className="relative">
-                          <img
-                            src={joiner.avatar || "https://i.pravatar.cc/100"}
-                            alt={joiner.name}
-                            className="w-10 h-10 rounded-sm border border-gray-200 object-cover shadow-sm group-hover:scale-105 transition-transform"
-                          />
-                          <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full"></div>
-                        </div>
-                        <div className="overflow-hidden">
-                          <p className="font-bold text-gray-800 text-sm truncate">{joiner.name}</p>
-                          <div className="flex items-center gap-2 mt-0.5">
-                            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest truncate">{joiner.designation}</p>
+                  {recentJoiners.length > 0 ? (
+                    recentJoiners.slice(0, 5).map((joiner, index) => (
+                      <div key={index} className="flex items-center justify-between p-4 bg-slate-50 rounded-sm border border-slate-100 hover:border-orange-500 hover:shadow-md transition-all group">
+                        <div className="flex items-center gap-4">
+                          <div className="relative">
+                            <Avatar
+                              src={joiner.avatar}
+                              name={joiner.name}
+                              sizeClass="w-10 h-10"
+                              bgClass="bg-orange-100"
+                              colorClass="text-orange-600"
+                            />
+                            <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full"></div>
+                          </div>
+                          <div className="overflow-hidden">
+                            <p className="font-bold text-gray-800 text-sm truncate">{joiner.name}</p>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest truncate">{joiner.designation}</p>
+                            </div>
                           </div>
                         </div>
                       </div>
+                    ))
+                  ) : (
+                    <div className="flex flex-col items-center justify-center py-10 text-gray-400 h-full">
+                      <UserPlus size={40} className="mb-2 opacity-10" />
+                      <p className="text-[9px] font-bold uppercase tracking-widest">No recent arrivals</p>
                     </div>
-                  ))}
+                  )}
                 </div>
-                <button className="mt-6 w-full py-2.5 bg-slate-900 text-white rounded-sm text-[10px] font-black uppercase tracking-widest hover:bg-orange-600 transition-all shadow-md">
+                <button
+                  onClick={() => navigate("/hrm/employee/all")}
+                  className="mt-6 w-full py-2.5 bg-slate-900 text-white rounded-sm text-[10px] font-black uppercase tracking-widest hover:bg-orange-600 transition-all shadow-md active:scale-95"
+                >
                   View Directory
                 </button>
               </div>
@@ -495,15 +496,21 @@ export default function HRMDashboard() {
                   </div>
                 </div>
                 <div className="space-y-4 flex-1">
-                  {announcements.slice(0, 2).map((item) => (
-                    <div key={item.id} className="p-4 bg-slate-50 border border-slate-100 rounded-sm hover:border-rose-500 transition-all group">
-                      <div className="flex justify-between items-start mb-1">
-                        <h4 className="font-bold text-gray-800 text-xs group-hover:text-rose-600 transition-colors uppercase tracking-tight">{item.title}</h4>
-                        <span className="text-[8px] font-black uppercase text-rose-500 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-100">{item.tag}</span>
+                  {announcements.length > 0 ? (
+                    announcements.slice(0, 2).map((item) => (
+                      <div key={item.id} className="p-4 bg-slate-50 border border-slate-100 rounded-sm hover:border-rose-500 transition-all group">
+                        <div className="flex justify-between items-start mb-1">
+                          <h4 className="font-bold text-gray-800 text-xs group-hover:text-rose-600 transition-colors uppercase tracking-tight">{item.title}</h4>
+                          <span className="text-[8px] font-black uppercase text-rose-500 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-100">{item.tag}</span>
+                        </div>
+                        <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">{item.date}</p>
                       </div>
-                      <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">{item.date}</p>
+                    ))
+                  ) : (
+                    <div className="p-6 text-center text-gray-400 border border-dashed border-gray-200 rounded-sm">
+                      <p className="text-[9px] font-bold uppercase tracking-widest">No announcements</p>
                     </div>
-                  ))}
+                  )}
 
                   <div className="mt-4 pt-4 border-t border-gray-100">
                     <div className="flex items-center gap-2 mb-4">
@@ -511,15 +518,26 @@ export default function HRMDashboard() {
                       <span className="text-[10px] font-black text-gray-800 uppercase tracking-widest">Upcoming</span>
                     </div>
                     <div className="space-y-3">
-                      {anniversaries.slice(0, 2).map((anniversary, idx) => (
-                        <div key={idx} className="flex items-center gap-3">
-                          <img src={anniversary.avatar} className="w-8 h-8 rounded-sm object-cover border border-gray-200" alt={anniversary.name} />
-                          <div>
-                            <p className="text-xs font-bold text-gray-800">{anniversary.name}</p>
-                            <p className="text-[9px] text-gray-400 font-black uppercase tracking-widest">🏆 {anniversary.years}Y • {anniversary.date}</p>
+                      {anniversaries.length > 0 ? (
+                        anniversaries.slice(0, 2).map((anniversary, idx) => (
+                          <div key={idx} className="flex items-center gap-3">
+                            <Avatar
+                              src={anniversary.avatar}
+                              name={anniversary.name}
+                              sizeClass="w-8 h-8"
+                              textClass="text-[10px]"
+                              bgClass="bg-slate-100"
+                              colorClass="text-slate-600"
+                            />
+                            <div>
+                              <p className="text-xs font-bold text-gray-800">{anniversary.name}</p>
+                              <p className="text-[9px] text-gray-400 font-black uppercase tracking-widest">🏆 {anniversary.years}Y • {anniversary.date}</p>
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        ))
+                      ) : (
+                        <p className="text-[9px] text-gray-400 font-bold text-center py-2">No upcoming anniversaries</p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -538,128 +556,140 @@ export default function HRMDashboard() {
                 </div>
 
                 <div className="space-y-6 flex-1 flex flex-col justify-center">
-                  {hiringPipeline.map((item, idx) => (
-                    <div key={idx} className="space-y-2">
-                      <div className="flex justify-between items-end">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-300">{item.stage}</span>
-                        <span className="text-sm font-black text-white">{item.count}</span>
+                  {hiringPipeline.length > 0 ? (
+                    hiringPipeline.map((item, idx) => (
+                      <div key={idx} className="space-y-2">
+                        <div className="flex justify-between items-end">
+                          <span className="text-[10px] font-black uppercase tracking-widest text-slate-300">{item.stage}</span>
+                          <span className="text-sm font-black text-white">{item.count}</span>
+                        </div>
+                        <div className="w-full bg-slate-800 h-1 rounded-full overflow-hidden">
+                          <div
+                            className={`${item.color} h-full rounded-full transition-all duration-1000`}
+                            style={{ width: `${(item.count / 30) * 100}%` }}
+                          />
+                        </div>
                       </div>
-                      <div className="w-full bg-slate-800 h-1 rounded-full overflow-hidden">
-                        <div
-                          className={`${item.color} h-full rounded-full transition-all duration-1000`}
-                          style={{ width: `${(item.count / 30) * 100}%` }}
-                        />
-                      </div>
+                    ))
+                  ) : (
+                    <div className="flex flex-col items-center justify-center py-10 text-slate-500 border border-slate-800 border-dashed rounded-sm">
+                      <Briefcase size={32} className="mb-2 opacity-10" />
+                      <p className="text-[9px] font-bold uppercase tracking-widest">Queue empty</p>
                     </div>
-                  ))}
+                  )}
                 </div>
-                <button className="mt-8 w-full py-2.5 bg-white/5 border border-white/10 rounded-sm text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-all text-blue-400">
+                <button
+                  onClick={() => navigate("/hrm/job-management")}
+                  className="mt-8 w-full py-2.5 bg-white/5 border border-white/10 rounded-sm text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-all text-blue-400 active:scale-95"
+                >
                   Portal
                 </button>
+              </div>
+            </div>
+            <div className="w-full mb-12">
+              <div className="bg-white rounded-sm border border-gray-100 shadow-lg p-6 flex flex-col">
+                <div className="flex items-center mb-8">
+                  <div className="p-3 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 mr-4 shadow-md flex-shrink-0">
+                    <Warehouse size={24} className="text-white" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h2 className="text-2xl font-bold text-gray-800 leading-tight">Department Pulse</h2>
+                      <span className="px-2 py-0.5 bg-blue-50 text-blue-600 text-[9px] font-black rounded-full border border-blue-100 uppercase tracking-tighter">Enterprise View</span>
+                    </div>
+                    <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest">Headcount & Attendance</p>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-2">
+                    <button className="p-2 border border-gray-200 rounded-sm hover:bg-gray-50 transition-colors">
+                      <FilterIcon size={14} className="text-gray-500" />
+                    </button>
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Showing all departments</span>
+                  </div>
+                  <button className="flex items-center gap-1.5 text-[10px] font-black uppercase text-blue-600 hover:text-blue-700 transition-colors">
+                    <Download size={14} />
+                    Export Report
+                  </button>
+                </div>
+                <div className="overflow-x-auto custom-scrollbar">
+                  <table className="w-full text-left">
+                    <thead>
+                      <tr className="border-b border-gray-100">
+                        <th className="pb-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Department</th>
+                        <th className="pb-4 text-center text-[10px] font-bold text-gray-400 uppercase tracking-widest">Staff</th>
+                        <th className="pb-4 text-center text-[10px] font-bold text-gray-400 uppercase tracking-widest">Present</th>
+                        <th className="pb-4 text-center text-[10px] font-bold text-gray-400 uppercase tracking-widest">On Leave</th>
+                        <th className="pb-4 text-right text-[10px] font-bold text-gray-400 uppercase tracking-widest">Avg Stats</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50">
+                      {departmentDistribution.length > 0 ? (
+                        departmentDistribution.map((dept, index) => (
+                          <tr key={index} className="group hover:bg-slate-50 transition-colors">
+                            <td className="py-4">
+                              <div className="flex items-center gap-3">
+                                <div
+                                  className="w-2.5 h-2.5 rounded-full shadow-sm"
+                                  style={{ backgroundColor: dept.color || COLORS[index % COLORS.length] }}
+                                ></div>
+                                <div>
+                                  <p className="text-sm font-bold text-gray-800 group-hover:text-blue-600 transition-colors uppercase tracking-tight">
+                                    {dept.name}
+                                  </p>
+                                  <p className="text-[9px] text-gray-400 font-black tracking-widest uppercase">
+                                    {dept.hod ? `HOD: ${dept.hod}` : 'Leadership view'}
+                                  </p>
+                                </div>
+                                {dept.employees > 100 && (
+                                  <span className="px-1.5 py-0.5 bg-blue-50 text-blue-600 text-[8px] font-black rounded-sm border border-blue-100 uppercase">Core</span>
+                                )}
+                              </div>
+                            </td>
+                            <td className="py-4 text-center font-black text-gray-800 text-sm">
+                              {dept.employees || dept.totalEmployees || 0}
+                            </td>
+                            <td className="py-4 text-center">
+                              <span className="text-emerald-600 font-bold text-sm">
+                                {dept.presentToday || 0}
+                              </span>
+                            </td>
+                            <td className="py-4 text-center">
+                              <span className="text-rose-500 font-bold text-sm">
+                                {dept.onLeave || 0}
+                              </span>
+                            </td>
+                            <td className="py-4 text-right">
+                              <div className="flex flex-col items-end gap-1">
+                                <span className="font-bold text-orange-600 text-[10px]">{dept.avgAttendance || '0%'}</span>
+                                <div className="w-16 bg-gray-100 h-1 rounded-full overflow-hidden shadow-inner">
+                                  <div className="bg-orange-500 h-full" style={{ width: dept.avgAttendance || '0%' }} />
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="5" className="py-12 text-center text-gray-400">
+                            <div className="flex flex-col items-center">
+                              <Warehouse size={40} className="mb-2 opacity-10" />
+                              <p className="text-[10px] font-bold uppercase tracking-widest">No departments found</p>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           </div>
 
           {/* Department Overview Table - Full Width Row */}
-          <div className="w-full mb-12">
-            <div className="bg-white rounded-sm border border-gray-100 shadow-lg p-6 flex flex-col">
-              <div className="flex items-center mb-8">
-                <div className="p-3 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 mr-4 shadow-md flex-shrink-0">
-                  <Warehouse size={24} className="text-white" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-2xl font-bold text-gray-800 leading-tight">Department Pulse</h2>
-                    <span className="px-2 py-0.5 bg-blue-50 text-blue-600 text-[9px] font-black rounded-full border border-blue-100 uppercase tracking-tighter">Enterprise View</span>
-                  </div>
-                  <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest">Headcount & Attendance</p>
-                </div>
-              </div>
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-2">
-                  <button className="p-2 border border-gray-200 rounded-sm hover:bg-gray-50 transition-colors">
-                    <FilterIcon size={14} className="text-gray-500" />
-                  </button>
-                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Showing all departments</span>
-                </div>
-                <button className="flex items-center gap-1.5 text-[10px] font-black uppercase text-blue-600 hover:text-blue-700 transition-colors">
-                  <Download size={14} />
-                  Export Report
-                </button>
-              </div>
-              <div className="overflow-x-auto custom-scrollbar">
-                <table className="w-full text-left">
-                  <thead>
-                    <tr className="border-b border-gray-100">
-                      <th className="pb-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Department</th>
-                      <th className="pb-4 text-center text-[10px] font-bold text-gray-400 uppercase tracking-widest">Staff</th>
-                      <th className="pb-4 text-center text-[10px] font-bold text-gray-400 uppercase tracking-widest">Present</th>
-                      <th className="pb-4 text-center text-[10px] font-bold text-gray-400 uppercase tracking-widest">On Leave</th>
-                      <th className="pb-4 text-right text-[10px] font-bold text-gray-400 uppercase tracking-widest">Avg Stats</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-50">
-                    {departmentDistribution.map((dept, index) => (
-                      <tr key={index} className="group hover:bg-slate-50 transition-colors">
-                        <td className="py-4">
-                          <div className="flex items-center gap-3">
-                            <div
-                              className="w-2.5 h-2.5 rounded-full shadow-sm"
-                              style={{ backgroundColor: dept.color || COLORS[index % COLORS.length] }}
-                            ></div>
-                            <div>
-                              <p className="text-sm font-bold text-gray-800 group-hover:text-blue-600 transition-colors uppercase tracking-tight">
-                                {dept.name}
-                              </p>
-                              <p className="text-[9px] text-gray-400 font-black tracking-widest uppercase">HOD: {['Vikram S.', 'Anjali G.', 'Rahul D.', 'Sneha R.', 'Amit T.'][index % 5]}</p>
-                            </div>
-                            {dept.employees > 100 && (
-                              <span className="px-1.5 py-0.5 bg-blue-50 text-blue-600 text-[8px] font-black rounded-sm border border-blue-100 uppercase">Core</span>
-                            )}
-                          </div>
-                        </td>
-                        <td className="py-4 text-center font-black text-gray-800 text-sm">
-                          {dept.employees || dept.totalEmployees}
-                        </td>
-                        <td className="py-4 text-center">
-                          <span className="text-emerald-600 font-bold text-sm">
-                            {dept.presentToday || '-'}
-                          </span>
-                        </td>
-                        <td className="py-4 text-center">
-                          <span className="text-rose-500 font-bold text-sm">
-                            {dept.onLeave || '-'}
-                          </span>
-                        </td>
-                        <td className="py-4 text-right">
-                          <div className="flex flex-col items-end gap-1">
-                            <span className="font-bold text-orange-600 text-[10px]">{dept.avgAttendance || '95%'}</span>
-                            <div className="w-16 bg-gray-100 h-1 rounded-full overflow-hidden shadow-inner">
-                              <div className="bg-orange-500 h-full" style={{ width: dept.avgAttendance || '95%' }} />
-                            </div>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
 
-          {/* Footer Info */}
-          <div className="mt-12 mb-8 px-2 flex flex-col md:flex-row justify-between items-center gap-4 text-gray-400 border-t border-gray-100 pt-8">
-            <div className="flex items-center gap-4">
-              <span className="text-[10px] font-black uppercase tracking-widest text-slate-800"> Briotechno Sales CRM</span>
-              <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
-              <span className="text-[10px] font-bold uppercase tracking-tight">HRM Portal v2.4</span>
-            </div>
-            <div className="flex items-center gap-6 text-[10px] font-black uppercase tracking-widest hover:text-orange-500 transition-colors cursor-pointer">
-              <span>Privacy Policy</span>
-              <span>Terms of Service</span>
-              <span>Support</span>
-            </div>
-          </div>
+
+
         </div>
       </div>
     </DashboardLayout>
@@ -668,6 +698,31 @@ export default function HRMDashboard() {
 }
 
 // Sub-component Helper
+const Avatar = ({ src, name, sizeClass = "w-10 h-10", textClass = "text-sm", bgClass = "bg-orange-100", colorClass = "text-orange-600" }) => {
+  const [error, setError] = React.useState(false);
+  const firstChar = name?.charAt(0).toUpperCase() || "?";
+
+  // Format URL - check if it's already an absolute URL or needs prefixing
+  const imageUrl = src && !src.startsWith('http') ? `${import.meta.env.VITE_API_BASE_URL}/${src}` : src;
+
+  if (!src || error) {
+    return (
+      <div className={`${sizeClass} rounded-sm ${bgClass} flex items-center justify-center ${colorClass} font-black ${textClass} border border-gray-100 shadow-sm transition-transform`}>
+        {firstChar}
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={imageUrl}
+      alt={name}
+      className={`${sizeClass} rounded-sm border border-gray-200 object-cover shadow-sm transition-transform`}
+      onError={() => setError(true)}
+    />
+  );
+};
+
 const TrendingUp = ({ size, className }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
