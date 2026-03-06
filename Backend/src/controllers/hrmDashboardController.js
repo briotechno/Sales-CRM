@@ -59,7 +59,8 @@ const getDashboardData = async (req, res) => {
         const [leaveRequestsRows] = await pool.query(
             `SELECT e.employee_name as name, d.department_name as department, 
              lt.leave_type as type, lr.days, lr.status, 
-             DATE_FORMAT(lr.from_date, '%b %d') as date
+             DATE_FORMAT(lr.from_date, '%b %d') as date,
+             e.profile_picture as avatar
              FROM leave_requests lr
              JOIN employees e ON lr.employee_id = e.id
              LEFT JOIN departments d ON e.department_id = d.id
@@ -73,7 +74,8 @@ const getDashboardData = async (req, res) => {
         const [recentJoinersRows] = await pool.query(
             `SELECT e.employee_name as name, deg.designation_name as designation, 
              d.department_name as department, DATE_FORMAT(e.joining_date, '%b %d, %Y') as joinDate,
-             COALESCE(s.net_salary, 'N/A') as salary
+             COALESCE(s.net_salary, 'N/A') as salary,
+             e.profile_picture as avatar
              FROM employees e
              LEFT JOIN designations deg ON e.designation_id = deg.id
              LEFT JOIN departments d ON e.department_id = d.id

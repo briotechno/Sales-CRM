@@ -30,12 +30,17 @@ const Invoice = {
     },
 
     findAll: async (userId, filters = {}, pagination = {}) => {
-        const { status, search, dateFrom, dateTo, customer_type, tax_type } = filters;
+        const { status, search, dateFrom, dateTo, customer_type, tax_type, client_id } = filters;
         const { page = 1, limit = 10 } = pagination;
         const offset = (page - 1) * limit;
 
         let whereClause = 'WHERE user_id = ?';
         let queryParams = [userId];
+
+        if (client_id) {
+            whereClause += ' AND client_id = ?';
+            queryParams.push(client_id);
+        }
 
         if (status && status !== 'all') {
             whereClause += ' AND status = ?';

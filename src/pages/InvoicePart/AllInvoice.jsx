@@ -64,6 +64,8 @@ export default function AllInvoicePage() {
   const [filterTaxType, setFilterTaxType] = useState("all");
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
+  const [clientIdFilter, setClientIdFilter] = useState(location.state?.client?.id || null);
+  const [hasAutoOpened, setHasAutoOpened] = useState(false);
 
   const [tempStatus, setTempStatus] = useState("all");
   const [tempCustomerType, setTempCustomerType] = useState("all");
@@ -349,14 +351,52 @@ export default function AllInvoicePage() {
     page: currentPage,
     limit: itemsPerPage,
     dateFrom,
-    dateTo
-  }), [filterStatus, filterCustomerType, filterTaxType, searchTerm, currentPage, itemsPerPage, dateFrom, dateTo]);
+    dateTo,
+    client_id: clientIdFilter
+  }), [filterStatus, filterCustomerType, filterTaxType, searchTerm, currentPage, itemsPerPage, dateFrom, dateTo, clientIdFilter]);
 
   const { data: invoicesResponse, isLoading, refetch, isFetching } = useGetInvoicesQuery(queryParams);
 
   const invoices = invoicesResponse?.invoices || [];
   const summary = invoicesResponse?.summary || {};
   const pagination = invoicesResponse?.pagination || { total: 0, totalPages: 1 };
+
+  // Log to check state and response
+  useEffect(() => {
+    if (location.state?.client && !isLoading && invoicesResponse && invoices.length === 0 && !hasAutoOpened) {
+      const client = location.state.client;
+      setFormData({
+        invoiceNo: `INV-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
+        clientId: client.id,
+        clientName: client.type === 'person' ? `${client.first_name || ''} ${client.last_name || ''}`.trim() : client.company_name,
+        email: client.email || "",
+        phone: client.phone || "",
+        address: client.address || "",
+        invoiceDate: new Date().toISOString().split("T")[0],
+        dueDate: "",
+        lineItems: [],
+        subtotal: 0,
+        tax: 0,
+        discount: 0,
+        totalAmount: 0,
+        paidAmount: 0,
+        balanceAmount: 0,
+        status: "Draft",
+        notes: "",
+        tax_type: "GST",
+        client_gstin: client.tax_id || "",
+        place_of_supply: client.state || "",
+        business_gstin: "",
+        pan_number: "",
+        terms_and_conditions: "",
+        customer_type: client.type === 'company' ? 'Business' : 'Individual',
+        pincode: client.zip_code || "",
+        state: client.state || ""
+      });
+      setShowModal(true);
+      setHasAutoOpened(true);
+    }
+  }, [location.state, isLoading, invoicesResponse, invoices.length, hasAutoOpened]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -376,10 +416,11 @@ export default function AllInvoicePage() {
     setDateFilter("All");
     setCustomStart("");
     setCustomEnd("");
+    setClientIdFilter(null);
     setCurrentPage(1);
   };
 
-  const hasActiveFilters = searchTerm || filterStatus !== "all" || filterCustomerType !== "all" || filterTaxType !== "all" || dateFilter !== "All";
+  const hasActiveFilters = searchTerm || filterStatus !== "all" || filterCustomerType !== "all" || filterTaxType !== "all" || dateFilter !== "All" || clientIdFilter;
 
   const handleExportExcel = () => {
     try {
@@ -446,8 +487,25 @@ export default function AllInvoicePage() {
           <div className="max-w-8xl mx-auto px-4 py-4 border-b">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
-                <h1 className="text-2xl font-bold text-gray-800">
+                <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-3">
                   Invoices
+                  {clientIdFilter && location.state?.client && (
+                    <span className="flex items-center gap-2 px-3 py-1 bg-orange-50 text-[#FF7B1D] text-xs font-bold rounded-full border border-orange-100 animate-fadeIn">
+                      <User size={12} />
+                      {location.state.client.type === 'person'
+                        ? `${location.state.client.first_name} ${location.state.client.last_name || ''}`
+                        : location.state.client.company_name}
+                      <button
+                        onClick={() => {
+                          setClientIdFilter(null);
+                          window.history.replaceState({}, document.title);
+                        }}
+                        className="hover:bg-orange-200 rounded-full p-0.5 transition-colors"
+                      >
+                        <X size={10} strokeWidth={3} />
+                      </button>
+                    </span>
+                  )}
                 </h1>
                 <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
                   <FiHome className="text-gray-700" size={14} />
@@ -653,7 +711,7 @@ export default function AllInvoicePage() {
                   Export
                 </button>
 
-                \
+
                 <button
                   onClick={() => {
                     setFormData({

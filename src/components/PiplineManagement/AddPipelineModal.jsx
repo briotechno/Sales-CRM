@@ -62,6 +62,8 @@ const AddPipelineModal = ({ isOpen, onClose, pipelineToEdit }) => {
 
 
 
+  const totalProbability = stages.reduce((sum, s) => sum + (Number(s.probability) || 0), 0);
+
   const [editIndex, setEditIndex] = useState(null);
   const [stageName, setStageName] = useState("");
   const [stageDescription, setStageDescription] = useState("");
@@ -202,6 +204,10 @@ const AddPipelineModal = ({ isOpen, onClose, pipelineToEdit }) => {
     if (!pipelineName.trim()) return toast.error("Pipeline name is required");
 
     if (!stages.length) return toast.error("At least one stage is required");
+
+    if (totalProbability !== 100) {
+      return toast.error(`Total probability must be exactly 100%. Current total: ${totalProbability}%`);
+    }
 
     // Check if there is more than one final stage
     const finalStages = stages.filter((s) => s.is_final);
@@ -489,7 +495,7 @@ const AddPipelineModal = ({ isOpen, onClose, pipelineToEdit }) => {
             <div className="flex gap-2">
               <button
                 onClick={saveStage}
-                className="w-full py-3 bg-gray-800 text-white text-xs font-bold capitalize rounded-sm hover:bg-gray-900 transition-all flex items-center justify-center gap-2 shadow-sm"
+                className="w-full py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white text-xs font-bold capitalize rounded-sm hover:from-orange-600 hover:to-orange-700 hover:shadow-lg transition-all flex items-center justify-center gap-2 shadow-sm"
               >
                 {editIndex !== null ? (
                   <>
@@ -507,14 +513,42 @@ const AddPipelineModal = ({ isOpen, onClose, pipelineToEdit }) => {
 
         {/* RIGHT COLUMN: Stages List */}
         <div className="bg-gray-50 rounded-sm border border-gray-200 flex flex-col h-full min-h-[400px] max-h-[600px]">
-          <div className="p-4 border-b border-gray-200 bg-gray-100 flex justify-between items-center">
-            <h4 className="font-bold text-gray-700 flex items-center gap-2 text-sm capitalize">
-              <Layers size={18} className="text-[#FF7B1D]" />
-              Pipeline Stages ({stages.length})
-            </h4>
-            <span className="text-[10px] text-gray-500 font-semibold bg-white px-2 py-1 rounded border border-gray-200">
-              Drag to Reorder
-            </span>
+          <div className="p-4 border-b border-gray-200 bg-gray-100 space-y-4">
+            <div className="flex justify-between items-center">
+              <h4 className="font-bold text-gray-700 flex items-center gap-2 text-sm capitalize">
+                <Layers size={18} className="text-[#FF7B1D]" />
+                Pipeline Stages ({stages.length})
+              </h4>
+              <span className="text-[10px] text-gray-500 font-semibold bg-white px-2 py-1 rounded border border-gray-200">
+                Drag to Reorder
+              </span>
+            </div>
+
+            {/* Probability Progress Tracker */}
+            <div className="space-y-1.5">
+              <div className="flex justify-between items-end">
+                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Total Probability</p>
+                <p className={`text-xs font-black ${totalProbability === 100 ? 'text-green-600' : 'text-orange-600'}`}>
+                  {totalProbability}% / 100%
+                </p>
+              </div>
+              <div className="h-1.5 w-full bg-white border border-gray-200 rounded-full overflow-hidden shadow-inner">
+                <div
+                  className={`h-full transition-all duration-500 ${totalProbability === 100 ? 'bg-green-500' : totalProbability > 100 ? 'bg-red-500' : 'bg-orange-500'}`}
+                  style={{ width: `${Math.min(totalProbability, 100)}%` }}
+                />
+              </div>
+              {totalProbability > 100 && (
+                <p className="text-[10px] text-red-500 font-bold flex items-center gap-1 animate-pulse">
+                  <AlertCircle size={12} /> Total probability exceeds 100%!
+                </p>
+              )}
+              {totalProbability === 100 && (
+                <p className="text-[10px] text-green-600 font-bold flex items-center gap-1">
+                  <Check size={12} /> Perfect! Probability is balanced.
+                </p>
+              )}
+            </div>
           </div>
 
           <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
@@ -571,13 +605,6 @@ const AddPipelineModal = ({ isOpen, onClose, pipelineToEdit }) => {
                   </div>
 
                   <div className="flex flex-col gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-                    <button
-                      onClick={() => openEditStage(i)}
-                      className="p-1.5 hover:bg-orange-50 text-gray-400 hover:text-orange-600 rounded transition-all"
-                      title="Edit Stage"
-                    >
-                      <Edit2 size={14} />
-                    </button>
                     <button
                       onClick={() => deleteStageFromList(i)}
                       className="p-1.5 hover:bg-red-50 text-gray-400 hover:text-red-600 rounded transition-all"

@@ -30,8 +30,9 @@ import {
   LayoutGrid,
   List,
   SquarePen,
+  Smartphone,
+  QrCode,
 } from "lucide-react";
-import NumberCard from "../../components/NumberCard";
 import {
   useGetClientsQuery,
   useCreateClientMutation,
@@ -42,8 +43,13 @@ import { useGetQuotationsQuery } from "../../store/api/quotationApi";
 import { toast } from "react-hot-toast";
 import Modal from "../../components/common/Modal";
 import ViewClientModal from "../../components/Client/ViewClientModal";
+import CallQrModal from "../../components/LeadManagement/CallQrModal";
+import CallActionPopup from "../../components/AddNewLeads/CallActionPopup";
 import { useDebounce } from "../../hooks/useDebounce";
 import { Country, State, City } from "country-state-city";
+import ClientInvoicesModal from "../../components/Client/ClientInvoicesModal";
+import CreateInvoiceModal from "../../pages/InvoicePart/CreateInvoiceModal";
+import { useCreateInvoiceMutation } from "../../store/api/invoiceApi";
 import { ChevronDown } from "lucide-react";
 
 export default function AllClientPage() {
@@ -58,6 +64,8 @@ export default function AllClientPage() {
   const [filterSource, setFilterSource] = useState("all");
   const [selectedClients, setSelectedClients] = useState(new Set());
   const [viewMode, setViewMode] = useState("table");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = viewMode === "list" ? 10 : 8;
 
   // Temporary Filter States for "Apply" logic
   const [tempFilterStatus, setTempFilterStatus] = useState("all");
@@ -71,6 +79,67 @@ export default function AllClientPage() {
 
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [clientToView, setClientToView] = useState(null);
+
+  // QR Modal States
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
+  const [qrClient, setQrClient] = useState(null);
+  const [showCallAction, setShowCallAction] = useState(false);
+
+  // Invoice Modal States
+  const [isInvoiceListModalOpen, setIsInvoiceListModalOpen] = useState(false);
+  const [selectedClientForInvoices, setSelectedClientForInvoices] = useState(null);
+  const [showCreateInvoiceModal, setShowCreateInvoiceModal] = useState(false);
+  const [invoiceFormData, setInvoiceFormData] = useState({
+    invoiceNo: "",
+    clientName: "",
+    email: "",
+    phone: "",
+    address: "",
+    invoiceDate: new Date().toISOString().split("T")[0],
+    dueDate: "",
+    lineItems: [],
+    subtotal: 0,
+    tax: 0,
+    discount: 0,
+    totalAmount: 0,
+    paidAmount: 0,
+    balanceAmount: 0,
+    status: "Draft",
+    notes: "",
+    tax_type: "GST",
+    client_gstin: "",
+    business_gstin: "",
+    pan_number: "",
+    terms_and_conditions: "",
+    customer_type: "Business",
+    pincode: "",
+    contact_person: "",
+    state: ""
+  });
+
+  const openQrModal = (client) => {
+    // Transform client to lead format for CallQrModal/CallActionPopup
+    const leadFormat = {
+      name: client.type === 'person' ? `${client.first_name} ${client.last_name || ''}` : client.company_name,
+      mobile_number: client.phone,
+      call_count: 0,
+      id: client.id,
+      tag: "Client"
+    };
+    setQrClient(leadFormat);
+    setIsQrModalOpen(true);
+  };
+
+  const handleProceedToLog = () => {
+    setIsQrModalOpen(false);
+    setShowCallAction(true);
+  };
+
+  const handleCallHit = async (callData) => {
+    // This is a mock or you can use an actual API if available
+    toast.success("Call log saved successfully");
+    setShowCallAction(false);
+  };
 
   // Filter States
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -94,6 +163,8 @@ export default function AllClientPage() {
 
   // API Hooks
   const { data: clientsResponse, isLoading, refetch } = useGetClientsQuery({
+    page: currentPage,
+    limit: itemsPerPage,
     search: searchTerm,
     status: filterStatus,
     industry: filterIndustry !== "all" ? filterIndustry : undefined,
@@ -108,6 +179,94 @@ export default function AllClientPage() {
   const [createClient, { isLoading: isCreating }] = useCreateClientMutation();
   const [updateClient, { isLoading: isUpdating }] = useUpdateClientMutation();
   const [deleteClient, { isLoading: isDeleting }] = useDeleteClientMutation();
+  const [createInvoice] = useCreateInvoiceMutation();
+
+  const handleOpenInvoiceList = (client) => {
+    setSelectedClientForInvoices(client);
+    setIsInvoiceListModalOpen(true);
+  };
+
+  const handleGenerateInvoiceFromList = () => {
+    const client = selectedClientForInvoices;
+    const name = client.type === 'person' ? `${client.first_name} ${client.last_name || ''}`.trim() : client.company_name;
+
+    setInvoiceFormData({
+      invoiceNo: `INV-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
+      clientId: client.id,
+      clientName: name,
+      email: client.email || "",
+      phone: client.phone || "",
+      address: client.address || "",
+      invoiceDate: new Date().toISOString().split("T")[0],
+      dueDate: "",
+      lineItems: [],
+      subtotal: 0,
+      tax: 0,
+      discount: 0,
+      totalAmount: 0,
+      paidAmount: 0,
+      balanceAmount: 0,
+      status: "Draft",
+      notes: "",
+      tax_type: "GST",
+      client_gstin: client.tax_id || "",
+      business_gstin: "",
+      pan_number: "",
+      terms_and_conditions: "",
+      customer_type: client.type === 'person' ? 'Individual' : 'Business',
+      pincode: client.zip_code || "",
+      contact_person: client.type === 'organization' ? `${client.first_name} ${client.last_name || ''}`.trim() : "",
+      state: client.state || ""
+    });
+
+    setShowCreateInvoiceModal(true);
+  };
+
+  const handleInvoiceInputChange = (e) => {
+    const { name, value } = e.target;
+    setInvoiceFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleCreateInvoiceSubmit = async () => {
+    try {
+      const payload = {
+        invoice_number: invoiceFormData.invoiceNo,
+        client_id: invoiceFormData.clientId,
+        client_name: invoiceFormData.clientName,
+        client_email: invoiceFormData.email,
+        client_phone: invoiceFormData.phone,
+        client_address: invoiceFormData.address,
+        invoice_date: invoiceFormData.invoiceDate,
+        due_date: invoiceFormData.dueDate,
+        items: invoiceFormData.lineItems,
+        subtotal: invoiceFormData.subtotal,
+        tax_rate: invoiceFormData.tax,
+        tax_amount: (invoiceFormData.subtotal * invoiceFormData.tax) / 100,
+        discount: invoiceFormData.discount,
+        total_amount: invoiceFormData.totalAmount,
+        paid_amount: invoiceFormData.paidAmount,
+        balance_amount: invoiceFormData.balanceAmount,
+        status: invoiceFormData.status,
+        notes: invoiceFormData.notes,
+        tax_type: invoiceFormData.tax_type,
+        client_gstin: invoiceFormData.client_gstin,
+        business_gstin: "",
+        pan_number: "",
+        terms_and_conditions: invoiceFormData.terms_and_conditions,
+        customer_type: invoiceFormData.customer_type,
+        pincode: invoiceFormData.pincode,
+        contact_person: invoiceFormData.contact_person,
+        state: invoiceFormData.state
+      };
+
+      await createInvoice(payload).unwrap();
+      toast.success("Invoice created successfully");
+      setShowCreateInvoiceModal(false);
+    } catch (error) {
+      console.error(error);
+      toast.error(error?.data?.message || "Failed to create invoice");
+    }
+  };
 
   const handleDeleteClient = async () => {
     if (isBulkDelete) {
@@ -142,6 +301,16 @@ export default function AllClientPage() {
   };
 
   const clients = clientsResponse?.data || [];
+  const pagination = clientsResponse?.pagination || { totalPages: 1, total: 0 };
+
+  const handlePageChange = (page) => setCurrentPage(page);
+  const handlePrev = () =>
+    setCurrentPage((prev) => (prev > 1 ? prev - 1 : prev));
+  const handleNext = () =>
+    setCurrentPage((prev) => (prev < pagination.totalPages ? prev + 1 : prev));
+
+  const indexOfFirstItem = (currentPage - 1) * itemsPerPage;
+  const indexOfLastItem = Math.min(currentPage * itemsPerPage, pagination.total || 0);
 
   const initialFormState = {
     firstName: "",
@@ -567,34 +736,65 @@ export default function AllClientPage() {
         {/* Stats Cards */}
         <div className="max-w-8xl mx-auto px-4 pb-4 pt-2 mt-0 font-primary w-full flex-1">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-5 mb-6">
-            <NumberCard
-              title="Total Clients"
-              number={totalClients}
-              icon={<Users className="text-blue-600" size={24} />}
-              iconBgColor="bg-blue-100"
-              lineBorderClass="border-blue-500"
-            />
-            <NumberCard
-              title="Active Clients"
-              number={activeClients}
-              icon={<CheckCircle className="text-green-600" size={24} />}
-              iconBgColor="bg-green-100"
-              lineBorderClass="border-green-500"
-            />
-            <NumberCard
-              title="Inactive Clients"
-              number={inactiveClients}
-              icon={<Clock className="text-orange-600" size={24} />}
-              iconBgColor="bg-orange-100"
-              lineBorderClass="border-orange-500"
-            />
-            <NumberCard
-              title="Pipeline Value"
-              number={totalValue}
-              icon={<DollarSign className="text-purple-600" size={24} />}
-              iconBgColor="bg-purple-100"
-              lineBorderClass="border-purple-500"
-            />
+            {/* Total Clients */}
+            <div
+              className={`rounded-sm shadow-sm border border-gray-200 p-4 border-t-4 bg-white transition-all duration-300 border-t-blue-500 bg-blue-50/50`}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-1.5 rounded-sm bg-white border border-gray-100 shadow-sm">
+                    <Users size={18} className="text-blue-500" />
+                  </div>
+                  <h3 className="text-sm font-bold text-gray-800 capitalize tracking-tight font-primary">Total Clients</h3>
+                </div>
+                <span className="bg-white text-gray-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-gray-100 shadow-sm">{totalClients}</span>
+              </div>
+            </div>
+
+            {/* Active Clients */}
+            <div
+              className={`rounded-sm shadow-sm border border-gray-200 p-4 border-t-4 bg-white transition-all duration-300 border-t-green-500 bg-green-50/50`}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-1.5 rounded-sm bg-white border border-gray-100 shadow-sm">
+                    <CheckCircle size={18} className="text-green-500" />
+                  </div>
+                  <h3 className="text-sm font-bold text-gray-800 capitalize tracking-tight font-primary">Active Clients</h3>
+                </div>
+                <span className="bg-white text-gray-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-gray-100 shadow-sm">{activeClients}</span>
+              </div>
+            </div>
+
+            {/* Inactive Clients */}
+            <div
+              className={`rounded-sm shadow-sm border border-gray-200 p-4 border-t-4 bg-white transition-all duration-300 border-t-orange-500 bg-orange-50/50`}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-1.5 rounded-sm bg-white border border-gray-100 shadow-sm">
+                    <Clock size={18} className="text-orange-500" />
+                  </div>
+                  <h3 className="text-sm font-bold text-gray-800 capitalize tracking-tight font-primary">Inactive Clients</h3>
+                </div>
+                <span className="bg-white text-gray-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-gray-100 shadow-sm">{inactiveClients}</span>
+              </div>
+            </div>
+
+            {/* Pipeline Value */}
+            <div
+              className={`rounded-sm shadow-sm border border-gray-200 p-4 border-t-4 bg-white transition-all duration-300 border-t-purple-500 bg-purple-50/50`}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-1.5 rounded-sm bg-white border border-gray-100 shadow-sm">
+                    <DollarSign size={18} className="text-purple-500" />
+                  </div>
+                  <h3 className="text-sm font-bold text-gray-800 capitalize tracking-tight font-primary">Pipeline Value</h3>
+                </div>
+                <span className="bg-white text-gray-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-gray-100 shadow-sm">{totalValue}</span>
+              </div>
+            </div>
           </div>
 
 
@@ -752,7 +952,7 @@ export default function AllClientPage() {
                                     <span className="sm:hidden">View</span>
                                   </button>
                                   <button
-                                    onClick={() => navigate('/additional/invoice', { state: { client } })}
+                                    onClick={() => handleOpenInvoiceList(client)}
                                     className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white text-orange-600 hover:bg-orange-50 rounded-sm transition-all font-bold text-xs uppercase tracking-widest border border-orange-100 shadow-sm flex-1 min-h-[44px]"
                                   >
                                     <FileText size={16} />
@@ -838,8 +1038,22 @@ export default function AllClientPage() {
                                 <Phone size={14} className="text-orange-500" />
                               </div>
                               <div className="flex flex-col min-w-0">
-                                <span className="text-[10px] text-gray-400 font-extrabold uppercase tracking-widest leading-none mb-1.5">Contact Number</span>
-                                <span className="text-sm font-bold text-gray-800 truncate">{client.phone || 'N/A'}</span>
+                                <span className="text-[12px] text-gray-600 font-semibold capitalize tracking-tight font-primary leading-none mb-1.5">Contact Number</span>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm font-bold text-gray-800 truncate">{client.phone || 'N/A'}</span>
+                                  {client.phone && (
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        openQrModal(client);
+                                      }}
+                                      className="p-1 hover:bg-orange-100 text-[#FF7B1D] rounded transition-colors"
+                                      title="Scan to Call"
+                                    >
+                                      <QrCode size={14} />
+                                    </button>
+                                  )}
+                                </div>
                               </div>
                             </div>
 
@@ -849,7 +1063,7 @@ export default function AllClientPage() {
                                 {client.type === 'person' ? <User size={14} className="text-orange-500" /> : <Building2 size={14} className="text-orange-500" />}
                               </div>
                               <div className="flex flex-col min-w-0">
-                                <span className="text-[10px] text-gray-400 font-extrabold uppercase tracking-widest leading-none mb-1.5">Client Category</span>
+                                <span className="text-[12px] text-gray-600 font-semibold capitalize tracking-tight font-primary leading-none mb-1.5">Client Category</span>
                                 <div>
                                   <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm border ${client.type === 'person' ? 'bg-blue-100 text-blue-600 border-blue-200' : 'bg-purple-100 text-purple-600 border-purple-200'}`}>
                                     {client.type}
@@ -864,7 +1078,7 @@ export default function AllClientPage() {
                                 <Globe size={14} className="text-orange-500" />
                               </div>
                               <div className="flex flex-col min-w-0">
-                                <span className="text-[10px] text-gray-400 font-extrabold uppercase tracking-widest leading-none mb-1.5">Lead Source</span>
+                                <span className="text-[12px] text-gray-600 font-semibold capitalize tracking-tight font-primary leading-none mb-1.5">Lead Source</span>
                                 <span className="text-sm font-bold text-gray-800 capitalize truncate">
                                   {client.source || 'General'}
                                 </span>
@@ -876,13 +1090,13 @@ export default function AllClientPage() {
                           <div className="flex items-center gap-4 flex-shrink-0 ml-6">
                             <div className="hidden xl:flex items-center gap-8 border-l border-orange-100/50 pl-8">
                               <div className="flex flex-col items-center w-24">
-                                <span className="text-[10px] text-gray-400 font-extrabold uppercase tracking-widest mb-2">Status</span>
+                                <span className="text-[12px] text-gray-600 font-semibold capitalize tracking-tight font-primary mb-2">Status</span>
                                 <span className={`px-3 py-1 rounded-full text-[11px] font-black border capitalize shadow-sm ${getStatusColor(client.status)}`}>
                                   {client.status}
                                 </span>
                               </div>
                               <div className="flex flex-col items-start w-28 border-l border-gray-100 pl-6">
-                                <span className="text-[10px] text-gray-400 font-extrabold uppercase tracking-widest mb-2">Since</span>
+                                <span className="text-[12px] text-gray-600 font-semibold capitalize tracking-tight font-primary mb-2">Since</span>
                                 <span className="text-xs text-gray-700 font-bold flex items-center">
                                   <Calendar className="w-4 h-4 mr-1.5 text-orange-400" />
                                   {client.created_at ? new Date(client.created_at).toLocaleDateString() : 'Recent'}
@@ -900,7 +1114,7 @@ export default function AllClientPage() {
                                 <Eye size={18} />
                               </button>
                               <button
-                                onClick={() => navigate('/additional/invoice', { state: { client } })}
+                                onClick={() => handleOpenInvoiceList(client)}
                                 className="p-2 text-orange-600 hover:bg-orange-100 rounded-md transition-all hover:scale-110"
                                 title="Generate Invoice"
                               >
@@ -929,6 +1143,54 @@ export default function AllClientPage() {
                 </div>
               )}
             </>
+          )}
+
+          {/* Pagination */}
+          {pagination.totalPages > 0 && (
+            <div className="flex flex-col md:flex-row justify-between items-center mt-6 gap-4 bg-gray-50 p-4 rounded-sm border border-gray-200 shadow-sm">
+              <p className="text-sm font-semibold text-gray-700">
+                Showing <span className="text-orange-600 font-bold">{indexOfFirstItem + 1}</span> to <span className="text-orange-600 font-bold">{indexOfLastItem}</span> of <span className="text-orange-600 font-bold">{pagination.total}</span> Clients
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handlePrev}
+                  disabled={currentPage === 1}
+                  className={`px-4 py-2 rounded-sm font-bold transition flex items-center gap-1 ${currentPage === 1
+                    ? "bg-gray-200 text-gray-400 cursor-not-allowed border-gray-300 shadow-sm"
+                    : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"
+                    }`}
+                >
+                  Previous
+                </button>
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+                    const pageNum = i + 1;
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => handlePageChange(pageNum)}
+                        className={`w-10 h-10 rounded-sm font-bold transition border ${currentPage === pageNum
+                          ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md border-orange-500"
+                          : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"
+                          }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                </div>
+                <button
+                  onClick={handleNext}
+                  disabled={currentPage === pagination.totalPages}
+                  className={`px-4 py-2 rounded-sm font-bold transition flex items-center gap-1 ${currentPage === pagination.totalPages
+                    ? "bg-gray-200 text-gray-400 cursor-not-allowed border-gray-300 shadow-sm"
+                    : "bg-[#22C55E] text-white hover:opacity-90 shadow-md transition-all font-primary text-xs uppercase tracking-widest pt-2.5"
+                    }`}
+                >
+                  Next
+                </button>
+              </div>
+            </div>
           )}
         </div>
 
@@ -1500,6 +1762,26 @@ export default function AllClientPage() {
           onClose={() => setIsViewModalOpen(false)}
           client={clientToView}
         />
+
+        {/* Call QR Modal */}
+        <CallQrModal
+          isOpen={isQrModalOpen}
+          onClose={() => setIsQrModalOpen(false)}
+          lead={qrClient}
+          onProceedToLog={handleProceedToLog}
+          onViewProfile={() => openViewModal(qrClient)}
+        />
+
+        {/* Call Action Form (Call Log) */}
+        {showCallAction && (
+          <CallActionPopup
+            isOpen={showCallAction}
+            onClose={() => setShowCallAction(false)}
+            lead={qrClient}
+            onHitCall={handleCallHit}
+            initialResponse="connected"
+          />
+        )}
       </div>
       {/* Floating Action Bar for Selected Clients */}
       {selectedClients.size > 0 && (
@@ -1549,7 +1831,8 @@ export default function AllClientPage() {
       )}
 
       {/* Global Animations Style */}
-      <style>{`
+      <style>
+        {`
         @keyframes slideUp {
           from {
             transform: translateY(100px);
@@ -1570,7 +1853,24 @@ export default function AllClientPage() {
           from { opacity: 0; }
           to { opacity: 1; }
         }
-      `}</style>
+      `}
+      </style>
+
+      <ClientInvoicesModal
+        isOpen={isInvoiceListModalOpen}
+        onClose={() => setIsInvoiceListModalOpen(false)}
+        client={selectedClientForInvoices}
+        onGenerateInvoice={handleGenerateInvoiceFromList}
+      />
+
+      <CreateInvoiceModal
+        showModal={showCreateInvoiceModal}
+        setShowModal={setShowCreateInvoiceModal}
+        formData={invoiceFormData}
+        setFormData={setInvoiceFormData}
+        handleInputChange={handleInvoiceInputChange}
+        handleCreateInvoice={handleCreateInvoiceSubmit}
+      />
     </DashboardLayout>
   );
 }
