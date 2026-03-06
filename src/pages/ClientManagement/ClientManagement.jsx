@@ -33,7 +33,6 @@ import {
   Smartphone,
   QrCode,
 } from "lucide-react";
-import NumberCard from "../../components/NumberCard";
 import {
   useGetClientsQuery,
   useCreateClientMutation,
@@ -48,6 +47,9 @@ import CallQrModal from "../../components/LeadManagement/CallQrModal";
 import CallActionPopup from "../../components/AddNewLeads/CallActionPopup";
 import { useDebounce } from "../../hooks/useDebounce";
 import { Country, State, City } from "country-state-city";
+import ClientInvoicesModal from "../../components/Client/ClientInvoicesModal";
+import CreateInvoiceModal from "../../pages/InvoicePart/CreateInvoiceModal";
+import { useCreateInvoiceMutation } from "../../store/api/invoiceApi";
 import { ChevronDown } from "lucide-react";
 
 export default function AllClientPage() {
@@ -82,6 +84,38 @@ export default function AllClientPage() {
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [qrClient, setQrClient] = useState(null);
   const [showCallAction, setShowCallAction] = useState(false);
+
+  // Invoice Modal States
+  const [isInvoiceListModalOpen, setIsInvoiceListModalOpen] = useState(false);
+  const [selectedClientForInvoices, setSelectedClientForInvoices] = useState(null);
+  const [showCreateInvoiceModal, setShowCreateInvoiceModal] = useState(false);
+  const [invoiceFormData, setInvoiceFormData] = useState({
+    invoiceNo: "",
+    clientName: "",
+    email: "",
+    phone: "",
+    address: "",
+    invoiceDate: new Date().toISOString().split("T")[0],
+    dueDate: "",
+    lineItems: [],
+    subtotal: 0,
+    tax: 0,
+    discount: 0,
+    totalAmount: 0,
+    paidAmount: 0,
+    balanceAmount: 0,
+    status: "Draft",
+    notes: "",
+    tax_type: "GST",
+    client_gstin: "",
+    business_gstin: "",
+    pan_number: "",
+    terms_and_conditions: "",
+    customer_type: "Business",
+    pincode: "",
+    contact_person: "",
+    state: ""
+  });
 
   const openQrModal = (client) => {
     // Transform client to lead format for CallQrModal/CallActionPopup
@@ -145,6 +179,94 @@ export default function AllClientPage() {
   const [createClient, { isLoading: isCreating }] = useCreateClientMutation();
   const [updateClient, { isLoading: isUpdating }] = useUpdateClientMutation();
   const [deleteClient, { isLoading: isDeleting }] = useDeleteClientMutation();
+  const [createInvoice] = useCreateInvoiceMutation();
+
+  const handleOpenInvoiceList = (client) => {
+    setSelectedClientForInvoices(client);
+    setIsInvoiceListModalOpen(true);
+  };
+
+  const handleGenerateInvoiceFromList = () => {
+    const client = selectedClientForInvoices;
+    const name = client.type === 'person' ? `${client.first_name} ${client.last_name || ''}`.trim() : client.company_name;
+
+    setInvoiceFormData({
+      invoiceNo: `INV-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
+      clientId: client.id,
+      clientName: name,
+      email: client.email || "",
+      phone: client.phone || "",
+      address: client.address || "",
+      invoiceDate: new Date().toISOString().split("T")[0],
+      dueDate: "",
+      lineItems: [],
+      subtotal: 0,
+      tax: 0,
+      discount: 0,
+      totalAmount: 0,
+      paidAmount: 0,
+      balanceAmount: 0,
+      status: "Draft",
+      notes: "",
+      tax_type: "GST",
+      client_gstin: client.tax_id || "",
+      business_gstin: "",
+      pan_number: "",
+      terms_and_conditions: "",
+      customer_type: client.type === 'person' ? 'Individual' : 'Business',
+      pincode: client.zip_code || "",
+      contact_person: client.type === 'organization' ? `${client.first_name} ${client.last_name || ''}`.trim() : "",
+      state: client.state || ""
+    });
+
+    setShowCreateInvoiceModal(true);
+  };
+
+  const handleInvoiceInputChange = (e) => {
+    const { name, value } = e.target;
+    setInvoiceFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleCreateInvoiceSubmit = async () => {
+    try {
+      const payload = {
+        invoice_number: invoiceFormData.invoiceNo,
+        client_id: invoiceFormData.clientId,
+        client_name: invoiceFormData.clientName,
+        client_email: invoiceFormData.email,
+        client_phone: invoiceFormData.phone,
+        client_address: invoiceFormData.address,
+        invoice_date: invoiceFormData.invoiceDate,
+        due_date: invoiceFormData.dueDate,
+        items: invoiceFormData.lineItems,
+        subtotal: invoiceFormData.subtotal,
+        tax_rate: invoiceFormData.tax,
+        tax_amount: (invoiceFormData.subtotal * invoiceFormData.tax) / 100,
+        discount: invoiceFormData.discount,
+        total_amount: invoiceFormData.totalAmount,
+        paid_amount: invoiceFormData.paidAmount,
+        balance_amount: invoiceFormData.balanceAmount,
+        status: invoiceFormData.status,
+        notes: invoiceFormData.notes,
+        tax_type: invoiceFormData.tax_type,
+        client_gstin: invoiceFormData.client_gstin,
+        business_gstin: "",
+        pan_number: "",
+        terms_and_conditions: invoiceFormData.terms_and_conditions,
+        customer_type: invoiceFormData.customer_type,
+        pincode: invoiceFormData.pincode,
+        contact_person: invoiceFormData.contact_person,
+        state: invoiceFormData.state
+      };
+
+      await createInvoice(payload).unwrap();
+      toast.success("Invoice created successfully");
+      setShowCreateInvoiceModal(false);
+    } catch (error) {
+      console.error(error);
+      toast.error(error?.data?.message || "Failed to create invoice");
+    }
+  };
 
   const handleDeleteClient = async () => {
     if (isBulkDelete) {
@@ -614,34 +736,65 @@ export default function AllClientPage() {
         {/* Stats Cards */}
         <div className="max-w-8xl mx-auto px-4 pb-4 pt-2 mt-0 font-primary w-full flex-1">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-5 mb-6">
-            <NumberCard
-              title="Total Clients"
-              number={totalClients}
-              icon={<Users className="text-blue-600" size={24} />}
-              iconBgColor="bg-blue-100"
-              lineBorderClass="border-blue-500"
-            />
-            <NumberCard
-              title="Active Clients"
-              number={activeClients}
-              icon={<CheckCircle className="text-green-600" size={24} />}
-              iconBgColor="bg-green-100"
-              lineBorderClass="border-green-500"
-            />
-            <NumberCard
-              title="Inactive Clients"
-              number={inactiveClients}
-              icon={<Clock className="text-orange-600" size={24} />}
-              iconBgColor="bg-orange-100"
-              lineBorderClass="border-orange-500"
-            />
-            <NumberCard
-              title="Pipeline Value"
-              number={totalValue}
-              icon={<DollarSign className="text-purple-600" size={24} />}
-              iconBgColor="bg-purple-100"
-              lineBorderClass="border-purple-500"
-            />
+            {/* Total Clients */}
+            <div
+              className={`rounded-sm shadow-sm border border-gray-200 p-4 border-t-4 bg-white transition-all duration-300 border-t-blue-500 bg-blue-50/50`}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-1.5 rounded-sm bg-white border border-gray-100 shadow-sm">
+                    <Users size={18} className="text-blue-500" />
+                  </div>
+                  <h3 className="text-sm font-bold text-gray-800 capitalize tracking-tight font-primary">Total Clients</h3>
+                </div>
+                <span className="bg-white text-gray-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-gray-100 shadow-sm">{totalClients}</span>
+              </div>
+            </div>
+
+            {/* Active Clients */}
+            <div
+              className={`rounded-sm shadow-sm border border-gray-200 p-4 border-t-4 bg-white transition-all duration-300 border-t-green-500 bg-green-50/50`}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-1.5 rounded-sm bg-white border border-gray-100 shadow-sm">
+                    <CheckCircle size={18} className="text-green-500" />
+                  </div>
+                  <h3 className="text-sm font-bold text-gray-800 capitalize tracking-tight font-primary">Active Clients</h3>
+                </div>
+                <span className="bg-white text-gray-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-gray-100 shadow-sm">{activeClients}</span>
+              </div>
+            </div>
+
+            {/* Inactive Clients */}
+            <div
+              className={`rounded-sm shadow-sm border border-gray-200 p-4 border-t-4 bg-white transition-all duration-300 border-t-orange-500 bg-orange-50/50`}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-1.5 rounded-sm bg-white border border-gray-100 shadow-sm">
+                    <Clock size={18} className="text-orange-500" />
+                  </div>
+                  <h3 className="text-sm font-bold text-gray-800 capitalize tracking-tight font-primary">Inactive Clients</h3>
+                </div>
+                <span className="bg-white text-gray-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-gray-100 shadow-sm">{inactiveClients}</span>
+              </div>
+            </div>
+
+            {/* Pipeline Value */}
+            <div
+              className={`rounded-sm shadow-sm border border-gray-200 p-4 border-t-4 bg-white transition-all duration-300 border-t-purple-500 bg-purple-50/50`}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-1.5 rounded-sm bg-white border border-gray-100 shadow-sm">
+                    <DollarSign size={18} className="text-purple-500" />
+                  </div>
+                  <h3 className="text-sm font-bold text-gray-800 capitalize tracking-tight font-primary">Pipeline Value</h3>
+                </div>
+                <span className="bg-white text-gray-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-gray-100 shadow-sm">{totalValue}</span>
+              </div>
+            </div>
           </div>
 
 
@@ -799,7 +952,7 @@ export default function AllClientPage() {
                                     <span className="sm:hidden">View</span>
                                   </button>
                                   <button
-                                    onClick={() => navigate('/additional/invoice', { state: { client } })}
+                                    onClick={() => handleOpenInvoiceList(client)}
                                     className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white text-orange-600 hover:bg-orange-50 rounded-sm transition-all font-bold text-xs uppercase tracking-widest border border-orange-100 shadow-sm flex-1 min-h-[44px]"
                                   >
                                     <FileText size={16} />
@@ -961,7 +1114,7 @@ export default function AllClientPage() {
                                 <Eye size={18} />
                               </button>
                               <button
-                                onClick={() => navigate('/additional/invoice', { state: { client } })}
+                                onClick={() => handleOpenInvoiceList(client)}
                                 className="p-2 text-orange-600 hover:bg-orange-100 rounded-md transition-all hover:scale-110"
                                 title="Generate Invoice"
                               >
@@ -1678,7 +1831,8 @@ export default function AllClientPage() {
       )}
 
       {/* Global Animations Style */}
-      <style>{`
+      <style>
+        {`
         @keyframes slideUp {
           from {
             transform: translateY(100px);
@@ -1699,7 +1853,24 @@ export default function AllClientPage() {
           from { opacity: 0; }
           to { opacity: 1; }
         }
-      `}</style>
+      `}
+      </style>
+
+      <ClientInvoicesModal
+        isOpen={isInvoiceListModalOpen}
+        onClose={() => setIsInvoiceListModalOpen(false)}
+        client={selectedClientForInvoices}
+        onGenerateInvoice={handleGenerateInvoiceFromList}
+      />
+
+      <CreateInvoiceModal
+        showModal={showCreateInvoiceModal}
+        setShowModal={setShowCreateInvoiceModal}
+        formData={invoiceFormData}
+        setFormData={setInvoiceFormData}
+        handleInputChange={handleInvoiceInputChange}
+        handleCreateInvoice={handleCreateInvoiceSubmit}
+      />
     </DashboardLayout>
   );
 }
