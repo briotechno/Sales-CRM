@@ -16,6 +16,9 @@ export default {
       fontFamily: {
         primary: ["Outfit", "sans-serif"],
       },
+      screens: {
+        '3xl': '1920px',
+      },
     },
   },
   plugins: [],
