@@ -36,24 +36,63 @@ const Client = {
     },
 
     findAll: async (userId, filters = {}) => {
+        let countQuery = 'SELECT COUNT(*) as total FROM clients WHERE user_id = ?';
         let query = 'SELECT * FROM clients WHERE user_id = ?';
         const params = [userId];
 
         if (filters.status && filters.status !== 'all') {
-            query += ' AND status = ?';
+            const statusFilter = ' AND status = ?';
+            countQuery += statusFilter;
+            query += statusFilter;
             params.push(filters.status);
         }
 
+        if (filters.industry && filters.industry !== 'all') {
+            const industryFilter = ' AND industry = ?';
+            countQuery += industryFilter;
+            query += industryFilter;
+            params.push(filters.industry);
+        }
+
+        if (filters.source && filters.source !== 'all') {
+            const sourceFilter = ' AND source = ?';
+            countQuery += sourceFilter;
+            query += sourceFilter;
+            params.push(filters.source);
+        }
+
         if (filters.search) {
-            query += ' AND (first_name LIKE ? OR last_name LIKE ? OR company_name LIKE ? OR email LIKE ?)';
+            const searchFilter = ' AND (first_name LIKE ? OR last_name LIKE ? OR company_name LIKE ? OR email LIKE ?)';
+            countQuery += searchFilter;
+            query += searchFilter;
             const term = `%${filters.search}%`;
             params.push(term, term, term, term);
         }
 
+        const [totalRows] = await pool.query(countQuery, params);
+        const total = totalRows[0].total;
+
         query += ' ORDER BY created_at DESC';
 
+        // Pagination
+        const page = parseInt(filters.page) || 1;
+        const limit = parseInt(filters.limit) || 10;
+        const offset = (page - 1) * limit;
+
+        query += ' LIMIT ? OFFSET ?';
+        params.push(limit, offset);
+
         const [rows] = await pool.query(query, params);
-        return rows;
+
+        return {
+            data: rows,
+            pagination: {
+                total,
+                page,
+                limit,
+                totalPages: Math.ceil(total / limit)
+            }
+        };
     },
 
     findById: async (id, userId) => {

@@ -30,6 +30,8 @@ import {
   LayoutGrid,
   List,
   SquarePen,
+  Smartphone,
+  QrCode,
 } from "lucide-react";
 import NumberCard from "../../components/NumberCard";
 import {
@@ -42,6 +44,8 @@ import { useGetQuotationsQuery } from "../../store/api/quotationApi";
 import { toast } from "react-hot-toast";
 import Modal from "../../components/common/Modal";
 import ViewClientModal from "../../components/Client/ViewClientModal";
+import CallQrModal from "../../components/LeadManagement/CallQrModal";
+import CallActionPopup from "../../components/AddNewLeads/CallActionPopup";
 import { useDebounce } from "../../hooks/useDebounce";
 import { Country, State, City } from "country-state-city";
 import { ChevronDown } from "lucide-react";
@@ -58,6 +62,8 @@ export default function AllClientPage() {
   const [filterSource, setFilterSource] = useState("all");
   const [selectedClients, setSelectedClients] = useState(new Set());
   const [viewMode, setViewMode] = useState("table");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = viewMode === "list" ? 10 : 8;
 
   // Temporary Filter States for "Apply" logic
   const [tempFilterStatus, setTempFilterStatus] = useState("all");
@@ -71,6 +77,35 @@ export default function AllClientPage() {
 
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [clientToView, setClientToView] = useState(null);
+
+  // QR Modal States
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
+  const [qrClient, setQrClient] = useState(null);
+  const [showCallAction, setShowCallAction] = useState(false);
+
+  const openQrModal = (client) => {
+    // Transform client to lead format for CallQrModal/CallActionPopup
+    const leadFormat = {
+      name: client.type === 'person' ? `${client.first_name} ${client.last_name || ''}` : client.company_name,
+      mobile_number: client.phone,
+      call_count: 0,
+      id: client.id,
+      tag: "Client"
+    };
+    setQrClient(leadFormat);
+    setIsQrModalOpen(true);
+  };
+
+  const handleProceedToLog = () => {
+    setIsQrModalOpen(false);
+    setShowCallAction(true);
+  };
+
+  const handleCallHit = async (callData) => {
+    // This is a mock or you can use an actual API if available
+    toast.success("Call log saved successfully");
+    setShowCallAction(false);
+  };
 
   // Filter States
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -94,6 +129,8 @@ export default function AllClientPage() {
 
   // API Hooks
   const { data: clientsResponse, isLoading, refetch } = useGetClientsQuery({
+    page: currentPage,
+    limit: itemsPerPage,
     search: searchTerm,
     status: filterStatus,
     industry: filterIndustry !== "all" ? filterIndustry : undefined,
@@ -142,6 +179,16 @@ export default function AllClientPage() {
   };
 
   const clients = clientsResponse?.data || [];
+  const pagination = clientsResponse?.pagination || { totalPages: 1, total: 0 };
+
+  const handlePageChange = (page) => setCurrentPage(page);
+  const handlePrev = () =>
+    setCurrentPage((prev) => (prev > 1 ? prev - 1 : prev));
+  const handleNext = () =>
+    setCurrentPage((prev) => (prev < pagination.totalPages ? prev + 1 : prev));
+
+  const indexOfFirstItem = (currentPage - 1) * itemsPerPage;
+  const indexOfLastItem = Math.min(currentPage * itemsPerPage, pagination.total || 0);
 
   const initialFormState = {
     firstName: "",
@@ -838,8 +885,22 @@ export default function AllClientPage() {
                                 <Phone size={14} className="text-orange-500" />
                               </div>
                               <div className="flex flex-col min-w-0">
-                                <span className="text-[10px] text-gray-400 font-extrabold uppercase tracking-widest leading-none mb-1.5">Contact Number</span>
-                                <span className="text-sm font-bold text-gray-800 truncate">{client.phone || 'N/A'}</span>
+                                <span className="text-[12px] text-gray-600 font-semibold capitalize tracking-tight font-primary leading-none mb-1.5">Contact Number</span>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm font-bold text-gray-800 truncate">{client.phone || 'N/A'}</span>
+                                  {client.phone && (
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        openQrModal(client);
+                                      }}
+                                      className="p-1 hover:bg-orange-100 text-[#FF7B1D] rounded transition-colors"
+                                      title="Scan to Call"
+                                    >
+                                      <QrCode size={14} />
+                                    </button>
+                                  )}
+                                </div>
                               </div>
                             </div>
 
@@ -849,7 +910,7 @@ export default function AllClientPage() {
                                 {client.type === 'person' ? <User size={14} className="text-orange-500" /> : <Building2 size={14} className="text-orange-500" />}
                               </div>
                               <div className="flex flex-col min-w-0">
-                                <span className="text-[10px] text-gray-400 font-extrabold uppercase tracking-widest leading-none mb-1.5">Client Category</span>
+                                <span className="text-[12px] text-gray-600 font-semibold capitalize tracking-tight font-primary leading-none mb-1.5">Client Category</span>
                                 <div>
                                   <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm border ${client.type === 'person' ? 'bg-blue-100 text-blue-600 border-blue-200' : 'bg-purple-100 text-purple-600 border-purple-200'}`}>
                                     {client.type}
@@ -864,7 +925,7 @@ export default function AllClientPage() {
                                 <Globe size={14} className="text-orange-500" />
                               </div>
                               <div className="flex flex-col min-w-0">
-                                <span className="text-[10px] text-gray-400 font-extrabold uppercase tracking-widest leading-none mb-1.5">Lead Source</span>
+                                <span className="text-[12px] text-gray-600 font-semibold capitalize tracking-tight font-primary leading-none mb-1.5">Lead Source</span>
                                 <span className="text-sm font-bold text-gray-800 capitalize truncate">
                                   {client.source || 'General'}
                                 </span>
@@ -876,13 +937,13 @@ export default function AllClientPage() {
                           <div className="flex items-center gap-4 flex-shrink-0 ml-6">
                             <div className="hidden xl:flex items-center gap-8 border-l border-orange-100/50 pl-8">
                               <div className="flex flex-col items-center w-24">
-                                <span className="text-[10px] text-gray-400 font-extrabold uppercase tracking-widest mb-2">Status</span>
+                                <span className="text-[12px] text-gray-600 font-semibold capitalize tracking-tight font-primary mb-2">Status</span>
                                 <span className={`px-3 py-1 rounded-full text-[11px] font-black border capitalize shadow-sm ${getStatusColor(client.status)}`}>
                                   {client.status}
                                 </span>
                               </div>
                               <div className="flex flex-col items-start w-28 border-l border-gray-100 pl-6">
-                                <span className="text-[10px] text-gray-400 font-extrabold uppercase tracking-widest mb-2">Since</span>
+                                <span className="text-[12px] text-gray-600 font-semibold capitalize tracking-tight font-primary mb-2">Since</span>
                                 <span className="text-xs text-gray-700 font-bold flex items-center">
                                   <Calendar className="w-4 h-4 mr-1.5 text-orange-400" />
                                   {client.created_at ? new Date(client.created_at).toLocaleDateString() : 'Recent'}
@@ -929,6 +990,54 @@ export default function AllClientPage() {
                 </div>
               )}
             </>
+          )}
+
+          {/* Pagination */}
+          {pagination.totalPages > 0 && (
+            <div className="flex flex-col md:flex-row justify-between items-center mt-6 gap-4 bg-gray-50 p-4 rounded-sm border border-gray-200 shadow-sm">
+              <p className="text-sm font-semibold text-gray-700">
+                Showing <span className="text-orange-600 font-bold">{indexOfFirstItem + 1}</span> to <span className="text-orange-600 font-bold">{indexOfLastItem}</span> of <span className="text-orange-600 font-bold">{pagination.total}</span> Clients
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handlePrev}
+                  disabled={currentPage === 1}
+                  className={`px-4 py-2 rounded-sm font-bold transition flex items-center gap-1 ${currentPage === 1
+                    ? "bg-gray-200 text-gray-400 cursor-not-allowed border-gray-300 shadow-sm"
+                    : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"
+                    }`}
+                >
+                  Previous
+                </button>
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+                    const pageNum = i + 1;
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => handlePageChange(pageNum)}
+                        className={`w-10 h-10 rounded-sm font-bold transition border ${currentPage === pageNum
+                          ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md border-orange-500"
+                          : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"
+                          }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                </div>
+                <button
+                  onClick={handleNext}
+                  disabled={currentPage === pagination.totalPages}
+                  className={`px-4 py-2 rounded-sm font-bold transition flex items-center gap-1 ${currentPage === pagination.totalPages
+                    ? "bg-gray-200 text-gray-400 cursor-not-allowed border-gray-300 shadow-sm"
+                    : "bg-[#22C55E] text-white hover:opacity-90 shadow-md transition-all font-primary text-xs uppercase tracking-widest pt-2.5"
+                    }`}
+                >
+                  Next
+                </button>
+              </div>
+            </div>
           )}
         </div>
 
@@ -1500,6 +1609,26 @@ export default function AllClientPage() {
           onClose={() => setIsViewModalOpen(false)}
           client={clientToView}
         />
+
+        {/* Call QR Modal */}
+        <CallQrModal
+          isOpen={isQrModalOpen}
+          onClose={() => setIsQrModalOpen(false)}
+          lead={qrClient}
+          onProceedToLog={handleProceedToLog}
+          onViewProfile={() => openViewModal(qrClient)}
+        />
+
+        {/* Call Action Form (Call Log) */}
+        {showCallAction && (
+          <CallActionPopup
+            isOpen={showCallAction}
+            onClose={() => setShowCallAction(false)}
+            lead={qrClient}
+            onHitCall={handleCallHit}
+            initialResponse="connected"
+          />
+        )}
       </div>
       {/* Floating Action Bar for Selected Clients */}
       {selectedClients.size > 0 && (

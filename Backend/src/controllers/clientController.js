@@ -13,9 +13,20 @@ const clientController = {
 
     getAllClients: async (req, res) => {
         try {
-            const { status, search } = req.query;
-            const clients = await Client.findAll(req.user.id, { status, search });
-            res.json({ success: true, data: clients });
+            const { status, search, page = 1, limit = 10, industry, source } = req.query;
+            const result = await Client.findAll(req.user.id, {
+                status,
+                search,
+                page: parseInt(page),
+                limit: parseInt(limit),
+                industry,
+                source
+            });
+            res.json({
+                success: true,
+                data: result.data,
+                pagination: result.pagination
+            });
         } catch (error) {
             console.error('Error fetching clients:', error);
             res.status(500).json({ success: false, message: 'Error fetching clients' });
