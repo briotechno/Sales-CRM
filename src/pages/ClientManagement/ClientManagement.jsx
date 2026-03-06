@@ -1017,124 +1017,121 @@ export default function AllClientPage() {
                               className="w-4 h-4 cursor-pointer accent-[#FF7B1D] border-gray-300 rounded transition-all"
                             />
                           </div>
-                          {/* Left Section: Avatar & Name - Fixed Width */}
-                          <div className="flex items-center gap-4 w-[300px] flex-shrink-0">
+                          {/* Left Section: Avatar & Name - Responsive Width */}
+                          <div className="flex items-center gap-4 flex-[1.2] min-w-[220px]">
                             <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white font-bold text-lg shadow-md flex-shrink-0 border border-orange-300">
                               {avatar}
                             </div>
                             <div className="flex flex-col justify-center min-w-0">
-                              <h4 className="font-bold text-gray-800 text-[17px] capitalize truncate max-w-[200px] mb-0.5">
+                              <h4 className="font-bold text-gray-800 text-[21px] capitalize truncate mb-0.5">
                                 {name}
                               </h4>
-                              <p className="text-sm text-gray-500 lowercase truncate max-w-[200px] font-medium">{client.email || 'no-email@found.com'}</p>
+                              <p className="text-[16px] text-gray-500 lowercase truncate font-medium">{client.email || 'no-email@found.com'}</p>
                             </div>
                           </div>
 
-                          {/* Middle Info Section: 3-Column Grid */}
-                          <div className="hidden lg:grid grid-cols-3 flex-1 gap-6 px-8 border-l border-orange-100/50 ml-2">
-                            {/* Phone Column */}
-                            <div className="flex items-center gap-3 text-gray-600 group/info">
-                              <div className="p-2.5 bg-white rounded-xl shadow-sm border border-orange-100 group-hover/info:bg-orange-50 transition-colors flex-shrink-0">
+                          {/* Middle Info Section: Flexible Flex Layout */}
+                          <div className="hidden lg:flex flex-[2.5] items-center gap-4 xl:gap-8 px-4 border-l border-orange-100/50">
+                            {/* Phone Block */}
+                            <div className="flex items-center gap-2.5 text-gray-600 group/info min-w-0 flex-1">
+                              <div className="p-2 bg-white rounded-lg shadow-sm border border-orange-100 group-hover/info:bg-orange-50 transition-colors flex-shrink-0">
                                 <Phone size={14} className="text-orange-500" />
                               </div>
                               <div className="flex flex-col min-w-0">
-                                <span className="text-[12px] text-gray-600 font-semibold capitalize tracking-tight font-primary leading-none mb-1.5">Contact Number</span>
-                                <div className="flex items-center gap-2">
-                                  <span className="text-sm font-bold text-gray-800 truncate">{client.phone || 'N/A'}</span>
+                                <span className="text-[14px] text-gray-500 font-semibold capitalize tracking-tight font-primary mb-1 whitespace-nowrap">Contact Number</span>
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-[17px] font-bold text-gray-800 truncate">{client.phone || 'N/A'}</span>
                                   {client.phone && (
                                     <button
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         openQrModal(client);
                                       }}
-                                      className="p-1 hover:bg-orange-100 text-[#FF7B1D] rounded transition-colors"
-                                      title="Scan to Call"
+                                      className="p-0.5 hover:bg-orange-100 text-[#FF7B1D] rounded transition-colors"
                                     >
-                                      <QrCode size={14} />
+                                      <QrCode size={12} />
                                     </button>
                                   )}
                                 </div>
                               </div>
                             </div>
 
-                            {/* Client Type Column - Moved Badge here */}
-                            <div className="flex items-center gap-3 text-gray-600 group/info border-l border-orange-100/30 pl-6">
-                              <div className="p-2.5 bg-white rounded-xl shadow-sm border border-orange-100 group-hover/info:bg-orange-50 transition-colors flex-shrink-0">
+                            {/* Category Block - Shown only on 1920px+ */}
+                            <div className="hidden 3xl:flex items-center gap-2.5 text-gray-600 group/info border-l border-orange-100/30 pl-4 min-w-0 flex-1">
+                              <div className="p-2 bg-white rounded-lg shadow-sm border border-orange-100 group-hover/info:bg-orange-50 transition-colors flex-shrink-0">
                                 {client.type === 'person' ? <User size={14} className="text-orange-500" /> : <Building2 size={14} className="text-orange-500" />}
                               </div>
                               <div className="flex flex-col min-w-0">
-                                <span className="text-[12px] text-gray-600 font-semibold capitalize tracking-tight font-primary leading-none mb-1.5">Client Category</span>
+                                <span className="text-[14px] text-gray-500 font-semibold capitalize tracking-tight font-primary mb-1 whitespace-nowrap">Client Category</span>
                                 <div>
-                                  <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm border ${client.type === 'person' ? 'bg-blue-100 text-blue-600 border-blue-200' : 'bg-purple-100 text-purple-600 border-purple-200'}`}>
+                                  <span className={`px-3 py-1.5 rounded-full text-[12px] font-black uppercase tracking-widest shadow-sm border w-fit ${client.type === 'person' ? 'bg-blue-100 text-blue-600 border-blue-200' : 'bg-purple-100 text-purple-600 border-purple-200'}`}>
                                     {client.type}
                                   </span>
                                 </div>
                               </div>
                             </div>
 
-                            {/* Source Column - Replaced Location */}
-                            <div className="flex items-center gap-3 text-gray-600 group/info border-l border-orange-100/30 pl-6">
-                              <div className="p-2.5 bg-white rounded-xl shadow-sm border border-orange-100 group-hover/info:bg-orange-50 transition-colors flex-shrink-0">
+                            {/* Source Block */}
+                            <div className="hidden 2xl:flex items-center gap-2.5 text-gray-600 group/info border-l border-orange-100/30 pl-4 min-w-0 flex-1">
+                              <div className="p-2 bg-white rounded-lg shadow-sm border border-orange-100 group-hover/info:bg-orange-50 transition-colors flex-shrink-0">
                                 <Globe size={14} className="text-orange-500" />
                               </div>
                               <div className="flex flex-col min-w-0">
-                                <span className="text-[12px] text-gray-600 font-semibold capitalize tracking-tight font-primary leading-none mb-1.5">Lead Source</span>
-                                <span className="text-sm font-bold text-gray-800 capitalize truncate">
+                                <span className="text-[14px] text-gray-500 font-semibold capitalize tracking-tight font-primary mb-1 whitespace-nowrap">Lead Source</span>
+                                <span className="text-[17px] font-bold text-gray-800 capitalize truncate">
                                   {client.source || 'General'}
                                 </span>
                               </div>
                             </div>
                           </div>
 
-                          {/* Right Section: Status, Date & Actions */}
-                          <div className="flex items-center gap-4 flex-shrink-0 ml-6">
-                            <div className="hidden xl:flex items-center gap-8 border-l border-orange-100/50 pl-8">
-                              <div className="flex flex-col items-center w-24">
-                                <span className="text-[12px] text-gray-600 font-semibold capitalize tracking-tight font-primary mb-2">Status</span>
-                                <span className={`px-3 py-1 rounded-full text-[11px] font-black border capitalize shadow-sm ${getStatusColor(client.status)}`}>
-                                  {client.status}
-                                </span>
-                              </div>
-                              <div className="flex flex-col items-start w-28 border-l border-gray-100 pl-6">
-                                <span className="text-[12px] text-gray-600 font-semibold capitalize tracking-tight font-primary mb-2">Since</span>
-                                <span className="text-xs text-gray-700 font-bold flex items-center">
-                                  <Calendar className="w-4 h-4 mr-1.5 text-orange-400" />
-                                  {client.created_at ? new Date(client.created_at).toLocaleDateString() : 'Recent'}
-                                </span>
-                              </div>
+                          {/* Right Section: Status & Date */}
+                          <div className="flex items-center gap-4 xl:gap-8 flex-shrink-0 ml-auto border-l border-orange-100/50 pl-4 xl:pl-8 pr-4">
+                            <div className="hidden lg:flex flex-col items-center min-w-[100px]">
+                              <span className="text-[14px] text-gray-500 font-semibold capitalize tracking-tight font-primary mb-1 whitespace-nowrap">Status</span>
+                              <span className={`px-4 py-1.5 rounded-full text-[12px] font-black border capitalize shadow-sm ${getStatusColor(client.status)}`}>
+                                {client.status}
+                              </span>
                             </div>
+                            <div className="hidden xl:flex flex-col items-start min-w-[130px] border-l border-gray-100 pl-4 xl:pl-8">
+                              <span className="text-[14px] text-gray-500 font-semibold capitalize tracking-tight font-primary mb-1 whitespace-nowrap">Since</span>
+                              <span className="text-[15px] text-gray-700 font-bold flex items-center whitespace-nowrap">
+                                <Calendar className="w-4 h-4 mr-1.5 text-orange-400" />
+                                {client.created_at ? new Date(client.created_at).toLocaleDateString() : 'Recent'}
+                              </span>
+                            </div>
+                          </div>
 
-                            {/* Actions always visible now as requested */}
-                            <div className="flex items-center gap-1 sm:gap-2 bg-white/80 backdrop-blur-sm p-1.5 rounded-lg border border-orange-100 shadow-sm transition-all">
-                              <button
-                                onClick={() => openViewModal(client)}
-                                className="p-2 text-blue-600 hover:bg-blue-100 rounded-md transition-all hover:scale-110"
-                                title="View Details"
-                              >
-                                <Eye size={18} />
-                              </button>
-                              <button
-                                onClick={() => handleOpenInvoiceList(client)}
-                                className="p-2 text-orange-600 hover:bg-orange-100 rounded-md transition-all hover:scale-110"
-                                title="Generate Invoice"
-                              >
-                                <FileText size={18} />
-                              </button>
-                              <button
-                                onClick={() => openEditModal(client)}
-                                className="p-2 text-green-600 hover:bg-green-100 rounded-md transition-all hover:scale-110"
-                                title="Edit Client"
-                              >
-                                <SquarePen size={18} />
-                              </button>
-                              <button
-                                onClick={() => openDeleteModal(client.id)}
-                                className="p-2 text-red-600 hover:bg-red-100 rounded-md transition-all hover:scale-110"
-                                title="Delete Client"
-                              >
-                                <Trash2 size={18} />
-                              </button>
-                            </div>
+                          {/* Actions always visible now as requested */}
+                          <div className="flex items-center gap-1 sm:gap-2 bg-white/80 backdrop-blur-sm p-1.5 rounded-lg border border-orange-100 shadow-sm transition-all">
+                            <button
+                              onClick={() => openViewModal(client)}
+                              className="p-2 text-blue-600 hover:bg-blue-100 rounded-md transition-all hover:scale-110"
+                              title="View Details"
+                            >
+                              <Eye size={18} />
+                            </button>
+                            <button
+                              onClick={() => handleOpenInvoiceList(client)}
+                              className="p-2 text-orange-600 hover:bg-orange-100 rounded-md transition-all hover:scale-110"
+                              title="Generate Invoice"
+                            >
+                              <FileText size={18} />
+                            </button>
+                            <button
+                              onClick={() => openEditModal(client)}
+                              className="p-2 text-green-600 hover:bg-green-100 rounded-md transition-all hover:scale-110"
+                              title="Edit Client"
+                            >
+                              <SquarePen size={18} />
+                            </button>
+                            <button
+                              onClick={() => openDeleteModal(client.id)}
+                              className="p-2 text-red-600 hover:bg-red-100 rounded-md transition-all hover:scale-110"
+                              title="Delete Client"
+                            >
+                              <Trash2 size={18} />
+                            </button>
                           </div>
                         </div>
                       );
@@ -1784,51 +1781,53 @@ export default function AllClientPage() {
         )}
       </div>
       {/* Floating Action Bar for Selected Clients */}
-      {selectedClients.size > 0 && (
-        <div className="fixed bottom-10 inset-x-0 z-[100] flex justify-center px-4 animate-slideUp">
-          <div className="bg-white/95 backdrop-blur-xl border border-gray-200 rounded-sm shadow-[0_30px_70px_rgba(0,0,0,0.25)] flex items-center gap-8 px-8 py-4 flex-wrap md:flex-nowrap justify-between max-w-fit mx-auto">
-            <div className="flex items-center gap-4 border-r border-gray-200 pr-8">
-              <div className="bg-white px-4 py-1.5 rounded-full border border-orange-300 shadow-sm">
-                <span className="text-[#FF7B1D] font-black text-sm">
-                  {selectedClients.size} Selected
-                </span>
-              </div>
-              <button
-                onClick={deselectAll}
-                className="text-sm text-gray-400 hover:text-orange-600 font-bold underline transition-colors decoration-gray-300 hover:decoration-orange-600 underline-offset-4"
-              >
-                Clear Selection
-              </button>
-              {selectedClients.size < clients.length && (
+      {
+        selectedClients.size > 0 && (
+          <div className="fixed bottom-10 inset-x-0 z-[100] flex justify-center px-4 animate-slideUp">
+            <div className="bg-white/95 backdrop-blur-xl border border-gray-200 rounded-sm shadow-[0_30px_70px_rgba(0,0,0,0.25)] flex items-center gap-8 px-8 py-4 flex-wrap md:flex-nowrap justify-between max-w-fit mx-auto">
+              <div className="flex items-center gap-4 border-r border-gray-200 pr-8">
+                <div className="bg-white px-4 py-1.5 rounded-full border border-orange-300 shadow-sm">
+                  <span className="text-[#FF7B1D] font-black text-sm">
+                    {selectedClients.size} Selected
+                  </span>
+                </div>
                 <button
-                  onClick={selectAll}
+                  onClick={deselectAll}
                   className="text-sm text-gray-400 hover:text-orange-600 font-bold underline transition-colors decoration-gray-300 hover:decoration-orange-600 underline-offset-4"
                 >
-                  Select All
+                  Clear Selection
                 </button>
-              )}
-            </div>
+                {selectedClients.size < clients.length && (
+                  <button
+                    onClick={selectAll}
+                    className="text-sm text-gray-400 hover:text-orange-600 font-bold underline transition-colors decoration-gray-300 hover:decoration-orange-600 underline-offset-4"
+                  >
+                    Select All
+                  </button>
+                )}
+              </div>
 
-            <div className="flex items-center gap-4">
-              <button className="flex items-center gap-2.5 px-6 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-sm hover:bg-orange-50 hover:border-orange-300 hover:text-orange-600 transition-all font-bold text-sm shadow-sm active:scale-95">
-                <Mail size={18} className="text-orange-500" />
-                Email Selected
-              </button>
-              <button className="flex items-center gap-2.5 px-6 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-sm hover:bg-orange-50 hover:border-orange-300 hover:text-orange-600 transition-all font-bold text-sm shadow-sm active:scale-95">
-                <Download size={18} className="text-orange-500" />
-                Export Selected
-              </button>
-              <button
-                onClick={openBulkDeleteModal}
-                className="flex items-center gap-2.5 px-6 py-2.5 bg-red-600 text-white rounded-sm hover:bg-red-700 transition-all font-bold text-sm shadow-md active:scale-95"
-              >
-                <Trash2 size={18} />
-                Delete Selected
-              </button>
+              <div className="flex items-center gap-4">
+                <button className="flex items-center gap-2.5 px-6 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-sm hover:bg-orange-50 hover:border-orange-300 hover:text-orange-600 transition-all font-bold text-sm shadow-sm active:scale-95">
+                  <Mail size={18} className="text-orange-500" />
+                  Email Selected
+                </button>
+                <button className="flex items-center gap-2.5 px-6 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-sm hover:bg-orange-50 hover:border-orange-300 hover:text-orange-600 transition-all font-bold text-sm shadow-sm active:scale-95">
+                  <Download size={18} className="text-orange-500" />
+                  Export Selected
+                </button>
+                <button
+                  onClick={openBulkDeleteModal}
+                  className="flex items-center gap-2.5 px-6 py-2.5 bg-red-600 text-white rounded-sm hover:bg-red-700 transition-all font-bold text-sm shadow-md active:scale-95"
+                >
+                  <Trash2 size={18} />
+                  Delete Selected
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       {/* Global Animations Style */}
       <style>
@@ -1871,7 +1870,7 @@ export default function AllClientPage() {
         handleInputChange={handleInvoiceInputChange}
         handleCreateInvoice={handleCreateInvoiceSubmit}
       />
-    </DashboardLayout>
+    </DashboardLayout >
   );
 }
 
