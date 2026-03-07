@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import DashboardLayout from "../../../components/DashboardLayout";
 import {
-    Wallet,
+    Wallet as WalletIcon,
     Settings,
     CheckCircle2,
     XCircle,
@@ -12,11 +12,13 @@ import {
     Home,
     ShieldCheck,
     CreditCard,
-    Zap
+    Zap,
+    TrendingUp
 } from "lucide-react";
 
 export default function PaymentGateways() {
     const [searchParams] = useSearchParams();
+    const navigate = useNavigate();
     const activeGatewayParam = searchParams.get("gateway");
     const [showKeys, setShowKeys] = useState({});
 
@@ -28,7 +30,7 @@ export default function PaymentGateways() {
         {
             id: "GW001",
             name: "Cashfree",
-            slug: "cashfree",
+            slug: "Cashfree",
             icon: "💳",
             status: "Connected",
             mode: "Production",
@@ -39,7 +41,7 @@ export default function PaymentGateways() {
         {
             id: "GW002",
             name: "PhonePe",
-            slug: "phonepe",
+            slug: "PhonePay",
             icon: "📱",
             status: "Connected",
             mode: "Production",
@@ -50,7 +52,7 @@ export default function PaymentGateways() {
         {
             id: "GW003",
             name: "Razorpay",
-            slug: "razorpay",
+            slug: "Razorpay",
             icon: "⚡",
             status: "Disconnected",
             mode: "Test",
@@ -58,26 +60,34 @@ export default function PaymentGateways() {
             keySecret: "rzp_sk_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
             lastSync: "2 days ago"
         },
+        {
+            id: "GW004",
+            name: "Wallet",
+            slug: "Wallet",
+            icon: "👛",
+            status: "Active",
+            mode: "Production",
+            totalAmount: "₹12,50,000",
+            usedAmount: "₹4,50,000",
+            restAmount: "₹8,00,000",
+            lastSync: "Just now"
+        },
     ];
 
     return (
         <DashboardLayout>
             <div className="min-h-screen">
                 {/* Header */}
-                <div className="bg-white border-b my-3">
-                    <div className="max-w-7xl mx-auto px-6 py-4">
+                <div className="bg-white border-b sticky top-0 z-30">
+                    <div className="max-w-8xl mx-auto px-6 py-4">
                         <div className="flex items-center justify-between">
                             <div>
-                                <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                                    <Wallet className="text-[#FF7B1D]" />
-                                    Payment Gateways
+                                <h1 className="text-2xl font-bold flex items-center gap-2 text-gray-800">
+                                    <WalletIcon className="text-[#FF7B1D]" size={26} /> Payment Gateways
                                 </h1>
-                                <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
-                                    <Home className="text-gray-700" size={14} />
-                                    <span className="text-gray-400"></span> Super Admin /{" "}
-                                    <span className="text-[#FF7B1D] font-medium">
-                                        Payment Gateways
-                                    </span>
+                                <p className="text-sm text-gray-500 mt-1 flex items-center gap-2 font-medium">
+                                    <Home size={14} className="text-gray-700" /> Super Admin /{" "}
+                                    <span className="text-[#FF7B1D]">Payment Gateways</span>
                                 </p>
                             </div>
                         </div>
@@ -85,7 +95,7 @@ export default function PaymentGateways() {
                 </div>
 
                 {/* Gateways Grid */}
-                <div className="p-0 px-6 space-y-8">
+                <div className="max-w-8xl mx-auto px-6 pt-2 pb-6 space-y-8">
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         {gateways.map((gw) => (
                             <div
@@ -115,23 +125,44 @@ export default function PaymentGateways() {
 
                                 <div className="p-6 space-y-4 flex-1">
                                     <div className="space-y-1">
-                                        <label className="text-xs font-bold text-gray-400 uppercase">Configuration</label>
+                                        <label className="text-xs font-bold text-gray-400 uppercase">
+                                            {gw.slug === 'Wallet' ? 'Wallet Overview' : 'Configuration'}
+                                        </label>
                                         <div className="bg-gray-50 p-3 rounded-sm space-y-3">
-                                            <div className="flex justify-between items-center">
-                                                <span className="text-xs text-gray-500">Public ID:</span>
-                                                <span className="text-xs font-mono font-bold text-gray-800">{gw.appId || gw.merchantId || gw.keyId}</span>
-                                            </div>
-                                            <div className="flex justify-between items-center">
-                                                <span className="text-xs text-gray-500">Secret Key:</span>
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-xs font-mono font-bold text-gray-800">
-                                                        {showKeys[gw.id] ? (gw.secretKey || gw.saltKey || gw.keySecret) : '••••••••••••••••'}
-                                                    </span>
-                                                    <button onClick={() => toggleKey(gw.id)} className="text-gray-400 hover:text-gray-600">
-                                                        {showKeys[gw.id] ? <EyeOff size={14} /> : <Eye size={14} />}
-                                                    </button>
-                                                </div>
-                                            </div>
+                                            {gw.slug === 'Wallet' ? (
+                                                <>
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="text-xs text-gray-500 font-bold">Amount:</span>
+                                                        <span className="text-xs font-black text-gray-800 tracking-tight">{gw.totalAmount}</span>
+                                                    </div>
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="text-xs text-gray-500 font-bold">Used Amount:</span>
+                                                        <span className="text-xs font-black text-red-600 tracking-tight">{gw.usedAmount}</span>
+                                                    </div>
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="text-xs text-gray-500 font-bold">Rest Amount:</span>
+                                                        <span className="text-xs font-black text-green-600 tracking-tight">{gw.restAmount}</span>
+                                                    </div>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="text-xs text-gray-500">Public ID:</span>
+                                                        <span className="text-xs font-mono font-bold text-gray-800">{gw.appId || gw.merchantId || gw.keyId}</span>
+                                                    </div>
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="text-xs text-gray-500">Secret Key:</span>
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-xs font-mono font-bold text-gray-800">
+                                                                {showKeys[gw.id] ? (gw.secretKey || gw.saltKey || gw.keySecret) : '••••••••••••••••'}
+                                                            </span>
+                                                            <button onClick={() => toggleKey(gw.id)} className="text-gray-400 hover:text-gray-600">
+                                                                {showKeys[gw.id] ? <EyeOff size={14} /> : <Eye size={14} />}
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </>
+                                            )}
                                         </div>
                                     </div>
 
@@ -142,11 +173,20 @@ export default function PaymentGateways() {
                                 </div>
 
                                 <div className="p-4 bg-gray-50 border-t flex gap-2">
-                                    <button className="flex-1 bg-white border border-gray-200 text-gray-700 py-2 rounded-sm text-xs font-bold flex items-center justify-center gap-2 hover:bg-white transition-all">
-                                        <Settings size={14} /> Configure
+                                    <button
+                                        onClick={() => {
+                                            if (gw.slug === 'Wallet') {
+                                                navigate('/superadmin/wallet');
+                                            } else {
+                                                navigate(`/superadmin/paymentgateways/${gw.slug}`);
+                                            }
+                                        }}
+                                        className="flex-1 bg-white border border-gray-200 text-gray-700 py-2 rounded-sm text-xs font-bold flex items-center justify-center gap-2 hover:bg-white transition-all active:scale-95"
+                                    >
+                                        <Settings size={14} /> {gw.slug === 'Wallet' ? 'Manage Wallet' : 'Configure'}
                                     </button>
-                                    <button className="flex-1 bg-gray-800 text-white py-2 rounded-sm text-xs font-bold flex items-center justify-center gap-2 hover:bg-gray-900 transition-all">
-                                        <Zap size={14} /> Test
+                                    <button className="flex-1 bg-gray-800 text-white py-2 rounded-sm text-xs font-bold flex items-center justify-center gap-2 hover:bg-gray-900 transition-all active:scale-95">
+                                        <Zap size={14} /> {gw.slug === 'Wallet' ? 'History' : 'Test'}
                                     </button>
                                 </div>
                             </div>
