@@ -3,6 +3,7 @@ const router = express.Router();
 const {
     createLead,
     getLeads,
+    getLeadAnalysis,
     getLeadById,
     updateLead,
     deleteLead,
@@ -32,8 +33,10 @@ const {
     getDueReminders,
     snoozeLead,
     getDueMeetings,
+    getEmployeePerformance,
     convertLeadToClient,
-    addLeadActivity
+    addLeadActivity,
+    getLeadDashboard
 } = require('../controllers/leadController');
 const { protect } = require('../middleware/authMiddleware');
 const { checkLimit } = require('../middleware/limitMiddleware');
@@ -42,6 +45,9 @@ const upload = require('../middleware/uploadMiddleware'); // Added
 router.post('/bulk', protect, bulkCreateLeads);
 router.post('/', protect, checkLimit('leads'), createLead);
 router.get('/', protect, getLeads);
+router.get('/analysis', protect, getLeadAnalysis);
+router.get('/dashboard', protect, getLeadDashboard);
+router.get('/employee-performance/:id', protect, getEmployeePerformance);
 router.get('/check-call-conflict', protect, checkCallConflict);
 router.get('/due-reminders', protect, getDueReminders);
 router.get('/due-meetings', protect, getDueMeetings);

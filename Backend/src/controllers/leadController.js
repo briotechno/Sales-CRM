@@ -310,6 +310,34 @@ const analyzeLead = async (req, res) => {
     }
 };
 
+const getLeadAnalysis = async (req, res) => {
+    try {
+        const analysis = await Lead.getAnalysis(req.user.id);
+        res.status(200).json(analysis);
+    } catch (error) {
+        res.status(500).json({ status: false, message: error.message });
+    }
+};
+
+const getEmployeePerformance = async (req, res) => {
+    try {
+        const performance = await Lead.getEmployeePerformance(req.params.id, req.user.id);
+        if (!performance) return res.status(404).json({ message: 'Employee not found' });
+        res.status(200).json(performance);
+    } catch (error) {
+        res.status(500).json({ status: false, message: error.message });
+    }
+};
+
+const getLeadDashboard = async (req, res) => {
+    try {
+        const data = await Lead.getDashboardData(req.user.id);
+        res.status(200).json(data);
+    } catch (error) {
+        res.status(500).json({ status: false, message: error.message });
+    }
+};
+
 const getAssignmentHistory = async (req, res) => {
     try {
         const history = await LeadAssignmentLog.findByLeadId(req.params.id);
@@ -861,6 +889,9 @@ module.exports = {
     deleteLead,
     hitCall,
     analyzeLead,
+    getLeadAnalysis,
+    getLeadDashboard,
+    getEmployeePerformance,
     getAssignmentHistory,
     getLeadNotes,
     addLeadNote,

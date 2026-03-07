@@ -21,7 +21,9 @@ import {
   Upload,
   PlusIcon,
   Briefcase,
+  AlertCircle,
 } from "lucide-react";
+import { useGetLeadDashboardQuery } from "../../store/api/leadApi";
 import NumberCard from "../../components/NumberCard";
 import BulkUploadLeads from "../../components/AddNewLeads/BulkUpload";
 import AddLeadPopup from "../../components/AddNewLeads/AddNewLead";
@@ -50,6 +52,8 @@ export default function LeadDashboard() {
   const dropdownRef = useRef(null);
   const addLeadMenuRef = useRef(null);
 
+  const { data, isLoading, isError, refetch } = useGetLeadDashboardQuery();
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -71,80 +75,35 @@ export default function LeadDashboard() {
     setIsModalOpen(false);
   };
 
-  const recentLeads = [
-    {
-      name: "Sarah Johnson",
-      email: "sarah.j@example.com",
-      company: "Tech Corp",
-      status: "New",
-      priority: "High",
-      time: "5 min ago",
-      avatar: "SJ",
-    },
-    {
-      name: "Michael Chen",
-      email: "mchen@example.com",
-      company: "Digital Solutions",
-      status: "Assigned",
-      priority: "Medium",
-      time: "23 min ago",
-      avatar: "MC",
-    },
-    {
-      name: "Emily Rodriguez",
-      email: "emily.r@example.com",
-      company: "Innovation Labs",
-      status: "New",
-      priority: "High",
-      time: "1 hour ago",
-      avatar: "ER",
-    },
-    {
-      name: "David Kim",
-      email: "dkim@example.com",
-      company: "Smart Systems",
-      status: "Unread",
-      priority: "Low",
-      time: "2 hours ago",
-      avatar: "DK",
-    },
-    {
-      name: "Lisa Anderson",
-      email: "l.anderson@example.com",
-      company: "Future Tech",
-      status: "Assigned",
-      priority: "Medium",
-      time: "3 hours ago",
-      avatar: "LA",
-    },
-    {
-      name: "James Wilson",
-      email: "jwilson@example.com",
-      company: "CloudNet",
-      status: "New",
-      priority: "High",
-      time: "4 hours ago",
-      avatar: "JW",
-    },
-  ];
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <Loader2 className="w-10 h-10 text-orange-500 animate-spin" />
+      </div>
+    );
+  }
 
-  const trendingData = [
-    { category: "Technology", count: 245, percentage: 98, trend: "up" },
-    { category: "Healthcare", count: 189, percentage: 76, trend: "up" },
-    { category: "Finance", count: 156, percentage: 62, trend: "down" },
-    { category: "Retail", count: 134, percentage: 54, trend: "up" },
-    { category: "Manufacturing", count: 98, percentage: 39, trend: "down" },
-  ];
+  if (isError) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-white p-4">
+        <AlertCircle className="w-12 h-12 text-red-500 mb-4" />
+        <h2 className="text-xl font-bold text-gray-800 mb-2">Failed to load dashboard</h2>
+        <button
+          onClick={() => refetch()}
+          className="px-6 py-2 bg-orange-500 text-white rounded-sm font-bold hover:bg-orange-600 transition-colors"
+        >
+          Try Again
+        </button>
+      </div>
+    );
+  }
 
-  const weeklyData = [
-    { day: "Mon", value: 65, leads: 185 },
-    { day: "Tue", value: 85, leads: 242 },
-    { day: "Wed", value: 45, leads: 128 },
-    { day: "Thu", value: 90, leads: 256 },
-    { day: "Fri", value: 70, leads: 199 },
-    { day: "Sat", value: 55, leads: 156 },
-    { day: "Sun", value: 80, leads: 228 },
-  ];
+  const { stats, recentLeads, trendingData, weeklyData } = data || {
+    stats: { total: 0, total_up: "0%", new: 0, new_up: "0%", assigned: 0, assigned_up: "0%", unread: 0, unread_down: "0%" },
+    recentLeads: [],
+    trendingData: [],
+    weeklyData: []
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -271,32 +230,32 @@ export default function LeadDashboard() {
 
           <NumberCard
             title="All Leads"
-            number={"2,847"}
-            up={"+12.5%"}
+            number={stats.total.toLocaleString()}
+            up={stats.total_up}
             icon={<Users className="text-blue-600" size={24} />}
             iconBgColor="bg-blue-100"
             lineBorderClass="border-blue-500"
           />
           <NumberCard
             title="New Leads"
-            number={"342"}
-            up={"+23.1%"}
+            number={stats.new.toLocaleString()}
+            up={stats.new_up}
             icon={<UserPlus className="text-green-600" size={24} />}
             iconBgColor="bg-green-100"
             lineBorderClass="border-green-500"
           />
           <NumberCard
             title="Assigned"
-            number={"1,524"}
-            up={"+8.2%"}
+            number={stats.assigned.toLocaleString()}
+            up={stats.assigned_up}
             icon={<UserCheck className="text-orange-600" size={24} />}
             iconBgColor="bg-orange-100"
             lineBorderClass="border-orange-500"
           />
           <NumberCard
             title="Unread Leads"
-            number={"89"}
-            down={"-5.3%"}
+            number={stats.unread.toLocaleString()}
+            down={stats.unread_down}
             icon={<Mail className="text-purple-600" size={24} />}
             iconBgColor="bg-purple-100"
             lineBorderClass="border-purple-500"
@@ -321,9 +280,10 @@ export default function LeadDashboard() {
               </button>
             </div>
             <div className="space-y-3">
-              {recentLeads.map((lead, index) => (
+              {recentLeads.length > 0 ? recentLeads.map((lead, index) => (
                 <div
                   key={index}
+                  onClick={() => navigate(`/crm/leads/work-station`)}
                   className="flex items-center justify-between p-4 bg-gradient-to-r from-orange-50 to-amber-50 rounded-lg hover:shadow-md transition-shadow duration-200 border border-orange-200 cursor-pointer"
                 >
                   <div className="flex items-center space-x-4">
@@ -334,7 +294,7 @@ export default function LeadDashboard() {
                       <h4 className="font-bold text-gray-800 text-base">
                         {lead.name}
                       </h4>
-                      <p className="text-sm text-gray-600">{lead.email}</p>
+                      <p className="text-sm text-gray-600 truncate max-w-[150px]">{lead.email}</p>
                       <p className="text-xs text-orange-600 mt-0.5 font-medium">
                         {lead.company}
                       </p>
@@ -360,7 +320,11 @@ export default function LeadDashboard() {
                     </span>
                   </div>
                 </div>
-              ))}
+              )) : (
+                <div className="flex flex-col items-center justify-center py-10 text-gray-400 italic">
+                  No recent leads found
+                </div>
+              )}
             </div>
           </div>
 
@@ -378,7 +342,7 @@ export default function LeadDashboard() {
               </div>
             </div>
             <div className="space-y-4">
-              {trendingData.map((item, index) => (
+              {trendingData.length > 0 ? trendingData.map((item, index) => (
                 <div
                   key={index}
                   className="p-4 bg-gradient-to-r from-orange-50 to-amber-50 rounded-lg border border-orange-200 hover:shadow-md transition-shadow cursor-pointer"
@@ -411,7 +375,9 @@ export default function LeadDashboard() {
                     </div>
                   </div>
                 </div>
-              ))}
+              )) : (
+                <div className="py-10 text-center text-gray-400 italic">No trending data</div>
+              )}
             </div>
           </div>
         </div>
@@ -445,30 +411,35 @@ export default function LeadDashboard() {
           {/* Chart - Simple Bar Graph */}
           <div className="bg-gradient-to-b from-orange-50 to-amber-50 rounded-lg p-8 border border-orange-200">
             <div className="space-y-6">
-              {weeklyData.map((data, index) => (
-                <div key={index} className="group">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-bold text-gray-800 w-16">
-                      {data.day}
-                    </span>
-                    <span className="text-xs font-semibold text-orange-600">
-                      {data.leads} leads
-                    </span>
-                  </div>
-                  <div className="relative">
-                    <div className="w-full bg-orange-100 rounded-lg h-10 border border-orange-200">
-                      <div
-                        className="bg-gradient-to-r from-orange-500 to-orange-600 h-10 rounded-lg transition-all duration-500 flex items-center px-4 hover:from-orange-600 hover:to-orange-700"
-                        style={{ width: `${(data.leads / 300) * 100}%` }}
-                      >
-                        <span className="text-white font-bold text-sm">
-                          {data.leads}
-                        </span>
+              {weeklyData.length > 0 ? weeklyData.map((data, index) => {
+                const maxLeads = Math.max(...weeklyData.map(d => d.leads), 1);
+                return (
+                  <div key={index} className="group">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-bold text-gray-800 w-16">
+                        {data.day}
+                      </span>
+                      <span className="text-xs font-semibold text-orange-600">
+                        {data.leads} leads
+                      </span>
+                    </div>
+                    <div className="relative">
+                      <div className="w-full bg-orange-100 rounded-lg h-10 border border-orange-200">
+                        <div
+                          className="bg-gradient-to-r from-orange-500 to-orange-600 h-10 rounded-lg transition-all duration-500 flex items-center px-4 hover:from-orange-600 hover:to-orange-700"
+                          style={{ width: `${(data.leads / maxLeads) * 100}%` }}
+                        >
+                          <span className="text-white font-bold text-sm">
+                            {data.leads}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              }) : (
+                <div className="py-20 text-center text-gray-400 italic">No analytics data for this week</div>
+              )}
             </div>
           </div>
         </div>

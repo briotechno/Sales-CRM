@@ -275,6 +275,18 @@ export const leadApi = createApi({
             }),
             invalidatesTags: (result, error, { leadId }) => [{ type: 'LeadMeetings', id: leadId }, { type: 'LeadActivities', id: leadId }],
         }),
+        getLeadAnalysis: builder.query({
+            query: () => 'leads/analysis',
+            providesTags: ['Lead'],
+        }),
+        getLeadDashboard: builder.query({
+            query: () => 'leads/dashboard',
+            providesTags: ['Lead'],
+        }),
+        getEmployeePerformance: builder.query({
+            query: (id) => `leads/employee-performance/${id}`,
+            providesTags: (result, error, id) => ['Lead', { type: 'LeadActivities', id }],
+        }),
         getLeadAssignmentHistory: builder.query({
             query: (id) => `leads/${id}/assignment-history`,
             providesTags: (result, error, id) => [{ type: 'LeadAssignmentLogs', id }],
@@ -373,6 +385,9 @@ export const {
     useDeleteLeadFileMutation,
     useDeleteLeadMeetingMutation,
     useGetLeadAssignmentHistoryQuery,
+    useGetEmployeePerformanceQuery,
+    useGetLeadAnalysisQuery,
+    useGetLeadDashboardQuery,
     useCheckCallConflictQuery,
     useGetDueRemindersQuery,
     useGetDueMeetingsQuery,
