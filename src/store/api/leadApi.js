@@ -222,6 +222,14 @@ export const leadApi = createApi({
             }),
             invalidatesTags: (result, error, { leadId }) => [{ type: 'LeadNotes', id: leadId }, { type: 'LeadActivities', id: leadId }],
         }),
+        addNoteComment: builder.mutation({
+            query: ({ leadId, noteId, text }) => ({
+                url: `leads/${leadId}/notes/${noteId}/comments`,
+                method: 'POST',
+                body: { text },
+            }),
+            invalidatesTags: (result, error, { leadId }) => [{ type: 'LeadNotes', id: leadId }, { type: 'LeadActivities', id: leadId }],
+        }),
         updateLeadCall: builder.mutation({
             query: ({ leadId, callId, data }) => ({
                 url: `leads/${leadId}/calls/${callId}`,
@@ -368,6 +376,7 @@ export const {
     useManualAssignLeadsMutation,
     useGetLeadNotesQuery,
     useAddLeadNoteMutation,
+    useAddNoteCommentMutation,
     useGetLeadCallsQuery,
     useAddLeadCallMutation,
     useGetLeadFilesQuery,

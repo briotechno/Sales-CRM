@@ -38,12 +38,54 @@ import {
   ResponsiveContainer,
   Tooltip as RechartsTooltip,
 } from "recharts";
-import NumberCard from "../components/NumberCard";
 import { useGetMainDashboardStatsQuery } from "../store/api/mainDashboardApi";
+import { useGetUserProfileQuery } from "../store/api/userApi";
+
+const DashboardAvatar = ({ src, name, className, initialsClassName, fallbackChar }) => {
+  const [hasError, setHasError] = useState(false);
+
+  const getInitials = (name) => {
+    if (!name) return fallbackChar || "??";
+    const parts = name.trim().split(' ');
+    if (parts.length > 1) {
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return parts[0].slice(0, 2).toUpperCase();
+  };
+
+  const resolveUrl = (path) => {
+    if (!path) return null;
+    if (path.startsWith('http') || path.startsWith('data:')) return path;
+    const baseUrl = import.meta.env.VITE_IMAGE_BASE_URL || import.meta.env.VITE_API_BASE_URL.replace('/api/', '').replace('/api/v1', '');
+    return `${baseUrl}${path.startsWith('/') ? '' : '/'}${path}`;
+  };
+
+  const finalSrc = resolveUrl(src);
+
+  if (!finalSrc || hasError) {
+    return (
+      <div className={initialsClassName || className}>
+        {getInitials(name)}
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={finalSrc}
+      alt={name}
+      className={className}
+      onError={() => setHasError(true)}
+    />
+  );
+};
 
 const CRMDashboard = () => {
   const { user } = useSelector((state) => state.auth);
-  const { data: dashboardData, isLoading, isFetching, error, refetch } = useGetMainDashboardStatsQuery();
+  const { data: dashboardData, isLoading: statsLoading, isFetching, error, refetch } = useGetMainDashboardStatsQuery();
+  const { data: userProfile } = useGetUserProfileQuery();
+
+  const isLoading = statsLoading;
 
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [openLeadMenu, setOpenLeadMenu] = useState(false);
@@ -185,10 +227,6 @@ const CRMDashboard = () => {
 
   const COLORS = ["#3b82f6", "#f97316", "#10b981", "#8b5cf6", "#64748b"];
 
-  const getInitials = (name) => {
-    if (!name) return "";
-    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-  };
 
   return (
     <>
@@ -269,44 +307,42 @@ const CRMDashboard = () => {
 
           <div className="max-w-[100%] mx-auto px-4 mt-2">
             {/* Welcome Section */}
-            <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-sm shadow-xl p-8 mb-8 relative overflow-hidden border border-slate-700">
-              {/* Decorative background elements */}
-              <div className="absolute top-0 right-0 w-96 h-96 bg-orange-500/10 rounded-full -mr-48 -mt-48 blur-3xl"></div>
-              <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-500/5 rounded-full -ml-32 -mb-32 blur-3xl"></div>
+            <div className="bg-[#FF7B1D] bg-gradient-to-br from-[#FF9D52] via-[#FF7B1D] to-[#E35600] rounded-sm shadow-xl p-8 mb-8 relative overflow-hidden border border-white/20">
+              {/* Premium Glow Elements */}
+              <div className="absolute -top-24 -right-24 w-80 h-80 bg-white opacity-20 rounded-full blur-[100px]"></div>
+              <div className="absolute -bottom-24 -left-24 w-80 h-80 bg-[#B04500] opacity-30 rounded-full blur-[100px]"></div>
+              <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-[0.03] pointer-events-none"></div>
 
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-8 relative z-10">
                 <div className="flex items-center gap-6">
                   <div className="relative group">
-                    <div className="absolute -inset-1 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full blur opacity-40 group-hover:opacity-100 transition duration-1000 group-hover:duration-200"></div>
-                    <div className="relative w-24 h-24 rounded-full border-2 border-white/10 shadow-2xl overflow-hidden bg-slate-800 flex items-center justify-center text-white text-3xl font-black">
-                      {user?.profile_picture ? (
-                        <img
-                          src={user.profile_picture}
-                          alt="Profile"
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        getInitials(user?.firstName || user?.name || 'User')
-                      )}
+                    <div className="absolute -inset-1 bg-white rounded-full blur opacity-40 group-hover:opacity-60 transition duration-1000 group-hover:duration-200"></div>
+                    <div className="relative w-24 h-24 rounded-full border-2 border-white/20 shadow-2xl overflow-hidden bg-white/10 backdrop-blur-sm flex items-center justify-center text-white text-3xl font-black">
+                      <DashboardAvatar
+                        src={userProfile?.profile_picture || userProfile?.profile_picture_url || user?.profile_picture}
+                        name={userProfile?.firstName || userProfile?.employee_name || user?.firstName || user?.name || 'User'}
+                        className="w-full h-full object-cover"
+                        initialsClassName="w-full h-full flex items-center justify-center"
+                      />
                     </div>
-                    <div className="absolute bottom-1.5 right-1.5 w-5 h-5 bg-green-500 border-2 border-slate-800 rounded-full shadow-lg"></div>
+                    <div className="absolute bottom-1.5 right-1.5 w-5 h-5 bg-green-500 border-2 border-[#F26422] rounded-full shadow-lg"></div>
                   </div>
                   <div>
                     <h2 className="text-4xl font-black text-white tracking-tight leading-tight">
-                      Welcome Back, <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-orange-600">{user?.firstName || user?.name || 'User'}</span>!
+                      Welcome Back, <span className="text-white drop-shadow-md">{user?.firstName || user?.name || 'User'}</span>!
                     </h2>
-                    <p className="text-slate-300 text-lg mt-2 font-medium flex items-center gap-2">
-                      <Calendar size={18} className="text-orange-500" />
+                    <p className="text-white/90 text-lg mt-2 font-medium flex items-center gap-2">
+                      <Calendar size={18} className="text-white" />
                       Today is {currentTime.toLocaleDateString("en-US", { weekday: 'long', day: 'numeric', month: 'long' })}
                     </p>
                     <div className="flex flex-wrap gap-4 mt-5">
-                      <div className="bg-white/5 backdrop-blur-md px-4 py-2 rounded-sm text-slate-200 text-sm border border-white/10 shadow-sm transition-all hover:bg-white/10">
-                        <span className="font-black text-orange-500 mr-1.5">{stats.leads.new}</span> New Leads Today
+                      <div className="bg-white/10 backdrop-blur-md px-4 py-2 rounded-sm text-white text-sm border border-white/20 shadow-sm transition-all hover:bg-white/20">
+                        <span className="font-black text-white mr-1.5">{stats.leads.new}</span> New Leads Today
                       </div>
-                      <div className="bg-white/5 backdrop-blur-md px-4 py-2 rounded-sm text-slate-200 text-sm border border-white/10 shadow-sm transition-all hover:bg-white/10">
-                        <span className="font-black text-orange-500 mr-1.5">{stats.leads.unread}</span> Unread Messages
+                      <div className="bg-white/10 backdrop-blur-md px-4 py-2 rounded-sm text-white text-sm border border-white/20 shadow-sm transition-all hover:bg-white/20">
+                        <span className="font-black text-white mr-1.5">{stats.leads.unread}</span> Unread Messages
                       </div>
-                      <div className="bg-orange-500/10 backdrop-blur-md px-4 py-2 rounded-sm text-orange-400 text-sm border border-orange-500/20 shadow-sm transition-all hover:bg-orange-500/20">
+                      <div className="bg-white/20 backdrop-blur-md px-4 py-2 rounded-sm text-white text-sm border border-white/30 shadow-sm transition-all hover:bg-white/30">
                         <span className="font-black mr-1.5">{stats.leads.conversionRate}%</span> Conversion Rate
                       </div>
                     </div>
@@ -315,10 +351,10 @@ const CRMDashboard = () => {
 
                 <div className="hidden lg:flex items-center gap-4">
                   <div className="text-right">
-                    <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Session Duration</p>
+                    <p className="text-white/70 text-xs font-bold uppercase tracking-widest mb-1">Session Duration</p>
                     <p className="text-2xl font-black text-white">{String(workingHours.hours).padStart(2, "0")}:{String(workingHours.minutes).padStart(2, "0")}:{String(workingHours.seconds).padStart(2, "0")}</p>
                   </div>
-                  <div className="w-12 h-12 bg-white/5 rounded-sm border border-white/10 flex items-center justify-center text-orange-500 shadow-inner">
+                  <div className="w-12 h-12 bg-white/10 rounded-sm border border-white/20 flex items-center justify-center text-white shadow-inner">
                     <Clock size={24} />
                   </div>
                 </div>
@@ -795,11 +831,13 @@ const CRMDashboard = () => {
                             <td className="py-4">
                               <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-sm bg-slate-100 flex items-center justify-center text-slate-800 font-bold text-sm border border-slate-200 group-hover:bg-gradient-to-br group-hover:from-orange-500 group-hover:to-orange-600 group-hover:text-white transition-all shadow-sm group-hover:border-orange-400 capitalize overflow-hidden">
-                                  {lead.profile_picture ? (
-                                    <img src={lead.profile_picture} alt={lead.name} className="w-full h-full object-cover" />
-                                  ) : (
-                                    getInitials(lead.name) || (lead.id?.toString().slice(-2) || 'LD')
-                                  )}
+                                  <DashboardAvatar
+                                    src={lead.profile_picture}
+                                    name={lead.name}
+                                    className="w-full h-full object-cover"
+                                    initialsClassName="w-full h-full flex items-center justify-center"
+                                    fallbackChar={lead.id?.toString().slice(-2) || 'LD'}
+                                  />
                                 </div>
                                 <div>
                                   <p className="text-sm font-bold text-gray-800">{lead.name || 'Unknown'}</p>
@@ -863,11 +901,13 @@ const CRMDashboard = () => {
                       >
                         <div className="flex items-center gap-4">
                           <div className="w-10 h-10 rounded-full bg-slate-900 border-2 border-slate-800 flex items-center justify-center text-white font-black text-sm shadow-lg group-hover:scale-110 transition-transform overflow-hidden">
-                            {performer.avatar ? (
-                              <img src={performer.avatar} alt={performer.name} className="w-full h-full object-cover" />
-                            ) : (
-                              getInitials(performer.name) || (index + 1)
-                            )}
+                            <DashboardAvatar
+                              src={performer.avatar}
+                              name={performer.name}
+                              className="w-full h-full object-cover"
+                              initialsClassName="w-full h-full flex items-center justify-center"
+                              fallbackChar={String(index + 1)}
+                            />
                           </div>
                           <div>
                             <p className="font-bold text-gray-800 text-sm group-hover:text-orange-600 transition-colors">
@@ -917,11 +957,13 @@ const CRMDashboard = () => {
                       className="flex items-center gap-4 p-4 bg-slate-50 rounded-sm border border-slate-100 hover:border-pink-500 hover:shadow-md transition-all group"
                     >
                       <div className="w-12 h-12 rounded-sm border-2 border-pink-200 bg-white flex items-center justify-center text-pink-500 font-black text-sm shadow-md group-hover:scale-105 transition-transform overflow-hidden">
-                        {employee.avatar ? (
-                          <img src={employee.avatar} alt={employee.name} className="w-full h-full object-cover" />
-                        ) : (
-                          getInitials(employee.name) || 'MB'
-                        )}
+                        <DashboardAvatar
+                          src={employee.avatar}
+                          name={employee.name}
+                          className="w-full h-full object-cover"
+                          initialsClassName="w-full h-full flex items-center justify-center"
+                          fallbackChar="MB"
+                        />
                       </div>
                       <div className="min-w-0">
                         <p className="text-sm font-bold text-gray-800 truncate">

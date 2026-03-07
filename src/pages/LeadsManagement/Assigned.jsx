@@ -16,6 +16,7 @@ import { useGetPipelinesQuery } from "../../store/api/pipelineApi";
 import { useGetEmployeesQuery } from "../../store/api/employeeApi";
 import CallActionPopup from "../../components/AddNewLeads/CallActionPopup";
 import CallQrModal from "../../components/LeadManagement/CallQrModal";
+import AssignmentHistoryModal from "../../components/LeadManagement/AssignmentHistoryModal";
 import EmptyState from "../../components/common/EmptyState";
 import { toast } from "react-hot-toast";
 
@@ -55,6 +56,14 @@ export default function AssignedLeads() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const dropdownRef = useRef(null);
   const addLeadMenuRef = useRef(null);
+
+  const [isAssignmentHistoryOpen, setIsAssignmentHistoryOpen] = useState(false);
+  const [currentAssignmentLead, setCurrentAssignmentLead] = useState(null);
+
+  const handleShowAssignmentHistory = (lead) => {
+    setCurrentAssignmentLead(lead);
+    setIsAssignmentHistoryOpen(true);
+  };
 
   // Temporary filter states for the menu
   const [tempFilters, setTempFilters] = useState({
@@ -657,14 +666,6 @@ export default function AssignedLeads() {
         </div>
 
         <div className="max-w-8xl mx-auto p-4 pt-0 mt-2">
-          {/* <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-3">
-            <NumberCard title="Total Assigned" number={totalLeads.toString()} icon={<Users className="text-blue-600" size={24} />} iconBgColor="bg-blue-100" lineBorderClass="border-blue-500" />
-            <NumberCard title="Quick Filters" number="Assigned" icon={<Server className="text-green-600" size={24} />} iconBgColor="bg-green-100" lineBorderClass="border-green-500" />
-            <NumberCard title="Avg Value" number="-" icon={<Type className="text-orange-600" size={24} />} iconBgColor="bg-orange-100" lineBorderClass="border-orange-500" />
-            <NumberCard title="Priority" number="Mix" icon={<Phone className="text-purple-600" size={24} />} iconBgColor="bg-purple-100" lineBorderClass="border-purple-500" />
-          </div> */}
-
-          {/* Floating Action Bar for Selected Leads - Properly Centered in Content Area */}
           {selectedLeads.length > 0 && !isAssignModalOpen && !isModalOpen && !showDeleteModal && !callPopupData.isOpen && !isQrModalOpen && !showBulkUploadPopup && (
             <div
               className={`fixed bottom-10 z-[100] flex justify-center pointer-events-none transition-all duration-300 left-0 ${isLocked ? "md:left-[280px]" : "md:left-[68px]"} right-0 animate-slideUp`}
@@ -727,6 +728,7 @@ export default function AssignedLeads() {
                     handleDeleteLead={handleDeleteLead}
                     handleEditLead={handleEditLead}
                     handleHitCall={openCallAction}
+                    handleShowAssignmentHistory={handleShowAssignmentHistory}
                     pageType="Assigned"
                   />
                 ) : (
@@ -737,6 +739,7 @@ export default function AssignedLeads() {
                     selectedLeads={selectedLeads}
                     handleSelectLead={handleSelectLead}
                     handleHitCall={openCallAction}
+                    handleShowAssignmentHistory={handleShowAssignmentHistory}
                     pageType="Assigned"
                   />
                 )}
@@ -868,6 +871,13 @@ export default function AssignedLeads() {
             <p className="text-xs text-red-500 italic font-medium">This action cannot be undone. All associated data will be permanently removed.</p>
           </div>
         </Modal>
+
+        <AssignmentHistoryModal
+          open={isAssignmentHistoryOpen}
+          onClose={() => setIsAssignmentHistoryOpen(false)}
+          lead={currentAssignmentLead}
+          employees={employees}
+        />
       </div>
       <style>{`
         @keyframes slideUp {

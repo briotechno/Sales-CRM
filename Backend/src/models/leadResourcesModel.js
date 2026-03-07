@@ -16,13 +16,36 @@ const LeadResources = {
 
     addNote: async (data, userId) => {
         const { lead_id, title, description, files } = data;
-        // files might be JSON string or handled separately. For now assumed passed as string/json if text.
-        // If files are uploaded, handled in controller.
         const [result] = await pool.query(
             'INSERT INTO lead_notes (lead_id, user_id, title, description, files, created_at) VALUES (?, ?, ?, ?, ?, UTC_TIMESTAMP())',
             [lead_id, userId, title, description, JSON.stringify(files || [])]
         );
         return { id: result.insertId, ...data, created_at: new Date() };
+    },
+
+    addNoteComment: async (noteId, userId, commentData) => {
+        // Fetch existing comments
+        const [rows] = await pool.query('SELECT comments FROM lead_notes WHERE id = ?', [noteId]);
+        let comments = [];
+        if (rows.length > 0 && rows[0].comments) {
+            comments = typeof rows[0].comments === 'string' ? JSON.parse(rows[0].comments) : rows[0].comments;
+        }
+
+        // Add new comment
+        const newComment = {
+            id: Date.now(),
+            user_id: userId,
+            user_name: commentData.user_name,
+            text: commentData.text,
+            created_at: new Date()
+        };
+        comments.push(newComment);
+
+        await pool.query(
+            'UPDATE lead_notes SET comments = ? WHERE id = ?',
+            [JSON.stringify(comments), noteId]
+        );
+        return newComment;
     },
 
     // Calls
@@ -177,10 +200,10 @@ const LeadResources = {
     },
 
     updateCall: async (callId, data, userId) => {
-        const { status, date, note, follow_task, duration } = data;
+        const { status, date, note, follow_task, duration, priority } = data;
         await pool.query(
-            'UPDATE lead_calls SET status = ?, call_date = ?, note = ?, follow_task = ?, duration = ? WHERE id = ? AND user_id = ?',
-            [status, date, note, follow_task ? 1 : 0, duration || null, callId, userId]
+            'UPDATE lead_calls SET status = ?, call_date = ?, note = ?, follow_task = ?, duration = ?, priority = ? WHERE id = ? AND user_id = ?',
+            [status, date, note, follow_task ? 1 : 0, duration || null, priority || null, callId, userId]
         );
         return { id: callId, ...data };
     },

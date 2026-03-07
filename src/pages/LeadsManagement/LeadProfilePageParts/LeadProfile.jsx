@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import AddNoteModal from "../../../components/LeadManagement/LeadPipLineStatus/AddNotes";
 import CreateCallLogModal from "../../../components/LeadManagement/LeadPipLineStatus/CreateCallLogModal";
 import AddMeetingModal from "../../../components/LeadManagement/LeadPipLineStatus/AddMeetingModal";
@@ -134,7 +134,9 @@ export default function CRMLeadDetail() {
 
   // Data Fetching
   const passedLead = location.state?.lead;
-  const { data: leadFromQuery, isLoading: leadLoading } = useGetLeadByIdQuery(passedLead?.id, { skip: !passedLead?.id });
+  const { id } = useParams();
+  const leadId = passedLead?.id || id;
+  const { data: leadFromQuery, isLoading: leadLoading } = useGetLeadByIdQuery(leadId, { skip: !leadId });
   const { data: rules } = useGetAssignmentSettingsQuery();
   const { data: employeesData } = useGetEmployeesQuery({ limit: 1000, status: 'Active' });
   const employees = employeesData?.employees || [];

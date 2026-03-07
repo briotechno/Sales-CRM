@@ -55,8 +55,9 @@ const messengerController = {
                 }
             }
 
-            // Get all clients
-            const clients = await Client.findAll(orgId);
+            // Get all clients (findAll returns { data, pagination })
+            const clientResponse = await Client.findAll(orgId, { limit: 1000 });
+            const clients = clientResponse?.data || [];
 
             // Get conversations for unread counts and last messages
             const conversations = await Messenger.getConversations(currentSubId, currentType);
@@ -89,7 +90,7 @@ const messengerController = {
                 id: c.id,
                 name: c.company_name || `${c.first_name} ${c.last_name}`,
                 role: c.type === 'organization' ? 'Organization' : 'Individual Client',
-                avatar: (c.company_name || c.first_name).substring(0, 2).toUpperCase(),
+                avatar: (c.company_name || c.first_name || 'C').substring(0, 2).toUpperCase(),
                 status: c.status === 'active' ? 'online' : 'offline',
                 email: c.email,
                 phone: c.phone,

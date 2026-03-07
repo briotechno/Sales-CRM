@@ -1,4 +1,4 @@
-import { Phone, Mail, TrendingUp, Clock, User, Calendar, DollarSign, Info, QrCode } from "lucide-react";
+import { Phone, Mail, TrendingUp, Clock, User, Calendar, DollarSign, Info, QrCode, History } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
 import EmptyState from "../../../components/common/EmptyState";
 
@@ -14,6 +14,7 @@ export default function LeadsListView({
   handleDeleteLead,
   handleHitCall,
   handleReborn,
+  handleShowAssignmentHistory,
   pageType = "All" // New prop to determine column layout
 }) {
   const getStatusBadge = (tag, isTrending, stageName) => {
@@ -310,9 +311,22 @@ export default function LeadsListView({
                       case 'assignee':
                         return (
                           <td key={col.id} className="py-3 px-4 text-left">
-                            <div className="flex items-center gap-2">
-                              <div className="w-6 h-6 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600"><User size={12} /></div>
-                              <span className="text-xs font-bold text-gray-700 capitalize">{lead.employee_name || "Unassigned"}</span>
+                            <div
+                              className="flex items-center justify-between gap-2 px-2 py-1.5 bg-slate-50/50 rounded-sm border border-transparent hover:bg-orange-50 hover:border-orange-100 hover:shadow-sm transition-all cursor-pointer group/assignee"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleShowAssignmentHistory && handleShowAssignmentHistory(lead);
+                              }}
+                            >
+                              <div className="flex items-center gap-2 overflow-hidden">
+                                <div className="w-6 h-6 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 shrink-0">
+                                  <User size={12} />
+                                </div>
+                                <span className="text-xs font-bold text-gray-700 capitalize truncate" title={lead.employee_name || "Unassigned"}>
+                                  {lead.employee_name || "Unassigned"}
+                                </span>
+                              </div>
+                              <History size={12} className="text-gray-300 group-hover/assignee:text-orange-500 shrink-0" />
                             </div>
                           </td>
                         );

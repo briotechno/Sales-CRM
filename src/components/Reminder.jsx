@@ -322,7 +322,7 @@ export default function LeadsReminder() {
                   )}
 
                   {/* Stage Indicators */}
-                  {currentReminder.total_stages > 0 && (
+                  {/* {currentReminder.total_stages > 0 && (
                     <div className="flex justify-between items-start pt-2 px-1">
                       {Array.from({ length: currentReminder.total_stages }).map(
                         (_, index) => {
@@ -351,7 +351,7 @@ export default function LeadsReminder() {
                         }
                       )}
                     </div>
-                  )}
+                  )} */}
                 </div>
               </div>
 

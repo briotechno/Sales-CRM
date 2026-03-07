@@ -12,6 +12,7 @@ const {
     checkCallConflict,
     getLeadNotes,
     addLeadNote,
+    addLeadNoteComment,
     getLeadCalls,
     addLeadCall,
     getLeadFiles,
@@ -63,6 +64,7 @@ router.get('/:id/assignment-history', protect, getAssignmentHistory);
 router.get('/:id/notes', protect, getLeadNotes);
 router.post('/:id/notes', protect, upload.array('files'), addLeadNote);
 router.put('/:id/notes/:noteId', protect, updateLeadNote);
+router.post('/:id/notes/:noteId/comments', protect, addLeadNoteComment);
 router.delete('/:id/notes/:noteId', protect, deleteLeadNote);
 
 // Calls

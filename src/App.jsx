@@ -101,6 +101,8 @@ import Messenger from "./pages/MessengerPart/Messenger";
 import Catelogs from "./pages/CatelogsPart/Catelogs";
 import CatalogView from "./pages/CatelogsPart/CatalogView";
 import CatalogCategory from "./pages/CatelogsPart/CatalogCategory";
+import AllMeetings from "./pages/MeetingPart/AllMeetings";
+import AllVisitors from "./pages/VisitorPart/AllVisitors";
 // Channel Integration
 import CRMFormPage from "./pages/ChannelIntegration/CRMForm";
 import GoogleDocsPage from "./pages/ChannelIntegration/GoogleDocs";
@@ -147,6 +149,7 @@ import Wallet from "./pages/SuperAdmin/PaymentGateways/Wallet.jsx";
 import RoleProtectedRoute from "./components/RoleProtectedRoute";
 import GlobalModals from "./components/common/GlobalModals";
 import TaskReminderPopup from "./components/TaskReminderPopup.jsx";
+import VisitorReminder from "./components/Visitor/VisitorReminder.jsx";
 import DashboardLayout from "./components/DashboardLayout";
 
 function App() {
@@ -228,6 +231,8 @@ function App() {
             <Route path="/additional/notification" element={<Notification />} />
             <Route path="/additional/announcement" element={<AllAnouncement />} />
             <Route path="/additional/announcement/category" element={<AnnouncementCategoryPage />} />
+            <Route path="/additional/meeting" element={<AllMeetings />} />
+            <Route path="/additional/visitor" element={<AllVisitors />} />
             <Route path="/crm/client/all" element={<ClientManagement />} />
             <Route path="/settings/business-info" element={<BusinessInfo />} />
             <Route path="/settings/subscription" element={<ManageSubscription />} />
@@ -266,6 +271,7 @@ function App() {
       <LeadsReminder />
       <MeetingReminder />
       <TaskReminderPopup />
+      <VisitorReminder />
       <GlobalModals />
     </Router>
   );

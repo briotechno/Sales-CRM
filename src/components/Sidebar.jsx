@@ -41,6 +41,7 @@ import {
   Unlock,
   Zap,
   Target,
+  Calendar,
 } from "lucide-react";
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
@@ -550,6 +551,18 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           name: "Messenger",
           icon: <MessageSquare size={22} />,
           path: "/additional/messenger",
+          permission: "Communication Tools",
+        },
+        {
+          name: "Meeting",
+          icon: <Calendar size={22} />,
+          path: "/additional/meeting",
+          permission: "Communication Tools",
+        },
+        {
+          name: "Visitor",
+          icon: <Users size={22} />,
+          path: "/additional/visitor",
           permission: "Communication Tools",
         },
         {

@@ -15,7 +15,7 @@ export const employeeApi = createApi({
     tagTypes: ['Employee'],
     endpoints: (builder) => ({
         getEmployees: builder.query({
-            query: ({ page = 1, limit = 10, status = 'All', search = '' }) => {
+            query: ({ page = 1, limit = 10, status = 'All', search = '' } = {}) => {
                 let url = `employees?page=${page}&limit=${limit}`;
                 if (status !== 'All') {
                     url += `&status=${status}`;

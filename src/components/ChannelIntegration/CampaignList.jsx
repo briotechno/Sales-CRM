@@ -164,7 +164,7 @@ const CampaignList = ({ searchTerm, statusFilter, onClearFilters }) => {
                             <th className="py-3 px-4 font-semibold border-b border-orange-400 text-left">Source</th>
                             <th className="py-3 px-4 font-semibold border-b border-orange-400 text-left">Status</th>
                             <th className="py-3 px-4 font-semibold border-b border-orange-400 text-left">Duration</th>
-                            <th className="py-3 px-4 font-semibold border-b border-orange-400 text-left">Hits</th>
+                            <th className="py-3 px-4 font-semibold border-b border-orange-400 text-left">Leads</th>
                             <th className="py-3 px-4 font-semibold border-b border-orange-400 text-left">Audience</th>
                             <th className="py-3 px-4 font-semibold border-b border-orange-400 text-right">Action</th>
                         </tr>

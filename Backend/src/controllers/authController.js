@@ -197,6 +197,7 @@ const authUser = async (req, res) => {
                         _id: user.id,
                         firstName: user.firstName,
                         lastName: user.lastName,
+                        profile_picture: user.profile_picture,
                         email: user.email,
                         mobileNumber: user.mobileNumber,
                         businessName: user.businessName,
@@ -230,6 +231,9 @@ const authUser = async (req, res) => {
                         _id: employee.id, // The Employee PK
                         employee_id: employee.employee_id, // The EMP ID string
                         name: employee.employee_name,
+                        firstName: employee.employee_name ? employee.employee_name.split(' ')[0] : '',
+                        lastName: employee.employee_name ? employee.employee_name.split(' ').slice(1).join(' ') : '',
+                        profile_picture: employee.profile_picture,
                         username: employee.username,
                         email: employee.email,
                         role: 'Employee',

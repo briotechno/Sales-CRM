@@ -254,8 +254,17 @@ const LeadCard = ({
 
             {/* Assigned To (if applicable) */}
             {showAssigned && (
-              <div className="flex flex-col gap-1 px-2 py-1.5 bg-slate-50/80 rounded-sm border border-slate-200">
-                <span className="text-[12px] font-semibold text-orange-400 capitalize">Assigned To</span>
+              <div
+                className="flex flex-col gap-1 px-2 py-1.5 bg-slate-50/80 rounded-sm border border-slate-200 cursor-pointer hover:bg-orange-50 hover:border-orange-200 transition-all group/people"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleShowAssignmentHistory && handleShowAssignmentHistory(lead);
+                }}
+              >
+                <div className="flex items-center justify-between gap-1">
+                  <span className="text-[12px] font-semibold text-orange-400 capitalize">Assigned To</span>
+                  <History size={12} className="text-gray-300 group-hover/people:text-orange-500 flex-shrink-0" />
+                </div>
                 <span className="text-[13px] font-bold text-gray-800 capitalize truncate" title={lead.employee_name || "Unassigned"}>
                   {lead.employee_name || "Unassigned"}
                 </span>

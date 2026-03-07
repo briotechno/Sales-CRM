@@ -1,6 +1,9 @@
 import React from "react";
 import {
   Edit2,
+  PhoneCall,
+  AlertTriangle,
+  CalendarClock,
   ChevronDown,
   Download,
   Trash2,
@@ -19,7 +22,8 @@ import {
   Plus,
   Bell,
   MoreVertical,
-  MapPin
+  MapPin,
+  X
 } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
 import {
@@ -30,7 +34,8 @@ import {
   useGetLeadMeetingsQuery,
   useGetLeadByIdQuery,
   useUpdateLeadMeetingMutation,
-  useUpdateLeadMutation
+  useUpdateLeadMutation,
+  useAddNoteCommentMutation
 } from "../../../store/api/leadApi";
 
 const formatDateUTC = (dateStr) => {
@@ -161,6 +166,92 @@ export default function LeadTabs({
 
   const [updateMeeting] = useUpdateLeadMeetingMutation();
   const [updateLead] = useUpdateLeadMutation();
+  const [addNoteComment] = useAddNoteCommentMutation();
+
+  const [partModal, setPartModal] = React.useState({ show: false, attendees: [] });
+  const [openCommentNoteId, setOpenCommentNoteId] = React.useState(null);
+  const [noteCommentText, setNoteCommentText] = React.useState("");
+
+  const ParticipantsModal = () => {
+    if (!partModal.show) return null;
+    return (
+      <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
+        <div className="bg-white rounded-sm shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-300 ">
+          <div className="bg-[#f36015] px-6 py-6 flex items-start justify-between relative overflow-hidden">
+            <div className="flex gap-4 items-center">
+              <div className="w-14 h-14 bg-white/20 backdrop-blur-md rounded-md flex items-center justify-center border border-white/30 shadow-inner">
+                <Users size={28} className="text-white" />
+              </div>
+              <div>
+                <h3 className="text-white font-bold text-xl leading-tight">Meeting Attendees</h3>
+                <p className="text-white/80 text-xs font-semibold mt-0.5">List of all members in this meeting</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setPartModal({ show: false, attendees: [] })}
+              className="text-white hover:bg-white/10 p-2 rounded-md transition-colors absolute top-4 right-4"
+            >
+              <X size={22} className="stroke-[2.5px]" />
+            </button>
+          </div>
+
+          <div className="max-h-[50vh] overflow-y-auto custom-scrollbar bg-white">
+            {partModal.attendees.length > 0 ? (
+              <div className="divide-y divide-slate-100">
+                {partModal.attendees.map((at, idx) => {
+                  const name = typeof at === 'string' ? at : (at.employee_name || at.name || at.email);
+                  const email = typeof at === 'string' ? at : at.email;
+                  const designation = typeof at === 'object' ? at.designation_name : null;
+                  const profilePicture = typeof at === 'object' ? (at.profile_picture || at.profilePicture) : null;
+
+                  return (
+                    <div key={idx} className="p-4 flex items-center gap-4 hover:bg-orange-50/50 transition-all group">
+                      <UserAvatar name={name} profilePicture={profilePicture} size="w-12 h-12 shadow-sm border-2 border-white" />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="font-bold text-slate-800 capitalize truncate text-[14px]">
+                            {name}
+                          </p>
+                          {designation && (
+                            <span className="text-[10px] bg-orange-100 text-[#f36015] px-2 py-0.5 rounded-sm font-bold uppercase tracking-wider">
+                              {designation}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[12px] text-slate-400 font-bold truncate mt-0.5">{email}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="py-20 flex flex-col items-center justify-center text-slate-300">
+                <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
+                  <Users size={32} />
+                </div>
+                <p className="font-bold text-sm uppercase tracking-widest">No participants Found</p>
+              </div>
+            )}
+          </div>
+
+          <div className="p-6 bg-slate-50/50 border-t border-slate-100 flex gap-3">
+            <button
+              onClick={() => setPartModal({ show: false, attendees: [] })}
+              className="flex-1 py-3.5 bg-white border border-slate-200 text-slate-600 font-bold text-sm rounded-sm hover:bg-slate-50 transition-all active:scale-[0.98] shadow-sm"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => setPartModal({ show: false, attendees: [] })}
+              className="flex-1 py-3.5 bg-[#f36015] text-white font-bold text-sm rounded-sm hover:bg-[#e05610] transition-all active:scale-[0.98] shadow-lg shadow-orange-500/20"
+            >
+              Done
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   const notes = (fetchedNotes || []).map((note, idx) => {
     let parsedFiles = [];
@@ -181,6 +272,14 @@ export default function LeadTabs({
       title: (note.title || "Note").toLowerCase(),
       description: note.description || "",
       files: parsedFiles.map(f => ({ name: f.name || "File", size: f.size || "0 KB", type: f.type || "file", path: f.path })),
+      comments: (() => {
+        try {
+          const c = typeof note.comments === 'string' ? JSON.parse(note.comments) : note.comments;
+          return Array.isArray(c) ? c : [];
+        } catch (e) {
+          return [];
+        }
+      })(),
       originalData: note
     };
   });
@@ -479,12 +578,28 @@ export default function LeadTabs({
                             {upcoming.type === 'meeting' ? <Users size={24} className="text-white fill-white/20" /> : <Phone size={24} className="text-white fill-white/20" />}
                           </div>
                           <div className="flex-1">
-                            <h4 className="font-extrabold text-[#1E293B] text-[17px] leading-tight mb-1.5">
-                              {upcoming.title}
+                            <h4 className="font-extrabold text-[#1E293B] text-[17px] leading-tight mb-1.5" title={upcoming.title}>
+                              {upcoming.title?.length > 60 ? upcoming.title.substring(0, 60) + "..." : upcoming.title}
                             </h4>
-                            <div className="flex items-center gap-2 text-[13px] font-bold text-slate-400">
-                              <span className="text-orange-500/80 font-black">Scheduled on</span>
-                              <span className="text-slate-600 bg-slate-100/50 px-2 py-0.5 rounded-sm">{upcoming.time}</span>
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2 text-[13px] font-bold text-slate-400">
+                                <span className="text-orange-500/80 font-black">Scheduled on</span>
+                                <span className="text-slate-600 bg-slate-100/50 px-2 py-0.5 rounded-sm">{upcoming.time}</span>
+                              </div>
+                              {upcoming.type === 'meeting' && upcoming.originalData?.attendees && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const attendees = Array.isArray(upcoming.originalData.attendees) ? upcoming.originalData.attendees : JSON.parse(upcoming.originalData.attendees || '[]');
+                                    setPartModal({ show: true, attendees });
+                                  }}
+                                  className="flex items-center -space-x-2 overflow-x-auto no-scrollbar hover:bg-slate-100 p-1 rounded-full transition-colors max-w-[120px]"
+                                >
+                                  {(Array.isArray(upcoming.originalData.attendees) ? upcoming.originalData.attendees : JSON.parse(upcoming.originalData.attendees || '[]')).map((at, i) => (
+                                    <UserAvatar key={i} name={typeof at === 'string' ? at : at.name} size="w-7 h-7 border-2 border-white shadow-sm flex-shrink-0" />
+                                  ))}
+                                </button>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -573,61 +688,164 @@ export default function LeadTabs({
                 </div>
               ) : (
                 notes.map((note) => (
-                  <div key={note.id} className="bg-white rounded-sm border border-gray-100 p-6 hover:shadow-sm transition-all group">
-                    <div className="flex items-start justify-between mb-5">
-                      <div className="flex items-center gap-3">
-                        <UserAvatar name={note.author} profilePicture={note.profilePicture} size="w-10 h-10" />
-                        <div>
-                          <p className="text-[14px] font-bold text-gray-800 font-primary capitalize">{note.author}</p>
-                          <p className="text-[12px] text-gray-400 font-bold font-primary">{note.date}</p>
+                  <div key={note.id} className="bg-white rounded-lg border border-gray-100 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] hover:border-orange-200 cursor-pointer transition-all overflow-hidden font-primary group/card">
+                    <div className="p-6">
+                      <div className="flex gap-5 items-start mb-6">
+                        <div className="w-14 h-14 bg-orange-500 rounded-full flex items-center justify-center flex-shrink-0 shadow-xl transition-transform group-hover/card:scale-105">
+                          <FileText size={24} className="text-white fill-white/20" />
                         </div>
-                      </div>
-                      <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button onClick={() => onEditClick('note', note.originalData)} className="p-1.5 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded-sm transition-all">
-                          <Edit2 size={14} />
-                        </button>
-                        <button onClick={() => onDeleteClick('note', note.id)} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-sm transition-all">
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    </div>
-                    <div className="space-y-4">
-                      <h4 className="font-bold text-gray-800 font-primary text-[15px] capitalize leading-tight">
-                        {note.title}
-                      </h4>
-                      <div className="text-[14px] text-gray-500 font-medium font-primary leading-relaxed">
-                        <ExpandableText text={note.description} limit={250} />
-                      </div>
-
-                      {note.files && note.files.length > 0 && (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pt-4 border-t border-gray-50">
-                          {note.files.map((file, fIdx) => (
-                            <div key={fIdx} className="flex items-center gap-3 p-3 bg-white rounded-sm border border-gray-100 hover:border-orange-200 transition-all shadow-sm group/file">
-                              <div className="w-10 h-10 bg-green-500 rounded-sm flex items-center justify-center flex-shrink-0">
-                                {file.name.toLowerCase().endsWith('.xls') || file.name.toLowerCase().endsWith('.xlsx') ? (
-                                  <FileSpreadsheet size={20} className="text-white" />
-                                ) : (
-                                  <Image size={20} className="text-white" />
-                                )}
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between mb-1.5">
+                            <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-1.5 px-3 py-1 bg-orange-50 text-orange-600 rounded-sm text-[10px] font-black uppercase tracking-widest border border-orange-100">
+                                <FileText size={12} className="fill-orange-600/10" />
+                                Note
                               </div>
-                              <div className="flex-1 overflow-hidden">
-                                <p className="text-[13px] font-bold text-gray-800 font-primary truncate" title={file.name}>{file.name}</p>
-                                <p className="text-[11px] text-gray-400 font-bold font-primary uppercase tracking-wider">{file.size}</p>
+                              <div className="flex items-center gap-1.5 text-[12px] font-bold text-orange-600">
+                                <Calendar size={12} /> {note.date}
                               </div>
-                              <button
-                                onClick={() => onDownloadClick(file.path, file.name)}
-                                className="p-1.5 text-gray-400 hover:text-orange-600 transition-colors"
-                              >
-                                <Download size={14} />
+                            </div>
+                            <div className="flex gap-2 opacity-0 group-hover/card:opacity-100 transition-opacity">
+                              <button onClick={(e) => { e.stopPropagation(); onEditClick('note', note.originalData); }} className="p-1.5 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded-sm">
+                                <Edit2 size={16} />
+                              </button>
+                              <button onClick={(e) => { e.stopPropagation(); onDeleteClick('note', note.id); }} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-sm">
+                                <Trash2 size={16} />
                               </button>
                             </div>
-                          ))}
+                          </div>
+                          <h4 className="font-semibold text-[#1E293B] text-[17px] leading-tight mb-2 capitalize" title={note.title}>
+                            {note.title}
+                          </h4>
+                          <div className="text-[14px] text-gray-500 font-medium leading-relaxed">
+                            <ExpandableText text={note.description} limit={300} />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Files Box - Reusing Meeting's Location Box style */}
+                      {note.files && note.files.length > 0 && (
+                        <div className="mb-6 p-4 bg-slate-50/80 border border-slate-100 rounded-lg group-hover/card:border-orange-200 transition-colors">
+                          <p className="text-[10px] font-black text-orange-500 uppercase tracking-widest mb-3 italic">Attached Documents</p>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {note.files.map((file, fIdx) => (
+                              <div key={fIdx} className="flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-100 hover:border-orange-200 transition-all shadow-sm group/file">
+                                <div className="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm shadow-orange-500/10">
+                                  {file.name.toLowerCase().endsWith('.xls') || file.name.toLowerCase().endsWith('.xlsx') ? (
+                                    <FileSpreadsheet size={18} className="text-white" />
+                                  ) : (
+                                    <Image size={18} className="text-white" />
+                                  )}
+                                </div>
+                                <div className="flex-1 overflow-hidden">
+                                  <p className="text-[13px] font-bold text-slate-700 truncate" title={file.name}>{file.name}</p>
+                                  <p className="text-[11px] text-slate-400 font-bold uppercase tracking-widest">{file.size}</p>
+                                </div>
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); onDownloadClick(file.path, file.name); }}
+                                  className="p-1.5 text-gray-400 hover:text-orange-600 transition-colors"
+                                >
+                                  <Download size={14} />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       )}
 
-                      <div className="flex justify-end pt-4">
-                        <button className="text-[13px] font-bold text-orange-600 hover:text-orange-700 font-primary flex items-center gap-1">
-                          <Plus size={14} className="stroke-[3px]" /> Add Comment
+                      {/* Comments Section */}
+                      {note.comments && note.comments.length > 0 && (
+                        <div className="mb-6">
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 italic">Recent Comments</p>
+                          <div className="max-h-[220px] overflow-y-auto space-y-3 pr-2 custom-scrollbar">
+                            {note.comments.map((comment, cIdx) => (
+                              <div key={cIdx} className="flex gap-3 bg-slate-50/50 p-3 rounded-sm border border-slate-100/50">
+                                <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center flex-shrink-0 text-[10px] font-bold text-slate-600">
+                                  {comment.user_name?.substring(0, 2).toUpperCase() || '??'}
+                                </div>
+                                <div className="flex-1">
+                                  <div className="flex items-center justify-between mb-0.5">
+                                    <span className="text-[12px] font-bold text-slate-700">{comment.user_name}</span>
+                                    <span className="text-[10px] text-slate-400 font-medium">{new Date(comment.created_at).toLocaleDateString()}</span>
+                                  </div>
+                                  <p className="text-[13px] text-slate-600 leading-snug">{comment.text}</p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Add Comment Input */}
+                      {openCommentNoteId === note.id && (
+                        <div className="mb-6 animate-fadeIn">
+                          <textarea
+                            autoFocus
+                            value={noteCommentText}
+                            onChange={(e) => setNoteCommentText(e.target.value)}
+                            placeholder="Type your comment here..."
+                            className="w-full p-4 bg-white border border-gray-100 rounded-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500/20 text-[14px] font-medium transition-all resize-none shadow-sm font-primary outline-none"
+                            rows={3}
+                          />
+                          <div className="flex justify-end items-center gap-4 mt-3">
+                            <button
+                              onClick={() => {
+                                setOpenCommentNoteId(null);
+                                setNoteCommentText("");
+                              }}
+                              className="text-[12px] font-bold text-slate-400 hover:text-orange-600 transition-colors font-primary capitalize tracking-wide"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              disabled={!noteCommentText.trim()}
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                try {
+                                  await addNoteComment({
+                                    leadId,
+                                    noteId: note.id,
+                                    text: noteCommentText
+                                  }).unwrap();
+                                  setOpenCommentNoteId(null);
+                                  setNoteCommentText("");
+                                } catch (err) {
+                                  console.error("Failed to add comment:", err);
+                                }
+                              }}
+                              className="px-6 py-2.5 bg-orange-500 text-white rounded-sm text-[12px] font-black capitalize tracking-wide hover:bg-orange-600 transition-all shadow-lg shadow-orange-500/20 disabled:opacity-50 disabled:shadow-none active:scale-95 font-primary"
+                            >
+                              Post Comment
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Footer */}
+                      <div className="flex items-center justify-between pt-5 border-t border-gray-100">
+                        <div className="flex items-center gap-8">
+                          <div className="flex flex-col gap-1.5">
+                            <span className="text-[10px] font-black text-orange-600 uppercase tracking-widest font-primary">Created By</span>
+                            <div className="flex items-center gap-2">
+                              <UserAvatar name={note.author} profilePicture={note.profilePicture} size="w-7 h-7" />
+                              <span className="text-[12px] font-bold text-slate-700 capitalize font-primary">{note.author}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (openCommentNoteId === note.id) {
+                              setOpenCommentNoteId(null);
+                            } else {
+                              setOpenCommentNoteId(note.id);
+                              setNoteCommentText("");
+                            }
+                          }}
+                          className={`px-4 py-2 border transition-all font-bold text-[12px] font-primary flex items-center gap-2 shadow-sm active:scale-95 rounded-sm ${openCommentNoteId === note.id ? 'bg-orange-600 text-white border-orange-600' : 'bg-white border-orange-200 text-orange-600 hover:bg-orange-50'}`}
+                        >
+                          {openCommentNoteId === note.id ? <X size={14} className="stroke-[3px]" /> : <Plus size={14} className="stroke-[3px]" />}
+                          {openCommentNoteId === note.id ? "Cancel" : "Add Comment"}
                         </button>
                       </div>
                     </div>
@@ -654,61 +872,71 @@ export default function LeadTabs({
                 </div>
               ) : (
                 calls.map((call) => (
-                  <div key={call.id} className="bg-white rounded-sm border border-gray-100 p-6 hover:shadow-sm transition-all group">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex gap-4 items-center">
-                        <UserAvatar name={call.author} profilePicture={call.profilePicture} size="w-10 h-10" />
-                        <div>
-                          <p className="text-[14px] font-bold text-gray-800 font-primary">
-                            <span className="capitalize">{call.author}</span>
-                            <span className="text-gray-400 font-medium"> logged a call on </span>
-                            <span className="text-gray-600">{call.date}</span>
-                          </p>
+                  <div key={call.id} className="bg-white rounded-lg border border-gray-100 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] hover:border-blue-200 cursor-pointer transition-all overflow-hidden font-primary group/card">
+                    <div className="p-6">
+                      <div className="flex gap-5 items-start mb-6">
+                        <div className="w-14 h-14 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 shadow-xl transition-transform group-hover/card:scale-105">
+                          <Phone size={24} className="text-white fill-white/20" />
                         </div>
-                      </div>
-                      <div className="flex items-center gap-4">
-                        <div className="relative group/status cursor-pointer">
-                          <div className={`px-4 py-1.5 rounded-sm text-[11px] font-bold font-primary flex items-center gap-1.5 ${call.status === 'Busy' ? 'bg-[#FFEBEE] text-[#D32F2F]' :
-                            call.status === 'No Answer' ? 'bg-[#F3E5F5] text-[#7B1FA2]' :
-                              'bg-green-50 text-green-600'
-                            }`}>
-                            {call.status}
-                            <ChevronDown size={12} />
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between mb-1.5">
+                            <div className="flex items-center gap-2">
+                              <div className={`flex items-center gap-1.5 px-3 py-1 rounded-sm text-[10px] font-black uppercase tracking-widest border ${call.priority === 'High' ? 'bg-red-50 text-red-600 border-red-100' :
+                                call.priority === 'Medium' ? 'bg-orange-50 text-orange-600 border-orange-100' :
+                                  'bg-green-50 text-green-600 border-green-100'
+                                }`}>
+                                {call.priority || 'Low'} Priority
+                              </div>
+                              <div className="flex items-center gap-1.5 text-[12px] font-bold text-blue-600">
+                                <Calendar size={12} /> {call.date}
+                              </div>
+                            </div>
+                            <div className="flex gap-2 opacity-0 group-hover/card:opacity-100 transition-opacity">
+                              <button onClick={(e) => { e.stopPropagation(); onDeleteClick('call', call.id); }} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-sm shadow-sm bg-white border border-gray-50">
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 mt-2">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Call Status:</span>
+                            <span className={`text-[13px] font-bold ${call.status === 'Busy' ? 'text-red-600' :
+                              call.status === 'No Answer' ? 'text-purple-600' :
+                                'text-green-600'
+                              }`}>{call.status}</span>
                           </div>
                         </div>
-                        <button onClick={() => onDeleteClick('call', call.id)} className="text-gray-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100">
-                          <Trash2 size={16} />
-                        </button>
                       </div>
-                    </div>
-                    <div className="text-[14px] text-gray-500 font-medium font-primary leading-relaxed pl-14 mb-4">
-                      <ExpandableText text={call.content} limit={250} />
-                    </div>
 
-                    {/* Additional Details row */}
-                    {(call.priority || call.nextFollowUp) && (
-                      <div className="ml-14 flex flex-wrap gap-4 items-center py-2 px-3 bg-gray-50 rounded-sm border border-gray-100/50">
-                        {call.priority && (
-                          <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Priority:</span>
-                            <span className={`text-[11px] font-bold ${call.priority === 'High' ? 'text-red-600' :
-                                call.priority === 'Medium' ? 'text-orange-600' : 'text-green-600'
-                              }`}>
-                              {call.priority}
-                            </span>
+                      {/* Details Box - Reusing Meeting's Location Box style */}
+                      {call.nextFollowUp && (
+                        <div className="mb-6 p-4 bg-slate-50/80 border border-slate-100 rounded-lg group-hover/card:border-blue-200 transition-colors flex flex-wrap gap-6">
+                          <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center shadow-sm">
+                              <CalendarClock size={18} />
+                            </div>
+                            <div>
+                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Next Follow-up</p>
+                              <p className="text-[13px] font-black text-slate-700">
+                                {new Date(call.nextFollowUp).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}
+                              </p>
+                            </div>
                           </div>
-                        )}
-                        {call.nextFollowUp && (
-                          <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Follow-up Set:</span>
-                            <span className="text-[11px] font-bold text-blue-600 flex items-center gap-1">
-                              <Calendar size={12} />
-                              {new Date(call.nextFollowUp).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}
-                            </span>
+                        </div>
+                      )}
+
+                      {/* Footer */}
+                      <div className="flex items-center justify-between pt-5 border-t border-gray-100">
+                        <div className="flex items-center gap-8">
+                          <div className="flex flex-col gap-1.5">
+                            <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest font-primary">Logged By</span>
+                            <div className="flex items-center gap-2">
+                              <UserAvatar name={call.author} profilePicture={call.profilePicture} size="w-7 h-7" />
+                              <span className="text-[12px] font-bold text-slate-700 capitalize">{call.author}</span>
+                            </div>
                           </div>
-                        )}
+                        </div>
                       </div>
-                    )}
+                    </div>
                   </div>
                 ))
               )}
@@ -747,43 +975,47 @@ export default function LeadTabs({
                 </div>
               ) : (
                 files.map((file) => (
-                  <div key={file.id} className="bg-white rounded-sm border border-gray-100 p-6 hover:shadow-sm transition-all group relative">
-                    <div className="flex items-start gap-4">
-                      <UserAvatar name={file.owner} profilePicture={file.profilePicture} size="w-12 h-12" />
-                      <div className="flex-1">
-                        <div className="flex justify-between items-start mb-2">
-                          <div>
-                            <h4 className="font-bold text-gray-800 font-primary text-[15px] capitalize tracking-tight group-hover:text-orange-600 transition-colors">
-                              {file.title}
-                            </h4>
-                            <div className="text-[13px] text-gray-400 font-medium font-primary mt-0.5">
-                              <ExpandableText text={file.description} limit={120} />
+                  <div key={file.id} className="bg-white rounded-lg border border-gray-100 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] hover:border-orange-200 cursor-pointer transition-all overflow-hidden font-primary group/card">
+                    <div className="p-5">
+                      <div className="flex gap-5 items-start ">
+                        <div className="w-14 h-14 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg transition-transform group-hover/card:scale-105">
+                          <FileText size={24} className="text-orange-600 fill-orange-600/10" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between mb-1.5">
+                            <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-1.5 px-3 py-1 bg-orange-50 text-orange-600 rounded-sm text-[10px] font-black uppercase tracking-widest border border-orange-100">
+                                Document
+                              </div>
                             </div>
-                            <div className="flex items-center gap-2 mt-4">
-                              <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest font-primary">Owner</span>
-                              <span className="text-[13px] font-bold text-gray-700 font-primary capitalize">{file.owner}</span>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <div className="flex gap-2">
-                              <button onClick={() => {
+                            <div className="flex gap-2 opacity-0 group-hover/card:opacity-100 transition-opacity">
+                              <button onClick={(e) => {
+                                e.stopPropagation();
                                 let path = file.originalData?.file_path || file.originalData?.path;
                                 onDownloadClick(path, file.title);
-                              }} className="p-1.5 text-gray-400 hover:text-blue-500 transition-colors">
+                              }} className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-sm transition-colors border border-transparent hover:border-blue-100 bg-white shadow-sm">
                                 <Download size={16} />
                               </button>
-                              <button onClick={() => onEditClick('file', file.originalData)} className="p-1.5 text-gray-400 hover:text-orange-600 transition-colors">
+                              <button onClick={(e) => { e.stopPropagation(); onEditClick('file', file.originalData); }} className="p-1.5 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded-sm transition-colors border border-transparent hover:border-orange-100 bg-white shadow-sm">
                                 <Edit2 size={16} />
                               </button>
-                              <button onClick={() => onDeleteClick('file', file.id)} className="p-1.5 text-gray-400 hover:text-red-500 transition-colors">
+                              <button onClick={(e) => { e.stopPropagation(); onDeleteClick('file', file.id); }} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-sm transition-colors border border-transparent hover:border-red-100 bg-white shadow-sm">
                                 <Trash2 size={16} />
                               </button>
                             </div>
-                            <div className="flex gap-2 items-center">
-                              <span className="px-3 py-1 bg-[#FCE4EC] text-[#E91E63] rounded-sm text-[10px] font-bold font-primary uppercase tracking-tight">Proposal</span>
-                              <span className="px-3 py-1 bg-[#E8F5E9] text-[#2E7D32] rounded-sm text-[10px] font-bold font-primary inline-flex items-center gap-1">
-                                <div className="w-1.5 h-1.5 bg-[#2E7D32] rounded-full"></div> Sent
-                              </span>
+                          </div>
+                          <h4 className="font-bold text-gray-800 font-primary text-[17px] capitalize tracking-tight group-hover/card:text-orange-600 transition-colors mb-1">
+                            {file.title}
+                          </h4>
+                          <div className="text-[14px] text-gray-500 font-medium leading-relaxed italic">
+                            <ExpandableText text={file.description} limit={200} />
+                          </div>
+
+                          <div className="mt-3 flex items-center gap-2">
+                            <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest font-primary">Owner :</span>
+                            <div className="flex items-center gap-2 bg-slate-50/80 px-2 py-1 rounded-full border border-slate-100 transition-colors group-hover/card:bg-orange-50/50 group-hover/card:border-orange-100">
+                              <UserAvatar name={file.owner} profilePicture={file.profilePicture} size="w-6 h-6 border-white shadow-sm" />
+                              <span className="text-[12px] font-bold text-slate-700 capitalize">{file.owner}</span>
                             </div>
                           </div>
                         </div>
@@ -812,102 +1044,98 @@ export default function LeadTabs({
                 </div>
               ) : (
                 meetings.map((meeting) => (
-                  <div key={meeting.id} className="bg-white rounded-sm border border-gray-100 p-6 hover:shadow-sm transition-all group">
-                    <div className="flex items-start gap-5">
-                      <div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg text-white">
-                        <Users size={24} className="fill-white/20" />
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between mb-4">
-                          <div className="flex items-center gap-4">
-                            <div className="flex items-center gap-1.5 px-3 py-1 bg-purple-50 text-purple-600 rounded-sm text-[10px] font-black font-primary uppercase tracking-widest border border-purple-100">
-                              {meeting.meeting_type === 'Online' ? <Video size={12} className="fill-purple-600/10" /> : <MapPin size={12} className="fill-purple-600/10" />}
-                              {meeting.meeting_type}
+                  <div key={meeting.id} className="bg-white rounded-lg border border-gray-100 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] hover:border-orange-200 cursor-pointer transition-all overflow-hidden font-primary group/card">
+                    <div className="p-6">
+                      <div className="flex gap-5 items-start mb-6">
+                        <div className="w-14 h-14 bg-purple-600 rounded-full flex items-center justify-center flex-shrink-0 shadow-xl transition-transform group-hover/card:scale-105">
+                          <Users size={24} className="text-white fill-white/20" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between mb-1.5">
+                            <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-1.5 px-3 py-1 bg-purple-50 text-purple-600 rounded-sm text-[10px] font-black uppercase tracking-widest border border-purple-100">
+                                {meeting.meeting_type === 'Online' ? <Video size={12} className="fill-purple-600/10" /> : <MapPin size={12} className="fill-purple-600/10" />}
+                                {meeting.meeting_type}
+                              </div>
+                              <div className="flex items-center gap-1.5 text-[12px] font-bold text-purple-600">
+                                <Calendar size={12} /> {meeting.date}
+                              </div>
+                              <div className="flex items-center gap-1.5 text-[12px] font-bold text-purple-600">
+                                <Clock size={12} /> {meeting.time}
+                              </div>
                             </div>
-                            <span className="flex items-center gap-1.5 text-[12px] font-bold text-gray-400 font-primary">
-                              <Calendar size={12} /> {meeting.date}
-                            </span>
-                            <span className="flex items-center gap-1.5 text-[12px] font-bold text-gray-400 font-primary">
-                              <Clock size={12} /> {meeting.time}
-                            </span>
+                            <div className="flex gap-2 opacity-0 group-hover/card:opacity-100 transition-opacity">
+                              <button onClick={(e) => { e.stopPropagation(); onEditClick('meeting', meeting.originalData); }} className="p-1.5 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded-sm">
+                                <Edit2 size={16} />
+                              </button>
+                              <button onClick={(e) => { e.stopPropagation(); onDeleteClick('meeting', meeting.id); }} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-sm">
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
                           </div>
-                          <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button onClick={() => onEditClick('meeting', meeting.originalData)} className="p-1.5 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded-sm">
-                              <Edit2 size={16} />
-                            </button>
-                            <button onClick={() => onDeleteClick('meeting', meeting.id)} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-sm">
-                              <Trash2 size={16} />
-                            </button>
+                          <h4 className="font-semibold text-[#1E293B] text-[17px] leading-tight mb-2" title={meeting.title}>
+                            Meeting With <span className="capitalize">{meeting.title?.length > 60 ? meeting.title.substring(0, 60) + "..." : meeting.title}</span>
+                          </h4>
+                          <div className="text-[14px] text-gray-500 font-medium leading-relaxed">
+                            <ExpandableText text={meeting.description} limit={250} />
                           </div>
                         </div>
-                        <h3 className="text-[16px] font-bold text-gray-800 mb-2 font-primary group-hover:text-purple-600 transition-colors">
-                          Meeting With <span className="capitalize">{meeting.title}</span>
-                        </h3>
-                        <div className="text-[14px] text-gray-500 font-medium font-primary leading-relaxed mb-2.5">
-                          <ExpandableText text={meeting.description} limit={250} />
-                        </div>
+                      </div>
 
-                        {/* Meeting Location Detail */}
-                        <div className="mb-3.5 p-3 bg-slate-50 border border-slate-100 rounded-sm flex items-start gap-3 group/loc transition-colors hover:border-purple-100 hover:bg-purple-50/30">
+                      {/* Location Box */}
+                      <div className="mb-6 p-4 bg-slate-50/80 border border-slate-100 rounded-lg flex items-start gap-4 transition-colors group-hover/card:border-purple-200">
+                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm ${meeting.meeting_type === 'Online' ? 'bg-blue-100 text-blue-600' : 'bg-orange-100 text-orange-600'}`}>
+                          {meeting.meeting_type === 'Online' ? <Video size={18} /> : <MapPin size={18} />}
+                        </div>
+                        <div className="flex-1 overflow-hidden">
+                          <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ${meeting.meeting_type === 'Online' ? 'text-blue-500' : 'text-orange-500'}`}>
+                            {meeting.meeting_type === 'Online' ? 'Meeting Link' : 'Location Address'}
+                          </p>
                           {meeting.meeting_type === 'Online' ? (
-                            <>
-                              <div className="w-8 h-8 rounded-sm bg-blue-100 flex items-center justify-center flex-shrink-0 text-blue-600 shadow-sm">
-                                <Video size={16} />
-                              </div>
-                              <div className="flex-1 overflow-hidden">
-                                <p className="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-0.5">Meeting Link</p>
-                                {meeting.meeting_link ? (
-                                  <a href={meeting.meeting_link.startsWith('http') ? meeting.meeting_link : `https://${meeting.meeting_link}`} target="_blank" rel="noopener noreferrer" className="text-[13px] font-bold text-gray-700 hover:text-blue-600 underline truncate block">
-                                    {meeting.meeting_link}
-                                  </a>
-                                ) : (
-                                  <p className="text-[13px] font-bold text-gray-400 italic">No link provided</p>
-                                )}
-                              </div>
-                            </>
+                            meeting.meeting_link ? (
+                              <a href={meeting.meeting_link.startsWith('http') ? meeting.meeting_link : `https://${meeting.meeting_link}`} target="_blank" rel="noopener noreferrer" className="text-[13px] font-bold text-gray-700 hover:text-blue-600 underline truncate block" onClick={(e) => e.stopPropagation()}>
+                                {meeting.meeting_link}
+                              </a>
+                            ) : <p className="text-[13px] font-bold text-gray-400 italic">No link provided</p>
                           ) : (
-                            <>
-                              <div className="w-8 h-8 rounded-sm bg-orange-100 flex items-center justify-center flex-shrink-0 text-orange-600 shadow-sm">
-                                <MapPin size={16} />
-                              </div>
-                              <div className="flex-1 overflow-hidden">
-                                <p className="text-[10px] font-black text-orange-500 uppercase tracking-widest mb-0.5">Meeting Address</p>
-                                <div className="text-[13px] font-bold text-gray-700 leading-snug">
-                                  {meeting.address_line1 && <span>{meeting.address_line1}</span>}
-                                  {meeting.address_line2 && <span>, {meeting.address_line2}</span>}
-                                  {(meeting.city || meeting.state || meeting.pincode) && (
-                                    <p className="mt-0.5 text-gray-500 font-semibold">
-                                      {[meeting.city, meeting.state, meeting.pincode].filter(Boolean).join(', ')}
-                                    </p>
-                                  )}
-                                  {!meeting.address_line1 && !meeting.city && (
-                                    <p className="text-gray-400 italic">No address provided</p>
-                                  )}
-                                </div>
-                              </div>
-                            </>
+                            <div className="text-[13px] font-bold text-gray-700 leading-snug">
+                              {meeting.address_line1 || meeting.city ? (
+                                <>
+                                  <p>{[meeting.address_line1, meeting.address_line2].filter(Boolean).join(', ')}</p>
+                                  <p className="text-gray-500">{[meeting.city, meeting.state, meeting.pincode].filter(Boolean).join(', ')}</p>
+                                </>
+                              ) : <p className="text-gray-400 italic">No address provided</p>}
+                            </div>
                           )}
                         </div>
-                        <div className="flex items-center justify-between pt-3 border-t border-gray-50">
-                          <div className="flex items-center gap-6">
-                            <div className="flex flex-col">
-                              <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1 font-primary">Hosted By</span>
-                              <div className="flex items-center gap-2">
-                                <UserAvatar name={meeting.host} profilePicture={meeting.profilePicture} size="w-7 h-7" />
-                                <span className="text-[13px] font-bold text-gray-700 font-primary capitalize">{meeting.host}</span>
-                              </div>
+                      </div>
+
+                      {/* Footer */}
+                      <div className="flex items-center justify-between pt-5 border-t border-gray-100">
+                        <div className="flex items-center gap-8">
+                          <div className="flex flex-col gap-1.5">
+                            <span className="text-[10px] font-black text-purple-600 uppercase tracking-widest font-primary">Hosted By</span>
+                            <div className="flex items-center gap-2">
+                              <UserAvatar name={meeting.host} profilePicture={meeting.profilePicture} size="w-7 h-7" />
+                              <span className="text-[12px] font-bold text-slate-700 capitalize">{meeting.host}</span>
                             </div>
-                            {meeting.attendees?.length > 0 && (
-                              <div className="flex flex-col">
-                                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1 font-primary">Participants</span>
-                                <div className="flex items-center -space-x-2">
-                                  {meeting.attendees.map((at, i) => (
-                                    <UserAvatar key={i} name={typeof at === 'string' ? at : at.name} size="w-7 h-7 border-2 border-white" />
-                                  ))}
-                                </div>
-                              </div>
-                            )}
                           </div>
+                          {meeting.attendees?.length > 0 && (
+                            <div className="flex flex-col gap-1.5 flex-1 min-w-0">
+                              <span className="text-[10px] font-black text-purple-600 uppercase tracking-widest font-primary">Participants</span>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setPartModal({ show: true, attendees: meeting.attendees });
+                                }}
+                                className="flex items-center -space-x-2 overflow-x-auto no-scrollbar hover:bg-slate-100 p-1 rounded-full transition-colors w-full"
+                              >
+                                {meeting.attendees.map((at, i) => (
+                                  <UserAvatar key={i} name={typeof at === 'string' ? at : at.name} size="w-7 h-7 border-2 border-white shadow-sm flex-shrink-0" />
+                                ))}
+                              </button>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -930,7 +1158,7 @@ export default function LeadTabs({
                 </div>
                 <button
                   disabled={isDisabled}
-                  className={`px-8 py-3 rounded-sm transition-all font-bold text-[14px] font-primary shadow-lg active:scale-95 ${isDisabled ? 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none' : 'bg-orange-500 text-white hover:bg-orange-600 shadow-orange-500/20'}`}
+                  className={`px-6 py-2.5 rounded-sm transition-all font-bold text-[13px] font-primary shadow-lg active:scale-95 ${isDisabled ? 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none' : 'bg-orange-500 text-white hover:bg-orange-600 shadow-orange-500/20'}`}
                 >
                   Connect Account
                 </button>
@@ -974,6 +1202,7 @@ export default function LeadTabs({
   return (
     <div className={isDisabled ? "opacity-60 pointer-events-none select-none transition-opacity duration-300" : "transition-opacity duration-300"}>
       {renderTabContent()}
+      <ParticipantsModal />
     </div>
   );
 }

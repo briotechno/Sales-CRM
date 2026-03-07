@@ -40,6 +40,8 @@ import { offerLetterApi } from './api/offerLetterApi';
 import { applicantApi } from './api/applicantApi';
 import { integrationApi } from './api/integrationApi';
 import { goalApi } from './api/goalApi';
+import { visitorApi } from './api/visitorApi';
+import { meetingApi } from './api/meetingApi';
 
 
 
@@ -86,6 +88,8 @@ export const store = configureStore({
         [applicantApi.reducerPath]: applicantApi.reducer,
         [integrationApi.reducerPath]: integrationApi.reducer,
         [goalApi.reducerPath]: goalApi.reducer,
+        [visitorApi.reducerPath]: visitorApi.reducer,
+        [meetingApi.reducerPath]: meetingApi.reducer,
 
 
 
@@ -131,6 +135,8 @@ export const store = configureStore({
             applicantApi.middleware,
             integrationApi.middleware,
             goalApi.middleware,
+            visitorApi.middleware,
+            meetingApi.middleware,
             limitErrorMiddleware
 
         ),

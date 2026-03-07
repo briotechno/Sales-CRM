@@ -72,7 +72,33 @@ const syncDatabase = async () => {
             // Already exists
         }
 
-        console.log('Database synced: channel_configs and goals tables are ready.');
+        const visitorSql = `
+        CREATE TABLE IF NOT EXISTS visitors (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            visitor_name VARCHAR(255) NOT NULL,
+            phone_number VARCHAR(20) NOT NULL,
+            email VARCHAR(255),
+            company_name VARCHAR(255),
+            visitor_type VARCHAR(100),
+            purpose TEXT,
+            host_employee_ids JSON,
+            visit_date DATE,
+            check_in_time TIME,
+            check_out_time TIME,
+            status VARCHAR(50) DEFAULT 'Waiting',
+            id_proof_type VARCHAR(100),
+            id_proof_number VARCHAR(100),
+            remarks TEXT,
+            send_reminder BOOLEAN DEFAULT 0,
+            user_id INT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+        );
+        `;
+        await pool.query(visitorSql);
+
+        console.log('Database synced: channel_configs, goals, and visitors tables are ready.');
     } catch (error) {
         console.error('Error syncing database:', error);
     }

@@ -3,7 +3,6 @@ import { useSearchParams } from "react-router-dom";
 
 import DashboardLayout from "../../components/DashboardLayout";
 import { Html5QrcodeScanner } from "html5-qrcode";
-import { FiHome } from "react-icons/fi";
 import { useSelector } from "react-redux";
 import {
   useMarkAttendanceMutation,
@@ -13,6 +12,8 @@ import {
   useGetAttendanceSettingsQuery
 } from "../../store/api/attendanceApi";
 import { toast } from "react-hot-toast";
+import EmptyState from "../../components/common/EmptyState";
+import { FiHome, FiEye } from "react-icons/fi";
 
 import {
   Calendar,
@@ -482,9 +483,9 @@ export default function EmployeeAttendance() {
                 if (todayRecord) {
                   const hasCheckedOut = todayRecord.check_out && todayRecord.check_out !== '-';
                   return (
-                    <div className={`p-6 rounded-sm border-l-4 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6 ${hasCheckedOut ? 'bg-green-50 border-green-500' : 'bg-orange-50 border-orange-500'}`}>
+                    <div className={`p-5 rounded-sm border-l-4 shadow-sm flex flex-col md:flex-row items-center justify-between gap-5 ${hasCheckedOut ? 'bg-green-50 border-green-500' : 'bg-orange-50 border-orange-500'}`}>
                       <div className="flex items-center gap-4">
-                        <div className={`p-3 rounded-full ${hasCheckedOut ? 'bg-green-100' : 'bg-orange-100 animate-pulse'}`}>
+                        <div className={`p-2.5 rounded-sm ${hasCheckedOut ? 'bg-green-100' : 'bg-orange-100 animate-pulse'}`}>
                           {hasCheckedOut ? <CheckCircle className="w-8 h-8 text-green-600" /> : <Timer className="w-8 h-8 text-orange-600" />}
                         </div>
                         <div>
@@ -614,19 +615,19 @@ export default function EmployeeAttendance() {
                       return (
                         <div
                           key={index}
-                          className="flex items-center gap-4 p-4 bg-orange-50 rounded-sm border border-orange-100 hover:shadow-md transition-shadow"
+                          className="flex items-center gap-4 p-4 bg-white rounded-sm border border-gray-200 hover:bg-gray-50 transition-colors group"
                         >
-                          <div className={`w-12 h-12 rounded-full flex items-center justify-center ${isPresent ? 'bg-green-100' : 'bg-red-100'}`}>
-                            {isPresent ? <CheckCircle className="w-6 h-6 text-green-600" /> : <UserX className="w-6 h-6 text-red-600" />}
+                          <div className={`w-10 h-10 rounded-sm flex items-center justify-center border ${isPresent ? 'bg-green-50 border-green-100 text-green-600' : 'bg-red-50 border-red-100 text-red-600'}`}>
+                            {isPresent ? <CheckCircle className="w-5 h-5" /> : <UserX className="w-5 h-5" />}
                           </div>
                           <div className="flex-1">
                             <p className="font-bold text-gray-900">
                               {date}
                             </p>
                             <div className="flex items-center gap-2 mt-1">
-                              <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${record.status === 'present' ? 'bg-green-500 text-white' :
-                                record.status === 'late' ? 'bg-orange-500 text-white' :
-                                  'bg-red-500 text-white'
+                              <span className={`px-2 py-0.5 rounded-[2px] text-[10px] font-bold border uppercase tracking-wider ${record.status === 'present' ? 'bg-green-100 text-green-600 border-green-200' :
+                                record.status === 'late' ? 'bg-orange-100 text-orange-600 border-orange-200' :
+                                  'bg-red-100 text-red-600 border-red-200'
                                 }`}>
                                 {record.status}
                               </span>
@@ -663,15 +664,15 @@ export default function EmployeeAttendance() {
               {/* Header */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-6">
-                  <div className="bg-gradient-to-br from-orange-500 to-orange-600 p-5 rounded-3xl shadow-xl shadow-orange-100 animate-bounce-subtle">
-                    <Camera className="w-10 h-10 text-white" />
+                  <div className="bg-gradient-to-br from-orange-500 to-orange-600 p-4 rounded-sm shadow-md animate-in fade-in duration-700">
+                    <Camera className="w-8 h-8 text-white" />
                   </div>
                   <div>
-                    <h1 className="text-5xl font-black bg-gradient-to-r from-gray-900 via-orange-600 to-gray-900 bg-clip-text text-transparent tracking-tighter">
+                    <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
                       My Check-In
                     </h1>
-                    <p className="text-gray-400 mt-1 font-bold text-sm tracking-wide flex items-center gap-2">
-                      <span className="w-8 h-[2px] bg-orange-200"></span>
+                    <p className="text-gray-400 mt-0.5 font-medium text-xs tracking-wide flex items-center gap-2">
+                      <span className="w-6 h-[1.5px] bg-orange-300"></span>
                       Secure presence verification
                     </p>
                   </div>
@@ -697,8 +698,8 @@ export default function EmployeeAttendance() {
 
               {/* Employee List (Here: Just the current user card for check-in) */}
               <div className="bg-white rounded-sm shadow-sm p-6">
-                <h2 className="text-3xl font-black text-gray-900 mb-8 tracking-tight">
-                  Session <span className="text-orange-500 underline decoration-orange-200 decoration-4 underline-offset-8">Terminal</span>
+                <h2 className="text-2xl font-bold text-gray-900 mb-6 tracking-tight">
+                  Session <span className="text-orange-500 border-b-2 border-orange-200">Terminal</span>
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {(() => {
@@ -711,44 +712,44 @@ export default function EmployeeAttendance() {
 
                     if (!todayRecord && !isAttendanceLoading) {
                       return (
-                        <div className={`group bg-white border-2 rounded-xl p-6 transition-all duration-300 ${(!settings?.wifiEnabled || isOnCompanyNetwork)
-                          ? "border-gray-100 hover:border-orange-200 hover:shadow-xl shadow-lg"
-                          : "border-gray-100 opacity-75 grayscale shadow-none"
+                        <div className={`group bg-white border rounded-sm p-6 transition-all duration-300 ${(!settings?.wifiEnabled || isOnCompanyNetwork)
+                          ? "border-gray-200 hover:border-orange-500 hover:shadow-md shadow-sm"
+                          : "border-gray-200 opacity-75 grayscale shadow-none"
                           }`}>
-                          <div className="flex items-center gap-5 mb-6">
+                          <div className="flex items-center gap-4 mb-6">
                             <div className="relative">
-                              <div className="bg-gradient-to-br from-orange-500 to-orange-600 p-4 rounded-xl shadow-lg transform group-hover:rotate-6 transition-transform">
-                                <UserCheck className="w-8 h-8 text-white" />
+                              <div className="bg-gradient-to-br from-orange-500 to-orange-600 p-3 rounded-sm shadow-sm transition-transform group-hover:scale-105">
+                                <UserCheck className="w-6 h-6 text-white" />
                               </div>
-                              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full"></div>
+                              <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full"></div>
                             </div>
                             <div className="flex-1">
-                              <p className="font-extrabold text-gray-900 text-xl tracking-tight">
-                                {user?.name}
+                              <p className="font-bold text-gray-900 text-lg">
+                                {user?.name || user?.employee_name}
                               </p>
-                              <p className="text-sm text-gray-500 font-semibold flex items-center gap-1.5 capitalize">
-                                <Activity className="w-3.5 h-3.5 text-orange-500" />
-                                {user?.employee_id}
+                              <p className="text-xs text-gray-500 font-bold flex items-center gap-1.5 uppercase">
+                                <Activity className="w-3 h-3 text-orange-500" />
+                                {user?.employee_id && user?.employee_id !== "0" && user?.employee_id !== 0 ? user.employee_id : "Active User"}
                               </p>
                             </div>
                           </div>
 
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
                             {settings?.wifiEnabled && (
-                              <div className={`flex flex-col items-center gap-1 px-3 py-3 rounded-2xl text-[10px] font-bold transition-all duration-300 ${isOnCompanyNetwork ? 'bg-green-50 text-green-700 border border-green-100' : 'bg-red-50 text-red-700 border border-red-100'}`}>
-                                <Wifi className="w-5 h-5 mb-1" />
+                              <div className={`flex flex-col items-center gap-1 px-3 py-3 rounded-sm text-[10px] font-bold transition-all duration-300 ${isOnCompanyNetwork ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+                                <Wifi className="w-4 h-4 mb-0.5" />
                                 <span>WiFi {isOnCompanyNetwork ? 'OK' : 'Required'}</span>
                               </div>
                             )}
                             {settings?.qrCodeEnabled && (
-                              <div className="flex flex-col items-center gap-1 px-3 py-3 rounded-2xl text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-100 hover:bg-purple-100 transition-colors">
-                                <QrCode className="w-5 h-5 mb-1" />
+                              <div className="flex flex-col items-center gap-1 px-3 py-3 rounded-sm text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 transition-colors">
+                                <QrCode className="w-4 h-4 mb-0.5" />
                                 <span>QR Required</span>
                               </div>
                             )}
                             {settings?.gpsEnabled && (
-                              <div className="flex flex-col items-center gap-1 px-3 py-3 rounded-2xl text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-100 hover:bg-blue-100 transition-colors">
-                                <MapPin className="w-5 h-5 mb-1" />
+                              <div className="flex flex-col items-center gap-1 px-3 py-3 rounded-sm text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors">
+                                <MapPin className="w-4 h-4 mb-0.5" />
                                 <span>GPS Tracking</span>
                               </div>
                             )}
@@ -763,9 +764,9 @@ export default function EmployeeAttendance() {
                           <button
                             onClick={() => setShowCheckInModal(true)}
                             disabled={settings?.wifiEnabled && !isOnCompanyNetwork}
-                            className={`w-full py-4 rounded-xl font-black text-sm uppercase tracking-widest transition-all duration-300 shadow-lg active:scale-95 ${(!settings?.wifiEnabled || isOnCompanyNetwork)
-                              ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:shadow-orange-200 hover:-translate-y-1"
-                              : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                            className={`w-full py-3.5 rounded-sm font-bold text-sm uppercase tracking-widest transition-all duration-300 shadow-sm active:scale-95 ${(!settings?.wifiEnabled || isOnCompanyNetwork)
+                              ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:shadow-orange-200 hover:-translate-y-0.5"
+                              : "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200"
                               }`}
                           >
                             Check In
@@ -829,99 +830,109 @@ export default function EmployeeAttendance() {
 
           {/* ==================== RECORDS PAGE ==================== */}
           {currentPage === "records" && (
-            <div className="space-y-8 px-6">
+            <div className="space-y-6 px-6">
               {/* Header */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-6">
-                  <div className="bg-gradient-to-br from-orange-500 to-orange-600 p-5 rounded-3xl shadow-xl shadow-orange-100">
-                    <ClipboardList className="w-10 h-10 text-white" />
+                  <div className="bg-gradient-to-br from-orange-500 to-orange-600 p-4 rounded-sm shadow-md">
+                    <ClipboardList className="w-8 h-8 text-white" />
                   </div>
                   <div>
-                    <h1 className="text-5xl font-black bg-gradient-to-r from-gray-900 via-orange-600 to-gray-900 bg-clip-text text-transparent tracking-tighter">
+                    <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
                       Attendance Logs
                     </h1>
-                    <p className="text-gray-400 mt-1 font-bold text-sm tracking-wide flex items-center gap-2">
-                      <span className="w-8 h-[2px] bg-orange-200"></span>
+                    <p className="text-gray-400 mt-0.5 font-medium text-xs tracking-wide flex items-center gap-2">
+                      <span className="w-6 h-[1.5px] bg-orange-300"></span>
                       Complete history of your check-in sessions
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white rounded-sm shadow-sm overflow-hidden">
+              <div className="bg-white rounded-sm shadow-sm border border-gray-200 overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full">
-                    <thead className="bg-gradient-to-r from-orange-400 to-orange-500">
+                    <thead className="bg-gradient-to-r from-orange-500 to-orange-600">
                       <tr>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase">Date</th>
-                        <th className="px-6 py-4 text-center text-xs font-bold text-white uppercase">Check In</th>
-                        <th className="px-6 py-4 text-center text-xs font-bold text-white uppercase">Method</th>
-                        <th className="px-6 py-4 text-center text-xs font-bold text-white uppercase">Check Out</th>
-                        <th className="px-6 py-4 text-center text-xs font-bold text-white uppercase">Work Hours</th>
-                        <th className="px-6 py-4 text-center text-xs font-bold text-white uppercase">Status</th>
-                        <th className="px-6 py-4 text-center text-xs font-bold text-white uppercase">Action</th>
+                        <th className="px-6 py-4 text-left text-[10px] font-bold text-white uppercase tracking-wider">Date</th>
+                        <th className="px-6 py-4 text-center text-[10px] font-bold text-white uppercase tracking-wider">Check In</th>
+                        <th className="px-6 py-4 text-center text-[10px] font-bold text-white uppercase tracking-wider">Method</th>
+                        <th className="px-6 py-4 text-center text-[10px] font-bold text-white uppercase tracking-wider">Check Out</th>
+                        <th className="px-6 py-4 text-center text-[10px] font-bold text-white uppercase tracking-wider">Work Hours</th>
+                        <th className="px-6 py-4 text-center text-[10px] font-bold text-white uppercase tracking-wider">Status</th>
+                        <th className="px-6 py-4 text-center text-[10px] font-bold text-white uppercase tracking-wider">Action</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
-                      {myRecords.map((record) => {
-                        const badge = getStatusBadge(record.status);
-                        const StatusIcon = badge.icon;
-                        const methodBadge = getMethodBadge(record.check_in_method);
-                        const MethodIcon = methodBadge.icon;
+                      {myRecords.length > 0 ? (
+                        myRecords.map((record) => {
+                          const badge = getStatusBadge(record.status);
+                          const StatusIcon = badge.icon;
+                          const methodBadge = getMethodBadge(record.check_in_method);
+                          const MethodIcon = methodBadge.icon;
 
+                          return (
+                            <tr key={record.id} className="hover:bg-gray-50 transition-all duration-200 border-t border-gray-100 group">
+                              <td className="px-6 py-4 text-sm font-bold text-gray-900">
+                                {new Date(record.date).toLocaleDateString("en-US", {
+                                  year: 'numeric',
+                                  month: 'short',
+                                  day: 'numeric'
+                                })}
+                              </td>
 
-                        return (
-                          <tr key={record.id} className="hover:bg-orange-50 transition-colors">
-                            <td className="px-6 py-4 text-sm font-bold text-gray-900">
-                              {new Date(record.date).toLocaleDateString("en-US", {
-                                year: 'numeric',
-                                month: 'short',
-                                day: 'numeric'
-                              })}
-                            </td>
+                              <td className="px-6 py-4 text-center">
+                                <div className="flex items-center justify-center gap-2">
+                                  <Clock className="w-4 h-4 text-orange-400" />
+                                  <span className="text-gray-900 font-semibold">{record.check_in}</span>
+                                </div>
+                              </td>
 
-                            <td className="px-6 py-4 text-center">
-                              <div className="flex items-center justify-center gap-2">
-                                <Clock className="w-4 h-4 text-orange-400" />
-                                <span className="text-gray-900 font-semibold">{record.check_in}</span>
-                              </div>
-                            </td>
+                              <td className="px-6 py-4 text-center">
+                                <span className={`inline-flex items-center gap-1.5 px-3 py-1 ${methodBadge.bg} ${methodBadge.text} rounded-sm text-[10px] font-bold`}>
+                                  <MethodIcon className="w-3.5 h-3.5" />
+                                  {record.check_in_method}
+                                </span>
+                              </td>
 
-                            <td className="px-6 py-4 text-center">
-                              <span className={`inline-flex items-center gap-2 px-3 py-1 ${methodBadge.bg} ${methodBadge.text} rounded-sm text-xs font-bold`}>
-                                <MethodIcon className="w-4 h-4" />
-                                {record.check_in_method}
-                              </span>
-                            </td>
+                              <td className="px-6 py-4 text-center text-gray-900 font-semibold">{record.check_out}</td>
 
+                              <td className="px-6 py-4 text-center">
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-orange-50 text-orange-600 border border-orange-100 rounded-sm text-[10px] font-bold">
+                                  <Timer className="w-3.5 h-3.5" />
+                                  {record.work_hours}
+                                </span>
+                              </td>
 
-                            <td className="px-6 py-4 text-center text-gray-900 font-semibold">{record.check_out}</td>
+                              <td className="px-6 py-4 text-center">
+                                <span className={`inline-flex items-center gap-1.5 px-3 py-1 ${badge.bg} ${badge.text} rounded-sm text-[10px] font-bold border ${badge.bg.replace('bg-', 'border-').replace('-100', '-200')}`}>
+                                  <StatusIcon className="w-3.5 h-3.5" />
+                                  {badge.label}
+                                </span>
+                              </td>
 
-                            <td className="px-6 py-4 text-center">
-                              <span className="inline-flex items-center gap-2 px-3 py-1 bg-orange-100 text-orange-700 rounded-sm text-xs font-bold">
-                                <Timer className="w-4 h-4" />
-                                {record.work_hours}
-                              </span>
-                            </td>
-
-                            <td className="px-6 py-4 text-center">
-                              <span className={`inline-flex items-center gap-2 px-3 py-1 ${badge.bg} ${badge.text} rounded-sm text-xs font-bold`}>
-                                <StatusIcon className="w-4 h-4" />
-                                {badge.label}
-                              </span>
-                            </td>
-
-                            <td className="px-6 py-4 text-center">
-                              <button
-                                onClick={() => setDetailsModal(record)}
-                                className="text-orange-600 hover:text-orange-800 font-medium text-sm underline"
-                              >
-                                View
-                              </button>
-                            </td>
-                          </tr>
-                        )
-                      })}
+                              <td className="px-6 py-4 text-center">
+                                <button
+                                  onClick={() => setDetailsModal(record)}
+                                  className="p-2 text-orange-500 hover:bg-orange-50 rounded-sm transition-all border border-transparent hover:border-orange-200 group-hover:shadow-sm"
+                                  title="View Details"
+                                >
+                                  <FiEye className="w-4 h-4" />
+                                </button>
+                              </td>
+                            </tr>
+                          )
+                        })
+                      ) : (
+                        <tr>
+                          <td colSpan="7" className="py-20">
+                            <EmptyState
+                              title="No Attendance Logs Found"
+                              description="Your session history will appear here once you start checking in."
+                            />
+                          </td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -932,19 +943,19 @@ export default function EmployeeAttendance() {
 
         {/* ==================== SELFIE CAPTURE MODAL ==================== */}
         {showSelfieCapture && selectedEmployee && (
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-[2rem] shadow-2xl max-w-2xl w-full overflow-hidden animate-in zoom-in-95 duration-300">
-              <div className="bg-gradient-to-br from-orange-500 to-orange-600 p-8 flex justify-between items-center relative overflow-hidden">
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-sm shadow-2xl max-w-2xl w-full overflow-hidden animate-in zoom-in-95 duration-300">
+              <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-6 flex justify-between items-center relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 animate-pulse"></div>
                 <div className="flex items-center gap-4 relative z-10">
-                  <div className="bg-white/20 p-3 rounded-2xl backdrop-blur-sm">
-                    <Camera className="w-8 h-8 text-white" />
+                  <div className="bg-white/20 p-2.5 rounded-sm backdrop-blur-sm">
+                    <Camera className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <h2 className="text-2xl font-black text-white uppercase tracking-tight">
+                    <h2 className="text-xl font-bold text-white uppercase tracking-tight">
                       Selfie Hub
                     </h2>
-                    <p className="text-orange-100 text-xs font-bold opacity-90 uppercase tracking-widest">
+                    <p className="text-orange-100 text-[10px] font-bold opacity-90 uppercase tracking-widest">
                       {selectedEmployee.name} • Verification
                     </p>
                   </div>
@@ -957,10 +968,10 @@ export default function EmployeeAttendance() {
                 </button>
               </div>
 
-              <div className="p-10">
+              <div className="p-8">
                 <div
-                  className="relative bg-gray-950 rounded-[2rem] overflow-hidden mb-8 border-4 border-orange-100 shadow-2xl"
-                  style={{ height: "400px" }}
+                  className="relative bg-gray-950 rounded-sm overflow-hidden mb-6 border-2 border-orange-100 shadow-sm"
+                  style={{ height: "350px" }}
                 >
                   {!capturedImage ? (
                     <>
@@ -970,28 +981,28 @@ export default function EmployeeAttendance() {
                         playsInline
                         className="w-full h-full object-cover scale-x-[-1]"
                       />
-                      <div className="absolute inset-0 border-[3px] border-white/20 rounded-[1.8rem] pointer-events-none m-4"></div>
+                      <div className="absolute inset-0 border border-white/20 rounded-sm pointer-events-none m-4"></div>
                       <canvas ref={canvasRef} className="hidden" />
                     </>
                   ) : (
                     <img
                       src={capturedImage}
                       alt="Captured"
-                      className="w-full h-full object-cover scale-x-[-1]"
+                      className="w-full h-full object-cover"
                     />
                   )}
                 </div>
 
                 {location && (
-                  <div className="bg-orange-50/50 border-2 border-orange-100 rounded-2xl p-6 mb-8 flex items-center gap-5 group hover:bg-white hover:shadow-xl transition-all duration-300">
-                    <div className="bg-orange-100 p-3 rounded-xl group-hover:bg-orange-500 transition-colors">
-                      <MapPin className="w-6 h-6 text-orange-600 group-hover:text-white" />
+                  <div className="bg-orange-50/50 border border-orange-100 rounded-sm p-4 mb-6 flex items-center gap-4 group hover:bg-white transition-all duration-300">
+                    <div className="bg-orange-100 p-2.5 rounded-sm group-hover:bg-orange-500 transition-colors">
+                      <MapPin className="w-5 h-5 text-orange-600 group-hover:text-white" />
                     </div>
                     <div className="flex-1">
-                      <p className="font-black text-gray-900 text-sm uppercase tracking-tight">
+                      <p className="font-bold text-gray-900 text-xs uppercase tracking-tight">
                         GPS Lock Engaged
                       </p>
-                      <p className="text-xs text-orange-600 font-bold mt-0.5">
+                      <p className="text-[10px] text-orange-600 font-bold mt-0.5">
                         {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)} • ±{location.accuracy.toFixed(0)}m
                       </p>
                     </div>
@@ -999,11 +1010,11 @@ export default function EmployeeAttendance() {
                 )}
 
                 {loadingLocation && (
-                  <div className="bg-blue-50 border-2 border-blue-100 rounded-2xl p-6 mb-8 flex items-center gap-5 animate-pulse">
-                    <div className="bg-blue-100 p-3 rounded-xl">
-                      <MapPin className="w-6 h-6 text-blue-600" />
+                  <div className="bg-blue-50 border border-blue-100 rounded-sm p-4 mb-6 flex items-center gap-4 animate-pulse">
+                    <div className="bg-blue-100 p-2.5 rounded-sm">
+                      <MapPin className="w-5 h-5 text-blue-600" />
                     </div>
-                    <p className="text-blue-800 font-black text-sm uppercase tracking-tight">
+                    <p className="text-blue-800 font-bold text-xs uppercase tracking-tight">
                       Acquiring GPS Signal...
                     </p>
                   </div>
@@ -1013,28 +1024,28 @@ export default function EmployeeAttendance() {
                   {!capturedImage ? (
                     <button
                       onClick={capturePhoto}
-                      className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 text-white py-5 rounded-2xl font-black uppercase tracking-widest hover:shadow-xl hover:shadow-orange-100 transition-all duration-300 flex items-center justify-center gap-3 active:scale-95 group"
+                      className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 text-white py-4 rounded-sm font-bold uppercase tracking-widest hover:shadow-md transition-all duration-300 flex items-center justify-center gap-2 active:scale-95 group"
                     >
-                      <Camera className="w-6 h-6 group-hover:rotate-12 transition-transform" />
+                      <Camera className="w-5 h-5 group-hover:rotate-12 transition-transform" />
                       Capture Verification
                     </button>
                   ) : (
                     <>
                       <button
                         onClick={retakePhoto}
-                        className="flex-1 bg-gray-100 text-gray-500 py-5 rounded-2xl font-black uppercase tracking-widest hover:bg-gray-200 transition-all duration-300 active:scale-95"
+                        className="flex-1 bg-gray-100 text-gray-500 py-4 rounded-sm font-bold uppercase tracking-widest hover:bg-gray-200 transition-all duration-300 active:scale-95 border border-gray-200"
                       >
                         Retake
                       </button>
                       <button
                         onClick={() => handleCheckIn(selectedEmployee, capturedImage, location)}
                         disabled={isMarking || (settings?.gpsEnabled && !location)}
-                        className="flex-[2] bg-gradient-to-r from-orange-500 to-orange-600 text-white py-5 rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-orange-100 hover:-translate-y-1 transition-all duration-300 flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50"
+                        className="flex-[2] bg-gradient-to-r from-orange-500 to-orange-600 text-white py-4 rounded-sm font-bold uppercase tracking-widest shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
                       >
                         {isMarking ? (
-                          <div className="w-6 h-6 border-3 border-white border-t-transparent animate-spin rounded-full" />
+                          <div className="w-5 h-5 border-2 border-white border-t-transparent animate-spin rounded-full" />
                         ) : (
-                          <CheckCircle className="w-6 h-6" />
+                          <CheckCircle className="w-5 h-5" />
                         )}
                         Finalize Check-In
                       </button>
@@ -1049,39 +1060,39 @@ export default function EmployeeAttendance() {
         {/* ==================== DETAILS MODAL ==================== */}
         {detailsModal && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-[2rem] shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in duration-300">
-              <div className="bg-gradient-to-br from-orange-500 to-orange-600 p-8 flex justify-between items-center relative overflow-hidden">
+            <div className="bg-white rounded-sm shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in duration-300">
+              <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-6 flex justify-between items-center relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
                 <div className="relative z-10">
-                  <h2 className="text-3xl font-black text-white uppercase tracking-tighter">
+                  <h2 className="text-xl font-bold text-white uppercase tracking-tighter">
                     Attendance Details
                   </h2>
-                  <p className="text-orange-100 font-bold text-sm tracking-widest flex items-center gap-2 mt-1">
-                    <Calendar className="w-4 h-4" />
+                  <p className="text-orange-100 font-bold text-[10px] tracking-widest flex items-center gap-2 mt-0.5">
+                    <Calendar className="w-3.5 h-3.5" />
                     {detailsModal.date}
                   </p>
                 </div>
                 <button
                   onClick={() => setDetailsModal(null)}
-                  className="text-white hover:bg-white/20 p-3 rounded-full transition-all duration-300 relative z-10"
+                  className="text-white hover:bg-white/20 p-2 rounded-full transition-all duration-300 relative z-10"
                 >
-                  <X className="w-7 h-7" />
+                  <X className="w-6 h-6" />
                 </button>
               </div>
 
-              <div className="p-10 space-y-10">
+              <div className="p-8 space-y-8">
                 {detailsModal.selfie && (
                   <div className="relative group">
                     <div className="absolute -inset-1 bg-orange-100 rounded-[2.5rem] blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
                     <div className="relative">
-                      <h3 className="font-black text-gray-900 mb-4 px-2 flex items-center gap-2 text-sm uppercase tracking-widest">
-                        <Camera className="w-4 h-4 text-orange-500" />
+                      <h3 className="font-bold text-gray-900 mb-3 px-1 flex items-center gap-2 text-xs uppercase tracking-widest">
+                        <Camera className="w-3.5 h-3.5 text-orange-500" />
                         Shift Verification Image
                       </h3>
                       <img
                         src={detailsModal.selfie}
                         alt="Check-in selfie"
-                        className="w-full max-w-md mx-auto rounded-[2rem] shadow-2xl border-4 border-orange-50 hover:scale-[1.02] transition-transform duration-500"
+                        className="w-full max-w-md mx-auto rounded-sm shadow-md border border-orange-100"
                       />
                     </div>
                   </div>
@@ -1097,18 +1108,18 @@ export default function EmployeeAttendance() {
                 )}
 
                 {detailsModal.location && (
-                  <div className="bg-orange-50/50 border-2 border-orange-100 rounded-2xl p-6 flex items-center gap-6 group hover:bg-white transition-all duration-300">
-                    <div className="bg-orange-100 p-4 rounded-2xl text-orange-600 group-hover:bg-orange-500 group-hover:text-white transition-all">
-                      <MapPin className="w-8 h-8" />
+                  <div className="bg-orange-50/50 border border-orange-100 rounded-sm p-5 flex items-center gap-5 group hover:bg-white transition-all duration-300">
+                    <div className="bg-orange-100 p-3 rounded-sm text-orange-600 group-hover:bg-orange-500 group-hover:text-white transition-all">
+                      <MapPin className="w-6 h-6" />
                     </div>
                     <div>
-                      <h3 className="font-black text-gray-900 text-sm uppercase tracking-tight">
+                      <h3 className="font-bold text-gray-900 text-xs uppercase tracking-tight">
                         Geographic Stamp
                       </h3>
-                      <p className="text-orange-600 font-bold text-xs mt-1">
+                      <p className="text-orange-600 font-bold text-[10px] mt-0.5">
                         Lat: {detailsModal.location.latitude.toFixed(6)} • Long: {detailsModal.location.longitude.toFixed(6)}
                       </p>
-                      <p className="text-[10px] text-gray-400 font-bold mt-0.5 opacity-60">
+                      <p className="text-[9px] text-gray-400 font-bold mt-0.5 opacity-60">
                         Calculated Precision: ±{detailsModal.location.accuracy.toFixed(0)}m
                       </p>
                     </div>
@@ -1116,42 +1127,39 @@ export default function EmployeeAttendance() {
                 )}
 
                 <div className="grid grid-cols-2 gap-4 mt-8">
-                  <div className="bg-orange-50/50 p-5 rounded-2xl border border-orange-100 hover:bg-white hover:shadow-lg transition-all duration-300 group">
-                    <p className="text-orange-400 text-[10px] font-black uppercase tracking-widest mb-2 group-hover:text-orange-600">Check In</p>
-                    <p className="font-black text-gray-900 text-xl tracking-tight">
+                  <div className="bg-gray-50 p-4 rounded-sm border border-gray-100 hover:bg-white hover:shadow-sm transition-all duration-300 group">
+                    <p className="text-gray-400 text-[10px] font-bold uppercase tracking-widest mb-1 group-hover:text-orange-600">Check In</p>
+                    <p className="font-bold text-gray-900 text-lg tracking-tight">
                       {detailsModal.checkIn}
                     </p>
                   </div>
-                  <div className="bg-orange-50/50 p-5 rounded-2xl border border-orange-100 hover:bg-white hover:shadow-lg transition-all duration-300 group">
-                    <p className="text-orange-400 text-[10px] font-black uppercase tracking-widest mb-2 group-hover:text-orange-600">Check Out</p>
-                    <p className="font-black text-gray-900 text-xl tracking-tight">
+                  <div className="bg-gray-50 p-4 rounded-sm border border-gray-100 hover:bg-white hover:shadow-sm transition-all duration-300 group">
+                    <p className="text-gray-400 text-[10px] font-bold uppercase tracking-widest mb-1 group-hover:text-orange-600">Check Out</p>
+                    <p className="font-bold text-gray-900 text-lg tracking-tight">
                       {detailsModal.checkOut}
                     </p>
                   </div>
-                  <div className="bg-orange-50/50 p-5 rounded-2xl border border-orange-100 hover:bg-white hover:shadow-lg transition-all duration-300 group">
-                    <p className="text-orange-400 text-[10px] font-black uppercase tracking-widest mb-2 group-hover:text-orange-600">Method</p>
-                    <p className="font-extrabold text-gray-900 text-sm tracking-tight flex items-center gap-2">
+                  <div className="bg-gray-50 p-4 rounded-sm border border-gray-100 hover:bg-white hover:shadow-sm transition-all duration-300 group">
+                    <p className="text-gray-400 text-[10px] font-bold uppercase tracking-widest mb-1 group-hover:text-orange-600">Method</p>
+                    <p className="font-bold text-gray-900 text-[13px] tracking-tight flex items-center gap-2">
                       <Zap className="w-3.5 h-3.5 text-orange-500" />
                       {detailsModal.check_in_method}
                     </p>
                   </div>
-                  <div className="bg-orange-50/50 p-5 rounded-2xl border border-orange-100 hover:bg-white hover:shadow-lg transition-all duration-300 group">
-                    <p className="text-orange-400 text-[10px] font-black uppercase tracking-widest mb-2 group-hover:text-orange-600">Network IP</p>
+                  <div className="bg-gray-50 p-4 rounded-sm border border-gray-100 hover:bg-white hover:shadow-sm transition-all duration-300 group">
+                    <p className="text-gray-400 text-[10px] font-bold uppercase tracking-widest mb-1 group-hover:text-orange-600">Network IP</p>
                     <p className="font-bold text-gray-800 font-mono text-xs">
                       {detailsModal.ip_address}
                     </p>
                   </div>
-                  <div className="bg-orange-600 p-6 rounded-2xl col-span-2 shadow-xl shadow-orange-100 group relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-8 -mt-8 animate-pulse"></div>
-                    <p className="text-white/70 text-[10px] font-black uppercase tracking-widest mb-1">Total Work Hours</p>
-                    <p className="font-black text-white text-3xl tracking-tighter">
-                      {detailsModal.work_hours}
-                    </p>
-                    <div className="mt-2 flex items-center gap-2">
-                      <div className="w-full h-1.5 bg-white/20 rounded-full overflow-hidden">
-                        <div className="h-full bg-white w-3/4 rounded-full"></div>
-                      </div>
+                  <div className="bg-orange-500 p-6 rounded-sm col-span-2 shadow-sm group relative overflow-hidden flex items-center justify-between">
+                    <div className="relative z-10">
+                      <p className="text-white/80 text-[10px] font-bold uppercase tracking-widest mb-0.5">Total Work Hours</p>
+                      <p className="font-bold text-white text-3xl tracking-tighter">
+                        {detailsModal.work_hours}
+                      </p>
                     </div>
+                    <Timer className="w-12 h-12 text-white/20 relative z-10" />
                   </div>
                 </div>
               </div>
@@ -1161,36 +1169,40 @@ export default function EmployeeAttendance() {
 
         {showCheckInModal && (
           <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
-            <div className="bg-white rounded-[2rem] w-full max-w-md overflow-hidden relative shadow-2xl animate-in fade-in zoom-in duration-300">
-              <div className="p-10 bg-gradient-to-br from-orange-500 to-orange-600 text-white relative">
+            <div className="bg-white rounded-sm w-full max-w-md overflow-hidden relative shadow-2xl animate-in fade-in zoom-in duration-300">
+              <div className="p-5 bg-gradient-to-r from-orange-500 to-orange-600 text-white relative">
                 <button
                   onClick={() => setShowCheckInModal(false)}
-                  className="absolute top-6 right-6 p-2 hover:bg-white/20 rounded-full transition-all duration-300 hover:rotate-90"
+                  className="absolute top-4 right-4 p-2 hover:bg-white/20 rounded-full transition-all duration-300"
                 >
-                  <X className="w-6 h-6" />
+                  <X className="w-5 h-5" />
                 </button>
-                <div className="bg-white/20 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 backdrop-blur-sm">
-                  <Clock className="w-8 h-8 text-white" />
+                <div className="flex items-center gap-4">
+                  <div className="bg-white/20 w-10 h-10 rounded-sm flex items-center justify-center backdrop-blur-sm shadow-sm">
+                    <Clock className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold uppercase tracking-tight leading-none">Portal</h2>
+                    <p className="text-orange-100 font-bold text-[9px] opacity-90 tracking-wider uppercase mt-0.5">Start workspace session</p>
+                  </div>
                 </div>
-                <h2 className="text-4xl font-black uppercase tracking-tighter leading-none mb-1">Portal</h2>
-                <p className="text-orange-100 font-bold text-xs opacity-90 tracking-widest uppercase">Start your workspace session</p>
               </div>
 
-              <div className="p-10 space-y-5 bg-white">
+              <div className="p-7 space-y-4 bg-white">
                 {settings?.qrCodeEnabled && (
                   <button
                     onClick={() => {
                       setShowCheckInModal(false);
                       setShowQRScanner(true);
                     }}
-                    className="w-full flex items-center gap-5 p-6 bg-purple-50/50 border-2 border-purple-100 rounded-3xl hover:border-purple-500 hover:bg-white hover:shadow-2xl hover:shadow-purple-100 transition-all duration-300 group"
+                    className="w-full flex items-center gap-4 p-4 bg-purple-50 hover:bg-purple-100 border border-purple-100 rounded-sm transition-all duration-300 group"
                   >
-                    <div className="bg-purple-100 p-4 rounded-2xl group-hover:bg-purple-500 transition-all duration-300 group-hover:scale-110 group-hover:rotate-6">
-                      <QrCode className="w-8 h-8 text-purple-600 group-hover:text-white" />
+                    <div className="bg-white p-3 rounded-sm shadow-sm group-hover:bg-purple-500 transition-all duration-300 border border-purple-50">
+                      <QrCode className="w-6 h-6 text-purple-600 group-hover:text-white" />
                     </div>
                     <div className="text-left">
-                      <p className="font-black text-gray-900 text-xl group-hover:text-purple-700 transition-colors tracking-tight">Scan Office QR</p>
-                      <p className="text-[10px] text-purple-400 font-black uppercase tracking-widest mt-0.5">Physical Hub Verification</p>
+                      <p className="font-bold text-gray-900 text-lg tracking-tight">Scan Office QR</p>
+                      <p className="text-[9px] text-purple-400 font-bold uppercase tracking-widest mt-0.5">Physical Hub Verification</p>
                     </div>
                   </button>
                 )}
@@ -1200,20 +1212,20 @@ export default function EmployeeAttendance() {
                     setShowCheckInModal(false);
                     handleCheckInClick(user, null, true);
                   }}
-                  className="w-full flex items-center gap-5 p-6 bg-orange-50/50 border-2 border-orange-100 rounded-3xl hover:border-orange-500 hover:bg-white hover:shadow-2xl hover:shadow-orange-100 transition-all duration-300 group"
+                  className="w-full flex items-center gap-4 p-4 bg-orange-50 hover:bg-orange-100 border border-orange-100 rounded-sm transition-all duration-300 group"
                 >
-                  <div className="bg-orange-100 p-4 rounded-2xl group-hover:bg-orange-500 transition-all duration-300 group-hover:scale-110 group-hover:rotate-6">
-                    <Camera className="w-8 h-8 text-orange-600 group-hover:text-white" />
+                  <div className="bg-white p-3 rounded-sm shadow-sm group-hover:bg-orange-500 transition-all duration-300 border border-orange-50">
+                    <Camera className="w-6 h-6 text-orange-600 group-hover:text-white" />
                   </div>
                   <div className="text-left">
-                    <p className="font-black text-gray-900 text-xl group-hover:text-orange-700 transition-colors tracking-tight">Selfie & GPS</p>
-                    <p className="text-[10px] text-orange-400 font-black uppercase tracking-widest mt-0.5">Biometric Handshake</p>
+                    <p className="font-bold text-gray-900 text-lg tracking-tight">Selfie & GPS</p>
+                    <p className="text-[9px] text-orange-400 font-bold uppercase tracking-widest mt-0.5">Biometric Handshake</p>
                   </div>
                 </button>
 
                 <button
                   onClick={() => setShowCheckInModal(false)}
-                  className="w-full py-4 text-gray-400 font-black text-[10px] uppercase tracking-[0.2em] hover:text-red-500 transition-colors active:scale-95"
+                  className="w-full py-2 text-gray-400 font-bold text-[10px] uppercase tracking-wider hover:text-red-500 transition-colors active:scale-95"
                 >
                   Cancel Session
                 </button>
@@ -1224,38 +1236,38 @@ export default function EmployeeAttendance() {
 
         {showQRScanner && (
           <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
-            <div className="bg-white rounded-[2rem] w-full max-w-lg overflow-hidden relative shadow-2xl animate-in zoom-in-95 fade-in duration-300">
-              <div className="p-8 bg-gradient-to-br from-orange-500 to-orange-600 text-white flex justify-between items-center bg-[length:200%_200%]">
+            <div className="bg-white rounded-sm w-full max-w-lg overflow-hidden relative shadow-2xl animate-in zoom-in-95 fade-in duration-300">
+              <div className="p-6 bg-gradient-to-r from-orange-500 to-orange-600 text-white flex justify-between items-center bg-[length:200%_200%]">
                 <div className="flex items-center gap-4">
-                  <div className="bg-white/20 p-3 rounded-2xl backdrop-blur-sm">
-                    <QrCode className="w-8 h-8" />
+                  <div className="bg-white/20 p-2.5 rounded-sm backdrop-blur-sm shadow-sm">
+                    <QrCode className="w-6 h-6" />
                   </div>
                   <div>
-                    <h2 className="text-2xl font-black uppercase tracking-tight">Scan Office QR</h2>
-                    <p className="text-orange-100 text-xs font-semibold opacity-90">Instant presence verification</p>
+                    <h2 className="text-xl font-bold uppercase tracking-tight">Scan Office QR</h2>
+                    <p className="text-orange-100 text-[10px] font-semibold opacity-90">Instant presence verification</p>
                   </div>
                 </div>
                 <button
                   onClick={() => setShowQRScanner(false)}
-                  className="p-3 hover:bg-white/20 rounded-full transition-all duration-300 hover:rotate-90"
+                  className="p-2 hover:bg-white/20 rounded-full transition-all duration-300"
                 >
-                  <X className="w-7 h-7" />
+                  <X className="w-6 h-6" />
                 </button>
               </div>
-              <div className="p-10">
-                <div id="reader" className="overflow-hidden rounded-[1.5rem] border-4 border-orange-100 mb-8 bg-slate-50 min-h-[350px] shadow-inner flex items-center justify-center relative">
+              <div className="p-8">
+                <div id="reader" className="overflow-hidden rounded-sm border-2 border-orange-100 mb-6 bg-slate-50 min-h-[300px] shadow-inner flex items-center justify-center relative">
                 </div>
-                <div className="flex items-start gap-4 bg-orange-50 p-6 rounded-[1.5rem] border border-orange-100 mb-8">
-                  <div className="bg-orange-200 p-2 rounded-lg mt-1">
-                    <Zap className="w-4 h-4 text-orange-700" />
+                <div className="flex items-start gap-4 bg-orange-50 p-4 rounded-sm border border-orange-100 mb-6">
+                  <div className="bg-orange-200 p-1.5 rounded-sm mt-0.5">
+                    <Zap className="w-3.5 h-3.5 text-orange-700" />
                   </div>
-                  <p className="text-sm text-gray-700 font-bold leading-relaxed">
+                  <p className="text-xs text-gray-700 font-bold leading-relaxed">
                     Align the official office QR code within the frame. Once detected, you will be redirected to the photo verification step.
                   </p>
                 </div>
                 <button
                   onClick={() => setShowQRScanner(false)}
-                  className="w-full py-5 bg-gray-100 text-gray-500 font-black rounded-2xl hover:bg-red-50 hover:text-red-500 transition-all duration-300 uppercase tracking-widest text-xs shadow-sm hover:shadow-lg active:scale-95"
+                  className="w-full py-4 bg-gray-50 text-gray-500 font-bold rounded-sm hover:bg-red-50 hover:text-red-500 transition-all duration-300 uppercase tracking-widest text-[10px] border border-gray-100 shadow-sm active:scale-95"
                 >
                   Cancel Scanning
                 </button>
