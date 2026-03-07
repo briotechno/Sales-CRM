@@ -242,19 +242,19 @@ const Header = () => {
               <div className="absolute right-0 mt-3 w-64 bg-white rounded-lg shadow-2xl border border-gray-100 p-2 z-50 animate-fadeIn">
                 <div className="flex flex-col gap-1">
                   {[
-                    { name: "To Do", icon: <FiCheckSquare />, path: "/additional/todo", color: "text-blue-500" },
-                    { name: "Notes", icon: <FiFileText />, path: "/additional/notes", color: "text-purple-500" },
-                    { name: "Invoices", icon: <FiDollarSign />, path: "/additional/invoice", color: "text-green-500" },
-                    { name: "Expenses", icon: <Wallet />, path: "/additional/expenses", color: "text-orange-500" },
-                    { name: "Quotation", icon: <FileSignature size={18} />, path: "/additional/quotation", color: "text-indigo-500" },
+                    { name: "To Do", icon: <FiCheckSquare size={20} />, path: "/additional/todo", color: "text-blue-500" },
+                    { name: "Notes", icon: <FiFileText size={20} />, path: "/additional/notes", color: "text-purple-500" },
+                    { name: "Invoices", icon: <FiDollarSign size={20} />, path: "/additional/invoice", color: "text-green-500" },
+                    { name: "Expenses", icon: <Wallet size={20} />, path: "/additional/expenses", color: "text-orange-500" },
+                    { name: "Quotation", icon: <FileSignature size={20} />, path: "/additional/quotation", color: "text-indigo-500" },
                   ].map((app, i) => (
                     <button
                       key={i}
                       onClick={() => go(app.path)}
-                      className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-all group"
+                      className="flex items-center gap-2.5 p-1 rounded-lg hover:bg-gray-50 transition-all group"
                     >
-                      <div className={`p-2 rounded-lg bg-gray-50 ${app.color} group-hover:bg-white`}>{app.icon}</div>
-                      <span className="text-sm font-semibold text-gray-700">{app.name}</span>
+                      <div className={`p-1.5 rounded-lg bg-gray-50 ${app.color} group-hover:bg-white`}>{app.icon}</div>
+                      <span className="text-base font-bold text-gray-700">{app.name}</span>
                     </button>
                   ))}
                 </div>
