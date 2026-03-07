@@ -124,6 +124,7 @@ import LandingPage from "./pages/LandingPage";
 import Logout from "./pages/Logout";
 import SuperAdmin from "./pages/SuperAdmin/Dashboard/SuperAdmin";
 import EnterpriseManagement from "./pages/SuperAdmin/EnterpriseManagement/EnterpriseManagement";
+import EnterpriseDetail from "./pages/SuperAdmin/EnterpriseManagement/EnterpriseDetail";
 import SubscriptionManagement from "./pages/SuperAdmin/SubscriptionManagement/SubscriptionManagement";
 import ProductKeys from "./pages/SuperAdmin/ProductKeys/ProductKeys";
 import PaymentGateways from "./pages/SuperAdmin/PaymentGateways/PaymentGateways";
@@ -141,6 +142,7 @@ import Razorpay from "./pages/SuperAdmin/PaymentGateways/Razorpay.jsx";
 import PhonePay from "./pages/SuperAdmin/PaymentGateways/PhonePay.jsx";
 import GoalSetting from "./pages/GoalSetting/GoalSetting";
 
+import Wallet from "./pages/SuperAdmin/PaymentGateways/Wallet.jsx";
 
 import RoleProtectedRoute from "./components/RoleProtectedRoute";
 import GlobalModals from "./components/common/GlobalModals";
@@ -248,6 +250,7 @@ function App() {
             <Route element={<RoleProtectedRoute allowedRoles={['Super Admin']} />}>
               <Route path="/superadmin/dashboard" element={<SuperAdmin />} />
               <Route path="/superadmin/enterprises" element={<EnterpriseManagement />} />
+              <Route path="/superadmin/enterprises/:id" element={<EnterpriseDetail />} />
               <Route path="/superadmin/subscriptions" element={<SubscriptionManagement />} />
               <Route path="/superadmin/productkeys" element={<ProductKeys />} />
               <Route path="/superadmin/plans" element={<PlanManagement />} />
@@ -255,6 +258,7 @@ function App() {
               <Route path="/superadmin/paymentgateways/Cashfree" element={<Cashfree />} />
               <Route path="/superadmin/paymentgateways/PhonePay" element={<PhonePay />} />
               <Route path="/superadmin/paymentgateways/Razorpay" element={<Razorpay />} />
+              <Route path="/superadmin/wallet" element={<Wallet />} />
             </Route>
           </Route>
         </Route>
