@@ -745,6 +745,377 @@ const Lead = {
                 }, userId);
             }
         }
+    },
+
+    getEmployeePerformance: async (employeeId, userId) => {
+        // 1. Get Employee Basic Info
+        const [empInfo] = await pool.query(`
+            SELECT e.*, d.department_name as role, deg.designation_name as designation, e.joining_date as joined
+            FROM employees e
+            LEFT JOIN departments d ON e.department_id = d.id
+            LEFT JOIN designations deg ON e.designation_id = deg.id
+            WHERE e.id = ? AND e.user_id = ?
+        `, [employeeId, userId]);
+
+        if (empInfo.length === 0) return null;
+        const employee = empInfo[0];
+
+        // 2. Lead Stats
+        const [stats] = await pool.query(`
+            SELECT 
+                COUNT(*) as leads,
+                SUM(CASE WHEN tag = 'Won' THEN 1 ELSE 0 END) as converted,
+                ROUND((SUM(CASE WHEN tag = 'Won' THEN 1 ELSE 0 END) / NULLIF(COUNT(*), 0)) * 100, 1) as rate,
+                (SELECT ROUND(AVG(TIMESTAMPDIFF(MINUTE, l.created_at, lc.call_date)) / 60, 1) 
+                 FROM leads l 
+                 JOIN (SELECT lead_id, MIN(call_date) as call_date FROM lead_calls GROUP BY lead_id) lc ON l.id = lc.lead_id
+                 WHERE l.assigned_to = CAST(? AS CHAR) OR l.assigned_to = ?) as avg_response_time
+            FROM leads 
+            WHERE (assigned_to = CAST(? AS CHAR) OR assigned_to = ?) AND user_id = ?
+        `, [employeeId, employee.employee_id, employeeId, employee.employee_id, userId]);
+
+        const leadStats = stats[0] || { leads: 0, converted: 0, rate: 0, avg_response_time: 0 };
+
+        // 3. Lead Status Pipeline
+        const [pipeline] = await pool.query(`
+            SELECT 
+                status as name, 
+                COUNT(*) as count
+            FROM leads 
+            WHERE (assigned_to = CAST(? AS CHAR) OR assigned_to = ?) AND user_id = ?
+            GROUP BY status
+        `, [employeeId, employee.employee_id, userId]);
+
+        // 4. Recent Activities (Split into two queries to avoid 'Illegal mix of collations' error on UNION)
+        const [calls] = await pool.query(`
+            SELECT 'Call' as type, CONCAT('Call: ', status) as title, created_at as time, status as status_label
+            FROM lead_calls 
+            WHERE user_id = ? AND (lead_id IN (SELECT id FROM leads WHERE assigned_to = CAST(? AS CHAR) OR assigned_to = ?))
+            ORDER BY created_at DESC LIMIT 10
+        `, [userId, employeeId, employee.employee_id]);
+
+        const [otherActivities] = await pool.query(`
+            SELECT 'Activity' as type, title, created_at as time, 'Log' as status_label
+            FROM lead_activities 
+            WHERE user_id = ? AND (lead_id IN (SELECT id FROM leads WHERE assigned_to = CAST(? AS CHAR) OR assigned_to = ?))
+            ORDER BY created_at DESC LIMIT 10
+        `, [userId, employeeId, employee.employee_id]);
+
+        const allActivities = [...calls, ...otherActivities]
+            .sort((a, b) => new Date(b.time) - new Date(a.time))
+            .slice(0, 10);
+
+        // 5. Goals
+        const [goals] = await pool.query(`
+            SELECT * FROM goals 
+            WHERE employee_id = ? AND user_id = ? AND status = 'Active' 
+            ORDER BY created_at DESC LIMIT 1
+        `, [employeeId, userId]);
+
+        const goal = goals[0] || null;
+        let goalProgress = 0;
+        let goalCurrent = 0;
+        let goalTarget = goal ? goal.target_value : 1000000;
+
+        if (goal) {
+            // Calculate progress based on 'Won' leads value during goal period
+            const [progress] = await pool.query(`
+                SELECT SUM(value) as current 
+                FROM leads 
+                WHERE (assigned_to = CAST(? AS CHAR) OR assigned_to = ?) 
+                AND tag = 'Won' 
+                AND updated_at BETWEEN ? AND ?
+            `, [employeeId, employee.employee_id, goal.start_date, goal.end_date]);
+            goalCurrent = progress[0].current || 0;
+            goalProgress = Math.min(Math.round((goalCurrent / goalTarget) * 100), 100);
+        } else {
+            // Default mock progress if no goal set
+            const [allWon] = await pool.query(`
+                SELECT SUM(value) as current FROM leads WHERE (assigned_to = CAST(? AS CHAR) OR assigned_to = ?) AND tag = 'Won'
+            `, [employeeId, employee.employee_id]);
+            goalCurrent = allWon[0].current || 0;
+            goalTarget = 1500000;
+            goalProgress = Math.min(Math.round((goalCurrent / goalTarget) * 100), 100);
+        }
+
+        // 6. Conversion Trend (Last 14 days)
+        const [trend] = await pool.query(`
+            SELECT 
+                DATE_FORMAT(created_at, '%Y-%m-%d') as date,
+                COUNT(*) as total,
+                SUM(CASE WHEN tag = 'Won' THEN 1 ELSE 0 END) as won
+            FROM leads
+            WHERE (assigned_to = CAST(? AS CHAR) OR assigned_to = ?) AND created_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL 14 DAY)
+            GROUP BY date
+            ORDER BY date ASC
+        `, [employeeId, employee.employee_id]);
+
+        // 7. Dynamic Achievements
+        const achievements = [];
+        if (parseFloat(leadStats.rate) >= 40) {
+            achievements.push({ title: "Deal Closer Pro", sub: "Highest Conversions", icon: "Award", color: "amber" });
+        }
+        if (leadStats.leads >= 100) {
+            achievements.push({ title: "Engagement Star", sub: `${leadStats.leads}+ Direct Leads`, icon: "Activity", color: "blue" });
+        }
+        if (parseFloat(leadStats.avg_response_time) <= 2 && leadStats.leads > 0) {
+            achievements.push({ title: "Fast Responder", sub: "Under 2h response avg", icon: "Zap", color: "orange" });
+        }
+        if (goalProgress >= 100) {
+            achievements.push({ title: "Goal Crusher", sub: "100%+ Target Achieved", icon: "Target", color: "green" });
+        }
+        // Base achievement if nothing else
+        if (achievements.length === 0) {
+            achievements.push({ title: "Rising Talent", sub: "Team Contributor", icon: "Star", color: "amber" });
+        }
+
+        return {
+            employee: {
+                id: employee.id,
+                name: employee.employee_name,
+                role: employee.designation || employee.role || "Sales Executive",
+                email: employee.email,
+                joined: employee.joined ? new Date(employee.joined).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }) : 'N/A',
+                avatar: employee.employee_name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
+            },
+            stats: [
+                { title: "Total Leads", value: leadStats.leads, icon: 'Users', color: "text-blue-600", bg: "bg-blue-50" },
+                { title: "Deals Won", value: leadStats.converted, icon: 'Target', color: "text-green-600", bg: "bg-green-50" },
+                { title: "Success Rate", value: `${leadStats.rate}%`, icon: 'Award', color: "text-orange-600", bg: "bg-orange-50" },
+                { title: "Avg. Response", value: `${leadStats.avg_response_time || 0}h`, icon: 'Clock', color: "text-purple-600", bg: "bg-purple-50" },
+            ],
+            activities: allActivities.map(a => ({
+                type: a.type,
+                title: a.title,
+                time: Lead.formatTimeAgo(a.time),
+                status: a.status_label
+            })),
+            goalProgress: {
+                percentage: goalProgress,
+                current: goalCurrent,
+                target: goalTarget,
+                title: goal ? goal.goal_title : "Q1 Sales Target"
+            },
+            leadStatusPipeline: pipeline.map(p => ({
+                name: p.name,
+                count: p.count,
+                color: Lead.getStatusColor(p.name)
+            })),
+            conversionTrend: trend.map(t => Math.round((t.won / (t.total || 1)) * 100)),
+            achievements
+        };
+    },
+
+    getDashboardData: async (userId) => {
+        // 1. Stats
+        const [stats] = await pool.query(`
+            SELECT 
+                (SELECT COUNT(*) FROM leads WHERE user_id = ?) as total_leads,
+                (SELECT COUNT(*) FROM leads WHERE user_id = ? AND tag = 'New Lead') as new_leads,
+                (SELECT COUNT(*) FROM leads WHERE user_id = ? AND assigned_to IS NOT NULL) as assigned_leads,
+                (SELECT COUNT(*) FROM leads WHERE user_id = ? AND status = 'New') as unread_leads
+        `, [userId, userId, userId, userId]);
+
+        // 2. Recent Leads
+        const [recentLeads] = await pool.query(`
+            SELECT 
+                name, email, organization_name as company, status, tag as priority, created_at
+            FROM leads 
+            WHERE user_id = ? 
+            ORDER BY created_at DESC 
+            LIMIT 6
+        `, [userId]);
+
+        // 3. Trending Categories (by Industry)
+        const [trending] = await pool.query(`
+            SELECT 
+                COALESCE(NULLIF(industry_type, ''), 'Others') as category, 
+                COUNT(*) as count,
+                ROUND((COUNT(*) / (SELECT NULLIF(COUNT(*), 0) FROM leads WHERE user_id = ?)) * 100, 1) as percentage
+            FROM leads
+            WHERE user_id = ?
+            GROUP BY category
+            ORDER BY count DESC
+            LIMIT 5
+        `, [userId, userId]);
+
+        // 4. Weekly Analytics (Last 7 Days)
+        const [weekly] = await pool.query(`
+            SELECT 
+                DATE_FORMAT(d.date, '%a') as day,
+                COALESCE(COUNT(l.id), 0) as leads
+            FROM (
+                SELECT CURDATE() as date
+                UNION SELECT DATE_SUB(CURDATE(), INTERVAL 1 DAY)
+                UNION SELECT DATE_SUB(CURDATE(), INTERVAL 2 DAY)
+                UNION SELECT DATE_SUB(CURDATE(), INTERVAL 3 DAY)
+                UNION SELECT DATE_SUB(CURDATE(), INTERVAL 4 DAY)
+                UNION SELECT DATE_SUB(CURDATE(), INTERVAL 5 DAY)
+                UNION SELECT DATE_SUB(CURDATE(), INTERVAL 6 DAY)
+            ) d
+            LEFT JOIN leads l ON DATE(l.created_at) = d.date AND l.user_id = ?
+            GROUP BY d.date
+            ORDER BY d.date ASC
+        `, [userId]);
+
+        return {
+            stats: {
+                total: stats[0].total_leads,
+                total_up: "+12.5%",
+                new: stats[0].new_leads,
+                new_up: "+23.1%",
+                assigned: stats[0].assigned_leads,
+                assigned_up: "+8.2%",
+                unread: stats[0].unread_leads,
+                unread_down: "-5.3%"
+            },
+            recentLeads: recentLeads.map(l => ({
+                name: l.name,
+                email: l.email || "N/A",
+                company: l.company || "N/A",
+                status: l.status,
+                priority: l.priority === 'Won' ? 'High' : (l.priority === 'Interested' ? 'Medium' : 'Low'),
+                time: Lead.formatTimeAgo(l.created_at),
+                avatar: (l.name || 'U').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
+            })),
+            trendingData: trending.map(t => ({
+                category: t.category,
+                count: t.count,
+                percentage: t.percentage,
+                trend: t.percentage > 20 ? "up" : "down"
+            })),
+            weeklyData: weekly
+        };
+    },
+
+    formatTimeAgo: (date) => {
+        const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+        let interval = seconds / 31536000;
+        if (interval > 1) return Math.floor(interval) + " years ago";
+        interval = seconds / 2592000;
+        if (interval > 1) return Math.floor(interval) + " months ago";
+        interval = seconds / 86400;
+        if (interval > 1) return Math.floor(interval) + " days ago";
+        interval = seconds / 3600;
+        if (interval > 1) return Math.floor(interval) + " hours ago";
+        interval = seconds / 60;
+        if (interval > 1) return Math.floor(interval) + " minutes ago";
+        return Math.floor(seconds) + " seconds ago";
+    },
+
+    getStatusColor: (status) => {
+        const colors = {
+            'New Lead': 'bg-blue-500',
+            'Contacted': 'bg-orange-500',
+            'Negotiation': 'bg-purple-500',
+            'Won': 'bg-green-500',
+            'Dropped': 'bg-red-500'
+        };
+        return colors[status] || 'bg-gray-500';
+    },
+
+    getAnalysis: async (userId) => {
+        const [perfMetrics] = await pool.query(`
+            SELECT 
+                (SELECT ROUND((SUM(CASE WHEN tag = 'Won' THEN 1 ELSE 0 END) / NULLIF(COUNT(*), 0)) * 100, 1) FROM leads WHERE user_id = ?) as conversion_rate,
+                (SELECT ROUND(AVG(TIMESTAMPDIFF(MINUTE, l.created_at, lc.call_date)) / 60, 1) 
+                 FROM leads l 
+                 JOIN (SELECT lead_id, MIN(call_date) as call_date FROM lead_calls GROUP BY lead_id) lc ON l.id = lc.lead_id
+                 WHERE l.user_id = ?) as avg_response_time,
+                (SELECT ROUND(AVG(conversion_probability) / 10, 1) FROM leads WHERE user_id = ?) as success_score,
+                (SELECT ROUND((SUM(CASE WHEN status = 'Open' THEN 1 ELSE 0 END) / NULLIF(COUNT(*), 0)) * 100, 1) FROM leads WHERE user_id = ?) as active_rate
+        `, [userId, userId, userId, userId]);
+
+        const [sources] = await pool.query(`
+            SELECT 
+                COALESCE(NULLIF(lead_source, ''), 'Direct') as source, 
+                COUNT(*) as leads, 
+                ROUND((SUM(CASE WHEN tag = 'Won' THEN 1 ELSE 0 END) / NULLIF(COUNT(*), 0)) * 100, 1) as conversion,
+                SUM(value) as revenue
+            FROM leads
+            WHERE user_id = ?
+            GROUP BY source
+            ORDER BY leads DESC
+        `, [userId]);
+
+        const [industries] = await pool.query(`
+            SELECT 
+                COALESCE(NULLIF(industry_type, ''), 'Others') as industry, 
+                COUNT(*) as count,
+                ROUND((COUNT(*) / (SELECT NULLIF(COUNT(*), 0) FROM leads WHERE user_id = ?)) * 100, 1) as percentage
+            FROM leads
+            WHERE user_id = ?
+            GROUP BY industry
+            ORDER BY count DESC
+        `, [userId, userId]);
+
+        const [weekly] = await pool.query(`
+            SELECT 
+                DATE_FORMAT(created_at, '%v') as week_num,
+                CONCAT('Week ', DATE_FORMAT(created_at, '%v')) as week,
+                COUNT(CASE WHEN tag = 'New Lead' THEN 1 END) as \`new\`,
+                COUNT(CASE WHEN tag = 'Not Connected' THEN 1 END) as notConnected,
+                COUNT(CASE WHEN tag = 'Follow Up' THEN 1 END) as followUp,
+                COUNT(CASE WHEN tag = 'Interested' OR is_trending = 1 THEN 1 END) as trending,
+                COUNT(CASE WHEN tag = 'Won' THEN 1 END) as won
+            FROM leads 
+            WHERE user_id = ? AND created_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 WEEK)
+            GROUP BY week_num, week
+            ORDER BY week_num ASC
+        `, [userId]);
+
+        const [team] = await pool.query(`
+            SELECT 
+                MAX(e.id) as id,
+                e.employee_name as name, 
+                COUNT(*) as leads, 
+                SUM(CASE WHEN l.tag = 'Won' THEN 1 ELSE 0 END) as converted,
+                ROUND((SUM(CASE WHEN l.tag = 'Won' THEN 1 ELSE 0 END) / NULLIF(COUNT(*), 0)) * 100, 1) as rate,
+                SUBSTRING_INDEX(e.employee_name, ' ', 1) as avatar
+            FROM leads l
+            JOIN employees e ON (l.assigned_to = CAST(e.id AS CHAR) OR l.assigned_to = e.employee_id)
+            WHERE l.user_id = ? AND l.assigned_to IS NOT NULL
+            GROUP BY e.id, e.employee_name
+            ORDER BY leads DESC
+            LIMIT 5
+        `, [userId]);
+
+        return {
+            performanceMetrics: [
+                { title: "Conversion Rate", value: (perfMetrics[0].conversion_rate || 0) + "%", change: "+0%", trend: "up", icon: "Target", color: "from-orange-400 to-orange-500" },
+                { title: "Avg Response Time", value: (perfMetrics[0].avg_response_time || 0) + "h", change: "-0%", trend: "up", icon: "Clock", color: "from-orange-500 to-orange-600" },
+                { title: "Success Score", value: (perfMetrics[0].success_score || 0) + "/10", change: "+0", trend: "up", icon: "Award", color: "from-amber-500 to-orange-500" },
+                { title: "Active Rate", value: (perfMetrics[0].active_rate || 0) + "%", change: "+0%", trend: "up", icon: "Zap", color: "from-orange-600 to-red-500" }
+            ],
+            sourceAnalysis: sources.map(s => ({
+                source: s.source,
+                leads: s.leads,
+                conversion: s.conversion || 0,
+                revenue: "$" + (s.revenue || 0).toLocaleString(),
+                color: "bg-orange-500" // Default color, can be mapped from index
+            })),
+            weeklyTrends: weekly.map(w => ({
+                week: w.week,
+                new: w.new || 0,
+                notConnected: w.notConnected || 0,
+                followUp: w.followUp || 0,
+                trending: w.trending || 0,
+                won: w.won || 0
+            })),
+            teamPerformance: team.map(t => ({
+                id: t.id,
+                name: t.name,
+                leads: t.leads,
+                converted: t.converted || 0,
+                rate: t.rate || 0,
+                avatar: (t.name || 'U').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
+            })),
+            industryBreakdown: industries.map(i => ({
+                industry: i.industry,
+                percentage: i.percentage || 0,
+                count: i.count
+            }))
+        };
     }
 };
 

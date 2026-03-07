@@ -25,22 +25,26 @@ const getDashboardStats = async (req, res) => {
             [userId]
         );
 
-        // 2. Revenue Trend (Last 6 Months)
+        // 2. Revenue Trend (Dynamic Period)
+        const period = req.query.period || '6m';
+        const interval = period === '1y' ? '12 MONTH' : '6 MONTH';
+
         const [revenueTrend] = await pool.query(`
             SELECT 
                 DATE_FORMAT(invoice_date, '%b') as month,
                 SUM(total_amount) / 100000 as revenue
             FROM invoices 
             WHERE user_id = ? AND status = 'Paid'
-            AND invoice_date >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
+            AND invoice_date >= DATE_SUB(CURDATE(), INTERVAL ${interval})
             GROUP BY month, MONTH(invoice_date)
-            ORDER BY MONTH(invoice_date) ASC
+            ORDER BY MIN(invoice_date) ASC
         `, [userId]);
 
         // 3. Recent Leads
         const [recentLeads] = await pool.query(`
             SELECT 
                 name, organization_name as company, status, value, email, lead_source as source,
+                profile_image as profile_picture,
                 LEFT(name, 2) as avatar
             FROM leads 
             WHERE user_id = ? 
@@ -63,6 +67,7 @@ const getDashboardStats = async (req, res) => {
         const [champions] = await pool.query(`
             SELECT 
                 e.employee_name as name,
+                e.profile_picture as avatar_url,
                 COUNT(l.id) as deals,
                 SUM(l.value) as revenue,
                 LEFT(e.employee_name, 2) as avatar
@@ -141,9 +146,9 @@ const getDashboardStats = async (req, res) => {
                 SUM(CASE WHEN tag IN ('Closed', 'Won') OR status IN ('Closed', 'Won') THEN 1 ELSE 0 END) as won,
                 SUM(CASE WHEN tag = 'Lost' OR status = 'Lost' THEN 1 ELSE 0 END) as lost
             FROM leads 
-            WHERE user_id = ? AND updated_at >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
+            WHERE user_id = ? AND updated_at >= DATE_SUB(CURDATE(), INTERVAL ${interval})
             GROUP BY month, MONTH(updated_at)
-            ORDER BY MONTH(updated_at) ASC
+            ORDER BY MIN(updated_at) ASC
         `, [userId]);
 
         // 11. Territory Split
@@ -203,6 +208,7 @@ const getDashboardStats = async (req, res) => {
             SELECT 
                 la.activity_type as action, la.title as target, la.description as to_text, 
                 la.created_at, CONCAT(u.firstName, ' ', u.lastName) as user,
+                u.profile_picture as avatar_url,
                 LEFT(u.firstName, 1) as avatar,
                 TIMESTAMPDIFF(MINUTE, la.created_at, NOW()) as minutes_ago
             FROM lead_activities la
@@ -218,7 +224,8 @@ const getDashboardStats = async (req, res) => {
             target: a.target,
             to: a.to_text,
             time: a.minutes_ago < 60 ? `${a.minutes_ago}m ago` : a.minutes_ago < 1440 ? `${Math.floor(a.minutes_ago / 60)}h ago` : `${Math.floor(a.minutes_ago / 1440)}d ago`,
-            avatar: a.avatar
+            avatar: a.avatar,
+            avatar_url: a.avatar_url
         }));
 
         // 15. Revenue Forecast Comparison
@@ -252,7 +259,7 @@ const getDashboardStats = async (req, res) => {
 
         // 18. Workload & Team (Restored)
         const [workloadRows] = await pool.query(`
-            SELECT e.employee_name as name, COUNT(l.id) as leads
+            SELECT e.employee_name as name, e.profile_picture as avatar, COUNT(l.id) as leads
             FROM employees e
             LEFT JOIN leads l ON e.id = l.assigned_to OR e.employee_id = l.assigned_to
             WHERE e.user_id = ?
@@ -261,6 +268,7 @@ const getDashboardStats = async (req, res) => {
 
         const workloadData = workloadRows.map((w, i) => ({
             name: w.name,
+            avatar: w.avatar,
             leads: Number(w.leads),
             capacity: 100,
             color: ["#fb923c", "#60a5fa", "#f43f5e", "#22c55e"][i % 4]
@@ -269,6 +277,7 @@ const getDashboardStats = async (req, res) => {
         const [teamRows] = await pool.query(`
             SELECT 
                 e.id, e.employee_name as name,
+                e.profile_picture as avatar_url,
                 LEFT(e.employee_name, 2) as avatar,
                 COUNT(l.id) as leads,
                 SUM(CASE WHEN l.tag IN ('Closed', 'Won') OR l.status IN ('Closed', 'Won') THEN 1 ELSE 0 END) as converted,

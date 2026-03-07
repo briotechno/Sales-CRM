@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { FiHome } from "react-icons/fi";
+import EmptyState from "../../../components/common/EmptyState";
 import { QRCodeCanvas } from "qrcode.react";
 import DashboardLayout from "../../../components/DashboardLayout";
 import {
@@ -97,6 +98,7 @@ export default function AttendanceManagement() {
     manualEnabled: true,
     biometricEnabled: false,
     gpsEnabled: false,
+    anywhereEnabled: false,
 
     // WiFi Settings
     wifiSSID: "CompanyWiFi-Guest",
@@ -298,6 +300,7 @@ export default function AttendanceManagement() {
           wifiPassword: "",
           allowedIPs: "",
           gpsEnabled: false,
+          anywhereEnabled: false,
           officeLatitude: 0,
           officeLongitude: 0,
           geoFenceRadius: 100,
@@ -414,7 +417,7 @@ export default function AttendanceManagement() {
                 </div>
 
                 {/* Active Table */}
-                <div className="bg-white rounded-sm shadow-xl border border-gray-100 overflow-hidden">
+                <div className="bg-white rounded-sm shadow-sm border border-gray-200 overflow-hidden">
                   <div className="p-6 border-b border-gray-50 flex flex-col md:flex-row justify-between items-center gap-4">
                     <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
                       <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
@@ -434,71 +437,88 @@ export default function AttendanceManagement() {
 
                   <div className="overflow-x-auto">
                     <table className="w-full text-left">
-                      <thead className="bg-gray-50 border-b border-gray-100">
-                        <tr>
-                          <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Employee</th>
-                          <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-center">Check-In</th>
-                          <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-center">Status</th>
-                          <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-center">Network / IP</th>
-                          <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Actions</th>
+                      <thead>
+                        <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm">
+                          <th className="px-6 py-3 font-semibold border-b border-orange-400 capitalize whitespace-nowrap text-left">Employee</th>
+                          <th className="px-6 py-3 font-semibold border-b border-orange-400 capitalize whitespace-nowrap text-center">Check-In</th>
+                          <th className="px-6 py-3 font-semibold border-b border-orange-400 capitalize whitespace-nowrap text-center">Status</th>
+                          <th className="px-6 py-3 font-semibold border-b border-orange-400 capitalize whitespace-nowrap text-center">Network / IP</th>
+                          <th className="px-6 py-3 font-semibold border-b border-orange-400 capitalize whitespace-nowrap text-right">Actions</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-50">
                         {isAttendanceLoading ? (
                           <tr><td colSpan="5" className="px-6 py-12 text-center text-gray-400">Loading live data...</td></tr>
-                        ) : attendanceResponse?.data?.filter(r => r.status !== 'absent' &&
-                          (r.employee_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                            r.emp_uid?.toLowerCase().includes(searchQuery.toLowerCase()))
-                        ).map((record) => (
-                          <tr key={record.id} className="hover:bg-gray-50/50 transition-colors">
-                            <td className="px-6 py-4">
-                              <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center font-bold text-orange-600 border border-orange-200">
-                                  {record.employee_name?.charAt(0)}
+                        ) : (() => {
+                          const filteredRecords = attendanceResponse?.data?.filter(r => r.status !== 'absent' &&
+                            (r.employee_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                              r.emp_uid?.toLowerCase().includes(searchQuery.toLowerCase()))
+                          ) || [];
+
+                          if (filteredRecords.length === 0) {
+                            return (
+                              <tr>
+                                <td colSpan="5" className="py-20 text-center">
+                                  <EmptyState
+                                    title="No Live Attendance Found"
+                                    description="There are no active employee check-ins matching your search."
+                                  />
+                                </td>
+                              </tr>
+                            );
+                          }
+
+                          return filteredRecords.map((record) => (
+                            <tr key={record.id} className="border-t hover:bg-gray-50 transition-colors group">
+                              <td className="px-6 py-4">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center font-bold text-orange-600 border border-orange-200">
+                                    {record.employee_name?.charAt(0)}
+                                  </div>
+                                  <div>
+                                    <p className="font-bold text-gray-900">{record.employee_name}</p>
+                                    <p className="text-xs text-gray-500 font-medium">{record.emp_uid}</p>
+                                  </div>
                                 </div>
-                                <div>
-                                  <p className="font-bold text-gray-900">{record.employee_name}</p>
-                                  <p className="text-xs text-gray-500 font-medium">{record.emp_uid}</p>
+                              </td>
+                              <td className="px-6 py-4 text-center">
+                                <div className="inline-flex flex-col items-center">
+                                  <span className="text-sm font-bold text-gray-700">{record.check_in}</span>
+                                  <span className="text-[10px] text-gray-400 uppercase tracking-tighter">{record.check_in_method}</span>
                                 </div>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 text-center">
-                              <div className="inline-flex flex-col items-center">
-                                <span className="text-sm font-bold text-gray-700">{record.check_in}</span>
-                                <span className="text-[10px] text-gray-400 uppercase tracking-tighter">{record.check_in_method}</span>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 text-center">
-                              <span className={`px-2.5 py-1 rounded-sm text-[10px] font-extrabold uppercase tracking-wider ${record.status === 'present' ? 'bg-green-100 text-green-700' :
-                                record.status === 'late' ? 'bg-orange-100 text-orange-700' :
-                                  'bg-red-100 text-red-700'
-                                }`}>
-                                {record.status}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 text-center">
-                              <div className="text-xs font-mono text-gray-500">{record.ip_address}</div>
-                            </td>
-                            <td className="px-6 py-4 text-right">
-                              {!record.check_out ? (
-                                <button
-                                  onClick={() => handleManualCheckOut(record)}
-                                  className="px-3 py-1.5 bg-red-50 text-red-600 rounded-sm text-xs font-bold hover:bg-red-600 hover:text-white transition-all flex items-center gap-1 ml-auto"
-                                >
-                                  <LogOut className="w-3 h-3" />
-                                  Force Check Out
-                                </button>
-                              ) : (
-                                <span className="text-[10px] font-bold text-green-600 bg-green-50 px-2 py-1 rounded-sm">
-                                  COMPLETED at {record.check_out}
+                              </td>
+                              <td className="px-6 py-4 text-center">
+                                <span className={`px-2 py-1 rounded-[2px] text-[10px] font-bold border uppercase tracking-wider ${record.status === 'present' ? 'bg-green-100 text-green-600 border-green-200' :
+                                  record.status === 'late' ? 'bg-orange-100 text-orange-600 border-orange-200' :
+                                    'bg-red-100 text-red-600 border-red-200'
+                                  }`}>
+                                  {record.status}
                                 </span>
-                              )}
-                            </td>
-                          </tr>
-                        ))}
-                        {!isAttendanceLoading && (attendanceResponse?.data?.filter(r => r.status !== 'absent') || []).length === 0 && (
-                          <tr><td colSpan="5" className="px-6 py-20 text-center text-gray-400 italic">No active attendance sessions found for today.</td></tr>
-                        )}
+                              </td>
+                              <td className="px-6 py-4 text-center">
+                                <div className="text-xs font-mono text-gray-500">{record.ip_address}</div>
+                              </td>
+                              <td className="px-6 py-4 text-right">
+                                <div className="flex justify-end gap-2">
+                                  {!record.check_out ? (
+                                    <button
+                                      onClick={() => handleManualCheckOut(record)}
+                                      className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-500 rounded-sm text-red-600 hover:text-white transition-all border border-red-100 shadow-sm text-[10px] font-bold uppercase tracking-wider group"
+                                      title="Force Check Out"
+                                    >
+                                      <LogOut className="w-3.5 h-3.5" />
+                                      <span>Force Check Out</span>
+                                    </button>
+                                  ) : (
+                                    <span className="text-[10px] font-bold text-green-600 bg-green-50 px-3 py-1.5 rounded-sm border border-green-100 uppercase tracking-tighter">
+                                      COMPLETED at {record.check_out}
+                                    </span>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          ));
+                        })()}
                       </tbody>
                     </table>
                   </div>
@@ -508,8 +528,8 @@ export default function AttendanceManagement() {
 
             {mainTab === "records" && (
               <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <div className="bg-white rounded-sm shadow-xl border border-gray-100 p-6">
-                  <div className="flex justify-between items-center mb-6">
+                <div className="bg-white rounded-sm shadow-sm border border-gray-200 overflow-hidden">
+                  <div className="p-6 border-b border-gray-100 flex justify-between items-center">
                     <h2 className="text-xl font-bold text-gray-800">Historical Records Management</h2>
                     <div className="flex gap-2">
                       <button className="p-2 hover:bg-gray-100 rounded-sm text-gray-400"><Filter className="w-5 h-5" /></button>
@@ -519,39 +539,57 @@ export default function AttendanceManagement() {
 
                   <div className="overflow-x-auto">
                     <table className="w-full text-left">
-                      <thead className="bg-gray-50 border-b border-gray-100">
-                        <tr>
-                          <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Employee</th>
-                          <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-center">Date</th>
-                          <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-center">Hours</th>
-                          <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-center">Status</th>
-                          <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Actions</th>
+                      <thead>
+                        <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm">
+                          <th className="px-6 py-3 font-semibold border-b border-orange-400 capitalize whitespace-nowrap text-left">Employee</th>
+                          <th className="px-6 py-3 font-semibold border-b border-orange-400 capitalize whitespace-nowrap text-center">Date</th>
+                          <th className="px-6 py-3 font-semibold border-b border-orange-400 capitalize whitespace-nowrap text-center">Hours</th>
+                          <th className="px-6 py-3 font-semibold border-b border-orange-400 capitalize whitespace-nowrap text-center">Status</th>
+                          <th className="px-6 py-3 font-semibold border-b border-orange-400 capitalize whitespace-nowrap text-right">Actions</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-50">
-                        {attendanceResponse?.data?.map((record) => (
-                          <tr key={record.id} className="hover:bg-gray-50/50 transition-colors">
-                            <td className="px-6 py-4">
-                              <p className="font-bold text-gray-900">{record.employee_name}</p>
-                              <p className="text-xs text-gray-500">{record.emp_uid}</p>
-                            </td>
-                            <td className="px-6 py-4 text-center text-sm">{record.date ? new Date(record.date).toLocaleDateString() : '-'}</td>
-                            <td className="px-6 py-4 text-center text-sm font-bold">{record.work_hours || '-'}</td>
-                            <td className="px-6 py-4 text-center">
-                              <span className={`px-2.5 py-1 rounded-sm text-[10px] font-extrabold uppercase tracking-wider ${record.status === 'present' ? 'bg-green-100 text-green-700' :
-                                record.status === 'absent' ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'
-                                }`}>
-                                {record.status}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 text-right">
-                              <div className="flex justify-end gap-2">
-                                <button className="p-1 text-blue-600 hover:bg-blue-50 rounded-sm transition-colors"><Edit className="w-4 h-4" /></button>
-                                <button onClick={() => handleDeleteRecord(record.id)} className="p-1 text-red-600 hover:bg-red-50 rounded-sm transition-colors"><Trash2 className="w-4 h-4" /></button>
-                              </div>
+                        {attendanceResponse?.data?.length > 0 ? (
+                          attendanceResponse?.data?.map((record) => (
+                            <tr key={record.id} className="border-t hover:bg-gray-50 transition-colors group">
+                              <td className="px-6 py-4">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-600 border border-slate-200 uppercase">
+                                    {record.employee_name?.charAt(0)}
+                                  </div>
+                                  <div>
+                                    <p className="font-bold text-gray-900">{record.employee_name}</p>
+                                    <p className="text-[11px] text-gray-500 font-medium uppercase tracking-tighter">{record.emp_uid}</p>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 text-center text-sm">{record.date ? new Date(record.date).toLocaleDateString() : '-'}</td>
+                              <td className="px-6 py-4 text-center text-sm font-bold">{record.work_hours || '-'}</td>
+                              <td className="px-6 py-4 text-center">
+                                <span className={`px-2 py-1 rounded-[2px] text-[10px] font-bold border uppercase tracking-wider ${record.status === 'present' ? 'bg-green-100 text-green-600 border-green-200' :
+                                  record.status === 'absent' ? 'bg-red-100 text-red-600 border-red-200' : 'bg-orange-100 text-orange-600 border-orange-200'
+                                  }`}>
+                                  {record.status}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4 text-right">
+                                <div className="flex justify-end gap-2">
+                                  <button className="p-2 bg-blue-50 hover:bg-blue-500 rounded-sm text-blue-600 hover:text-white transition-all border border-blue-100 shadow-sm" title="Edit Record"><Edit className="w-4 h-4" /></button>
+                                  <button onClick={() => handleDeleteRecord(record.id)} className="p-2 bg-red-50 hover:bg-red-500 rounded-sm text-red-600 hover:text-white transition-all border border-red-100 shadow-sm" title="Delete Record"><Trash2 className="w-4 h-4" /></button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan="5" className="py-20 text-center">
+                              <EmptyState
+                                title="No Historical Records Found"
+                                description="Attendance logs will appear here once they are generated."
+                              />
                             </td>
                           </tr>
-                        ))}
+                        )}
                       </tbody>
                     </table>
                   </div>
@@ -1053,6 +1091,44 @@ export default function AttendanceManagement() {
                                 </div>
                               </div>
                             )}
+                          </div>
+
+                          {/* Anywhere Check-in */}
+                          <div className="bg-white border-2 border-gray-200 rounded-lg p-4 hover:border-indigo-300 transition-all">
+                            <div className="flex items-center justify-between mb-3">
+                              <div className="flex items-center gap-3">
+                                <div className="p-2 bg-indigo-100 rounded-lg">
+                                  <Globe className="w-6 h-6 text-indigo-600" />
+                                </div>
+                                <div>
+                                  <h4 className="text-sm font-bold text-gray-800">
+                                    Anywhere Check-in
+                                  </h4>
+                                  <p className="text-xs text-gray-600">
+                                    Allow check-in from any location
+                                  </p>
+                                </div>
+                              </div>
+                              <label className="relative inline-flex items-center cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={settings.anywhereEnabled}
+                                  onChange={(e) =>
+                                    handleSettingChange(
+                                      "anywhereEnabled",
+                                      e.target.checked
+                                    )
+                                  }
+                                  className="sr-only peer"
+                                />
+                                <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                              </label>
+                            </div>
+                            <div className="mt-4 pt-4 border-t border-gray-200">
+                              <p className="text-[11px] text-gray-500 leading-relaxed italic">
+                                "Enabling this allows employees to mark attendance from home or on-site without WiFi or GPS restrictions. Ideal for remote or field teams."
+                              </p>
+                            </div>
                           </div>
                         </div>
                       </div>

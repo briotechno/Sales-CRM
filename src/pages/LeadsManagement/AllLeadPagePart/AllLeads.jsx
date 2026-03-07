@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import * as XLSX from "xlsx";
 import { useSelector } from "react-redux";
 import { FiHome, FiGrid } from "react-icons/fi";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -313,20 +314,39 @@ export default function LeadsList() {
   };
 
   const handleExport = () => {
-    const headers = ["ID", "Name", "Email", "Phone", "Type", "Created", "Status", "Tag"];
-    const csvContent = [
-      headers.join(","),
-      ...leadsData.map((lead) =>
-        [lead.id, `"${lead.name}"`, lead.email || "", lead.mobile_number || "", lead.type || "", lead.createdAt, lead.status || "", lead.tag || ""].join(",")
-      ),
-    ].join("\n");
+    if (leadsData.length === 0) {
+      toast.error("No leads to export");
+      return;
+    }
 
-    const blob = new Blob([csvContent], { type: "text/csv" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `all_leads_${new Date().toISOString().split("T")[0]}.csv`;
-    a.click();
+    const exportData = leadsData.map((lead) => ({
+      "Lead ID": lead.lead_id || lead.id,
+      "Name": lead.name || lead.full_name || "--",
+      "Email": lead.email || "--",
+      "Mobile Number": lead.mobile_number || lead.phone || "--",
+      "Type": lead.type || "--",
+      "Created At": lead.createdAt || lead.created_at || "--",
+      "Status": lead.tag || lead.status || "New Lead",
+      "Priority": lead.priority || "Medium",
+      "Source": lead.lead_source || "--",
+      "Owner": lead.lead_owner || "--",
+      "Assigned To": lead.employee_name || "Unassigned",
+      "Pipeline": lead.pipeline_name || "--",
+      "Stage": lead.stage_name || "--",
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "All Leads");
+
+    // Fix column widths
+    const maxWidths = Object.keys(exportData[0]).map(key => ({
+      wch: Math.max(key.length, ...exportData.map(row => (row[key] || "").toString().length)) + 2
+    }));
+    worksheet["!cols"] = maxWidths;
+
+    XLSX.writeFile(workbook, `CRM_All_Leads_${new Date().toISOString().split("T")[0]}.xlsx`);
+    toast.success("Leads exported successfully to Excel!");
   };
 
   const handlePageChange = (page) => setCurrentPage(page);
@@ -615,13 +635,15 @@ export default function LeadsList() {
               </div>
 
               {/* Export Button */}
-              {/* <button
-                  onClick={handleExport}
-                  className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-sm text-[11px] font-bold text-gray-700 hover:bg-gray-50 transition-all shadow-sm capitalize tracking-wider"
-                >
-                  <Download size={18} className="text-[#FF7B1D]" />
-                  Export
-                </button> */}
+              <button
+                onClick={handleExport}
+                className="bg-white border border-gray-300 hover:bg-gray-50 px-5 py-3 rounded-sm flex items-center gap-2 transition font-semibold shadow-sm text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed group"
+                disabled={leadsData.length === 0}
+                title="Export to Excel"
+              >
+                <Download size={18} className="text-gray-700 transition-transform group-hover:scale-110" />
+                Export
+              </button>
 
               {/* Add Lead Button */}
               <div className="relative" ref={addLeadMenuRef}>

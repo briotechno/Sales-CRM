@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { X, FileText, LayoutGrid, Upload, CheckCircle, Plus } from "lucide-react";
+import { toast } from 'react-hot-toast';
 
 const AddNoteModal = ({ open, onClose, onSave, editData = null, title: modalTitle = "Add Note" }) => {
   const [title, setTitle] = useState("");
@@ -13,6 +14,7 @@ const AddNoteModal = ({ open, onClose, onSave, editData = null, title: modalTitl
     } else {
       setTitle("");
       setDescription("");
+      setFiles([]);
     }
   }, [editData, open]);
 
@@ -25,6 +27,13 @@ const AddNoteModal = ({ open, onClose, onSave, editData = null, title: modalTitl
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    // Attachments required for new notes/documents
+    if (!editData && files.length === 0) {
+      toast.error("Please attach at least one file");
+      return;
+    }
+
     onSave({
       title,
       description,
@@ -66,15 +75,14 @@ const AddNoteModal = ({ open, onClose, onSave, editData = null, title: modalTitl
           <div>
             <label className="flex items-center gap-2 text-[14px] font-semibold text-gray-700 mb-2 capitalize">
               <LayoutGrid size={14} className="text-[#FF7B1D]" />
-              Title <span className="text-red-500">*</span>
+              Title
             </label>
             <input
               type="text"
-              required
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               className="w-full px-4 py-2.5 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300 shadow-sm"
-              placeholder="Enter note title"
+              placeholder="Enter title"
             />
           </div>
 
@@ -82,15 +90,14 @@ const AddNoteModal = ({ open, onClose, onSave, editData = null, title: modalTitl
           <div>
             <label className="flex items-center gap-2 text-[14px] font-semibold text-gray-700 mb-2 capitalize">
               <FileText size={14} className="text-[#FF7B1D]" />
-              Description <span className="text-red-500">*</span>
+              Description
             </label>
             <textarea
               rows="4"
-              required
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               className="w-full px-4 py-2.5 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all resize-none text-sm text-gray-900 bg-white placeholder-gray-400 shadow-sm hover:border-gray-300"
-              placeholder="Write your note here..."
+              placeholder="Write your description here..."
             ></textarea>
           </div>
 
@@ -99,7 +106,7 @@ const AddNoteModal = ({ open, onClose, onSave, editData = null, title: modalTitl
             <div>
               <label className="flex items-center gap-2 text-[14px] font-semibold text-gray-700 mb-2 capitalize">
                 <Upload size={14} className="text-[#FF7B1D]" />
-                Attachments
+                Attachments <span className="text-red-500">*</span>
               </label>
 
               <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-gray-200 rounded-sm cursor-pointer hover:border-[#FF7B1D] hover:bg-orange-50/30 transition-all bg-gray-50/50 group">

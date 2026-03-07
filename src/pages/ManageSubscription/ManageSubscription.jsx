@@ -121,7 +121,7 @@ const ManageSubscription = () => {
   if (statsLoading || plansLoading) {
     return (
       <DashboardLayout>
-        <div className="flex flex-col items-center justify-center min-h-[80vh] ml-6">
+        <div className="flex flex-col items-center justify-center min-h-[80vh]">
           <Loader2 className="w-12 h-12 text-orange-500 animate-spin mb-4" />
           <p className="text-gray-500 font-bold uppercase tracking-widest text-sm">Loading Subscription Details...</p>
         </div>
@@ -132,7 +132,7 @@ const ManageSubscription = () => {
   if (!currentPlan) {
     return (
       <DashboardLayout>
-        <div className="flex flex-col items-center justify-center min-h-[80vh] ml-6">
+        <div className="flex flex-col items-center justify-center min-h-[80vh]">
           <Package className="w-12 h-12 text-gray-300 mb-4" />
           <p className="text-gray-500 font-bold">No Plan Found</p>
         </div>
@@ -142,9 +142,9 @@ const ManageSubscription = () => {
 
   return (
     <DashboardLayout>
-      <div className="p-0 bg-[#F9FAFB] ml-6 min-h-screen pb-12">
+      <div className="p-0 bg-[#F9FAFB] w-full min-h-screen pb-12">
         {/* Header Section */}
-        <div className="bg-white border-b border-gray-200 px-8 py-6 sticky top-0 z-[40]">
+        <div className="bg-white border-b border-gray-200 px-8 py-6 sticky top-[70px] z-[30]">
           <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
               <h1 className="text-2xl font-bold text-gray-900 leading-tight">Billing & subscription</h1>

@@ -883,6 +883,7 @@ export default function MessengerPage() {
       <div className="flex-1 min-h-0 ml-5 bg-white rounded-3xl overflow-hidden shadow-2xl border border-gray-100 flex flex-col">
         <div className="flex flex-1 min-h-0">
           {/* Sidebar */}
+
           <div className="w-[380px] bg-gray-50/30 flex flex-col h-full border-r border-gray-100">
             {/* Header */}
             <div className="px-6 pt-8 pb-6 bg-white shrink-0">

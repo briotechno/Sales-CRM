@@ -45,7 +45,8 @@ import { Loader2, RefreshCw } from "lucide-react";
 
 export default function CRMDashboard() {
   const navigate = useNavigate();
-  const { data: stats, isLoading, isFetching, refetch } = useGetCRMStatsQuery();
+  const [viewPeriod, setViewPeriod] = React.useState('6m');
+  const { data: stats, isLoading, isFetching, refetch } = useGetCRMStatsQuery(viewPeriod);
 
   if (isLoading) {
     return (
@@ -240,12 +241,22 @@ export default function CRMDashboard() {
                   </div>
                   <div>
                     <h2 className="text-2xl font-bold text-gray-800">Monthly Revenue Trend</h2>
-                    <p className="text-gray-500 text-sm font-medium">Performance overview for the last 6 months</p>
+                    <p className="text-gray-500 text-sm font-medium">Performance overview for the last {viewPeriod === '1y' ? '12 months' : '6 months'}</p>
                   </div>
                 </div>
                 <div className="flex gap-2 p-1 bg-gray-100 rounded-sm">
-                  <button className="px-4 py-1.5 text-xs font-bold bg-white text-orange-600 shadow-sm rounded-sm transition-all">6m View</button>
-                  <button className="px-4 py-1.5 text-xs font-bold text-gray-500 hover:text-gray-700 transition-all">1y View</button>
+                  <button
+                    onClick={() => setViewPeriod('6m')}
+                    className={`px-4 py-1.5 text-xs font-bold transition-all rounded-sm ${viewPeriod === '6m' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                  >
+                    6m View
+                  </button>
+                  <button
+                    onClick={() => setViewPeriod('1y')}
+                    className={`px-4 py-1.5 text-xs font-bold transition-all rounded-sm ${viewPeriod === '1y' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                  >
+                    1y View
+                  </button>
                 </div>
               </div>
               <div className="flex-1">
@@ -559,8 +570,22 @@ export default function CRMDashboard() {
                   <div key={idx} className="space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-sm bg-gradient-to-br from-slate-800 to-slate-900 text-white flex items-center justify-center font-bold text-base shadow-lg border border-slate-700 uppercase">
-                          {exec.name.split(' ').map(n => n[0]).join('')}
+                        <div className="w-12 h-12 rounded-sm bg-gradient-to-br from-slate-800 to-slate-900 text-white flex items-center justify-center font-bold text-base shadow-lg border border-slate-700 uppercase overflow-hidden">
+                          {exec.avatar ? (
+                            <img
+                              src={exec.avatar}
+                              alt={exec.name}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.style.display = 'none';
+                                e.target.nextSibling.style.display = 'flex';
+                              }}
+                            />
+                          ) : null}
+                          <span style={{ display: exec.avatar ? 'none' : 'flex' }}>
+                            {exec.name.split(' ').map(n => n[0]).join('')}
+                          </span>
                         </div>
                         <span className="text-base font-bold text-gray-800">{exec.name}</span>
                       </div>
@@ -709,8 +734,22 @@ export default function CRMDashboard() {
                   onClick={() => navigate(`/crm/leads/team-performance/${member.id}`)}
                   className="p-6 bg-white border border-gray-100 rounded-sm hover:border-orange-500 hover:shadow-xl transition-all duration-300 group cursor-pointer flex flex-col items-center text-center"
                 >
-                  <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center text-gray-800 font-bold text-xl mb-4 group-hover:bg-orange-600 group-hover:text-white transition-all shadow-sm border border-gray-100">
-                    {member.avatar}
+                  <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center text-gray-800 font-bold text-xl mb-4 group-hover:bg-orange-600 group-hover:text-white transition-all shadow-sm border border-gray-100 overflow-hidden">
+                    {member.avatar_url ? (
+                      <img
+                        src={member.avatar_url}
+                        alt={member.name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.style.display = 'none';
+                          e.target.nextSibling.style.display = 'flex';
+                        }}
+                      />
+                    ) : null}
+                    <span style={{ display: member.avatar_url ? 'none' : 'flex' }}>
+                      {member.avatar}
+                    </span>
                   </div>
                   <h4 className="font-bold text-gray-800 mb-4 group-hover:text-orange-600 transition-colors">
                     {member.name}
@@ -770,8 +809,22 @@ export default function CRMDashboard() {
                       <tr key={index} className="group hover:bg-orange-50/50 transition-all border-b border-gray-100 last:border-0 font-primary">
                         <td className="px-6 py-5">
                           <div className="flex items-center space-x-4">
-                            <div className="w-12 h-12 bg-slate-100 rounded-sm flex items-center justify-center text-slate-800 font-bold text-base group-hover:bg-gradient-to-br group-hover:from-orange-500 group-hover:to-orange-600 group-hover:text-white transition-all shadow-sm border border-slate-200 group-hover:border-orange-400 uppercase">
-                              {lead.avatar || (lead.name ? lead.name[0] : "L")}
+                            <div className="w-12 h-12 bg-slate-100 rounded-sm flex items-center justify-center text-slate-800 font-bold text-base group-hover:bg-gradient-to-br group-hover:from-orange-500 group-hover:to-orange-600 group-hover:text-white transition-all shadow-sm border border-slate-200 group-hover:border-orange-400 uppercase overflow-hidden">
+                              {lead.profile_picture ? (
+                                <img
+                                  src={lead.profile_picture}
+                                  alt={lead.name}
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    e.target.onerror = null;
+                                    e.target.style.display = 'none';
+                                    e.target.nextSibling.style.display = 'flex';
+                                  }}
+                                />
+                              ) : null}
+                              <span style={{ display: lead.profile_picture ? 'none' : 'flex' }}>
+                                {lead.avatar || (lead.name ? lead.name[0] : "L")}
+                              </span>
                             </div>
                             <div>
                               <p className="text-base font-bold text-gray-800 truncate max-w-[180px] group-hover:text-orange-700">{lead.name}</p>
@@ -859,8 +912,22 @@ export default function CRMDashboard() {
                 {champions.slice(0, 4).map((ch, i) => (
                   <div key={i} className="flex items-center justify-between p-6 bg-white/5 border border-white/10 rounded-sm hover:bg-white/10 transition-all group/item shadow-inner backdrop-blur-sm">
                     <div className="flex items-center gap-6">
-                      <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-orange-600 text-white flex items-center justify-center font-bold text-2xl rounded-sm shadow-2xl group-hover/item:scale-105 transition-all border border-orange-400 shadow-orange-500/30 uppercase">
-                        {ch.avatar}
+                      <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-orange-600 text-white flex items-center justify-center font-bold text-2xl rounded-sm shadow-2xl group-hover/item:scale-105 transition-all border border-orange-400 shadow-orange-500/30 uppercase overflow-hidden">
+                        {ch.avatar_url ? (
+                          <img
+                            src={ch.avatar_url}
+                            alt={ch.name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.style.display = 'none';
+                              e.target.nextSibling.style.display = 'flex';
+                            }}
+                          />
+                        ) : null}
+                        <span style={{ display: ch.avatar_url ? 'none' : 'flex' }}>
+                          {ch.avatar}
+                        </span>
                       </div>
                       <div>
                         <p className="text-lg font-bold text-white group-hover/item:text-orange-400 transition-colors">{ch.name}</p>
@@ -947,8 +1014,22 @@ export default function CRMDashboard() {
 
                   {/* Avatar/Icon Container with Badge */}
                   <div className="relative z-10">
-                    <div className="w-9 h-9 rounded-full bg-white border border-gray-200 shadow-sm text-gray-700 flex-shrink-0 flex items-center justify-center font-bold text-[11px] group-hover:border-orange-200 group-hover:bg-orange-50 group-hover:text-orange-600 transition-all duration-300 uppercase">
-                      {activity.avatar}
+                    <div className="w-9 h-9 rounded-full bg-white border border-gray-200 shadow-sm text-gray-700 flex-shrink-0 flex items-center justify-center font-bold text-[11px] group-hover:border-orange-200 group-hover:bg-orange-50 group-hover:text-orange-600 transition-all duration-300 uppercase overflow-hidden">
+                      {activity.avatar_url ? (
+                        <img
+                          src={activity.avatar_url}
+                          alt={activity.user}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.style.display = 'none';
+                            e.target.nextSibling.style.display = 'flex';
+                          }}
+                        />
+                      ) : null}
+                      <span style={{ display: activity.avatar_url ? 'none' : 'flex' }}>
+                        {activity.avatar}
+                      </span>
                     </div>
                     <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-white rounded-full flex items-center justify-center shadow-sm border border-gray-50">
                       <div className={`w-2 h-2 rounded-full ${activity.action?.toLowerCase().includes('won') ? 'bg-green-500 shadow-[0_0_5px_#22c55e]' : activity.action?.toLowerCase().includes('conversion') ? 'bg-blue-500 shadow-[0_0_5px_#3b82f6]' : 'bg-orange-500 shadow-[0_0_5px_#f97316]'}`}></div>
@@ -962,8 +1043,7 @@ export default function CRMDashboard() {
                     </div>
                     <p className="text-[12px] text-gray-500 leading-snug font-medium font-primary">
                       <span className="capitalize">{activity.action}</span> <span className="text-gray-900 font-bold">{activity.target}</span> <br />
-                      <span className="text-[11px] text-gray-400 font-bold italic tracking-tighter mr-1 uppercase">to</span>
-                      <span className="text-blue-600 px-1.5 py-0.5 bg-blue-50 rounded-sm font-extrabold text-[10px] uppercase tracking-tight inline-block mt-1 border border-blue-100">{activity.to}</span>
+
                     </p>
                   </div>
                 </div>

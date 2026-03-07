@@ -98,6 +98,7 @@ const getMainDashboardStats = async (req, res) => {
             SELECT 
                 id,
                 name,
+                profile_image as profile_picture,
                 organization_name as company,
                 lead_source as source,
                 tag as status,
@@ -128,6 +129,7 @@ const getMainDashboardStats = async (req, res) => {
         const [topPerformers] = await pool.query(`
             SELECT 
                 e.employee_name as name,
+                e.profile_picture as avatar,
                 COUNT(l.id) as leads,
                 SUM(CASE WHEN l.tag = 'Closed' THEN 1 ELSE 0 END) as deals,
                 SUM(CASE WHEN l.tag = 'Closed' THEN COALESCE(l.value, 0) ELSE 0 END) as revenue

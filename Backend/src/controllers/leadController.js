@@ -310,6 +310,34 @@ const analyzeLead = async (req, res) => {
     }
 };
 
+const getLeadAnalysis = async (req, res) => {
+    try {
+        const analysis = await Lead.getAnalysis(req.user.id);
+        res.status(200).json(analysis);
+    } catch (error) {
+        res.status(500).json({ status: false, message: error.message });
+    }
+};
+
+const getEmployeePerformance = async (req, res) => {
+    try {
+        const performance = await Lead.getEmployeePerformance(req.params.id, req.user.id);
+        if (!performance) return res.status(404).json({ message: 'Employee not found' });
+        res.status(200).json(performance);
+    } catch (error) {
+        res.status(500).json({ status: false, message: error.message });
+    }
+};
+
+const getLeadDashboard = async (req, res) => {
+    try {
+        const data = await Lead.getDashboardData(req.user.id);
+        res.status(200).json(data);
+    } catch (error) {
+        res.status(500).json({ status: false, message: error.message });
+    }
+};
+
 const getAssignmentHistory = async (req, res) => {
     try {
         const history = await LeadAssignmentLog.findByLeadId(req.params.id);
@@ -351,6 +379,32 @@ const addLeadNote = async (req, res) => {
     }
 };
 
+const addLeadNoteComment = async (req, res) => {
+    try {
+        const { noteId } = req.params;
+        const { text } = req.body;
+        const userId = req.user.id;
+        const userName = req.user.employee_name || req.user.username || req.user.firstName || 'User';
+
+        const comment = await LeadResources.addNoteComment(noteId, userId, {
+            user_name: userName,
+            text: text
+        });
+
+        // Log Activity
+        await LeadResources.addActivity({
+            lead_id: req.params.id,
+            activity_type: 'notification',
+            title: 'Comment Added to Note',
+            description: `${userName} added a comment to a note.`
+        }, userId);
+
+        res.status(201).json(comment);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 const getLeadCalls = async (req, res) => {
     try {
         const calls = await LeadResources.getCalls(req.params.id, req.user.id);
@@ -372,7 +426,8 @@ const addLeadCall = async (req, res) => {
             date,
             note,
             follow_task: followTask === 'true' || followTask === true,
-            duration: parseInt(duration) || null
+            duration: parseInt(duration) || null,
+            priority: priority || 'Medium'
         }, userId);
 
         // Update Lead priority and next_call_at
@@ -861,9 +916,13 @@ module.exports = {
     deleteLead,
     hitCall,
     analyzeLead,
+    getLeadAnalysis,
+    getLeadDashboard,
+    getEmployeePerformance,
     getAssignmentHistory,
     getLeadNotes,
     addLeadNote,
+    addLeadNoteComment,
     getLeadCalls,
     addLeadCall,
     getLeadFiles,

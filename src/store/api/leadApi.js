@@ -222,6 +222,14 @@ export const leadApi = createApi({
             }),
             invalidatesTags: (result, error, { leadId }) => [{ type: 'LeadNotes', id: leadId }, { type: 'LeadActivities', id: leadId }],
         }),
+        addNoteComment: builder.mutation({
+            query: ({ leadId, noteId, text }) => ({
+                url: `leads/${leadId}/notes/${noteId}/comments`,
+                method: 'POST',
+                body: { text },
+            }),
+            invalidatesTags: (result, error, { leadId }) => [{ type: 'LeadNotes', id: leadId }, { type: 'LeadActivities', id: leadId }],
+        }),
         updateLeadCall: builder.mutation({
             query: ({ leadId, callId, data }) => ({
                 url: `leads/${leadId}/calls/${callId}`,
@@ -274,6 +282,18 @@ export const leadApi = createApi({
                 method: 'DELETE',
             }),
             invalidatesTags: (result, error, { leadId }) => [{ type: 'LeadMeetings', id: leadId }, { type: 'LeadActivities', id: leadId }],
+        }),
+        getLeadAnalysis: builder.query({
+            query: () => 'leads/analysis',
+            providesTags: ['Lead'],
+        }),
+        getLeadDashboard: builder.query({
+            query: () => 'leads/dashboard',
+            providesTags: ['Lead'],
+        }),
+        getEmployeePerformance: builder.query({
+            query: (id) => `leads/employee-performance/${id}`,
+            providesTags: (result, error, id) => ['Lead', { type: 'LeadActivities', id }],
         }),
         getLeadAssignmentHistory: builder.query({
             query: (id) => `leads/${id}/assignment-history`,
@@ -356,6 +376,7 @@ export const {
     useManualAssignLeadsMutation,
     useGetLeadNotesQuery,
     useAddLeadNoteMutation,
+    useAddNoteCommentMutation,
     useGetLeadCallsQuery,
     useAddLeadCallMutation,
     useGetLeadFilesQuery,
@@ -373,6 +394,9 @@ export const {
     useDeleteLeadFileMutation,
     useDeleteLeadMeetingMutation,
     useGetLeadAssignmentHistoryQuery,
+    useGetEmployeePerformanceQuery,
+    useGetLeadAnalysisQuery,
+    useGetLeadDashboardQuery,
     useCheckCallConflictQuery,
     useGetDueRemindersQuery,
     useGetDueMeetingsQuery,

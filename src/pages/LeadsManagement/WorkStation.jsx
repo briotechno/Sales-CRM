@@ -398,7 +398,7 @@ const WorkStationLeadsGridView = ({
                 };
                 if (paths[groupTag]) navigate(paths[groupTag]);
               }}
-              className={`cursor-pointer rounded-sm shadow-sm border border-gray-200 p-4 mb-4 border-t-4 bg-white transition-all duration-300 ${groupTag === 'Trending' ? 'border-t-orange-500 bg-orange-50/50' : groupTag === 'New Leads' ? 'border-t-blue-500 bg-blue-50/50' : groupTag === 'Not Connected' ? 'border-t-purple-500 bg-purple-50/50' : 'border-t-yellow-500 bg-yellow-50/50'}`}
+              className={`cursor-pointer rounded-sm shadow-sm border border-gray-200 p-4 mb-4 border-t-4 bg-white transition-all duration-300 group ${groupTag === 'Trending' ? 'border-t-orange-500 bg-orange-50/50' : groupTag === 'New Leads' ? 'border-t-blue-500 bg-blue-50/50' : groupTag === 'Not Connected' ? 'border-t-purple-500 bg-purple-50/50' : 'border-t-yellow-500 bg-yellow-50/50'}`}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
@@ -410,7 +410,10 @@ const WorkStationLeadsGridView = ({
                   </div>
                   <h3 className="text-sm font-bold text-gray-800 capitalize tracking-tight font-primary">{groupTag}</h3>
                 </div>
-                <span className="bg-white text-gray-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-gray-100 shadow-sm">{tagLeads.length}</span>
+                <div className="flex items-center gap-2">
+                  <span className="bg-white text-gray-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-gray-100 shadow-sm">{tagLeads.length}</span>
+                  <ChevronRight size={14} className="text-gray-400 opacity-0 group-hover:opacity-100 transition-all -translate-x-1 group-hover:translate-x-0" />
+                </div>
               </div>
             </div>
 

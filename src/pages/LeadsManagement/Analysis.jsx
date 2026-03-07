@@ -22,6 +22,9 @@ import {
 } from "lucide-react";
 import { FiHome } from "react-icons/fi";
 
+import { useGetLeadAnalysisQuery } from "../../store/api/leadApi";
+import { AlertCircle } from "lucide-react";
+
 const leadCategories = [
   { name: "All Leads", path: "/crm/leads/all", icon: <Users size={16} /> },
   { name: "New Leads", path: "/crm/leads/new", icon: <UserPlus size={16} /> },
@@ -36,10 +39,23 @@ const leadCategories = [
   { name: "Analysis", path: "/crm/leads/analysis", icon: <Server size={16} /> },
 ];
 
+const iconMap = {
+  Target,
+  Clock,
+  Award,
+  Zap,
+  Users,
+  PieChart,
+  BarChart3,
+  Activity
+};
+
 export default function AnalysisPage() {
   const navigate = useNavigate();
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const dropdownRef = useRef(null);
+
+  const { data: analysisData, isLoading, isError } = useGetLeadAnalysisQuery();
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -51,123 +67,69 @@ export default function AnalysisPage() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const performanceMetrics = [
+  const performanceMetrics = analysisData?.performanceMetrics || [
     {
       title: "Conversion Rate",
-      value: "34.5%",
-      change: "+5.2%",
+      value: "0%",
+      change: "+0%",
       trend: "up",
-      icon: Target,
+      icon: "Target",
       color: "from-orange-400 to-orange-500",
     },
     {
       title: "Avg Response Time",
-      value: "2.4h",
-      change: "-12%",
+      value: "0h",
+      change: "-0%",
       trend: "up",
-      icon: Clock,
+      icon: "Clock",
       color: "from-orange-500 to-orange-600",
     },
     {
       title: "Success Score",
-      value: "8.7/10",
-      change: "+0.8",
+      value: "0/10",
+      change: "+0",
       trend: "up",
-      icon: Award,
+      icon: "Award",
       color: "from-amber-500 to-orange-500",
     },
     {
       title: "Active Rate",
-      value: "67.3%",
-      change: "+3.1%",
+      value: "0%",
+      change: "+0%",
       trend: "up",
-      icon: Zap,
+      icon: "Zap",
       color: "from-orange-600 to-red-500",
     },
   ];
 
-  const sourceAnalysis = [
-    {
-      source: "Indiamart",
-      leads: 842,
-      conversion: 38,
-      revenue: "$124,500",
-      color: "bg-orange-500",
-    },
-    {
-      source: "Direct",
-      leads: 654,
-      conversion: 31,
-      revenue: "$98,200",
-      color: "bg-orange-400",
-    },
-    {
-      source: "Meta",
-      leads: 523,
-      conversion: 42,
-      revenue: "$156,300",
-      color: "bg-orange-600",
-    },
-    {
-      source: "Justdial",
-      leads: 387,
-      conversion: 45,
-      revenue: "$178,900",
-      color: "bg-orange-700",
-    },
-    {
-      source: "Website",
-      leads: 441,
-      conversion: 29,
-      revenue: "$87,600",
-      color: "bg-amber-500",
-    },
-  ];
+  const sourceAnalysis = analysisData?.sourceAnalysis || [];
+  const weeklyTrends = analysisData?.weeklyTrends || [];
+  const teamPerformance = analysisData?.teamPerformance || [];
+  const industryBreakdown = analysisData?.industryBreakdown || [];
 
-  const weeklyTrends = [
-    { week: "Week 1", new: 120, notConnected: 80, followUp: 60, trending: 45, won: 30 },
-    { week: "Week 2", new: 150, notConnected: 95, followUp: 85, trending: 60, won: 42 },
-    { week: "Week 3", new: 135, notConnected: 70, followUp: 110, trending: 75, won: 58 },
-    { week: "Week 4", new: 180, notConnected: 110, followUp: 95, trending: 90, won: 65 },
-    { week: "Week 5", new: 210, notConnected: 125, followUp: 140, trending: 110, won: 88 },
-  ];
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <Loader2 className="w-10 h-10 text-orange-500 animate-spin" />
+      </div>
+    );
+  }
 
-  const teamPerformance = [
-    {
-      id: 1,
-      name: "Sarah Johnson",
-      leads: 156,
-      converted: 67,
-      rate: 43,
-      avatar: "SJ",
-    },
-    { id: 2, name: "Michael Chen", leads: 142, converted: 58, rate: 41, avatar: "MC" },
-    {
-      id: 3,
-      name: "Emily Rodriguez",
-      leads: 134,
-      converted: 52,
-      rate: 39,
-      avatar: "ER",
-    },
-    { id: 4, name: "David Kim", leads: 128, converted: 48, rate: 38, avatar: "DK" },
-    {
-      id: 5,
-      name: "Lisa Anderson",
-      leads: 119,
-      converted: 45,
-      rate: 38,
-      avatar: "LA",
-    },
-  ];
-
-  const industryBreakdown = [
-    { industry: "Technology", percentage: 32, count: 912 },
-    { industry: "Healthcare", percentage: 24, count: 684 },
-    { industry: "Finance", percentage: 18, count: 513 },
-    { industry: "Retail", percentage: 15, count: 427 },
-    { industry: "Manufacturing", percentage: 11, count: 313 },
-  ];
+  if (isError) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-white p-4 text-center">
+        <AlertCircle className="w-12 h-12 text-red-500 mb-4" />
+        <h2 className="text-xl font-bold text-gray-800 mb-2">Failed to load analysis</h2>
+        <p className="text-gray-500 mb-6">There was an error fetching the analytical data. Please try again later.</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="px-6 py-2 bg-orange-500 text-white rounded-sm font-bold hover:bg-orange-600 transition-colors"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
 
   const handleExport = () => {
     // Mock export for analysis data
@@ -287,7 +249,7 @@ export default function AnalysisPage() {
                     <div
                       className={`p-3 rounded-sm bg-gradient-to-br ${metric.color} shadow-sm group-hover:scale-110 transition-transform`}
                     >
-                      <metric.icon className="w-6 h-6 text-white" />
+                      {React.createElement(iconMap[metric.icon] || Target, { className: "w-6 h-6 text-white" })}
                     </div>
                     <div
                       className={`flex items-center space-x-1 px-2.5 py-1 rounded-full ${metric.trend === "up"
@@ -462,47 +424,53 @@ export default function AnalysisPage() {
             </div>
             <div className="bg-gray-50/30 rounded-sm p-8 border border-gray-100 relative">
               <div className="h-96 flex items-end justify-around gap-4">
-                {weeklyTrends.map((data, index) => {
-                  const maxVal = 230;
-                  const categories = [
-                    { key: 'new', color: 'from-blue-600 to-blue-400', label: 'New Lead' },
-                    { key: 'notConnected', color: 'from-gray-500 to-gray-300', label: 'Not Connected' },
-                    { key: 'followUp', color: 'from-orange-600 to-orange-400', label: 'Follow Up' },
-                    { key: 'trending', color: 'from-purple-600 to-purple-400', label: 'Trending' },
-                    { key: 'won', color: 'from-green-600 to-green-400', label: 'Won' }
-                  ];
+                {(() => {
+                  const maxOverall = weeklyTrends.length > 0
+                    ? Math.max(...weeklyTrends.map(w => Math.max(w.new, w.notConnected, w.followUp, w.trending, w.won, 10)))
+                    : 100;
+                  const maxVal = maxOverall * 1.1;
 
-                  return (
-                    <div
-                      key={index}
-                      className="flex-1 flex flex-col items-center group relative h-full justify-end"
-                    >
-                      <div className="w-full flex justify-center items-end gap-1.5 mb-6">
-                        {categories.map((cat) => {
-                          const height = (data[cat.key] / maxVal) * 320;
-                          return (
-                            <div key={cat.key} className="relative group/bar flex flex-col items-center flex-1 min-w-[20px] max-w-[40px]">
-                              <div className="absolute -top-10 opacity-0 group-hover/bar:opacity-100 transition-all duration-200 bg-gray-900 text-white text-[10px] px-3 py-1.5 rounded-sm mb-1 font-bold z-20 whitespace-nowrap shadow-xl border border-white/10 pointer-events-none">
-                                <div className="flex flex-col items-center">
-                                  <span className="text-orange-400">{data[cat.key]}</span>
-                                  <span>{cat.label}</span>
+                  return weeklyTrends.map((data, index) => {
+                    const categories = [
+                      { key: 'new', color: 'from-blue-600 to-blue-400', label: 'New Lead' },
+                      { key: 'notConnected', color: 'from-gray-500 to-gray-300', label: 'Not Connected' },
+                      { key: 'followUp', color: 'from-orange-600 to-orange-400', label: 'Follow Up' },
+                      { key: 'trending', color: 'from-purple-600 to-purple-400', label: 'Trending' },
+                      { key: 'won', color: 'from-green-600 to-green-400', label: 'Won' }
+                    ];
+
+                    return (
+                      <div
+                        key={index}
+                        className="flex-1 flex flex-col items-center group relative h-full justify-end"
+                      >
+                        <div className="w-full flex justify-center items-end gap-1.5 mb-6">
+                          {categories.map((cat) => {
+                            const height = (data[cat.key] / maxVal) * 320;
+                            return (
+                              <div key={cat.key} className="relative group/bar flex flex-col items-center flex-1 min-w-[20px] max-w-[40px]">
+                                <div className="absolute -top-10 opacity-0 group-hover/bar:opacity-100 transition-all duration-200 bg-gray-900 text-white text-[10px] px-3 py-1.5 rounded-sm mb-1 font-bold z-20 whitespace-nowrap shadow-xl border border-white/10 pointer-events-none">
+                                  <div className="flex flex-col items-center">
+                                    <span className="text-orange-400">{data[cat.key]}</span>
+                                    <span>{cat.label}</span>
+                                  </div>
+                                  <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-900 rotate-45 border-r border-b border-white/10"></div>
                                 </div>
-                                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-900 rotate-45 border-r border-b border-white/10"></div>
+                                <div
+                                  className={`w-full bg-gradient-to-t ${cat.color} rounded-t-sm transition-all duration-500 shadow-md border-x border-t border-white/10 group-hover:brightness-110 group-hover:scale-x-105 origin-bottom`}
+                                  style={{ height: `${height}px` }}
+                                ></div>
                               </div>
-                              <div
-                                className={`w-full bg-gradient-to-t ${cat.color} rounded-t-sm transition-all duration-500 shadow-md border-x border-t border-white/10 group-hover:brightness-110 group-hover:scale-x-105 origin-bottom`}
-                                style={{ height: `${height}px` }}
-                              ></div>
-                            </div>
-                          );
-                        })}
+                            );
+                          })}
+                        </div>
+                        <div className="text-[11px] font-bold text-gray-500 uppercase tracking-widest pt-4 border-t border-gray-200 w-full text-center bg-white/50">
+                          {data.week}
+                        </div>
                       </div>
-                      <div className="text-[11px] font-bold text-gray-500 uppercase tracking-widest pt-4 border-t border-gray-200 w-full text-center bg-white/50">
-                        {data.week}
-                      </div>
-                    </div>
-                  );
-                })}
+                    );
+                  });
+                })()}
               </div>
             </div>
           </div>

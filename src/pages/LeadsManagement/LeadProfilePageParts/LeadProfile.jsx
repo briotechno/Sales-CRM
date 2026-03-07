@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import AddNoteModal from "../../../components/LeadManagement/LeadPipLineStatus/AddNotes";
 import CreateCallLogModal from "../../../components/LeadManagement/LeadPipLineStatus/CreateCallLogModal";
 import AddMeetingModal from "../../../components/LeadManagement/LeadPipLineStatus/AddMeetingModal";
@@ -134,7 +134,9 @@ export default function CRMLeadDetail() {
 
   // Data Fetching
   const passedLead = location.state?.lead;
-  const { data: leadFromQuery, isLoading: leadLoading } = useGetLeadByIdQuery(passedLead?.id, { skip: !passedLead?.id });
+  const { id } = useParams();
+  const leadId = passedLead?.id || id;
+  const { data: leadFromQuery, isLoading: leadLoading } = useGetLeadByIdQuery(leadId, { skip: !leadId });
   const { data: rules } = useGetAssignmentSettingsQuery();
   const { data: employeesData } = useGetEmployeesQuery({ limit: 1000, status: 'Active' });
   const employees = employeesData?.employees || [];
@@ -919,8 +921,8 @@ export default function CRMLeadDetail() {
                       onClick={() => setShowStageDropdown(!showStageDropdown)}
                       className={`flex items-center gap-2 px-5 py-2 rounded-sm text-sm font-semibold shadow-md text-white transition-all active:scale-95 border border-white/20 min-w-[200px] justify-between ${effectiveStages.find(s => s.active)?.color || 'bg-slate-700'} hover:brightness-110 font-primary`}
                     >
-                      <div className="flex flex-col items-start leading-tight">
-                        {/* <span className="text-[9px] opacity-80 uppercase tracking-tighter">Current Stage</span> */}
+                      <div className="flex flex-row items-center gap-2 leading-tight">
+                        <span className="">Current Stage</span>{" : "}
                         <span>{effectiveStages.find(s => s.active)?.label || "Initial"}</span>
                       </div>
                       <ChevronDown size={16} className={`transition-transform duration-300 ${showStageDropdown ? 'rotate-180' : ''}`} />
@@ -1252,10 +1254,10 @@ export default function CRMLeadDetail() {
                           ? "opacity-30 cursor-not-allowed border-transparent text-gray-300"
                           : activeTab === id
                             ? "border-orange-500 text-orange-600 bg-orange-50/10"
-                            : "border-transparent text-gray-400 hover:text-gray-600 hover:bg-gray-50/50"
+                            : "border-transparent text-black hover:text-gray-600 hover:bg-gray-50/50"
                           }`}
                       >
-                        <Icon size={id === 'whatsapp' ? 18 : 16} className={id === 'whatsapp' && activeTab === id ? 'text-[#25D366]' : (activeTab === id ? 'text-orange-500' : 'text-gray-400')} />
+                        <Icon size={id === 'whatsapp' ? 18 : 16} className={id === 'whatsapp' && activeTab === id ? 'text-[#25D366]' : (activeTab === id ? 'text-orange-500' : 'text-black')} />
                         {label}
                       </button>
                     );

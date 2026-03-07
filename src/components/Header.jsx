@@ -17,12 +17,22 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { FileSignature, Wallet, Shield } from "lucide-react";
+import { useGetUserProfileQuery } from "../store/api/userApi";
 
 const Header = () => {
   const { user } = useSelector((state) => state.auth);
+  const { data: userProfile } = useGetUserProfileQuery();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [appsOpen, setAppsOpen] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [profileImageError, setProfileImageError] = useState(false);
+
+  const resolveUrl = (path) => {
+    if (!path) return null;
+    if (path.startsWith('http') || path.startsWith('data:')) return path;
+    const baseUrl = import.meta.env.VITE_IMAGE_BASE_URL || import.meta.env.VITE_API_BASE_URL.replace('/api/', '').replace('/api/v1', '');
+    return `${baseUrl}${path.startsWith('/') ? '' : '/'}${path}`;
+  };
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
   const [isSearchFocused, setIsSearchFocused] = useState(false);
@@ -232,19 +242,19 @@ const Header = () => {
               <div className="absolute right-0 mt-3 w-64 bg-white rounded-lg shadow-2xl border border-gray-100 p-2 z-50 animate-fadeIn">
                 <div className="flex flex-col gap-1">
                   {[
-                    { name: "To Do", icon: <FiCheckSquare />, path: "/additional/todo", color: "text-blue-500" },
-                    { name: "Notes", icon: <FiFileText />, path: "/additional/notes", color: "text-purple-500" },
-                    { name: "Invoices", icon: <FiDollarSign />, path: "/additional/invoice", color: "text-green-500" },
-                    { name: "Expenses", icon: <Wallet />, path: "/additional/expenses", color: "text-orange-500" },
-                    { name: "Quotation", icon: <FileSignature size={18} />, path: "/additional/quotation", color: "text-indigo-500" },
+                    { name: "To Do", icon: <FiCheckSquare size={20} />, path: "/additional/todo", color: "text-blue-500" },
+                    { name: "Notes", icon: <FiFileText size={20} />, path: "/additional/notes", color: "text-purple-500" },
+                    { name: "Invoices", icon: <FiDollarSign size={20} />, path: "/additional/invoice", color: "text-green-500" },
+                    { name: "Expenses", icon: <Wallet size={20} />, path: "/additional/expenses", color: "text-orange-500" },
+                    { name: "Quotation", icon: <FileSignature size={20} />, path: "/additional/quotation", color: "text-indigo-500" },
                   ].map((app, i) => (
                     <button
                       key={i}
                       onClick={() => go(app.path)}
-                      className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-all group"
+                      className="flex items-center gap-2.5 p-1 rounded-lg hover:bg-gray-50 transition-all group"
                     >
-                      <div className={`p-2 rounded-lg bg-gray-50 ${app.color} group-hover:bg-white`}>{app.icon}</div>
-                      <span className="text-sm font-semibold text-gray-700">{app.name}</span>
+                      <div className={`p-1.5 rounded-lg bg-gray-50 ${app.color} group-hover:bg-white`}>{app.icon}</div>
+                      <span className="text-base font-bold text-gray-700">{app.name}</span>
                     </button>
                   ))}
                 </div>
@@ -323,9 +333,21 @@ const Header = () => {
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             className="flex items-center hover:bg-white/10 p-1 rounded-full transition-all"
           >
-            <div className="w-10 h-10 rounded-full border-2 border-white/20 bg-orange-500 flex items-center justify-center text-white font-bold text-sm">
-              {user?.firstName?.charAt(0).toUpperCase()}
-              {user?.lastName?.charAt(0).toUpperCase()}
+            <div className="w-10 h-10 rounded-full border-2 border-white/20 bg-orange-500 flex items-center justify-center text-white font-bold text-sm overflow-hidden">
+              {(userProfile?.profile_picture || user?.profile_picture) && !profileImageError ? (
+                <img
+                  src={resolveUrl(userProfile?.profile_picture || user?.profile_picture)}
+                  alt="User"
+                  className="w-full h-full object-cover"
+                  onError={() => setProfileImageError(true)}
+                />
+              ) : null}
+              {(!(userProfile?.profile_picture || user?.profile_picture) || profileImageError) && (
+                <span>
+                  {(userProfile?.firstName || user?.firstName)?.charAt(0).toUpperCase()}
+                  {(userProfile?.lastName || user?.lastName)?.charAt(0).toUpperCase()}
+                </span>
+              )}
             </div>
           </button>
 

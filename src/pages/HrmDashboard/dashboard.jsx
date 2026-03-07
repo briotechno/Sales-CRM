@@ -702,9 +702,6 @@ const Avatar = ({ src, name, sizeClass = "w-10 h-10", textClass = "text-sm", bgC
   const [error, setError] = React.useState(false);
   const firstChar = name?.charAt(0).toUpperCase() || "?";
 
-  // Format URL - check if it's already an absolute URL or needs prefixing
-  const imageUrl = src && !src.startsWith('http') ? `${import.meta.env.VITE_API_BASE_URL}/${src}` : src;
-
   if (!src || error) {
     return (
       <div className={`${sizeClass} rounded-sm ${bgClass} flex items-center justify-center ${colorClass} font-black ${textClass} border border-gray-100 shadow-sm transition-transform`}>
@@ -715,7 +712,7 @@ const Avatar = ({ src, name, sizeClass = "w-10 h-10", textClass = "text-sm", bgC
 
   return (
     <img
-      src={imageUrl}
+      src={src}
       alt={name}
       className={`${sizeClass} rounded-sm border border-gray-200 object-cover shadow-sm transition-transform`}
       onError={() => setError(true)}

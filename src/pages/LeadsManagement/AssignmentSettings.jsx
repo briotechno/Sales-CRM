@@ -68,7 +68,7 @@ export default function AssignmentSettings() {
 
     return (
         <>
-            <div className="p-6 max-w-7xl mx-auto space-y-8 font-primary pb-20 text-left">
+            <div className="w-full space-y-6 font-primary pb-10 text-left">
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
@@ -93,8 +93,36 @@ export default function AssignmentSettings() {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 text-left">
                     {/* Main Controls */}
                     <div className="lg:col-span-2 space-y-8">
-                        {/* Mode Selection */}
-                        <div className="bg-white rounded-sm border border-gray-200 shadow-sm overflow-hidden">
+                        {/* Mode Selection Switch */}
+                        <div className="bg-white rounded-sm border border-gray-200 shadow-sm p-6 flex flex-col md:flex-row items-center justify-between gap-6">
+                            <div>
+                                <h3 className="text-lg font-bold text-gray-800 capitalize leading-tight">Lead Assignment Mode</h3>
+                                <p className="text-sm text-gray-500 font-medium mt-1">Select how leads should be distributed in the system</p>
+                            </div>
+                            <div className="flex bg-gray-100 p-1.5 rounded-sm border border-gray-200 shadow-inner w-full md:w-auto self-stretch md:self-auto">
+                                <button
+                                    onClick={() => setFormData({ ...formData, mode: 'manual' })}
+                                    className={`flex-1 md:w-32 py-2.5 rounded-sm text-sm font-bold transition-all flex items-center justify-center gap-2 ${formData.mode === 'manual'
+                                        ? 'bg-white text-orange-600 shadow-md border border-gray-200'
+                                        : 'text-gray-400 hover:text-gray-600'}`}
+                                >
+                                    <ToggleLeft size={18} />
+                                    Manual
+                                </button>
+                                <button
+                                    onClick={() => setFormData({ ...formData, mode: 'auto' })}
+                                    className={`flex-1 md:w-32 py-2.5 rounded-sm text-sm font-bold transition-all flex items-center justify-center gap-2 ${formData.mode === 'auto'
+                                        ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md'
+                                        : 'text-gray-400 hover:text-gray-600'}`}
+                                >
+                                    <ToggleRight size={18} />
+                                    Auto
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Auto-Assignment Employee Pool */}
+                        <div className={`bg-white rounded-sm border border-gray-200 shadow-sm overflow-hidden transition-all duration-300 ${formData.mode !== 'auto' ? 'opacity-50 pointer-events-none grayscale' : ''}`}>
                             <div className="bg-gray-50 px-6 py-4 border-b border-gray-200 flex items-center gap-3">
                                 <ShieldCheck className="text-orange-500" size={20} />
                                 <h2 className="font-bold text-[15px] text-gray-700 capitalize">Auto-Assignment Employee Pool</h2>
