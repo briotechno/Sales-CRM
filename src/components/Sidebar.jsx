@@ -335,6 +335,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             { name: "Duplicates", path: "/crm/leads/duplicates" },
             { name: "Trending", path: "/crm/leads/trending" },
             { name: "Won", path: "/crm/leads/won" },
+            { name: "Trash", path: "/crm/leads/trash" },
           ],
         },
         {

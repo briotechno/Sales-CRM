@@ -237,12 +237,12 @@ export default function NotConnectedLeads() {
             if (Array.isArray(leadToDelete)) {
                 // Bulk delete
                 await Promise.all(leadToDelete.map(id => deleteLead(id).unwrap()));
-                toast.success("Selected leads deleted successfully");
+                toast.success("Selected leads moved to trash successfully");
                 setSelectedLeads([]);
             } else {
                 // Single delete
                 await deleteLead(leadToDelete.id).unwrap();
-                toast.success("Lead deleted successfully");
+                toast.success("Lead moved to trash successfully");
                 setSelectedLeads(selectedLeads.filter((leadId) => leadId !== leadToDelete.id));
             }
             setShowDeleteModal(false);

@@ -7,6 +7,9 @@ const {
     getLeadById,
     updateLead,
     deleteLead,
+    getTrashedLeads,
+    permanentDeleteLead,
+    restoreLead,
     hitCall,
     analyzeLead,
     checkCallConflict,
@@ -55,6 +58,9 @@ router.get('/due-meetings', protect, getDueMeetings);
 router.get('/:id', protect, getLeadById);
 router.put('/:id', protect, updateLead);
 router.delete('/:id', protect, deleteLead);
+router.get('/trash/list', protect, getTrashedLeads);
+router.delete('/:id/permanent', protect, permanentDeleteLead);
+router.post('/:id/restore', protect, restoreLead);
 router.post('/:id/hit-call', protect, hitCall);
 router.post('/:id/snooze', protect, snoozeLead);
 router.post('/:id/analyze', protect, analyzeLead);
