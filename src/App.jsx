@@ -20,6 +20,7 @@ import FollowUpLeads from "./pages/LeadsManagement/FollowUpLeads";
 import MissedLeads from "./pages/LeadsManagement/MissedLeads";
 import DuplicatesLeads from "./pages/LeadsManagement/DuplicatesLeads";
 import WonLeads from "./pages/LeadsManagement/WonLeads";
+import TrashLeads from "./pages/LeadsManagement/TrashLeads";
 import AssignmentSettings from "./pages/LeadsManagement/AssignmentSettings";
 import LeadRulesConfig from "./pages/LeadsManagement/LeadRulesConfig";
 import WorkStation from "./pages/LeadsManagement/WorkStation";
@@ -187,6 +188,7 @@ function App() {
             <Route path="/crm/leads/duplicates" element={<DuplicatesLeads />} />
             <Route path="/crm/leads/trending" element={<TrendingLeads />} />
             <Route path="/crm/leads/won" element={<WonLeads />} />
+            <Route path="/crm/leads/trash" element={<TrashLeads />} />
             <Route path="/crm/leads/analysis" element={<Analysis />} />
             <Route path="/crm/leads/team-performance/:id" element={<EmployeePerformanceDetail />} />
             <Route path="/crm/leads/assignment-settings" element={<AssignmentSettings />} />

@@ -259,8 +259,58 @@ const integrationController = {
 
     saveChannelConfig: async (req, res) => {
         try {
+            const { channel_type, account_name, api_key, config_data } = req.body;
+
+            // --- Real-time Verification Logic ---
+            if (channel_type === 'meta') {
+                try {
+                    // Check token validity and page access
+                    const pageId = config_data?.page_id;
+                    const metaCheck = await axios.get(`https://graph.facebook.com/v18.0/${pageId || 'me'}?access_token=${api_key}`);
+                    if (!metaCheck.data || metaCheck.data.error) {
+                        throw new Error(metaCheck.data?.error?.message || "Invalid Meta Token");
+                    }
+                } catch (err) {
+                    return res.status(400).json({
+                        message: "Meta Authentication Failed. Please check your Page ID and Access Token."
+                    });
+                }
+            } else if (channel_type === 'indiamart') {
+                try {
+                    // Test hit to Indiamart API
+                    const imCheck = await axios.get(`https://mapi.indiamart.com/wservce/enquiry/listing/GLUSR_MOBILE/${account_name}/GLUSR_MOBILE_KEY/${api_key}/`);
+
+                    // Indiamart returns "CODE: 403" or "Invalid Key" inside the successful HTTP response sometimes
+                    if (imCheck.data?.STATUS === "FAILURE" || (imCheck.data?.CODE && imCheck.data?.CODE !== "200")) {
+                        throw new Error(imCheck.data?.MESSAGE || "Invalid IndiaMart Key or Mobile Number");
+                    }
+                } catch (err) {
+                    return res.status(400).json({
+                        message: "IndiaMart Verification Failed. Please check your Mobile and CRM API Key."
+                    });
+                }
+            } else if (channel_type === 'justdial') {
+                try {
+                    const mobile = config_data?.mobile;
+                    if (!mobile || !api_key) {
+                        return res.status(400).json({ message: "Mobile Number and API Key are required for Justdial" });
+                    }
+                    // Test hit to Justdial lead fetch endpoint
+                    const jdCheck = await axios.get(`http://api.justdial.com/free_api/getleads.php?mobile=${mobile}&key=${api_key}`);
+
+                    // Justdial often returns 200 with error text in the body or 401/403
+                    if (jdCheck.data && (jdCheck.data.toString().includes("Invalid") || jdCheck.data.status === "failure")) {
+                        throw new Error("Invalid Justdial credentials");
+                    }
+                } catch (err) {
+                    return res.status(400).json({
+                        message: "Justdial Verification Failed. Please verify your Registered Mobile and API Key."
+                    });
+                }
+            }
+
             const configId = await ChannelConfig.create({ ...req.body, user_id: req.user.id });
-            res.status(201).json({ message: 'Configuration saved successfully', id: configId });
+            res.status(201).json({ message: 'Configuration verified and saved successfully', id: configId });
         } catch (error) {
             res.status(500).json({ message: error.message });
         }

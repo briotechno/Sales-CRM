@@ -908,12 +908,44 @@ const snoozeLead = async (req, res) => {
     }
 };
 
+const getTrashedLeads = async (req, res) => {
+    try {
+        const { page, limit, search } = req.query;
+        const data = await Lead.findTrashed(req.user.id, page, limit, search);
+        res.status(200).json(data);
+    } catch (error) {
+        res.status(500).json({ status: false, message: error.message });
+    }
+};
+
+const permanentDeleteLead = async (req, res) => {
+    try {
+        await Lead.permanentDelete(req.params.id, req.user.id);
+        res.status(200).json({ status: true, message: 'Lead permanently deleted' });
+    } catch (error) {
+        res.status(500).json({ status: false, message: error.message });
+    }
+};
+
+const restoreLead = async (req, res) => {
+    try {
+        await Lead.restore(req.params.id, req.user.id);
+        res.status(200).json({ status: true, message: 'Lead restored successfully' });
+    } catch (error) {
+        res.status(500).json({ status: false, message: error.message });
+    }
+};
+
 module.exports = {
     createLead,
     getLeads,
     getLeadById,
     updateLead,
     deleteLead,
+    getTrashedLeads,
+    permanentDeleteLead,
+    restoreLead,
+    snoozeLead,
     hitCall,
     analyzeLead,
     getLeadAnalysis,

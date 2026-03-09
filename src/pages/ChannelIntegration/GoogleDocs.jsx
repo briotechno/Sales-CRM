@@ -68,6 +68,20 @@ const GoogleDocs = () => {
     });
     const logs = logsResponse?.data || [];
     const logsPagination = logsResponse?.pagination || { totalPages: 1, total: 0 };
+
+    const formatTime12h = (dateObj) => {
+        if (!dateObj) return "";
+        try {
+            const h = dateObj.getHours();
+            const m = dateObj.getMinutes().toString().padStart(2, '0');
+            const ampm = h >= 12 ? 'PM' : 'AM';
+            let DisplayH = h % 12;
+            DisplayH = DisplayH ? DisplayH : 12;
+            return `${DisplayH}:${m} ${ampm}`;
+        } catch (e) {
+            return "";
+        }
+    };
     const [createConfig] = useCreateSheetConfigMutation();
     const [updateConfig] = useUpdateSheetConfigMutation();
     const [deleteConfig] = useDeleteSheetConfigMutation();
@@ -386,23 +400,29 @@ const GoogleDocs = () => {
                             lineBorderClass="border-purple-500"
                         />
                     </div>
-                    <div className="flex gap-4 mb-6">
-                        <button
-                            onClick={() => setActiveTab("accounts")}
-                            className={`px-6 py-2.5 rounded-sm font-bold transition-all capitalize text-sm border ${activeTab === 'accounts'
-                                ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D] shadow-md'
-                                : 'bg-white text-gray-600 hover:bg-gray-50 border-gray-200'}`}
-                        >
-                            Connected Sheets
-                        </button>
-                        <button
-                            onClick={() => setActiveTab("logs")}
-                            className={`px-6 py-2.5 rounded-sm font-bold transition-all capitalize text-sm border ${activeTab === 'logs'
-                                ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D] shadow-md'
-                                : 'bg-white text-gray-600 hover:bg-gray-50 border-gray-200'}`}
-                        >
-                            Sync History
-                        </button>
+                    <div className="flex mb-8">
+                        <div className="flex p-1 bg-white border border-gray-200 rounded-sm shadow-sm">
+                            <button
+                                onClick={() => setActiveTab("accounts")}
+                                className={`px-8 py-2.5 rounded-sm text-sm font-bold transition-all duration-300 flex items-center gap-2 ${activeTab === 'accounts'
+                                    ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-[0_4px_12px_rgba(255,123,29,0.3)]'
+                                    : 'text-gray-500 hover:text-gray-800'
+                                    }`}
+                            >
+                                <FileSpreadsheet size={18} />
+                                <span>Connected Sheets</span>
+                            </button>
+                            <button
+                                onClick={() => setActiveTab("logs")}
+                                className={`px-8 py-2.5 rounded-sm text-sm font-bold transition-all duration-300 flex items-center gap-2 ${activeTab === 'logs'
+                                    ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-[0_4px_12px_rgba(255,123,29,0.3)]'
+                                    : 'text-gray-500 hover:text-gray-800'
+                                    }`}
+                            >
+                                <History size={18} />
+                                <span>Sync History</span>
+                            </button>
+                        </div>
                     </div>
 
                     {activeTab === 'accounts' ? (
@@ -682,29 +702,35 @@ const GoogleDocs = () => {
                     ) : (<div className="bg-white rounded-sm border border-gray-200 shadow-sm overflow-hidden">
                         <div className="overflow-x-auto">
                             <table className="w-full text-left">
-                                <thead className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm font-bold capitalize tracking-wide">
+                                <thead className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-[14px] font-bold capitalize tracking-wide">
                                     <tr>
-                                        <th className="px-4 py-3">Timestamp</th>
-                                        <th className="px-4 py-3">Source</th>
-                                        <th className="px-4 py-3 text-center">Status</th>
-                                        <th className="px-4 py-3 text-right">Message</th>
+                                        <th className="px-6 py-2.5">Timestamp</th>
+                                        <th className="px-6 py-2.5">Source</th>
+                                        <th className="px-6 py-2.5 text-center">Status</th>
+                                        <th className="px-6 py-2.5 text-right">Message</th>
                                     </tr>
                                 </thead>
                                 <tbody className="text-sm font-medium">
                                     {logs?.length > 0 ? logs.map((log) => (
                                         <tr key={log.id} className="border-t hover:bg-gray-50 transition-colors">
-                                            <td className="px-6 py-4 text-gray-500 text-xs">
-                                                {new Date(log.created_at).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                            <td className="px-6 py-2.5 whitespace-nowrap">
+                                                <div className="flex items-center gap-3 text-[14px] font-medium text-gray-700">
+                                                    <Calendar size={18} className="text-orange-500 shrink-0" />
+                                                    <div className="flex items-center gap-2 flex-nowrap">
+                                                        <span className="text-gray-800 font-bold">{new Date(log.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                                                        <span className="text-[12px] text-orange-600 font-black uppercase bg-orange-50 px-2 py-0.5 rounded-sm border border-orange-100">{formatTime12h(new Date(log.created_at))}</span>
+                                                    </div>
+                                                </div>
                                             </td>
-                                            <td className="px-6 py-4 capitalize font-bold text-gray-700">{log.channel_type.replace('_', ' ')}</td>
-                                            <td className="px-6 py-4 text-center">
-                                                <span className={`px-2 py-1 rounded-sm text-[10px] font-bold uppercase tracking-widest border ${log.status === 'success'
+                                            <td className="px-6 py-2.5 capitalize font-bold text-gray-700 text-sm">{log.channel_type.replace('_', ' ')}</td>
+                                            <td className="px-6 py-2.5 text-center">
+                                                <span className={`px-3 py-1 rounded-sm text-xs font-bold capitalize tracking-widest border ${log.status === 'success'
                                                     ? 'bg-green-50 text-green-700 border-green-100'
                                                     : 'bg-red-50 text-red-700 border-red-100'}`}>
                                                     {log.status}
                                                 </span>
                                             </td>
-                                            <td className="px-6 py-4 text-gray-600 text-right text-xs">{log.message}</td>
+                                            <td className="px-6 py-2.5 text-gray-800 font-medium text-right text-sm">{log.message}</td>
                                         </tr>
                                     )) : (
                                         <tr>

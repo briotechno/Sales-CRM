@@ -99,6 +99,24 @@ export const leadApi = createApi({
             }),
             invalidatesTags: ['Lead'],
         }),
+        getTrashedLeads: builder.query({
+            query: ({ page = 1, limit = 10, search = '' }) => `leads/trash/list?page=${page}&limit=${limit}&search=${search}`,
+            providesTags: ['Lead'],
+        }),
+        permanentDeleteLead: builder.mutation({
+            query: (id) => ({
+                url: `leads/${id}/permanent`,
+                method: 'DELETE',
+            }),
+            invalidatesTags: ['Lead'],
+        }),
+        restoreLead: builder.mutation({
+            query: (id) => ({
+                url: `leads/${id}/restore`,
+                method: 'POST',
+            }),
+            invalidatesTags: ['Lead'],
+        }),
         hitCall: builder.mutation({
             query: ({ id, status, next_call_at, drop_reason, create_reminder, not_connected_reason, remarks, priority, duration }) => ({
                 url: `leads/${id}/hit-call`,
@@ -408,4 +426,7 @@ export const {
     useToggleCampaignStatusMutation,
     useDeleteCampaignMutation,
     useUpdateCampaignMutation,
+    useGetTrashedLeadsQuery,
+    usePermanentDeleteLeadMutation,
+    useRestoreLeadMutation,
 } = leadApi;

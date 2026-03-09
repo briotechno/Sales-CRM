@@ -20,7 +20,10 @@ import {
     Edit2,
     Users,
     Database,
-    ShieldCheck
+    ShieldCheck,
+    PhoneCall,
+    Calendar,
+    Clock
 } from "lucide-react";
 import {
     useGetLogsQuery,
@@ -42,7 +45,7 @@ const IndiamartIntegration = () => {
 
     // Real API fetching
     const { data: configsData, isLoading: isLoadingConfigs } = useGetChannelConfigsQuery("indiamart");
-    const [saveConfig] = useSaveChannelConfigMutation();
+    const [saveConfig, { isLoading: isConnecting }] = useSaveChannelConfigMutation();
     const [deleteConfig] = useDeleteChannelConfigMutation();
     const [syncLeads, { isLoading: isSyncing }] = useSyncChannelLeadsMutation();
 
@@ -55,6 +58,20 @@ const IndiamartIntegration = () => {
     });
 
     const logs = logsResponse?.data || [];
+
+    const formatTime12h = (dateObj) => {
+        if (!dateObj) return "";
+        try {
+            const h = dateObj.getHours();
+            const m = dateObj.getMinutes().toString().padStart(2, '0');
+            const ampm = h >= 12 ? 'PM' : 'AM';
+            let DisplayH = h % 12;
+            DisplayH = DisplayH ? DisplayH : 12;
+            return `${DisplayH}:${m} ${ampm}`;
+        } catch (e) {
+            return "";
+        }
+    };
 
     const handleConnect = () => {
         setIsConnectModalOpen(true);
@@ -72,9 +89,10 @@ const IndiamartIntegration = () => {
 
             setIsConnectModalOpen(false);
             setFormData({ account_name: '', api_key: '' });
-            toast.success("IndiaMart CRM API connected!");
+            toast.success("IndiaMart linked successfully! Your B2B leads will now sync.");
         } catch (err) {
-            toast.error(err.data?.message || "Failed to connect");
+            const errorMsg = err.data?.message || "Verification failed. Please check your Mobile and API Key.";
+            toast.error(errorMsg);
         }
     };
 
@@ -142,7 +160,7 @@ const IndiamartIntegration = () => {
                     </div>
                 </div>
 
-                <div className="max-w-8xl mx-auto px-4 py-6">
+                <div className="max-w-8xl mx-auto px-4 py-6 pt-0 mt-2">
                     {/* Stats Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                         <NumberCard
@@ -175,20 +193,30 @@ const IndiamartIntegration = () => {
                         />
                     </div>
 
-                    {/* Tabs */}
-                    <div className="flex gap-4 mb-6">
-                        <button
-                            onClick={() => setActiveTab("accounts")}
-                            className={`px-6 py-2.5 rounded-sm font-bold transition-all text-sm border ${activeTab === 'accounts' ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D] shadow-md' : 'bg-white text-gray-600 border-gray-200'}`}
-                        >
-                            API Connections
-                        </button>
-                        <button
-                            onClick={() => setActiveTab("logs")}
-                            className={`px-6 py-2.5 rounded-sm font-bold transition-all text-sm border ${activeTab === 'logs' ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D] shadow-md' : 'bg-white text-gray-600 border-gray-200'}`}
-                        >
-                            Sync History
-                        </button>
+                    {/* Tabs Navigation - Premium Segmented Pill UI */}
+                    <div className="flex mb-8">
+                        <div className="flex p-1 bg-white border border-gray-200 rounded-sm shadow-sm">
+                            <button
+                                onClick={() => setActiveTab("accounts")}
+                                className={`px-8 py-2.5 rounded-sm text-sm font-bold transition-all duration-300 flex items-center gap-2 ${activeTab === 'accounts'
+                                    ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-[0_4px_12px_rgba(255,123,29,0.3)]'
+                                    : 'text-gray-500 hover:text-gray-800'
+                                    }`}
+                            >
+                                <Database size={18} />
+                                <span>API Connections</span>
+                            </button>
+                            <button
+                                onClick={() => setActiveTab("logs")}
+                                className={`px-8 py-2.5 rounded-sm text-sm font-bold transition-all duration-300 flex items-center gap-2 ${activeTab === 'logs'
+                                    ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-[0_4px_12px_rgba(255,123,29,0.3)]'
+                                    : 'text-gray-500 hover:text-gray-800'
+                                    }`}
+                            >
+                                <History size={18} />
+                                <span>Sync History</span>
+                            </button>
+                        </div>
                     </div>
 
                     {/* Content Area */}
@@ -247,15 +275,15 @@ const IndiamartIntegration = () => {
                                         </div>
                                     ))
                                 ) : (
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full text-left">
-                                            <thead className="bg-[#FF7B1D] text-white text-xs font-bold uppercase tracking-wider">
-                                                <tr>
-                                                    <th className="px-6 py-4">Account Name</th>
-                                                    <th className="px-6 py-4">API Key</th>
-                                                    <th className="px-6 py-4">Status</th>
-                                                    <th className="px-6 py-4">Fetch Time</th>
-                                                    <th className="px-6 py-4 text-right">Actions</th>
+                                    <div className="overflow-x-auto border border-gray-200 rounded-sm shadow-sm bg-white">
+                                        <table className="w-full text-left border-collapse">
+                                            <thead>
+                                                <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm">
+                                                    <th className="px-6 py-3.5 font-bold border-b border-orange-400 capitalize whitespace-nowrap">Account Name</th>
+                                                    <th className="px-6 py-3.5 font-bold border-b border-orange-400 capitalize whitespace-nowrap">API Key</th>
+                                                    <th className="px-6 py-3.5 font-bold border-b border-orange-400 capitalize whitespace-nowrap">Status</th>
+                                                    <th className="px-6 py-3.5 font-bold border-b border-orange-400 capitalize whitespace-nowrap">Fetch Time</th>
+                                                    <th className="px-6 py-3.5 font-bold border-b border-orange-400 capitalize whitespace-nowrap text-right">Actions</th>
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-gray-100 text-sm">
@@ -294,98 +322,121 @@ const IndiamartIntegration = () => {
                             </div>
                         )
                     ) : (
-                        <div className="bg-white border rounded-sm overflow-hidden shadow-sm">
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left">
-                                    <thead className="bg-gray-800 text-gray-300 text-[11px] font-bold uppercase tracking-widest border-b">
-                                        <tr>
-                                            <th className="px-6 py-4">Sync Timestamp</th>
-                                            <th className="px-6 py-4">System Event</th>
-                                            <th className="px-6 py-4">Sync Results</th>
-                                            <th className="px-6 py-4 text-right">Server Log</th>
+                        <div className="overflow-x-auto border border-gray-200 rounded-sm shadow-sm bg-white">
+                            <table className="w-full text-left border-collapse">
+                                <thead>
+                                    <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-[14px]">
+                                        <th className="px-6 py-2.5 font-bold border-b border-orange-400 capitalize whitespace-nowrap">Sync Timestamp</th>
+                                        <th className="px-6 py-2.5 font-bold border-b border-orange-400 capitalize whitespace-nowrap">System Event</th>
+                                        <th className="px-6 py-2.5 font-bold border-b border-orange-400 capitalize whitespace-nowrap">Sync Results</th>
+                                        <th className="px-6 py-2.5 font-bold border-b border-orange-400 capitalize whitespace-nowrap text-right">Server Log</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100">
+                                    {logs.length > 0 ? logs.map(log => (
+                                        <tr key={log.id} className="hover:bg-gray-50">
+                                            <td className="px-6 py-2.5 whitespace-nowrap">
+                                                <div className="flex items-center gap-3 text-[14px] font-medium text-gray-700">
+                                                    <Calendar size={18} className="text-orange-500 shrink-0" />
+                                                    <div className="flex items-center gap-2 flex-nowrap">
+                                                        <span className="text-gray-800 font-bold">{new Date(log.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                                                        <span className="text-[12px] text-orange-600 font-black uppercase bg-orange-50 px-2 py-0.5 rounded-sm border border-orange-100">{formatTime12h(new Date(log.created_at))}</span>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-2.5 text-sm font-bold text-gray-700 uppercase">IndiaMart Feed</td>
+                                            <td className="px-6 py-2.5">
+                                                <span className={`px-3 py-1 rounded-sm text-xs font-bold capitalize ${log.status === 'success' ? 'bg-green-50 text-green-700 border border-green-100' : 'bg-red-50 text-red-700 border border-red-100'}`}>
+                                                    {log.status}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-2.5 text-right text-sm text-gray-800 font-medium">{log.message}</td>
                                         </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-100 text-xs">
-                                        {logs.length > 0 ? logs.map(log => (
-                                            <tr key={log.id} className="hover:bg-gray-50">
-                                                <td className="px-6 py-4 font-medium text-gray-500">{new Date(log.created_at).toLocaleString()}</td>
-                                                <td className="px-6 py-4 font-bold text-gray-700 uppercase">IndiaMart Feed</td>
-                                                <td className="px-6 py-4 italic text-gray-400">{log.status}</td>
-                                                <td className="px-6 py-4 text-right font-medium">{log.message}</td>
-                                            </tr>
-                                        )) : (
-                                            <tr>
-                                                <td colSpan="4" className="px-6 py-12">
-                                                    <EmptyState title="History is empty" message="Enquiry sync history will be populated here." type="leads" />
-                                                </td>
-                                            </tr>
-                                        )}
-                                    </tbody>
-                                </table>
-                            </div>
+                                    )) : (
+                                        <tr>
+                                            <td colSpan="4" className="px-6 py-12">
+                                                <EmptyState title="History is empty" message="Enquiry sync history will be populated here." type="leads" />
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
                         </div>
                     )}
                 </div>
-
-                {/* Connect Modal */}
-                <Modal
-                    isOpen={isConnectModalOpen}
-                    onClose={() => setIsConnectModalOpen(false)}
-                    headerVariant="simple"
-                    maxWidth="max-w-md"
-                >
-                    <form onSubmit={confirmConnect} className="font-primary">
-                        <div className="flex justify-center mb-6">
-                            <div className="w-20 h-20 bg-orange-600 text-white rounded-lg flex items-center justify-center font-bold text-4xl shadow-xl rotate-3">
-                                IM
-                            </div>
-                        </div>
-
-                        <div className="text-center mb-8">
-                            <h2 className="text-2xl font-bold text-gray-800">B2B Lead Sync</h2>
-                            <p className="text-gray-500 text-sm mt-1">Connect your IndiaMart account via CRM API Key.</p>
-                        </div>
-
-                        <div className="space-y-4">
-                            <div>
-                                <div>
-                                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 block ml-1">IndiaMart Mobile Number</label>
-                                    <input
-                                        type="text"
-                                        placeholder="e.g. 9876543210"
-                                        value={formData.account_name}
-                                        onChange={(e) => setFormData({ ...formData, account_name: e.target.value })}
-                                        required
-                                        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-sm focus:border-[#FF7B1D] outline-none font-bold text-sm shadow-sm transition-all"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 block ml-1">CRM API KEY</label>
-                                    <div className="relative">
-                                        <Database className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={18} />
-                                        <input
-                                            type="password"
-                                            placeholder="Paste your IndiaMart API Key"
-                                            value={formData.api_key}
-                                            onChange={(e) => setFormData({ ...formData, api_key: e.target.value })}
-                                            required
-                                            className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-sm focus:border-[#FF7B1D] outline-none font-bold text-sm shadow-sm transition-all"
-                                        />
-                                    </div>
-                                    <p className="text-[10px] text-gray-400 mt-2 italic ml-1">* You can find this in your IndiaMart Seller Panel under Settings {" > "} CRM Integration.</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <button
-                            type="submit"
-                            className="w-full mt-10 py-4 bg-orange-600 text-white font-bold rounded-sm shadow-lg hover:bg-orange-700 transition-all uppercase text-xs tracking-widest flex items-center justify-center gap-3 active:scale-95"
-                        >
-                            <ShieldCheck size={18} /> Authenticate API
-                        </button>
-                    </form>
-                </Modal>
             </div>
+
+            {/* Connect Modal */}
+            <Modal
+                isOpen={isConnectModalOpen}
+                onClose={() => setIsConnectModalOpen(false)}
+                headerVariant="simple"
+                maxWidth="max-w-md"
+            >
+                <form onSubmit={confirmConnect} className="font-primary">
+                    <div className="flex justify-center mb-6">
+                        <div className="w-20 h-20 bg-orange-600 text-white rounded-lg flex items-center justify-center font-bold text-4xl shadow-xl rotate-3">
+                            IM
+                        </div>
+                    </div>
+
+                    <div className="text-center mb-8">
+                        <h2 className="text-2xl font-bold text-gray-800">B2B Lead Sync</h2>
+                        <p className="text-gray-500 text-sm mt-1">Connect your IndiaMart account via CRM API Key.</p>
+                    </div>
+
+                    <div className="space-y-4 text-left">
+                        <div className="space-y-1.5">
+                            <label className="flex items-center gap-2 text-[14px] font-bold text-gray-700 capitalize">
+                                <PhoneCall size={14} className="text-orange-500" /> IndiaMart mobile number
+                            </label>
+                            <input
+                                type="text"
+                                placeholder="e.g. 9876543210"
+                                value={formData.account_name}
+                                onChange={(e) => setFormData({ ...formData, account_name: e.target.value })}
+                                required
+                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500 focus:ring-opacity-20 outline-none font-bold text-sm shadow-sm transition-all"
+                            />
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="flex items-center gap-2 text-[14px] font-bold text-gray-700 capitalize">
+                                <Database size={14} className="text-orange-500" /> CRM API key
+                            </label>
+                            <div className="relative">
+                                <input
+                                    type="password"
+                                    placeholder="Paste your IndiaMart API Key"
+                                    value={formData.api_key}
+                                    onChange={(e) => setFormData({ ...formData, api_key: e.target.value })}
+                                    required
+                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500 focus:ring-opacity-20 outline-none font-bold text-sm shadow-sm transition-all"
+                                />
+                            </div>
+                            <p className="text-[10px] text-gray-400 mt-2 italic leading-tight">
+                                * You can find this in your IndiaMart Seller Panel under Settings {">"} CRM Integration.
+                            </p>
+                        </div>
+                    </div>
+
+                    <button
+                        type="submit"
+                        disabled={isConnecting}
+                        className="w-full mt-8 py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold rounded-sm shadow-xl hover:shadow-orange-200 transition-all uppercase text-xs tracking-widest active:scale-95 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                    >
+                        {isConnecting ? (
+                            <>
+                                <RefreshCw size={18} className="animate-spin" />
+                                Authenticating...
+                            </>
+                        ) : (
+                            <>
+                                <ShieldCheck size={18} /> Authenticate & Connect
+                            </>
+                        )}
+                    </button>
+                </form>
+            </Modal>
         </DashboardLayout>
     );
 };

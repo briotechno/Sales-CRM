@@ -19,7 +19,9 @@ import {
     Home,
     Trash2,
     Edit2,
-    Users
+    Users,
+    Calendar,
+    Clock
 } from "lucide-react";
 import {
     useGetLogsQuery,
@@ -37,10 +39,15 @@ const MetaIntegration = () => {
     const [activeTab, setActiveTab] = useState("accounts");
     const [isConnectModalOpen, setIsConnectModalOpen] = useState(false);
     const [viewMode, setViewMode] = useState("grid");
+    const [formData, setFormData] = useState({
+        account_name: "",
+        page_id: "",
+        api_key: ""
+    });
 
     // Real API fetching
     const { data: configsData, isLoading: isLoadingConfigs } = useGetChannelConfigsQuery("meta");
-    const [saveConfig] = useSaveChannelConfigMutation();
+    const [saveConfig, { isLoading: isConnecting }] = useSaveChannelConfigMutation();
     const [deleteConfig] = useDeleteChannelConfigMutation();
     const [syncLeads, { isLoading: isSyncing }] = useSyncChannelLeadsMutation();
 
@@ -54,23 +61,40 @@ const MetaIntegration = () => {
 
     const logs = logsResponse?.data || [];
 
+    const formatTime12h = (dateObj) => {
+        if (!dateObj) return "";
+        try {
+            const h = dateObj.getHours();
+            const m = dateObj.getMinutes().toString().padStart(2, '0');
+            const ampm = h >= 12 ? 'PM' : 'AM';
+            let DisplayH = h % 12;
+            DisplayH = DisplayH ? DisplayH : 12;
+            return `${DisplayH}:${m} ${ampm}`;
+        } catch (e) {
+            return "";
+        }
+    };
+
     const handleConnect = () => {
         setIsConnectModalOpen(true);
     };
 
-    const confirmConnect = async () => {
+    const confirmConnect = async (e) => {
+        if (e) e.preventDefault();
         try {
             await saveConfig({
                 channel_type: "meta",
-                account_name: "My Business Page",
-                api_key: "EAAL...", // This would be the OAuth token in production
-                config_data: { page_id: "12345" }
+                account_name: formData.account_name,
+                api_key: formData.api_key,
+                config_data: { page_id: formData.page_id }
             }).unwrap();
 
             setIsConnectModalOpen(false);
-            toast.success("Meta Page connected successfully!");
+            setFormData({ account_name: "", page_id: "", api_key: "" });
+            toast.success("Meta Assets linked! Your leads will now sync automatically.");
         } catch (err) {
-            toast.error(err.data?.message || "Failed to connect");
+            const errorMsg = err.data?.message || "Authentication failed. Please check your Page ID and Token.";
+            toast.error(errorMsg);
         }
     };
 
@@ -138,7 +162,7 @@ const MetaIntegration = () => {
                     </div>
                 </div>
 
-                <div className="max-w-8xl mx-auto px-4 py-6">
+                <div className="max-w-8xl mx-auto px-4 py-6   pt-0 mt-2">
                     {/* Stats Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                         <NumberCard
@@ -171,20 +195,30 @@ const MetaIntegration = () => {
                         />
                     </div>
 
-                    {/* Tabs */}
-                    <div className="flex gap-4 mb-6">
-                        <button
-                            onClick={() => setActiveTab("accounts")}
-                            className={`px-6 py-2.5 rounded-sm font-bold transition-all text-sm border ${activeTab === 'accounts' ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D] shadow-md' : 'bg-white text-gray-600 border-gray-200'}`}
-                        >
-                            Connected Pages
-                        </button>
-                        <button
-                            onClick={() => setActiveTab("logs")}
-                            className={`px-6 py-2.5 rounded-sm font-bold transition-all text-sm border ${activeTab === 'logs' ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D] shadow-md' : 'bg-white text-gray-600 border-gray-200'}`}
-                        >
-                            Sync History
-                        </button>
+                    {/* Tabs Navigation - Premium Segmented Pill UI */}
+                    <div className="flex mb-8">
+                        <div className="flex p-1 bg-white border border-gray-200 rounded-sm shadow-sm">
+                            <button
+                                onClick={() => setActiveTab("accounts")}
+                                className={`px-8 py-2.5 rounded-sm text-sm font-bold transition-all duration-300 flex items-center gap-2 ${activeTab === 'accounts'
+                                    ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-[0_4px_12px_rgba(255,123,29,0.3)]'
+                                    : 'text-gray-500 hover:text-gray-800'
+                                    }`}
+                            >
+                                <Facebook size={18} />
+                                <span>Connected Pages</span>
+                            </button>
+                            <button
+                                onClick={() => setActiveTab("logs")}
+                                className={`px-8 py-2.5 rounded-sm text-sm font-bold transition-all duration-300 flex items-center gap-2 ${activeTab === 'logs'
+                                    ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-[0_4px_12px_rgba(255,123,29,0.3)]'
+                                    : 'text-gray-500 hover:text-gray-800'
+                                    }`}
+                            >
+                                <History size={18} />
+                                <span>Sync History</span>
+                            </button>
+                        </div>
                     </div>
 
                     {/* Content Area */}
@@ -243,18 +277,18 @@ const MetaIntegration = () => {
                                         </div>
                                     ))
                                 ) : (
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full text-left">
-                                            <thead className="bg-[#FFF8F4] text-gray-800 text-sm font-bold border-b border-orange-100">
-                                                <tr>
-                                                    <th className="px-6 py-4">Page Name</th>
-                                                    <th className="px-6 py-4">Status</th>
-                                                    <th className="px-6 py-4">Leads Synced</th>
-                                                    <th className="px-6 py-4">Last Sync</th>
-                                                    <th className="px-6 py-4 text-right">Actions</th>
+                                    <div className="overflow-x-auto border border-gray-200 rounded-sm shadow-sm bg-white">
+                                        <table className="w-full text-left border-collapse">
+                                            <thead>
+                                                <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm">
+                                                    <th className="px-6 py-3.5 font-bold border-b border-orange-400 capitalize whitespace-nowrap">Page Name</th>
+                                                    <th className="px-6 py-3.5 font-bold border-b border-orange-400 capitalize whitespace-nowrap">Status</th>
+                                                    <th className="px-6 py-3.5 font-bold border-b border-orange-400 capitalize whitespace-nowrap">Leads Synced</th>
+                                                    <th className="px-6 py-3.5 font-bold border-b border-orange-400 capitalize whitespace-nowrap">Last Sync</th>
+                                                    <th className="px-6 py-3.5 font-bold border-b border-orange-400 capitalize whitespace-nowrap text-right">Actions</th>
                                                 </tr>
                                             </thead>
-                                            <tbody className="divide-y divide-gray-100">
+                                            <tbody>
                                                 {connectedPages.map(page => (
                                                     <tr key={page.id} className="hover:bg-gray-50 transition-colors">
                                                         <td className="px-6 py-4">
@@ -297,98 +331,138 @@ const MetaIntegration = () => {
                             </div>
                         )
                     ) : (
-                        <div className="bg-white border border-gray-200 rounded-sm overflow-hidden shadow-sm">
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left">
-                                    <thead className="bg-gray-50 text-gray-600 text-[11px] font-bold uppercase tracking-widest border-b">
-                                        <tr>
-                                            <th className="px-6 py-4">Event Time</th>
-                                            <th className="px-6 py-4">Sync ID</th>
-                                            <th className="px-6 py-4">Status</th>
-                                            <th className="px-6 py-4 text-right">Details</th>
+                        <div className="overflow-x-auto border border-gray-200 rounded-sm shadow-sm bg-white">
+                            <table className="w-full text-left border-collapse">
+                                <thead>
+                                    <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-[14px]">
+                                        <th className="px-6 py-2.5 font-bold border-b border-orange-400 capitalize whitespace-nowrap">Event Time</th>
+                                        <th className="px-6 py-2.5 font-bold border-b border-orange-400 capitalize whitespace-nowrap">Sync ID</th>
+                                        <th className="px-6 py-2.5 font-bold border-b border-orange-400 capitalize whitespace-nowrap">Status</th>
+                                        <th className="px-6 py-2.5 font-bold border-b border-orange-400 capitalize whitespace-nowrap text-right">Details</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100">
+                                    {logs.length > 0 ? logs.map(log => (
+                                        <tr key={log.id} className="hover:bg-gray-50 transition-colors">
+                                            <td className="px-6 py-2.5 whitespace-nowrap">
+                                                <div className="flex items-center gap-3 text-[14px] font-medium text-gray-700">
+                                                    <Calendar size={18} className="text-orange-500 shrink-0" />
+                                                    <div className="flex items-center gap-2 flex-nowrap">
+                                                        <span className="text-gray-800 font-bold">{new Date(log.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                                                        <span className="text-[12px] text-orange-600 font-black uppercase bg-orange-50 px-2 py-0.5 rounded-sm border border-orange-100">{formatTime12h(new Date(log.created_at))}</span>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-2.5 text-sm font-mono font-bold text-gray-600">
+                                                #{log.id.toString().substring(0, 8)}
+                                            </td>
+                                            <td className="px-6 py-2.5">
+                                                <span className={`px-3 py-1 rounded-sm text-xs font-bold capitalize tracking-wider ${log.status === 'success' ? 'bg-green-50 text-green-700 border border-green-100' : 'bg-red-50 text-red-700 border border-red-100'}`}>
+                                                    {log.status}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-2.5 text-right text-sm text-gray-800 font-medium">
+                                                {log.message}
+                                            </td>
                                         </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-100">
-                                        {logs.length > 0 ? logs.map(log => (
-                                            <tr key={log.id}>
-                                                <td className="px-6 py-4 text-xs text-gray-500 font-medium">
-                                                    {new Date(log.created_at).toLocaleString()}
-                                                </td>
-                                                <td className="px-6 py-4 text-[10px] font-mono font-bold text-gray-600">
-                                                    #{log.id.toString().substring(0, 8)}
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <span className={`px-2 py-1 rounded-sm text-[10px] font-bold uppercase tracking-wider ${log.status === 'success' ? 'bg-green-50 text-green-700 border border-green-100' : 'bg-red-50 text-red-700 border border-red-100'}`}>
-                                                        {log.status}
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-4 text-right text-xs text-gray-600">
-                                                    {log.message}
-                                                </td>
-                                            </tr>
-                                        )) : (
-                                            <tr>
-                                                <td colSpan="4" className="px-6 py-12 text-center">
-                                                    <EmptyState
-                                                        title="No logs found"
-                                                        message="Sync history will appear here once you connect a page."
-                                                        type="leads"
-                                                    />
-                                                </td>
-                                            </tr>
-                                        )}
-                                    </tbody>
-                                </table>
-                            </div>
+                                    )) : (
+                                        <tr>
+                                            <td colSpan="4" className="px-6 py-12 text-center">
+                                                <EmptyState
+                                                    title="No logs found"
+                                                    message="Sync history will appear here once you connect a page."
+                                                    type="leads"
+                                                />
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
                         </div>
                     )}
                 </div>
-
-                {/* Connect Modal */}
-                <Modal
-                    isOpen={isConnectModalOpen}
-                    onClose={() => setIsConnectModalOpen(false)}
-                    headerVariant="simple"
-                    maxWidth="max-w-md"
-                    footer={
-                        <div className="flex gap-4 w-full">
-                            <button
-                                onClick={() => setIsConnectModalOpen(false)}
-                                className="flex-1 px-6 py-3 border border-gray-200 text-gray-600 font-bold rounded-sm hover:bg-gray-50 transition-all font-primary text-xs uppercase"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={confirmConnect}
-                                className="flex-1 px-6 py-3 bg-[#1877F2] text-white font-bold rounded-sm hover:bg-[#166fe5] transition-all shadow-lg flex items-center justify-center gap-2 font-primary text-xs uppercase"
-                            >
-                                Connect Page
-                            </button>
-                        </div>
-                    }
-                >
-                    <div className="flex flex-col items-center text-center font-primary p-2">
-                        <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mb-6">
-                            <Facebook className="text-[#1877F2]" size={48} />
-                        </div>
-                        <h2 className="text-2xl font-bold text-gray-800 mb-2">Connect Meta Assets</h2>
-                        <p className="text-gray-500 text-sm mb-6 leading-relaxed">
-                            Connect your Facebook Business Manager to import leads from your Ads campaigns. Make sure you have Admin access to the page.
-                        </p>
-
-                        <div className="w-full space-y-3">
-                            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-sm border border-gray-100 text-left">
-                                <CheckCircle className="text-green-500" size={18} />
-                                <span className="text-xs font-semibold text-gray-600">Automatic Lead Import</span>
-                            </div>
-                            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-sm border border-gray-100 text-left">
-                                <CheckCircle className="text-green-500" size={18} />
-                                <span className="text-xs font-semibold text-gray-600">Real-time Webhook Sync</span>
-                            </div>
-                        </div>
-                    </div>
-                </Modal>
             </div>
+
+            {/* Connect Modal */}
+            <Modal
+                isOpen={isConnectModalOpen}
+                onClose={() => setIsConnectModalOpen(false)}
+                headerVariant="simple"
+                maxWidth="max-w-md"
+                footer={null}
+            >
+                <div className="flex flex-col items-center text-center font-primary p-2">
+                    <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mb-6">
+                        <Facebook className="text-[#1877F2]" size={48} />
+                    </div>
+                    <h2 className="text-2xl font-bold text-gray-800 mb-2">Connect Meta Assets</h2>
+                    <p className="text-gray-500 text-sm mb-6 leading-relaxed">
+                        Connect your Facebook Business Manager to import leads from your Ads campaigns. Make sure you have Admin access to the page.
+                    </p>
+
+                    <form onSubmit={confirmConnect} className="w-full space-y-4 text-left font-primary">
+                        <div className="space-y-1.5">
+                            <label className="flex items-center gap-2 text-[14px] font-bold text-gray-700 capitalize">
+                                <Users size={14} className="text-orange-500" /> Account name / Page name
+                            </label>
+                            <input
+                                type="text"
+                                placeholder="e.g. Facebook Main Page"
+                                value={formData.account_name}
+                                onChange={(e) => setFormData({ ...formData, account_name: e.target.value })}
+                                required
+                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500 focus:ring-opacity-20 outline-none font-bold text-sm transition-all"
+                            />
+                        </div>
+
+                        <div className="space-y-1.5">
+                            <label className="flex items-center gap-2 text-[14px] font-bold text-gray-700 capitalize">
+                                <Settings size={14} className="text-orange-500" /> Page ID
+                            </label>
+                            <input
+                                type="text"
+                                placeholder="Enter your Facebook Page ID"
+                                value={formData.page_id}
+                                onChange={(e) => setFormData({ ...formData, page_id: e.target.value })}
+                                required
+                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500 focus:ring-opacity-20 outline-none font-bold text-sm transition-all"
+                            />
+                        </div>
+
+                        <div className="space-y-1.5">
+                            <label className="flex items-center gap-2 text-[14px] font-bold text-gray-700 capitalize">
+                                <Link2 size={14} className="text-orange-500" /> Access token (API Key)
+                            </label>
+                            <input
+                                type="password"
+                                placeholder="Paste Page Access Token here"
+                                value={formData.api_key}
+                                onChange={(e) => setFormData({ ...formData, api_key: e.target.value })}
+                                required
+                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500 focus:ring-opacity-20 outline-none font-bold text-sm transition-all"
+                            />
+                            <p className="text-[10px] text-gray-400 mt-1 italic leading-tight">* Use a Long-lived User Token or Page Token for uninterrupted lead sync.</p>
+                        </div>
+
+                        <button
+                            type="submit"
+                            disabled={isConnecting}
+                            className="w-full mt-6 py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold rounded-sm shadow-xl hover:shadow-orange-200 transition-all uppercase text-xs tracking-widest active:scale-95 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                        >
+                            {isConnecting ? (
+                                <>
+                                    <RefreshCw size={18} className="animate-spin" />
+                                    Authenticating...
+                                </>
+                            ) : (
+                                <>
+                                    <CheckCircle size={18} /> Authenticate & Connect
+                                </>
+                            )}
+                        </button>
+                    </form>
+                </div>
+            </Modal>
         </DashboardLayout>
     );
 };

@@ -21,7 +21,9 @@ import {
     Edit2,
     Users,
     Key,
-    Globe
+    Globe,
+    Calendar,
+    Clock
 } from "lucide-react";
 import {
     useGetLogsQuery,
@@ -43,7 +45,7 @@ const JustdialIntegration = () => {
 
     // Real API fetching
     const { data: configsData, isLoading: isLoadingConfigs } = useGetChannelConfigsQuery("justdial");
-    const [saveConfig] = useSaveChannelConfigMutation();
+    const [saveConfig, { isLoading: isConnecting }] = useSaveChannelConfigMutation();
     const [deleteConfig] = useDeleteChannelConfigMutation();
     const [syncLeads, { isLoading: isSyncing }] = useSyncChannelLeadsMutation();
 
@@ -56,6 +58,20 @@ const JustdialIntegration = () => {
     });
 
     const logs = logsResponse?.data || [];
+
+    const formatTime12h = (dateObj) => {
+        if (!dateObj) return "";
+        try {
+            const h = dateObj.getHours();
+            const m = dateObj.getMinutes().toString().padStart(2, '0');
+            const ampm = h >= 12 ? 'PM' : 'AM';
+            let DisplayH = h % 12;
+            DisplayH = DisplayH ? DisplayH : 12;
+            return `${DisplayH}:${m} ${ampm}`;
+        } catch (e) {
+            return "";
+        }
+    };
 
     const handleConnect = () => {
         setIsConnectModalOpen(true);
@@ -73,9 +89,10 @@ const JustdialIntegration = () => {
 
             setIsConnectModalOpen(false);
             setFormData({ account_name: '', mobile: '', api_key: '' });
-            toast.success("Justdial account linked successfully!");
+            toast.success("Justdial account linked! Leads will sync automatically.");
         } catch (err) {
-            toast.error(err.data?.message || "Failed to link account");
+            const errorMsg = err.data?.message || "Failed to link Justdial account. Please check your credentials.";
+            toast.error(errorMsg);
         }
     };
 
@@ -143,7 +160,7 @@ const JustdialIntegration = () => {
                     </div>
                 </div>
 
-                <div className="max-w-8xl mx-auto px-4 py-6">
+                <div className="max-w-8xl mx-auto px-4 py-6 pt-0 mt-2">
                     {/* Stats Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                         <NumberCard
@@ -176,20 +193,30 @@ const JustdialIntegration = () => {
                         />
                     </div>
 
-                    {/* Tabs */}
-                    <div className="flex gap-4 mb-6">
-                        <button
-                            onClick={() => setActiveTab("accounts")}
-                            className={`px-6 py-2.5 rounded-sm font-bold transition-all text-sm border ${activeTab === 'accounts' ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D] shadow-md' : 'bg-white text-gray-600 border-gray-200'}`}
-                        >
-                            Linked Accounts
-                        </button>
-                        <button
-                            onClick={() => setActiveTab("logs")}
-                            className={`px-6 py-2.5 rounded-sm font-bold transition-all text-sm border ${activeTab === 'logs' ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D] shadow-md' : 'bg-white text-gray-600 border-gray-200'}`}
-                        >
-                            Sync History
-                        </button>
+                    {/* Tabs Navigation - Premium Segmented Pill UI */}
+                    <div className="flex mb-8">
+                        <div className="flex p-1 bg-white border border-gray-200 rounded-sm shadow-sm">
+                            <button
+                                onClick={() => setActiveTab("accounts")}
+                                className={`px-8 py-2.5 rounded-sm text-sm font-bold transition-all duration-300 flex items-center gap-2 ${activeTab === 'accounts'
+                                    ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-[0_4px_12px_rgba(255,123,29,0.3)]'
+                                    : 'text-gray-500 hover:text-gray-800'
+                                    }`}
+                            >
+                                <PhoneCall size={18} />
+                                <span>Linked Accounts</span>
+                            </button>
+                            <button
+                                onClick={() => setActiveTab("logs")}
+                                className={`px-8 py-2.5 rounded-sm text-sm font-bold transition-all duration-300 flex items-center gap-2 ${activeTab === 'logs'
+                                    ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-[0_4px_12px_rgba(255,123,29,0.3)]'
+                                    : 'text-gray-500 hover:text-gray-800'
+                                    }`}
+                            >
+                                <History size={18} />
+                                <span>Sync History</span>
+                            </button>
+                        </div>
                     </div>
 
                     {/* Content Area */}
@@ -250,15 +277,15 @@ const JustdialIntegration = () => {
                                         </div>
                                     ))
                                 ) : (
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full text-left">
-                                            <thead className="bg-gray-50 text-gray-800 text-xs font-bold uppercase tracking-wider border-b">
-                                                <tr>
-                                                    <th className="px-6 py-4">Profile Name</th>
-                                                    <th className="px-6 py-4">Contact</th>
-                                                    <th className="px-6 py-4">Total Leads</th>
-                                                    <th className="px-6 py-4">Last Sync</th>
-                                                    <th className="px-6 py-4 text-right">Actions</th>
+                                    <div className="overflow-x-auto border border-gray-200 rounded-sm shadow-sm bg-white">
+                                        <table className="w-full text-left border-collapse">
+                                            <thead>
+                                                <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm">
+                                                    <th className="px-6 py-3.5 font-bold border-b border-orange-400 capitalize whitespace-nowrap">Profile Name</th>
+                                                    <th className="px-6 py-3.5 font-bold border-b border-orange-400 capitalize whitespace-nowrap">Contact</th>
+                                                    <th className="px-6 py-3.5 font-bold border-b border-orange-400 capitalize whitespace-nowrap">Total Leads</th>
+                                                    <th className="px-6 py-3.5 font-bold border-b border-orange-400 capitalize whitespace-nowrap">Last Sync</th>
+                                                    <th className="px-6 py-3.5 font-bold border-b border-orange-400 capitalize whitespace-nowrap text-right">Actions</th>
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-gray-100">
@@ -302,104 +329,123 @@ const JustdialIntegration = () => {
                             </div>
                         )
                     ) : (
-                        <div className="bg-white border rounded-sm overflow-hidden shadow-sm">
-                            {/* Same log table as Meta */}
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left">
-                                    <thead className="bg-[#FFFBF8] text-gray-700 text-[11px] font-bold uppercase tracking-widest border-b border-orange-100">
-                                        <tr>
-                                            <th className="px-6 py-4">Event Time</th>
-                                            <th className="px-6 py-4">Log Type</th>
-                                            <th className="px-6 py-4">Status</th>
-                                            <th className="px-6 py-4 text-right">Message</th>
+                        <div className="overflow-x-auto border border-gray-200 rounded-sm shadow-sm bg-white">
+                            <table className="w-full text-left border-collapse">
+                                <thead>
+                                    <tr className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-[14px]">
+                                        <th className="px-6 py-2.5 font-bold border-b border-orange-400 capitalize whitespace-nowrap">Event Time</th>
+                                        <th className="px-6 py-2.5 font-bold border-b border-orange-400 capitalize whitespace-nowrap">Log Type</th>
+                                        <th className="px-6 py-2.5 font-bold border-b border-orange-400 capitalize whitespace-nowrap">Status</th>
+                                        <th className="px-6 py-2.5 font-bold border-b border-orange-400 capitalize whitespace-nowrap text-right">Message</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100 text-sm">
+                                    {logs.length > 0 ? logs.map(log => (
+                                        <tr key={log.id} className="hover:bg-gray-50">
+                                            <td className="px-6 py-2.5 whitespace-nowrap">
+                                                <div className="flex items-center gap-3 text-[14px] font-medium text-gray-700">
+                                                    <Calendar size={18} className="text-orange-500 shrink-0" />
+                                                    <div className="flex items-center gap-2 flex-nowrap">
+                                                        <span className="text-gray-800 font-bold">{new Date(log.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                                                        <span className="text-[12px] text-orange-600 font-black uppercase bg-orange-50 px-2 py-0.5 rounded-sm border border-orange-100">{formatTime12h(new Date(log.created_at))}</span>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-2.5 font-bold text-gray-700 capitalize text-sm">Justdial Fetch</td>
+                                            <td className="px-6 py-2.5">
+                                                <span className={`px-3 py-1 rounded-sm text-xs font-bold capitalize ${log.status === 'success' ? 'bg-green-50 text-green-700 border border-green-100' : 'bg-red-50 text-red-700 border border-red-100'}`}>
+                                                    {log.status}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-2.5 text-right text-sm text-gray-800 font-medium">{log.message}</td>
                                         </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-100 text-sm">
-                                        {logs.length > 0 ? logs.map(log => (
-                                            <tr key={log.id}>
-                                                <td className="px-6 py-4 text-xs text-gray-500">{new Date(log.created_at).toLocaleString()}</td>
-                                                <td className="px-6 py-4 font-bold text-gray-700 capitalize">Justdial Fetch</td>
-                                                <td className="px-6 py-4">
-                                                    <span className={`px-2 py-0.5 rounded-sm text-[10px] font-bold uppercase ${log.status === 'success' ? 'bg-green-50 text-green-700 border border-green-100' : 'bg-red-50 text-red-700 border border-red-100'}`}>
-                                                        {log.status}
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-4 text-right text-xs text-gray-500">{log.message}</td>
-                                            </tr>
-                                        )) : (
-                                            <tr>
-                                                <td colSpan="4" className="px-6 py-12">
-                                                    <EmptyState title="No sync activity" message="You'll see Justdial sync logs here after setup." type="leads" />
-                                                </td>
-                                            </tr>
-                                        )}
-                                    </tbody>
-                                </table>
-                            </div>
+                                    )) : (
+                                        <tr>
+                                            <td colSpan="4" className="px-6 py-12">
+                                                <EmptyState title="No sync activity" message="You'll see Justdial sync logs here after setup." type="leads" />
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
                         </div>
                     )}
                 </div>
-
-                {/* Connect Modal */}
-                <Modal
-                    isOpen={isConnectModalOpen}
-                    onClose={() => setIsConnectModalOpen(false)}
-                    headerVariant="simple"
-                    maxWidth="max-w-md"
-                >
-                    <form onSubmit={confirmConnect} className="font-primary">
-                        <div className="text-center mb-6">
-                            <div className="w-16 h-16 bg-orange-50 rounded-full flex items-center justify-center text-[#FF7B1D] mx-auto mb-4">
-                                <PhoneCall size={32} />
-                            </div>
-                            <h2 className="text-2xl font-bold text-gray-800">Add Justdial Link</h2>
-                            <p className="text-gray-500 text-sm">Enter your Justdial credentials to sync leads.</p>
-                        </div>
-
-                        <div className="space-y-4">
-                            <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-gray-700 uppercase tracking-wide">Account Name</label>
-                                <input
-                                    type="text"
-                                    placeholder="e.g. Mumbai Office"
-                                    value={formData.account_name}
-                                    onChange={(e) => setFormData({ ...formData, account_name: e.target.value })}
-                                    required
-                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-sm focus:border-[#FF7B1D] outline-none font-semibold text-sm transition-all"
-                                />
-                            </div>
-                            <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-gray-700 uppercase tracking-wide">Mobile Number (JD Registered)</label>
-                                <input
-                                    type="tel"
-                                    placeholder="Enter 10 digit number"
-                                    value={formData.mobile}
-                                    onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
-                                    required
-                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-sm focus:border-[#FF7B1D] outline-none font-semibold text-sm transition-all"
-                                />
-                            </div>
-                            <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-gray-700 uppercase tracking-wide">API KEY (Optional)</label>
-                                <input
-                                    type="password"
-                                    placeholder="Paste JD API key here"
-                                    value={formData.api_key}
-                                    onChange={(e) => setFormData({ ...formData, api_key: e.target.value })}
-                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-sm focus:border-[#FF7B1D] outline-none font-semibold text-sm transition-all"
-                                />
-                            </div>
-                        </div>
-
-                        <button
-                            type="submit"
-                            className="w-full mt-8 py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold rounded-sm shadow-xl hover:shadow-orange-200 transition-all uppercase text-xs tracking-widest active:scale-95"
-                        >
-                            Verify & Connect
-                        </button>
-                    </form>
-                </Modal>
             </div>
+
+            {/* Connect Modal */}
+            <Modal
+                isOpen={isConnectModalOpen}
+                onClose={() => setIsConnectModalOpen(false)}
+                headerVariant="simple"
+                maxWidth="max-w-md"
+            >
+                <form onSubmit={confirmConnect} className="font-primary">
+                    <div className="text-center mb-6">
+                        <div className="w-16 h-16 bg-orange-50 rounded-full flex items-center justify-center text-[#FF7B1D] mx-auto mb-4">
+                            <PhoneCall size={32} />
+                        </div>
+                        <h2 className="text-2xl font-bold text-gray-800">Add Justdial Link</h2>
+                        <p className="text-gray-500 text-sm">Enter your Justdial credentials to sync leads.</p>
+                    </div>
+
+                    <div className="space-y-4 text-left">
+                        <div className="space-y-1.5">
+                            <label className="flex items-center gap-2 text-[14px] font-bold text-gray-700 capitalize">
+                                <Users size={14} className="text-orange-500" /> Account name
+                            </label>
+                            <input
+                                type="text"
+                                placeholder="e.g. Mumbai Office"
+                                value={formData.account_name}
+                                onChange={(e) => setFormData({ ...formData, account_name: e.target.value })}
+                                required
+                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500 focus:ring-opacity-20 outline-none font-bold text-sm transition-all"
+                            />
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="flex items-center gap-2 text-[14px] font-bold text-gray-700 capitalize">
+                                <PhoneCall size={14} className="text-orange-500" /> Mobile number (JD registered)
+                            </label>
+                            <input
+                                type="tel"
+                                placeholder="Enter 10 digit number"
+                                value={formData.mobile}
+                                onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
+                                required
+                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500 focus:ring-opacity-20 outline-none font-bold text-sm transition-all"
+                            />
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="flex items-center gap-2 text-[14px] font-bold text-gray-700 capitalize">
+                                <Key size={14} className="text-orange-500" /> API key (optional)
+                            </label>
+                            <input
+                                type="password"
+                                placeholder="Paste JD API key here"
+                                value={formData.api_key}
+                                onChange={(e) => setFormData({ ...formData, api_key: e.target.value })}
+                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500 focus:ring-opacity-20 outline-none font-bold text-sm transition-all"
+                            />
+                        </div>
+                    </div>
+
+                    <button
+                        type="submit"
+                        disabled={isConnecting}
+                        className="w-full mt-8 py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold rounded-sm shadow-xl hover:shadow-orange-200 transition-all uppercase text-xs tracking-widest active:scale-95 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                    >
+                        {isConnecting ? (
+                            <>
+                                <RefreshCw size={18} className="animate-spin" />
+                                Connecting...
+                            </>
+                        ) : (
+                            "Verify & Connect"
+                        )}
+                    </button>
+                </form>
+            </Modal>
         </DashboardLayout>
     );
 };

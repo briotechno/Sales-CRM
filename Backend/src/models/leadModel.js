@@ -269,7 +269,7 @@ const Lead = {
             LEFT JOIN pipelines p ON l.pipeline_id = p.id
             LEFT JOIN pipeline_stages s ON l.stage_id = s.id
             LEFT JOIN employees e ON (l.assigned_to = CAST(e.id AS CHAR) OR l.assigned_to = e.employee_id OR l.assigned_to = e.employee_name)
-            WHERE l.user_id = ?
+            WHERE l.user_id = ? AND l.is_deleted = 0
         `;
         const params = [userId];
 
@@ -311,7 +311,7 @@ const Lead = {
         }
 
         // Count query construction
-        let countQuery = 'SELECT COUNT(*) as total FROM leads l LEFT JOIN pipeline_stages s ON l.stage_id = s.id WHERE l.user_id = ?';
+        let countQuery = 'SELECT COUNT(*) as total FROM leads l LEFT JOIN pipeline_stages s ON l.stage_id = s.id WHERE l.user_id = ? AND l.is_deleted = 0';
         const countParams = [userId];
 
         if (status && status !== 'All') { countQuery += ' AND l.status = ?'; countParams.push(status); }
@@ -349,7 +349,7 @@ const Lead = {
                 SUM(CASE WHEN status = 'Active' THEN 1 ELSE 0 END) as active,
                 SUM(CASE WHEN tag = 'Closed' THEN 1 ELSE 0 END) as converted,
                 SUM(CASE WHEN tag = 'Lost' THEN 1 ELSE 0 END) as lost
-            FROM leads WHERE user_id = ?
+            FROM leads WHERE user_id = ? AND is_deleted = 0
         `, [userId]);
 
         query += ' ORDER BY l.id DESC LIMIT ? OFFSET ?';
@@ -377,7 +377,7 @@ const Lead = {
              LEFT JOIN pipelines p ON l.pipeline_id = p.id
              LEFT JOIN pipeline_stages s ON l.stage_id = s.id
              LEFT JOIN employees e ON (l.assigned_to = CAST(e.id AS CHAR) OR l.assigned_to = e.employee_id OR l.assigned_to = e.employee_name)
-             WHERE l.id = ? AND l.user_id = ?`,
+             WHERE l.id = ? AND l.user_id = ? AND l.is_deleted = 0`,
             [id, userId]
         );
         return rows[0];
@@ -656,7 +656,57 @@ const Lead = {
     },
 
     delete: async (id, userId) => {
-        await pool.query('DELETE FROM leads WHERE id = ? AND user_id = ?', [id, userId]);
+        await pool.query('UPDATE leads SET is_deleted = 1 WHERE id = ? AND user_id = ?', [id, userId]);
+    },
+
+    findTrashed: async (userId, page = 1, limit = 10, search = '') => {
+        const offset = (page - 1) * limit;
+        let query = `
+            SELECT l.*, p.name as pipeline_name, s.name as stage_name
+            FROM leads l
+            LEFT JOIN pipelines p ON l.pipeline_id = p.id
+            LEFT JOIN pipeline_stages s ON l.stage_id = s.id
+            WHERE l.user_id = ? AND l.is_deleted = 1
+        `;
+        const params = [userId];
+
+        if (search) {
+            query += ' AND (l.name LIKE ? OR l.email LIKE ? OR l.mobile_number LIKE ?)';
+            const term = `%${search}%`;
+            params.push(term, term, term);
+        }
+
+        query += ' ORDER BY l.id DESC LIMIT ? OFFSET ?';
+        params.push(parseInt(limit), parseInt(offset));
+
+        const [leads] = await pool.query(query, params);
+
+        let countQuery = 'SELECT COUNT(*) as total FROM leads l WHERE l.user_id = ? AND l.is_deleted = 1';
+        const countParams = [userId];
+        if (search) {
+            countQuery += ' AND (l.name LIKE ? OR l.email LIKE ? OR l.mobile_number LIKE ?)';
+            const term = `%${search}%`;
+            countParams.push(term, term, term);
+        }
+        const [totalRows] = await pool.query(countQuery, countParams);
+
+        return {
+            leads,
+            pagination: {
+                total: totalRows[0].total,
+                page: parseInt(page),
+                limit: parseInt(limit),
+                totalPages: Math.ceil(totalRows[0].total / limit)
+            }
+        };
+    },
+
+    permanentDelete: async (id, userId) => {
+        await pool.query('DELETE FROM leads WHERE id = ? AND user_id = ? AND is_deleted = 1', [id, userId]);
+    },
+
+    restore: async (id, userId) => {
+        await pool.query('UPDATE leads SET is_deleted = 0 WHERE id = ? AND user_id = ?', [id, userId]);
     },
 
     checkCallConflict: async (userId, dateTime, excludeLeadId = null) => {
