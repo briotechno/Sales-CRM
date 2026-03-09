@@ -6,6 +6,9 @@ import LeadRulesConfig from "../LeadsManagement/LeadRulesConfig";
 import DropLeadRules from "../LeadsManagement/DropLeadRules";
 import CreateCampaignModal from "../../components/ChannelIntegration/CreateCampaignModal";
 import CampaignList from "../../components/ChannelIntegration/CampaignList";
+import DialerSettings from "./DialerSettings";
+import IVRSettings from "./IVRSettings";
+import { Phone, Mic } from "lucide-react";
 
 export default function ChannelSettings() {
     const [activeTab, setActiveTab] = useState("campaign-list");
@@ -193,6 +196,26 @@ export default function ChannelSettings() {
                             <List size={18} className={activeTab === "campaign-list" ? "text-orange-500" : ""} />
                             Campaign List
                         </button>
+                        <button
+                            onClick={() => setActiveTab("dialer")}
+                            className={`flex items-center gap-2 px-5 py-2.5 rounded-md text-[15px] font-bold transition-all duration-300 ${activeTab === "dialer"
+                                ? "bg-white text-orange-600 shadow-sm"
+                                : "text-gray-500 hover:text-gray-700 hover:bg-gray-200/50"
+                                }`}
+                        >
+                            <Phone size={18} className={activeTab === "dialer" ? "text-orange-500" : ""} />
+                            Dialer Integration
+                        </button>
+                        <button
+                            onClick={() => setActiveTab("ivr")}
+                            className={`flex items-center gap-2 px-5 py-2.5 rounded-md text-[15px] font-bold transition-all duration-300 ${activeTab === "ivr"
+                                ? "bg-white text-orange-600 shadow-sm"
+                                : "text-gray-500 hover:text-gray-700 hover:bg-gray-200/50"
+                                }`}
+                        >
+                            <Mic size={18} className={activeTab === "ivr" ? "text-orange-500" : ""} />
+                            IVR Configuration
+                        </button>
                     </div>
                 </div>
             </div>
@@ -226,6 +249,16 @@ export default function ChannelSettings() {
                                 setTempStatus("All");
                             }}
                         />
+                    </div>
+                )}
+                {activeTab === "dialer" && (
+                    <div className="px-6 py-6 font-primary">
+                        <DialerSettings />
+                    </div>
+                )}
+                {activeTab === "ivr" && (
+                    <div className="px-6 py-6 font-primary">
+                        <IVRSettings />
                     </div>
                 )}
             </div>
