@@ -42,7 +42,8 @@ import { integrationApi } from './api/integrationApi';
 import { goalApi } from './api/goalApi';
 import { visitorApi } from './api/visitorApi';
 import { meetingApi } from './api/meetingApi';
-
+import { walletApi } from './api/walletApi';
+import { superAdminApi } from './api/superAdminApi';
 
 
 
@@ -90,7 +91,8 @@ export const store = configureStore({
         [goalApi.reducerPath]: goalApi.reducer,
         [visitorApi.reducerPath]: visitorApi.reducer,
         [meetingApi.reducerPath]: meetingApi.reducer,
-
+        [walletApi.reducerPath]: walletApi.reducer,
+        [superAdminApi.reducerPath]: superAdminApi.reducer,
 
 
 
@@ -137,6 +139,8 @@ export const store = configureStore({
             goalApi.middleware,
             visitorApi.middleware,
             meetingApi.middleware,
+            walletApi.middleware,
+            superAdminApi.middleware,
             limitErrorMiddleware
 
         ),

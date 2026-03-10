@@ -11,7 +11,7 @@ import {
     Plus,
     ArrowRight,
     Eye,
-    Edit2,
+    SquarePen,
     Trash2,
     Loader2,
     Copy,
@@ -171,7 +171,7 @@ export default function ProductKeys() {
                         {/* Title & Breadcrumb */}
                         <div>
                             <h1 className="text-2xl font-bold flex items-center gap-2 text-gray-800">
-                                <KeyRound className="text-[#FF7B1D]" size={26} /> Product Keys
+                                Product Keys
                             </h1>
                             <p className="text-sm text-gray-500 mt-1 flex items-center gap-2 font-medium">
                                 <Home size={14} className="text-gray-700" /> Super Admin /{" "}
@@ -314,7 +314,7 @@ export default function ProductKeys() {
                 </div>
 
                 {/* Dashboard Content */}
-                <div className="max-w-8xl mx-auto px-6 pt-2 pb-6 space-y-6">
+                <div className="max-w-8xl mx-auto px-6 pt-0 mt-2 pb-6 space-y-6">
                     {/* Quick Generate Card */}
                     <div className="bg-white rounded-sm shadow-md border border-gray-100 overflow-hidden">
                         <div className="bg-gradient-to-r from-[#1a222c] to-[#2d3a4b] p-4 border-b border-gray-700">
@@ -480,31 +480,31 @@ export default function ProductKeys() {
                                                 <div className="flex justify-end gap-2">
                                                     <button
                                                         onClick={() => handleCopy(pk.product_key)}
-                                                        className="p-1 hover:bg-orange-100 rounded-sm text-gray-500 hover:text-orange-600 transition-all font-bold"
+                                                        className="p-1.5 text-gray-600 hover:bg-gray-50 rounded-sm transition-all"
                                                         title="Copy Key"
                                                     >
-                                                        <Copy size={18} />
+                                                        <Copy size={16} />
                                                     </button>
                                                     <button
                                                         onClick={() => { setSelectedKey(pk); setIsViewOpen(true); }}
-                                                        className="p-1 hover:bg-orange-100 rounded-sm text-blue-500 hover:text-blue-700 transition-all"
+                                                        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-sm transition-all"
                                                         title="View Details"
                                                     >
-                                                        <Eye size={18} />
+                                                        <Eye size={16} />
                                                     </button>
                                                     <button
                                                         onClick={() => { setSelectedKey(pk); setIsEditOpen(true); }}
-                                                        className="p-1 hover:bg-orange-100 rounded-sm text-green-500 hover:text-green-700 transition-all font-bold"
+                                                        className="p-1.5 text-green-600 hover:bg-green-50 rounded-sm transition-all font-bold"
                                                         title="Edit Key"
                                                     >
-                                                        <Edit2 size={18} />
+                                                        <SquarePen size={16} />
                                                     </button>
                                                     <button
                                                         onClick={() => { setSelectedKey(pk); setIsDeleteOpen(true); }}
-                                                        className="p-1 hover:bg-orange-100 rounded-sm text-red-500 hover:text-red-700 transition-all"
+                                                        className="p-1.5 text-red-600 hover:bg-red-50 rounded-sm transition-all"
                                                         title="Delete Key"
                                                     >
-                                                        <Trash2 size={18} />
+                                                        <Trash2 size={16} />
                                                     </button>
                                                 </div>
                                             </td>

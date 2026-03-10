@@ -8,7 +8,8 @@ const {
     deleteEnterprise,
     completeOnboarding,
     redeemKey,
-    getSubscriptionStats
+    getSubscriptionStats,
+    getDashboardStats
 } = require('../controllers/enterpriseController');
 const { protect, superAdmin } = require('../middleware/authMiddleware');
 
@@ -20,6 +21,7 @@ router.post('/redeem-key', redeemKey);
 router.get('/subscription-stats', getSubscriptionStats);
 
 // Restricted to Super Admins
+router.get('/dashboard-stats', superAdmin, getDashboardStats);
 router.post('/', superAdmin, createEnterprise);
 router.get('/', superAdmin, getAllEnterprises);
 router.get('/:id', superAdmin, getEnterpriseById);

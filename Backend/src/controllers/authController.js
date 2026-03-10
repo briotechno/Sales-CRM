@@ -7,6 +7,7 @@ const ProductKey = require('../models/productKeyModel');
 const Plan = require('../models/planModel');
 const Subscription = require('../models/subscriptionModel');
 const BusinessInfo = require('../models/businessInfoModel');
+const { pool } = require('../config/db');
 
 // @desc    Register a new user
 // @route   POST /api/auth/signup
@@ -189,6 +190,9 @@ const authUser = async (req, res) => {
         if (email) {
             const user = await User.findByEmail(email);
             if (user && (await bcrypt.compare(password, user.password))) {
+                // Update last_login timestamp
+                await pool.query('UPDATE users SET last_login = NOW() WHERE id = ?', [user.id]);
+
                 return res.json({
                     status: true,
                     message: 'Login successful',
@@ -223,13 +227,16 @@ const authUser = async (req, res) => {
             const isPlainMatch = employee.password === password;
 
             if (isMatch || isPlainMatch) {
+                // Update last_login timestamp for employees
+                await pool.query('UPDATE employees SET last_login = NOW() WHERE id = ?', [employee.id]).catch(() => { });
+
                 return res.json({
                     status: true,
                     message: 'Employee Login successful',
                     token: generateToken(employee.id, 'Employee'),
                     user: {
-                        _id: employee.id, // The Employee PK
-                        employee_id: employee.employee_id, // The EMP ID string
+                        _id: employee.id,
+                        employee_id: employee.employee_id,
                         name: employee.employee_name,
                         firstName: employee.employee_name ? employee.employee_name.split(' ')[0] : '',
                         lastName: employee.employee_name ? employee.employee_name.split(' ').slice(1).join(' ') : '',
@@ -238,7 +245,7 @@ const authUser = async (req, res) => {
                         email: employee.email,
                         role: 'Employee',
                         permissions: employee.permissions ? (typeof employee.permissions === 'string' ? JSON.parse(employee.permissions) : employee.permissions) : [],
-                        user_id: employee.user_id // The Admin ID
+                        user_id: employee.user_id
                     }
                 });
             }

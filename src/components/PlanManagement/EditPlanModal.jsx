@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Package, DollarSign, Users, Zap, HardDrive, Layout, Loader2, Save, Plus, X, Check } from "lucide-react";
+import { Package, DollarSign, Users, Zap, HardDrive, Layout, Loader2, Save, Plus, X, Check, Trash2 } from "lucide-react";
 import Modal from "../common/Modal";
 import { toast } from "react-hot-toast";
 import { useUpdatePlanMutation } from "../../store/api/planApi";
@@ -100,14 +100,14 @@ const EditPlanModal = ({ isOpen, onClose, plan }) => {
             <button
                 onClick={onClose}
                 disabled={isLoading}
-                className="px-6 py-2.5 rounded-sm border-2 border-gray-300 font-semibold hover:bg-gray-100 disabled:opacity-50 transition-all"
+                className="px-6 py-2.5 rounded-sm border-2 border-gray-300 font-semibold hover:bg-gray-100 disabled:opacity-50 transition-all font-primary text-sm"
             >
                 Cancel
             </button>
             <button
                 onClick={handleSave}
                 disabled={isLoading}
-                className="px-6 py-2.5 rounded-sm bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold shadow-md active:scale-95 transition-all disabled:opacity-50 flex items-center gap-2"
+                className="px-6 py-2.5 rounded-sm bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold shadow-md active:scale-95 transition-all disabled:opacity-50 flex items-center gap-2 font-primary text-sm"
             >
                 {isLoading ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
                 {isLoading ? "Saving..." : "Save Changes"}
@@ -123,26 +123,26 @@ const EditPlanModal = ({ isOpen, onClose, plan }) => {
             onClose={onClose}
             title={`Edit Plan: ${plan.name}`}
             subtitle={"ID: PLAN-" + plan.id}
-            icon={<Package size={24} />}
+            icon={<Package size={24} className="text-[#FF7B1D]" />}
             footer={footer}
         >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 px-1 font-semibold">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 px-1 font-semibold p-2">
                 {/* Name */}
                 <div className="md:col-span-2">
-                    <label className="flex items-center gap-2 text-sm font-semibold mb-1 text-gray-700">
-                        <Package size={16} className="text-[#FF7B1D]" /> Plan Name *
+                    <label className="flex items-center gap-2 text-sm font-semibold mb-2 text-gray-700">
+                        <Package size={16} className="text-[#FF7B1D]" /> Plan Name <span className="text-red-500">*</span>
                     </label>
                     <input
                         name="name"
                         value={form.name}
                         onChange={handleChange}
-                        className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all font-semibold text-sm bg-gray-50"
+                        className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm hover:border-gray-300 font-semibold bg-gray-50 hover:bg-white"
                     />
                 </div>
 
                 {/* Description */}
                 <div className="md:col-span-2">
-                    <label className="flex items-center gap-2 text-sm font-semibold mb-1 text-gray-700">
+                    <label className="flex items-center gap-2 text-sm font-semibold mb-2 text-gray-700">
                         <Layout size={16} className="text-[#FF7B1D]" /> Description
                     </label>
                     <textarea
@@ -150,7 +150,7 @@ const EditPlanModal = ({ isOpen, onClose, plan }) => {
                         value={form.description}
                         onChange={handleChange}
                         rows="2"
-                        className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all font-semibold resize-none text-sm bg-gray-50"
+                        className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm hover:border-gray-300 font-semibold resize-none bg-gray-50 hover:bg-white"
                     ></textarea>
                 </div>
 
@@ -160,7 +160,7 @@ const EditPlanModal = ({ isOpen, onClose, plan }) => {
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {/* Users */}
-                        <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                        <div className="bg-gray-50 p-4 rounded-sm border border-gray-200">
                             <label className="flex items-center gap-2 text-xs font-bold mb-2 text-gray-700">
                                 <Users size={14} className="text-[#FF7B1D]" /> Default Users
                             </label>
@@ -169,7 +169,7 @@ const EditPlanModal = ({ isOpen, onClose, plan }) => {
                                 name="default_users"
                                 value={form.default_users}
                                 onChange={handleChange}
-                                className="w-full px-3 py-2 border rounded-md mb-3 text-sm focus:border-orange-500 outline-none font-bold bg-white"
+                                className="w-full px-3 py-2 border border-gray-200 rounded-sm mb-3 text-sm focus:border-orange-500 outline-none font-bold bg-white hover:border-gray-300"
                             />
                             <div className="space-y-3">
                                 <label className="flex items-center gap-2 cursor-pointer select-none">
@@ -178,12 +178,12 @@ const EditPlanModal = ({ isOpen, onClose, plan }) => {
                                         name="upgradable_users"
                                         checked={form.upgradable_users}
                                         onChange={handleChange}
-                                        className="w-4 h-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500"
+                                        className="w-4 h-4 rounded-sm border-gray-300 text-orange-600 focus:ring-orange-500"
                                     />
                                     <span className="text-[11px] font-bold text-gray-600">Upgradation Allowed</span>
                                 </label>
                                 {form.upgradable_users && (
-                                    <div className="flex items-center gap-2 bg-white p-2 rounded border border-orange-100">
+                                    <div className="flex items-center gap-2 bg-white p-2 rounded-sm border border-orange-100">
                                         <span className="text-[10px] font-bold text-gray-400">₹</span>
                                         <input
                                             type="number"
@@ -199,7 +199,7 @@ const EditPlanModal = ({ isOpen, onClose, plan }) => {
                         </div>
 
                         {/* Storage */}
-                        <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                        <div className="bg-gray-50 p-4 rounded-sm border border-gray-200">
                             <label className="flex items-center gap-2 text-xs font-bold mb-2 text-gray-700">
                                 <HardDrive size={14} className="text-[#FF7B1D]" /> Default Storage (GB)
                             </label>
@@ -208,7 +208,7 @@ const EditPlanModal = ({ isOpen, onClose, plan }) => {
                                 name="default_storage"
                                 value={form.default_storage}
                                 onChange={handleChange}
-                                className="w-full px-3 py-2 border rounded-md mb-3 text-sm focus:border-orange-500 outline-none font-bold bg-white"
+                                className="w-full px-3 py-2 border border-gray-200 rounded-sm mb-3 text-sm focus:border-orange-500 outline-none font-bold bg-white hover:border-gray-300"
                             />
                             <div className="space-y-3">
                                 <label className="flex items-center gap-2 cursor-pointer select-none">
@@ -217,12 +217,12 @@ const EditPlanModal = ({ isOpen, onClose, plan }) => {
                                         name="upgradable_storage"
                                         checked={form.upgradable_storage}
                                         onChange={handleChange}
-                                        className="w-4 h-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500"
+                                        className="w-4 h-4 rounded-sm border-gray-300 text-orange-600 focus:ring-orange-500"
                                     />
                                     <span className="text-[11px] font-bold text-gray-600">Upgradation Allowed</span>
                                 </label>
                                 {form.upgradable_storage && (
-                                    <div className="flex items-center gap-2 bg-white p-2 rounded border border-orange-100">
+                                    <div className="flex items-center gap-2 bg-white p-2 rounded-sm border border-orange-100">
                                         <span className="text-[10px] font-bold text-gray-400">₹</span>
                                         <input
                                             type="number"
@@ -238,7 +238,7 @@ const EditPlanModal = ({ isOpen, onClose, plan }) => {
                         </div>
 
                         {/* Leads */}
-                        <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                        <div className="bg-gray-50 p-4 rounded-sm border border-gray-200">
                             <label className="flex items-center gap-2 text-xs font-bold mb-2 text-gray-700">
                                 <Zap size={14} className="text-[#00C853]" /> Monthly Leads
                             </label>
@@ -247,7 +247,7 @@ const EditPlanModal = ({ isOpen, onClose, plan }) => {
                                 name="monthly_leads"
                                 value={form.monthly_leads}
                                 onChange={handleChange}
-                                className="w-full px-3 py-2 border rounded-md mb-3 text-sm focus:border-green-500 outline-none font-bold bg-white"
+                                className="w-full px-3 py-2 border border-gray-200 rounded-sm mb-3 text-sm focus:border-green-500 outline-none font-bold bg-white hover:border-gray-300"
                             />
                             <div className="space-y-3">
                                 <label className="flex items-center gap-2 cursor-pointer select-none">
@@ -256,12 +256,12 @@ const EditPlanModal = ({ isOpen, onClose, plan }) => {
                                         name="upgradable_leads"
                                         checked={form.upgradable_leads}
                                         onChange={handleChange}
-                                        className="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                                        className="w-4 h-4 rounded-sm border-gray-300 text-green-600 focus:ring-green-500"
                                     />
                                     <span className="text-[11px] font-bold text-gray-600">Upgradation Allowed</span>
                                 </label>
                                 {form.upgradable_leads && (
-                                    <div className="flex items-center gap-2 bg-white p-2 rounded border border-green-100">
+                                    <div className="flex items-center gap-2 bg-white p-2 rounded-sm border border-green-100">
                                         <span className="text-[10px] font-bold text-gray-400">₹</span>
                                         <input
                                             type="number"
@@ -278,7 +278,7 @@ const EditPlanModal = ({ isOpen, onClose, plan }) => {
                     </div>
 
                     {isStrictPlan && (
-                        <div className="mt-4 p-3 bg-orange-50 border border-orange-100 rounded-md">
+                        <div className="mt-4 p-3 bg-orange-50 border border-orange-100 rounded-sm">
                             <p className="text-[11px] font-bold text-orange-700 italic">
                                 Note: “This plan does not support upgrades. To increase users, storage, or leads, please upgrade to a higher plan.”
                             </p>
@@ -292,26 +292,26 @@ const EditPlanModal = ({ isOpen, onClose, plan }) => {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                         {/* Base Price */}
-                        <div className="bg-orange-50/50 p-4 rounded-lg border border-orange-100 ring-1 ring-orange-100">
+                        <div className="bg-orange-50/50 p-4 rounded-sm border border-orange-100 ring-1 ring-orange-100">
                             <label className="flex items-center gap-2 text-sm font-bold mb-2 text-gray-700">
-                                <DollarSign size={16} className="text-[#FF7B1D]" /> Base Monthly Amount (₹) *
+                                <DollarSign size={16} className="text-[#FF7B1D]" /> Base Monthly Amount (₹) <span className="text-red-500">*</span>
                             </label>
                             <input
                                 type="number"
                                 name="price"
                                 value={form.price}
                                 onChange={handleChange}
-                                className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all font-black text-xl text-orange-600 bg-white"
+                                className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all font-black text-xl text-orange-600 bg-white hover:border-gray-300 font-primary"
                             />
                         </div>
 
                         {/* Duration Discounts */}
                         <div className="space-y-3">
-                            <label className="text-xs font-bold text-gray-500 uppercase flex items-center gap-2">
+                            <label className="text-[11px] font-bold text-gray-500 uppercase flex items-center gap-2 tracking-wider">
                                 <Zap size={14} className="text-orange-500" /> Duration Discounts (%)
                             </label>
                             <div className="grid grid-cols-1 gap-2">
-                                <div className="flex items-center justify-between bg-white border border-gray-200 p-2 px-3 rounded-md">
+                                <div className="flex items-center justify-between bg-white border border-gray-200 p-2 px-3 rounded-sm">
                                     <span className="text-xs font-bold text-gray-600">12 Months</span>
                                     <div className="flex items-center gap-2">
                                         <input
@@ -319,12 +319,12 @@ const EditPlanModal = ({ isOpen, onClose, plan }) => {
                                             name="discount_12_months"
                                             value={form.discount_12_months}
                                             onChange={handleChange}
-                                            className="w-16 px-2 py-1 border rounded text-right text-xs font-bold outline-none border-orange-200"
+                                            className="w-16 px-2 py-1 border rounded-sm text-right text-xs font-bold outline-none border-orange-200 focus:border-orange-500 focus:ring-1 focus:ring-orange-500/20"
                                         />
                                         <span className="text-xs text-gray-400">%</span>
                                     </div>
                                 </div>
-                                <div className="flex items-center justify-between bg-white border border-gray-200 p-2 px-3 rounded-md">
+                                <div className="flex items-center justify-between bg-white border border-gray-200 p-2 px-3 rounded-sm">
                                     <span className="text-xs font-bold text-gray-600">6 Months</span>
                                     <div className="flex items-center gap-2">
                                         <input
@@ -332,12 +332,12 @@ const EditPlanModal = ({ isOpen, onClose, plan }) => {
                                             name="discount_6_months"
                                             value={form.discount_6_months}
                                             onChange={handleChange}
-                                            className="w-16 px-2 py-1 border rounded text-right text-xs font-bold outline-none border-orange-200"
+                                            className="w-16 px-2 py-1 border rounded-sm text-right text-xs font-bold outline-none border-orange-200 focus:border-orange-500 focus:ring-1 focus:ring-orange-500/20"
                                         />
                                         <span className="text-xs text-gray-400">%</span>
                                     </div>
                                 </div>
-                                <div className="flex items-center justify-between bg-white border border-gray-200 p-2 px-3 rounded-md">
+                                <div className="flex items-center justify-between bg-white border border-gray-200 p-2 px-3 rounded-sm">
                                     <span className="text-xs font-bold text-gray-600">3 Months</span>
                                     <div className="flex items-center gap-2">
                                         <input
@@ -345,14 +345,14 @@ const EditPlanModal = ({ isOpen, onClose, plan }) => {
                                             name="discount_3_months"
                                             value={form.discount_3_months}
                                             onChange={handleChange}
-                                            className="w-16 px-2 py-1 border rounded text-right text-xs font-bold outline-none border-orange-200"
+                                            className="w-16 px-2 py-1 border rounded-sm text-right text-xs font-bold outline-none border-orange-200 focus:border-orange-500 focus:ring-1 focus:ring-orange-500/20"
                                         />
                                         <span className="text-xs text-gray-400">%</span>
                                     </div>
                                 </div>
-                                <div className="flex items-center justify-between bg-gray-50 border border-gray-100 p-2 px-3 rounded-md opacity-60">
+                                <div className="flex items-center justify-between bg-gray-50 border border-gray-100 p-2 px-3 rounded-sm opacity-60">
                                     <span className="text-xs font-bold text-gray-600">1 Month</span>
-                                    <span className="text-[10px] font-black text-gray-400 bg-gray-200 px-1.5 py-0.5 rounded uppercase">Default 0%</span>
+                                    <span className="text-[10px] font-black text-gray-400 bg-gray-200 px-1.5 py-0.5 rounded-sm uppercase tracking-tighter">Default 0%</span>
                                 </div>
                             </div>
                         </div>
@@ -370,12 +370,12 @@ const EditPlanModal = ({ isOpen, onClose, plan }) => {
                             onChange={(e) => setCurrentFeature(e.target.value)}
                             onKeyPress={(e) => e.key === 'Enter' && addFeature()}
                             placeholder="Add a feature (e.g. 24/7 Support)"
-                            className="flex-1 px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all font-semibold text-sm bg-gray-50"
+                            className="flex-1 px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm bg-gray-50 hover:bg-white hover:border-gray-300 font-semibold"
                         />
                         <button
                             type="button"
                             onClick={addFeature}
-                            className="px-6 py-3 bg-orange-500 text-white rounded-lg font-bold hover:bg-orange-600 transition-colors shadow-md text-sm active:scale-95"
+                            className="px-6 py-3 bg-orange-500 text-white rounded-sm font-bold hover:bg-orange-600 transition-colors shadow-md text-sm active:scale-95 font-primary"
                         >
                             Add
                         </button>
@@ -386,7 +386,7 @@ const EditPlanModal = ({ isOpen, onClose, plan }) => {
                         {form.key_features.map((feature, index) => (
                             <div
                                 key={index}
-                                className="flex items-center justify-between gap-3 bg-gray-50 p-2.5 rounded-lg border border-gray-100 group hover:border-orange-200 hover:bg-white transition-all shadow-sm"
+                                className="flex items-center justify-between gap-3 bg-white p-2.5 rounded-sm border border-gray-100 group hover:border-orange-200 transition-all shadow-sm"
                             >
                                 <div className="flex items-center gap-2">
                                     <Check className="w-3.5 h-3.5 text-green-500" />
@@ -396,7 +396,7 @@ const EditPlanModal = ({ isOpen, onClose, plan }) => {
                                     onClick={() => removeFeature(index)}
                                     className="p-1 text-gray-400 hover:text-red-500 transition-all opacity-0 group-hover:opacity-100"
                                 >
-                                    <X size={14} />
+                                    <Trash2 size={14} />
                                 </button>
                             </div>
                         ))}

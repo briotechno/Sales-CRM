@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import DashboardLayout from "../../../components/DashboardLayout";
 import {
@@ -29,14 +29,30 @@ import {
     BarChart3,
     Shield,
 } from "lucide-react";
-import { useGetEnterpriseByIdQuery } from "../../../store/api/enterpriseApi";
+import {
+    useGetEnterpriseByIdQuery,
+    useUpdateEnterpriseMutation
+} from "../../../store/api/enterpriseApi";
+import { toast } from "react-hot-toast";
+import DeleteEnterpriseModal from "../../../components/EnterpriseManagement/DeleteEnterpriseModal";
 
 export default function EnterpriseDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
     const { data: response, isLoading, isError, refetch } = useGetEnterpriseByIdQuery(id);
+
     const enterprise = response?.data || response || null;
+
+    const handleDelete = () => {
+        setIsDeleteModalOpen(true);
+    };
+
+    const handleDeleteSuccess = () => {
+        setIsDeleteModalOpen(false);
+        navigate("/superadmin/enterprises");
+    };
 
     // ── Loading ──
     if (isLoading) {
@@ -45,7 +61,9 @@ export default function EnterpriseDetail() {
                 <div className="flex items-center justify-center min-h-screen">
                     <div className="flex flex-col items-center gap-4">
                         <Loader2 className="w-12 h-12 text-orange-500 animate-spin" />
-                        <p className="text-gray-500 font-bold uppercase tracking-widest text-xs">Loading Enterprise Data...</p>
+                        <p className="text-gray-500 font-bold uppercase tracking-widest text-xs">
+                            Loading Enterprise Data...
+                        </p>
                     </div>
                 </div>
             </DashboardLayout>
@@ -145,19 +163,15 @@ export default function EnterpriseDetail() {
                             <div className="flex items-center gap-3">
                                 {/* Go to Dashboard */}
                                 <button
+                                    onClick={() => navigate(`/superadmin/dashboard`)}
                                     className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm font-bold shadow-md hover:from-orange-600 hover:to-orange-700 transition active:scale-95"
-                                    title="Enter this enterprise's dashboard"
+                                    title="Back to Super Admin Dashboard"
                                 >
                                     <ExternalLink size={16} />
                                     Go to Dashboard
                                 </button>
                                 <button
-                                    className="p-2.5 text-orange-600 hover:bg-orange-50 border border-orange-200 rounded-sm transition"
-                                    title="Edit Enterprise"
-                                >
-                                    <Edit2 size={17} />
-                                </button>
-                                <button
+                                    onClick={handleDelete}
                                     className="p-2.5 text-red-600 hover:bg-red-50 border border-red-200 rounded-sm transition"
                                     title="Delete Enterprise"
                                 >
@@ -343,6 +357,14 @@ export default function EnterpriseDetail() {
                     </div>
                 </div>
             </div>
+
+            {/* Modals */}
+            <DeleteEnterpriseModal
+                isOpen={isDeleteModalOpen}
+                onClose={() => setIsDeleteModalOpen(false)}
+                enterprise={enterprise}
+                onSuccess={handleDeleteSuccess}
+            />
         </DashboardLayout>
     );
 }

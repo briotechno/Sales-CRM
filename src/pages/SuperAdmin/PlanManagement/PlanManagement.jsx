@@ -7,7 +7,7 @@ import {
     Plus,
     Home,
     Eye,
-    Edit2,
+    SquarePen,
     Trash2,
     Loader2,
     X,
@@ -90,7 +90,7 @@ export default function PlanManagement() {
                     <div className="max-w-8xl mx-auto px-6 py-4 flex flex-col md:flex-row md:justify-between md:items-center gap-4">
                         <div>
                             <h1 className="text-2xl font-bold flex items-center gap-2 text-gray-800">
-                                <Package className="text-[#FF7B1D]" size={26} /> Plan Management
+                                Plan Management
                             </h1>
                             <p className="text-sm text-gray-500 mt-1 flex items-center gap-2 font-medium">
                                 <Home size={14} className="text-gray-700" /> Super Admin /{" "}
@@ -193,7 +193,7 @@ export default function PlanManagement() {
                 </div>
 
                 {/* Main Content Table */}
-                <div className="max-w-8xl mx-auto px-6 pt-2 pb-6">
+                <div className="max-w-8xl mx-auto px-6 pt-0 mt-2 pb-6">
                     <div className="overflow-x-auto border border-gray-200 rounded-sm shadow-sm">
                         <table className="w-full border-collapse text-left">
                             <thead className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm">
@@ -292,18 +292,24 @@ export default function PlanManagement() {
                                                     <div className="flex justify-end gap-2">
                                                         <button
                                                             onClick={() => { setSelectedPlan(plan); setIsViewModalOpen(true); }}
-                                                            className="p-1 hover:bg-orange-100 rounded-sm text-blue-500 hover:text-blue-700 transition-all" title="View Details">
-                                                            <Eye size={18} />
+                                                            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-sm transition-all"
+                                                            title="View Details"
+                                                        >
+                                                            <Eye size={16} />
                                                         </button>
                                                         <button
                                                             onClick={() => { setSelectedPlan(plan); setIsEditModalOpen(true); }}
-                                                            className="p-1 hover:bg-orange-100 rounded-sm text-green-500 hover:text-green-700 transition-all font-bold" title="Edit Plan">
-                                                            <Edit2 size={18} />
+                                                            className="p-1.5 text-green-600 hover:bg-green-50 rounded-sm transition-all"
+                                                            title="Edit Plan"
+                                                        >
+                                                            <SquarePen size={16} />
                                                         </button>
                                                         <button
                                                             onClick={() => { setSelectedPlan(plan); setIsDeleteModalOpen(true); }}
-                                                            className="p-1 hover:bg-orange-100 rounded-sm text-red-500 hover:text-red-700 transition-all" title="Delete Plan">
-                                                            <Trash2 size={18} />
+                                                            className="p-1.5 text-red-600 hover:bg-red-50 rounded-sm transition-all"
+                                                            title="Delete Plan"
+                                                        >
+                                                            <Trash2 size={16} />
                                                         </button>
                                                     </div>
                                                 </td>

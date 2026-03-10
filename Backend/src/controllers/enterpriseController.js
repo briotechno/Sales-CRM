@@ -127,11 +127,52 @@ const enterpriseController = {
                     message: 'Enterprise not found'
                 });
             }
+
+            // Fetch active subscription for plan details
+            const activeSubscription = await Subscription.findActiveByEnterpriseId(enterprise.id);
+
+            // Usage counts across different tables
+            // 1. Total Employees (Users with role 'Employee' or assigned to this enterprise's admin)
+            // Enterprise has an admin_id, we need to count users belonging to this admin's workspace
+            const [empRows] = await pool.query(
+                'SELECT COUNT(*) as total, SUM(CASE WHEN status = "Active" THEN 1 ELSE 0 END) as active, SUM(CASE WHEN status = "Inactive" THEN 1 ELSE 0 END) as inactive FROM employees WHERE user_id = ?',
+                [enterprise.admin_id]
+            );
+
+            // 2. Leads count for this enterprise
+            const [leadRows] = await pool.query(
+                'SELECT COUNT(*) as count FROM leads WHERE user_id = ?',
+                [enterprise.admin_id]
+            );
+
+            // Merge everything into a final response
+            const fullData = {
+                ...enterprise,
+                // Plan info from subscription
+                plan: activeSubscription?.plan || enterprise.plan || 'N/A',
+                planExpiry: activeSubscription?.expiryDate || null,
+                onboardingDate: activeSubscription?.onboardingDate || enterprise.onboardingDate,
+                billingCycle: activeSubscription?.billingCycle || 'N/A',
+
+                // Limits from subscription (fallbacks to 0 if missing)
+                usersLimit: parseInt(activeSubscription?.users) || 0,
+                leadsLimit: parseInt(activeSubscription?.leads) || 0,
+                storageLimit: parseFloat(activeSubscription?.storage) || 0,
+
+                // Actual usage metrics
+                usersUsed: parseInt(empRows[0].total) || 0,
+                activeUsers: parseInt(empRows[0].active) || 0,
+                inactiveUsers: parseInt(empRows[0].inactive) || 0,
+                leadsUsed: parseInt(leadRows[0].count) || 0,
+                storageUsed: 0, // Placeholder for storage
+            };
+
             res.status(200).json({
                 success: true,
-                data: enterprise
+                data: fullData
             });
         } catch (error) {
+            console.error('GetEnterpriseById Error:', error);
             res.status(500).json({
                 success: false,
                 message: error.message || 'Server Error'
@@ -298,6 +339,29 @@ const enterpriseController = {
         } catch (error) {
             console.error('Get stats error:', error);
             res.status(500).json({ success: false, message: error.message });
+        }
+    },
+
+    // @desc    Get Dashboard Stats
+    // @route   GET /api/enterprises/dashboard-stats
+    // @access  Super Admin
+    getDashboardStats: async (req, res) => {
+        try {
+            const [activeRows] = await pool.query('SELECT COUNT(*) as count FROM enterprises WHERE status = "Active"');
+            const [trialRows] = await pool.query('SELECT COUNT(*) as count FROM enterprises WHERE status = "Trial"');
+            const [planRows] = await pool.query('SELECT COUNT(DISTINCT plan) as count FROM enterprises WHERE plan IS NOT NULL');
+
+            res.status(200).json({
+                success: true,
+                data: {
+                    activeEnterprises: activeRows[0].count,
+                    activeTrials: trialRows[0].count,
+                    totalPlans: planRows[0].count
+                }
+            });
+        } catch (error) {
+            console.error('Get Dashboard Stats error:', error);
+            res.status(500).json({ success: false, message: error.message || 'Server Error' });
         }
     }
 };
