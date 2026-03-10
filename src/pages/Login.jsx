@@ -36,7 +36,11 @@ export default function Login() {
       toast.success("Login successful!");
       const from = location.state?.from?.pathname
         ? (location.state.from.pathname + (location.state.from.search || ""))
-        : (result.user.role === 'Employee' ? "/hrm/dashboard" : "/dashboard");
+        : result.user.role === 'Super Admin'
+          ? "/superadmin/dashboard"
+          : result.user.role === 'Employee'
+            ? "/hrm/dashboard"
+            : "/dashboard";
 
       navigate(from, { replace: true });
     } catch (err) {

@@ -204,6 +204,10 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
     if (path.startsWith("/hrm")) return "hrm";
     if (path.startsWith("/settings")) return "settings";
     if (path.startsWith("/additional")) return "additional";
+
+    // Priority for Super Admin
+    if (user?.role === "Super Admin" && (path === "/" || path === "/dashboard")) return "superadmin";
+
     return "dashboard";
   };
 
@@ -217,8 +221,9 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
     else if (path.startsWith("/hrm")) setActiveModule("hrm");
     else if (path.startsWith("/settings")) setActiveModule("settings");
     else if (path.startsWith("/additional")) setActiveModule("additional");
+    else if (user?.role === "Super Admin" && (path === "/" || path === "/dashboard")) setActiveModule("superadmin");
     else setActiveModule("dashboard");
-  }, [location.pathname]);
+  }, [location.pathname, user?.role]);
 
 
 
@@ -255,43 +260,43 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       section: "Super Admin",
       items: [
         {
-          name: "Admin Dashboard",
+          name: "Super Admin Dashboard",
           icon: <LayoutDashboard size={22} />,
           path: "/superadmin/dashboard",
           permission: "Super Admin Dashboard"
         },
         {
-          name: "Enterprise Management",
+          name: "Enterprise",
           icon: <Building2 size={22} />,
           path: "/superadmin/enterprises",
           permission: "Enterprise Management",
         },
         {
-          name: "Subscription Management",
+          name: "Subscription",
           icon: <CreditCard size={16} />,
           path: "/superadmin/subscriptions",
           permission: "Subscription Management",
         },
         {
-          name: "Plan Management",
+          name: "Plan",
           icon: <Package size={22} />,
           path: "/superadmin/plans",
           permission: "Plan Management",
         },
         {
-          name: "Generate Product Keys",
+          name: "Product Keys",
           icon: <KeyRound size={22} />,
           path: "/superadmin/productkeys",
           permission: "Product Key Management",
         },
         {
-          name: "Wallet Management",
+          name: "Wallet",
           icon: <Wallet size={22} />,
           path: "/superadmin/wallet",
           permission: "Payment Gateway Management",
         },
         {
-          name: "Payment Gateways",
+          name: "Payment",
           icon: <Wallet size={22} />,
           path: "/superadmin/paymentgateways",
           permission: "Payment Gateway Management",
