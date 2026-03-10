@@ -131,14 +131,14 @@ const AddSubscriptionModal = ({ isOpen, onClose }) => {
       <button
         onClick={onClose}
         disabled={isLoading}
-        className="px-6 py-2.5 border-2 border-gray-300 rounded-sm font-semibold hover:bg-gray-100 transition-all disabled:opacity-50"
+        className="px-6 py-2.5 border-2 border-gray-300 rounded-sm font-semibold hover:bg-gray-100 transition-all disabled:opacity-50 font-primary"
       >
         Cancel
       </button>
       <button
         onClick={handleAdd}
         disabled={isLoading}
-        className="px-6 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm font-semibold shadow-md active:scale-95 transition-all disabled:opacity-50 flex items-center gap-2"
+        className="px-6 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm font-semibold shadow-md active:scale-95 transition-all disabled:opacity-50 flex items-center gap-2 font-primary"
       >
         {isLoading && <Loader2 size={18} className="animate-spin" />}
         {isLoading ? "Adding..." : "Add Subscription"}
@@ -155,33 +155,33 @@ const AddSubscriptionModal = ({ isOpen, onClose }) => {
       icon={<CreditCard size={24} />}
       footer={footer}
     >
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 px-1">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 px-1 p-2">
         {/* Enterprise Name */}
         <div>
-          <label className="flex items-center gap-2 text-sm font-semibold mb-1">
+          <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
             <CreditCard size={16} className="text-[#FF7B1D]" />
-            Enterprise Name *
+            Enterprise Name <span className="text-red-500">*</span>
           </label>
           <input
             name="name"
             value={form.name}
             onChange={handleChange}
             placeholder="TechVista Solutions"
-            className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all"
+            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm hover:border-gray-300"
           />
         </div>
 
         {/* Plan */}
         <div>
-          <label className="flex items-center gap-2 text-sm font-semibold mb-1">
+          <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
             <Layers size={16} className="text-[#FF7B1D]" />
-            Plan *
+            Plan <span className="text-red-500">*</span>
           </label>
           <select
             name="plan"
             value={form.plan}
             onChange={handlePlanChange}
-            className="w-full px-4 py-3 border rounded-lg bg-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all cursor-pointer font-semibold"
+            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm bg-white hover:border-gray-300 cursor-pointer font-semibold"
           >
             {isPlansLoading ? (
               <option>Loading plans...</option>
@@ -195,15 +195,15 @@ const AddSubscriptionModal = ({ isOpen, onClose }) => {
 
         {/* Billing Cycle */}
         <div>
-          <label className="flex items-center gap-2 text-sm font-semibold mb-1">
+          <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
             <RefreshCw size={16} className="text-[#FF7B1D]" />
-            Billing Cycle *
+            Billing Cycle <span className="text-red-500">*</span>
           </label>
           <select
             name="billingCycle"
             value={form.billingCycle}
             onChange={handleChange}
-            className="w-full px-4 py-3 border rounded-lg bg-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all cursor-pointer"
+            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm bg-white hover:border-gray-300 cursor-pointer"
           >
             <option value="Monthly">Monthly</option>
             <option value="Yearly">Yearly</option>
@@ -212,9 +212,9 @@ const AddSubscriptionModal = ({ isOpen, onClose }) => {
 
         {/* Amount */}
         <div>
-          <label className="flex items-center gap-2 text-sm font-semibold mb-1">
+          <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
             <CreditCard size={16} className="text-[#FF7B1D]" />
-            Amount *
+            Amount <span className="text-red-500">*</span>
           </label>
           <input
             type="number"
@@ -222,13 +222,13 @@ const AddSubscriptionModal = ({ isOpen, onClose }) => {
             value={form.amount}
             onChange={handleChange}
             placeholder="6499"
-            className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all font-semibold"
+            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm hover:border-gray-300 font-semibold"
           />
         </div>
 
         {/* Users Limit */}
         <div>
-          <label className="flex items-center gap-2 text-sm font-semibold mb-1">
+          <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
             <Users size={16} className="text-[#FF7B1D]" />
             User Limit
           </label>
@@ -238,13 +238,13 @@ const AddSubscriptionModal = ({ isOpen, onClose }) => {
             value={form.users}
             onChange={handleChange}
             placeholder="25"
-            className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all font-semibold"
+            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm hover:border-gray-300 font-semibold"
           />
         </div>
 
         {/* Leads Limit */}
         <div>
-          <label className="flex items-center gap-2 text-sm font-semibold mb-1">
+          <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
             <Zap size={16} className="text-[#FF7B1D]" />
             Leads Limit /mo
           </label>
@@ -254,13 +254,13 @@ const AddSubscriptionModal = ({ isOpen, onClose }) => {
             value={form.leads}
             onChange={handleChange}
             placeholder="10000"
-            className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all font-semibold"
+            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm hover:border-gray-300 font-semibold"
           />
         </div>
 
         {/* Storage Limit */}
         <div>
-          <label className="flex items-center gap-2 text-sm font-semibold mb-1">
+          <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
             <HardDrive size={16} className="text-[#FF7B1D]" />
             Cloud Storage
           </label>
@@ -270,13 +270,13 @@ const AddSubscriptionModal = ({ isOpen, onClose }) => {
             value={form.storage}
             onChange={handleChange}
             placeholder="50GB"
-            className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all font-semibold"
+            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm hover:border-gray-300 font-semibold"
           />
         </div>
 
         {/* Status */}
         <div>
-          <label className="flex items-center gap-2 text-sm font-semibold mb-1">
+          <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
             <ToggleLeft size={16} className="text-[#FF7B1D]" />
             Status
           </label>
@@ -284,7 +284,7 @@ const AddSubscriptionModal = ({ isOpen, onClose }) => {
             name="status"
             value={form.status}
             onChange={handleChange}
-            className="w-full px-4 py-3 border rounded-lg bg-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all cursor-pointer"
+            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm bg-white hover:border-gray-300 cursor-pointer"
           >
             <option value="Active">Active</option>
             <option value="Inactive">Inactive</option>
@@ -295,22 +295,22 @@ const AddSubscriptionModal = ({ isOpen, onClose }) => {
 
         {/* Start Date */}
         <div>
-          <label className="flex items-center gap-2 text-sm font-semibold mb-1">
+          <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
             <Calendar size={16} className="text-[#FF7B1D]" />
-            Start Date *
+            Start Date <span className="text-red-500">*</span>
           </label>
           <input
             type="date"
             name="onboardingDate"
             value={form.onboardingDate}
             onChange={handleChange}
-            className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all font-semibold"
+            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm bg-gray-50 hover:bg-white hover:border-gray-300 font-semibold"
           />
         </div>
 
         {/* Expiry Date */}
         <div>
-          <label className="flex items-center gap-2 text-sm font-semibold mb-1">
+          <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
             <Calendar size={16} className="text-[#FF7B1D]" />
             Expiry Date
           </label>
@@ -319,12 +319,12 @@ const AddSubscriptionModal = ({ isOpen, onClose }) => {
             name="expiryDate"
             value={form.expiryDate}
             onChange={handleChange}
-            className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all font-semibold"
+            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm bg-gray-50 hover:bg-white hover:border-gray-300 font-semibold"
           />
         </div>
 
         {/* Key Features Section */}
-        <div className="md:col-span-2 bg-gray-50 p-6 rounded-lg border border-dashed border-orange-200">
+        <div className="md:col-span-2 bg-gray-50 p-6 rounded-sm border border-dashed border-orange-200 mt-2">
           <div className="flex items-center justify-between mb-4">
             <label className="flex items-center gap-2 text-sm font-bold text-gray-700">
               <Plus size={16} className="text-[#FF7B1D]" />
@@ -334,7 +334,7 @@ const AddSubscriptionModal = ({ isOpen, onClose }) => {
               <button
                 type="button"
                 onClick={() => setIsAddingFeature(true)}
-                className="text-xs font-bold text-orange-600 bg-orange-50 px-3 py-1.5 rounded-lg border border-orange-100 hover:bg-orange-100 transition-all flex items-center gap-1"
+                className="text-xs font-bold text-orange-600 bg-orange-50 px-3 py-1.5 rounded-sm border border-orange-100 hover:bg-orange-100 transition-all flex items-center gap-1"
               >
                 <Plus size={14} /> Add Feature
               </button>
@@ -348,13 +348,13 @@ const AddSubscriptionModal = ({ isOpen, onClose }) => {
                 value={newFeature}
                 onChange={(e) => setNewFeature(e.target.value)}
                 placeholder="e.g. 24/7 Priority Support"
-                className="flex-1 px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none bg-white transition-all shadow-sm"
+                className="flex-1 px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none bg-white transition-all text-sm shadow-sm hover:border-gray-300"
                 onKeyDown={(e) => e.key === 'Enter' && handleAddFeature()}
               />
               <button
                 type="button"
                 onClick={handleAddFeature}
-                className="px-4 bg-orange-500 text-white rounded-lg shadow-md shadow-orange-500/20 hover:bg-orange-600 transition-all flex items-center justify-center p-2"
+                className="px-4 bg-orange-500 text-white rounded-sm shadow-md shadow-orange-500/20 hover:bg-orange-600 transition-all flex items-center justify-center p-2"
               >
                 <Check size={20} />
               </button>
@@ -364,9 +364,9 @@ const AddSubscriptionModal = ({ isOpen, onClose }) => {
                   setIsAddingFeature(false);
                   setNewFeature("");
                 }}
-                className="px-4 bg-white border text-gray-400 rounded-lg hover:bg-gray-100 transition-all p-2"
+                className="px-4 bg-white border border-gray-200 text-gray-400 rounded-sm hover:bg-gray-100 transition-all p-2"
               >
-                Cancel
+                <Trash2 size={20} className="text-gray-400" />
               </button>
             </div>
           )}

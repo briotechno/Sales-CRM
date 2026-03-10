@@ -18,13 +18,14 @@ import {
     Loader2,
     RefreshCw,
     X,
+    SquarePen,
 } from "lucide-react";
 import NumberCard from "../../../components/NumberCard";
 import AddSubscriptionModal from "../../../components/SubscriptionManagement/AddSubscriptionModal";
 import ViewSubscriptionModal from "../../../components/SubscriptionManagement/ViewSubscriptionModal";
 import EditSubscriptionModal from "../../../components/SubscriptionManagement/EditSubscriptionModal";
 import DeleteSubscriptionModal from "../../../components/SubscriptionManagement/DeleteSubscriptionModal";
-import { useGetSubscriptionsQuery } from "../../../store/api/subscriptionApi";
+import { useGetSubscriptionsQuery, useGetSubscriptionDashboardStatsQuery } from "../../../store/api/subscriptionApi";
 
 export default function SubscriptionManagement() {
     const [searchTerm, setSearchTerm] = useState("");
@@ -81,9 +82,9 @@ export default function SubscriptionManagement() {
     };
 
     const totalSubscriptions = pagination.total;
-    const activeSubscriptions = subscriptions.filter(s => s.status === "Active").length;
-    const totalUsers = subscriptions.reduce((acc, s) => acc + (parseInt(s.users) || 0), 0);
-    const totalPlans = new Set(subscriptions.map(s => s.plan)).size;
+
+    const { data: statsData, isLoading: isStatsLoading } = useGetSubscriptionDashboardStatsQuery();
+    const stats = statsData?.data || { activeSubscriptions: 0, totalUsers: 0, totalPlans: 0 };
 
     const handlePageChange = (page) => setCurrentPage(page);
     const handlePrev = () => setCurrentPage((prev) => (prev > 1 ? prev - 1 : prev));
@@ -101,7 +102,7 @@ export default function SubscriptionManagement() {
                     <div className="max-w-8xl mx-auto px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
                         <div>
                             <h1 className="text-2xl font-bold flex items-center gap-2 text-gray-800">
-                                <CreditCard className="text-[#FF7B1D]" size={26} />
+
                                 Subscription Management
                             </h1>
                             <p className="text-sm text-gray-500 flex items-center gap-2 mt-1 font-medium">
@@ -228,7 +229,7 @@ export default function SubscriptionManagement() {
                 </div>
 
                 {/* Dashboard Content */}
-                <div className="max-w-8xl mx-auto px-6 py-6 space-y-6">
+                <div className="max-w-8xl mx-auto px-6 pt-0 mt-2 py-6 space-y-6">
                     {/* Statement Cards */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                         <NumberCard
@@ -240,21 +241,21 @@ export default function SubscriptionManagement() {
                         />
                         <NumberCard
                             title="Active Subscription"
-                            number={isLoading ? "..." : activeSubscriptions}
+                            number={isStatsLoading ? "..." : stats.activeSubscriptions}
                             icon={<CreditCard className="text-green-600" size={24} />}
                             iconBgColor="bg-green-100"
                             lineBorderClass="border-green-500"
                         />
                         <NumberCard
                             title="Total Plan"
-                            number={isLoading ? "..." : totalPlans}
+                            number={isStatsLoading ? "..." : stats.totalPlans}
                             icon={<Handshake className="text-orange-600" size={24} />}
                             iconBgColor="bg-orange-100"
                             lineBorderClass="border-orange-500"
                         />
                         <NumberCard
                             title="Total Users"
-                            number={isLoading ? "..." : totalUsers}
+                            number={isStatsLoading ? "..." : stats.totalUsers}
                             icon={<Target className="text-purple-600" size={24} />}
                             iconBgColor="bg-purple-100"
                             lineBorderClass="border-purple-500"
@@ -332,30 +333,30 @@ export default function SubscriptionManagement() {
                                                             setSelectedSubscription(sub);
                                                             setIsViewOpen(true);
                                                         }}
-                                                        className="p-1 hover:bg-orange-100 rounded-sm text-blue-500 hover:text-blue-700 transition-all"
+                                                        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-sm transition-all"
                                                         title="View Details"
                                                     >
-                                                        <Eye size={18} />
+                                                        <Eye size={16} />
                                                     </button>
                                                     <button
                                                         onClick={() => {
                                                             setSelectedSubscription(sub);
                                                             setIsEditOpen(true);
                                                         }}
-                                                        className="p-1 hover:bg-orange-100 rounded-sm text-green-500 hover:text-green-700 transition-all font-bold"
+                                                        className="p-1.5 text-green-600 hover:bg-green-50 rounded-sm transition-all"
                                                         title="Edit Subscription"
                                                     >
-                                                        <Edit2 size={18} />
+                                                        <SquarePen size={16} />
                                                     </button>
                                                     <button
                                                         onClick={() => {
                                                             setSelectedSubscription(sub);
                                                             setIsDeleteOpen(true);
                                                         }}
-                                                        className="p-1 hover:bg-orange-100 rounded-sm text-red-500 hover:text-red-700 transition-all"
+                                                        className="p-1.5 text-red-600 hover:bg-red-50 rounded-sm transition-all"
                                                         title="Delete Subscription"
                                                     >
-                                                        <Trash2 size={18} />
+                                                        <Trash2 size={16} />
                                                     </button>
                                                 </div>
                                             </td>

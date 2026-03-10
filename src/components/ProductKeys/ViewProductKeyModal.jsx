@@ -1,15 +1,14 @@
 import React from "react";
-import { KeyRound, Users, Calendar, ShieldCheck, Tag, Info, Zap, HardDrive } from "lucide-react";
+import { KeyRound, Users, Calendar, ShieldCheck, Tag, Info, Zap, HardDrive, Layout, CheckCircle2, XCircle, RefreshCw } from "lucide-react";
 import Modal from "../common/Modal";
 
 const ViewProductKeyModal = ({ isOpen, onClose, productKey }) => {
-    // ... (rest of component start)
     if (!productKey) return null;
 
     const footer = (
         <button
             onClick={onClose}
-            className="px-8 py-3 bg-white border-2 border-gray-200 text-gray-700 rounded-sm hover:bg-gray-100 transition shadow-sm font-semibold"
+            className="px-8 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-sm hover:bg-gray-100 transition shadow-sm font-bold text-sm font-primary"
         >
             Close
         </button>
@@ -21,76 +20,91 @@ const ViewProductKeyModal = ({ isOpen, onClose, productKey }) => {
             onClose={onClose}
             title={productKey.enterprise}
             subtitle={"Product Key ID: KEY-" + productKey.id}
-            icon={<KeyRound size={26} />}
+            icon={<KeyRound size={24} className="text-[#FF7B1D]" />}
             footer={footer}
         >
-            <div className="space-y-8 font-semibold">
-                {/* STATS */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                    <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 text-center shadow-sm">
-                        <div className="bg-blue-600 p-2 rounded-lg text-white inline-block mb-2 shadow-lg shadow-blue-500/20">
+            <div className="space-y-6 p-1">
+                {/* Stats Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="bg-blue-50 p-4 rounded-sm border border-blue-100 text-center shadow-sm">
+                        <div className="bg-blue-600 p-2 rounded-sm text-white inline-block mb-2 shadow-sm">
                             <Users size={20} />
                         </div>
-                        <div className="text-2xl font-bold text-gray-900">{productKey.users}</div>
-                        <div className="text-[10px] font-bold tracking-widest text-blue-600 uppercase">Users</div>
+                        <div className="text-2xl font-bold text-gray-900">{productKey.users || "0"}</div>
+                        <div className="text-[10px] font-bold tracking-widest text-blue-600 uppercase">Allowed Users</div>
                     </div>
 
-                    <div className="bg-orange-50 p-4 rounded-xl border border-orange-100 text-center shadow-sm">
-                        <div className="bg-orange-500 p-2 rounded-lg text-white inline-block mb-2 shadow-lg shadow-orange-500/20">
+                    <div className="bg-orange-50 p-4 rounded-sm border border-orange-100 text-center shadow-sm">
+                        <div className="bg-orange-500 p-2 rounded-sm text-white inline-block mb-2 shadow-sm">
                             <Tag size={20} />
                         </div>
                         <div className="text-xl font-bold text-gray-900">{productKey.plan}</div>
-                        <div className="text-[10px] font-bold tracking-widest text-orange-600 uppercase">Plan</div>
+                        <div className="text-[10px] font-bold tracking-widest text-orange-600 uppercase">Plan Type</div>
                     </div>
 
-                    <div className="bg-green-50 p-4 rounded-xl border border-green-100 text-center shadow-sm">
-                        <div className="bg-green-600 p-2 rounded-lg text-white inline-block mb-2 shadow-lg shadow-green-500/20">
+                    <div className="bg-green-50 p-4 rounded-sm border border-green-100 text-center shadow-sm font-primary">
+                        <div className="bg-green-600 p-2 rounded-sm text-white inline-block mb-2 shadow-sm">
                             <ShieldCheck size={20} />
                         </div>
                         <div className="text-xl font-bold text-gray-900">{productKey.status}</div>
-                        <div className="text-[10px] font-bold tracking-widest text-green-600 uppercase">Status</div>
+                        <div className="text-[10px] font-bold tracking-widest text-green-600 uppercase">License Status</div>
                     </div>
                 </div>
 
-                {/* KEY DISPLAY */}
-                <div className="bg-gray-900 p-6 rounded-xl relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 p-3 opacity-20 group-hover:opacity-100 transition-opacity">
-                        <KeyRound className="text-white" size={40} />
+                {/* License Key Display */}
+                <div className="bg-[#1a222c] p-6 rounded-sm relative overflow-hidden group shadow-lg border border-gray-800">
+                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-30 transition-opacity">
+                        <KeyRound className="text-orange-500" size={60} />
                     </div>
-                    <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">License Key</div>
-                    <div className="text-2xl font-black text-white tracking-[0.2em] font-mono select-all">
+                    <div className="text-[10px] font-bold text-orange-500 uppercase tracking-widest mb-3 flex items-center gap-2 border-b border-gray-800 pb-2">
+                        <Layout size={14} /> Product License Key
+                    </div>
+                    <div className="text-2xl font-black text-white tracking-[0.2em] font-mono select-all break-all drop-shadow-md">
                         {productKey.product_key}
                     </div>
                 </div>
 
-                {/* DETAILS */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <DetailRow
-                        label="Generated On"
-                        value={new Date(productKey.generatedOn).toLocaleDateString()}
-                        icon={<Calendar size={18} className="text-orange-500" />}
-                    />
-                    <DetailRow
-                        label="Expires On"
-                        value={productKey.expiresOn ? new Date(productKey.expiresOn).toLocaleDateString() : 'N/A'}
-                        icon={<Calendar size={18} className="text-red-500" />}
-                    />
-                    <DetailRow
-                        label="Validity"
-                        value={productKey.validity}
-                        icon={<Info size={18} className="text-blue-500" />}
-                    />
-                    {/* New Fields */}
-                    <DetailRow
-                        label="Monthly Leads"
-                        value={productKey.leads || 0}
-                        icon={<Zap size={18} className="text-yellow-500" />}
-                    />
-                    <DetailRow
-                        label="Storage"
-                        value={`${productKey.storage || 0} GB`}
-                        icon={<HardDrive size={18} className="text-purple-500" />}
-                    />
+                {/* Detailed Resource Info */}
+                <div className="bg-gray-50 p-6 rounded-sm border border-gray-100">
+                    <h4 className="text-[11px] font-bold text-orange-500 uppercase tracking-widest mb-4 flex items-center gap-2 border-b border-orange-100 pb-2">
+                        Assigned Resources & Limits
+                    </h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <DetailRow
+                            label="Monthly Leads"
+                            value={productKey.leads.toLocaleString()}
+                            icon={<Zap size={18} className="text-yellow-500" />}
+                        />
+                        <DetailRow
+                            label="Cloud Storage"
+                            value={`${productKey.storage} GB`}
+                            icon={<HardDrive size={18} className="text-purple-500" />}
+                        />
+                        <DetailRow
+                            label="Validity Period"
+                            value={productKey.validity}
+                            icon={<Calendar size={18} className="text-blue-500" />}
+                        />
+                        <DetailRow
+                            label="Expiration Date"
+                            value={productKey.expiresOn ? new Date(productKey.expiresOn).toLocaleDateString() : 'Lifetime'}
+                            icon={<Calendar size={18} className="text-red-500" />}
+                        />
+                    </div>
+                </div>
+
+                {/* Metadata */}
+                <div className="bg-white p-4 rounded-sm border border-gray-100 shadow-sm flex items-center justify-between px-6">
+                    <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
+                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Generated On:</span>
+                        <span className="text-xs font-bold text-gray-700">{new Date(productKey.generatedOn).toLocaleDateString()}</span>
+                    </div>
+                    <div className={`flex items-center gap-1.5 px-3 py-1 rounded-sm text-[10px] font-bold uppercase tracking-wider border ${productKey.status === "Active" ? "bg-green-50 text-green-700 border-green-100" : "bg-red-50 text-red-700 border-red-100"
+                        }`}>
+                        {productKey.status === "Active" ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
+                        {productKey.status}
+                    </div>
                 </div>
             </div>
         </Modal>
@@ -98,13 +112,13 @@ const ViewProductKeyModal = ({ isOpen, onClose, productKey }) => {
 };
 
 const DetailRow = ({ label, value, icon }) => (
-    <div className="flex items-center gap-4 bg-white p-4 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-        <div className="p-3 bg-gray-50 rounded-lg">
+    <div className="flex items-center gap-3 group transition-all duration-300 hover:translate-x-1">
+        <div className="p-2.5 bg-white rounded-sm shadow-sm border border-gray-100 group-hover:border-orange-200 transition-colors">
             {icon}
         </div>
         <div>
-            <div className="text-[10px] uppercase text-gray-400 font-bold tracking-widest mb-0.5">{label}</div>
-            <div className="text-sm font-bold text-gray-900">{value}</div>
+            <div className="text-[10px] font-bold text-orange-400 uppercase tracking-wider leading-none mb-1">{label}</div>
+            <div className="text-sm font-bold text-gray-700">{value}</div>
         </div>
     </div>
 );

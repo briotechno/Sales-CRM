@@ -53,21 +53,21 @@ const DeletePlanModal = ({
             maxWidth="max-w-md"
             footer={footer}
         >
-            <div className="flex flex-col items-center text-center text-black py-4">
-                <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mb-6">
-                    <AlertCircle size={48} className="text-red-500" />
+            <div className="flex flex-col items-center text-center py-4 font-primary">
+                <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-6 shadow-sm border border-red-100">
+                    <AlertCircle size={32} className="text-red-500" />
                 </div>
 
-                <h2 className="text-2xl font-bold text-gray-800 mb-2 uppercase tracking-tight">
+                <h2 className="text-2xl font-bold text-gray-800 mb-2 font-primary">
                     Confirm Delete
                 </h2>
 
-                <p className="text-gray-600 mb-2 leading-relaxed font-semibold px-4">
+                <p className="text-gray-600 mb-2 leading-relaxed font-semibold px-4 text-sm">
                     Are you sure you want to delete the plan{" "}
-                    <span className="text-red-600 font-black italic">"{plan?.name}"</span>?
+                    <span className="text-red-600 font-bold italic">"{plan?.name}"</span>?
                 </p>
 
-                <p className="text-sm text-gray-400 font-semibold italic">
+                <p className="text-xs text-gray-400 font-bold italic">
                     All enterprises currently on this plan might be affected.
                 </p>
             </div>

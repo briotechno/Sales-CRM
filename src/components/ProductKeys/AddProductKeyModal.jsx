@@ -29,7 +29,6 @@ const AddProductKeyModal = ({ isOpen, onClose }) => {
 
       if (selectedPlan) {
         setForm(prev => {
-          // If detailed fields align with plan, avoid redundant updates (simple check)
           if (prev.plan === currentPlanName && prev.users == selectedPlan.default_users) return prev;
 
           return {
@@ -76,14 +75,14 @@ const AddProductKeyModal = ({ isOpen, onClose }) => {
       <button
         onClick={onClose}
         disabled={isLoading}
-        className="px-6 py-2.5 rounded-sm border-2 border-gray-300 font-semibold hover:bg-gray-100 disabled:opacity-50"
+        className="px-6 py-2.5 rounded-sm border-2 border-gray-300 font-semibold hover:bg-gray-100 disabled:opacity-50 transition-all font-primary text-sm"
       >
         Cancel
       </button>
       <button
         onClick={handleGenerate}
         disabled={isLoading}
-        className="px-6 py-2.5 rounded-sm bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold shadow-md active:scale-95 transition-all disabled:opacity-50 flex items-center gap-2"
+        className="px-6 py-2.5 rounded-sm bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold shadow-md active:scale-95 transition-all disabled:opacity-50 flex items-center gap-2 font-primary text-sm"
       >
         {isLoading && <Loader2 size={18} className="animate-spin" />}
         {isLoading ? "Generating..." : "Generate Key"}
@@ -97,22 +96,20 @@ const AddProductKeyModal = ({ isOpen, onClose }) => {
       onClose={onClose}
       title="Generate Product Key"
       subtitle="Create a new license key for enterprise"
-      icon={<KeyRound size={24} />}
+      icon={<KeyRound size={24} className="text-[#FF7B1D]" />}
       footer={footer}
     >
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 px-1 font-semibold">
-
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 px-1 font-semibold p-2">
         {/* Enterprise */}
         <div>
-          <label className="flex items-center gap-2 text-sm font-semibold mb-1 text-gray-700">
-            <Building2 size={16} className="text-[#FF7B1D]" />
-            Enterprise *
+          <label className="flex items-center gap-2 text-sm font-semibold mb-2 text-gray-700">
+            <Building2 size={16} className="text-[#FF7B1D]" /> Enterprise <span className="text-red-500">*</span>
           </label>
           <select
             name="enterprise"
             value={form.enterprise}
             onChange={handleChange}
-            className="w-full px-4 py-3 border rounded-lg bg-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 cursor-pointer outline-none transition-all font-semibold"
+            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm hover:border-gray-300 font-semibold bg-gray-50 hover:bg-white"
           >
             <option value="">Select Enterprise</option>
             {enterprisesList.map(ent => (
@@ -123,15 +120,14 @@ const AddProductKeyModal = ({ isOpen, onClose }) => {
 
         {/* Plan */}
         <div>
-          <label className="flex items-center gap-2 text-sm font-semibold mb-1 text-gray-700">
-            <Layers size={16} className="text-[#FF7B1D]" />
-            Plan *
+          <label className="flex items-center gap-2 text-sm font-semibold mb-2 text-gray-700">
+            <Layers size={16} className="text-[#FF7B1D]" /> Plan Type <span className="text-red-500">*</span>
           </label>
           <select
             name="plan"
             value={form.plan}
             onChange={handleChange}
-            className="w-full px-4 py-3 border rounded-lg bg-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 cursor-pointer outline-none transition-all font-semibold"
+            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm hover:border-gray-300 font-semibold bg-gray-50 hover:bg-white"
           >
             {isPlansLoading ? (
               <option>Loading plans...</option>
@@ -145,15 +141,14 @@ const AddProductKeyModal = ({ isOpen, onClose }) => {
 
         {/* Validity */}
         <div>
-          <label className="flex items-center gap-2 text-sm font-semibold mb-1 text-gray-700">
-            <Calendar size={16} className="text-[#FF7B1D]" />
-            Validity *
+          <label className="flex items-center gap-2 text-sm font-semibold mb-2 text-gray-700">
+            <Calendar size={16} className="text-[#FF7B1D]" /> Validity Period <span className="text-red-500">*</span>
           </label>
           <select
             name="validity"
             value={form.validity}
             onChange={handleChange}
-            className="w-full px-4 py-3 border rounded-lg bg-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 cursor-pointer outline-none transition-all font-semibold"
+            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm hover:border-gray-300 font-semibold bg-gray-50 hover:bg-white"
           >
             <option>1 Month</option>
             <option>3 Months</option>
@@ -163,52 +158,48 @@ const AddProductKeyModal = ({ isOpen, onClose }) => {
 
         {/* Users */}
         <div>
-          <label className="flex items-center gap-2 text-sm font-semibold mb-1 text-gray-700">
-            <Users size={16} className="text-[#FF7B1D]" />
-            Allowed Users *
+          <label className="flex items-center gap-2 text-sm font-semibold mb-2 text-gray-700">
+            <Users size={16} className="text-[#FF7B1D]" /> Allowed Users <span className="text-red-500">*</span>
           </label>
           <input
             name="users"
             type="number"
             value={form.users}
             onChange={handleChange}
-            placeholder="50"
-            className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all font-semibold"
+            placeholder="e.g. 50"
+            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm hover:border-gray-300 font-semibold bg-gray-50 hover:bg-white"
           />
         </div>
 
         {/* Monthly Leads */}
         <div>
-          <label className="flex items-center gap-2 text-sm font-semibold mb-1 text-gray-700">
-            <Zap size={16} className="text-[#FF7B1D]" />
-            Monthly Leads
+          <label className="flex items-center gap-2 text-sm font-semibold mb-2 text-gray-700">
+            <Zap size={16} className="text-[#FF7B1D]" /> Monthly Leads
           </label>
           <input
             name="leads"
             type="number"
             value={form.leads}
             onChange={handleChange}
-            placeholder="Leads"
-            className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all font-semibold"
+            placeholder="e.g. 1000"
+            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm hover:border-gray-300 font-semibold bg-gray-50 hover:bg-white"
           />
         </div>
 
         {/* Storage */}
         <div>
-          <label className="flex items-center gap-2 text-sm font-semibold mb-1 text-gray-700">
-            <HardDrive size={16} className="text-[#FF7B1D]" />
-            Storage (GB)
+          <label className="flex items-center gap-2 text-sm font-semibold mb-2 text-gray-700">
+            <HardDrive size={16} className="text-[#FF7B1D]" /> Storage (GB)
           </label>
           <input
             name="storage"
             type="number"
             value={form.storage}
             onChange={handleChange}
-            placeholder="GB"
-            className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all font-semibold"
+            placeholder="e.g. 10"
+            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm hover:border-gray-300 font-semibold bg-gray-50 hover:bg-white"
           />
         </div>
-
       </div>
     </Modal>
   );

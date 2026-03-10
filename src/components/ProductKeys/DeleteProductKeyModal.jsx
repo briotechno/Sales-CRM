@@ -24,14 +24,14 @@ const DeleteProductKeyModal = ({ isOpen, onClose, productKey }) => {
             <button
                 onClick={onClose}
                 disabled={isLoading}
-                className="flex-1 px-6 py-3 border-2 border-gray-200 text-gray-700 font-bold rounded-sm hover:bg-gray-100 transition-all disabled:opacity-50"
+                className="flex-1 px-6 py-3 border-2 border-gray-200 text-gray-700 font-bold rounded-sm hover:bg-gray-100 transition-all disabled:opacity-50 font-primary text-sm shadow-sm"
             >
                 Cancel
             </button>
             <button
                 onClick={handleDelete}
                 disabled={isLoading}
-                className="flex-1 px-6 py-3 bg-red-600 text-white font-bold rounded-sm hover:bg-red-700 transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50"
+                className="flex-1 px-6 py-3 bg-red-600 text-white font-bold rounded-sm hover:bg-red-700 transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 font-primary text-sm"
             >
                 {isLoading ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
                 {isLoading ? "Deleting..." : "Delete Now"}
@@ -47,23 +47,23 @@ const DeleteProductKeyModal = ({ isOpen, onClose, productKey }) => {
             maxWidth="max-w-md"
             footer={footer}
         >
-            <div className="flex flex-col items-center text-center text-black py-4">
-                <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mb-6">
-                    <AlertCircle size={48} className="text-red-500" />
+            <div className="flex flex-col items-center text-center py-4 font-primary">
+                <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-6 shadow-sm border border-red-100">
+                    <AlertCircle size={32} className="text-red-500" />
                 </div>
 
-                <h2 className="text-2xl font-bold text-gray-800 mb-2 uppercase tracking-tight">
+                <h2 className="text-2xl font-bold text-gray-800 mb-2 font-primary">
                     Confirm Delete
                 </h2>
 
-                <p className="text-gray-600 mb-2 leading-relaxed font-semibold px-4">
+                <p className="text-gray-600 mb-2 leading-relaxed font-semibold px-4 text-sm">
                     Are you sure you want to delete the product key for{" "}
-                    <span className="text-red-600">
+                    <span className="text-red-600 font-bold italic">
                         "{productKey.enterprise}"
                     </span>?
                 </p>
 
-                <p className="text-sm text-gray-400 font-semibold italic">
+                <p className="text-xs text-gray-400 font-bold italic">
                     This action cannot be undone.
                 </p>
             </div>

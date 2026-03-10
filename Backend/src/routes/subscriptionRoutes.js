@@ -5,12 +5,15 @@ const {
     getSubscriptionById,
     createSubscription,
     updateSubscription,
-    deleteSubscription
+    deleteSubscription,
+    getDashboardStats
 } = require('../controllers/subscriptionController');
 const { protect, superAdmin } = require('../middleware/authMiddleware');
 
 router.use(protect);
 router.use(superAdmin);
+
+router.get('/dashboard-stats', getDashboardStats);
 
 router.route('/')
     .get(getAllSubscriptions)

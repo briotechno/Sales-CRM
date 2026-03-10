@@ -25,6 +25,10 @@ export const subscriptionApi = createApi({
             query: (id) => `/${id}`,
             providesTags: (result, error, id) => [{ type: "Subscription", id }],
         }),
+        getSubscriptionDashboardStats: builder.query({
+            query: () => '/dashboard-stats',
+            providesTags: ["Subscription"],
+        }),
         createSubscription: builder.mutation({
             query: (body) => ({
                 url: "/",
@@ -57,4 +61,5 @@ export const {
     useCreateSubscriptionMutation,
     useUpdateSubscriptionMutation,
     useDeleteSubscriptionMutation,
+    useGetSubscriptionDashboardStatsQuery,
 } = subscriptionApi;

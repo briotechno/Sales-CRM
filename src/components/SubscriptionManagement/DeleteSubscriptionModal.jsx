@@ -22,18 +22,18 @@ const DeleteSubscriptionModal = ({
   };
 
   const footer = (
-    <div className="flex gap-4 w-full font-semibold">
+    <div className="flex gap-4 w-full">
       <button
         onClick={onClose}
         disabled={isLoading}
-        className="flex-1 px-6 py-3 border-2 border-gray-200 text-gray-700 font-bold rounded-sm hover:bg-gray-100 transition-all disabled:opacity-50"
+        className="flex-1 px-6 py-2.5 border-2 border-gray-200 text-gray-700 font-bold rounded-sm hover:bg-gray-100 transition-all disabled:opacity-50 font-primary"
       >
         Cancel
       </button>
       <button
         onClick={handleDelete}
         disabled={isLoading}
-        className="flex-1 px-6 py-3 bg-red-600 text-white font-bold rounded-sm hover:bg-red-700 transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50"
+        className="flex-1 px-6 py-2.5 bg-red-600 text-white font-bold rounded-sm hover:bg-red-700 transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 font-primary"
       >
         {isLoading ? (
           <Loader2 size={18} className="animate-spin" />
@@ -53,21 +53,21 @@ const DeleteSubscriptionModal = ({
       maxWidth="max-w-md"
       footer={footer}
     >
-      <div className="flex flex-col items-center text-center text-black py-4">
-        <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mb-6">
-          <AlertCircle size={48} className="text-red-500" />
+      <div className="flex flex-col items-center text-center p-2">
+        <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mb-6 border-4 border-white shadow-sm">
+          <AlertCircle size={40} className="text-red-500" />
         </div>
 
-        <h2 className="text-2xl font-bold text-gray-800 mb-2 uppercase tracking-tight">
+        <h2 className="text-2xl font-bold text-gray-800 mb-2 font-primary">
           Confirm Delete
         </h2>
 
-        <p className="text-gray-600 mb-2 leading-relaxed font-semibold">
+        <p className="text-gray-600 mb-2 leading-relaxed text-sm font-medium">
           Are you sure you want to delete the subscription for{" "}
-          <span className="text-red-600">"{subscription?.enterprise_name}"</span>?
+          <span className="font-bold text-gray-800">"{subscription?.enterprise_name}"</span>?
         </p>
 
-        <p className="text-sm text-gray-400 font-semibold italic">
+        <p className="text-xs text-red-500 font-bold uppercase tracking-wider bg-red-50 px-3 py-1.5 rounded-sm border border-red-100">
           This action cannot be undone.
         </p>
       </div>

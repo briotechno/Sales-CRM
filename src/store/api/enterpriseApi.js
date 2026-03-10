@@ -68,6 +68,10 @@ export const enterpriseApi = createApi({
             query: () => 'enterprises/subscription-stats',
             providesTags: ['Enterprise', 'Subscription'],
         }),
+        getEnterpriseDashboardStats: builder.query({
+            query: () => 'enterprises/dashboard-stats',
+            providesTags: ['Enterprise'],
+        }),
     }),
 });
 
@@ -79,5 +83,6 @@ export const {
     useDeleteEnterpriseMutation,
     useOnboardEnterpriseMutation,
     useRedeemKeyMutation,
-    useGetSubscriptionStatsQuery
+    useGetSubscriptionStatsQuery,
+    useGetEnterpriseDashboardStatsQuery
 } = enterpriseApi;

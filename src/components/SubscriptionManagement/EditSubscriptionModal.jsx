@@ -124,14 +124,14 @@ const EditSubscriptionModal = ({ isOpen, onClose, subscription }) => {
             <button
                 onClick={onClose}
                 disabled={isLoading}
-                className="px-6 py-2.5 rounded-sm border-2 border-gray-300 font-semibold hover:bg-gray-100 disabled:opacity-50"
+                className="px-6 py-2.5 rounded-sm border-2 border-gray-300 font-semibold hover:bg-gray-100 disabled:opacity-50 font-primary"
             >
                 Cancel
             </button>
             <button
                 onClick={handleSave}
                 disabled={isLoading}
-                className="px-6 py-2.5 rounded-sm bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold flex items-center gap-2 disabled:opacity-50 active:scale-95 transition-all shadow-md shadow-orange-500/20"
+                className="px-6 py-2.5 rounded-sm bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold flex items-center gap-2 disabled:opacity-50 active:scale-95 transition-all shadow-md shadow-orange-500/20 font-primary"
             >
                 {isLoading ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
                 {isLoading ? "Saving..." : "Save Changes"}
@@ -148,31 +148,31 @@ const EditSubscriptionModal = ({ isOpen, onClose, subscription }) => {
             icon={<CreditCard size={26} />}
             footer={footer}
         >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 px-1">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 px-1 p-2">
                 {/* NAME */}
                 <div>
-                    <label className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
-                        <CreditCard size={14} className="text-[#FF7B1D]" /> Enterprise Name *
+                    <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                        <CreditCard size={16} className="text-[#FF7B1D]" /> Enterprise Name <span className="text-red-500">*</span>
                     </label>
                     <input
                         type="text"
                         name="name"
                         value={form.name}
                         onChange={handleChange}
-                        className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all font-semibold"
+                        className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm hover:border-gray-300 font-semibold"
                     />
                 </div>
 
                 {/* PLAN */}
                 <div>
-                    <label className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
-                        <Layers size={14} className="text-[#FF7B1D]" /> Plan *
+                    <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                        <Layers size={16} className="text-[#FF7B1D]" /> Plan <span className="text-red-500">*</span>
                     </label>
                     <select
                         name="plan"
                         value={form.plan}
                         onChange={handlePlanChange}
-                        className="w-full px-4 py-3 border rounded-lg bg-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 cursor-pointer outline-none transition-all font-semibold"
+                        className="w-full px-4 py-3 border border-gray-200 rounded-sm bg-white focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 cursor-pointer outline-none transition-all text-sm hover:border-gray-300 font-semibold"
                     >
                         {isPlansLoading ? (
                             <option>Loading plans...</option>
@@ -186,14 +186,14 @@ const EditSubscriptionModal = ({ isOpen, onClose, subscription }) => {
 
                 {/* BILLING CYCLE */}
                 <div>
-                    <label className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
-                        <RefreshCw size={14} className="text-[#FF7B1D]" /> Billing Cycle *
+                    <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                        <RefreshCw size={16} className="text-[#FF7B1D]" /> Billing Cycle <span className="text-red-500">*</span>
                     </label>
                     <select
                         name="billingCycle"
                         value={form.billingCycle}
                         onChange={handleChange}
-                        className="w-full px-4 py-3 border rounded-lg bg-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 cursor-pointer outline-none transition-all font-semibold"
+                        className="w-full px-4 py-3 border border-gray-200 rounded-sm bg-white focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 cursor-pointer outline-none transition-all text-sm hover:border-gray-300 font-semibold"
                     >
                         <option value="Monthly">Monthly</option>
                         <option value="Yearly">Yearly</option>
@@ -202,28 +202,28 @@ const EditSubscriptionModal = ({ isOpen, onClose, subscription }) => {
 
                 {/* AMOUNT */}
                 <div>
-                    <label className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
-                        <CreditCard size={14} className="text-[#FF7B1D]" /> Amount *
+                    <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                        <CreditCard size={16} className="text-[#FF7B1D]" /> Amount <span className="text-red-500">*</span>
                     </label>
                     <input
                         type="number"
                         name="amount"
                         value={form.amount}
                         onChange={handleChange}
-                        className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all font-semibold"
+                        className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm hover:border-gray-300 font-semibold"
                     />
                 </div>
 
                 {/* STATUS */}
                 <div>
-                    <label className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
-                        <ToggleLeft size={14} className="text-[#FF7B1D]" /> Status
+                    <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                        <ToggleLeft size={16} className="text-[#FF7B1D]" /> Status
                     </label>
                     <select
                         name="status"
                         value={form.status}
                         onChange={handleChange}
-                        className="w-full px-4 py-3 border rounded-lg bg-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 cursor-pointer outline-none transition-all font-semibold"
+                        className="w-full px-4 py-3 border border-gray-200 rounded-sm bg-white focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 cursor-pointer outline-none transition-all text-sm hover:border-gray-300 font-semibold"
                     >
                         <option value="Active">Active</option>
                         <option value="Inactive">Inactive</option>
@@ -234,76 +234,76 @@ const EditSubscriptionModal = ({ isOpen, onClose, subscription }) => {
 
                 {/* USERS */}
                 <div>
-                    <label className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
-                        <Users size={14} className="text-[#FF7B1D]" /> User Limit
+                    <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                        <Users size={16} className="text-[#FF7B1D]" /> User Limit
                     </label>
                     <input
                         type="text"
                         name="users"
                         value={form.users}
                         onChange={handleChange}
-                        className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all font-semibold"
+                        className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm hover:border-gray-300 font-semibold"
                     />
                 </div>
 
                 {/* LEADS */}
                 <div>
-                    <label className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
-                        <Zap size={14} className="text-[#FF7B1D]" /> Leads Limit
+                    <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                        <Zap size={16} className="text-[#FF7B1D]" /> Leads Limit
                     </label>
                     <input
                         type="text"
                         name="leads"
                         value={form.leads}
                         onChange={handleChange}
-                        className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all font-semibold"
+                        className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm hover:border-gray-300 font-semibold"
                     />
                 </div>
 
                 {/* STORAGE */}
                 <div>
-                    <label className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
-                        <HardDrive size={14} className="text-[#FF7B1D]" /> Storage
+                    <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                        <HardDrive size={16} className="text-[#FF7B1D]" /> Storage
                     </label>
                     <input
                         type="text"
                         name="storage"
                         value={form.storage}
                         onChange={handleChange}
-                        className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all font-semibold"
+                        className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm hover:border-gray-300 font-semibold"
                     />
                 </div>
 
                 {/* START DATE */}
                 <div>
-                    <label className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
-                        <Calendar size={14} className="text-[#FF7B1D]" /> Start Date *
+                    <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                        <Calendar size={16} className="text-[#FF7B1D]" /> Start Date <span className="text-red-500">*</span>
                     </label>
                     <input
                         type="date"
                         name="onboardingDate"
                         value={form.onboardingDate}
                         onChange={handleChange}
-                        className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all font-semibold"
+                        className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm bg-gray-50 hover:bg-white hover:border-gray-300 font-semibold"
                     />
                 </div>
 
                 {/* EXPIRY DATE */}
                 <div>
-                    <label className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
-                        <Calendar size={14} className="text-[#FF7B1D]" /> Expiry Date
+                    <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                        <Calendar size={16} className="text-[#FF7B1D]" /> Expiry Date
                     </label>
                     <input
                         type="date"
                         name="expiryDate"
                         value={form.expiryDate}
                         onChange={handleChange}
-                        className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all font-semibold"
+                        className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm bg-gray-50 hover:bg-white hover:border-gray-300 font-semibold"
                     />
                 </div>
 
                 {/* Key Features Section */}
-                <div className="md:col-span-2 bg-gray-50 p-6 rounded-lg border border-dashed border-orange-200">
+                <div className="md:col-span-2 bg-gray-50 p-6 rounded-sm border border-dashed border-orange-200 mt-2">
                     <div className="flex items-center justify-between mb-4">
                         <label className="flex items-center gap-2 text-sm font-bold text-gray-700">
                             <Plus size={16} className="text-[#FF7B1D]" />
@@ -313,7 +313,7 @@ const EditSubscriptionModal = ({ isOpen, onClose, subscription }) => {
                             <button
                                 type="button"
                                 onClick={() => setIsAddingFeature(true)}
-                                className="text-xs font-bold text-orange-600 bg-orange-50 px-3 py-1.5 rounded-lg border border-orange-100 hover:bg-orange-100 transition-all flex items-center gap-1"
+                                className="text-xs font-bold text-orange-600 bg-orange-50 px-3 py-1.5 rounded-sm border border-orange-100 hover:bg-orange-100 transition-all flex items-center gap-1"
                             >
                                 <Plus size={14} /> Add Feature
                             </button>
@@ -327,13 +327,13 @@ const EditSubscriptionModal = ({ isOpen, onClose, subscription }) => {
                                 value={newFeature}
                                 onChange={(e) => setNewFeature(e.target.value)}
                                 placeholder="e.g. 24/7 Priority Support"
-                                className="flex-1 px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none bg-white transition-all shadow-sm"
+                                className="flex-1 px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none bg-white transition-all shadow-sm text-sm hover:border-gray-300"
                                 onKeyDown={(e) => e.key === 'Enter' && handleAddFeature()}
                             />
                             <button
                                 type="button"
                                 onClick={handleAddFeature}
-                                className="px-4 bg-orange-500 text-white rounded-lg shadow-md shadow-orange-500/20 hover:bg-orange-600 transition-all flex items-center justify-center p-2"
+                                className="px-4 bg-orange-500 text-white rounded-sm shadow-md shadow-orange-500/20 hover:bg-orange-600 transition-all flex items-center justify-center p-2"
                             >
                                 <Check size={20} />
                             </button>
@@ -343,9 +343,9 @@ const EditSubscriptionModal = ({ isOpen, onClose, subscription }) => {
                                     setIsAddingFeature(false);
                                     setNewFeature("");
                                 }}
-                                className="px-4 bg-white border text-gray-400 rounded-lg hover:bg-gray-100 transition-all p-2"
+                                className="px-4 bg-white border border-gray-200 text-gray-400 rounded-sm hover:bg-gray-100 transition-all p-2"
                             >
-                                Cancel
+                                <Trash2 size={20} className="text-gray-400" />
                             </button>
                         </div>
                     )}

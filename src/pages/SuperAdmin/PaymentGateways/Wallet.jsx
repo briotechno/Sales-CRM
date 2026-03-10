@@ -15,73 +15,38 @@ import {
     Clock,
     CheckCircle2
 } from "lucide-react";
+import { useGetWalletStatsQuery, useGetWalletUpgradesQuery } from "../../../store/api/walletApi";
+import { useGetPlansQuery } from "../../../store/api/planApi";
 
 export default function Wallet() {
     const [searchTerm, setSearchTerm] = useState("");
     const [tempSearch, setTempSearch] = useState("");
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [planFilter, setPlanFilter] = useState("all");
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 8;
     const filterRef = React.useRef(null);
 
-    const walletStats = {
-        totalAmount: 1250000,
-        usedAmount: 450000,
-        restAmount: 800000,
-        lastTransaction: "2 hours ago"
+    const { data: statsResponse, isLoading: isLoadingStats } = useGetWalletStatsQuery();
+    const walletStats = statsResponse?.data || {
+        totalAmount: 0,
+        usedAmount: 0,
+        restAmount: 0,
+        lastTransaction: "0 hours ago"
     };
 
-    const upgradeHistory = [
-        {
-            id: "UPG-8271",
-            enterprise: "TechSol India",
-            previousPlan: "Starter",
-            newPlan: "Professional",
-            amount: 15000,
-            date: "2024-02-18",
-            time: "14:30",
-            status: "Success"
-        },
-        {
-            id: "UPG-8272",
-            enterprise: "Global Connect",
-            previousPlan: "Professional",
-            newPlan: "Enterprise",
-            amount: 45000,
-            date: "2024-02-18",
-            time: "11:15",
-            status: "Success"
-        },
-        {
-            id: "UPG-8273",
-            enterprise: "Swift Logistics",
-            previousPlan: "Starter",
-            newPlan: "Professional",
-            amount: 15000,
-            date: "2024-02-17",
-            time: "16:45",
-            status: "Success"
-        },
-        {
-            id: "UPG-8274",
-            enterprise: "Apex Media",
-            previousPlan: "Free Trial",
-            newPlan: "Starter",
-            amount: 5000,
-            date: "2024-02-17",
-            time: "09:30",
-            status: "Success"
-        },
-        {
-            id: "UPG-8275",
-            enterprise: "Future Systems",
-            previousPlan: "Professional",
-            newPlan: "Enterprise",
-            amount: 45000,
-            date: "2024-02-16",
-            time: "15:20",
-            status: "Success"
-        }
-    ];
+    const { data: historyResponse, isLoading: isLoadingHistory, refetch: refetchHistory } = useGetWalletUpgradesQuery({
+        plan: planFilter,
+        searchTerm: searchTerm,
+        page: currentPage,
+        limit: itemsPerPage
+    });
+
+    const { data: plansResponse, isLoading: isPlansLoading } = useGetPlansQuery();
+    const plansList = plansResponse?.data || [];
+
+    const upgradeHistory = historyResponse?.data || [];
+    const pagination = historyResponse?.pagination || { totalPages: 1, total: 0 };
 
     React.useEffect(() => {
         const handleClickOutside = (e) => {
@@ -104,17 +69,16 @@ export default function Wallet() {
     const handleApplyFilters = () => {
         setSearchTerm(tempSearch);
         setIsFilterOpen(false);
+        setCurrentPage(1);
     };
 
-    const filteredHistory = upgradeHistory.filter(row => {
-        const matchesSearch = row.enterprise.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            row.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            row.newPlan.toLowerCase().includes(searchTerm.toLowerCase());
+    const handlePageChange = (page) => setCurrentPage(page);
+    const handlePrev = () => setCurrentPage((prev) => (prev > 1 ? prev - 1 : prev));
+    const handleNext = () => setCurrentPage((prev) => (prev < pagination.totalPages ? prev + 1 : prev));
 
-        const matchesPlan = planFilter === "all" || row.newPlan === planFilter;
+    const indexOfFirstItem = (currentPage - 1) * itemsPerPage;
+    const indexOfLastItem = Math.min(currentPage * itemsPerPage, pagination.total || 0);
 
-        return matchesSearch && matchesPlan;
-    });
 
     return (
         <DashboardLayout>
@@ -124,7 +88,7 @@ export default function Wallet() {
                     <div className="max-w-8xl mx-auto px-6 py-4 flex flex-col md:flex-row md:justify-between md:items-center gap-4">
                         <div>
                             <h1 className="text-2xl font-bold flex items-center gap-2 text-gray-800">
-                                <WalletIcon className="text-[#FF7B1D]" size={26} /> Wallet Management
+                                Wallet Management
                             </h1>
                             <p className="text-sm text-gray-500 mt-1 flex items-center gap-2 font-medium">
                                 <Home size={14} className="text-gray-700" /> Super Admin /{" "}
@@ -134,44 +98,44 @@ export default function Wallet() {
                     </div>
                 </div>
 
-                <div className="max-w-8xl mx-auto px-6 pt-2 pb-6 space-y-6">
+                <div className="max-w-8xl mx-auto px-6 pt-0 mt-2 pb-6 space-y-6">
                     {/* Stats Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         {/* Total Amount */}
-                        <div className="bg-white p-6 rounded-sm shadow-sm border border-gray-200 flex items-center gap-5 group hover:border-[#FF7B1D] transition-all">
-                            <div className="w-14 h-14 bg-orange-50 text-[#FF7B1D] rounded-sm flex items-center justify-center group-hover:bg-[#FF7B1D] group-hover:text-white transition-all transform group-hover:scale-110">
+                        <div className="bg-white p-6 rounded-sm shadow-sm border border-gray-100 flex items-center gap-5 group hover:border-orange-500 transition-all">
+                            <div className="w-14 h-14 bg-orange-50 text-orange-500 rounded-sm flex items-center justify-center group-hover:bg-orange-500 group-hover:text-white transition-all transform group-hover:scale-105 shadow-sm border border-orange-100">
                                 <DollarSign size={28} />
                             </div>
                             <div>
-                                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Amount</p>
-                                <h3 className="text-2xl font-black text-gray-800 tracking-tight">
-                                    ₹{walletStats.totalAmount.toLocaleString()}
+                                <p className="text-sm font-bold text-gray-500 capitalize tracking-tight mb-1 text-nowrap">Total Available</p>
+                                <h3 className="text-2xl font-bold text-gray-800 tracking-tight">
+                                    {isLoadingStats ? "..." : `₹${walletStats.totalAmount.toLocaleString()}`}
                                 </h3>
                             </div>
                         </div>
 
                         {/* Used Amount */}
-                        <div className="bg-white p-6 rounded-sm shadow-sm border border-gray-200 flex items-center gap-5 group hover:border-red-500 transition-all">
-                            <div className="w-14 h-14 bg-red-50 text-red-500 rounded-sm flex items-center justify-center group-hover:bg-red-500 group-hover:text-white transition-all transform group-hover:scale-110">
+                        <div className="bg-white p-6 rounded-sm shadow-sm border border-gray-100 flex items-center gap-5 group hover:border-red-500 transition-all">
+                            <div className="w-14 h-14 bg-red-50 text-red-500 rounded-sm flex items-center justify-center group-hover:bg-red-500 group-hover:text-white transition-all transform group-hover:scale-105 shadow-sm border border-red-100">
                                 <TrendingUp size={28} />
                             </div>
                             <div>
-                                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Used Amount</p>
-                                <h3 className="text-2xl font-black text-gray-800 tracking-tight">
-                                    ₹{walletStats.usedAmount.toLocaleString()}
+                                <p className="text-sm  font-bold text-gray-500 capitalize tracking-tight mb-1 text-nowrap">Total Spent</p>
+                                <h3 className="text-2xl font-bold text-gray-800 tracking-tight">
+                                    {isLoadingStats ? "..." : `₹${walletStats.usedAmount.toLocaleString()}`}
                                 </h3>
                             </div>
                         </div>
 
                         {/* Rest Amount */}
-                        <div className="bg-white p-6 rounded-sm shadow-sm border border-gray-200 flex items-center gap-5 group hover:border-green-500 transition-all">
-                            <div className="w-14 h-14 bg-green-50 text-green-500 rounded-sm flex items-center justify-center group-hover:bg-green-500 group-hover:text-white transition-all transform group-hover:scale-110">
+                        <div className="bg-white p-6 rounded-sm shadow-sm border border-gray-100 flex items-center gap-5 group hover:border-green-500 transition-all">
+                            <div className="w-14 h-14 bg-green-50 text-green-500 rounded-sm flex items-center justify-center group-hover:bg-green-500 group-hover:text-white transition-all transform group-hover:scale-105 shadow-sm border border-green-100">
                                 <TrendingDown size={28} />
                             </div>
                             <div>
-                                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Rest Amount</p>
-                                <h3 className="text-2xl font-black text-gray-800 tracking-tight">
-                                    ₹{walletStats.restAmount.toLocaleString()}
+                                <p className="text-sm font-bold text-gray-500 capitalize tracking-tight mb-1 text-nowrap">Balance Remaining</p>
+                                <h3 className="text-2xl font-bold text-gray-800 tracking-tight">
+                                    {isLoadingStats ? "..." : `₹${walletStats.restAmount.toLocaleString()}`}
                                 </h3>
                             </div>
                         </div>
@@ -181,77 +145,66 @@ export default function Wallet() {
                     <div className="bg-white border border-gray-200 rounded-sm shadow-sm overflow-hidden">
                         <div className="p-5 border-b flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gray-50/50">
                             <div className="flex items-center gap-2">
-                                <History className="text-gray-500" size={20} />
-                                <h2 className="text-lg font-bold text-gray-800 uppercase tracking-tighter">Plan Upgrade History</h2>
+                                <h2 className="text-sm font-bold text-gray-800 capitalize tracking-tight">Plan Upgrade History</h2>
                             </div>
 
                             <div className="flex items-center gap-3">
-                                <div className="relative">
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                                    <input
-                                        type="text"
-                                        placeholder="Search History..."
-                                        className="pl-10 pr-4 py-2.5 border border-gray-200 rounded-sm text-xs focus:border-[#FF7B1D] outline-none w-72 bg-white font-bold text-gray-700 shadow-sm"
-                                        value={tempSearch}
-                                        onChange={(e) => setTempSearch(e.target.value)}
-                                        onKeyDown={(e) => e.key === 'Enter' && handleApplyFilters()}
-                                    />
-                                </div>
+
                                 <div className="relative" ref={filterRef}>
                                     <button
                                         onClick={() => {
-                                            if (hasActiveFilters && !isFilterOpen) {
+                                            if (hasActiveFilters) {
                                                 handleClearFilters();
                                             } else {
                                                 setIsFilterOpen(!isFilterOpen);
                                             }
                                         }}
-                                        className={`p-2.5 border rounded-sm shadow-sm transition-all active:scale-95 flex items-center justify-center ${(isFilterOpen || hasActiveFilters)
-                                            ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-orange-600"
-                                            : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
+                                        className={`p-3 border rounded-sm shadow-sm transition-all active:scale-95 flex items-center justify-center ${(isFilterOpen || hasActiveFilters)
+                                            ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-orange-500"
+                                            : "bg-white border-gray-200 text-gray-600 hover:bg-gray-100"
                                             }`}
                                     >
-                                        {(hasActiveFilters && !isFilterOpen) ? <X size={20} /> : <Filter size={20} />}
+                                        {hasActiveFilters ? <X size={20} /> : <Filter size={20} />}
                                     </button>
 
                                     {isFilterOpen && (
-                                        <div className="absolute right-0 mt-3 w-80 bg-white border border-gray-200 rounded-sm shadow-2xl z-50 animate-fadeIn">
+                                        <div className="absolute right-0 mt-2 w-[350px] bg-white border border-gray-200 rounded-sm shadow-2xl z-50 animate-fadeIn overflow-hidden">
                                             <div className="p-4 bg-gray-50 border-b flex justify-between items-center">
-                                                <span className="text-[11px] font-black text-gray-800 uppercase tracking-widest">Filter Options</span>
+                                                <span className="text-sm font-bold text-gray-800 tracking-tight capitalize">Filter Options</span>
                                                 <button
                                                     onClick={handleClearFilters}
-                                                    className="text-[10px] font-bold text-orange-600 hover:text-orange-700 uppercase"
+                                                    className="text-[10px] font-bold text-orange-600 hover:underline hover:text-orange-700 capitalize tracking-wider"
                                                 >
-                                                    Reset
+                                                    Reset All
                                                 </button>
                                             </div>
                                             <div className="p-5 space-y-5">
                                                 <div>
-                                                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 border-b pb-1">Filter by Plan</label>
+                                                    <label className="text-[11px] font-bold text-gray-400 capitalize tracking-wider block mb-2 border-b pb-1">Filter by Plan Type</label>
                                                     <select
                                                         value={planFilter}
                                                         onChange={(e) => setPlanFilter(e.target.value)}
-                                                        className="w-full border border-gray-200 rounded-sm px-3 py-2 text-xs font-bold text-gray-700 bg-gray-50 hover:bg-white outline-none focus:ring-1 focus:ring-orange-500/20"
+                                                        className="w-full border border-gray-200 rounded-sm px-3 py-2.5 text-xs font-bold text-gray-700 bg-gray-50 hover:bg-white outline-none focus:ring-1 focus:ring-orange-500/20 transition-all"
                                                     >
                                                         <option value="all">All Plans</option>
-                                                        <option value="Starter">Starter</option>
-                                                        <option value="Professional">Professional</option>
-                                                        <option value="Enterprise">Enterprise</option>
+                                                        {plansList.map(plan => (
+                                                            <option key={plan.id} value={plan.name}>{plan.name}</option>
+                                                        ))}
                                                     </select>
                                                 </div>
                                             </div>
-                                            <div className="p-4 bg-gray-50 border-t flex gap-2">
+                                            <div className="p-4 bg-gray-50 border-t flex gap-3">
                                                 <button
                                                     onClick={() => setIsFilterOpen(false)}
-                                                    className="flex-1 py-2 text-[11px] font-bold text-gray-500 bg-white border border-gray-200 rounded-sm hover:bg-gray-100 uppercase"
+                                                    className="flex-1 py-2.5 text-[11px] font-bold text-gray-500 bg-white border border-gray-200 rounded-sm hover:bg-gray-200 transition-all capitalize tracking-wider shadow-sm"
                                                 >
                                                     Cancel
                                                 </button>
                                                 <button
                                                     onClick={handleApplyFilters}
-                                                    className="flex-1 py-2 text-[11px] font-bold text-white bg-gradient-to-r from-orange-500 to-orange-600 rounded-sm shadow-md hover:from-orange-600 hover:to-orange-700 uppercase"
+                                                    className="flex-1 py-2.5 text-[11px] font-bold text-white bg-gradient-to-r from-orange-500 to-orange-600 rounded-sm shadow-md hover:from-orange-600 hover:to-orange-700 transition-all active:scale-95 capitalize tracking-wider"
                                                 >
-                                                    Apply
+                                                    Apply Filter
                                                 </button>
                                             </div>
                                         </div>
@@ -262,45 +215,55 @@ export default function Wallet() {
 
                         <div className="overflow-x-auto">
                             <table className="w-full text-left border-collapse">
-                                <thead className="bg-[#FF7B1D] text-white">
+                                <thead className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm">
                                     <tr>
-                                        <th className="px-6 py-4 text-xs font-black uppercase tracking-widest border-b border-orange-400 text-center">Upgrade ID</th>
-                                        <th className="px-6 py-4 text-xs font-black uppercase tracking-widest border-b border-orange-400">Enterprise</th>
-                                        <th className="px-6 py-4 text-xs font-black uppercase tracking-widest border-b border-orange-400">Transition</th>
-                                        <th className="px-6 py-4 text-xs font-black uppercase tracking-widest border-b border-orange-400 text-center">Amount Paid</th>
-                                        <th className="px-6 py-4 text-xs font-black uppercase tracking-widest border-b border-orange-400 text-center">Date & Time</th>
-                                        <th className="px-6 py-4 text-xs font-black uppercase tracking-widest border-b border-orange-400 text-right">Status</th>
+                                        <th className="py-3 px-4 font-semibold text-left border-b border-orange-400">Id</th>
+                                        <th className="py-3 px-4 font-semibold text-left border-b border-orange-400">Enterprise Name</th>
+                                        <th className="py-3 px-4 font-semibold text-left border-b border-orange-400">Upgrade Path</th>
+                                        <th className="py-3 px-4 font-semibold text-left border-b border-orange-400">Amount Paid</th>
+                                        <th className="py-3 px-4 font-semibold text-left border-b border-orange-400 text-nowrap">Timestamp</th>
+                                        <th className="py-3 px-4 font-semibold text-right border-b border-orange-400">Status</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100 font-medium">
-                                    {filteredHistory.length > 0 ? (
-                                        filteredHistory.map((row) => (
-                                            <tr key={row.id} className="hover:bg-gray-50 transition-colors cursor-pointer group">
-                                                <td className="px-6 py-4 text-xs text-center text-gray-500 font-mono font-bold tracking-tighter uppercase">{row.id}</td>
-                                                <td className="px-6 py-4">
-                                                    <div className="font-bold text-gray-800 text-sm tracking-tight">{row.enterprise}</div>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest">
-                                                        <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded-sm border border-gray-200">{row.previousPlan}</span>
-                                                        <ArrowUpRight size={14} className="text-[#FF7B1D]" />
-                                                        <span className="bg-orange-50 text-[#FF7B1D] px-2 py-1 rounded-sm border border-orange-100">{row.newPlan}</span>
+                                    {isLoadingHistory ? (
+                                        <tr>
+                                            <td colSpan="6" className="py-20 text-center">
+                                                <div className="flex flex-col items-center gap-3">
+                                                    <div className="w-12 h-12 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin"></div>
+                                                    <p className="text-gray-500 font-bold capitalize tracking-widest text-xs">Loading upgrades...</p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ) : upgradeHistory.length > 0 ? (
+                                        upgradeHistory.map((row) => (
+                                            <tr key={row.id} className="border-t hover:bg-gray-50 transition-colors font-medium cursor-pointer">
+                                                <td className="py-4 px-4 text-sm text-left text-orange-500 font-semibold tracking-tight capitalize">{row.id.toString().startsWith('UPG') ? row.id : `UPG-${row.id}`}</td>
+                                                <td className="py-4 px-4 font-bold text-gray-800 text-base">{row.enterprise}</td>
+                                                <td className="py-4 px-4">
+                                                    <div className="flex items-center gap-2 text-[13px] font-bold capitalize tracking-tight">
+                                                        <span className="bg-gray-100 text-gray-600 px-3 py-2 rounded-sm border border-gray-200 shadow-sm">{row.previousPlan}</span>
+                                                        <ArrowUpRight size={16} className="text-orange-500" />
+                                                        <span className="bg-orange-50 text-orange-600 px-3 py-2 rounded-sm border border-orange-100 shadow-sm">{row.newPlan}</span>
                                                     </div>
                                                 </td>
-                                                <td className="px-6 py-4 text-center">
-                                                    <span className="text-sm font-bold text-gray-800">₹{row.amount.toLocaleString()}</span>
+                                                <td className="py-4 px-4 text-left">
+                                                    <span className="text-base font-bold text-gray-800 tracking-tight">₹{row.amount.toLocaleString()}</span>
                                                 </td>
-                                                <td className="px-6 py-4 text-center">
+                                                <td className="py-4 px-4 text-left">
                                                     <div className="flex flex-col">
                                                         <span className="text-sm font-bold text-gray-800 tracking-tight">{row.date}</span>
-                                                        <span className="text-[10px] text-gray-400 uppercase flex items-center justify-center gap-1 font-black">
-                                                            <Clock size={10} /> {row.time}
+                                                        <span className="text-[11px] text-gray-400 capitalize flex items-center justify-start gap-1 font-black tracking-widest leading-none mt-1.5">
+                                                            <Clock size={12} /> {row.time}
                                                         </span>
                                                     </div>
                                                 </td>
-                                                <td className="px-6 py-4 text-right">
-                                                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-sm text-[10px] font-black uppercase bg-green-100 text-green-700 border border-green-200 shadow-sm">
-                                                        <CheckCircle2 size={10} /> {row.status}
+                                                <td className="py-4 px-4 text-right">
+                                                    <span className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-sm text-[11px] font-black capitalize border shadow-sm ${row.status === 'Active'
+                                                        ? 'bg-green-50 text-green-700 border-green-200'
+                                                        : 'bg-gray-50 text-gray-700 border-gray-200'
+                                                        }`}>
+                                                        {row.status === 'Active' && <CheckCircle2 size={14} />} {row.status}
                                                     </span>
                                                 </td>
                                             </tr>
@@ -312,7 +275,7 @@ export default function Wallet() {
                                                     <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center">
                                                         <History className="text-gray-300" size={30} />
                                                     </div>
-                                                    <p className="text-gray-500 font-bold uppercase tracking-widest text-xs">No transaction history found</p>
+                                                    <p className="text-gray-500 font-bold capitalize tracking-widest text-xs">No transaction history found</p>
                                                 </div>
                                             </td>
                                         </tr>
@@ -321,14 +284,55 @@ export default function Wallet() {
                             </table>
                         </div>
 
-                        {/* Pagination Footer */}
-                        <div className="p-4 bg-gray-50 border-t flex justify-between items-center">
-                            <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Showing {filteredHistory.length} of {upgradeHistory.length} upgrades</p>
-                            <div className="flex gap-2">
-                                <button className="px-4 py-2 text-xs font-bold border border-gray-300 rounded-sm bg-white text-gray-500 cursor-not-allowed" disabled>Previous</button>
-                                <button className="px-4 py-2 text-xs font-bold border border-gray-300 rounded-sm bg-white text-gray-700 hover:bg-gray-50 shadow-sm transition-all active:scale-95">Next</button>
+                        {/* Pagination */}
+                        {!isLoadingHistory && upgradeHistory.length > 0 && (
+                            <div className="flex flex-col md:flex-row justify-between items-center mt-6 gap-4 bg-gray-50 p-4 rounded-sm border border-gray-200">
+                                <p className="text-sm font-semibold text-gray-700">
+                                    Showing <span className="text-orange-600">{indexOfFirstItem + 1}</span> to <span className="text-orange-600">{indexOfLastItem}</span> of <span className="text-orange-600">{pagination.total}</span> Upgrades
+                                </p>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={handlePrev}
+                                        disabled={currentPage === 1}
+                                        className={`px-4 py-2 rounded-sm font-bold transition flex items-center gap-1 ${currentPage === 1
+                                            ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                                            : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"
+                                            }`}
+                                    >
+                                        Previous
+                                    </button>
+
+                                    <div className="flex items-center gap-1">
+                                        {Array.from({ length: pagination.totalPages }, (_, i) => {
+                                            let pageNum = i + 1;
+                                            return (
+                                                <button
+                                                    key={pageNum}
+                                                    onClick={() => handlePageChange(pageNum)}
+                                                    className={`w-10 h-10 rounded-sm font-bold transition ${currentPage === pageNum
+                                                        ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md border-orange-500"
+                                                        : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                                                        }`}
+                                                >
+                                                    {pageNum}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+
+                                    <button
+                                        onClick={handleNext}
+                                        disabled={currentPage === pagination.totalPages}
+                                        className={`px-4 py-2 rounded-sm font-bold transition flex items-center gap-1 ${currentPage === pagination.totalPages
+                                            ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                                            : "bg-[#22C55E] text-white hover:opacity-90 shadow-md"
+                                            }`}
+                                    >
+                                        Next
+                                    </button>
+                                </div>
                             </div>
-                        </div>
+                        )}
                     </div>
                 </div>
             </div>

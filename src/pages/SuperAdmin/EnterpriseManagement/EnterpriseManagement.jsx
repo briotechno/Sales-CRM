@@ -21,12 +21,13 @@ import {
     AlertCircle,
     Filter,
     X,
+    SquarePen,
 } from "lucide-react";
 import NumberCard from "../../../components/NumberCard";
 import AddEnterpriseModal from "../../../components/EnterpriseManagement/AddEnterpriseModal";
 import EditEnterpriseModal from "../../../components/EnterpriseManagement/EditEnterpriseModal";
 import DeleteEnterpriseModal from "../../../components/EnterpriseManagement/DeleteEnterpriseModal";
-import { useGetEnterprisesQuery } from "../../../store/api/enterpriseApi";
+import { useGetEnterprisesQuery, useGetEnterpriseDashboardStatsQuery } from "../../../store/api/enterpriseApi";
 
 // Filter chip definitions
 const FILTER_CHIPS = [
@@ -102,10 +103,10 @@ export default function EnterpriseManagement() {
     const enterprises = response?.data || [];
     const pagination = response?.pagination || { totalPages: 1, total: 0 };
 
+    const { data: statsData, isLoading: isStatsLoading } = useGetEnterpriseDashboardStatsQuery();
+    const stats = statsData?.data || { activeEnterprises: 0, activeTrials: 0, totalPlans: 0 };
+
     const totalEnterprises = pagination.total;
-    const activeEnterprises = enterprises.filter(e => e.status === "Active").length;
-    const totalPlans = new Set(enterprises.map(e => e.plan)).size;
-    const trialCount = enterprises.filter(e => e.status === "Trial").length;
 
     useEffect(() => {
         const handleClickOutside = (e) => {
@@ -171,7 +172,7 @@ export default function EnterpriseManagement() {
                     <div className="max-w-8xl mx-auto px-6 py-4 flex flex-col md:flex-row md:justify-between md:items-center gap-4">
                         <div>
                             <h1 className="text-2xl font-bold flex items-center gap-2 text-gray-800">
-                                <Building2 className="text-[#FF7B1D]" size={26} /> Enterprise Management
+                                Enterprise Management
                             </h1>
                             <p className="text-sm text-gray-500 mt-1 flex items-center gap-2 font-medium">
                                 <Home size={14} className="text-gray-700" /> Super Admin /{" "}
@@ -300,7 +301,7 @@ export default function EnterpriseManagement() {
                 </div>
 
                 {/* ── DASHBOARD CONTENT ── */}
-                <div className="max-w-8xl mx-auto px-6 pt-2 pb-6 space-y-6">
+                <div className="max-w-8xl mx-auto px-6 pt-0 mt-2 pb-6 space-y-6">
 
                     {/* Stats Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -313,21 +314,21 @@ export default function EnterpriseManagement() {
                         />
                         <NumberCard
                             title="Active Enterprises"
-                            number={isLoading ? "..." : activeEnterprises}
+                            number={isStatsLoading ? "..." : stats.activeEnterprises}
                             icon={<Building2 className="text-green-600" size={24} />}
                             iconBgColor="bg-green-100"
                             lineBorderClass="border-green-500"
                         />
                         <NumberCard
                             title="Total Plans"
-                            number={isLoading ? "..." : totalPlans}
+                            number={isStatsLoading ? "..." : stats.totalPlans}
                             icon={<Handshake className="text-orange-600" size={24} />}
                             iconBgColor="bg-orange-100"
                             lineBorderClass="border-orange-500"
                         />
                         <NumberCard
                             title="Active Trials"
-                            number={isLoading ? "..." : trialCount}
+                            number={isStatsLoading ? "..." : stats.activeTrials}
                             icon={<Target className="text-purple-600" size={24} />}
                             iconBgColor="bg-purple-100"
                             lineBorderClass="border-purple-500"
@@ -419,24 +420,24 @@ export default function EnterpriseManagement() {
                                                 <div className="flex justify-end gap-2">
                                                     <button
                                                         onClick={() => navigate(`/superadmin/enterprises/${ent.id}`)}
-                                                        className="p-1 hover:bg-orange-100 rounded-sm text-blue-500 hover:text-blue-700 transition-all"
+                                                        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-sm transition-all"
                                                         title="View Details"
                                                     >
-                                                        <Eye size={18} />
+                                                        <Eye size={16} />
                                                     </button>
                                                     <button
                                                         onClick={() => { setSelectedEnterprise(ent); setIsEditOpen(true); }}
-                                                        className="p-1 hover:bg-orange-100 rounded-sm text-green-500 hover:text-green-700 transition-all"
+                                                        className="p-1.5 text-green-600 hover:bg-green-50 rounded-sm transition-all"
                                                         title="Edit Enterprise"
                                                     >
-                                                        <Edit2 size={18} />
+                                                        <SquarePen size={16} />
                                                     </button>
                                                     <button
                                                         onClick={() => { setSelectedEnterprise(ent); setIsDeleteOpen(true); }}
-                                                        className="p-1 hover:bg-orange-100 rounded-sm text-red-500 hover:text-red-700 transition-all"
+                                                        className="p-1.5 text-red-600 hover:bg-red-50 rounded-sm transition-all"
                                                         title="Delete Enterprise"
                                                     >
-                                                        <Trash2 size={18} />
+                                                        <Trash2 size={16} />
                                                     </button>
                                                 </div>
                                             </td>

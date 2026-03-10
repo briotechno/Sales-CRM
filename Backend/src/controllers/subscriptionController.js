@@ -1,3 +1,4 @@
+const { pool } = require('../config/db');
 const Subscription = require('../models/subscriptionModel');
 
 const getAllSubscriptions = async (req, res) => {
@@ -69,10 +70,31 @@ const deleteSubscription = async (req, res) => {
     }
 };
 
+const getDashboardStats = async (req, res) => {
+    try {
+        const [activeRows] = await pool.query('SELECT COUNT(*) as count FROM subscriptions WHERE status = "Active"');
+        const [usersRows] = await pool.query('SELECT SUM(users) as count FROM subscriptions');
+        const [planRows] = await pool.query('SELECT COUNT(DISTINCT plan) as count FROM subscriptions WHERE plan IS NOT NULL');
+
+        res.status(200).json({
+            success: true,
+            data: {
+                activeSubscriptions: activeRows[0].count || 0,
+                totalUsers: usersRows[0].count || 0,
+                totalPlans: planRows[0].count || 0
+            }
+        });
+    } catch (error) {
+        console.error('Get Subscription Stats error:', error);
+        res.status(500).json({ success: false, message: error.message || 'Server Error' });
+    }
+};
+
 module.exports = {
     getAllSubscriptions,
     getSubscriptionById,
     createSubscription,
     updateSubscription,
-    deleteSubscription
+    deleteSubscription,
+    getDashboardStats
 };
