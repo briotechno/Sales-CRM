@@ -916,10 +916,34 @@ const GoalSetting = () => {
             <div className="max-w-8xl mx-auto p-4 pt-0 mt-4">
                 {/* Quick Insights */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-                    <NumberCard title="Active Goals" number={goals?.length || 0} icon={<Zap className="text-blue-600" size={24} />} iconBgColor="bg-blue-100" lineBorderClass="border-blue-500" />
-                    <NumberCard title="Completion Average" number={`${goals?.length ? Math.round(goals.reduce((a, b) => a + b.progress_percentage, 0) / goals.length) : 0}%`} icon={<TrendingUp className="text-green-600" size={24} />} iconBgColor="bg-green-100" lineBorderClass="border-green-500" />
-                    <NumberCard title="Achieved This Week" number={"2"} icon={<Award className="text-orange-600" size={24} />} iconBgColor="bg-orange-100" lineBorderClass="border-orange-500" />
-                    <NumberCard title="Call Velocity" number={"42/50"} icon={<Phone className="text-purple-600" size={24} />} iconBgColor="bg-purple-100" lineBorderClass="border-purple-500" />
+                    <NumberCard
+                        variant="matrix"
+                        title="Active Goals"
+                        number={goals?.length || 0}
+                        icon={<Zap size={24} />}
+                        lineBorderClass="border-blue-500"
+                    />
+                    <NumberCard
+                        variant="matrix"
+                        title="Completion Average"
+                        number={`${goals?.length ? Math.round(goals.reduce((a, b) => a + b.progress_percentage, 0) / goals.length) : 0}%`}
+                        icon={<TrendingUp size={24} />}
+                        lineBorderClass="border-green-500"
+                    />
+                    <NumberCard
+                        variant="matrix"
+                        title="Achieved This Week"
+                        number={"2"}
+                        icon={<Award size={24} />}
+                        lineBorderClass="border-orange-500"
+                    />
+                    <NumberCard
+                        variant="matrix"
+                        title="Call Velocity"
+                        number={"42/50"}
+                        icon={<Phone size={24} />}
+                        lineBorderClass="border-purple-500"
+                    />
                 </div>
 
                 {/* Goals Section */}
