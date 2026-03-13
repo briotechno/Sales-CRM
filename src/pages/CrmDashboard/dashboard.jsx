@@ -135,7 +135,7 @@ export default function CRMDashboard() {
 
               <button className="flex items-center gap-2 px-6 py-3 rounded-sm font-semibold transition shadow-lg hover:shadow-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700">
                 <Plus size={20} />
-                Add New Lead
+                Add new lead
               </button>
             </div>
           </div>
@@ -148,83 +148,93 @@ export default function CRMDashboard() {
         {/* Main Content Area */}
         <div className="flex-1 space-y-4">
 
-          {/* Row 1: KPI Matrices with Workstation Header Design */}
+          {/* Row 1: KPI Matrices */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Total Quotations */}
-            <div className="rounded-sm shadow-sm border border-gray-200 p-4 border-t-4 border-t-blue-500 bg-blue-50/50 transition-all duration-300">
+            <div className="rounded-sm shadow-sm border border-gray-200 p-4 border-t-4 border-t-blue-500 bg-blue-50/50 transition-all duration-300 hover:shadow-md">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
                   <div className="p-1.5 rounded-sm bg-white border border-gray-100 shadow-sm">
                     <UserPlus size={18} className="text-blue-500" />
                   </div>
-                  <h3 className="text-sm font-bold text-gray-800 capitalize tracking-tight font-primary">Total Quotations</h3>
+                  <div className="flex flex-col">
+                    <h3 className="text-xs font-bold text-gray-500 capitalize tracking-wide font-primary">Total quotations</h3>
+                    <p className="text-2xl font-bold text-gray-800 leading-none mt-1.5">
+                      {summary.totalQuotations.toLocaleString()}
+                    </p>
+                  </div>
                 </div>
-                <span className="bg-white text-gray-700 text-[11px] font-bold px-2 py-0.5 rounded-full border border-gray-100 shadow-sm">
-                  {summary.totalQuotations.toLocaleString()}
-                </span>
               </div>
             </div>
 
             {/* Conversions */}
-            <div className="rounded-sm shadow-sm border border-gray-200 p-4 border-t-4 border-t-purple-500 bg-purple-50/50 transition-all duration-300">
+            <div className="rounded-sm shadow-sm border border-gray-200 p-4 border-t-4 border-t-purple-500 bg-purple-50/50 transition-all duration-300 hover:shadow-md">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
                   <div className="p-1.5 rounded-sm bg-white border border-gray-100 shadow-sm">
                     <PhoneIncoming size={18} className="text-purple-500" />
                   </div>
-                  <h3 className="text-sm font-bold text-gray-800 capitalize tracking-tight font-primary">Conversions</h3>
+                  <div className="flex flex-col">
+                    <h3 className="text-xs font-bold text-gray-500 capitalize tracking-wide font-primary">Total conversions</h3>
+                    <p className="text-2xl font-bold text-gray-800 leading-none mt-1.5">
+                      {summary.conversions.toLocaleString()}
+                    </p>
+                  </div>
                 </div>
-                <span className="bg-white text-gray-700 text-[11px] font-bold px-2 py-0.5 rounded-full border border-gray-100 shadow-sm">
-                  {summary.conversions.toLocaleString()}
-                </span>
               </div>
             </div>
 
             {/* Total Revenue */}
-            <div className="rounded-sm shadow-sm border border-gray-200 p-4 border-t-4 border-t-yellow-500 bg-yellow-50/50 transition-all duration-300">
+            <div className="rounded-sm shadow-sm border border-gray-200 p-4 border-t-4 border-t-yellow-500 bg-yellow-50/50 transition-all duration-300 hover:shadow-md">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
                   <div className="p-1.5 rounded-sm bg-white border border-gray-100 shadow-sm">
                     <Clock size={18} className="text-yellow-500" />
                   </div>
-                  <h3 className="text-sm font-bold text-gray-800 capitalize tracking-tight font-primary">Total Revenue</h3>
+                  <div className="flex flex-col">
+                    <h3 className="text-xs font-bold text-gray-500 capitalize tracking-wide font-primary">Total revenue</h3>
+                    <p className="text-2xl font-bold text-gray-800 leading-none mt-1.5">
+                      {formatCurrency(summary.revenue)}
+                    </p>
+                  </div>
                 </div>
-                <span className="bg-white text-gray-700 text-[11px] font-bold px-2 py-0.5 rounded-full border border-gray-100 shadow-sm">
-                  {formatCurrency(summary.revenue)}
-                </span>
               </div>
             </div>
 
             {/* Top Performers */}
-            <div className="rounded-sm shadow-sm border border-gray-200 p-4 border-t-4 border-t-orange-500 bg-orange-50/50 transition-all duration-300">
+            <div className="rounded-sm shadow-sm border border-gray-200 p-4 border-t-4 border-t-orange-500 bg-orange-50/50 transition-all duration-300 hover:shadow-md">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
                   <div className="p-1.5 rounded-sm bg-white border border-gray-100 shadow-sm">
                     <TrendingUp size={18} className="text-orange-500" />
                   </div>
-                  <h3 className="text-sm font-bold text-gray-800 capitalize tracking-tight font-primary">Top Performers</h3>
+                  <div className="flex flex-col">
+                    <h3 className="text-xs font-bold text-gray-500 capitalize tracking-wide font-primary">Top performers</h3>
+                    <p className="text-2xl font-bold text-gray-800 leading-none mt-1.5">
+                      {summary.champions.toLocaleString()}
+                    </p>
+                  </div>
                 </div>
-                <span className="bg-white text-gray-700 text-[11px] font-bold px-2 py-0.5 rounded-full border border-gray-100 shadow-sm">
-                  {summary.champions.toLocaleString()}
-                </span>
               </div>
             </div>
           </div>
 
-          {/* Row 2: Efficiency Metrics with Workstation Header Design */}
+          {/* Row 2: Efficiency Metrics */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {dynamicEfficiencyMetrics.map((metric, idx) => (
-              <div key={idx} className={`rounded-sm shadow-sm border border-gray-200 p-4 border-t-4 ${metric.colorClass} transition-all duration-300`}>
+              <div key={idx} className={`rounded-sm shadow-sm border border-gray-200 p-4 border-t-4 ${metric.colorClass} transition-all duration-300 hover:shadow-md`}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
                     <div className="p-1.5 rounded-sm bg-white border border-gray-100 shadow-sm">
                       {metric.icon}
                     </div>
-                    <h3 className="text-sm font-bold text-gray-800 capitalize tracking-tight font-primary">{metric.label}</h3>
+                    <div className="flex flex-col">
+                      <h3 className="text-xs font-bold text-gray-500 capitalize tracking-wide font-primary">{metric.label}</h3>
+                      <p className="text-2xl font-bold text-gray-800 leading-none mt-1.5">
+                        {metric.value}
+                      </p>
+                    </div>
                   </div>
-                  <span className="bg-white text-gray-700 text-[11px] font-bold px-2 py-0.5 rounded-full border border-gray-100 shadow-sm">
-                    {metric.value}
-                  </span>
                 </div>
               </div>
             ))}
@@ -240,8 +250,8 @@ export default function CRMDashboard() {
                     <TrendingUp className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <h2 className="text-2xl font-bold text-gray-800">Monthly Revenue Trend</h2>
-                    <p className="text-gray-500 text-sm font-medium">Performance overview for the last {viewPeriod === '1y' ? '12 months' : '6 months'}</p>
+                    <h2 className="text-xl font-bold text-gray-800">Monthly revenue trend</h2>
+                    <p className="text-orange-500 text-sm font-semibold capitalize tracking-wide">Performance overview for the last {viewPeriod === '1y' ? '12 months' : '6 months'}</p>
                   </div>
                 </div>
                 <div className="flex gap-2 p-1 bg-gray-100 rounded-sm">
@@ -290,35 +300,37 @@ export default function CRMDashboard() {
             {/* Sales Conversion Funnel */}
             <div className="bg-white rounded-sm border border-orange-100 shadow-lg overflow-hidden flex flex-col p-6">
               <div className="flex items-center mb-10">
-                <div className="p-3 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 mr-4 shadow-md">
+                <div className="p-3 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 mr-4 shadow-lg">
                   <Target className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-800">Conversion Pipeline</h2>
-                  <p className="text-gray-500 text-sm font-medium">Lead progression tracking</p>
+                  <h2 className="text-xl font-bold bg-gradient-to-r from-orange-600 to-orange-500 bg-clip-text text-transparent">
+                    Conversion pipeline
+                  </h2>
+                  <p className="text-orange-500 text-sm font-semibold capitalize tracking-wide">Lead progression tracking</p>
                 </div>
               </div>
               <div className="flex-1 flex flex-col justify-center">
-                <div className="space-y-6">
+                <div className="space-y-4">
                   {funnelData.map((stage, i) => (
-                    <div key={i} className="relative group">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-bold text-gray-700 capitalize">{stage.name}</span>
-                        <span className="text-sm font-bold text-gray-900">{stage.value}</span>
-                      </div>
-                      <div className="w-full bg-slate-50 h-8 rounded-sm overflow-hidden border border-gray-100 p-0.5 relative shadow-inner">
-                        <div
-                          className="h-full rounded-[1px] transition-all duration-1000 group-hover:opacity-90 shadow-sm"
-                          style={{ width: `${(stage.value / funnelData[0].value) * 100}%`, backgroundColor: stage.fill }}
-                        ></div>
-                      </div>
-                      {i < funnelData.length - 1 && (
-                        <div className="flex justify-center -my-1 absolute left-1/2 -translate-x-1/2 z-10 w-full top-full mt-2">
-                          <div className="bg-white p-1 rounded-full border border-gray-100 shadow-sm">
-                            <ChevronRight size={14} className="text-gray-300 rotate-90" />
+                    <div key={i} className="p-4 bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl border border-orange-200 hover:shadow-md transition-all group flex flex-col">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-sm font-bold text-gray-800 capitalize">{stage.name}</span>
+                        <div className="flex items-center gap-3">
+                          <span className="text-sm font-bold text-orange-600">{stage.value}</span>
+                          <div className="bg-orange-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-sm shadow-sm">
+                            {Math.round((stage.value / funnelData[0].value) * 100)}%
                           </div>
                         </div>
-                      )}
+                      </div>
+                      <div className="relative">
+                        <div className="w-full bg-orange-100 rounded-full h-2.5 border border-orange-200 overflow-hidden">
+                          <div
+                            className="bg-gradient-to-r from-orange-500 to-orange-600 h-2.5 rounded-full transition-all duration-1000 shadow-sm"
+                            style={{ width: `${(stage.value / funnelData[0].value) * 100}%` }}
+                          ></div>
+                        </div>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -335,18 +347,20 @@ export default function CRMDashboard() {
                   <AlertCircle className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-800">Critical Attention</h2>
-                  <p className="text-gray-500 text-sm font-medium">Immediate action items</p>
+                  <h2 className="text-xl font-bold text-gray-800">Critical attention</h2>
+                  <p className="text-red-500 text-sm font-semibold capitalize tracking-wide">Immediate action items</p>
                 </div>
               </div>
               <div className="space-y-4">
                 {agingStats.length > 0 ? agingStats.map((item, id) => (
-                  <div key={id} className={`p-5 rounded-sm border-l-4 ${item.status === 'Critical' ? 'bg-red-50 border-red-500' : 'bg-orange-50 border-orange-500'} flex items-center justify-between group cursor-pointer hover:shadow-md transition-all`}>
+                  <div key={id} className={`p-4 rounded-sm border-l-4 shadow-sm border-orange-100 ${item.status === 'Critical' ? 'bg-gradient-to-r from-red-50 to-white border-l-red-500' : 'bg-gradient-to-r from-orange-50 to-white border-l-orange-500'} flex items-center justify-between group cursor-pointer hover:shadow-md transition-all`}>
                     <div>
-                      <p className={`text-xs font-bold uppercase tracking-wider ${item.status === 'Critical' ? 'text-red-600' : 'text-orange-600'}`}>{item.label}</p>
-                      <p className="text-2xl font-bold text-gray-900 mt-1">{item.count} Leads</p>
+                      <p className={`text-sm font-bold capitalize tracking-wide ${item.status === 'Critical' ? 'text-red-500' : 'text-orange-500'}`}>{item.label}</p>
+                      <p className="text-xl font-semibold text-gray-900 mt-1">{item.count} <span className="text-xs font-medium text-gray-500">leads</span></p>
                     </div>
-                    <ChevronRight size={24} className="text-gray-300 group-hover:text-orange-500 transition-all" />
+                    <div className={`p-2 rounded-sm ${item.status === 'Critical' ? 'bg-red-100/50 text-red-500' : 'bg-orange-100/50 text-orange-500'} group-hover:scale-110 transition-transform`}>
+                      <ChevronRight size={18} />
+                    </div>
                   </div>
                 )) : (
                   <div className="p-10 text-center border-2 border-dashed border-gray-100 rounded-sm">
@@ -374,8 +388,8 @@ export default function CRMDashboard() {
                   <Share2 className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-800">Territory Distribution</h2>
-                  <p className="text-gray-500 text-sm font-medium">Sales split by territory</p>
+                  <h2 className="text-xl font-bold text-gray-800">Territory distribution</h2>
+                  <p className="text-blue-500 text-sm font-semibold capitalize tracking-wide">Sales split by territory</p>
                 </div>
               </div>
               <div className="flex-1 flex flex-col items-center justify-center">
@@ -454,8 +468,8 @@ export default function CRMDashboard() {
                   <Activity className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-800">Deal Success</h2>
-                  <p className="text-gray-500 text-sm font-medium">Won vs Lost deal ratio</p>
+                  <h2 className="text-xl font-bold text-gray-800">Deal success</h2>
+                  <p className="text-purple-500 text-sm font-semibold capitalize tracking-wide">Won vs lost deal ratio</p>
                 </div>
               </div>
               <div className="flex-1">
@@ -488,15 +502,7 @@ export default function CRMDashboard() {
                     <span className="text-xs font-bold text-gray-600 capitalize">Lost Deals</span>
                   </div>
                 </div>
-                <div className="mt-8 p-5 bg-slate-900 rounded-sm flex items-center justify-between shadow-xl">
-                  <div>
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-2">Customer Satisfaction</p>
-                    <p className="text-3xl font-bold text-white tracking-tight">4.8 <span className="text-sm font-medium text-gray-500">/ 5.0</span></p>
-                  </div>
-                  <div className="w-12 h-12 bg-white/10 rounded-lg flex items-center justify-center border border-white/20">
-                    <Award size={24} className="text-yellow-400" />
-                  </div>
-                </div>
+
               </div>
             </div>
             {/* Revenue Forecast Comparison */}
@@ -507,8 +513,8 @@ export default function CRMDashboard() {
                     <TrendingUp className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <h2 className="text-2xl font-bold text-gray-800">Revenue Forecast Engine</h2>
-                    <p className="text-gray-500 text-sm font-medium">Predictive modeling: Expected vs Weighted</p>
+                    <h2 className="text-xl font-bold text-gray-800">Revenue forecast engine</h2>
+                    <p className="text-emerald-500 text-sm font-semibold capitalize tracking-wide">Predictive modeling: expected vs weighted</p>
                   </div>
                 </div>
                 <div className="flex gap-4">
@@ -557,20 +563,22 @@ export default function CRMDashboard() {
             {/* Team Workload */}
             <div className="bg-white rounded-sm border border-gray-100 shadow-lg overflow-hidden flex flex-col p-6">
               <div className="flex items-center mb-8">
-                <div className="p-3 rounded-lg bg-gradient-to-br from-indigo-500 to-indigo-600 mr-4 shadow-md">
+                <div className="p-3 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 mr-4 shadow-lg">
                   <Users size={24} className="text-white" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-800">Consultant Capacity</h2>
-                  <p className="text-gray-500 text-sm font-medium">Load distribution audit</p>
+                  <h2 className="text-xl font-bold bg-gradient-to-r from-orange-600 to-orange-500 bg-clip-text text-transparent">
+                    Consultant capacity
+                  </h2>
+                  <p className="text-orange-500 text-sm font-semibold capitalize tracking-wide">Load distribution audit</p>
                 </div>
               </div>
-              <div className="space-y-6">
+              <div className="space-y-4">
                 {workloadData.map((exec, idx) => (
-                  <div key={idx} className="space-y-3">
-                    <div className="flex items-center justify-between">
+                  <div key={idx} className="p-5 bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl border border-orange-200 hover:shadow-lg transition-all group flex flex-col">
+                    <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-sm bg-gradient-to-br from-slate-800 to-slate-900 text-white flex items-center justify-center font-bold text-base shadow-lg border border-slate-700 uppercase overflow-hidden">
+                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 text-white flex items-center justify-center font-bold text-base shadow-lg border border-orange-400 overflow-hidden group-hover:scale-105 transition-transform">
                           {exec.avatar ? (
                             <img
                               src={exec.avatar}
@@ -587,18 +595,25 @@ export default function CRMDashboard() {
                             {exec.name.split(' ').map(n => n[0]).join('')}
                           </span>
                         </div>
-                        <span className="text-base font-bold text-gray-800">{exec.name}</span>
+                        <div>
+                          <p className="text-base font-bold text-gray-800 group-hover:text-orange-600 transition-colors">{exec.name}</p>
+                          <p className="text-xs font-semibold text-gray-400 capitalize">Sales consultant</p>
+                        </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Lead Volume</p>
-                        <p className="text-base font-bold text-gray-900">{exec.leads} / {exec.capacity}</p>
+                        <div className="bg-orange-600 text-white px-3 py-1.5 rounded-lg font-bold text-sm shadow-md inline-block">
+                          {exec.leads} / {exec.capacity}
+                        </div>
+                        <p className="text-xs font-semibold text-gray-400 capitalize tracking-wide mt-1">Lead capacity</p>
                       </div>
                     </div>
-                    <div className="w-full bg-slate-100 h-3 rounded-sm overflow-hidden border border-gray-50 shadow-inner">
-                      <div
-                        className={`h-full opacity-90 transition-all duration-1000 ${exec.leads > 50 ? 'bg-orange-500' : 'bg-blue-500'}`}
-                        style={{ width: `${(exec.leads / exec.capacity) * 100}%` }}
-                      ></div>
+                    <div className="relative m-0">
+                      <div className="w-full bg-orange-100 rounded-full h-3 border border-orange-200 overflow-hidden">
+                        <div
+                          className={`h-[10px] rounded-full transition-all duration-1000 shadow-sm ${exec.leads / exec.capacity > 0.8 ? 'bg-gradient-to-r from-red-500 to-red-600' : 'bg-gradient-to-r from-orange-500 to-orange-600'}`}
+                          style={{ width: `${(exec.leads / exec.capacity) * 100}%` }}
+                        ></div>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -613,12 +628,12 @@ export default function CRMDashboard() {
                     <Briefcase size={24} className="text-white" />
                   </div>
                   <div>
-                    <h2 className="text-2xl font-bold text-gray-800">Sales Velocity Projection</h2>
-                    <p className="text-gray-500 text-sm font-medium">Predictive revenue engine & pipeline health</p>
+                    <h2 className="text-xl font-bold text-gray-800">Sales velocity projection</h2>
+                    <p className="text-orange-500 text-sm font-semibold capitalize tracking-wide">Predictive revenue engine & pipeline health</p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Forecast Confidence</p>
+                  <p className="text-[10px] font-semibold text-gray-400 capitalize tracking-wide mb-1">Forecast confidence</p>
                   <div className="flex gap-1">
                     {[1, 2, 3, 4].map(b => <div key={b} className={`w-3 h-1.5 rounded-full ${b <= 3 ? 'bg-orange-500' : 'bg-gray-200'}`}></div>)}
                   </div>
@@ -643,7 +658,7 @@ export default function CRMDashboard() {
                             {formatCurrency(f.value)}
                           </div>
                         </div>
-                        <p className="text-[11px] font-bold text-gray-400 uppercase tracking-tight mt-4">{f.name}</p>
+                        <p className="text-[11px] font-semibold text-gray-400 capitalize tracking-wide mt-4">{f.name}</p>
                         <p className={`text-lg font-bold mt-1 ${i === 0 ? 'text-orange-600' : 'text-gray-400'}`}>{formatCurrency(f.value)}</p>
                       </div>
                     ))}
@@ -662,7 +677,7 @@ export default function CRMDashboard() {
 
                 {/* Velocity Drivers Breakdown */}
                 <div className="space-y-6">
-                  <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100 pb-2">Velocity Drivers</h4>
+                  <h4 className="text-sm font-semibold text-gray-500 capitalize tracking-widest border-b border-gray-100 pb-2">Velocity drivers</h4>
 
                   {[
                     { label: "Win Rate", value: `${velocityDrivers.winRate}%`, trend: "+2.1%", progress: velocityDrivers.winRate, sub: "Qualified leads to Won" },
@@ -699,7 +714,7 @@ export default function CRMDashboard() {
                       {Math.round((dailyGoal.current / dailyGoal.target) * 100)}%
                     </div>
                     <div>
-                      <p className="text-[10px] font-bold text-orange-400 uppercase tracking-widest leading-none mb-1">Probability Pulse</p>
+                      <p className="text-xs font-semibold text-orange-400 capitalize tracking-wide leading-none mb-1.5">Probability pulse</p>
                       <p className="text-xs text-white/80 font-medium leading-snug">Target is within reach. Maintain current <span className="text-white font-bold">Follow-up Velocity</span> to exceed goal.</p>
                     </div>
                   </div>
@@ -716,15 +731,15 @@ export default function CRMDashboard() {
                   <Users className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-800">Team Performance</h2>
-                  <p className="text-gray-500 text-sm font-medium">Top performing consultants this month</p>
+                  <h2 className="text-xl font-bold text-gray-800">Team performance</h2>
+                  <p className="text-orange-500 text-sm font-semibold capitalize tracking-wide">Top performing consultants this month</p>
                 </div>
               </div>
               <button
                 onClick={() => navigate("/crm/leads/analysis")}
                 className="text-orange-600 text-[11px] font-bold hover:bg-orange-50 px-4 py-2 border border-orange-200 rounded-sm shadow-sm transition-all uppercase tracking-widest"
               >
-                In-Depth Analysis
+                In-depth analysis
               </button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
@@ -732,9 +747,9 @@ export default function CRMDashboard() {
                 <div
                   key={index}
                   onClick={() => navigate(`/crm/leads/team-performance/${member.id}`)}
-                  className="p-6 bg-white border border-gray-100 rounded-sm hover:border-orange-500 hover:shadow-xl transition-all duration-300 group cursor-pointer flex flex-col items-center text-center"
+                  className="p-6 bg-gradient-to-br from-white to-orange-50/30 border border-orange-100 rounded-sm hover:border-orange-500 hover:shadow-xl transition-all duration-300 group cursor-pointer flex flex-col items-center text-center shadow-sm"
                 >
-                  <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center text-gray-800 font-bold text-xl mb-4 group-hover:bg-orange-600 group-hover:text-white transition-all shadow-sm border border-gray-100 overflow-hidden">
+                  <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center text-gray-800 font-bold text-xl mb-4 group-hover:bg-orange-500 group-hover:text-white transition-all shadow-md border border-orange-100 overflow-hidden">
                     {member.avatar_url ? (
                       <img
                         src={member.avatar_url}
@@ -751,22 +766,22 @@ export default function CRMDashboard() {
                       {member.avatar}
                     </span>
                   </div>
-                  <h4 className="font-bold text-gray-800 mb-4 group-hover:text-orange-600 transition-colors">
+                  <h4 className="font-bold text-gray-800 mb-4 group-hover:text-orange-600 transition-colors text-base truncate w-full px-2">
                     {member.name}
                   </h4>
                   <div className="w-full space-y-3">
                     <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider">
                       <span className="text-gray-400">Converted</span>
-                      <span className="text-green-600 bg-green-50 px-2 py-0.5 rounded-sm">
+                      <span className="text-green-600 bg-white px-2 py-0.5 rounded-sm border border-green-100">
                         {member.converted}
                       </span>
                     </div>
-                    <div className="pt-4 border-t border-gray-100 group-hover:border-orange-100">
-                      <div className="text-3xl font-black text-gray-800 group-hover:text-orange-600">
+                    <div className="pt-4 border-t border-orange-100 group-hover:border-orange-200">
+                      <div className="text-3xl font-semibold text-gray-800 group-hover:text-orange-600">
                         {member.rate}%
                       </div>
-                      <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">
-                        Success Rate
+                      <div className="text-[10px] font-semibold text-gray-400 capitalize tracking-wide mt-1">
+                        Success rate
                       </div>
                     </div>
                   </div>
@@ -779,82 +794,71 @@ export default function CRMDashboard() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {/* Active Monitoring */}
             <div className="lg:col-span-2 bg-white rounded-sm shadow-lg border border-gray-100 overflow-hidden flex flex-col p-6">
-              <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center">
-                  <div className="p-3 rounded-lg bg-gradient-to-br from-orange-500 to-orange-600 mr-4 shadow-md">
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 mr-4 shadow-lg">
                     <Activity size={24} className="text-white" />
                   </div>
                   <div>
-                    <h2 className="text-2xl font-bold text-gray-800">Lead Monitoring</h2>
-                    <p className="text-gray-500 text-sm font-medium">Real-time pipeline overview</p>
+                    <h2 className="text-xl font-bold bg-gradient-to-r from-orange-600 to-orange-500 bg-clip-text text-transparent">
+                      Lead monitoring
+                    </h2>
+                    <p className="text-orange-500 text-sm font-semibold capitalize tracking-wide">Real-time pipeline overview</p>
                   </div>
                 </div>
-                <button className="text-orange-600 text-[11px] font-bold hover:bg-orange-50 px-6 py-2.5 border border-orange-200 rounded-sm shadow-sm transition-all flex items-center gap-2 uppercase tracking-widest">
-                  <span>View Full CRM</span>
-                  <ChevronRight size={18} />
-                </button>
+
               </div>
-              <div className="overflow-x-auto flex-1 custom-scrollbar">
-                <table className="w-full text-left">
-                  <thead className="sticky top-0 bg-white border-b border-gray-100 z-10 shadow-sm">
-                    <tr>
-                      <th className="px-6 py-5 text-xs font-bold text-gray-400 capitalize tracking-tight">Lead identity</th>
-                      <th className="px-6 py-5 text-xs font-bold text-gray-400 capitalize tracking-tight">Source channel</th>
-                      <th className="px-6 py-5 text-xs font-bold text-gray-400 capitalize tracking-tight text-center">Deal value</th>
-                      <th className="px-6 py-5 text-xs font-bold text-gray-400 capitalize tracking-tight text-right">Progress</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-50">
-                    {recentLeads.length > 0 ? recentLeads.map((lead, index) => (
-                      <tr key={index} className="group hover:bg-orange-50/50 transition-all border-b border-gray-100 last:border-0 font-primary">
-                        <td className="px-6 py-5">
-                          <div className="flex items-center space-x-4">
-                            <div className="w-12 h-12 bg-slate-100 rounded-sm flex items-center justify-center text-slate-800 font-bold text-base group-hover:bg-gradient-to-br group-hover:from-orange-500 group-hover:to-orange-600 group-hover:text-white transition-all shadow-sm border border-slate-200 group-hover:border-orange-400 uppercase overflow-hidden">
-                              {lead.profile_picture ? (
-                                <img
-                                  src={lead.profile_picture}
-                                  alt={lead.name}
-                                  className="w-full h-full object-cover"
-                                  onError={(e) => {
-                                    e.target.onerror = null;
-                                    e.target.style.display = 'none';
-                                    e.target.nextSibling.style.display = 'flex';
-                                  }}
-                                />
-                              ) : null}
-                              <span style={{ display: lead.profile_picture ? 'none' : 'flex' }}>
-                                {lead.avatar || (lead.name ? lead.name[0] : "L")}
-                              </span>
-                            </div>
-                            <div>
-                              <p className="text-base font-bold text-gray-800 truncate max-w-[180px] group-hover:text-orange-700">{lead.name}</p>
-                              <p className="text-xs text-gray-500 font-medium capitalize">{lead.company}</p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-5">
-                          <span className="text-xs font-bold text-gray-600 capitalize bg-gray-100 px-4 py-1 rounded-full border border-gray-200">{lead.source}</span>
-                        </td>
-                        <td className="px-6 py-5 text-center font-bold text-gray-900 text-base">
-                          {formatCurrency(lead.value)}
-                        </td>
-                        <td className="px-6 py-5 text-right">
-                          <span className={`px-5 py-2 rounded-sm text-[11px] font-bold uppercase tracking-wider shadow-md ${lead.status === "Hot"
-                            ? "bg-gradient-to-r from-red-500 to-red-600 text-white" : lead.status === "Warm"
-                              ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white" : "bg-gradient-to-r from-blue-500 to-blue-600 text-white"}`}>
-                            {lead.status}
+              <div className="space-y-4 flex-1">
+                {recentLeads.length > 0 ? recentLeads.map((lead, index) => (
+                  <div key={index} className="p-5 bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl border border-orange-200 hover:shadow-lg transition-all cursor-pointer group flex flex-col">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-orange-600 font-bold text-lg shadow-md border border-orange-100 group-hover:scale-105 transition-transform overflow-hidden">
+                          {lead.profile_picture ? (
+                            <img
+                              src={lead.profile_picture}
+                              alt={lead.name}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.style.display = 'none';
+                                e.target.nextSibling.style.display = 'flex';
+                              }}
+                            />
+                          ) : null}
+                          <span style={{ display: lead.profile_picture ? 'none' : 'flex' }}>
+                            {lead.avatar || (lead.name ? lead.name[0] : "L")}
                           </span>
-                        </td>
-                      </tr>
-                    )) : (
-                      <tr>
-                        <td colSpan="4" className="px-6 py-20 text-center text-gray-400 font-bold">
-                          No Recent Leads Found
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
+                        </div>
+                        <div>
+                          <p className="text-base font-bold text-gray-800 group-hover:text-orange-600 transition-colors uppercase">{lead.name}</p>
+
+                        </div>
+                      </div>
+
+                      <div className="text-right">
+                        <div className="bg-orange-600 text-white px-3 py-1.5 rounded-lg font-bold text-sm shadow-md inline-block">
+                          {formatCurrency(lead.value)}
+                        </div>
+                        <p className="text-xs font-semibold text-gray-400 capitalize tracking-wide mt-1">{lead.status} status</p>
+                      </div>
+                    </div>
+
+                    <div className="relative m-0">
+                      <div className="w-full bg-orange-100 rounded-full h-3 border border-orange-200 overflow-hidden shadow-inner">
+                        <div
+                          className="h-[10px] rounded-full transition-all duration-1000 shadow-sm bg-gradient-to-r from-orange-500 to-orange-600"
+                          style={{ width: lead.status === "Hot" ? "90%" : lead.status === "Warm" ? "60%" : "30%" }}
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
+                )) : (
+                  <div className="flex flex-col items-center justify-center py-20 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
+                    <Activity size={48} className="text-gray-300 mb-4" />
+                    <p className="text-gray-400 font-bold">No Recent Lead Data Found</p>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -865,29 +869,29 @@ export default function CRMDashboard() {
                   <Clock size={24} className="text-white" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-800">Priority Queues</h2>
-                  <p className="text-gray-500 text-sm font-medium">Daily follow-up tactical schedule</p>
+                  <h2 className="text-xl font-bold text-gray-800">Priority queues</h2>
+                  <p className="text-purple-500 text-sm font-semibold capitalize tracking-wide">Daily follow-up tactical schedule</p>
                 </div>
               </div>
               <div className="flex-1 overflow-y-auto max-h-[500px] custom-scrollbar px-2">
-                <div className="space-y-8 relative before:absolute before:left-[17px] before:top-2 before:bottom-2 before:w-px before:bg-slate-100">
+                <div className="space-y-3">
                   {upcomingTasks.length > 0 ? upcomingTasks.map((task, index) => (
-                    <div key={index} className="flex gap-6 relative pl-12 group cursor-pointer">
-                      <div className="absolute left-0 top-1 w-9 h-9 bg-white border-2 border-slate-100 text-slate-400 rounded-full flex items-center justify-center font-bold text-sm z-10 group-hover:text-purple-600 group-hover:border-purple-200 transition-all shadow-sm">
+                    <div key={index} className="flex gap-4 p-4 rounded-sm bg-orange-50/20 border border-orange-100 hover:border-orange-200 transition-all group cursor-pointer shadow-sm">
+                      <div className="w-9 h-9 bg-white border border-orange-100 text-orange-400 rounded-full flex-shrink-0 flex items-center justify-center font-bold text-sm group-hover:text-orange-600 group-hover:border-orange-300 transition-all shadow-sm">
                         {index + 1}
                       </div>
-                      <div className="flex-1 pb-6 border-b border-gray-50 last:border-0 last:pb-0">
+                      <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-xs font-bold text-purple-600 tracking-widest uppercase">{task.dueTime}</span>
-                          <div className={`text-[10px] font-bold px-3 py-0.5 rounded-sm capitalize border ${task.priority === 'High' ? 'bg-red-50 text-red-600 border-red-200' : task.priority === 'Medium' ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-teal-50 text-teal-700 border-teal-200'}`}>{task.priority} Priority</div>
+                          <span className="text-[10px] font-semibold text-orange-500 tracking-wide capitalize">{task.dueTime}</span>
+                          <div className={`text-[9px] font-bold px-2 py-0.5 rounded-sm capitalize border ${task.priority === 'High' ? 'bg-red-50 text-red-600 border-red-100' : task.priority === 'Medium' ? 'bg-amber-50 text-amber-600 border-amber-100' : 'bg-teal-50 text-teal-600 border-teal-100'}`}>{task.priority} Priority</div>
                         </div>
-                        <p className="text-base font-bold text-gray-800 leading-snug group-hover:text-purple-700 transition-colors capitalize">
+                        <p className="text-sm font-semibold text-gray-800 leading-snug group-hover:text-orange-700 transition-colors capitalize truncate">
                           {task.task}
                         </p>
                       </div>
                     </div>
                   )) : (
-                    <div className="pl-12 py-10 text-gray-400 font-bold">No Pending Tasks</div>
+                    <div className="py-10 text-center text-gray-400 font-bold">No Pending Tasks</div>
                   )}
                 </div>
               </div>
@@ -901,11 +905,11 @@ export default function CRMDashboard() {
               <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-orange-500/10 rounded-full -mr-40 -mt-40 blur-[100px] group-hover:scale-125 transition-all duration-1000"></div>
               <div className="relative z-10 mb-12 flex items-center justify-between">
                 <div>
-                  <h2 className="text-2xl font-bold text-white flex items-center gap-4">
-                    Consultant Champions
+                  <h2 className="text-xl font-bold text-white flex items-center gap-4">
+                    Consultant champions
                     <Award size={28} className="text-yellow-400 drop-shadow-lg" />
                   </h2>
-                  <p className="text-orange-500 text-sm font-bold capitalize mt-1">High-impact account management</p>
+                  <p className="text-orange-500 text-sm font-semibold capitalize tracking-wide mt-1.5">High-impact account management</p>
                 </div>
               </div>
               <div className="space-y-6 relative z-10">
@@ -950,17 +954,17 @@ export default function CRMDashboard() {
                   <BarChart3 size={24} className="text-white" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-800">Pipeline Structural Audit</h2>
-                  <p className="text-gray-500 text-sm font-medium">Deals distribution across active funnels</p>
+                  <h2 className="text-xl font-bold text-gray-800">Pipeline structural audit</h2>
+                  <p className="text-slate-500 text-[10px] font-semibold capitalize tracking-wide">Deals distribution across active funnels</p>
                 </div>
               </div>
               <div className="flex-1 overflow-x-auto">
                 <table className="w-full text-left">
                   <thead>
                     <tr className="bg-slate-50 border-b border-gray-100 shadow-sm">
-                      <th className="px-6 py-4 text-xs font-bold text-gray-400 capitalize">Pathway name</th>
-                      <th className="px-6 py-4 text-xs font-bold text-gray-400 capitalize text-center">Active leads</th>
-                      <th className="px-6 py-4 text-xs font-bold text-gray-400 capitalize text-right">Forecasted value</th>
+                      <th className="px-6 py-4 text-[14px] font-semibold text-orange-400 capitalize tracking-wide">Pathway name</th>
+                      <th className="px-6 py-4 text-[14px] font-semibold text-orange-400 capitalize tracking-wide text-center">Active leads</th>
+                      <th className="px-6 py-4 text-[14px] font-semibold text-orange-400 capitalize tracking-wide text-right">Forecasted value</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50 font-primary">
@@ -992,29 +996,25 @@ export default function CRMDashboard() {
                   <Zap size={16} className="text-orange-600 fill-orange-600" />
                 </div>
                 <div>
-                  <h2 className="text-gray-900 font-extrabold text-sm tracking-tight uppercase font-primary">
-                    Live Activity
+                  <h2 className="text-gray-900 font-bold text-sm tracking-tight capitalize font-primary">
+                    Live activity log
                   </h2>
-                  <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-0.5 font-primary">Real-time Pulse</p>
+                  <p className="text-sm text-orange-500 font-semibold capitalize tracking-wide mt-1 font-primary">Real-time pulse</p>
                 </div>
               </div>
               <div className="flex items-center gap-2 bg-white px-2 py-1 rounded-full border border-gray-100 shadow-sm">
                 <span className="flex h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
-                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-tighter">Live Monitor</span>
+                <span className="text-[10px] font-semibold text-gray-500 capitalize tracking-wide">Live monitor</span>
               </div>
             </div>
 
             {/* Activity List */}
-            <div className="flex-1 p-5 px-6 space-y-5 overflow-y-auto custom-scrollbar bg-white">
+            <div className="flex-1 p-5 px-6 space-y-3 overflow-y-auto custom-scrollbar bg-white">
               {activityFeed.length > 0 ? activityFeed.map((activity, i) => (
-                <div key={i} className="relative flex gap-4 group cursor-pointer transition-all">
-                  {i < activityFeed.length - 1 && (
-                    <div className="absolute left-[17px] top-10 bottom-[-28px] w-[2px] bg-slate-50 group-hover:bg-orange-100 transition-colors"></div>
-                  )}
-
+                <div key={i} className="p-3 bg-orange-50/20 border border-orange-100 rounded-sm hover:border-orange-200 transition-all group cursor-pointer flex gap-4 shadow-sm">
                   {/* Avatar/Icon Container with Badge */}
-                  <div className="relative z-10">
-                    <div className="w-9 h-9 rounded-full bg-white border border-gray-200 shadow-sm text-gray-700 flex-shrink-0 flex items-center justify-center font-bold text-[11px] group-hover:border-orange-200 group-hover:bg-orange-50 group-hover:text-orange-600 transition-all duration-300 uppercase overflow-hidden">
+                  <div className="relative flex-shrink-0">
+                    <div className="w-9 h-9 rounded-full bg-white border border-gray-200 shadow-sm text-gray-700 flex items-center justify-center font-bold text-[11px] group-hover:border-orange-400 group-hover:bg-orange-50 transition-all duration-300 uppercase overflow-hidden">
                       {activity.avatar_url ? (
                         <img
                           src={activity.avatar_url}
@@ -1031,60 +1031,29 @@ export default function CRMDashboard() {
                         {activity.avatar}
                       </span>
                     </div>
-                    <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-white rounded-full flex items-center justify-center shadow-sm border border-gray-50">
-                      <div className={`w-2 h-2 rounded-full ${activity.action?.toLowerCase().includes('won') ? 'bg-green-500 shadow-[0_0_5px_#22c55e]' : activity.action?.toLowerCase().includes('conversion') ? 'bg-blue-500 shadow-[0_0_5px_#3b82f6]' : 'bg-orange-500 shadow-[0_0_5px_#f97316]'}`}></div>
+                    <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-white rounded-full flex items-center justify-center shadow-sm border border-gray-50">
+                      <div className={`w-1.5 h-1.5 rounded-full ${activity.action?.toLowerCase().includes('won') ? 'bg-green-500 shadow-[0_0_5px_#22c55e]' : activity.action?.toLowerCase().includes('conversion') ? 'bg-blue-500 shadow-[0_0_5px_#3b82f6]' : 'bg-orange-500 shadow-[0_0_5px_#f97316]'}`}></div>
                     </div>
                   </div>
 
-                  <div className="flex-1 min-w-0 pb-1">
-                    <div className="flex justify-between items-start mb-0.5">
-                      <span className="text-[13px] font-bold text-gray-800 truncate group-hover:text-orange-600 transition-colors font-primary">{activity.user}</span>
-                      <span className="text-[9px] font-extrabold text-gray-400 uppercase tracking-tighter whitespace-nowrap ml-2 bg-slate-50 px-1.5 py-0.5 rounded-sm border border-slate-100">{activity.time}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between items-start mb-1">
+                      <span className="text-[13px] font-semibold text-gray-800 truncate group-hover:text-orange-600 transition-colors font-primary">{activity.user}</span>
+                      <span className="text-[10px] font-bold text-orange-500 uppercase tracking-tight whitespace-nowrap ml-2 bg-white px-2 py-1 rounded-sm border border-orange-50 shadow-sm">{activity.time}</span>
                     </div>
-                    <p className="text-[12px] text-gray-500 leading-snug font-medium font-primary">
-                      <span className="capitalize">{activity.action}</span> <span className="text-gray-900 font-bold">{activity.target}</span> <br />
-
+                    <p className="text-[11px] text-gray-500 leading-snug font-medium font-primary">
+                      <span className="capitalize">{activity.action}</span> <span className="text-gray-900 font-semibold">{activity.target}</span>
                     </p>
                   </div>
                 </div>
               )) : (
                 <div className="flex-1 flex items-center justify-center text-center p-10">
-                  <p className="text-gray-400 font-bold italic">Waiting for real-time activities...</p>
+                  <p className="text-gray-400 font-bold">Waiting for real-time activities...</p>
                 </div>
               )}
             </div>
 
-            {/* Bottom Insight Widget */}
-            {/* <div className="p-6 bg-slate-50 border-t border-gray-100 mt-auto shadow-[0_-10px_20px_-10px_rgba(0,0,0,0.05)]">
-              <div className="bg-white border border-gray-100 rounded-sm p-4 shadow-xl relative overflow-hidden group hover:border-orange-100 transition-all">
-                <div className="flex items-center justify-between mb-3">
-                  <div>
-                    <h4 className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-1 font-primary">Daily Goal Pulse</h4>
-                    <div className="flex items-baseline gap-1">
-                      <p className="text-xl font-black text-gray-900 tracking-tighter font-primary">{formatCurrency(dailyGoal.current)}</p>
-                      <p className="text-xs font-bold text-gray-400 font-primary">/ {formatCurrency(dailyGoal.target)}</p>
-                    </div>
-                  </div>
-                  <div className="p-2 bg-orange-50 rounded-full shadow-inner">
-                    <TrendingUp size={16} className="text-orange-600" />
-                  </div>
-                </div>
-                <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden shadow-inner flex items-center px-0.5">
-                  <div
-                    className="bg-gradient-to-r from-orange-500 to-orange-400 h-1 rounded-full transition-all duration-1000 shadow-sm relative"
-                    style={{ width: `${Math.min(100, (dailyGoal.current / dailyGoal.target) * 100)}%` }}
-                  >
-                  </div>
-                </div>
-                <div className="flex justify-between mt-3">
-                  <p className="text-[10px] font-extrabold text-gray-400 uppercase font-primary flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 bg-orange-500 rounded-full"></span>
-                    {Math.round((dailyGoal.current / dailyGoal.target) * 100)}% Progress
-                  </p>
-                  <p className="text-[10px] font-extrabold text-orange-600 uppercase font-primary">{formatCurrency(Math.max(0, dailyGoal.target - dailyGoal.current))} Remaining</p>
-                </div>
-              </div>
-            </div> */}
+
           </div>
         </div>
 

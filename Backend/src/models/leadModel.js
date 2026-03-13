@@ -1067,14 +1067,25 @@ const Lead = {
     getAnalysis: async (userId) => {
         const [perfMetrics] = await pool.query(`
             SELECT 
-                (SELECT ROUND((SUM(CASE WHEN tag = 'Won' THEN 1 ELSE 0 END) / NULLIF(COUNT(*), 0)) * 100, 1) FROM leads WHERE user_id = ?) as conversion_rate,
-                (SELECT ROUND(AVG(TIMESTAMPDIFF(MINUTE, l.created_at, lc.call_date)) / 60, 1) 
-                 FROM leads l 
-                 JOIN (SELECT lead_id, MIN(call_date) as call_date FROM lead_calls GROUP BY lead_id) lc ON l.id = lc.lead_id
-                 WHERE l.user_id = ?) as avg_response_time,
-                (SELECT ROUND(AVG(conversion_probability) / 10, 1) FROM leads WHERE user_id = ?) as success_score,
-                (SELECT ROUND((SUM(CASE WHEN status = 'Open' THEN 1 ELSE 0 END) / NULLIF(COUNT(*), 0)) * 100, 1) FROM leads WHERE user_id = ?) as active_rate
-        `, [userId, userId, userId, userId]);
+                (SELECT SUM(value) FROM leads WHERE user_id = ? AND is_deleted = 0) as total_pipeline_value,
+                (SELECT COUNT(*) FROM leads WHERE user_id = ? AND created_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL 30 DAY)) as current_month_leads,
+                (SELECT COUNT(*) FROM leads WHERE user_id = ? AND created_at BETWEEN DATE_SUB(UTC_TIMESTAMP(), INTERVAL 60 DAY) AND DATE_SUB(UTC_TIMESTAMP(), INTERVAL 30 DAY)) as last_month_leads,
+                (SELECT ROUND(AVG(TIMESTAMPDIFF(HOUR, created_at, updated_at)) / 24, 1) FROM leads WHERE user_id = ? AND tag = 'Won') as avg_sales_cycle,
+                (SELECT COUNT(*) FROM leads WHERE user_id = ? AND tag = 'Won') as won_leads,
+                (SELECT COUNT(*) FROM leads WHERE user_id = ? AND tag IN ('Lost', 'Dropped', 'Lost Lead')) as lost_leads
+        `, [userId, userId, userId, userId, userId, userId]);
+
+        const stats = perfMetrics[0];
+        
+        // Calculate velocity (growth %)
+        const currentLeads = stats.current_month_leads || 0;
+        const lastLeads = stats.last_month_leads || 0;
+        const velocity = lastLeads > 0 ? Math.round(((currentLeads - lastLeads) / lastLeads) * 100) : 100;
+
+        // Calculate Win Rate
+        const won = stats.won_leads || 0;
+        const lost = stats.lost_leads || 0;
+        const winRate = (won + lost) > 0 ? Math.round((won / (won + lost)) * 100) : 0;
 
         const [sources] = await pool.query(`
             SELECT 
@@ -1130,12 +1141,31 @@ const Lead = {
             LIMIT 5
         `, [userId]);
 
+        const [monthly] = await pool.query(`
+            SELECT 
+                DATE_FORMAT(d.month, '%b') as month,
+                COALESCE(COUNT(l.id), 0) as leads,
+                COALESCE(SUM(CASE WHEN l.tag = 'Won' THEN 1 ELSE 0 END), 0) as converted,
+                COALESCE(SUM(l.value), 0) as revenue
+            FROM (
+                SELECT DATE_SUB(DATE_FORMAT(CURRENT_DATE, '%Y-%m-01'), INTERVAL 5 MONTH) as month
+                UNION SELECT DATE_SUB(DATE_FORMAT(CURRENT_DATE, '%Y-%m-01'), INTERVAL 4 MONTH)
+                UNION SELECT DATE_SUB(DATE_FORMAT(CURRENT_DATE, '%Y-%m-01'), INTERVAL 3 MONTH)
+                UNION SELECT DATE_SUB(DATE_FORMAT(CURRENT_DATE, '%Y-%m-01'), INTERVAL 2 MONTH)
+                UNION SELECT DATE_SUB(DATE_FORMAT(CURRENT_DATE, '%Y-%m-01'), INTERVAL 1 MONTH)
+                UNION SELECT DATE_FORMAT(CURRENT_DATE, '%Y-%m-01')
+            ) d
+            LEFT JOIN leads l ON DATE_FORMAT(l.created_at, '%Y-%m') = DATE_FORMAT(d.month, '%Y-%m') AND l.user_id = ?
+            GROUP BY d.month
+            ORDER BY d.month ASC
+        `, [userId]);
+
         return {
             performanceMetrics: [
-                { title: "Conversion Rate", value: (perfMetrics[0].conversion_rate || 0) + "%", change: "+0%", trend: "up", icon: "Target", color: "from-orange-400 to-orange-500" },
-                { title: "Avg Response Time", value: (perfMetrics[0].avg_response_time || 0) + "h", change: "-0%", trend: "up", icon: "Clock", color: "from-orange-500 to-orange-600" },
-                { title: "Success Score", value: (perfMetrics[0].success_score || 0) + "/10", change: "+0", trend: "up", icon: "Award", color: "from-amber-500 to-orange-500" },
-                { title: "Active Rate", value: (perfMetrics[0].active_rate || 0) + "%", change: "+0%", trend: "up", icon: "Zap", color: "from-orange-600 to-red-500" }
+                { title: "Pipeline Value", value: "₹" + (stats.total_pipeline_value || 0).toLocaleString(), change: "+0%", trend: "up", icon: "DollarSign", color: "from-blue-400 to-blue-500", colorClass: "border-t-blue-500 bg-blue-50/50", iconColor: "text-blue-500" },
+                { title: "Lead Velocity", value: (velocity >= 0 ? "+" : "") + velocity + "%", change: velocity + "%", trend: velocity >= 0 ? "up" : "down", icon: "TrendingUp", color: "from-purple-400 to-purple-500", colorClass: "border-t-purple-500 bg-purple-50/50", iconColor: "text-purple-500" },
+                { title: "Sales Cycle", value: (stats.avg_sales_cycle || 0) + " Days", change: "Avg.", trend: "up", icon: "Clock", color: "from-amber-400 to-amber-500", colorClass: "border-t-amber-500 bg-amber-50/50", iconColor: "text-amber-500" },
+                { title: "Win/Loss Ratio", value: winRate + "%", change: "Win Rate", trend: "up", icon: "Target", color: "from-orange-400 to-orange-500", colorClass: "border-t-orange-500 bg-orange-50/50", iconColor: "text-orange-500" }
             ],
             sourceAnalysis: sources.map(s => ({
                 source: s.source,
@@ -1164,6 +1194,12 @@ const Lead = {
                 industry: i.industry,
                 percentage: i.percentage || 0,
                 count: i.count
+            })),
+            monthlyTrends: monthly.map(m => ({
+                month: m.month,
+                leads: m.leads,
+                converted: m.converted,
+                revenue: (m.revenue || 0).toLocaleString()
             }))
         };
     }
