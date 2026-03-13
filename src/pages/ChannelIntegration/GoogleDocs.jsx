@@ -372,6 +372,7 @@ const GoogleDocs = () => {
                     {/* Matrix Cards */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-3">
                         <NumberCard
+                            variant="matrix"
                             title="Total sheets"
                             number={stats.total}
                             icon={<FileSpreadsheet className="text-blue-600" size={24} />}
@@ -379,6 +380,7 @@ const GoogleDocs = () => {
                             lineBorderClass="border-blue-500"
                         />
                         <NumberCard
+                            variant="matrix"
                             title="Automated syncs"
                             number={stats.automated}
                             icon={<RefreshCw className="text-green-600" size={24} />}
@@ -386,6 +388,7 @@ const GoogleDocs = () => {
                             lineBorderClass="border-green-500"
                         />
                         <NumberCard
+                            variant="matrix"
                             title="Sync history"
                             number={stats.totalLogs}
                             icon={<History className="text-orange-600" size={24} />}
@@ -393,6 +396,7 @@ const GoogleDocs = () => {
                             lineBorderClass="border-orange-500"
                         />
                         <NumberCard
+                            variant="matrix"
                             title="Manual connections"
                             number={stats.manual}
                             icon={<Share2 className="text-purple-600" size={24} />}

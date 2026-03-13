@@ -272,13 +272,13 @@ const PipelineList = () => {
 
 
 
-                <button
+                {/* <button
                   onClick={() => navigate("/crm/pipeline/stages")}
                   className="flex items-center gap-2 px-4 py-3 rounded-sm border border-gray-300 text-gray-700 font-semibold hover:bg-gray-100 transition shadow-sm"
                 >
                   <Layers size={18} />
                   <span className="text-sm">Manage Stages</span>
-                </button>
+                </button> */}
 
                 <button
                   onClick={() => {
@@ -300,6 +300,7 @@ const PipelineList = () => {
           {/* Statement Card */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-3">
             <NumberCard
+              variant="matrix"
               title="Total Pipeline"
               number={pipelines.length}
               icon={<Users className="text-blue-600" size={24} />}
@@ -307,6 +308,7 @@ const PipelineList = () => {
               lineBorderClass="border-blue-500"
             />
             <NumberCard
+              variant="matrix"
               title="Total Value"
               number={pipelines.reduce((sum, p) => sum + (Number(p.totalDealValue) || 0), 0)}
               icon={<DollarSign className="text-green-600" size={24} />}
@@ -314,6 +316,7 @@ const PipelineList = () => {
               lineBorderClass="border-green-500"
             />
             <NumberCard
+              variant="matrix"
               title="Total Deals"
               number={pipelines.reduce((sum, p) => sum + (Number(p.noOfDeals) || 0), 0)}
               icon={<Handshake className="text-orange-600" size={24} />}
@@ -321,6 +324,7 @@ const PipelineList = () => {
               lineBorderClass="border-orange-500"
             />
             <NumberCard
+              variant="matrix"
               title="Total Active"
               number={pipelines.filter(p => p.status === 'Active').length}
               icon={<Target className="text-purple-600" size={24} />}

@@ -164,6 +164,7 @@ const IndiamartIntegration = () => {
                     {/* Stats Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                         <NumberCard
+                            variant="matrix"
                             title="Active Keys"
                             number={vendors.length}
                             icon={<ShieldCheck className="text-blue-600" size={24} />}
@@ -171,6 +172,7 @@ const IndiamartIntegration = () => {
                             lineBorderClass="border-blue-500"
                         />
                         <NumberCard
+                            variant="matrix"
                             title="IndiaMart Leads"
                             number="0"
                             icon={<ShoppingBag className="text-green-600" size={24} />}
@@ -178,6 +180,7 @@ const IndiamartIntegration = () => {
                             lineBorderClass="border-green-500"
                         />
                         <NumberCard
+                            variant="matrix"
                             title="Sync Status"
                             number={vendors.length > 0 ? "Healthy" : "Offline"}
                             icon={<Database className="text-orange-600" size={24} />}
@@ -185,6 +188,7 @@ const IndiamartIntegration = () => {
                             lineBorderClass="border-orange-500"
                         />
                         <NumberCard
+                            variant="matrix"
                             title="Last Fetch"
                             number="--"
                             icon={<RefreshCw className="text-purple-600" size={24} />}
@@ -367,76 +371,86 @@ const IndiamartIntegration = () => {
             </div>
 
             {/* Connect Modal */}
-            <Modal
-                isOpen={isConnectModalOpen}
-                onClose={() => setIsConnectModalOpen(false)}
-                headerVariant="simple"
-                maxWidth="max-w-md"
-            >
-                <form onSubmit={confirmConnect} className="font-primary">
-                    <div className="flex justify-center mb-6">
-                        <div className="w-20 h-20 bg-orange-600 text-white rounded-lg flex items-center justify-center font-bold text-4xl shadow-xl rotate-3">
-                            IM
-                        </div>
+            {(() => {
+                const connectFooter = (
+                    <div className="flex items-center justify-end w-full gap-3">
+                        <button
+                            type="button"
+                            onClick={() => setIsConnectModalOpen(false)}
+                            className="px-6 py-2.5 rounded-sm border-2 border-gray-200 text-gray-500 font-bold hover:bg-gray-50 hover:text-gray-700 transition-all font-primary text-sm bg-white shadow-sm"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="button"
+                            onClick={confirmConnect}
+                            disabled={isConnecting}
+                            className="px-8 py-2.5 rounded-sm bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold hover:shadow-orange-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all font-primary text-sm flex items-center gap-2 shadow-md disabled:opacity-70 disabled:cursor-not-allowed"
+                        >
+                            {isConnecting ? (
+                                <>
+                                    <RefreshCw size={18} className="animate-spin" />
+                                    Authenticating...
+                                </>
+                            ) : (
+                                <>
+                                    <ShieldCheck size={18} /> Authenticate & Connect
+                                </>
+                            )}
+                        </button>
                     </div>
+                );
 
-                    <div className="text-center mb-8">
-                        <h2 className="text-2xl font-bold text-gray-800">B2B Lead Sync</h2>
-                        <p className="text-gray-500 text-sm mt-1">Connect your IndiaMart account via CRM API Key.</p>
-                    </div>
-
-                    <div className="space-y-4 text-left">
-                        <div className="space-y-1.5">
-                            <label className="flex items-center gap-2 text-[14px] font-bold text-gray-700 capitalize">
-                                <PhoneCall size={14} className="text-orange-500" /> IndiaMart mobile number
-                            </label>
-                            <input
-                                type="text"
-                                placeholder="e.g. 9876543210"
-                                value={formData.account_name}
-                                onChange={(e) => setFormData({ ...formData, account_name: e.target.value })}
-                                required
-                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500 focus:ring-opacity-20 outline-none font-bold text-sm shadow-sm transition-all"
-                            />
-                        </div>
-                        <div className="space-y-1.5">
-                            <label className="flex items-center gap-2 text-[14px] font-bold text-gray-700 capitalize">
-                                <Database size={14} className="text-orange-500" /> CRM API key
-                            </label>
-                            <div className="relative">
-                                <input
-                                    type="password"
-                                    placeholder="Paste your IndiaMart API Key"
-                                    value={formData.api_key}
-                                    onChange={(e) => setFormData({ ...formData, api_key: e.target.value })}
-                                    required
-                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500 focus:ring-opacity-20 outline-none font-bold text-sm shadow-sm transition-all"
-                                />
-                            </div>
-                            <p className="text-[10px] text-gray-400 mt-2 italic leading-tight">
-                                * You can find this in your IndiaMart Seller Panel under Settings {">"} CRM Integration.
-                            </p>
-                        </div>
-                    </div>
-
-                    <button
-                        type="submit"
-                        disabled={isConnecting}
-                        className="w-full mt-8 py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold rounded-sm shadow-xl hover:shadow-orange-200 transition-all uppercase text-xs tracking-widest active:scale-95 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                return (
+                    <Modal
+                        isOpen={isConnectModalOpen}
+                        onClose={() => setIsConnectModalOpen(false)}
+                        title="B2B Lead Sync"
+                        subtitle="Connect your IndiaMart account via CRM API Key to sync enquiries automatically."
+                        icon={<ShoppingBag size={24} />}
+                        headerVariant="orange"
+                        maxWidth="max-w-md"
+                        footer={connectFooter}
                     >
-                        {isConnecting ? (
-                            <>
-                                <RefreshCw size={18} className="animate-spin" />
-                                Authenticating...
-                            </>
-                        ) : (
-                            <>
-                                <ShieldCheck size={18} /> Authenticate & Connect
-                            </>
-                        )}
-                    </button>
-                </form>
-            </Modal>
+                        <div className="space-y-6 pt-2">
+                            <form onSubmit={confirmConnect} className="space-y-5 text-left font-primary">
+                                <div className="space-y-2">
+                                    <label className="text-sm font-bold text-gray-700 capitalize mb-2 block">
+                                        <PhoneCall size={16} className="text-orange-500 inline mr-2" />
+                                        IndiaMart mobile number <span className="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        placeholder="e.g. 9876543210"
+                                        value={formData.account_name}
+                                        onChange={(e) => setFormData({ ...formData, account_name: e.target.value })}
+                                        required
+                                        className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-1 focus:ring-[#FF7B1D]/20 outline-none transition-all text-sm font-semibold"
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-sm font-bold text-gray-700 capitalize mb-2 block">
+                                        <Database size={16} className="text-orange-500 inline mr-2" />
+                                        CRM API key <span className="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        type="password"
+                                        placeholder="Paste your IndiaMart API Key"
+                                        value={formData.api_key}
+                                        onChange={(e) => setFormData({ ...formData, api_key: e.target.value })}
+                                        required
+                                        className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-1 focus:ring-[#FF7B1D]/20 outline-none transition-all text-sm font-semibold"
+                                    />
+                                    <p className="text-[10px] text-gray-400 mt-2 italic leading-tight">
+                                        * You can find this in your IndiaMart Seller Panel under Settings {">"} CRM Integration.
+                                    </p>
+                                </div>
+                            </form>
+                        </div>
+                    </Modal>
+                );
+            })()}
         </DashboardLayout>
     );
 };

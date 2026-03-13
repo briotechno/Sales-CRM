@@ -166,33 +166,37 @@ const MetaIntegration = () => {
                     {/* Stats Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                         <NumberCard
-                            title="Connected Pages"
-                            number={connectedPages.length}
-                            icon={<Facebook className="text-blue-600" size={24} />}
-                            iconBgColor="bg-blue-100"
-                            lineBorderClass="border-blue-500"
-                        />
-                        <NumberCard
-                            title="Leads Sync (24h)"
-                            number="0"
-                            icon={<RefreshCw className="text-green-600" size={24} />}
-                            iconBgColor="bg-green-100"
-                            lineBorderClass="border-green-500"
-                        />
-                        <NumberCard
-                            title="Sync Success Rate"
-                            number="100%"
-                            icon={<CheckCircle className="text-orange-600" size={24} />}
-                            iconBgColor="bg-orange-100"
-                            lineBorderClass="border-orange-500"
-                        />
-                        <NumberCard
-                            title="Active Webhooks"
-                            number={connectedPages.length > 0 ? "1" : "0"}
-                            icon={<Link2 className="text-purple-600" size={24} />}
-                            iconBgColor="bg-purple-100"
-                            lineBorderClass="border-purple-500"
-                        />
+                        variant="matrix"
+                        title="Connected Pages"
+                        number={connectedPages.length}
+                        icon={<Facebook className="text-blue-600" size={24} />}
+                        iconBgColor="bg-blue-100"
+                        lineBorderClass="border-blue-500"
+                    />
+                    <NumberCard
+                        variant="matrix"
+                        title="Total Sync Leads"
+                        number={connectedPages.reduce((acc, p) => acc + (p.leadsCount || 0), 0)}
+                        icon={<RefreshCw className="text-green-600" size={24} />}
+                        iconBgColor="bg-green-100"
+                        lineBorderClass="border-green-500"
+                    />
+                    <NumberCard
+                        variant="matrix"
+                        title="Sync Success Rate"
+                        number="98.5%"
+                        icon={<CheckCircle className="text-orange-600" size={24} />}
+                        iconBgColor="bg-orange-100"
+                        lineBorderClass="border-orange-500"
+                    />
+                    <NumberCard
+                        variant="matrix"
+                        title="Last Activity"
+                        number="2m ago"
+                        icon={<Clock className="text-purple-600" size={24} />}
+                        iconBgColor="bg-purple-100"
+                        lineBorderClass="border-purple-500"
+                    />
                     </div>
 
                     {/* Tabs Navigation - Premium Segmented Pill UI */}
@@ -384,70 +388,21 @@ const MetaIntegration = () => {
             </div>
 
             {/* Connect Modal */}
-            <Modal
-                isOpen={isConnectModalOpen}
-                onClose={() => setIsConnectModalOpen(false)}
-                headerVariant="simple"
-                maxWidth="max-w-md"
-                footer={null}
-            >
-                <div className="flex flex-col items-center text-center font-primary p-2">
-                    <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mb-6">
-                        <Facebook className="text-[#1877F2]" size={48} />
-                    </div>
-                    <h2 className="text-2xl font-bold text-gray-800 mb-2">Connect Meta Assets</h2>
-                    <p className="text-gray-500 text-sm mb-6 leading-relaxed">
-                        Connect your Facebook Business Manager to import leads from your Ads campaigns. Make sure you have Admin access to the page.
-                    </p>
-
-                    <form onSubmit={confirmConnect} className="w-full space-y-4 text-left font-primary">
-                        <div className="space-y-1.5">
-                            <label className="flex items-center gap-2 text-[14px] font-bold text-gray-700 capitalize">
-                                <Users size={14} className="text-orange-500" /> Account name / Page name
-                            </label>
-                            <input
-                                type="text"
-                                placeholder="e.g. Facebook Main Page"
-                                value={formData.account_name}
-                                onChange={(e) => setFormData({ ...formData, account_name: e.target.value })}
-                                required
-                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500 focus:ring-opacity-20 outline-none font-bold text-sm transition-all"
-                            />
-                        </div>
-
-                        <div className="space-y-1.5">
-                            <label className="flex items-center gap-2 text-[14px] font-bold text-gray-700 capitalize">
-                                <Settings size={14} className="text-orange-500" /> Page ID
-                            </label>
-                            <input
-                                type="text"
-                                placeholder="Enter your Facebook Page ID"
-                                value={formData.page_id}
-                                onChange={(e) => setFormData({ ...formData, page_id: e.target.value })}
-                                required
-                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500 focus:ring-opacity-20 outline-none font-bold text-sm transition-all"
-                            />
-                        </div>
-
-                        <div className="space-y-1.5">
-                            <label className="flex items-center gap-2 text-[14px] font-bold text-gray-700 capitalize">
-                                <Link2 size={14} className="text-orange-500" /> Access token (API Key)
-                            </label>
-                            <input
-                                type="password"
-                                placeholder="Paste Page Access Token here"
-                                value={formData.api_key}
-                                onChange={(e) => setFormData({ ...formData, api_key: e.target.value })}
-                                required
-                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500 focus:ring-opacity-20 outline-none font-bold text-sm transition-all"
-                            />
-                            <p className="text-[10px] text-gray-400 mt-1 italic leading-tight">* Use a Long-lived User Token or Page Token for uninterrupted lead sync.</p>
-                        </div>
-
+            {(() => {
+                const connectFooter = (
+                    <div className="flex items-center justify-end w-full gap-3">
                         <button
-                            type="submit"
+                            type="button"
+                            onClick={() => setIsConnectModalOpen(false)}
+                            className="px-6 py-2.5 rounded-sm border-2 border-gray-200 text-gray-500 font-bold hover:bg-gray-50 hover:text-gray-700 transition-all font-primary text-sm bg-white shadow-sm"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="button"
+                            onClick={confirmConnect}
                             disabled={isConnecting}
-                            className="w-full mt-6 py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold rounded-sm shadow-xl hover:shadow-orange-200 transition-all uppercase text-xs tracking-widest active:scale-95 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                            className="px-8 py-2.5 rounded-sm bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold hover:shadow-orange-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all font-primary text-sm flex items-center gap-2 shadow-md disabled:opacity-70 disabled:cursor-not-allowed"
                         >
                             {isConnecting ? (
                                 <>
@@ -460,9 +415,74 @@ const MetaIntegration = () => {
                                 </>
                             )}
                         </button>
-                    </form>
-                </div>
-            </Modal>
+                    </div>
+                );
+
+                return (
+                    <Modal
+                        isOpen={isConnectModalOpen}
+                        onClose={() => setIsConnectModalOpen(false)}
+                        title="Connect Meta Assets"
+                        subtitle="Connect your Facebook Business Manager to import leads from your Ads campaigns. Make sure you have Admin access."
+                        icon={<Facebook size={24} />}
+                        headerVariant="orange"
+                        maxWidth="max-w-md"
+                        footer={connectFooter}
+                    >
+                        <div className="space-y-6 pt-2">
+                            <form onSubmit={confirmConnect} className="space-y-5 text-left font-primary">
+                                <div className="space-y-2">
+                                    <label className="text-sm font-bold text-gray-700 capitalize mb-2 block">
+                                        <Users size={16} className="text-orange-500 inline mr-2" />
+                                        Account name / Page name <span className="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        placeholder="e.g. Facebook Main Page"
+                                        value={formData.account_name}
+                                        onChange={(e) => setFormData({ ...formData, account_name: e.target.value })}
+                                        required
+                                        className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-1 focus:ring-[#FF7B1D]/20 outline-none transition-all text-sm font-semibold"
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-sm font-bold text-gray-700 capitalize mb-2 block">
+                                        <Settings size={16} className="text-orange-500 inline mr-2" />
+                                        Page ID <span className="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        placeholder="Enter your Facebook Page ID"
+                                        value={formData.page_id}
+                                        onChange={(e) => setFormData({ ...formData, page_id: e.target.value })}
+                                        required
+                                        className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-1 focus:ring-[#FF7B1D]/20 outline-none transition-all text-sm font-semibold"
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-sm font-bold text-gray-700 capitalize mb-2 block">
+                                        <Link2 size={16} className="text-orange-500 inline mr-2" />
+                                        Access token (API Key) <span className="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        type="password"
+                                        placeholder="Paste Page Access Token here"
+                                        value={formData.api_key}
+                                        onChange={(e) => setFormData({ ...formData, api_key: e.target.value })}
+                                        required
+                                        className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-1 focus:ring-[#FF7B1D]/20 outline-none transition-all text-sm font-semibold"
+                                    />
+                                    <p className="text-[10px] text-gray-400 mt-2 italic leading-relaxed bg-gray-50 p-2 rounded border border-gray-100">
+                                        * Use a Long-lived User Token or Page Token for uninterrupted lead sync.
+                                    </p>
+                                </div>
+                            </form>
+                        </div>
+                    </Modal>
+                );
+            })()}
         </DashboardLayout>
     );
 };
