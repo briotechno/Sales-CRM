@@ -29,6 +29,7 @@ export default function BulkUploadLeads({ onClose }) {
   const employees = employeesData?.employees || [];
 
   const [leadType, setLeadType] = useState("Individual");
+  const [assignmentType, setAssignmentType] = useState("Self");
   const [tags, setTags] = useState([]);
   const [tagInput, setTagInput] = useState("");
   const [formData, setFormData] = useState({
@@ -116,7 +117,7 @@ export default function BulkUploadLeads({ onClose }) {
           state: row.State || row.state,
           country: row.Country || row.country,
           pincode: row.Zipcode || row.pincode || row["Zip Code"],
-          owner: formData.owner,
+          owner: assignmentType === "Self" ? formData.owner : null,
           lead_source: formData.lead_source,
           tag: tags.join(", "),
         }));
@@ -164,37 +165,76 @@ export default function BulkUploadLeads({ onClose }) {
         {/* Scrollable Form Content */}
         <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5 max-h-[70vh]">
           {/* Lead Type */}
-          <div className="bg-orange-50 p-4 rounded-xl border-2 border-orange-100">
-            <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-3">
-              <Briefcase size={16} className="text-[#FF7B1D]" />
-              Lead Type <span className="text-red-500">*</span>
-            </label>
-            <div className="flex gap-4">
-              <label className="flex items-center cursor-pointer group">
-                <input
-                  type="radio"
-                  value="Individual"
-                  checked={leadType === "Individual"}
-                  onChange={(e) => setLeadType(e.target.value)}
-                  className="w-5 h-5 text-[#FF7B1D]"
-                />
-                <span className="ml-3 text-sm font-semibold text-gray-800 group-hover:text-[#FF7B1D] flex items-center gap-2">
-                  <User size={16} /> Individual
-                </span>
+          <div className="bg-orange-50 p-4 rounded-xl border-2 border-orange-100 flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="flex-1">
+              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-3">
+                <Briefcase size={16} className="text-[#FF7B1D]" />
+                Lead Type <span className="text-red-500">*</span>
               </label>
+              <div className="flex gap-4">
+                <label className="flex items-center cursor-pointer group">
+                  <input
+                    type="radio"
+                    value="Individual"
+                    checked={leadType === "Individual"}
+                    onChange={(e) => setLeadType(e.target.value)}
+                    className="w-5 h-5 text-[#FF7B1D]"
+                  />
+                  <span className="ml-3 text-sm font-semibold text-gray-800 group-hover:text-[#FF7B1D] flex items-center gap-2">
+                    <User size={16} /> Individual
+                  </span>
+                </label>
 
-              <label className="flex items-center cursor-pointer group">
-                <input
-                  type="radio"
-                  value="Organization"
-                  checked={leadType === "Organization"}
-                  onChange={(e) => setLeadType(e.target.value)}
-                  className="w-5 h-5 text-[#FF7B1D]"
-                />
-                <span className="ml-3 text-sm font-semibold text-gray-800 group-hover:text-[#FF7B1D] flex items-center gap-2">
-                  <Building2 size={16} /> Organization
-                </span>
+                <label className="flex items-center cursor-pointer group">
+                  <input
+                    type="radio"
+                    value="Organization"
+                    checked={leadType === "Organization"}
+                    onChange={(e) => setLeadType(e.target.value)}
+                    className="w-5 h-5 text-[#FF7B1D]"
+                  />
+                  <span className="ml-3 text-sm font-semibold text-gray-800 group-hover:text-[#FF7B1D] flex items-center gap-2">
+                    <Building2 size={16} /> Organization
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            {/* Vertical Divider */}
+            <div className="hidden md:block w-px bg-orange-200 h-12"></div>
+
+            {/* Assignment Type */}
+            <div className="flex-1">
+              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-3">
+                <User size={16} className="text-[#FF7B1D]" />
+                Lead Assignment <span className="text-red-500">*</span>
               </label>
+              <div className="flex gap-4">
+                <label className="flex items-center cursor-pointer group">
+                  <input
+                    type="radio"
+                    value="Self"
+                    checked={assignmentType === "Self"}
+                    onChange={(e) => setAssignmentType(e.target.value)}
+                    className="w-5 h-5 text-[#FF7B1D]"
+                  />
+                  <span className="ml-3 text-sm font-semibold text-gray-800 group-hover:text-[#FF7B1D] transition-colors">
+                    Assign to me
+                  </span>
+                </label>
+                <label className="flex items-center cursor-pointer group">
+                  <input
+                    type="radio"
+                    value="System"
+                    checked={assignmentType === "System"}
+                    onChange={(e) => setAssignmentType(e.target.value)}
+                    className="w-5 h-5 text-[#FF7B1D]"
+                  />
+                  <span className="ml-3 text-sm font-semibold text-gray-800 group-hover:text-[#FF7B1D] transition-colors">
+                    System Auto-assign
+                  </span>
+                </label>
+              </div>
             </div>
           </div>
 
@@ -217,8 +257,10 @@ export default function BulkUploadLeads({ onClose }) {
                     type="text"
                     readOnly
                     value={
-                      employees.find(emp => (emp.user_id || emp.id) == (user?.id || user?.user_id))?.employee_name ||
-                      user?.employee_name || user?.name || (user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : "") || "Self"
+                      assignmentType === "Self" ? (
+                        employees.find(emp => (emp.user_id || emp.id) == (user?.id || user?.user_id))?.employee_name ||
+                        user?.employee_name || user?.name || (user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : "") || "Self"
+                      ) : "System Auto-assigned"
                     }
                     className={inputStyles + " bg-gray-50 cursor-not-allowed border-gray-100"}
                   />

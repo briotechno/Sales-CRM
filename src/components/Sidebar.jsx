@@ -254,6 +254,12 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           path: "/crm/leads/dashboard",
           permission: "Lead Dashboard"
         },
+        {
+          name: "Goal Dashbaord",
+          icon: <Target size={22} />,
+          path: "/crm/goals",
+          permission: "Leads Management"
+        },
       ],
     },
     {
@@ -369,7 +375,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           permission: "Pipeline Management",
           children: [
             { name: "Manage Pipeline", path: "/crm/pipeline/manage" },
-            { name: "Manage Stages", path: "/crm/pipeline/stages" },
+            // { name: "Manage Stages", path: "/crm/pipeline/stages" },
             { name: "Analytics", path: "/crm/pipeline/analytics" },
           ],
         },
@@ -400,12 +406,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           path: "/crm/channel/settings",
           permission: "Leads Management"
         },
-        {
-          name: "Goal Setting",
-          icon: <Target size={22} />,
-          path: "/crm/goals",
-          permission: "Leads Management"
-        },
+
       ],
     },
     {

@@ -62,6 +62,7 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
   const { user } = useSelector((state) => state.auth);
 
   const [leadType, setLeadType] = useState("Individual");
+  const [assignmentType, setAssignmentType] = useState("Self");
   const [visibility, setVisibility] = useState("Public");
   const [tags, setTags] = useState([]);
   const [tagInput, setTagInput] = useState("");
@@ -129,7 +130,7 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
     lead_owner: ""
   });
 
-  const selectedPipeline = pipelines?.find(p => p.id == formData.pipeline_id);
+  const selectedPipeline = (formData && pipelines) ? pipelines.find(p => p.id == formData.pipeline_id) : null;
   const filteredStages = selectedPipeline?.stages || [];
 
   // Interested-in options
@@ -173,16 +174,20 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
 
   // Set default lead owner to logged-in user
   useEffect(() => {
-    if (!leadToEdit && user && !formData.lead_owner) {
-      const name = user.employee_name ||
-        user.name ||
-        (user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : null) ||
-        user.username ||
-        "Unknown User";
+    if (!leadToEdit && user) {
+      if (assignmentType === "Self") {
+        const name = user.employee_name ||
+          user.name ||
+          (user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : null) ||
+          user.username ||
+          "Unknown User";
 
-      setFormData(prev => ({ ...prev, lead_owner: name }));
+        setFormData(prev => ({ ...prev, lead_owner: name }));
+      } else {
+        setFormData(prev => ({ ...prev, lead_owner: "System Auto-assigned" }));
+      }
     }
-  }, [user, leadToEdit]);
+  }, [user, leadToEdit, assignmentType]);
 
   useEffect(() => {
     if (leadToEdit) {
@@ -545,7 +550,7 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
       dob: formData.dob || null,
       custom_fields: JSON.stringify(customFields.filter(cf => cf.label && cf.value)),
       contact_persons: leadType === "Organization" ? JSON.stringify(contactPersons) : null,
-      lead_owner: formData.lead_owner,
+      lead_owner: assignmentType === "Self" ? formData.lead_owner : null,
       // owner_name: formData.lead_owner,
       // owner: formData.lead_owner
     };
@@ -615,36 +620,76 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
         <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
 
           {/* Lead Type Selection */}
-          <div className="bg-orange-50 p-4 rounded-xl border-2 border-orange-100">
-            <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-3">
-              <Briefcase size={16} className="text-[#FF7B1D]" />
-              Lead Type <span className="text-red-500">*</span>
-            </label>
-            <div className="flex gap-4">
-              <label className="flex items-center cursor-pointer group">
-                <input
-                  type="radio"
-                  value="Individual"
-                  checked={leadType === "Individual"}
-                  onChange={(e) => setLeadType(e.target.value)}
-                  className="w-5 h-5 text-[#FF7B1D]"
-                />
-                <span className="ml-3 text-sm font-semibold text-gray-800 group-hover:text-[#FF7B1D] transition-colors">
-                  Individual
-                </span>
+          <div className="bg-orange-50 p-4 rounded-xl border-2 border-orange-100 flex flex-col md:flex-row md:items-center justify-between gap-6">
+            {/* Lead Type */}
+            <div className="flex-1">
+              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-3">
+                <Briefcase size={16} className="text-[#FF7B1D]" />
+                Lead Type <span className="text-red-500">*</span>
               </label>
-              <label className="flex items-center cursor-pointer group">
-                <input
-                  type="radio"
-                  value="Organization"
-                  checked={leadType === "Organization"}
-                  onChange={(e) => setLeadType(e.target.value)}
-                  className="w-5 h-5 text-[#FF7B1D]"
-                />
-                <span className="ml-3 text-sm font-semibold text-gray-800 group-hover:text-[#FF7B1D] transition-colors">
-                  Organization
-                </span>
+              <div className="flex gap-4">
+                <label className="flex items-center cursor-pointer group">
+                  <input
+                    type="radio"
+                    value="Individual"
+                    checked={leadType === "Individual"}
+                    onChange={(e) => setLeadType(e.target.value)}
+                    className="w-5 h-5 text-[#FF7B1D]"
+                  />
+                  <span className="ml-3 text-sm font-semibold text-gray-800 group-hover:text-[#FF7B1D] transition-colors">
+                    Individual
+                  </span>
+                </label>
+                <label className="flex items-center cursor-pointer group">
+                  <input
+                    type="radio"
+                    value="Organization"
+                    checked={leadType === "Organization"}
+                    onChange={(e) => setLeadType(e.target.value)}
+                    className="w-5 h-5 text-[#FF7B1D]"
+                  />
+                  <span className="ml-3 text-sm font-semibold text-gray-800 group-hover:text-[#FF7B1D] transition-colors">
+                    Organization
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            {/* Vertical Divider */}
+            <div className="hidden md:block w-px bg-orange-200 h-12"></div>
+
+            {/* Assignment Type */}
+            <div className="flex-1">
+              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-3">
+                <User size={16} className="text-[#FF7B1D]" />
+                Lead Assignment <span className="text-red-500">*</span>
               </label>
+              <div className="flex gap-4">
+                <label className="flex items-center cursor-pointer group">
+                  <input
+                    type="radio"
+                    value="Self"
+                    checked={assignmentType === "Self"}
+                    onChange={(e) => setAssignmentType(e.target.value)}
+                    className="w-5 h-5 text-[#FF7B1D]"
+                  />
+                  <span className="ml-3 text-sm font-semibold text-gray-800 group-hover:text-[#FF7B1D] transition-colors">
+                    Assign to me
+                  </span>
+                </label>
+                <label className="flex items-center cursor-pointer group">
+                  <input
+                    type="radio"
+                    value="System"
+                    checked={assignmentType === "System"}
+                    onChange={(e) => setAssignmentType(e.target.value)}
+                    className="w-5 h-5 text-[#FF7B1D]"
+                  />
+                  <span className="ml-3 text-sm font-semibold text-gray-800 group-hover:text-[#FF7B1D] transition-colors">
+                    System Auto-assign
+                  </span>
+                </label>
+              </div>
             </div>
           </div>
 
@@ -674,12 +719,23 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
                   />
                 </div>
 
-                {/* 2. Mobile Number */}
                 <div className="group">
-                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-                    <Phone size={14} className="text-[#FF7B1D]" />
-                    Mobile Number
-                  </label>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                      <Phone size={14} className="text-[#FF7B1D]" />
+                      Mobile Number
+                    </label>
+                    <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        name="mobile_same_as_whatsapp"
+                        checked={formData.mobile_same_as_whatsapp}
+                        onChange={handleChange}
+                        className="w-4 h-4 text-[#FF7B1D] rounded-sm focus:ring-[#FF7B1D]"
+                      />
+                      Same as WhatsApp
+                    </label>
+                  </div>
                   <input
                     type="text"
                     name="mobile_number"
@@ -690,16 +746,6 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
                     onBlur={(e) => handleMobileBlur("Mobile Number", e.target.value)}
                     maxLength={15}
                   />
-                  <label className="flex items-center gap-2 mt-2 text-xs text-gray-600">
-                    <input
-                      type="checkbox"
-                      name="mobile_same_as_whatsapp"
-                      checked={formData.mobile_same_as_whatsapp}
-                      onChange={handleChange}
-                      className="w-4 h-4 text-[#FF7B1D]"
-                    />
-                    Same as WhatsApp Number
-                  </label>
                 </div>
 
                 {/* 3. Email */}
@@ -718,12 +764,23 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
                   />
                 </div>
 
-                {/* 4. Alternate Mobile Number */}
                 <div className="group">
-                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-                    <Phone size={14} className="text-[#FF7B1D]" />
-                    Alternate Mobile Number
-                  </label>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                      <Phone size={14} className="text-[#FF7B1D]" />
+                      Alternate Mobile Number
+                    </label>
+                    <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        name="alt_mobile_same_as_whatsapp"
+                        checked={formData.alt_mobile_same_as_whatsapp}
+                        onChange={handleChange}
+                        className="w-4 h-4 text-[#FF7B1D] rounded-sm focus:ring-[#FF7B1D]"
+                      />
+                      Same as WhatsApp
+                    </label>
+                  </div>
                   <input
                     type="text"
                     name="alt_mobile_number"
@@ -734,20 +791,10 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
                     onBlur={(e) => handleMobileBlur("Alternate Mobile Number", e.target.value)}
                     maxLength={15}
                   />
-                  <label className="flex items-center gap-2 mt-2 text-xs text-gray-600">
-                    <input
-                      type="checkbox"
-                      name="alt_mobile_same_as_whatsapp"
-                      checked={formData.alt_mobile_same_as_whatsapp}
-                      onChange={handleChange}
-                      className="w-4 h-4 text-[#FF7B1D]"
-                    />
-                    Same as WhatsApp Number
-                  </label>
                 </div>
 
                 {/* 5. WhatsApp Number */}
-                <div className="group col-span-2">
+                <div className="group">
                   <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
                     <Phone size={14} className="text-[#FF7B1D]" />
                     WhatsApp Number
@@ -765,13 +812,13 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
                   />
                 </div>
 
-                {/* 6. Profile Image — full width */}
-                <div className="group col-span-2">
+                {/* 6. Profile Image */}
+                <div className="group">
                   <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
                     <Upload size={14} className="text-[#FF7B1D]" />
                     Profile Image
                   </label>
-                  <div className="relative group/img">
+                  <div className="relative">
                     <input
                       type="file"
                       accept="image/*"
@@ -781,44 +828,37 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
                     />
 
                     {formData.profile_image ? (
-                      <div className="flex items-center gap-4 p-2 border-2 border-orange-100 rounded-lg bg-orange-50/50">
-                        <div className="relative shrink-0">
-                          <img
-                            src={formData.profile_image}
-                            alt="Profile Preview"
-                            className="w-20 h-20 object-cover rounded-lg border-2 border-white shadow-md"
-                          />
+                      <div className="flex items-center gap-3 px-4 py-3 border border-gray-200 rounded-sm bg-gray-50">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-gray-900 truncate">
+                            {formData.profile_image.substring(0, 50)}...
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <label
+                            htmlFor="profile-image-upload"
+                            className="p-1 text-orange-600 hover:bg-orange-100 rounded transition-colors cursor-pointer"
+                            title="Change Image"
+                          >
+                            <Upload size={14} />
+                          </label>
                           <button
                             type="button"
                             onClick={() => setFormData(prev => ({ ...prev, profile_image: "" }))}
-                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-md hover:bg-red-600 transition-all hover:scale-110"
+                            className="p-1 text-red-500 hover:bg-red-50 rounded transition-colors"
+                            title="Remove Image"
                           >
-                            <X size={12} />
+                            <Trash2 size={14} />
                           </button>
-                        </div>
-                        <div className="flex-1">
-                          <label
-                            htmlFor="profile-image-upload"
-                            className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-orange-200 text-orange-600 rounded-md text-xs font-bold hover:bg-orange-500 hover:text-white transition-all cursor-pointer shadow-sm"
-                          >
-                            <Upload size={14} />
-                            Change Photo
-                          </label>
-                          <p className="text-[10px] text-gray-400 mt-2 font-medium">Image uploaded successfully</p>
                         </div>
                       </div>
                     ) : (
                       <label
                         htmlFor="profile-image-upload"
-                        className="flex flex-col items-center justify-center gap-2 w-full py-6 border-2 border-dashed border-gray-200 rounded-lg hover:border-[#FF7B1D] hover:bg-orange-50 transition-all cursor-pointer group/label"
+                        className="flex items-center justify-between w-full px-4 py-3 border border-gray-200 rounded-sm hover:border-[#FF7B1D] hover:bg-orange-50 transition-all cursor-pointer group/label"
                       >
-                        <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center group-hover/label:bg-orange-100 transition-all">
-                          <Upload size={20} className="text-gray-400 group-hover/label:text-[#FF7B1D]" />
-                        </div>
-                        <div className="text-center">
-                          <span className="block text-xs font-bold text-gray-600">Click to upload photo</span>
-                          <span className="block text-[10px] text-gray-400 mt-0.5">JPG, PNG or GIF (Max 1MB)</span>
-                        </div>
+                        <span className="text-sm text-gray-400">Upload profile image</span>
+                        <Upload size={16} className="text-gray-400 group-hover/label:text-[#FF7B1D]" />
                       </label>
                     )}
                   </div>
@@ -1022,13 +1062,12 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
                   </select>
                 </div>
 
-                {/* 5. Company Logo — full width */}
                 <div className="group col-span-2">
                   <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
                     <Upload size={14} className="text-[#FF7B1D]" />
                     Company Logo
                   </label>
-                  <div className="relative group/logo">
+                  <div className="relative">
                     <input
                       type="file"
                       accept="image/*"
@@ -1038,44 +1077,37 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
                     />
 
                     {formData.company_logo ? (
-                      <div className="flex items-center gap-4 p-2 border-2 border-orange-100 rounded-lg bg-orange-50/50">
-                        <div className="relative shrink-0">
-                          <img
-                            src={formData.company_logo}
-                            alt="Logo Preview"
-                            className="w-20 h-20 object-contain bg-white rounded-lg border-2 border-white shadow-md p-1"
-                          />
+                      <div className="flex items-center gap-3 px-4 py-3 border border-gray-200 rounded-sm bg-gray-50">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-gray-900 truncate">
+                            {formData.company_logo.substring(0, 50)}...
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <label
+                            htmlFor="company-logo-upload"
+                            className="p-1 text-orange-600 hover:bg-orange-100 rounded transition-colors cursor-pointer"
+                            title="Change Logo"
+                          >
+                            <Upload size={14} />
+                          </label>
                           <button
                             type="button"
                             onClick={() => setFormData(prev => ({ ...prev, company_logo: "" }))}
-                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-md hover:bg-red-600 transition-all hover:scale-110"
+                            className="p-1 text-red-500 hover:bg-red-50 rounded transition-colors"
+                            title="Remove Logo"
                           >
-                            <X size={12} />
+                            <Trash2 size={14} />
                           </button>
-                        </div>
-                        <div className="flex-1">
-                          <label
-                            htmlFor="company-logo-upload"
-                            className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-orange-200 text-orange-600 rounded-md text-xs font-bold hover:bg-orange-500 hover:text-white transition-all cursor-pointer shadow-sm"
-                          >
-                            <Upload size={14} />
-                            Change Logo
-                          </label>
-                          <p className="text-[10px] text-gray-400 mt-2 font-medium">Logo uploaded successfully</p>
                         </div>
                       </div>
                     ) : (
                       <label
                         htmlFor="company-logo-upload"
-                        className="flex flex-col items-center justify-center gap-2 w-full py-6 border-2 border-dashed border-gray-200 rounded-lg hover:border-[#FF7B1D] hover:bg-orange-50 transition-all cursor-pointer group/label"
+                        className="flex items-center justify-between w-full px-4 py-3 border border-gray-200 rounded-sm hover:border-[#FF7B1D] hover:bg-orange-50 transition-all cursor-pointer group/label"
                       >
-                        <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center group-hover/label:bg-orange-100 transition-all">
-                          <Upload size={20} className="text-gray-400 group-hover/label:text-[#FF7B1D]" />
-                        </div>
-                        <div className="text-center">
-                          <span className="block text-xs font-bold text-gray-600">Upload Company Logo</span>
-                          <span className="block text-[10px] text-gray-400 mt-0.5">Max size 1MB</span>
-                        </div>
+                        <span className="text-sm text-gray-400">Upload company logo</span>
+                        <Upload size={16} className="text-gray-400 group-hover/label:text-[#FF7B1D]" />
                       </label>
                     )}
                   </div>
@@ -1246,7 +1278,7 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
                           <Upload size={14} className="text-[#FF7B1D]" />
                           Profile Photo
                         </label>
-                        <div className="relative group/contact-img">
+                        <div className="relative">
                           <input
                             type="file"
                             accept="image/*"
@@ -1256,38 +1288,37 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
                           />
 
                           {contact.profile_image ? (
-                            <div className="flex items-center gap-3 p-1.5 border-2 border-orange-100 rounded-lg bg-orange-50/50">
-                              <div className="relative shrink-0">
-                                <img
-                                  src={contact.profile_image}
-                                  alt="Contact Preview"
-                                  className="w-14 h-14 object-cover rounded-lg border-2 border-white shadow-sm"
-                                />
+                            <div className="flex items-center gap-2 px-3 py-3 border border-gray-200 rounded-sm bg-gray-50">
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm text-gray-900 truncate">
+                                  {contact.profile_image.substring(0, 30)}...
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-1 shrink-0">
+                                <label
+                                  htmlFor={`contact-image-upload-${index}`}
+                                  className="p-1 text-orange-600 hover:bg-orange-100 rounded transition-colors cursor-pointer"
+                                  title="Change Photo"
+                                >
+                                  <Upload size={12} />
+                                </label>
                                 <button
                                   type="button"
                                   onClick={() => handleContactPersonChange(index, 'profile_image', '')}
-                                  className="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full p-0.5 shadow-sm hover:bg-red-600 transition-all hover:scale-110"
+                                  className="p-1 text-red-500 hover:bg-red-50 rounded transition-colors"
+                                  title="Remove Photo"
                                 >
-                                  <X size={10} />
+                                  <Trash2 size={12} />
                                 </button>
-                              </div>
-                              <div className="flex-1">
-                                <label
-                                  htmlFor={`contact-image-upload-${index}`}
-                                  className="inline-flex items-center gap-1.5 px-2 py-1 bg-white border border-orange-200 text-orange-600 rounded text-[10px] font-bold hover:bg-orange-500 hover:text-white transition-all cursor-pointer shadow-xs"
-                                >
-                                  <Upload size={12} />
-                                  Change
-                                </label>
                               </div>
                             </div>
                           ) : (
                             <label
                               htmlFor={`contact-image-upload-${index}`}
-                              className="flex flex-col items-center justify-center gap-1 w-full py-4 border-2 border-dashed border-gray-200 rounded-lg hover:border-[#FF7B1D] hover:bg-orange-50 transition-all cursor-pointer group/label"
+                              className="flex items-center justify-between w-full px-3 py-3 border border-gray-200 rounded-sm hover:border-[#FF7B1D] hover:bg-orange-50 transition-all cursor-pointer group/label"
                             >
-                              <Upload size={16} className="text-gray-400 group-hover/label:text-[#FF7B1D]" />
-                              <span className="text-[10px] font-bold text-gray-600">Upload Photo</span>
+                              <span className="text-xs text-gray-400">Upload photo</span>
+                              <Upload size={14} className="text-gray-400 group-hover/label:text-[#FF7B1D]" />
                             </label>
                           )}
                         </div>
@@ -1338,10 +1369,21 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
                       </div>
 
                       <div className="group">
-                        <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-                          <Phone size={14} className="text-[#FF7B1D]" />
-                          Mobile Number
-                        </label>
+                        <div className="flex items-center justify-between mb-2">
+                          <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                            <Phone size={14} className="text-[#FF7B1D]" />
+                            Mobile Number
+                          </label>
+                          <label className="flex items-center gap-2 text-[10px] text-gray-600 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={contact.mobile_same_as_whatsapp}
+                              onChange={(e) => handleContactPersonChange(index, 'mobile_same_as_whatsapp', e.target.checked)}
+                              className="w-3.5 h-3.5 text-[#FF7B1D] rounded-sm"
+                            />
+                            Same as WhatsApp
+                          </label>
+                        </div>
                         <input
                           type="text"
                           placeholder="Enter mobile number"
@@ -1351,22 +1393,24 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
                           onBlur={(e) => handleMobileBlur(`Mobile Number (Contact ${index + 1})`, e.target.value)}
                           maxLength={15}
                         />
-                        <label className="flex items-center gap-2 mt-2 text-xs text-gray-600">
-                          <input
-                            type="checkbox"
-                            checked={contact.mobile_same_as_whatsapp}
-                            onChange={(e) => handleContactPersonChange(index, 'mobile_same_as_whatsapp', e.target.checked)}
-                            className="w-4 h-4 text-[#FF7B1D]"
-                          />
-                          Same as WhatsApp Number
-                        </label>
                       </div>
 
                       <div className="group">
-                        <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-                          <Phone size={14} className="text-[#FF7B1D]" />
-                          Alternate Mobile Number
-                        </label>
+                        <div className="flex items-center justify-between mb-2">
+                          <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                            <Phone size={14} className="text-[#FF7B1D]" />
+                            Alternate Mobile
+                          </label>
+                          <label className="flex items-center gap-2 text-[10px] text-gray-600 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={contact.alt_mobile_same_as_whatsapp}
+                              onChange={(e) => handleContactPersonChange(index, 'alt_mobile_same_as_whatsapp', e.target.checked)}
+                              className="w-3.5 h-3.5 text-[#FF7B1D] rounded-sm"
+                            />
+                            Same as WhatsApp
+                          </label>
+                        </div>
                         <input
                           type="text"
                           placeholder="Enter alternate mobile"
@@ -1376,15 +1420,6 @@ export default function AddNewLead({ isOpen, onClose, leadToEdit = null }) {
                           onBlur={(e) => handleMobileBlur(`Alternate Mobile (Contact ${index + 1})`, e.target.value)}
                           maxLength={15}
                         />
-                        <label className="flex items-center gap-2 mt-2 text-xs text-gray-600">
-                          <input
-                            type="checkbox"
-                            checked={contact.alt_mobile_same_as_whatsapp}
-                            onChange={(e) => handleContactPersonChange(index, 'alt_mobile_same_as_whatsapp', e.target.checked)}
-                            className="w-4 h-4 text-[#FF7B1D]"
-                          />
-                          Same as WhatsApp Number
-                        </label>
                       </div>
 
                       <div className="group">

@@ -14,11 +14,22 @@ import {
     CheckCircle2,
     Calendar,
     Zap,
-    Briefcase
+    Briefcase,
+    DollarSign,
+    Filter,
 } from "lucide-react";
 import { FiHome } from "react-icons/fi";
 
 import { useGetEmployeePerformanceQuery } from "../../store/api/leadApi";
+import {
+    AreaChart,
+    Area,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip,
+    ResponsiveContainer,
+} from 'recharts';
 import { AlertCircle, Loader2 } from "lucide-react";
 
 const iconMap = {
@@ -73,7 +84,7 @@ export default function EmployeePerformanceDetail() {
 
     return (
         <div className="min-h-screen bg-gray-50/50">
-            {/* Header */}
+            {/* Header Section */}
             <div className="bg-white border-b sticky top-0 z-10">
                 <div className="max-w-8xl mx-auto px-4 py-4 md:px-8">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -90,6 +101,12 @@ export default function EmployeePerformanceDetail() {
                                     <FiHome className="text-gray-700" size={14} />
                                     <span className="text-gray-400">Analysis / </span>
                                     <span className="text-[#FF7B1D] font-medium">Team Performance</span>
+                                    {employee?.name && (
+                                        <>
+                                            <span className="text-gray-400"> / </span>
+                                            <span className="text-gray-700 font-semibold capitalize">{employee.name}</span>
+                                        </>
+                                    )}
                                 </p>
                             </div>
                         </div>
@@ -102,41 +119,41 @@ export default function EmployeePerformanceDetail() {
 
                     {/* Sidebar - Profile Info */}
                     <div className="lg:col-span-1 space-y-4">
-                        <div className="bg-white rounded-sm border border-gray-200 shadow-sm overflow-hidden text-center p-8">
+                        <div className="bg-white rounded-sm border-t-4 border-t-orange-500 shadow-lg overflow-hidden text-center p-8 border-x border-b border-orange-100">
                             <div className="relative inline-block mb-6">
-                                <div className="w-28 h-28 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center text-white text-4xl font-bold shadow-lg border-4 border-white">
+                                <div className="w-28 h-28 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center text-white text-4xl font-bold shadow-xl border-4 border-white">
                                     {employee.avatar}
                                 </div>
                                 <div className="absolute bottom-1 right-1 w-7 h-7 bg-green-500 border-4 border-white rounded-full"></div>
                             </div>
-                            <h2 className="text-2xl font-bold text-gray-800">{employee.name}</h2>
-                            <p className="text-orange-600 font-bold text-sm mb-6 flex items-center justify-center gap-2">
+                            <h2 className="text-2xl font-semibold text-gray-800 tracking-tight capitalize">{employee.name}</h2>
+                            <p className="text-orange-600 font-semibold text-sm mb-6 flex items-center justify-center gap-2 capitalize tracking-wide">
                                 <Briefcase size={14} />
                                 {employee.role}
                             </p>
 
-                            <div className="space-y-3 pt-6 border-t border-gray-100">
-                                <div className="flex items-center gap-4 text-left p-3 rounded-sm bg-gray-50/50 border border-gray-100 hover:border-orange-200 transition-colors">
-                                    <Mail size={16} className="text-gray-400" />
+                            <div className="space-y-3 pt-6 border-t border-orange-100">
+                                <div className="flex items-center gap-4 text-left p-3 rounded-sm bg-orange-50/30 border border-orange-100 hover:border-orange-200 transition-colors group">
+                                    <Mail size={16} className="text-orange-500 group-hover:scale-110 transition-transform" />
                                     <div className="overflow-hidden">
-                                        <p className="text-xs uppercase font-bold text-gray-400 tracking-wider leading-none mb-1.5">Email Address</p>
-                                        <p className="text-sm font-bold text-gray-700 truncate">{employee.email}</p>
+                                        <p className="text-[10px] capitalize font-semibold text-orange-400 tracking-wide leading-none mb-1.5">Email address</p>
+                                        <p className="text-sm font-semibold text-gray-800 truncate">{employee.email}</p>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-4 text-left p-3 rounded-sm bg-gray-50/50 border border-gray-100 hover:border-orange-200 transition-colors">
-                                    <Calendar size={16} className="text-gray-400" />
+                                <div className="flex items-center gap-4 text-left p-3 rounded-sm bg-orange-50/30 border border-orange-100 hover:border-orange-200 transition-colors group">
+                                    <Calendar size={16} className="text-orange-500 group-hover:scale-110 transition-transform" />
                                     <div>
-                                        <p className="text-xs uppercase font-bold text-gray-400 tracking-wider leading-none mb-1.5">Joining Date</p>
-                                        <p className="text-sm font-bold text-gray-700">{employee.joined}</p>
+                                        <p className="text-[10px] capitalize font-semibold text-orange-400 tracking-wide leading-none mb-1.5">Joining date</p>
+                                        <p className="text-sm font-semibold text-gray-800">{employee.joined}</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
                         {/* Quarterly Progress Section */}
-                        <div className="bg-white rounded-sm border border-gray-200 shadow-sm p-6">
-                            <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-6 flex items-center gap-2">
-                                <Target size={18} className="text-orange-500" />
+                        <div className="bg-white rounded-sm border border-orange-100 shadow-lg p-6">
+                            <h3 className="text-xs font-semibold text-orange-600 capitalize tracking-wide mb-6 flex items-center gap-2 border-b border-orange-50 pb-2">
+                                <Target size={16} className="text-orange-500" />
                                 {goalProgress.title}
                             </h3>
                             <div className="flex flex-col items-center">
@@ -149,7 +166,7 @@ export default function EmployeePerformanceDetail() {
                                             stroke="currentColor"
                                             strokeWidth="10"
                                             fill="transparent"
-                                            className="text-gray-100"
+                                            className="text-orange-50"
                                         />
                                         <circle
                                             cx="72"
@@ -161,29 +178,29 @@ export default function EmployeePerformanceDetail() {
                                             strokeDasharray={402}
                                             strokeDashoffset={402 * (1 - goalProgress.percentage / 100)}
                                             strokeLinecap="round"
-                                            className="text-orange-500 transition-all duration-1000 shadow-sm"
+                                            className="text-orange-600 transition-all duration-1000 shadow-sm"
                                         />
                                     </svg>
                                     <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                        <span className="text-3xl font-black text-gray-800 leading-none">{goalProgress.percentage}%</span>
-                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Achieved</p>
+                                        <span className="text-3xl font-semibold text-gray-800 leading-none">{goalProgress.percentage}%</span>
+                                        <p className="text-[10px] font-semibold text-orange-400 capitalize tracking-wide mt-1">Achieved</p>
                                     </div>
                                 </div>
-                                <div className="w-full grid grid-cols-2 gap-4 pt-4 border-t border-gray-50">
-                                    <div className="text-center border-r border-gray-100">
-                                        <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Current</p>
-                                        <p className="text-sm font-black text-gray-800">₹{(goalProgress.current / 100000).toFixed(1)}L</p>
+                                <div className="w-full grid grid-cols-2 gap-4 pt-4 border-t border-orange-50">
+                                    <div className="text-center border-r border-orange-50">
+                                        <p className="text-[10px] capitalize font-semibold text-orange-400 mb-1 leading-none">Current</p>
+                                        <p className="text-sm font-semibold text-gray-800">₹{(goalProgress.current / 100000).toFixed(1)}L</p>
                                     </div>
                                     <div className="text-center">
-                                        <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Goal</p>
-                                        <p className="text-sm font-black text-[#FF7B1D]">₹{(goalProgress.target / 100000).toFixed(1)}L</p>
+                                        <p className="text-[10px] capitalize font-semibold text-orange-400 mb-1 leading-none">Goal</p>
+                                        <p className="text-sm font-semibold text-[#FF7B1D]">₹{(goalProgress.target / 100000).toFixed(1)}L</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="bg-white rounded-sm border border-gray-200 shadow-sm p-6">
-                            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-6 flex items-center gap-2">
+                        <div className="bg-white rounded-sm border border-orange-100 shadow-lg p-6">
+                            <h3 className="text-xs font-semibold text-orange-600 capitalize tracking-wide mb-6 flex items-center gap-2 border-b border-orange-50 pb-2">
                                 <Star size={16} className="text-amber-500" />
                                 Top Achievements
                             </h3>
@@ -225,127 +242,226 @@ export default function EmployeePerformanceDetail() {
                     {/* Main Content */}
                     <div className="lg:col-span-3 space-y-4">
 
-                        {/* Stats Cards */}
+                        {/* Stats Cards - Updated to Analysis Grid Style */}
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            {stats.map((stat, i) => (
-                                <div key={i} className="bg-white p-6 rounded-sm border border-gray-200 shadow-sm group hover:border-orange-500 transition-all cursor-default">
-                                    <div className="flex items-center gap-4 mb-4">
-                                        <div className={`p-3 rounded-sm ${stat.bg} ${stat.color} group-hover:scale-110 transition-transform`}>
-                                            {React.createElement(iconMap[stat.icon] || Users, { size: 20 })}
+                            {stats.map((stat, i) => {
+                                const IconComp = iconMap[stat.icon] || Users;
+                                const colorMap = {
+                                    'text-blue-600': 'border-t-blue-500 bg-blue-50/50 text-blue-500',
+                                    'text-purple-600': 'border-t-purple-500 bg-purple-50/50 text-purple-500',
+                                    'text-amber-600': 'border-t-amber-500 bg-amber-50/50 text-amber-500',
+                                    'text-orange-600': 'border-t-orange-500 bg-orange-50/50 text-orange-500',
+                                    'text-green-600': 'border-t-green-500 bg-green-50/50 text-green-500'
+                                };
+                                const style = colorMap[stat.color] || 'border-t-orange-500 bg-orange-50/50 text-orange-500';
+
+                                return (
+                                    <div key={i} className={`rounded-sm shadow-sm border border-gray-200 p-4 border-t-4 ${style} transition-all duration-300 hover:shadow-md cursor-default`}>
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2.5">
+                                                <div className="p-1.5 rounded-sm bg-white border border-gray-100 shadow-sm">
+                                                    <IconComp size={18} />
+                                                </div>
+                                                <div className="flex flex-col">
+                                                    <h3 className="text-[10px] font-semibold text-gray-400 capitalize tracking-wide font-primary">
+                                                        {stat.title}
+                                                    </h3>
+                                                    <p className="text-xl font-semibold text-gray-800 leading-none mt-1">
+                                                        {stat.value}
+                                                    </p>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <p className="text-gray-400 text-xs font-bold uppercase tracking-widest">{stat.title}</p>
                                     </div>
-                                    <p className="text-3xl font-black text-gray-800 leading-none">{stat.value}</p>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {/* Conversion Trend */}
-                            <div className="bg-white rounded-sm border border-gray-200 shadow-sm p-6">
-                                <div className="flex items-center justify-between mb-6">
-                                    <div className="flex items-center gap-3">
-                                        <div className="p-2.5 bg-orange-50 rounded-sm">
-                                            <TrendingUp className="text-orange-600" size={22} />
+                            <div className="bg-white rounded-sm border border-orange-100 shadow-lg p-6">
+                                <div className="flex items-center justify-between mb-8">
+                                    <div className="flex items-center">
+                                        <div className="p-3 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 mr-4 shadow-lg">
+                                            <TrendingUp className="w-6 h-6 text-white" />
                                         </div>
-                                        <h3 className="text-xl font-bold text-gray-800">Conversion Trend</h3>
+                                        <div>
+                                            <h2 className="text-xl font-bold text-gray-800">Lead Performance Trend</h2>
+                                            <p className="text-orange-500 text-[10px] font-semibold capitalize tracking-wide font-primary">Last 14 days analysis</p>
+                                        </div>
                                     </div>
-                                    <div className="flex gap-1 bg-gray-100 p-1 rounded-sm border border-gray-200 overflow-hidden">
-                                        <button className="px-3 py-1 text-xs font-bold bg-white text-orange-600 shadow-sm rounded-sm">14D</button>
+                                    <div className="flex gap-2 items-center">
+                                        <div className="flex items-center gap-1.5 bg-orange-50 px-2 py-1 rounded-sm border border-orange-100">
+                                            <div className="w-2 h-2 rounded-full bg-orange-500"></div>
+                                            <span className="text-[10px] font-bold text-orange-700 capitalize">Performance %</span>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div className="h-56 flex items-end gap-1.5 px-2">
-                                    {conversionTrend.length > 0 ? conversionTrend.map((h, i) => (
-                                        <div key={i} className="flex-1 group relative flex flex-col items-center">
-                                            <div className="absolute -top-10 bg-gray-900 text-xs px-2.5 py-1.5 rounded-sm opacity-0 group-hover:opacity-100 transition-all z-10 whitespace-nowrap font-bold shadow-xl text-white">
-                                                {h}%
+                                <div className="bg-gradient-to-b from-orange-50/50 to-white rounded-xl p-4 border border-orange-50">
+                                    <div className="h-64 w-full">
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <AreaChart
+                                                data={conversionTrend.map((val, idx) => ({ day: `Day ${idx + 1}`, value: val }))}
+                                                margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                                            >
+                                                <defs>
+                                                    <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                                                        <stop offset="5%" stopColor="#f97316" stopOpacity={0.3} />
+                                                        <stop offset="95%" stopColor="#f97316" stopOpacity={0} />
+                                                    </linearGradient>
+                                                </defs>
+                                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#fed7aa" />
+                                                <XAxis
+                                                    dataKey="day"
+                                                    hide
+                                                />
+                                                <YAxis
+                                                    tick={{ fontSize: 10, fontWeight: 600, fill: '#9a3412' }}
+                                                    axisLine={false}
+                                                    tickLine={false}
+                                                    domain={[0, 100]}
+                                                    tickFormatter={(value) => `${value}%`}
+                                                />
+                                                <Tooltip
+                                                    content={({ active, payload }) => {
+                                                        if (active && payload && payload.length) {
+                                                            return (
+                                                                <div className="bg-gray-900 border border-gray-800 p-2 shadow-xl rounded-sm">
+                                                                    <p className="text-[10px] text-orange-400 font-bold mb-1 uppercase tracking-tighter">{payload[0].payload.day}</p>
+                                                                    <p className="text-sm text-white font-black leading-none">
+                                                                        {payload[0].value}% <span className="text-[10px] font-normal text-gray-400">Yield</span>
+                                                                    </p>
+                                                                </div>
+                                                            );
+                                                        }
+                                                        return null;
+                                                    }}
+                                                />
+                                                <Area
+                                                    type="monotone"
+                                                    dataKey="value"
+                                                    stroke="#f97316"
+                                                    strokeWidth={3}
+                                                    fillOpacity={1}
+                                                    fill="url(#colorValue)"
+                                                    animationDuration={1500}
+                                                />
+                                            </AreaChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                    <div className="w-full h-px bg-orange-100 mt-2 shadow-sm"></div>
+                                    <div className="flex justify-between mt-4 text-[10px] font-semibold text-orange-400 capitalize tracking-wide">
+                                        <div className="flex items-center gap-2">
+                                            <div className="p-1 rounded-sm bg-orange-100">
+                                                <TrendingUp size={10} />
                                             </div>
-                                            <div
-                                                className="w-full bg-gradient-to-t from-orange-600 to-orange-400 rounded-t-[1px] transition-all origin-bottom hover:brightness-110 active:scale-x-110"
-                                                style={{ height: `${h * 1.8}px` }}
-                                            ></div>
+                                            <span>Start cycle</span>
                                         </div>
-                                    )) : (
-                                        <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm italic font-bold">
-                                            No trend data available
+                                        <div className="flex items-center gap-2">
+                                            <span>Current state</span>
+                                            <div className="p-1 rounded-sm bg-orange-500 text-white">
+                                                <Zap size={10} />
+                                            </div>
                                         </div>
-                                    )}
-                                </div>
-                                <div className="w-full h-px bg-gray-100 mt-4"></div>
-                                <div className="flex justify-between mt-4 text-xs font-black text-gray-400 uppercase tracking-widest">
-                                    <span>Analysis Start</span>
-                                    <span>Current Period</span>
+                                    </div>
                                 </div>
                             </div>
 
                             {/* Lead Status Pipeline Section */}
-                            <div className="bg-white rounded-sm border border-gray-200 shadow-sm p-6">
-                                <div className="flex items-center gap-3 mb-6">
-                                    <div className="p-2.5 bg-orange-50 rounded-sm">
-                                        <Activity className="text-orange-600" size={22} />
+                            <div className="bg-white rounded-sm border border-orange-100 shadow-lg p-6 flex flex-col">
+                                <div className="flex items-center gap-4 mb-8">
+                                    <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg">
+                                        <Activity className="w-6 h-6 text-white" />
                                     </div>
-                                    <h3 className="text-xl font-bold text-gray-800">Lead Status Pipeline</h3>
+                                    <div>
+                                        <h3 className="text-xl font-bold text-gray-800">Current Lead Stages</h3>
+                                        <p className="text-blue-500 text-[10px] font-semibold capitalize tracking-wide">Pipeline health audit</p>
+                                    </div>
                                 </div>
-                                <div className="space-y-6">
+                                <div className="space-y-6 flex-1 flex flex-col justify-center">
                                     {leadStatusPipeline.length > 0 ? leadStatusPipeline.map((item, i) => {
                                         const maxCount = Math.max(...leadStatusPipeline.map(p => p.count), 1);
+                                        const colorMap = {
+                                            'bg-orange-500': 'bg-gradient-to-r from-orange-600 to-orange-400',
+                                            'bg-blue-500': 'bg-gradient-to-r from-blue-600 to-blue-400',
+                                            'bg-green-500': 'bg-gradient-to-r from-green-600 to-green-400',
+                                            'bg-red-500': 'bg-gradient-to-r from-red-600 to-red-400',
+                                            'bg-purple-500': 'bg-gradient-to-r from-purple-600 to-purple-400'
+                                        };
+                                        const gradient = colorMap[item.color] || 'bg-gradient-to-r from-orange-600 to-orange-400';
+
                                         return (
-                                            <div key={i}>
-                                                <div className="flex justify-between text-xs font-bold text-gray-600 mb-2 uppercase tracking-wide">
-                                                    <span>{item.name}</span>
-                                                    <span className="text-gray-400">{item.count} Active</span>
+                                            <div key={i} className="group cursor-default">
+                                                <div className="flex justify-between text-[11px] font-semibold text-gray-800 mb-2 capitalize tracking-wide">
+                                                    <span className="flex items-center gap-2">
+                                                        <div className={`w-2 h-2 rounded-full ${item.color}`}></div>
+                                                        {item.name}
+                                                    </span>
+                                                    <span className="text-orange-600 font-semibold">{item.count} leads</span>
                                                 </div>
-                                                <div className="w-full bg-gray-100 h-2.5 rounded-full overflow-hidden border border-gray-200/50">
-                                                    <div className={`${item.color} h-full rounded-full transition-all duration-700`} style={{ width: `${(item.count / maxCount) * 100}%` }}></div>
+                                                <div className="w-full bg-orange-50 h-3 rounded-full overflow-hidden border border-orange-100 shadow-inner p-0.5">
+                                                    <div className={`${gradient} h-full rounded-full transition-all duration-1000 shadow-sm group-hover:brightness-110`} style={{ width: `${(item.count / maxCount) * 100}%` }}></div>
                                                 </div>
                                             </div>
                                         );
                                     }) : (
-                                        <div className="h-40 flex items-center justify-center text-gray-400 text-sm italic font-bold">
-                                            No leads assigned yet
+                                        <div className="h-40 flex flex-col items-center justify-center text-orange-400 gap-3">
+                                            <Activity className="opacity-20 w-10 h-10" />
+                                            <p className="text-[10px] font-black uppercase tracking-widest">No Active Pipeline Data</p>
                                         </div>
                                     )}
                                 </div>
                             </div>
                         </div>
 
-                        {/* Recent Activities Section */}
-                        <div className="bg-white rounded-sm border border-gray-200 shadow-sm overflow-hidden mt-2">
-                            <div className="p-6 border-b border-gray-100 flex items-center justify-between">
-                                <h2 className="text-lg font-bold text-gray-800 flex items-center gap-3 uppercase tracking-wider">
-                                    <Clock className="text-orange-500" size={20} />
-                                    Performance Activity Logs
-                                </h2>
-                                <button className="text-orange-600 font-bold text-xs hover:underline uppercase tracking-tight">Full Timeline</button>
+                        <div className="bg-white rounded-sm border border-orange-100 shadow-lg overflow-hidden mt-2">
+                            <div className="p-6 border-b border-orange-50 bg-gradient-to-r from-white to-orange-50/30 flex items-center justify-between">
+                                <div className="flex items-center gap-4">
+                                    <div className="p-3 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 shadow-lg">
+                                        <Clock className="w-6 h-6 text-white" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-xl font-bold text-gray-800 capitalize tracking-wide">Recent activity log</h2>
+                                        <p className="text-orange-500 text-[10px] font-semibold capitalize tracking-wide">Real-time performance footprint</p>
+                                    </div>
+                                </div>
                             </div>
-                            <div className="divide-y divide-gray-100 text-base max-h-[500px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-200 hover:scrollbar-thumb-orange-200 transition-all">
+                            <div className="p-6 space-y-3 max-h-[600px] overflow-y-auto scrollbar-thin scrollbar-thumb-orange-200 hover:scrollbar-thumb-orange-400 transition-all">
                                 {activities.length > 0 ? activities.map((activity, i) => (
-                                    <div key={i} className="p-6 hover:bg-gray-50 transition-colors flex items-center justify-between group">
+                                    <div key={i} className="p-4 rounded-sm bg-orange-50/30 border border-orange-100 hover:border-orange-200 transition-colors group flex items-center justify-between shadow-sm cursor-default">
                                         <div className="flex items-center gap-5">
-                                            <div className={`w-12 h-12 rounded-full flex items-center justify-center shadow-sm ${activity.type === 'Won' ? 'bg-green-100 text-green-600' :
-                                                activity.type === 'Call' ? 'bg-blue-100 text-blue-600' :
-                                                    'bg-gray-100 text-gray-600'
+                                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-md transition-transform group-hover:scale-105 ${activity.type === 'Won' ? 'bg-gradient-to-br from-green-500 to-green-600 text-white' :
+                                                activity.type === 'Call' ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white' :
+                                                    'bg-gradient-to-br from-orange-500 to-orange-600 text-white'
                                                 }`}>
-                                                {activity.type === 'Won' ? <CheckCircle2 size={18} /> :
-                                                    activity.type === 'Call' ? <Phone size={18} /> :
-                                                        <Activity size={18} />}
+                                                {activity.type === 'Won' ? <CheckCircle2 size={20} /> :
+                                                    activity.type === 'Call' ? <Phone size={20} /> :
+                                                        <Activity size={20} />}
                                             </div>
                                             <div>
-                                                <p className="font-bold text-gray-800 text-base group-hover:text-orange-600 transition-colors">{activity.title}</p>
-                                                <p className="text-sm text-gray-400 mt-1">{activity.time}</p>
+                                                <p className="font-semibold text-gray-900 text-base group-hover:text-orange-600 transition-colors leading-tight capitalize">{activity.title}</p>
+                                                <div className="flex items-center gap-3 mt-1.5 font-semibold text-[11px]">
+                                                    <span className="text-orange-500 flex items-center gap-1.5 bg-white/50 px-2 py-0.5 rounded-sm border border-orange-50">
+                                                        <Clock size={10} />
+                                                        {activity.time}
+                                                    </span>
+                                                    <span className="text-gray-400 capitalize bg-gray-50/50 px-2 py-0.5 rounded-sm">Historical log</span>
+                                                </div>
                                             </div>
                                         </div>
-                                        <span className={`px-4 py-1.5 rounded-sm text-xs font-bold uppercase tracking-widest border ${activity.status === 'Success' ? 'bg-green-50 text-green-700 border-green-200' :
-                                            'bg-gray-50 text-gray-600 border-gray-200'
+                                        <span className={`px-4 py-1.5 rounded-full text-[10px] font-semibold capitalize tracking-wider shadow-sm border ${activity.status === 'Success' ? 'bg-green-100 text-green-700 border-green-200' :
+                                            'bg-orange-100 text-orange-700 border-orange-200'
                                             }`}>
                                             {activity.status}
                                         </span>
                                     </div>
                                 )) : (
-                                    <div className="h-full flex flex-col items-center justify-center py-20 text-gray-400">
-                                        <Activity size={40} className="mb-4 opacity-20" />
-                                        <p className="font-bold italic">No recent performance logs found</p>
+                                    <div className="h-full flex flex-col items-center justify-center py-24 text-orange-400 gap-4">
+                                        <div className="w-20 h-20 rounded-full bg-orange-50 flex items-center justify-center border-2 border-dashed border-orange-200 animate-pulse">
+                                            <Activity size={32} className="opacity-40" />
+                                        </div>
+                                        <p className="font-black italic uppercase tracking-widest text-[11px]">No Performance Activity Detected</p>
                                     </div>
                                 )}
                             </div>

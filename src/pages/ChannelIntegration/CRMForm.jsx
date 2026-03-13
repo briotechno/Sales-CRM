@@ -377,6 +377,7 @@ const CRMForm = () => {
                     {/* Matrix Cards */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-3">
                         <NumberCard
+                            variant="matrix"
                             title="Total forms"
                             number={stats.total}
                             icon={<Layout className="text-blue-600" size={24} />}
@@ -384,6 +385,7 @@ const CRMForm = () => {
                             lineBorderClass="border-blue-500"
                         />
                         <NumberCard
+                            variant="matrix"
                             title="Published forms"
                             number={stats.active}
                             icon={<CheckCircle className="text-green-600" size={24} />}
@@ -391,6 +393,7 @@ const CRMForm = () => {
                             lineBorderClass="border-green-500"
                         />
                         <NumberCard
+                            variant="matrix"
                             title="Inactive forms"
                             number={stats.inactive}
                             icon={<Clock className="text-orange-600" size={24} />}
@@ -398,6 +401,7 @@ const CRMForm = () => {
                             lineBorderClass="border-orange-500"
                         />
                         <NumberCard
+                            variant="matrix"
                             title="Submission history"
                             number={stats.totalLogs}
                             icon={<Clock className="text-purple-600" size={24} />}
