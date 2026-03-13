@@ -41,6 +41,9 @@ export default function AssignmentSettings() {
         auto_pool_employees: []
     });
 
+    const [filterDept, setFilterDept] = useState("all");
+    const [filterDesig, setFilterDesig] = useState("all");
+
     const { data: employeesData } = useGetEmployeesQuery({ limit: 1000, status: 'Active' });
     const employees = employeesData?.employees || [];
 
@@ -56,6 +59,12 @@ export default function AssignmentSettings() {
     }, [settings]);
 
     const handleSave = async () => {
+        // Validation: If auto mode is on, at least one employee must be selected
+        if (formData.mode === 'auto' && (!formData.auto_pool_employees || formData.auto_pool_employees.length === 0)) {
+            toast.error("Please select at least one employee for Auto-Assignment mode");
+            return;
+        }
+
         try {
             await updateSettings(formData).unwrap();
             toast.success("Assignment rules updated successfully!");
@@ -64,26 +73,35 @@ export default function AssignmentSettings() {
         }
     };
 
+    const departments = [...new Set(employees.map(emp => emp.department_name).filter(Boolean))];
+    const designations = [...new Set(employees.map(emp => emp.designation_name || emp.role).filter(Boolean))];
+
+    const filteredEmployees = employees.filter(emp => {
+        const matchesDept = filterDept === 'all' || emp.department_name === filterDept;
+        const matchesDesig = filterDesig === 'all' || (emp.designation_name || emp.role) === filterDesig;
+        return matchesDept && matchesDesig;
+    });
+
     const logs = logsData?.logs || [];
 
     return (
         <>
             <div className="w-full space-y-6 font-primary pb-10 text-left">
-                {/* Header */}
+                {/* Header Section */}
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <div className="w-12 h-12 bg-orange-100 rounded-sm flex items-center justify-center text-orange-600 shadow-sm border border-orange-200">
                             <Settings size={28} />
                         </div>
                         <div>
-                            <h1 className="text-2xl font-bold text-gray-800 capitalize tracking-wide">Assignment Settings</h1>
-                            <p className="text-sm text-gray-500 font-medium capitalize">Configure how leads are distributed to your team</p>
+                            <h1 className="text-2xl font-bold text-gray-800 capitalize tracking-wide font-primary">Assignment Settings</h1>
+                            <p className="text-sm text-gray-400 font-bold capitalize">Configure how leads are distributed to your team</p>
                         </div>
                     </div>
                     <button
                         onClick={handleSave}
                         disabled={updating}
-                        className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm font-bold shadow-lg hover:shadow-xl transition-all active:scale-95 disabled:opacity-50 capitalize text-sm tracking-wide"
+                        className="flex items-center gap-2 px-8 py-3.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm font-bold shadow-lg hover:shadow-xl transition-all active:scale-95 disabled:opacity-50 capitalize text-base tracking-wide"
                     >
                         {updating ? <RefreshCw size={18} className="animate-spin" /> : <Save size={18} />}
                         Save Configurations
@@ -94,7 +112,7 @@ export default function AssignmentSettings() {
                     {/* Main Controls */}
                     <div className="lg:col-span-2 space-y-8">
                         {/* Mode Selection Switch */}
-                        <div className="bg-white rounded-sm border border-gray-200 shadow-sm p-6 flex flex-col md:flex-row items-center justify-between gap-6">
+                        <div className="bg-white rounded-sm border border-gray-200 shadow-sm p-6 flex flex-col md:flex-row items-center justify-between gap-6 transition-all">
                             <div>
                                 <h3 className="text-lg font-bold text-gray-800 capitalize leading-tight">Lead Assignment Mode</h3>
                                 <p className="text-sm text-gray-500 font-medium mt-1">Select how leads should be distributed in the system</p>
@@ -102,18 +120,18 @@ export default function AssignmentSettings() {
                             <div className="flex bg-gray-100 p-1.5 rounded-sm border border-gray-200 shadow-inner w-full md:w-auto self-stretch md:self-auto">
                                 <button
                                     onClick={() => setFormData({ ...formData, mode: 'manual' })}
-                                    className={`flex-1 md:w-32 py-2.5 rounded-sm text-sm font-bold transition-all flex items-center justify-center gap-2 ${formData.mode === 'manual'
-                                        ? 'bg-white text-orange-600 shadow-md border border-gray-200'
-                                        : 'text-gray-400 hover:text-gray-600'}`}
+                                    className={`flex-1 md:w-32 py-2.5 rounded-sm text-sm font-bold transition-all flex items-center justify-center gap-2 border-2 ${formData.mode === 'manual'
+                                        ? 'bg-white text-orange-600 shadow-md border-orange-200'
+                                        : 'text-gray-400 hover:text-gray-600 border-transparent'}`}
                                 >
                                     <ToggleLeft size={18} />
                                     Manual
                                 </button>
                                 <button
                                     onClick={() => setFormData({ ...formData, mode: 'auto' })}
-                                    className={`flex-1 md:w-32 py-2.5 rounded-sm text-sm font-bold transition-all flex items-center justify-center gap-2 ${formData.mode === 'auto'
-                                        ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md'
-                                        : 'text-gray-400 hover:text-gray-600'}`}
+                                    className={`flex-1 md:w-32 py-2.5 rounded-sm text-sm font-bold transition-all flex items-center justify-center gap-2 border-2 ${formData.mode === 'auto'
+                                        ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md border-orange-500'
+                                        : 'text-gray-400 hover:text-gray-600 border-transparent'}`}
                                 >
                                     <ToggleRight size={18} />
                                     Auto
@@ -141,14 +159,33 @@ export default function AssignmentSettings() {
                                             </span>
                                         </div>
 
+                                        <div className="grid grid-cols-2 gap-2 mb-2">
+                                            <select
+                                                value={filterDept}
+                                                onChange={(e) => setFilterDept(e.target.value)}
+                                                className="px-2 py-1.5 bg-gray-50 border border-gray-200 rounded-sm text-[10px] font-bold text-gray-700 outline-none focus:border-orange-500 transition-all"
+                                            >
+                                                <option value="all">All Departments</option>
+                                                {departments.map(d => <option key={d} value={d}>{d}</option>)}
+                                            </select>
+                                            <select
+                                                value={filterDesig}
+                                                onChange={(e) => setFilterDesig(e.target.value)}
+                                                className="px-2 py-1.5 bg-gray-50 border border-gray-200 rounded-sm text-[10px] font-bold text-gray-700 outline-none focus:border-orange-500 transition-all"
+                                            >
+                                                <option value="all">All Designations</option>
+                                                {designations.map(d => <option key={d} value={d}>{d}</option>)}
+                                            </select>
+                                        </div>
+
                                         <div className="border border-gray-200 rounded-sm overflow-hidden bg-white shadow-inner max-h-[350px] overflow-y-auto custom-scrollbar">
-                                            {employees.length === 0 ? (
+                                            {filteredEmployees.length === 0 ? (
                                                 <div className="p-8 text-center text-gray-400 font-medium italic text-sm">
-                                                    No active employees found
+                                                    No employees match your filters
                                                 </div>
                                             ) : (
                                                 <div className="divide-y divide-gray-50">
-                                                    {employees.map(emp => (
+                                                    {filteredEmployees.map(emp => (
                                                         <label key={emp.id} className="flex items-center gap-3 p-3 hover:bg-orange-50/30 transition-all cursor-pointer group text-left">
                                                             <input
                                                                 type="checkbox"
@@ -202,10 +239,10 @@ export default function AssignmentSettings() {
                                             <RefreshCw size={16} className="text-orange-500" />
                                             Active Pool Preview
                                         </label>
-                                        <div className="p-6 bg-orange-50/50 border border-orange-100 rounded-sm min-h-[100px] max-h-[250px] overflow-x-auto custom-scrollbar flex flex-col">
+                                        <div className="p-4 bg-orange-50/50 border border-orange-100 rounded-sm min-h-[150px] max-h-[350px] overflow-y-auto custom-scrollbar">
                                             {formData.auto_pool_employees?.length === 0 ? (
-                                                <div className="flex-1 flex flex-col items-center justify-center text-center space-y-3">
-                                                    <div className="p-3 bg-white rounded-full shadow-sm">
+                                                <div className="h-full flex flex-col items-center justify-center text-center space-y-3 py-10">
+                                                    <div className="p-3 bg-white rounded-full shadow-sm border border-orange-100">
                                                         <AlertCircle className="text-orange-300" size={32} />
                                                     </div>
                                                     <p className="text-xs text-orange-400 font-semibold italic capitalize leading-relaxed">
@@ -213,18 +250,18 @@ export default function AssignmentSettings() {
                                                     </p>
                                                 </div>
                                             ) : (
-                                                <div className="flex flex-nowrap gap-3 text-left pb-2">
+                                                <div className="flex flex-col gap-2">
                                                     {formData.auto_pool_employees.map(id => {
                                                         const emp = employees.find(e => e.id === id);
                                                         if (!emp) return null;
                                                         return (
-                                                            <div key={id} className="flex-shrink-0 flex items-center gap-3 bg-white px-4 py-2 rounded-sm border border-orange-200 shadow-sm animate-fadeIn min-w-[150px]">
-                                                                <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-xs font-bold text-orange-600 border border-orange-200 shadow-inner overflow-hidden">
+                                                            <div key={id} className="flex items-center gap-3 bg-white px-3 py-2 rounded-sm border border-orange-100 shadow-sm animate-fadeIn">
+                                                                <div className="w-7 h-7 rounded-sm bg-orange-100 flex items-center justify-center text-[10px] font-bold text-orange-600 border border-orange-200 overflow-hidden shrink-0">
                                                                     {emp.profile_picture ? <img src={emp.profile_picture_url} className="w-full h-full object-cover" /> : emp.employee_name?.charAt(0)}
                                                                 </div>
-                                                                <div className="flex flex-col">
-                                                                    <span className="text-[12px] font-bold text-gray-800 capitalize leading-none">{emp.employee_name}</span>
-                                                                    <span className="text-[9px] text-orange-500 font-extrabold uppercase mt-1 tracking-tighter">{emp.designation_name || 'Agent'}</span>
+                                                                <div className="flex flex-col min-w-0">
+                                                                    <span className="text-[12px] font-bold text-gray-800 capitalize leading-tight truncate">{emp.employee_name}</span>
+                                                                    <span className="text-[9px] text-orange-500 font-black uppercase tracking-tighter truncate">{emp.designation_name || emp.role || 'Agent'}</span>
                                                                 </div>
                                                             </div>
                                                         );
@@ -304,7 +341,7 @@ export default function AssignmentSettings() {
                                     <p className="text-[11px] text-gray-400 font-medium capitalize">Algorithm used for auto-distribution</p>
                                 </div>
 
-                                <div className="md:col-span-2 flex items-center justify-between p-6 bg-gray-50 rounded-sm border border-gray-100 shadow-inner">
+                                {/* <div className="md:col-span-2 flex items-center justify-between p-6 bg-gray-50 rounded-sm border border-gray-100 shadow-inner">
                                     <div>
                                         <h4 className="text-[15px] font-bold text-gray-800 capitalize">Priority handling</h4>
                                         <p className="text-xs text-gray-500 font-medium capitalize mt-1">Trending leads will be assigned with higher priority</p>
@@ -315,48 +352,10 @@ export default function AssignmentSettings() {
                                     >
                                         <div className={`w-5 h-5 bg-white rounded-full transition-all shadow-sm ${formData.priority_handling ? 'ml-7' : 'ml-0'}`} />
                                     </button>
-                                </div>
+                                </div> */}
                             </div>
                         </div>
 
-                        {/* Call & Reassignment Rules */}
-                        <div className={`bg-white rounded-sm border border-gray-200 shadow-sm overflow-hidden transition-all ${formData.mode !== 'auto' ? 'opacity-50 pointer-events-none grayscale' : ''}`}>
-                            <div className="bg-gray-50 px-6 py-4 border-b border-gray-200 flex items-center gap-3">
-                                <Phone className="text-orange-500" size={20} />
-                                <h2 className="font-bold text-[15px] text-gray-700 capitalize">Call Attempt & Rotation Rules</h2>
-                            </div>
-                            <div className="p-8 space-y-8">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                                    <div className="space-y-2">
-                                        <label className="flex items-center gap-2 text-[15px] font-semibold text-gray-700 capitalize">
-                                            <AlertCircle size={14} className="text-orange-500" /> Max call attempts
-                                        </label>
-                                        <input
-                                            type="number"
-                                            value={formData.max_call_attempts}
-                                            onChange={(e) => setFormData({ ...formData, max_call_attempts: e.target.value })}
-                                            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500 focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 shadow-sm font-semibold"
-                                        />
-                                        <p className="text-[11px] text-gray-400 font-medium capitalize">Lead will be reassigned after these many failed attempts</p>
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <label className="flex items-center gap-2 text-[15px] font-semibold text-gray-700 capitalize">
-                                            <Clock size={14} className="text-orange-500" /> Call time gap (minutes)
-                                        </label>
-                                        <input
-                                            type="number"
-                                            value={formData.call_time_gap_minutes}
-                                            onChange={(e) => setFormData({ ...formData, call_time_gap_minutes: e.target.value })}
-                                            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500 focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 shadow-sm font-semibold"
-                                        />
-                                        <p className="text-[11px] text-gray-400 font-medium capitalize">Minimum time between two call attempts</p>
-                                    </div>
-                                </div>
-
-
-                            </div>
-                        </div>
                     </div>
 
                     {/* Activity Logs Sidebar */}
@@ -399,7 +398,7 @@ export default function AssignmentSettings() {
                                                 <span className={`px-3 py-1 rounded-sm text-[10px] font-bold capitalize tracking-wide shadow-sm ${log.assignment_type === 'auto' ? 'bg-blue-50 text-blue-600 border border-blue-100' : 'bg-orange-50 text-orange-600 border border-orange-100'}`}>
                                                     {log.assignment_type} mode
                                                 </span>
-                                                <span className="text-[11px] text-gray-400 font-bold bg-gray-50 px-2 py-1 rounded-sm border border-gray-100">{new Date(log.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                                <span className="text-[11px] text-orange-400 font-bold bg-orange-100 px-2 py-1 rounded-sm border border-orange-400">{new Date(log.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                                             </div>
                                             <h4 className="text-[13px] font-bold text-gray-800 leading-snug">
                                                 Lead <span className="text-orange-600 font-extrabold">{log.lead_name || 'Unidentified'}</span> assigned to <span className="text-gray-900">{log.employee_name || 'System Worker'}</span>

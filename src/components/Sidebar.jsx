@@ -254,6 +254,12 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           path: "/crm/leads/dashboard",
           permission: "Lead Dashboard"
         },
+        {
+          name: "Goal Dashbaord",
+          icon: <Target size={22} />,
+          path: "/crm/goals",
+          permission: "Leads Management"
+        },
       ],
     },
     {
@@ -400,12 +406,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           path: "/crm/channel/settings",
           permission: "Leads Management"
         },
-        {
-          name: "Goal Setting",
-          icon: <Target size={22} />,
-          path: "/crm/goals",
-          permission: "Leads Management"
-        },
+
       ],
     },
     {

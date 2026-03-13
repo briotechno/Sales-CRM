@@ -38,22 +38,34 @@ const inputStyles =
     "w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 placeholder-gray-400 bg-white hover:border-gray-300";
 
 const TeamStructureCard = ({ member, level, onUpdate, settings }) => {
+    const imageBaseUrl = import.meta.env.VITE_IMAGE_BASE_URL || import.meta.env.VITE_API_BASE_URL?.split('/api')[0];
+    const profileImageUrl = member.profile_picture ? `${imageBaseUrl}${member.profile_picture.startsWith('/') ? '' : '/'}${member.profile_picture}` : null;
+
     return (
-        <div className={`p-4 bg-white border-2 rounded-sm transition-all shadow-sm flex flex-col gap-4 font-primary ${settings?.isInvestigationOfficer ? "border-orange-500 bg-orange-50/30" : "border-gray-100 shadow-inner shadow-gray-50"}`}>
+        <div className={`p-4 bg-white border-2 rounded-sm transition-all shadow-sm flex flex-col gap-4 font-primary group/card hover:shadow-md hover:border-orange-400 ${settings?.isInvestigationOfficer ? "border-orange-500 bg-orange-50/40" : "border-orange-100 shadow-inner"}`}>
             <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-sm bg-gray-100 overflow-hidden border-2 border-white shadow-sm flex items-center justify-center text-lg font-black text-gray-400">
-                        {member.profile_picture ? (
-                            <img src={member.profile_picture_url} className="w-full h-full object-cover" alt="" />
-                        ) : (
-                            member.employee_name?.charAt(0)
-                        )}
+                    <div className="w-12 h-12 rounded-sm bg-orange-100 overflow-hidden border-2 border-white shadow-sm flex items-center justify-center text-lg font-black text-orange-600 transition-transform group-hover/card:scale-105">
+                        {profileImageUrl ? (
+                            <img
+                                src={profileImageUrl}
+                                className="w-full h-full object-cover"
+                                alt=""
+                                onError={(e) => {
+                                    e.target.style.display = 'none';
+                                    if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex';
+                                }}
+                            />
+                        ) : null}
+                        <span style={{ display: profileImageUrl ? 'none' : 'flex' }} className="flex items-center justify-center w-full h-full">
+                            {member.employee_name?.split(' ').map(n => n[0]).join('') || '?'}
+                        </span>
                     </div>
-                    <div>
-                        <p className="text-[13px] font-bold text-gray-800 leading-tight capitalize tracking-tight">{member.employee_name}</p>
-                        <p className="text-[10px] font-semibold text-gray-400 capitalize tracking-normal">{member.designation_name}</p>
+                    <div className="min-w-0">
+                        <p className="text-[14px] font-bold text-gray-800 leading-tight capitalize tracking-tight truncate font-primary">{member.employee_name}</p>
+                        <p className="text-[10px] font-semibold text-orange-500 uppercase tracking-wider font-primary">{member.designation_name || 'Agent'}</p>
                         <div className="flex items-center gap-1 mt-1">
-                            <span className="text-[9px] font-bold text-green-600 bg-green-50 px-1.5 py-0.5 rounded-sm border border-green-100 leading-none capitalize">
+                            <span className="text-[9px] font-black text-green-600 bg-green-50 px-2 py-0.5 rounded-sm border border-green-200 leading-none capitalize shadow-sm font-primary">
                                 {member.conversion_rate || "0"}% Conversion
                             </span>
                         </div>
@@ -61,18 +73,18 @@ const TeamStructureCard = ({ member, level, onUpdate, settings }) => {
                 </div>
                 <button
                     onClick={() => onUpdate(member.id, 'isInvestigationOfficer', !settings?.isInvestigationOfficer)}
-                    className={`flex items-center gap-1.5 px-2 py-1.5 rounded-sm transition-all border ${settings?.isInvestigationOfficer
-                        ? "bg-blue-600 text-white border-blue-600 shadow-md"
-                        : "bg-white text-gray-400 border-gray-200 hover:border-blue-400 hover:text-blue-600"
+                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-sm transition-all border shadow-sm ${settings?.isInvestigationOfficer
+                        ? "bg-orange-600 text-white border-orange-600"
+                        : "bg-white text-gray-400 border-gray-200 hover:border-orange-400 hover:text-orange-600"
                         }`}
                     title="Toggle Investigation Officer Status"
                 >
                     {settings?.isInvestigationOfficer ? (
-                        <ShieldCheck size={12} fill="currentColor" fillOpacity={0.2} />
+                        <ShieldCheck size={14} fill="currentColor" fillOpacity={0.2} />
                     ) : (
-                        <Shield size={12} />
+                        <Shield size={14} />
                     )}
-                    <span className="text-[10px] font-semibold capitalize tracking-normal">I.O.</span>
+                    <span className="text-[11px] font-bold uppercase tracking-tighter font-primary">I.O.</span>
                 </button>
             </div>
 
@@ -175,60 +187,62 @@ const TeamHierarchyConfig = ({ teamId, hierarchySettings, setHierarchySettings }
                         <Users size={16} className="text-white" />
                     </div>
                     <div>
-                        <h4 className="text-[15px] font-bold text-gray-900 capitalize leading-tight">{team?.team_name} Matrix</h4>
-                        <p className="text-[11px] font-semibold text-gray-500 capitalize">Define flow-based lead distribution</p>
+                        <h4 className="text-[16px] font-bold text-gray-900 capitalize leading-tight">{team?.team_name} Matrix</h4>
+                        <p className="text-[12px] font-semibold text-gray-500 capitalize">Define flow-based lead distribution</p>
                     </div>
                 </div>
-                <div className="flex items-center gap-4">
-                    <div className="flex flex-col items-end">
-                        <span className="text-[10px] font-bold text-gray-400 capitalize italic opacity-90 leading-none">Strategy</span>
-                        <span className="text-[11px] font-bold text-gray-800 capitalize">Round Robin</span>
-                    </div>
-                </div>
+
             </div>
 
-            <div className="space-y-8 relative">
+            <div className="space-y-0 relative">
                 {Object.entries(levelsGrouped).sort().map(([level, members], idx, arr) => (
-                    <div key={level} className="space-y-4 relative">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <div className="bg-[#222] text-white px-3 py-1 rounded-sm flex items-center justify-center text-[10px] font-bold shadow-lg shadow-gray-200 uppercase tracking-widest">
-                                    L{level}
+                    <div key={level} className="relative">
+                        {/* Level Wrapper with Solid Border */}
+                        <div className="p-6 bg-white border-2 border-orange-100 rounded-sm space-y-6 relative transition-all hover:border-orange-400 group/level">
+                            {/* Header for Level */}
+                            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 font-primary">
+                                <div className="flex items-center gap-4">
+                                    <div className="bg-gradient-to-br from-gray-800 to-black text-white px-5 py-2 rounded-sm flex items-center justify-center text-[14px] font-bold shadow-lg capitalize font-primary border border-gray-700">
+                                        Level {level}
+                                    </div>
+                                    <div className="h-[2px] w-12 bg-gradient-to-r from-orange-200 to-transparent rounded-full"></div>
+                                    <p className="text-[15px] font-bold text-orange-600 capitalize font-primary">{members.length} Members</p>
                                 </div>
-                                <div className="h-[1px] w-12 bg-gradient-to-r from-gray-200 to-transparent"></div>
+                                <div className="flex flex-wrap items-center justify-center gap-4">
+                                    <span className="text-[14px] font-bold text-orange-600 capitalize font-primary">Quick Apply:</span>
+                                    <button
+                                        onClick={() => applyToLevel(level, 'dailyLimitUnlimited', true)}
+                                        type="button"
+                                        className="text-[13px] font-bold text-orange-600 hover:bg-orange-500 hover:text-white px-5 py-2.5 rounded-sm transition-all border-2 border-orange-200 bg-white capitalize font-primary shadow-sm hover:shadow-none"
+                                    >
+                                        Unlimited All
+                                    </button>
+                                    <button
+                                        onClick={() => applyToLevel(level, 'isInvestigationOfficer', true)}
+                                        type="button"
+                                        className="text-[13px] font-bold text-blue-600 hover:bg-blue-500 hover:text-white px-5 py-2.5 rounded-sm transition-all border-2 border-blue-200 bg-white capitalize font-primary shadow-sm hover:shadow-none"
+                                    >
+                                        Set I.O. All
+                                    </button>
+                                </div>
                             </div>
-                            <div className="flex items-center gap-3">
-                                <span className="text-[11px] font-bold text-gray-500 capitalize">Bulk:</span>
-                                <button
-                                    onClick={() => applyToLevel(level, 'dailyLimitUnlimited', true)}
-                                    className="text-[11px] font-bold text-orange-600 hover:bg-orange-50 px-3.5 py-1.5 rounded-sm transition-all border border-orange-200 capitalize bg-white shadow-sm"
-                                >
-                                    Unlimited All
-                                </button>
-                                <button
-                                    onClick={() => applyToLevel(level, 'isInvestigationOfficer', true)}
-                                    className="text-[11px] font-bold text-blue-600 hover:bg-blue-50 px-3.5 py-1.5 rounded-sm transition-all border border-blue-200 capitalize bg-white shadow-sm"
-                                >
-                                    Investigation Officer All
-                                </button>
-                            </div>
-                        </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                            {members.map(member => (
-                                <TeamStructureCard
-                                    key={member.id}
-                                    member={member}
-                                    level={level}
-                                    settings={hierarchySettings[teamId]?.[member.id]}
-                                    onUpdate={updateMemberSetting}
-                                />
-                            ))}
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                                {members.map(member => (
+                                    <TeamStructureCard
+                                        key={member.id}
+                                        member={member}
+                                        level={level}
+                                        settings={hierarchySettings[teamId]?.[member.id]}
+                                        onUpdate={updateMemberSetting}
+                                    />
+                                ))}
+                            </div>
                         </div>
 
                         {idx < arr.length - 1 && (
-                            <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 opacity-10">
-                                <ChevronRight className="rotate-90 text-gray-800" size={24} />
+                            <div className="flex justify-center -my-px">
+                                <div className="w-[3px] h-10 bg-gradient-to-b from-orange-200 via-orange-100 to-orange-200"></div>
                             </div>
                         )}
                     </div>

@@ -81,14 +81,14 @@ const IVRSettings = () => {
         <>
             <div className="w-full">
                 <div className="bg-white border border-gray-200 rounded-sm shadow-sm overflow-hidden mb-6">
-                    <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-4 flex items-center justify-between shadow-md">
-                        <div className="flex items-center gap-3 text-white">
-                            <div className="p-2 bg-white/20 rounded-sm">
-                                <Mic size={20} />
+                    <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 bg-orange-100 text-orange-600 rounded-sm">
+                                <Mic size={18} />
                             </div>
                             <div>
-                                <h3 className="text-lg font-bold capitalize tracking-wide">IVR Configuration</h3>
-                                <p className="text-sm font-medium opacity-90 capitalize mt-0.5">Automated incoming call menu setup</p>
+                                <h3 className="text-base font-bold text-gray-800 capitalize tracking-tight font-primary">2. IVR Configuration</h3>
+                                <p className="text-[11px] font-semibold text-gray-400 capitalize mt-0.5">Automated incoming call menu setup</p>
                             </div>
                         </div>
                     </div>
@@ -197,10 +197,9 @@ const IVRSettings = () => {
                             </div>
                         </div>
 
-                        {/* Submit Section */}
                         <div className="pt-4 flex justify-end gap-3 font-primary">
                             <button
-                                className="px-6 py-3 border border-gray-200 text-gray-500 font-bold rounded-sm hover:bg-gray-50 transition-all text-sm capitalize tracking-wide shadow-sm"
+                                className="px-6 py-3 border border-gray-200 text-gray-500 font-bold rounded-sm hover:bg-gray-50 transition-all text-base capitalize tracking-wide shadow-sm"
                                 onClick={() => window.location.reload()}
                             >
                                 Reset Configuration
@@ -208,7 +207,7 @@ const IVRSettings = () => {
                             <button
                                 onClick={handleSave}
                                 disabled={isSaving}
-                                className="px-8 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold rounded-sm hover:shadow-lg transition-all text-sm capitalize tracking-wide flex items-center gap-2 active:scale-95 disabled:opacity-70"
+                                className="px-8 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold rounded-sm hover:shadow-lg transition-all text-base capitalize tracking-wide flex items-center gap-2 active:scale-95 disabled:opacity-70"
                             >
                                 {isSaving ? <RefreshCw size={18} className="animate-spin" /> : <Save size={18} />}
                                 {isSaving ? "Saving Config..." : "Deploy IVR Menus"}

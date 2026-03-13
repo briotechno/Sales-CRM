@@ -8,7 +8,8 @@ import CreateCampaignModal from "../../components/ChannelIntegration/CreateCampa
 import CampaignList from "../../components/ChannelIntegration/CampaignList";
 import DialerSettings from "./DialerSettings";
 import IVRSettings from "./IVRSettings";
-import { Phone, Mic } from "lucide-react";
+import WhatsAppSettings from "./WhatsAppSettings";
+import { Phone, Mic, MessageSquare } from "lucide-react";
 
 export default function ChannelSettings() {
     const [activeTab, setActiveTab] = useState("campaign-list");
@@ -204,17 +205,17 @@ export default function ChannelSettings() {
                                 }`}
                         >
                             <Phone size={18} className={activeTab === "dialer" ? "text-orange-500" : ""} />
-                            Dialer Integration
+                            Dialer & IVR Configuration
                         </button>
                         <button
-                            onClick={() => setActiveTab("ivr")}
-                            className={`flex items-center gap-2 px-5 py-2.5 rounded-md text-[15px] font-bold transition-all duration-300 ${activeTab === "ivr"
+                            onClick={() => setActiveTab("whatsapp")}
+                            className={`flex items-center gap-2 px-5 py-2.5 rounded-md text-[15px] font-bold transition-all duration-300 ${activeTab === "whatsapp"
                                 ? "bg-white text-orange-600 shadow-sm"
                                 : "text-gray-500 hover:text-gray-700 hover:bg-gray-200/50"
                                 }`}
                         >
-                            <Mic size={18} className={activeTab === "ivr" ? "text-orange-500" : ""} />
-                            IVR Configuration
+                            <MessageSquare size={18} className={activeTab === "whatsapp" ? "text-orange-500" : ""} />
+                            WhatsApp Integration
                         </button>
                     </div>
                 </div>
@@ -252,13 +253,40 @@ export default function ChannelSettings() {
                     </div>
                 )}
                 {activeTab === "dialer" && (
-                    <div className="px-6 py-6 font-primary">
+                    <div className="px-6 py-6 font-primary space-y-6">
+                        {/* Main Unified Header - Matching AssignmentSettings style */}
+                        <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 bg-orange-100 rounded-sm flex items-center justify-center text-orange-600 shadow-sm border border-orange-200">
+                                    <Phone size={28} />
+                                </div>
+                                <div>
+                                    <h1 className="text-2xl font-bold text-gray-800 capitalize tracking-wide">Communication Settings</h1>
+                                    <p className="text-sm text-gray-500 font-medium capitalize">Manage your dialer gateway and IVR call flows in one place</p>
+                                </div>
+                            </div>
+                        </div>
+
                         <DialerSettings />
+                        <IVRSettings />
                     </div>
                 )}
-                {activeTab === "ivr" && (
-                    <div className="px-6 py-6 font-primary">
-                        <IVRSettings />
+                {activeTab === "whatsapp" && (
+                    <div className="px-6 py-6 font-primary space-y-6">
+                        {/* Main Unified Header - Matching AssignmentSettings style */}
+                        <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 bg-orange-100 rounded-sm flex items-center justify-center text-orange-600 shadow-sm border border-orange-200">
+                                    <MessageSquare size={28} />
+                                </div>
+                                <div>
+                                    <h1 className="text-2xl font-bold text-gray-800 capitalize tracking-wide">WhatsApp Business Integration</h1>
+                                    <p className="text-sm text-gray-500 font-medium capitalize">Configure official WhatsApp Business API for automated messaging</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <WhatsAppSettings />
                     </div>
                 )}
             </div>
