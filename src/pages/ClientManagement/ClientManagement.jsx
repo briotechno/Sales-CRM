@@ -1056,8 +1056,8 @@ export default function AllClientPage() {
                               </div>
                             </div>
 
-                            {/* Category Block - Shown only on 1920px+ */}
-                            <div className="hidden 3xl:flex items-center gap-2.5 text-gray-600 group/info border-l border-orange-100/30 pl-4 min-w-0 flex-1">
+                            {/* Category Block - Shown only on 1536px+ */}
+                            <div className="hidden 2xl:flex items-center gap-2.5 text-gray-600 group/info border-l border-orange-100/30 pl-4 min-w-0 flex-1">
                               <div className="p-2 bg-white rounded-lg shadow-sm border border-orange-100 group-hover/info:bg-orange-50 transition-colors flex-shrink-0">
                                 {client.type === 'person' ? <User size={14} className="text-orange-500" /> : <Building2 size={14} className="text-orange-500" />}
                               </div>
@@ -1071,8 +1071,8 @@ export default function AllClientPage() {
                               </div>
                             </div>
 
-                            {/* Source Block */}
-                            <div className="hidden 2xl:flex items-center gap-2.5 text-gray-600 group/info border-l border-orange-100/30 pl-4 min-w-0 flex-1">
+                            {/* Source Block - Shown only on 1280px+ */}
+                            <div className="hidden xl:flex items-center gap-2.5 text-gray-600 group/info border-l border-orange-100/30 pl-4 min-w-0 flex-1">
                               <div className="p-2 bg-white rounded-lg shadow-sm border border-orange-100 group-hover/info:bg-orange-50 transition-colors flex-shrink-0">
                                 <Globe size={14} className="text-orange-500" />
                               </div>
