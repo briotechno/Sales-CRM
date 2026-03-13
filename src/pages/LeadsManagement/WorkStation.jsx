@@ -388,33 +388,41 @@ const WorkStationLeadsGridView = ({
 
         return (
           <div key={groupTag} className="flex flex-col group/column">
-            <div
-              onClick={() => {
-                const paths = {
-                  "New Leads": "/crm/leads/new",
-                  "Not Connected": "/crm/leads/not-connected",
-                  "Follow Up": "/crm/leads/follow-up",
-                  "Trending": "/crm/leads/trending"
-                };
-                if (paths[groupTag]) navigate(paths[groupTag]);
-              }}
-              className={`cursor-pointer rounded-sm shadow-sm border border-gray-200 p-4 mb-4 border-t-4 bg-white transition-all duration-300 group ${groupTag === 'Trending' ? 'border-t-orange-500 bg-orange-50/50' : groupTag === 'New Leads' ? 'border-t-blue-500 bg-blue-50/50' : groupTag === 'Not Connected' ? 'border-t-purple-500 bg-purple-50/50' : 'border-t-yellow-500 bg-yellow-50/50'}`}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div className="p-1.5 rounded-sm bg-white border border-gray-100 shadow-sm">
-                    {groupTag === 'New Leads' && <UserPlus size={18} className="text-blue-500" />}
-                    {groupTag === 'Not Connected' && <PhoneIncoming size={18} className="text-purple-500" />}
-                    {groupTag === 'Follow Up' && <Clock size={18} className="text-yellow-500" />}
-                    {groupTag === 'Trending' && <TrendingUp size={18} className="text-orange-500" />}
-                  </div>
-                  <h3 className="text-sm font-bold text-gray-800 capitalize tracking-tight font-primary">{groupTag}</h3>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="bg-white text-gray-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-gray-100 shadow-sm">{tagLeads.length}</span>
-                  <ChevronRight size={14} className="text-gray-400 opacity-0 group-hover:opacity-100 transition-all -translate-x-1 group-hover:translate-x-0" />
-                </div>
-              </div>
+            <div className="mb-4">
+              <NumberCard
+                variant="matrix"
+                title={groupTag}
+                number={tagLeads.length}
+                lineBorderClass={
+                  groupTag === "Trending"
+                    ? "border-orange-500"
+                    : groupTag === "New Leads"
+                      ? "border-blue-500"
+                      : groupTag === "Not Connected"
+                        ? "border-purple-500"
+                        : "border-yellow-500"
+                }
+                icon={
+                  groupTag === "New Leads" ? (
+                    <UserPlus />
+                  ) : groupTag === "Not Connected" ? (
+                    <PhoneIncoming />
+                  ) : groupTag === "Follow Up" ? (
+                    <Clock />
+                  ) : (
+                    <TrendingUp />
+                  )
+                }
+                onClick={() => {
+                  const paths = {
+                    "New Leads": "/crm/leads/new",
+                    "Not Connected": "/crm/leads/not-connected",
+                    "Follow Up": "/crm/leads/follow-up",
+                    "Trending": "/crm/leads/trending"
+                  };
+                  if (paths[groupTag]) navigate(paths[groupTag]);
+                }}
+              />
             </div>
 
             <div className="space-y-4">

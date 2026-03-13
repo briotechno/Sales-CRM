@@ -229,35 +229,35 @@ export default function LeadDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
 
           <NumberCard
+            variant="matrix"
             title="All Leads"
             number={stats.total.toLocaleString()}
             up={stats.total_up}
-            icon={<Users className="text-blue-600" size={24} />}
-            iconBgColor="bg-blue-100"
+            icon={<Users size={24} />}
             lineBorderClass="border-blue-500"
           />
           <NumberCard
+            variant="matrix"
             title="New Leads"
             number={stats.new.toLocaleString()}
             up={stats.new_up}
-            icon={<UserPlus className="text-green-600" size={24} />}
-            iconBgColor="bg-green-100"
+            icon={<UserPlus size={24} />}
             lineBorderClass="border-green-500"
           />
           <NumberCard
+            variant="matrix"
             title="Assigned"
             number={stats.assigned.toLocaleString()}
             up={stats.assigned_up}
-            icon={<UserCheck className="text-orange-600" size={24} />}
-            iconBgColor="bg-orange-100"
+            icon={<UserCheck size={24} />}
             lineBorderClass="border-orange-500"
           />
           <NumberCard
+            variant="matrix"
             title="Unread Leads"
             number={stats.unread.toLocaleString()}
             down={stats.unread_down}
-            icon={<Mail className="text-purple-600" size={24} />}
-            iconBgColor="bg-purple-100"
+            icon={<Mail size={24} />}
             lineBorderClass="border-purple-500"
           />
         </div>
