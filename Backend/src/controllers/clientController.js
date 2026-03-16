@@ -80,6 +80,55 @@ const clientController = {
             console.error('Error fetching client quotations:', error);
             res.status(500).json({ success: false, message: 'Error fetching client quotations' });
         }
+    },
+
+    getClientFiles: async (req, res) => {
+        try {
+            const files = await Client.getFiles(req.params.id, req.user.id);
+            res.json({ success: true, data: files });
+        } catch (error) {
+            console.error('Error fetching client files:', error);
+            res.status(500).json({ success: false, message: 'Error fetching client files' });
+        }
+    },
+
+    addClientFile: async (req, res) => {
+        try {
+            if (!req.files || req.files.length === 0) {
+                return res.status(400).json({ success: false, message: 'No files uploaded' });
+            }
+
+            const results = [];
+            for (const file of req.files) {
+                const result = await Client.addFile({
+                    client_id: req.params.id,
+                    name: file.originalname,
+                    path: file.path,
+                    type: file.mimetype,
+                    size: file.size,
+                    description: req.body.description
+                }, req.user.id);
+                results.push(result);
+            }
+
+            res.status(201).json({ success: true, data: results });
+        } catch (error) {
+            console.error('Error uploading client files:', error);
+            res.status(500).json({ success: false, message: 'Error uploading client files' });
+        }
+    },
+    
+    deleteClientFile: async (req, res) => {
+        try {
+            const success = await Client.deleteFile(req.params.fileId, req.user.id);
+            if (!success) {
+                return res.status(404).json({ success: false, message: 'File not found' });
+            }
+            res.json({ success: true, message: 'File deleted successfully' });
+        } catch (error) {
+            console.error('Error deleting client file:', error);
+            res.status(500).json({ success: false, message: 'Error deleting client file' });
+        }
     }
 };
 

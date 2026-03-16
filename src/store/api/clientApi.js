@@ -48,6 +48,29 @@ export const clientApi = createApi({
             }),
             invalidatesTags: ['Client'],
         }),
+        getClientQuotations: builder.query({
+            query: (id) => `/${id}/quotations`,
+            providesTags: (result, error, id) => [{ type: 'Client', id: `quotations-${id}` }],
+        }),
+        getClientFiles: builder.query({
+            query: (id) => `/${id}/files`,
+            providesTags: (result, error, id) => [{ type: 'Client', id: `files-${id}` }],
+        }),
+        addClientFile: builder.mutation({
+            query: ({ id, data }) => ({
+                url: `/${id}/files`,
+                method: 'POST',
+                body: data,
+            }),
+            invalidatesTags: (result, error, { id }) => [{ type: 'Client', id: `files-${id}` }],
+        }),
+        deleteClientFile: builder.mutation({
+            query: ({ clientId, fileId }) => ({
+                url: `/${clientId}/files/${fileId}`,
+                method: 'DELETE',
+            }),
+            invalidatesTags: (result, error, { clientId }) => [{ type: 'Client', id: `files-${clientId}` }],
+        }),
     }),
 });
 
@@ -57,4 +80,8 @@ export const {
     useCreateClientMutation,
     useUpdateClientMutation,
     useDeleteClientMutation,
+    useGetClientQuotationsQuery,
+    useGetClientFilesQuery,
+    useAddClientFileMutation,
+    useDeleteClientFileMutation,
 } = clientApi;

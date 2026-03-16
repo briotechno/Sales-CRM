@@ -42,7 +42,7 @@ import {
 import { useGetQuotationsQuery } from "../../store/api/quotationApi";
 import { toast } from "react-hot-toast";
 import Modal from "../../components/common/Modal";
-import ViewClientModal from "../../components/Client/ViewClientModal";
+// import ViewClientModal from "../../components/Client/ViewClientModal";
 import CallQrModal from "../../components/LeadManagement/CallQrModal";
 import CallActionPopup from "../../components/AddNewLeads/CallActionPopup";
 import { useDebounce } from "../../hooks/useDebounce";
@@ -77,8 +77,8 @@ export default function AllClientPage() {
   const [clientToDelete, setClientToDelete] = useState(null); // ID for single delete
   const [isBulkDelete, setIsBulkDelete] = useState(false);
 
-  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-  const [clientToView, setClientToView] = useState(null);
+  // const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  // const [clientToView, setClientToView] = useState(null);
 
   // QR Modal States
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
@@ -436,8 +436,7 @@ export default function AllClientPage() {
   };
 
   const openViewModal = (client) => {
-    setClientToView(client);
-    setIsViewModalOpen(true);
+    navigate(`/crm/client/profile/${client.id}`);
   };
 
   const handleSubmit = async (e) => {
@@ -523,21 +522,21 @@ export default function AllClientPage() {
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-white font-primary">
         {/* Header */}
         {/* Header */}
         <div className="bg-white sticky top-0 z-30">
           <div className="max-w-8xl mx-auto px-4 py-4 border-b">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
-                <h1 className="text-2xl font-bold text-gray-800 capitalize tracking-tight">
+                <h1 className="text-2xl font-bold text-slate-800 capitalize tracking-tight">
                   All Clients
                 </h1>
                 <p className="text-[11px] text-gray-400 mt-1 flex items-center gap-2 font-bold capitalize tracking-wider">
                   <FiHome className="text-gray-400" size={12} />
                   <span>CRM</span>
                   <span className="text-gray-300">/</span>
-                  <span className="text-[#FF7B1D]">
+                  <span className="text-[#FF7B1D] font-bold capitalize tracking-wide">
                     All Clients
                   </span>
                 </p>
@@ -723,7 +722,7 @@ export default function AllClientPage() {
                 {/* Add Client Button */}
                 <button
                   onClick={openAddModal}
-                  className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm text-sm font-bold transition shadow-lg hover:shadow-xl hover:from-orange-600 hover:to-orange-700 capitalize tracking-wider"
+                  className="flex items-center gap-2 px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-sm text-sm font-semibold transition shadow-lg active:scale-95 capitalize tracking-wider"
                 >
                   <Plus size={20} />
                   Add Client
@@ -852,7 +851,7 @@ export default function AllClientPage() {
                                 {client.type === "person" ? <User size={32} /> : <Building2 size={32} />}
                               </div>
                               <div className="flex-1 min-w-0">
-                                <h3 className="text-xl font-bold text-gray-900 leading-tight mb-2 truncate">
+                                <h3 className="text-xl font-bold text-slate-800 leading-tight mb-2 truncate uppercase tracking-tight">
                                   {client.type === 'person' ? `${client.first_name} ${client.last_name || ''}` : client.company_name}
                                 </h3>
                                 <div className="flex flex-wrap items-center gap-2 mb-3">
@@ -934,7 +933,7 @@ export default function AllClientPage() {
                                 </div>
                                 <div className="flex flex-col items-center flex-1">
                                   <p className="text-xs text-[#FF7B1D] capitalize font-bold tracking-wide">Status</p>
-                                  <p className={`text-sm font-black mt-1 capitalize ${client.status === 'active' ? 'text-green-600' : 'text-gray-600'}`}>
+                                  <p className={`text-sm font-bold mt-1 capitalize ${client.status === 'active' ? 'text-green-600' : 'text-gray-600'}`}>
                                     {client.status || 'Active'}
                                   </p>
                                 </div>
@@ -1006,7 +1005,7 @@ export default function AllClientPage() {
                       return (
                         <div
                           key={client.id}
-                          className={`flex items-center justify-between p-4 rounded-lg hover:shadow-md transition-all duration-200 border group ${selectedClients.has(client.id) ? 'bg-orange-50 border-orange-300 ring-1 ring-orange-200' : 'bg-gradient-to-r from-orange-50 to-amber-50 border-orange-200'}`}
+                          className={`flex items-center justify-between p-3 rounded-sm hover:shadow-sm transition-all duration-200 border group ${selectedClients.has(client.id) ? 'bg-orange-50 border-orange-400' : 'bg-white border-gray-100 hover:border-orange-200'}`}
                         >
                           {/* Selection Checkbox */}
                           <div className="flex items-center px-2">
@@ -1023,7 +1022,7 @@ export default function AllClientPage() {
                               {avatar}
                             </div>
                             <div className="flex flex-col justify-center min-w-0">
-                              <h4 className="font-bold text-gray-800 text-[21px] capitalize truncate mb-0.5">
+                              <h4 className="font-bold text-slate-800 text-[21px] capitalize truncate mb-0.5 tracking-tight">
                                 {name}
                               </h4>
                               <p className="text-[16px] text-gray-500 lowercase truncate font-medium">{client.email || 'no-email@found.com'}</p>
@@ -1064,7 +1063,7 @@ export default function AllClientPage() {
                               <div className="flex flex-col min-w-0">
                                 <span className="text-[14px] text-gray-500 font-semibold capitalize tracking-tight font-primary mb-1 whitespace-nowrap">Client Category</span>
                                 <div>
-                                  <span className={`px-3 py-1.5 rounded-full text-[12px] font-black uppercase tracking-widest shadow-sm border w-fit ${client.type === 'person' ? 'bg-blue-100 text-blue-600 border-blue-200' : 'bg-purple-100 text-purple-600 border-purple-200'}`}>
+                                  <span className={`px-3 py-1.5 rounded-full text-[12px] font-bold uppercase tracking-widest shadow-sm border w-fit ${client.type === 'person' ? 'bg-blue-100 text-blue-600 border-blue-200' : 'bg-purple-100 text-purple-600 border-purple-200'}`}>
                                     {client.type}
                                   </span>
                                 </div>
@@ -1089,7 +1088,7 @@ export default function AllClientPage() {
                           <div className="flex items-center gap-4 xl:gap-8 flex-shrink-0 ml-auto border-l border-orange-100/50 pl-4 xl:pl-8 pr-4">
                             <div className="hidden lg:flex flex-col items-center min-w-[100px]">
                               <span className="text-[14px] text-gray-500 font-semibold capitalize tracking-tight font-primary mb-1 whitespace-nowrap">Status</span>
-                              <span className={`px-4 py-1.5 rounded-full text-[12px] font-black border capitalize shadow-sm ${getStatusColor(client.status)}`}>
+                              <span className={`px-4 py-1.5 rounded-full text-[12px] font-bold border capitalize shadow-sm ${getStatusColor(client.status)}`}>
                                 {client.status}
                               </span>
                             </div>
@@ -1103,7 +1102,7 @@ export default function AllClientPage() {
                           </div>
 
                           {/* Actions always visible now as requested */}
-                          <div className="flex items-center gap-1 sm:gap-2 bg-white/80 backdrop-blur-sm p-1.5 rounded-lg border border-orange-100 shadow-sm transition-all">
+                          <div className="flex items-center gap-1">
                             <button
                               onClick={() => openViewModal(client)}
                               className="p-2 text-blue-600 hover:bg-blue-100 rounded-md transition-all hover:scale-110"
@@ -1181,7 +1180,7 @@ export default function AllClientPage() {
                   disabled={currentPage === pagination.totalPages}
                   className={`px-4 py-2 rounded-sm font-bold transition flex items-center gap-1 ${currentPage === pagination.totalPages
                     ? "bg-gray-200 text-gray-400 cursor-not-allowed border-gray-300 shadow-sm"
-                    : "bg-[#22C55E] text-white hover:opacity-90 shadow-md transition-all font-primary text-xs uppercase tracking-widest pt-2.5"
+                    : "bg-[#FF7B1D] text-white hover:bg-orange-600 shadow-md transition-all font-primary text-xs uppercase tracking-widest px-6"
                     }`}
                 >
                   Next
@@ -1361,75 +1360,87 @@ export default function AllClientPage() {
                   {/* Person Form */}
                   {clientType === "person" && (
                     <div className="animate-fadeIn">
-                      <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2 pb-2 border-b">
-                        <User className="text-orange-500" size={20} /> Personal Information
+                      <h3 className="text-lg font-black text-slate-800 mb-6 flex items-center gap-2 pb-2 border-b border-gray-100 uppercase tracking-tight">
+                        <User className="text-[#FF7B1D]" size={20} /> Personal Information
                       </h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-2">
-                          <label className="text-sm font-semibold text-gray-700 flex items-center gap-2"><User size={14} className="text-orange-500" /> First Name <span className="text-red-500">*</span></label>
+                        <div className="space-y-1.5">
+                          <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2 capitalize tracking-normal">
+                            <User size={16} className="text-[#FF7B1D]" /> First Name <span className="text-red-500">*</span>
+                          </label>
                           <input
                             type="text"
                             name="firstName"
                             value={formData.firstName}
                             onChange={handleInputChange}
-                            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all font-semibold text-gray-700 bg-white"
+                            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-1 focus:ring-[#FF7B1D]/20 outline-none transition-all text-sm font-semibold"
                             required
                             placeholder="John"
                           />
                         </div>
-                        <div className="space-y-2">
-                          <label className="text-sm font-semibold text-gray-700 flex items-center gap-2"><User size={14} className="text-orange-500" /> Last Name</label>
+                        <div className="space-y-1.5">
+                          <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2 capitalize tracking-normal">
+                            <User size={16} className="text-[#FF7B1D]" /> Last Name
+                          </label>
                           <input
                             type="text"
                             name="lastName"
                             value={formData.lastName}
                             onChange={handleInputChange}
-                            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all font-semibold text-gray-700 bg-white"
+                            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-1 focus:ring-[#FF7B1D]/20 outline-none transition-all text-sm font-semibold"
                             placeholder="Doe"
                           />
                         </div>
-                        <div className="space-y-2">
-                          <label className="text-sm font-semibold text-gray-700 flex items-center gap-2"><Mail size={14} className="text-orange-500" /> Email Address <span className="text-red-500">*</span></label>
+                        <div className="space-y-1.5">
+                          <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2 capitalize tracking-normal">
+                            <Mail size={16} className="text-[#FF7B1D]" /> Email Address <span className="text-red-500">*</span>
+                          </label>
                           <input
                             type="email"
                             name="email"
                             value={formData.email}
                             onChange={handleInputChange}
-                            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all font-semibold text-gray-700 bg-white"
+                            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-1 focus:ring-[#FF7B1D]/20 outline-none transition-all text-sm font-semibold"
                             required
                             placeholder="john@example.com"
                           />
                         </div>
-                        <div className="space-y-2">
-                          <label className="text-sm font-semibold text-gray-700 flex items-center gap-2"><Phone size={14} className="text-orange-500" /> Phone</label>
+                        <div className="space-y-1.5">
+                          <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2 capitalize tracking-normal">
+                            <Phone size={16} className="text-[#FF7B1D]" /> Phone
+                          </label>
                           <input
                             type="tel"
                             name="phone"
                             value={formData.phone}
                             onChange={handleInputChange}
-                            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all font-semibold text-gray-700 bg-white"
+                            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-1 focus:ring-[#FF7B1D]/20 outline-none transition-all text-sm font-semibold"
                             placeholder="+1 234 567 890"
                           />
                         </div>
-                        <div className="space-y-2">
-                          <label className="text-sm font-semibold text-gray-700 flex items-center gap-2"><Building2 size={14} className="text-orange-500" /> Company (if any)</label>
+                        <div className="space-y-1.5">
+                          <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2 capitalize tracking-normal">
+                            <Building2 size={16} className="text-[#FF7B1D]" /> Company (if any)
+                          </label>
                           <input
                             type="text"
                             name="company"
                             value={formData.company}
                             onChange={handleInputChange}
-                            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all font-semibold text-gray-700 bg-white"
+                            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-1 focus:ring-[#FF7B1D]/20 outline-none transition-all text-sm font-semibold"
                             placeholder="Workplace name"
                           />
                         </div>
-                        <div className="space-y-2">
-                          <label className="text-sm font-semibold text-gray-700 flex items-center gap-2"><Calendar size={14} className="text-orange-500" /> Birthday</label>
+                        <div className="space-y-1.5">
+                          <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2 capitalize tracking-normal">
+                            <Calendar size={16} className="text-[#FF7B1D]" /> Birthday
+                          </label>
                           <input
                             type="date"
                             name="birthday"
                             value={formData.birthday}
                             onChange={handleInputChange}
-                            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all font-semibold text-gray-700 bg-white"
+                            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-1 focus:ring-[#FF7B1D]/20 outline-none transition-all text-sm font-semibold"
                           />
                         </div>
                       </div>
@@ -1439,65 +1450,75 @@ export default function AllClientPage() {
                   {/* Organization Form */}
                   {clientType === "organization" && (
                     <div className="animate-fadeIn">
-                      <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2 pb-2 border-b">
-                        <Building2 className="text-orange-500" size={20} /> Organization Details
+                      <h3 className="text-lg font-black text-slate-800 mb-6 flex items-center gap-2 pb-2 border-b border-gray-100 uppercase tracking-tight">
+                        <Building2 className="text-[#FF7B1D]" size={20} /> Organization Details
                       </h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="md:col-span-2 space-y-2">
-                          <label className="text-sm font-semibold text-gray-700 flex items-center gap-2"><Building2 size={14} className="text-orange-500" /> Organization Name <span className="text-red-500">*</span></label>
+                        <div className="md:col-span-2 space-y-1.5">
+                          <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2 capitalize tracking-normal">
+                            <Building2 size={16} className="text-[#FF7B1D]" /> Organization Name <span className="text-red-500">*</span>
+                          </label>
                           <input
                             type="text"
                             name="orgName"
                             value={formData.orgName}
                             onChange={handleInputChange}
-                            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all font-semibold text-gray-700 bg-white"
+                            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-1 focus:ring-[#FF7B1D]/20 outline-none transition-all text-sm font-semibold"
                             required
                             placeholder="Acme Corp"
                           />
                         </div>
-                        <div className="space-y-2">
-                          <label className="text-sm font-semibold text-gray-700 flex items-center gap-2"><Mail size={14} className="text-orange-500" /> Work Email <span className="text-red-500">*</span></label>
+                        <div className="space-y-1.5">
+                          <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2 capitalize tracking-normal">
+                            <Mail size={16} className="text-[#FF7B1D]" /> Work Email <span className="text-red-500">*</span>
+                          </label>
                           <input
                             type="email"
                             name="orgEmail"
                             value={formData.orgEmail}
                             onChange={handleInputChange}
-                            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all font-semibold text-gray-700 bg-white"
+                            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-1 focus:ring-[#FF7B1D]/20 outline-none transition-all text-sm font-semibold"
                             required
                             placeholder="contact@acme.com"
                           />
                         </div>
-                        <div className="space-y-2">
-                          <label className="text-sm font-semibold text-gray-700 flex items-center gap-2"><Phone size={14} className="text-orange-500" /> Work Phone <span className="text-red-500">*</span></label>
+                        <div className="space-y-1.5">
+                          <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2 capitalize tracking-normal">
+                            <Phone size={16} className="text-[#FF7B1D]" /> Work Phone <span className="text-red-500">*</span>
+                          </label>
                           <input
                             type="tel"
                             name="orgPhone"
                             value={formData.orgPhone}
                             placeholder="+1 234 567 890"
                             onChange={handleInputChange}
-                            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all font-semibold text-gray-700 bg-white"
+                            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-1 focus:ring-[#FF7B1D]/20 outline-none transition-all text-sm font-semibold"
                             required
                           />
                         </div>
-                        <div className="space-y-2">
-                          <label className="text-sm font-semibold text-gray-700 flex items-center gap-2"><Globe size={14} className="text-orange-500" /> Website</label>
+                        <div className="space-y-1.5">
+                          <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2 capitalize tracking-normal">
+                            <Globe size={16} className="text-[#FF7B1D]" /> Website
+                          </label>
                           <input
                             type="url"
                             name="website"
                             value={formData.website}
                             onChange={handleInputChange}
-                            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all font-semibold text-gray-700 bg-white"
+                            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-1 focus:ring-[#FF7B1D]/20 outline-none transition-all text-sm font-semibold"
                             placeholder="https://example.com"
                           />
                         </div>
-                        <div className="space-y-2">
-                          <label className="text-sm font-semibold text-gray-700 flex items-center gap-2"><Users size={14} className="text-orange-500" /> Employees</label>
+                        <div className="space-y-1.5">
+                          <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2 capitalize tracking-normal">
+                            <Users size={16} className="text-[#FF7B1D]" /> Employees
+                          </label>
                           <input
                             type="number"
                             name="employees"
                             value={formData.employees}
                             onChange={handleInputChange}
-                            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none transition-all font-semibold text-gray-700 bg-white"
+                            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-1 focus:ring-[#FF7B1D]/20 outline-none transition-all text-sm font-semibold"
                             placeholder="e.g. 50"
                           />
                         </div>
@@ -1507,17 +1528,19 @@ export default function AllClientPage() {
 
                   {/* Common Fields */}
                   <div className="mt-8 border-t pt-6">
-                    <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2 pb-2 border-b">
-                      <MapPin className="text-orange-500" size={20} /> Communication & Address
+                    <h3 className="text-lg font-black text-slate-800 mb-6 flex items-center gap-2 pb-2 border-b border-gray-100 uppercase tracking-tight">
+                      <MapPin className="text-[#FF7B1D]" size={20} /> Communication & Address
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                      <div className="space-y-2">
-                        <label className="text-sm font-semibold text-gray-700 flex items-center gap-2"><Briefcase size={14} className="text-orange-500" /> Category / Industry</label>
+                      <div className="space-y-1.5">
+                        <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2 capitalize tracking-normal">
+                          <Briefcase size={16} className="text-[#FF7B1D]" /> Category / Industry
+                        </label>
                         <select
                           name="industry"
                           value={formData.industry}
                           onChange={handleInputChange}
-                          className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 bg-white cursor-pointer outline-none font-semibold text-gray-700"
+                          className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-1 focus:ring-[#FF7B1D]/20 bg-white cursor-pointer outline-none text-sm font-semibold"
                         >
                           <option value="">Select industry</option>
                           <option value="technology">Technology</option>
@@ -1529,13 +1552,15 @@ export default function AllClientPage() {
                           <option value="other">Other</option>
                         </select>
                       </div>
-                      <div className="space-y-2">
-                        <label className="text-sm font-semibold text-gray-700 flex items-center gap-2"><Globe size={14} className="text-orange-500" /> Source</label>
+                      <div className="space-y-1.5">
+                        <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2 capitalize tracking-normal">
+                          <Globe size={16} className="text-[#FF7B1D]" /> Source
+                        </label>
                         <select
                           name="source"
                           value={formData.source}
                           onChange={handleInputChange}
-                          className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 cursor-pointer outline-none bg-white font-semibold text-gray-700"
+                          className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-1 focus:ring-[#FF7B1D]/20 cursor-pointer outline-none bg-white text-sm font-semibold"
                         >
                           <option value="">Select source</option>
                           <option value="website">Website</option>
@@ -1545,13 +1570,17 @@ export default function AllClientPage() {
                           <option value="event">Event</option>
                         </select>
                       </div>
-                      <div className="space-y-2">
-                        <label className="text-sm font-semibold text-gray-700 flex items-center gap-2"><FileText size={14} className="text-orange-500" /> Tax ID / GSTIN</label>
-                        <input type="text" name="taxId" value={formData.taxId} onChange={handleInputChange} className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none font-semibold text-gray-700" />
+                      <div className="space-y-1.5">
+                        <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2 capitalize tracking-normal">
+                          <FileText size={16} className="text-[#FF7B1D]" /> Tax ID / GSTIN
+                        </label>
+                        <input type="text" name="taxId" value={formData.taxId} onChange={handleInputChange} className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-1 focus:ring-[#FF7B1D]/20 outline-none text-sm font-semibold" />
                       </div>
-                      <div className="space-y-2">
-                        <label className="text-sm font-semibold text-gray-700 flex items-center gap-2"><CheckCircle size={14} className="text-orange-500" /> Status</label>
-                        <select name="status" value={formData.status} onChange={handleInputChange} className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none bg-white font-semibold text-gray-700">
+                      <div className="space-y-1.5">
+                        <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2 capitalize tracking-normal">
+                          <CheckCircle size={16} className="text-[#FF7B1D]" /> Status
+                        </label>
+                        <select name="status" value={formData.status} onChange={handleInputChange} className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-1 focus:ring-[#FF7B1D]/20 outline-none bg-white text-sm font-semibold">
                           <option value="active">Active</option>
                           <option value="inactive">Inactive</option>
                           <option value="pending">Pending</option>
@@ -1560,14 +1589,16 @@ export default function AllClientPage() {
                     </div>
 
                     <div className="space-y-4">
-                      <div className="space-y-2">
-                        <label className="text-sm font-semibold text-gray-700 flex items-center gap-2"><MapPin size={14} className="text-orange-500" /> Street Address</label>
+                      <div className="space-y-1.5">
+                        <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2 capitalize tracking-normal">
+                          <MapPin size={16} className="text-[#FF7B1D]" /> Street Address
+                        </label>
                         <textarea
                           name="address"
                           value={formData.address}
                           onChange={handleInputChange}
                           rows="2"
-                          className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-2 focus:ring-[#FF7B1D] focus:ring-opacity-20 outline-none font-semibold text-gray-700"
+                          className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-1 focus:ring-[#FF7B1D]/20 outline-none text-sm font-semibold"
                           placeholder="123 Main St..."
                         ></textarea>
                       </div>
@@ -1575,15 +1606,15 @@ export default function AllClientPage() {
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
 
                         {/* Country */}
-                        <div className="space-y-2">
-                          <label className="text-sm font-semibold text-gray-700">Country</label>
+                        <div className="space-y-1.5">
+                          <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2 capitalize tracking-normal">Country</label>
 
                           <div className="relative">
                             <select
                               name="permanentCountry"
                               value={formData.permanentCountry || ""}
                               onChange={handlePermanentAddressChange}
-                              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
+                              className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-1 focus:ring-[#FF7B1D]/20 outline-none transition-all text-sm font-semibold bg-white"
                             >
                               <option value="">Select Country</option>
 
@@ -1602,15 +1633,15 @@ export default function AllClientPage() {
                         </div>
 
                         {/* State */}
-                        <div className="space-y-2">
-                          <label className="text-sm font-semibold text-gray-700">State</label>
+                        <div className="space-y-1.5">
+                          <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2 capitalize tracking-normal">State</label>
 
                           <div className="relative">
                             <select
                               name="permanentState"
                               value={formData.permanentState || ""}
                               onChange={handlePermanentAddressChange}
-                              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
+                              className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-1 focus:ring-[#FF7B1D]/20 outline-none transition-all text-sm font-semibold bg-white"
                             >
                               <option value="">Select State</option>
 
@@ -1631,15 +1662,15 @@ export default function AllClientPage() {
                         </div>
 
                         {/* City */}
-                        <div className="space-y-2">
-                          <label className="text-sm font-semibold text-gray-700">City</label>
+                        <div className="space-y-1.5">
+                          <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2 capitalize tracking-normal">City</label>
 
                           <div className="relative">
                             <select
                               name="permanentCity"
                               value={formData.permanentCity || ""}
                               onChange={handlePermanentAddressChange}
-                              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
+                              className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-1 focus:ring-[#FF7B1D]/20 outline-none transition-all text-sm font-semibold bg-white"
                             >
                               <option value="">Select City</option>
 
@@ -1661,42 +1692,46 @@ export default function AllClientPage() {
                         </div>
 
                         {/* Zip Code */}
-                        <div className="space-y-2">
-                          <label className="text-sm font-semibold text-gray-700">Zip Code</label>
+                        <div className="space-y-1.5">
+                          <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2 capitalize tracking-normal">Zip Code</label>
                           <input
                             type="text"
                             name="zipCode"
                             value={formData.zipCode || ""}
                             onChange={handleInputChange}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
+                            className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-1 focus:ring-[#FF7B1D]/20 outline-none transition-all text-sm font-semibold"
                           />
                         </div>
                       </div>
 
-                      <div className="space-y-2 mt-4">
-                        <label className="text-sm font-semibold text-gray-700">Internal Notes</label>
-                        <textarea name="notes" value={formData.notes} onChange={handleInputChange} rows="3" className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none" placeholder="Any private notes about this client..." />
+                      <div className="space-y-1.5 mt-4">
+                        <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2 capitalize tracking-normal">Internal Notes</label>
+                        <textarea name="notes" value={formData.notes} onChange={handleInputChange} rows="3" className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-[#FF7B1D] focus:ring-1 focus:ring-[#FF7B1D]/20 outline-none text-sm font-semibold" placeholder="Any private notes about this client..." />
                       </div>
                     </div>
                   </div>
 
-                  <div className="mt-10 flex justify-end gap-4 p-4 border-t bg-gray-50 rounded-b-lg -mx-8 -mb-8">
-                    <button
-                      type="button"
-                      onClick={() => setShowAddModal(false)}
-                      className="px-6 py-3 border border-gray-300 text-gray-700 font-bold rounded-lg hover:bg-white transition-all shadow-sm"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={isCreating || isUpdating}
-                      className="px-8 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold rounded-lg hover:from-orange-600 hover:to-orange-700 shadow-md hover:shadow-lg transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2"
-                    >
-                      {(isCreating || isUpdating) && <div className="w-5 h-5 border-2 border-white border-t-transparent animate-spin rounded-full"></div>}
-                      {isEditing ? "Update Client" : "Create Client"}
-                    </button>
-                  </div>
+                    <div className="mt-10 flex justify-end gap-3 p-6 border-t bg-gray-50 rounded-b-sm -mx-8 -mb-8">
+                      <button
+                        type="button"
+                        onClick={() => setShowAddModal(false)}
+                        className="px-6 py-2.5 rounded-sm border-2 border-gray-200 text-gray-500 font-bold hover:bg-gray-50 hover:text-gray-700 transition-all font-primary text-sm bg-white shadow-sm"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={isCreating || isUpdating}
+                        className="px-8 py-2.5 rounded-sm font-bold transition-all font-primary text-sm flex items-center gap-2 shadow-md bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:shadow-orange-500/30 hover:scale-[1.02] active:scale-[0.98]"
+                      >
+                        {(isCreating || isUpdating) ? (
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        ) : (
+                          isEditing ? <Check size={18} /> : <Plus size={18} />
+                        )}
+                        {isEditing ? "Update Client" : "Create Client"}
+                      </button>
+                    </div>
                 </form>
               </div>
             </div>
@@ -1713,14 +1748,14 @@ export default function AllClientPage() {
             <div className="flex gap-4 w-full">
               <button
                 onClick={() => setIsDeleteModalOpen(false)}
-                className="flex-1 px-6 py-3 border-2 border-gray-200 text-gray-700 font-bold rounded-sm hover:bg-gray-100 transition-all font-primary text-xs uppercase tracking-widest"
+                className="flex-1 px-6 py-3 border-2 border-gray-200 text-gray-700 font-bold rounded-sm hover:bg-gray-100 transition-all font-primary text-xs capitalize tracking-normal bg-white"
               >
                 Cancel
               </button>
               <button
                 onClick={handleDeleteClient}
                 disabled={isDeleting}
-                className="flex-1 px-6 py-3 bg-red-600 text-white font-bold rounded-sm hover:bg-red-700 transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 font-primary text-xs uppercase tracking-widest"
+                className="flex-1 px-6 py-3 bg-red-600 text-white font-bold rounded-sm hover:bg-red-700 transition-all shadow-lg shadow-red-500/30 flex items-center justify-center gap-2 disabled:opacity-50 font-primary text-xs capitalize tracking-normal"
               >
                 {isDeleting ? (
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -1753,12 +1788,12 @@ export default function AllClientPage() {
           </div>
         </Modal>
 
-        {/* View Client Modal */}
-        <ViewClientModal
+        {/* View Client Modal - Removed in favor of Profile Page */}
+        {/* <ViewClientModal
           isOpen={isViewModalOpen}
           onClose={() => setIsViewModalOpen(false)}
           client={clientToView}
-        />
+        /> */}
 
         {/* Call QR Modal */}
         <CallQrModal
