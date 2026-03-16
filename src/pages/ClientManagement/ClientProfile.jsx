@@ -238,9 +238,9 @@ export default function ClientProfile() {
   if (isError || !client) return <div className="flex items-center justify-center h-screen text-red-500">Error loading client profile</div>;
 
   return (
-    <div className="flex h-screen bg-[#F8FAFC] font-primary">
+    <div className="flex bg-[#F8FAFC] font-primary min-h-screen">
       {/* Sidebar - Consistent with Lead Profile */}
-      <div className="w-[360px] bg-white border-r border-gray-100 overflow-y-auto no-scrollbar shadow-sm">
+      <div className="w-[360px] bg-white border-r border-gray-100 shadow-sm flex-shrink-0">
         {/* Profile Header Gradient */}
         <div className="bg-gradient-to-r from-orange-500 to-amber-500 h-32 relative">
           <button
@@ -266,27 +266,38 @@ export default function ClientProfile() {
         </div>
 
         {/* Profile Basic Info */}
-        <div className="pt-16 px-6 text-center border-b border-gray-100 pb-8 mt-5">
-          <h2 className="text-2xl font-bold text-slate-800 capitalize tracking-tight mb-1 truncate w-full px-4" title={client.type === 'business' ? client.company_name : `${client.first_name} ${client.last_name}`}>
+        <div className="pt-14 px-6 text-center border-b border-gray-100 pb-3 mt-3">
+          <h2 className="text-2xl font-bold text-slate-800 capitalize tracking-tight mb-0.5 truncate w-full px-4" title={client.type === 'business' ? client.company_name : `${client.first_name} ${client.last_name}`}>
             {client.type === 'business' ? client.company_name : `${client.first_name} ${client.last_name}`}
           </h2>
-          <span className="text-[11px] font-bold capitalize tracking-wider text-slate-400">
+          <span className="text-[13px] font-extrabold capitalize tracking-wide text-orange-600">
             {client.type || "Individual"} Client
           </span>
-          <div className="flex flex-col items-center gap-1 mt-4">
-            <p className="text-slate-600 font-bold text-[14px] flex items-center gap-2">
-              <Phone size={14} className="text-orange-500" />
+          <div className="flex items-center justify-center gap-4 mt-3 flex-wrap">
+            <p className="text-slate-600 font-bold text-[13px] flex items-center gap-1.5">
+              <Phone size={13} className="text-orange-500" />
               {client.phone || "N/A"}
             </p>
-            <p className="text-slate-600 font-medium text-[14px] flex items-center gap-2">
-              <Mail size={14} className="text-orange-500" />
+            <p className="text-slate-600 font-bold text-[13px] flex items-center gap-1.5">
+              <Mail size={13} className="text-orange-500" />
               {client.email || "N/A"}
             </p>
           </div>
+          {client.lead_id && (
+            <div className="mt-3 flex justify-center">
+              <button
+                onClick={() => navigate(`/crm/leads/profile/${client.lead_id}`)}
+                className="flex items-center gap-2 px-4 py-1.5 bg-orange-50 hover:bg-orange-100 text-orange-600 rounded-full text-[12px] font-black transition-all border border-orange-100 shadow-sm active:scale-95 group"
+              >
+                <Users size={13} className="group-hover:scale-110 transition-transform" />
+                Linked Lead: #{client.lead_id}
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Action Buttons Row */}
-        <div className="p-4 grid grid-cols-1 border-b border-gray-100">
+        <div className="px-6 py-2.5 grid grid-cols-1 border-b border-gray-100">
           <button
             onClick={openQuotationModal}
             className="bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-sm text-sm font-bold capitalize tracking-wider flex items-center justify-center gap-2 transition-all shadow-md active:scale-95"
@@ -296,9 +307,9 @@ export default function ClientProfile() {
         </div>
 
         {/* Info Sections */}
-        <div className="px-6 py-4 space-y-6 pb-20">
+        <div className="px-6 py-2 space-y-4 pb-20">
           <section>
-            <h3 className="text-slate-800 font-bold text-[14px] capitalize tracking-tight flex items-center gap-2 mb-4">
+            <h3 className="text-slate-800 font-bold text-[15px] capitalize tracking-tight flex items-center gap-2 mb-2">
               <User size={14} className="text-orange-500" />
               Basic Information
             </h3>
@@ -314,8 +325,8 @@ export default function ClientProfile() {
           </section>
 
           {(client.budget || client.services || client.project_type) && (
-            <section className="pt-4 border-t border-gray-100">
-              <h3 className="text-slate-800 font-bold text-[14px] capitalize tracking-tight flex items-center gap-2 mb-4">
+            <section className="pt-3 border-t border-gray-100">
+              <h3 className="text-slate-800 font-bold text-[15px] capitalize tracking-tight flex items-center gap-2 mb-2">
                 <DollarSign size={14} className="text-orange-500" />
                 Engagement Details
               </h3>
@@ -328,8 +339,8 @@ export default function ClientProfile() {
           )}
 
           {(client.start_date || client.end_date || client.subscription_date || client.birthday) && (
-            <section className="pt-4 border-t border-gray-100">
-              <h3 className="text-slate-800 font-bold text-[14px] capitalize tracking-tight flex items-center gap-2 mb-4">
+            <section className="pt-3 border-t border-gray-100">
+              <h3 className="text-slate-800 font-bold text-[15px] capitalize tracking-tight flex items-center gap-2 mb-2">
                 <Calendar size={14} className="text-orange-500" />
                 Timeline
               </h3>
@@ -342,8 +353,8 @@ export default function ClientProfile() {
             </section>
           )}
 
-          <section className="pt-4 border-t border-gray-100">
-            <h3 className="text-slate-800 font-bold text-[14px] capitalize tracking-tight flex items-center gap-2 mb-4">
+          <section className="pt-3 border-t border-gray-100">
+            <h3 className="text-slate-800 font-bold text-[15px] capitalize tracking-tight flex items-center gap-2 mb-2">
               <MapPin size={14} className="text-orange-500" />
               Location
             </h3>
@@ -359,15 +370,14 @@ export default function ClientProfile() {
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0">
         {/* Header Tabs Navigation */}
-        <div className="bg-white border-b border-gray-100 shadow-sm z-10">
+        <div className="bg-white border-b border-gray-100 shadow-sm sticky top-0 z-20">
           <div className="flex w-full items-center justify-between px-8">
             <div className="flex">
               <TabButton active={activeTab === "documents"} onClick={() => setActiveTab("documents")} label="Digital" icon={<FileText size={18} />} />
               <TabButton active={activeTab === "quotations"} onClick={() => setActiveTab("quotations")} label="Quotations" icon={<DollarSign size={18} />} />
             </div>
-
             <div className="flex items-center gap-3 py-4">
               {activeTab === "documents" ? (
                 <label className="cursor-pointer bg-orange-500 hover:bg-orange-600 text-white px-5 py-2.5 rounded-sm text-xs font-bold capitalize tracking-wider flex items-center gap-2 transition-all shadow-md active:scale-95 group">
@@ -388,8 +398,8 @@ export default function ClientProfile() {
           </div>
         </div>
 
-        {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto p-8 no-scrollbar bg-[#F8FAFC]">
+        {/* Content Area */}
+        <div className="p-8">
           {/* Quick Metrics - Matrix Style from ClientManagement */}
           <div className="max-w-7xl grid grid-cols-1 md:grid-cols-3 gap-5 mb-8 animate-in fade-in slide-in-from-top-2 duration-300">
             <StatusCard label="Active Quotations" value={quotations.length} color="blue" icon={<DollarSign size={18} />} />
@@ -610,7 +620,7 @@ export default function ClientProfile() {
 
 function InfoItem({ label, value, icon: IconComponent }) {
   return (
-    <div className="flex items-center justify-between py-3 border-b border-gray-50 last:border-0 group">
+    <div className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0 group">
       <div className="flex items-center gap-2 text-slate-500">
         {IconComponent && <IconComponent size={14} className="text-slate-400 group-hover:text-orange-500 transition-colors" />}
         <span className="text-xs font-bold uppercase tracking-wider">{label}</span>
@@ -628,10 +638,10 @@ function TabButton({ active, label, icon, onClick }) {
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-2 px-8 py-5 text-[15px] font-bold capitalize tracking-tight transition-all border-b-2 ${active ? 'border-orange-500 text-orange-600 bg-orange-50/10' : 'border-transparent text-slate-400 hover:text-slate-600 hover:bg-gray-50'
+      className={`flex items-center gap-2 px-8 py-5 text-[15px] font-bold capitalize tracking-tight transition-all border-b-2 ${active ? 'border-orange-500 text-orange-600 bg-orange-50/10' : 'border-transparent text-black hover:bg-gray-50'
         }`}
     >
-      <span className={active ? 'text-orange-500' : 'text-slate-400'}>{icon}</span>
+      <span className={active ? 'text-orange-500' : 'text-black'}>{icon}</span>
       {label}
     </button>
   );
