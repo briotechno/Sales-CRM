@@ -851,7 +851,7 @@ export default function AllClientPage() {
                                 {client.type === "person" ? <User size={32} /> : <Building2 size={32} />}
                               </div>
                               <div className="flex-1 min-w-0">
-                                <h3 className="text-xl font-bold text-slate-800 leading-tight mb-2 truncate uppercase tracking-tight">
+                                <h3 className="text-lg font-bold text-slate-800 leading-tight mb-2 truncate uppercase tracking-tight">
                                   {client.type === 'person' ? `${client.first_name} ${client.last_name || ''}` : client.company_name}
                                 </h3>
                                 <div className="flex flex-wrap items-center gap-2 mb-3">
@@ -1005,7 +1005,7 @@ export default function AllClientPage() {
                       return (
                         <div
                           key={client.id}
-                          className={`flex items-center justify-between p-3 rounded-sm hover:shadow-sm transition-all duration-200 border group ${selectedClients.has(client.id) ? 'bg-orange-50 border-orange-400' : 'bg-white border-gray-100 hover:border-orange-200'}`}
+                          className={`flex items-center bg-gradient-to-r from-orange-50 to-amber-50 justify-between p-3 rounded-xl hover:shadow-sm transition-all duration-200 border group ${selectedClients.has(client.id) ? 'bg-orange-50 border-orange-400' : 'bg-white border-orange-200'}`}
                         >
                           {/* Selection Checkbox */}
                           <div className="flex items-center px-2">
@@ -1022,10 +1022,10 @@ export default function AllClientPage() {
                               {avatar}
                             </div>
                             <div className="flex flex-col justify-center min-w-0">
-                              <h4 className="font-bold text-slate-800 text-[21px] capitalize truncate mb-0.5 tracking-tight">
+                              <h4 className="font-bold text-slate-800 text-[17px] capitalize truncate mb-0.5 tracking-tight">
                                 {name}
                               </h4>
-                              <p className="text-[16px] text-gray-500 lowercase truncate font-medium">{client.email || 'no-email@found.com'}</p>
+                              <p className="text-[13px] text-gray-500 lowercase truncate font-medium">{client.email || 'no-email@found.com'}</p>
                             </div>
                           </div>
 
@@ -1711,27 +1711,27 @@ export default function AllClientPage() {
                     </div>
                   </div>
 
-                    <div className="mt-10 flex justify-end gap-3 p-6 border-t bg-gray-50 rounded-b-sm -mx-8 -mb-8">
-                      <button
-                        type="button"
-                        onClick={() => setShowAddModal(false)}
-                        className="px-6 py-2.5 rounded-sm border-2 border-gray-200 text-gray-500 font-bold hover:bg-gray-50 hover:text-gray-700 transition-all font-primary text-sm bg-white shadow-sm"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type="submit"
-                        disabled={isCreating || isUpdating}
-                        className="px-8 py-2.5 rounded-sm font-bold transition-all font-primary text-sm flex items-center gap-2 shadow-md bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:shadow-orange-500/30 hover:scale-[1.02] active:scale-[0.98]"
-                      >
-                        {(isCreating || isUpdating) ? (
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                        ) : (
-                          isEditing ? <Check size={18} /> : <Plus size={18} />
-                        )}
-                        {isEditing ? "Update Client" : "Create Client"}
-                      </button>
-                    </div>
+                  <div className="mt-10 flex justify-end gap-3 p-6 border-t bg-gray-50 rounded-b-sm -mx-8 -mb-8">
+                    <button
+                      type="button"
+                      onClick={() => setShowAddModal(false)}
+                      className="px-6 py-2.5 rounded-sm border-2 border-gray-200 text-gray-500 font-bold hover:bg-gray-50 hover:text-gray-700 transition-all font-primary text-sm bg-white shadow-sm"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isCreating || isUpdating}
+                      className="px-8 py-2.5 rounded-sm font-bold transition-all font-primary text-sm flex items-center gap-2 shadow-md bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:shadow-orange-500/30 hover:scale-[1.02] active:scale-[0.98]"
+                    >
+                      {(isCreating || isUpdating) ? (
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      ) : (
+                        isEditing ? <Check size={18} /> : <Plus size={18} />
+                      )}
+                      {isEditing ? "Update Client" : "Create Client"}
+                    </button>
+                  </div>
                 </form>
               </div>
             </div>
