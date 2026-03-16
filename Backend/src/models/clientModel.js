@@ -151,6 +151,89 @@ const Client = {
         }));
     },
 
+    // Files
+    getFiles: async (clientId, userId) => {
+        // First get client details to see if there's a lead_id
+        const [client] = await pool.query('SELECT lead_id FROM clients WHERE id = ?', [clientId]);
+        const leadId = client.length > 0 ? client[0].lead_id : null;
+
+        let query = `
+            SELECT id, user_id, 
+                   CONVERT(name USING utf8mb4) as name, 
+                   CONVERT(path USING utf8mb4) as path, 
+                   CONVERT(type USING utf8mb4) as type, 
+                   size, 
+                   CONVERT(description USING utf8mb4) as description, 
+                   created_at, 
+                   CONVERT('client' USING utf8mb4) as source
+            FROM client_files 
+            WHERE client_id = ? AND user_id = ?
+        `;
+        let params = [clientId, userId];
+
+        if (leadId) {
+            query += `
+                UNION ALL
+                SELECT id, user_id, 
+                       CONVERT(name USING utf8mb4) as name, 
+                       CONVERT(path USING utf8mb4) as path, 
+                       CONVERT(type USING utf8mb4) as type, 
+                       size, 
+                       CONVERT(description USING utf8mb4) as description, 
+                       created_at, 
+                       CONVERT('lead' USING utf8mb4) as source
+                FROM lead_files 
+                WHERE lead_id = ? AND user_id = ?
+            `;
+            params.push(leadId, userId);
+        }
+
+        query += ' ORDER BY created_at DESC';
+
+        const [rows] = await pool.query(query, params);
+        
+        // Add uploader info
+        const results = [];
+        for (const row of rows) {
+            const [user] = await pool.query(
+                "SELECT CONCAT(firstName, ' ', lastName) as uploaded_by, profile_picture FROM users WHERE id = ?",
+                [row.user_id]
+            );
+            results.push({
+                ...row,
+                uploaded_by: user.length > 0 ? user[0].uploaded_by : 'Unknown',
+                profile_picture: user.length > 0 ? user[0].profile_picture : null
+            });
+        }
+        return results;
+    },
+
+    addFile: async (data, userId) => {
+        const { client_id, name, path, type, size, description } = data;
+        
+        // Ensure table exists (internal check)
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS client_files (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                client_id INT NOT NULL,
+                user_id INT NOT NULL,
+                name VARCHAR(255) NOT NULL,
+                path VARCHAR(255) NOT NULL,
+                type VARCHAR(100),
+                size INT,
+                description TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE
+            )
+        `);
+
+        const [result] = await pool.query(
+            'INSERT INTO client_files (client_id, user_id, name, path, type, size, description, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, UTC_TIMESTAMP())',
+            [client_id, userId, name, path, type, size, description || '']
+        );
+        return { id: result.insertId, ...data, created_at: new Date() };
+    },
+
     findByEmailOrPhone: async (userId, email, phone) => {
         if (!email && !phone) return null;
         let query = 'SELECT * FROM clients WHERE user_id = ? AND (';
@@ -170,6 +253,13 @@ const Client = {
 
         const [rows] = await pool.query(query, params);
         return rows[0];
+    },
+    deleteFile: async (fileId, userId) => {
+        const [result] = await pool.query(
+            'DELETE FROM client_files WHERE id = ? AND user_id = ?',
+            [fileId, userId]
+        );
+        return result.affectedRows > 0;
     }
 };
 

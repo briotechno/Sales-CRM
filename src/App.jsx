@@ -84,8 +84,6 @@ import Notification from "./pages/NotificationPart/Notification";
 // Anouncement Part
 import AllAnouncement from "./pages/AnouncementPart/AllAnouncement";
 import AnnouncementCategoryPage from "./pages/AnouncementPart/Category";
-// Client Management Part
-import ClientManagement from "./pages/ClientManagement/ClientManagement";
 // Business Info Part
 import BusinessInfo from "./pages/BusinessInfoPart/BusinessInfo";
 // Manage Subscription Part
@@ -114,7 +112,9 @@ import PublicForm from "./pages/Public/PublicForm";
 import ChannelSettings from "./pages/ChannelIntegration/ChannelSettings";
 // Team Management
 
-// Team Management
+// Client Management Part
+import ClientManagement from "./pages/ClientManagement/ClientManagement";
+import ClientProfile from "./pages/ClientManagement/ClientProfile";
 import TeamManagement from "./pages/TeamManagement/Team";
 // Auth Pages
 import Login from "./pages/Login";
@@ -236,6 +236,7 @@ function App() {
             <Route path="/additional/meeting" element={<AllMeetings />} />
             <Route path="/additional/visitor" element={<AllVisitors />} />
             <Route path="/crm/client/all" element={<ClientManagement />} />
+            <Route path="/crm/client/profile/:id" element={<ClientProfile />} />
             <Route path="/settings/business-info" element={<BusinessInfo />} />
             <Route path="/settings/subscription" element={<ManageSubscription />} />
             <Route path="/settings/faq" element={<Faq />} />

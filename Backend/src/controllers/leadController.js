@@ -872,6 +872,14 @@ const convertLeadToClient = async (req, res) => {
         };
 
         const clientId = await Client.create(clientData, userId);
+        
+        // Link the existing quotation to this client if provided
+        if (quotation_id) {
+            await pool.query(
+                'UPDATE quotations SET client_id = ? WHERE (id = ? OR quotation_id = ?) AND user_id = ?',
+                [clientId, quotation_id, quotation_id, userId]
+            );
+        }
 
         // Update Lead status to Won
         await Lead.update(leadId, { status: 'Closed', tag: 'Won' }, userId);
