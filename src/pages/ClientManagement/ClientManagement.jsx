@@ -1005,7 +1005,7 @@ export default function AllClientPage() {
                       return (
                         <div
                           key={client.id}
-                          className={`flex items-center justify-between p-3 rounded-sm hover:shadow-sm transition-all duration-200 border group ${selectedClients.has(client.id) ? 'bg-orange-50 border-orange-400' : 'bg-white border-gray-100 hover:border-orange-200'}`}
+                          className={`flex items-center bg-gradient-to-r from-orange-50 to-amber-50 justify-between p-3 rounded-xl hover:shadow-sm transition-all duration-200 border group ${selectedClients.has(client.id) ? 'bg-orange-50 border-orange-400' : 'bg-white border-orange-200'}`}
                         >
                           {/* Selection Checkbox */}
                           <div className="flex items-center px-2">
