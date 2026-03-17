@@ -10,10 +10,7 @@ import AssignLeadsModal from "./AllLeadPagePart/AssignLeadModal";
 import LeadsListView from "./AllLeadPagePart/LeadsList";
 import LeadsGridView from "./AllLeadPagePart/LeadsGridView";
 import NumberCard from "../../components/NumberCard";
-import CallActionPopup from "../../components/AddNewLeads/CallActionPopup";
-import CallQrModal from "../../components/LeadManagement/CallQrModal";
-import EmptyState from "../../components/common/EmptyState";
-import { useGetLeadsQuery, useDeleteLeadMutation, useUpdateLeadMutation, useHitCallMutation, useManualAssignLeadsMutation } from "../../store/api/leadApi";
+import ActionGuard from "../../components/common/ActionGuard";
 import { useGetPipelinesQuery } from "../../store/api/pipelineApi";
 import { useGetEmployeesQuery } from "../../store/api/employeeApi";
 import { toast } from "react-hot-toast";
@@ -612,13 +609,15 @@ export default function LeadsList() {
 
               {/* Add Lead Button */}
               <div className="relative" ref={addLeadMenuRef}>
-                <button
-                  onClick={() => setOpenLeadMenu(!openLeadMenu)}
-                  className="flex items-center gap-2 px-6 py-3 rounded-sm font-semibold transition shadow-lg hover:shadow-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
-                >
-                  <PlusIcon size={20} />
-                  Add Lead
-                </button>
+                <ActionGuard permission="leads_create" module="Lead Management" type="create">
+                  <button
+                    onClick={() => setOpenLeadMenu(!openLeadMenu)}
+                    className="flex items-center gap-2 px-6 py-3 rounded-sm font-semibold transition shadow-lg hover:shadow-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
+                  >
+                    <PlusIcon size={20} />
+                    Add Lead
+                  </button>
+                </ActionGuard>
 
                 {openLeadMenu && (
                   <div className="absolute top-full right-0 mt-2 w-56 bg-white border border-gray-200 shadow-xl rounded-sm z-50 overflow-hidden divide-y divide-gray-100 animate-fadeIn">
@@ -678,20 +677,24 @@ export default function LeadsList() {
               </div>
 
               <div className="flex gap-4">
-                <button
-                  onClick={handleAssignLeads}
-                  className="bg-white border border-gray-300 text-gray-700 px-6 py-2.5 rounded-sm font-bold hover:bg-orange-50 hover:border-[#FF7B1D] hover:text-[#FF7B1D] transition-all capitalize flex items-center gap-2.5 text-sm shadow-sm active:scale-95 font-primary group"
-                >
-                  <UserPlus size={18} className="text-[#FF7B1D] group-hover:scale-110 transition-transform" />
-                  Assign Leads
-                </button>
-                <button
-                  onClick={handleDeleteSelected}
-                  className="bg-red-600 text-white px-6 py-2.5 rounded-sm font-bold hover:bg-red-700 transition-all capitalize flex items-center gap-2.5 text-sm shadow-md shadow-red-200 active:scale-95 font-primary border border-red-700"
-                >
-                  <Trash2 size={18} />
-                  Delete Selected
-                </button>
+                <ActionGuard permission="leads_assign" module="Lead Management" type="update">
+                  <button
+                    onClick={handleAssignLeads}
+                    className="bg-white border border-gray-300 text-gray-700 px-6 py-2.5 rounded-sm font-bold hover:bg-orange-50 hover:border-[#FF7B1D] hover:text-[#FF7B1D] transition-all capitalize flex items-center gap-2.5 text-sm shadow-sm active:scale-95 font-primary group"
+                  >
+                    <UserPlus size={18} className="text-[#FF7B1D] group-hover:scale-110 transition-transform" />
+                    Assign Leads
+                  </button>
+                </ActionGuard>
+                <ActionGuard permission="leads_delete" module="Lead Management" type="delete">
+                  <button
+                    onClick={handleDeleteSelected}
+                    className="bg-red-600 text-white px-6 py-2.5 rounded-sm font-bold hover:bg-red-700 transition-all capitalize flex items-center gap-2.5 text-sm shadow-md shadow-red-200 active:scale-95 font-primary border border-red-700"
+                  >
+                    <Trash2 size={18} />
+                    Delete Selected
+                  </button>
+                </ActionGuard>
               </div>
             </div>
           </div>

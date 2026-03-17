@@ -54,6 +54,7 @@ import toast from "react-hot-toast";
 import usePermission from "../../hooks/usePermission";
 import { useGetDepartmentsQuery } from "../../store/api/departmentApi";
 import Modal from "../../components/common/Modal";
+import ActionGuard from "../../components/common/ActionGuard";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
@@ -728,26 +729,26 @@ export default function HRPolicy() {
                   )}
                 </div>
 
-                <button
-                  onClick={handleExport}
-                  className="bg-white border border-gray-300 hover:bg-gray-50 px-4 py-3 rounded-sm flex items-center gap-2 transition text-sm font-semibold shadow-sm active:scale-95"
-                >
-                  <Download className="w-5 h-5" /> EXPORT
-                </button>
+                <ActionGuard permission="hr_policy_read" module="HR Policy" type="read">
+                  <button
+                    onClick={handleExport}
+                    className="bg-white border border-gray-300 hover:bg-gray-50 px-4 py-3 rounded-sm flex items-center gap-2 transition text-sm font-semibold shadow-sm active:scale-95"
+                  >
+                    <Download className="w-5 h-5" /> EXPORT
+                  </button>
+                </ActionGuard>
 
-                <button
-                  onClick={() => {
-                    resetForm();
-                    setShowAddModal(true);
-                  }}
-                  disabled={!create}
-                  className={`flex items-center gap-2 px-6 py-3 rounded-sm font-semibold transition shadow-lg hover:shadow-xl ${create
-                    ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 font-bold"
-                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                    }`}
-                >
-                  <Plus size={20} /> Add Policy
-                </button>
+                <ActionGuard permission="hr_policy_create" module="HR Policy" type="create">
+                  <button
+                    onClick={() => {
+                      resetForm();
+                      setShowAddModal(true);
+                    }}
+                    className="flex items-center gap-2 px-6 py-3 rounded-sm transition shadow-lg hover:shadow-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 font-bold"
+                  >
+                    <Plus size={20} /> Add Policy
+                  </button>
+                </ActionGuard>
               </div>
             </div>
           </div>
@@ -867,7 +868,7 @@ export default function HRPolicy() {
                       </td>
                       <td className="py-3 px-4 text-right">
                         <div className="flex justify-end gap-2 text-right">
-                          {read && (
+                          <ActionGuard permission="hr_policy_read" module="HR Policy" type="read">
                             <button
                               onClick={() => handleView(policy)}
                               className="p-1 hover:bg-orange-100 rounded-sm text-blue-500 hover:text-blue-700 transition-all font-medium"
@@ -875,8 +876,8 @@ export default function HRPolicy() {
                             >
                               <Eye size={18} />
                             </button>
-                          )}
-                          {update && (
+                          </ActionGuard>
+                          <ActionGuard permission="hr_policy_edit" module="HR Policy" type="update">
                             <button
                               onClick={() => handleEditClick(policy)}
                               className="p-1 hover:bg-orange-100 rounded-sm text-green-500 hover:text-green-700 transition-all font-medium"
@@ -884,8 +885,8 @@ export default function HRPolicy() {
                             >
                               <Edit size={18} />
                             </button>
-                          )}
-                          {remove && (
+                          </ActionGuard>
+                          <ActionGuard permission="hr_policy_delete" module="HR Policy" type="delete">
                             <button
                               onClick={() => handleDeleteClick(policy)}
                               className="p-1 hover:bg-orange-100 rounded-sm text-red-500 hover:text-red-700 transition-all font-medium"
@@ -893,7 +894,7 @@ export default function HRPolicy() {
                             >
                               <Trash2 size={18} />
                             </button>
-                          )}
+                          </ActionGuard>
                         </div>
                       </td>
                     </tr>
@@ -925,7 +926,7 @@ export default function HRPolicy() {
                             Reset All Filters
                           </button>
                         ) : (
-                          create && (
+                          <ActionGuard permission="hr_policy_create" module="HR Policy" type="create">
                             <button
                               onClick={() => {
                                 setFormData({
@@ -948,7 +949,7 @@ export default function HRPolicy() {
                               <Plus size={20} className="group-hover:rotate-90 transition-transform duration-300" />
                               Create First Policy
                             </button>
-                          )
+                          </ActionGuard>
                         )}
                       </div>
                     </td>

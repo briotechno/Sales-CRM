@@ -30,6 +30,7 @@ import DashboardLayout from "../../components/DashboardLayout";
 import NumberCard from "../../components/NumberCard";
 import AddMeetingModal from "../../components/LeadManagement/LeadPipLineStatus/AddMeetingModal";
 import Modal from "../../components/common/Modal";
+import ActionGuard from "../../components/common/ActionGuard";
 import {
     useGetMeetingsQuery,
     useCreateMeetingMutation,
@@ -254,16 +255,18 @@ const AllMeetings = () => {
                                     )}
                                 </div>
 
-                                <button
-                                    onClick={() => {
-                                        setSelectedMeeting(null);
-                                        setIsAddModalOpen(true);
-                                    }}
-                                    className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-2 font-semibold text-sm"
-                                >
-                                    <Plus size={20} />
-                                    Schedule Meeting
-                                </button>
+                                <ActionGuard permission="meeting_create" module="Meeting Management" type="create">
+                                    <button
+                                        onClick={() => {
+                                            setSelectedMeeting(null);
+                                            setIsAddModalOpen(true);
+                                        }}
+                                        className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-2 font-semibold text-sm"
+                                    >
+                                        <Plus size={20} />
+                                        Schedule Meeting
+                                    </button>
+                                </ActionGuard>
                             </div>
                         </div>
                     </div>
@@ -413,29 +416,35 @@ const AllMeetings = () => {
                                                 <td className="px-4 py-2.5 text-right">
                                                     <div className="flex items-center justify-end gap-1">
                                                         {/* View */}
-                                                        <button
-                                                            onClick={() => { setViewMeeting(meeting); setIsViewModalOpen(true); }}
-                                                            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-sm transition-all"
-                                                            title="View Details"
-                                                        >
-                                                            <Eye size={18} />
-                                                        </button>
+                                                        <ActionGuard permission="meeting_view" module="Meeting Management" type="read">
+                                                            <button
+                                                                onClick={() => { setViewMeeting(meeting); setIsViewModalOpen(true); }}
+                                                                className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-sm transition-all"
+                                                                title="View Details"
+                                                            >
+                                                                <Eye size={18} />
+                                                            </button>
+                                                        </ActionGuard>
                                                         {/* Edit */}
-                                                        <button
-                                                            onClick={() => { setSelectedMeeting(meeting); setIsEditModalOpen(true); }}
-                                                            className="p-1.5 text-green-600 hover:bg-green-50 rounded-sm transition-all"
-                                                            title="Edit Meeting"
-                                                        >
-                                                            <SquarePen size={18} />
-                                                        </button>
+                                                        <ActionGuard permission="meeting_edit" module="Meeting Management" type="update">
+                                                            <button
+                                                                onClick={() => { setSelectedMeeting(meeting); setIsEditModalOpen(true); }}
+                                                                className="p-1.5 text-green-600 hover:bg-green-50 rounded-sm transition-all"
+                                                                title="Edit Meeting"
+                                                            >
+                                                                <SquarePen size={18} />
+                                                            </button>
+                                                        </ActionGuard>
                                                         {/* Delete */}
-                                                        <button
-                                                            onClick={() => confirmDelete(meeting)}
-                                                            className="p-1.5 text-red-600 hover:bg-red-50 rounded-sm transition-all"
-                                                            title="Delete Meeting"
-                                                        >
-                                                            <Trash2 size={18} />
-                                                        </button>
+                                                        <ActionGuard permission="meeting_delete" module="Meeting Management" type="delete">
+                                                            <button
+                                                                onClick={() => confirmDelete(meeting)}
+                                                                className="p-1.5 text-red-600 hover:bg-red-50 rounded-sm transition-all"
+                                                                title="Delete Meeting"
+                                                            >
+                                                                <Trash2 size={18} />
+                                                            </button>
+                                                        </ActionGuard>
                                                     </div>
                                                 </td>
                                             </tr>

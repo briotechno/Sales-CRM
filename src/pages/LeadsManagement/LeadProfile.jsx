@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { useGetLeadByIdQuery, useUpdateLeadMutation } from "../../store/api/leadApi";
 import { useGetPipelineByIdQuery } from "../../store/api/pipelineApi";
+import ActionGuard from "../../components/common/ActionGuard";
 
 export default function CRMLeadDetail() {
   const location = useLocation();
@@ -527,15 +528,17 @@ export default function CRMLeadDetail() {
                     </div>
                   )}
                 </div>
-                <button
-                  onClick={() => setOpen(true)}
-                  className="flex items-center gap-2 text-orange-500 hover:text-orange-600 font-medium"
-                >
-                  <span className="text-orange-600 border border-orange-600 rounded-full w-4 h-4 flex items-center justify-center text-sm">
-                    +
-                  </span>
-                  Add Note
-                </button>
+                <ActionGuard permission="leads_edit" module="Lead Management" type="update">
+                  <button
+                    onClick={() => setOpen(true)}
+                    className="flex items-center gap-2 text-orange-500 hover:text-orange-600 font-medium"
+                  >
+                    <span className="text-orange-600 border border-orange-600 rounded-full w-4 h-4 flex items-center justify-center text-sm">
+                      +
+                    </span>
+                    Add Note
+                  </button>
+                </ActionGuard>
               </div>
             </div>
 
@@ -560,12 +563,16 @@ export default function CRMLeadDetail() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <button className="p-2 hover:bg-gray-100 rounded transition-colors">
-                        <Edit2 className="w-4 h-4 text-gray-500" />
-                      </button>
-                      <button className="p-2 hover:bg-gray-100 rounded transition-colors">
-                        <Trash2 className="w-4 h-4 text-gray-500" />
-                      </button>
+                      <ActionGuard permission="leads_edit" module="Lead Management" type="update">
+                        <button className="p-2 hover:bg-gray-100 rounded transition-colors">
+                          <Edit2 className="w-4 h-4 text-gray-500" />
+                        </button>
+                      </ActionGuard>
+                      <ActionGuard permission="leads_delete" module="Lead Management" type="delete">
+                        <button className="p-2 hover:bg-gray-100 rounded transition-colors">
+                          <Trash2 className="w-4 h-4 text-gray-500" />
+                        </button>
+                      </ActionGuard>
                     </div>
                   </div>
 
@@ -605,9 +612,11 @@ export default function CRMLeadDetail() {
                           </p>
                           <p className="text-xs text-gray-500">{file.size}</p>
                         </div>
-                        <button className="p-2 hover:bg-gray-100 rounded transition-colors">
-                          <Download className="w-4 h-4 text-gray-500" />
-                        </button>
+                        <ActionGuard permission="leads_view_own" module="Lead Management" type="read">
+                          <button className="p-2 hover:bg-gray-100 rounded transition-colors">
+                            <Download className="w-4 h-4 text-gray-500" />
+                          </button>
+                        </ActionGuard>
                       </div>
                     ))}
                   </div>
@@ -628,15 +637,17 @@ export default function CRMLeadDetail() {
           <div className="flex-1 bg-gray-50 p-8 overflow-auto">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold text-gray-800">Calls</h2>
-              <button
-                onClick={() => setOpen(true)}
-                className="flex items-center gap-2 text-orange-500 hover:text-orange-600 font-medium"
-              >
-                <span className="text-orange-500 border border-orange-500 rounded-full w-5 h-5 flex items-center justify-center text-sm">
-                  +
-                </span>
-                Add New
-              </button>
+              <ActionGuard permission="leads_edit" module="Lead Management" type="update">
+                <button
+                  onClick={() => setOpen(true)}
+                  className="flex items-center gap-2 text-orange-500 hover:text-orange-600 font-medium"
+                >
+                  <span className="text-orange-500 border border-orange-500 rounded-full w-5 h-5 flex items-center justify-center text-sm">
+                    +
+                  </span>
+                  Add New
+                </button>
+              </ActionGuard>
             </div>
 
             <div className="space-y-4">
@@ -676,9 +687,11 @@ export default function CRMLeadDetail() {
                           <ChevronDown className="w-3 h-3" />
                         </button>
                       </div>
-                      <button className="p-2 hover:bg-gray-100 rounded transition-colors">
-                        <Trash2 className="w-4 h-4 text-gray-500" />
-                      </button>
+                      <ActionGuard permission="leads_delete" module="Lead Management" type="delete">
+                        <button className="p-2 hover:bg-gray-100 rounded transition-colors">
+                          <Trash2 className="w-4 h-4 text-gray-500" />
+                        </button>
+                      </ActionGuard>
                     </div>
                   </div>
 
@@ -760,15 +773,21 @@ export default function CRMLeadDetail() {
                         )}
                       </div>
                       <div className="flex items-center gap-2">
-                        <button className="p-2 hover:bg-gray-100 rounded transition-colors">
-                          <Download className="w-4 h-4 text-gray-500" />
-                        </button>
-                        <button className="p-2 hover:bg-gray-100 rounded transition-colors">
-                          <Edit2 className="w-4 h-4 text-gray-500" />
-                        </button>
-                        <button className="p-2 hover:bg-gray-100 rounded transition-colors">
-                          <Trash2 className="w-4 h-4 text-gray-500" />
-                        </button>
+                        <ActionGuard permission="leads_view_own" module="Lead Management" type="read">
+                          <button className="p-2 hover:bg-gray-100 rounded transition-colors">
+                            <Download className="w-4 h-4 text-gray-500" />
+                          </button>
+                        </ActionGuard>
+                        <ActionGuard permission="leads_edit" module="Lead Management" type="update">
+                          <button className="p-2 hover:bg-gray-100 rounded transition-colors">
+                            <Edit2 className="w-4 h-4 text-gray-500" />
+                          </button>
+                        </ActionGuard>
+                        <ActionGuard permission="leads_delete" module="Lead Management" type="delete">
+                          <button className="p-2 hover:bg-gray-100 rounded transition-colors">
+                            <Trash2 className="w-4 h-4 text-gray-500" />
+                          </button>
+                        </ActionGuard>
                       </div>
                     </div>
                   </div>
@@ -792,9 +811,11 @@ export default function CRMLeadDetail() {
                   You can send and reply to emails directly via this section.
                 </p>
               </div>
-              <button className="px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors font-semibold">
-                Connect Account
-              </button>
+              <ActionGuard permission="leads_edit" module="Lead Management" type="update">
+                <button className="px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors font-semibold">
+                  Connect Account
+                </button>
+              </ActionGuard>
             </div>
           </div>
         );
@@ -817,10 +838,12 @@ export default function CRMLeadDetail() {
                   section.
                 </p>
               </div>
-              <button className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-semibold flex items-center gap-2">
-                <FaWhatsapp size={20} />
-                Connect WhatsApp
-              </button>
+              <ActionGuard permission="leads_edit" module="Lead Management" type="update">
+                <button className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-semibold flex items-center gap-2">
+                  <FaWhatsapp size={20} />
+                  Connect WhatsApp
+                </button>
+              </ActionGuard>
             </div>
           </div>
         );
@@ -899,10 +922,12 @@ export default function CRMLeadDetail() {
                 <h3 className="text-base font-bold text-gray-900">
                   Lead Information
                 </h3>
-                <Edit2
-                  className="w-4 h-4 text-gray-400 cursor-pointer hover:text-orange-500 transition-colors"
-                  onClick={() => setShowEditLeadModal(true)} // Changed from toggling isEditingLead
-                />
+                <ActionGuard permission="leads_edit" module="Lead Management" type="update">
+                  <Edit2
+                    className="w-4 h-4 text-gray-400 cursor-pointer hover:text-orange-500 transition-colors"
+                    onClick={() => setShowEditLeadModal(true)} // Changed from toggling isEditingLead
+                  />
+                </ActionGuard>
               </div>
 
               <div className="space-y-3">
@@ -1003,10 +1028,12 @@ export default function CRMLeadDetail() {
             <div className="px-6 mb-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-base font-bold text-gray-900">Owner</h3>
-                <Edit2
-                  className="w-4 h-4 text-gray-400 cursor-pointer hover:text-orange-500 transition-colors"
-                  onClick={() => setIsEditingOwner(!isEditingOwner)}
-                />
+                <ActionGuard permission="leads_edit" module="Lead Management" type="update">
+                  <Edit2
+                    className="w-4 h-4 text-gray-400 cursor-pointer hover:text-orange-500 transition-colors"
+                    onClick={() => setIsEditingOwner(!isEditingOwner)}
+                  />
+                </ActionGuard>
               </div>
               <div className="flex items-center gap-3">
                 <img
@@ -1069,12 +1096,14 @@ export default function CRMLeadDetail() {
             <div className="px-6 mb-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-base font-bold text-gray-800">Contacts</h3>
-                <button
-                  className="text-orange-500 text-xs font-semibold flex items-center gap-1"
-                  onClick={() => setShowEditLeadModal(true)}
-                >
-                  <span className="text-lg">⊕</span> Add New
-                </button>
+                <ActionGuard permission="leads_edit" module="Lead Management" type="update">
+                  <button
+                    className="text-orange-500 text-xs font-semibold flex items-center gap-1"
+                    onClick={() => setShowEditLeadModal(true)}
+                  >
+                    <span className="text-lg">⊕</span> Add New
+                  </button>
+                </ActionGuard>
               </div>
               <div className="flex items-center gap-3">
                 <img
@@ -1094,7 +1123,9 @@ export default function CRMLeadDetail() {
                 <h3 className="text-base font-bold text-gray-800">
                   Other Information
                 </h3>
-                <Edit2 className="w-4 h-4 text-gray-400 cursor-pointer" />
+                <ActionGuard permission="leads_edit" module="Lead Management" type="update">
+                  <Edit2 className="w-4 h-4 text-gray-400 cursor-pointer" />
+                </ActionGuard>
               </div>
               <div className="space-y-3">
                 <div className="flex items-center justify-between text-sm">

@@ -24,6 +24,7 @@ import {
   LayoutGrid,
   List,
 } from "lucide-react";
+import ActionGuard from "../../components/common/ActionGuard";
 import Modal from "../../components/common/Modal";
 import NumberCard from "../../components/NumberCard";
 // import EditPipelineModal from "../../components/PiplineManagement/EditPipelineModal"; // Removed in favor of consolidated AddPipelineModal
@@ -280,16 +281,18 @@ const PipelineList = () => {
                   <span className="text-sm">Manage Stages</span>
                 </button> */}
 
-                <button
-                  onClick={() => {
-                    setSelectedPipeline(null);
-                    setIsAddPipelineOpen(true);
-                  }}
-                  className="flex items-center gap-2 px-6 py-3 rounded-sm font-semibold transition shadow-lg hover:shadow-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
-                >
-                  <Plus size={20} />
-                  Add Pipeline
-                </button>
+                <ActionGuard permission="pipeline_create" module="Pipeline Management" type="create">
+                  <button
+                    onClick={() => {
+                      setSelectedPipeline(null);
+                      setIsAddPipelineOpen(true);
+                    }}
+                    className="flex items-center gap-2 px-6 py-3 rounded-sm font-semibold transition shadow-lg hover:shadow-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
+                  >
+                    <Plus size={20} />
+                    Add Pipeline
+                  </button>
+                </ActionGuard>
               </div>
             </div>
           </div>
@@ -402,40 +405,46 @@ const PipelineList = () => {
                         </td>
                         <td className="py-4 px-4">
                           <div className="flex justify-end gap-2 text-gray-400">
-                            <button
-                              className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-sm transition-all"
-                              onClick={() => {
-                                setSelectedPipeline(pipeline);
-                                setIsViewOpen(true);
-                              }}
-                              title="View"
-                            >
-                              <Eye size={18} />
-                            </button>
-                            <button
-                              className="p-1.5 text-green-600 hover:bg-green-50 rounded-sm transition-all"
-                              onClick={() => {
-                                setSelectedPipeline(pipeline);
-                                setIsAddPipelineOpen(true);
-                              }}
-                              title="Edit"
-                            >
-                              <SquarePen size={18} />
-                            </button>
-                            <button
-                              onClick={() => {
-                                setSelectedPipeline(pipeline);
-                                setIsDeleteOpen(true);
-                              }}
-                              className={`p-1.5 rounded-sm transition-all ${pipeline.name === "Default Pipeline"
-                                ? "text-gray-300 cursor-not-allowed opacity-50"
-                                : "text-red-600 hover:bg-red-50"
-                                }`}
-                              title={pipeline.name === "Default Pipeline" ? "Default Pipeline (Cannot Delete)" : "Delete"}
-                              disabled={pipeline.name === "Default Pipeline"}
-                            >
-                              <Trash2 size={18} />
-                            </button>
+                            <ActionGuard permission="pipeline_view" module="Pipeline Management" type="read">
+                              <button
+                                className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-sm transition-all"
+                                onClick={() => {
+                                  setSelectedPipeline(pipeline);
+                                  setIsViewOpen(true);
+                                }}
+                                title="View"
+                              >
+                                <Eye size={18} />
+                              </button>
+                            </ActionGuard>
+                            <ActionGuard permission="pipeline_edit" module="Pipeline Management" type="update">
+                              <button
+                                className="p-1.5 text-green-600 hover:bg-green-50 rounded-sm transition-all"
+                                onClick={() => {
+                                  setSelectedPipeline(pipeline);
+                                  setIsAddPipelineOpen(true);
+                                }}
+                                title="Edit"
+                              >
+                                <SquarePen size={18} />
+                              </button>
+                            </ActionGuard>
+                            <ActionGuard permission="pipeline_delete" module="Pipeline Management" type="delete">
+                              <button
+                                onClick={() => {
+                                  setSelectedPipeline(pipeline);
+                                  setIsDeleteOpen(true);
+                                }}
+                                className={`p-1.5 rounded-sm transition-all ${pipeline.name === "Default Pipeline"
+                                  ? "text-gray-300 cursor-not-allowed opacity-50"
+                                  : "text-red-600 hover:bg-red-50"
+                                  }`}
+                                title={pipeline.name === "Default Pipeline" ? "Default Pipeline (Cannot Delete)" : "Delete"}
+                                disabled={pipeline.name === "Default Pipeline"}
+                              >
+                                <Trash2 size={18} />
+                              </button>
+                            </ActionGuard>
                           </div>
                         </td>
                       </tr>
@@ -478,40 +487,46 @@ const PipelineList = () => {
                   >
                     {/* Action Icons - Top Right (Visible on hover) */}
                     <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 z-10">
-                      <button
-                        onClick={() => {
-                          setSelectedPipeline(pipeline);
-                          setIsViewOpen(true);
-                        }}
-                        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-sm bg-white shadow-sm border border-blue-100"
-                        title="View Details"
-                      >
-                        <Eye size={16} />
-                      </button>
-                      <button
-                        onClick={() => {
-                          setSelectedPipeline(pipeline);
-                          setIsAddPipelineOpen(true);
-                        }}
-                        className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-sm bg-white shadow-sm border border-emerald-100"
-                        title="Edit"
-                      >
-                        <SquarePen size={16} />
-                      </button>
-                      <button
-                        onClick={() => {
-                          setSelectedPipeline(pipeline);
-                          setIsDeleteOpen(true);
-                        }}
-                        className={`p-1.5 rounded-sm bg-white shadow-sm border transition-all ${pipeline.name === "Default Pipeline"
-                          ? "text-gray-300 cursor-not-allowed border-gray-100"
-                          : "text-red-600 hover:bg-red-50 border-red-100"
-                          }`}
-                        disabled={pipeline.name === "Default Pipeline"}
-                        title="Delete"
-                      >
-                        <Trash2 size={16} />
-                      </button>
+                      <ActionGuard permission="pipeline_view" module="Pipeline Management" type="read">
+                        <button
+                          onClick={() => {
+                            setSelectedPipeline(pipeline);
+                            setIsViewOpen(true);
+                          }}
+                          className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-sm bg-white shadow-sm border border-blue-100"
+                          title="View Details"
+                        >
+                          <Eye size={16} />
+                        </button>
+                      </ActionGuard>
+                      <ActionGuard permission="pipeline_edit" module="Pipeline Management" type="update">
+                        <button
+                          onClick={() => {
+                            setSelectedPipeline(pipeline);
+                            setIsAddPipelineOpen(true);
+                          }}
+                          className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-sm bg-white shadow-sm border border-emerald-100"
+                          title="Edit"
+                        >
+                          <SquarePen size={16} />
+                        </button>
+                      </ActionGuard>
+                      <ActionGuard permission="pipeline_delete" module="Pipeline Management" type="delete">
+                        <button
+                          onClick={() => {
+                            setSelectedPipeline(pipeline);
+                            setIsDeleteOpen(true);
+                          }}
+                          className={`p-1.5 rounded-sm bg-white shadow-sm border transition-all ${pipeline.name === "Default Pipeline"
+                            ? "text-gray-300 cursor-not-allowed border-gray-100"
+                            : "text-red-600 hover:bg-red-50 border-red-100"
+                            }`}
+                          disabled={pipeline.name === "Default Pipeline"}
+                          title="Delete"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </ActionGuard>
                     </div>
                     <div className="p-4 flex items-center gap-3">
                       {/* Initials Box */}

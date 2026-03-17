@@ -45,6 +45,7 @@ import {
   Briefcase,
   LogOut
 } from "lucide-react";
+import ActionGuard from "../../components/common/ActionGuard";
 import NumberCard from "../../components/NumberCard";
 
 export default function EmployeeAttendance() {
@@ -519,26 +520,28 @@ export default function EmployeeAttendance() {
                       </div>
 
                       {!hasCheckedOut && (
-                        <button
-                          onClick={async () => {
-                            try {
-                              await checkOut({ id: todayRecord.id }).unwrap();
-                              toast.success("Checked out successfully!");
-                            } catch (error) {
-                              toast.error(error.data?.message || "Failed to check out");
-                            }
-                          }}
+                        <ActionGuard permission="attendance_edit" module="Attendance" type="update">
+                          <button
+                            onClick={async () => {
+                              try {
+                                await checkOut({ id: todayRecord.id }).unwrap();
+                                toast.success("Checked out successfully!");
+                              } catch (error) {
+                                toast.error(error.data?.message || "Failed to check out");
+                              }
+                            }}
 
-                          disabled={isCheckingOut}
-                          className="w-full md:w-auto px-8 py-3 bg-red-500 text-white rounded-sm font-bold shadow-lg hover:bg-red-600 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-                        >
-                          {isCheckingOut ? (
-                            <div className="w-5 h-5 border-2 border-white border-t-transparent animate-spin rounded-full" />
-                          ) : (
-                            <LogOut className="w-5 h-5" />
-                          )}
-                          CHECK OUT NOW
-                        </button>
+                            disabled={isCheckingOut}
+                            className="w-full md:w-auto px-8 py-3 bg-red-500 text-white rounded-sm font-bold shadow-lg hover:bg-red-600 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                          >
+                            {isCheckingOut ? (
+                              <div className="w-5 h-5 border-2 border-white border-t-transparent animate-spin rounded-full" />
+                            ) : (
+                              <LogOut className="w-5 h-5" />
+                            )}
+                            CHECK OUT NOW
+                          </button>
+                        </ActionGuard>
                       )}
 
                       {hasCheckedOut && (
@@ -560,13 +563,15 @@ export default function EmployeeAttendance() {
                           <p className="text-sm text-gray-600 mt-1">Start your day by marking your attendance.</p>
                         </div>
                       </div>
-                      <button
-                        onClick={() => setCurrentPage("checkin")}
-                        className="w-full md:w-auto px-8 py-3 bg-blue-600 text-white rounded-sm font-bold shadow-lg hover:bg-blue-700 active:scale-95 transition-all flex items-center justify-center gap-2"
-                      >
-                        <Zap className="w-5 h-5" />
-                        GO TO CHECK-IN
-                      </button>
+                      <ActionGuard permission="attendance_create" module="Attendance" type="create">
+                        <button
+                          onClick={() => setCurrentPage("checkin")}
+                          className="w-full md:w-auto px-8 py-3 bg-blue-600 text-white rounded-sm font-bold shadow-lg hover:bg-blue-700 active:scale-95 transition-all flex items-center justify-center gap-2"
+                        >
+                          <Zap className="w-5 h-5" />
+                          GO TO CHECK-IN
+                        </button>
+                      </ActionGuard>
                     </div>
                   );
                 }
@@ -761,16 +766,18 @@ export default function EmployeeAttendance() {
                             )}
                           </div>
 
-                          <button
-                            onClick={() => setShowCheckInModal(true)}
-                            disabled={settings?.wifiEnabled && !isOnCompanyNetwork}
-                            className={`w-full py-3.5 rounded-sm font-bold text-sm uppercase tracking-widest transition-all duration-300 shadow-sm active:scale-95 ${(!settings?.wifiEnabled || isOnCompanyNetwork)
-                              ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:shadow-orange-200 hover:-translate-y-0.5"
-                              : "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200"
-                              }`}
-                          >
-                            Check In
-                          </button>
+                          <ActionGuard permission="attendance_create" module="Attendance" type="create">
+                            <button
+                              onClick={() => setShowCheckInModal(true)}
+                              disabled={settings?.wifiEnabled && !isOnCompanyNetwork}
+                              className={`w-full py-3.5 rounded-sm font-bold text-sm uppercase tracking-widest transition-all duration-300 shadow-sm active:scale-95 ${(!settings?.wifiEnabled || isOnCompanyNetwork)
+                                ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:shadow-orange-200 hover:-translate-y-0.5"
+                                : "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200"
+                                }`}
+                            >
+                              Check In
+                            </button>
+                          </ActionGuard>
                         </div>
                       );
                     } else if (todayRecord) {

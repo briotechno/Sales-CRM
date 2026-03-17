@@ -22,6 +22,7 @@ import { useGetDesignationsQuery } from "../../store/api/designationApi";
 import usePermission from "../../hooks/usePermission";
 import Modal from "../../components/common/Modal";
 import NumberCard from "../../components/NumberCard";
+import ActionGuard from "../../components/common/ActionGuard";
 
 const DeleteOfferLetterModal = ({ isOpen, onClose, onConfirm, isLoading, title }) => {
     return (
@@ -210,7 +211,7 @@ export default function OfferLetterList() {
     const renderActions = (offer) => {
         return (
             <div className="flex items-center justify-end gap-2.5">
-                {read && (
+                <ActionGuard permission="offer_letter_read" module="Offer Letter" type="read">
                     <button
                         onClick={() => {
                             setViewOffer(offer);
@@ -221,8 +222,8 @@ export default function OfferLetterList() {
                     >
                         <Eye size={16} />
                     </button>
-                )}
-                {update && (
+                </ActionGuard>
+                <ActionGuard permission="offer_letter_edit" module="Offer Letter" type="update">
                     <button
                         onClick={() => {
                             setSelectedOffer(offer);
@@ -233,8 +234,8 @@ export default function OfferLetterList() {
                     >
                         <Edit size={16} />
                     </button>
-                )}
-                {canDelete && (
+                </ActionGuard>
+                <ActionGuard permission="offer_letter_delete" module="Offer Letter" type="delete">
                     <button
                         onClick={() => handleDelete(offer)}
                         className="p-1.5 hover:bg-red-50 rounded-sm text-red-500 hover:text-red-700 transition-all border border-transparent hover:border-red-100 shadow-sm"
@@ -242,7 +243,7 @@ export default function OfferLetterList() {
                     >
                         <Trash2 size={16} />
                     </button>
-                )}
+                </ActionGuard>
             </div>
         );
     };
@@ -442,7 +443,7 @@ export default function OfferLetterList() {
                                     Export
                                 </button>
 
-                                {create && (
+                                <ActionGuard permission="offer_letter_create" module="Offer Letter" type="create">
                                     <button
                                         onClick={() => {
                                             setSelectedOffer(null);
@@ -453,7 +454,7 @@ export default function OfferLetterList() {
                                         <Plus size={20} />
                                         Add Offer
                                     </button>
-                                )}
+                                </ActionGuard>
                             </div>
                         </div>
                     </div>

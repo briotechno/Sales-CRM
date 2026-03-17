@@ -45,6 +45,7 @@ import EmptyState from "../../components/common/EmptyState";
 
 import CallQrModal from "../../components/LeadManagement/CallQrModal";
 import AssignmentHistoryModal from "../../components/LeadManagement/AssignmentHistoryModal";
+import ActionGuard from "../../components/common/ActionGuard";
 
 const safeParseDate = (dateStr) => {
   if (!dateStr) return null;
@@ -155,13 +156,15 @@ const WorkStationLeadsListView = ({
                   <div className="flex items-center gap-2">
                     <span className="font-semibold">{lead.mobile_number || lead.phone || "--"}</span>
                     {lead.mobile_number || lead.phone ? (
-                      <button
-                        onClick={() => handleHitCall && handleHitCall(lead)}
-                        className="p-1 hover:bg-orange-50 rounded-full text-orange-500 transition-colors"
-                        title="View QR"
-                      >
-                        <QrCode size={16} />
-                      </button>
+                      <ActionGuard permission="leads_view_own" module="Lead Management" type="read">
+                        <button
+                          onClick={() => handleHitCall && handleHitCall(lead)}
+                          className="p-1 hover:bg-orange-50 rounded-full text-orange-500 transition-colors"
+                          title="View QR"
+                        >
+                          <QrCode size={16} />
+                        </button>
+                      </ActionGuard>
                     ) : null}
                   </div>
                 </td>
@@ -278,25 +281,31 @@ const WorkStationLeadsListView = ({
                 </td>
                 <td className="py-3 px-4">
                   <div className="flex justify-end gap-1.5">
-                    <button onClick={() => handleHitCall && handleHitCall(lead)} className="p-1.5 bg-orange-50 hover:bg-orange-500 rounded-sm text-orange-600 hover:text-white transition-all border border-orange-100 hover:border-orange-500 shadow-sm" title="Call">
-                      <Phone size={16} />
-                    </button>
-                    <a
-                      href={((lead.mobile_number || lead.phone || '').replace(/\D/g, '')) ? `https://wa.me/${(lead.mobile_number || lead.phone || '').replace(/\D/g, '')}` : '#'}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="p-1.5 bg-green-50 hover:bg-green-500 rounded-sm text-green-600 hover:text-white transition-all border border-green-100 hover:border-green-500 shadow-sm"
-                      title="WhatsApp"
-                    >
-                      <FaWhatsapp size={16} />
-                    </a>
-                    <a
-                      href={lead.email ? `mailto:${lead.email}` : '#'}
-                      className="p-1.5 bg-blue-50 hover:bg-blue-500 rounded-sm text-blue-600 hover:text-white transition-all border border-blue-100 hover:border-blue-500 shadow-sm"
-                      title="Email"
-                    >
-                      <Mail size={16} />
-                    </a>
+                    <ActionGuard permission="leads_edit" module="Lead Management" type="update">
+                      <button onClick={() => handleHitCall && handleHitCall(lead)} className="p-1.5 bg-orange-50 hover:bg-orange-500 rounded-sm text-orange-600 hover:text-white transition-all border border-orange-100 hover:border-orange-500 shadow-sm" title="Call">
+                        <Phone size={16} />
+                      </button>
+                    </ActionGuard>
+                    <ActionGuard permission="leads_view_own" module="Lead Management" type="read">
+                      <a
+                        href={((lead.mobile_number || lead.phone || '').replace(/\D/g, '')) ? `https://wa.me/${(lead.mobile_number || lead.phone || '').replace(/\D/g, '')}` : '#'}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-1.5 bg-green-50 hover:bg-green-500 rounded-sm text-green-600 hover:text-white transition-all border border-green-100 hover:border-green-500 shadow-sm"
+                        title="WhatsApp"
+                      >
+                        <FaWhatsapp size={16} />
+                      </a>
+                    </ActionGuard>
+                    <ActionGuard permission="leads_view_own" module="Lead Management" type="read">
+                      <a
+                        href={lead.email ? `mailto:${lead.email}` : '#'}
+                        className="p-1.5 bg-blue-50 hover:bg-blue-500 rounded-sm text-blue-600 hover:text-white transition-all border border-blue-100 hover:border-blue-500 shadow-sm"
+                        title="Email"
+                      >
+                        <Mail size={16} />
+                      </a>
+                    </ActionGuard>
                   </div>
                 </td>
               </tr>
@@ -655,31 +664,37 @@ const WorkStationLeadsGridView = ({
 
                         {/* Action Buttons */}
                         <div className="flex items-center gap-2 flex-shrink-0">
-                          <button
-                            onClick={(e) => { e.stopPropagation(); handleHitCall && handleHitCall(lead); }}
-                            className="p-2 bg-white hover:bg-[#FF7B1D] rounded-sm text-[#FF7B1D] hover:text-white transition-all duration-200 border border-orange-100 hover:border-[#FF7B1D] shadow-sm active:scale-95"
-                            title={`Calls: ${lead.call_count || 0}`}
-                          >
-                            <Phone size={14} />
-                          </button>
-                          <a
-                            href={waLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={(e) => e.stopPropagation()}
-                            className="p-2 bg-white hover:bg-green-600 rounded-sm text-green-600 hover:text-white transition-all duration-200 border border-green-100 hover:border-green-600 shadow-sm active:scale-95"
-                            title="WhatsApp"
-                          >
-                            <FaWhatsapp size={14} />
-                          </a>
-                          <a
-                            href={lead.email ? `mailto:${lead.email}` : '#'}
-                            onClick={(e) => e.stopPropagation()}
-                            className="p-2 bg-white hover:bg-blue-600 rounded-sm text-blue-600 hover:text-white transition-all duration-200 border border-blue-100 hover:border-blue-600 shadow-sm active:scale-95"
-                            title="Email"
-                          >
-                            <Mail size={14} />
-                          </a>
+                          <ActionGuard permission="leads_edit" module="Lead Management" type="update">
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleHitCall && handleHitCall(lead); }}
+                              className="p-2 bg-white hover:bg-[#FF7B1D] rounded-sm text-[#FF7B1D] hover:text-white transition-all duration-200 border border-orange-100 hover:border-[#FF7B1D] shadow-sm active:scale-95"
+                              title={`Calls: ${lead.call_count || 0}`}
+                            >
+                              <Phone size={14} />
+                            </button>
+                          </ActionGuard>
+                          <ActionGuard permission="leads_view_own" module="Lead Management" type="read">
+                            <a
+                              href={waLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              className="p-2 bg-white hover:bg-green-600 rounded-sm text-green-600 hover:text-white transition-all duration-200 border border-green-100 hover:border-green-600 shadow-sm active:scale-95"
+                              title="WhatsApp"
+                            >
+                              <FaWhatsapp size={14} />
+                            </a>
+                          </ActionGuard>
+                          <ActionGuard permission="leads_view_own" module="Lead Management" type="read">
+                            <a
+                              href={lead.email ? `mailto:${lead.email}` : '#'}
+                              onClick={(e) => e.stopPropagation()}
+                              className="p-2 bg-white hover:bg-blue-600 rounded-sm text-blue-600 hover:text-white transition-all duration-200 border border-blue-100 hover:border-blue-600 shadow-sm active:scale-95"
+                              title="Email"
+                            >
+                              <Mail size={14} />
+                            </a>
+                          </ActionGuard>
                         </div>
                       </div>
                     </div>
@@ -1348,13 +1363,15 @@ export default function WorkStation() {
 
               {/* Add Lead Button */}
               <div className="relative" ref={addLeadMenuRef}>
-                <button
-                  onClick={() => setOpenLeadMenu(!openLeadMenu)}
-                  className="flex items-center gap-2 px-6 py-3 rounded-sm font-semibold transition shadow-lg hover:shadow-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
-                >
-                  <PlusIcon size={20} />
-                  Add Lead
-                </button>
+                <ActionGuard permission="leads_create" module="Lead Management" type="create">
+                  <button
+                    onClick={() => setOpenLeadMenu(!openLeadMenu)}
+                    className="flex items-center gap-2 px-6 py-3 rounded-sm font-semibold transition shadow-lg hover:shadow-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
+                  >
+                    <PlusIcon size={20} />
+                    Add Lead
+                  </button>
+                </ActionGuard>
                 {openLeadMenu && (
                   <div className="absolute top-full right-0 mt-2 w-56 bg-white border border-gray-200 shadow-xl rounded-sm z-50 overflow-hidden divide-y divide-gray-100 animate-fadeIn">
                     <button
@@ -1580,20 +1597,24 @@ export default function WorkStation() {
               </div>
 
               <div className="flex gap-4">
-                <button
-                  onClick={handleAssignLeads}
-                  className="bg-white border border-gray-300 text-gray-700 px-6 py-2.5 rounded-sm font-bold hover:bg-orange-50 hover:border-[#FF7B1D] hover:text-[#FF7B1D] transition-all capitalize flex items-center gap-2.5 text-sm shadow-sm active:scale-95 font-primary group"
-                >
-                  <UserPlus size={18} className="text-[#FF7B1D] group-hover:scale-110 transition-transform" />
-                  Assign Leads
-                </button>
-                <button
-                  onClick={handleDeleteSelected}
-                  className="bg-red-600 text-white px-6 py-2.5 rounded-sm font-bold hover:bg-red-700 transition-all capitalize flex items-center gap-2.5 text-sm shadow-md shadow-red-200 active:scale-95 font-primary border border-red-700"
-                >
-                  <Trash2 size={18} />
-                  Delete Selected
-                </button>
+                <ActionGuard permission="leads_assign" module="Lead Management" type="update">
+                  <button
+                    onClick={handleAssignLeads}
+                    className="bg-white border border-gray-300 text-gray-700 px-6 py-2.5 rounded-sm font-bold hover:bg-orange-50 hover:border-[#FF7B1D] hover:text-[#FF7B1D] transition-all capitalize flex items-center gap-2.5 text-sm shadow-sm active:scale-95 font-primary group"
+                  >
+                    <UserPlus size={18} className="text-[#FF7B1D] group-hover:scale-110 transition-transform" />
+                    Assign Leads
+                  </button>
+                </ActionGuard>
+                <ActionGuard permission="leads_delete" module="Lead Management" type="delete">
+                  <button
+                    onClick={handleDeleteSelected}
+                    className="bg-red-600 text-white px-6 py-2.5 rounded-sm font-bold hover:bg-red-700 transition-all capitalize flex items-center gap-2.5 text-sm shadow-md shadow-red-200 active:scale-95 font-primary border border-red-700"
+                  >
+                    <Trash2 size={18} />
+                    Delete Selected
+                  </button>
+                </ActionGuard>
               </div>
             </div>
           </div>

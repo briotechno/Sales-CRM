@@ -621,7 +621,41 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       // Module-wise filtering - Show sections belonging to the active module
       const currentModule = availableModules.find(m => m.id === activeModule);
       return currentModule?.section === section.section;
-    });
+    })
+    .map(section => {
+      // Filter the items within each section based on permissions
+      const filteredItems = section.items.filter(item => {
+        // If it's a Super Admin or the item has no permission key, show it
+        if (user?.role === "Super Admin" || !item.permission) return true;
+
+        // Special case: Admin role bypass
+        if (user?.role === "Admin") return true;
+
+        // Check if user has permission for this item
+        const hasPermission = checkPermission(item.permission);
+
+        return hasPermission;
+      }).map(item => {
+        // If the item has children, filter them as well
+        if (item.children) {
+          return {
+            ...item,
+            children: item.children.filter(child => {
+              if (user?.role === "Super Admin" || !child.permission) return true;
+              if (user?.role === "Admin") return true;
+              return checkPermission(child.permission);
+            })
+          };
+        }
+        return item;
+      });
+
+      return {
+        ...section,
+        items: filteredItems
+      };
+    })
+    .filter(section => section.items.length > 0); // Hide sections that have no visible items
 
 
   return (
