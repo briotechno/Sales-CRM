@@ -50,6 +50,7 @@ import {
   Building2,
   Map
 } from "lucide-react";
+import ActionGuard from "../../components/common/ActionGuard";
 import Modal from "../../components/common/Modal";
 import { FaBuilding } from "react-icons/fa";
 
@@ -298,12 +299,14 @@ export default function ClientProfile() {
 
         {/* Action Buttons Row */}
         <div className="px-6 py-2.5 grid grid-cols-1 border-b border-gray-100">
-          <button
-            onClick={openQuotationModal}
-            className="bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-sm text-sm font-bold capitalize tracking-wider flex items-center justify-center gap-2 transition-all shadow-md active:scale-95"
-          >
-            <Plus size={16} /> New Quotation
-          </button>
+          <ActionGuard permission="quotation_create" module="Financial Documents" type="create">
+            <button
+              onClick={openQuotationModal}
+              className="bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-sm text-sm font-bold capitalize tracking-wider flex items-center justify-center gap-2 transition-all shadow-md active:scale-95 w-full"
+            >
+              <Plus size={16} /> New Quotation
+            </button>
+          </ActionGuard>
         </div>
 
         {/* Info Sections */}
@@ -380,19 +383,23 @@ export default function ClientProfile() {
             </div>
             <div className="flex items-center gap-3 py-4">
               {activeTab === "documents" ? (
-                <label className="cursor-pointer bg-orange-500 hover:bg-orange-600 text-white px-5 py-2.5 rounded-sm text-xs font-bold capitalize tracking-wider flex items-center gap-2 transition-all shadow-md active:scale-95 group">
-                  <Plus size={14} className="group-hover:rotate-90 transition-transform" />
-                  {isUploading ? "Uploading..." : "Upload Document"}
-                  <input type="file" multiple className="hidden" onChange={handleAddFile} disabled={isUploading} />
-                </label>
+                <ActionGuard permission="clients_edit" module="Client Management" type="update">
+                  <label className="cursor-pointer bg-orange-500 hover:bg-orange-600 text-white px-5 py-2.5 rounded-sm text-xs font-bold capitalize tracking-wider flex items-center gap-2 transition-all shadow-md active:scale-95 group">
+                    <Plus size={14} className="group-hover:rotate-90 transition-transform" />
+                    {isUploading ? "Uploading..." : "Upload Document"}
+                    <input type="file" multiple className="hidden" onChange={handleAddFile} disabled={isUploading} />
+                  </label>
+                </ActionGuard>
               ) : (
-                <button
-                  onClick={openQuotationModal}
-                  className="bg-orange-500 hover:bg-orange-600 text-white px-5 py-2.5 rounded-sm text-xs font-bold capitalize tracking-wider flex items-center gap-2 transition-all shadow-md active:scale-95 group"
-                >
-                  <Plus size={14} className="group-hover:rotate-90 transition-transform" />
-                  New Record
-                </button>
+                <ActionGuard permission="quotation_create" module="Financial Documents" type="create">
+                  <button
+                    onClick={openQuotationModal}
+                    className="bg-orange-500 hover:bg-orange-600 text-white px-5 py-2.5 rounded-sm text-xs font-bold capitalize tracking-wider flex items-center gap-2 transition-all shadow-md active:scale-95 group"
+                  >
+                    <Plus size={14} className="group-hover:rotate-90 transition-transform" />
+                    New Record
+                  </button>
+                </ActionGuard>
               )}
             </div>
           </div>
@@ -454,11 +461,13 @@ export default function ClientProfile() {
                               className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-sm transition-all" title="Download">
                               <Download size={18} />
                             </button>
-                            <button
-                              onClick={() => handleDeleteFile(file.id)}
-                              className="p-1.5 text-red-600 hover:bg-red-50 rounded-sm transition-all" title="Delete">
-                              <Trash2 size={18} />
-                            </button>
+                            <ActionGuard permission="clients_edit" module="Client Management" type="update">
+                              <button
+                                onClick={() => handleDeleteFile(file.id)}
+                                className="p-1.5 text-red-600 hover:bg-red-50 rounded-sm transition-all" title="Delete">
+                                <Trash2 size={18} />
+                              </button>
+                            </ActionGuard>
                           </div>
                         </td>
                       </tr>
@@ -514,16 +523,20 @@ export default function ClientProfile() {
                         <td className="py-4 px-6 font-bold text-gray-900">{formatCurrency(q.total_amount)}</td>
                         <td className="py-4 px-6">
                           <div className="flex items-center justify-end gap-2 text-gray-400">
-                            <button 
-                              onClick={() => handleViewQuotation(q)}
-                              className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-sm transition-all" title="View Details">
-                              <Eye size={18} />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteQuotation(q.id)}
-                              className="p-1.5 text-red-600 hover:bg-red-50 rounded-sm transition-all" title="Delete">
-                              <Trash2 size={18} />
-                            </button>
+                            <ActionGuard permission="quotation_view" module="Financial Documents" type="read">
+                              <button 
+                                onClick={() => handleViewQuotation(q)}
+                                className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-sm transition-all" title="View Details">
+                                <Eye size={18} />
+                              </button>
+                            </ActionGuard>
+                            <ActionGuard permission="quotation_delete" module="Financial Documents" type="delete">
+                              <button
+                                onClick={() => handleDeleteQuotation(q.id)}
+                                className="p-1.5 text-red-600 hover:bg-red-50 rounded-sm transition-all" title="Delete">
+                                <Trash2 size={18} />
+                              </button>
+                            </ActionGuard>
                           </div>
                         </td>
                       </tr>

@@ -258,7 +258,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           name: "Goal Dashbaord",
           icon: <Target size={22} />,
           path: "/crm/goals",
-          permission: "Leads Management"
+          permission: "Goal Management"
         },
       ],
     },
@@ -404,7 +404,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           name: "Campaign",
           icon: <Settings size={22} />,
           path: "/crm/channel/settings",
-          permission: "Leads Management"
+          permission: "Campaign Management"
         },
 
       ],
@@ -504,7 +504,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           children: [
             { name: "Job List", path: "/hrm/job-management", permission: "Recruitment" },
             { name: "Applicant List", path: "/hrm/applicants", permission: "Recruitment" },
-            { name: "Offer Letter", path: "/hrm/offer-letters", permission: "Recruitment" },
+            { name: "Offer Letter", path: "/hrm/offer-letters", permission: "Offer Letter Management" },
           ],
         },
       ],
@@ -564,13 +564,13 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           name: "Meeting",
           icon: <Calendar size={22} />,
           path: "/additional/meeting",
-          permission: "Communication Tools",
+          permission: "Meeting Management",
         },
         {
           name: "Visitor",
           icon: <Users size={22} />,
           path: "/additional/visitor",
-          permission: "Communication Tools",
+          permission: "Visitor Management",
         },
         {
           name: "Notification",
@@ -600,7 +600,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           name: "FAQ",
           icon: <HelpCircle size={22} />,
           path: "/settings/faq",
-          permission: "System Administration"
+          permission: "FAQ Management"
         },
         { name: "Logout", icon: <LogOut size={22} />, path: "/logout" },
       ],
@@ -621,7 +621,41 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       // Module-wise filtering - Show sections belonging to the active module
       const currentModule = availableModules.find(m => m.id === activeModule);
       return currentModule?.section === section.section;
-    });
+    })
+    .map(section => {
+      // Filter the items within each section based on permissions
+      const filteredItems = section.items.filter(item => {
+        // If it's a Super Admin or the item has no permission key, show it
+        if (user?.role === "Super Admin" || !item.permission) return true;
+
+        // Special case: Admin role bypass
+        if (user?.role === "Admin") return true;
+
+        // Check if user has permission for this item
+        const hasPermission = checkPermission(item.permission);
+
+        return hasPermission;
+      }).map(item => {
+        // If the item has children, filter them as well
+        if (item.children) {
+          return {
+            ...item,
+            children: item.children.filter(child => {
+              if (user?.role === "Super Admin" || !child.permission) return true;
+              if (user?.role === "Admin") return true;
+              return checkPermission(child.permission);
+            })
+          };
+        }
+        return item;
+      });
+
+      return {
+        ...section,
+        items: filteredItems
+      };
+    })
+    .filter(section => section.items.length > 0); // Hide sections that have no visible items
 
 
   return (

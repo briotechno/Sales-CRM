@@ -34,6 +34,7 @@ import { FaBuilding, FaWhatsapp } from "react-icons/fa";
 import Modal from "../../../components/common/Modal";
 
 import { toast } from "react-hot-toast";
+import ActionGuard from "../../../components/common/ActionGuard";
 import ConvertClientModal from "../../../components/LeadManagement/ConvertClientModal";
 
 const interestedInOptions = [
@@ -264,11 +265,13 @@ export default function LeadSidebar({
                 ? (currentValue.length > 0 ? currentValue.join(', ') : "N/A")
                 : (currentValue || "N/A")}
             </span>
-            <Edit2
-              size={14}
-              className="text-slate-400 cursor-pointer opacity-0 group-hover/value:opacity-100 transition-opacity flex-shrink-0 hover:text-orange-500"
-              onClick={() => startEditing(field, currentValue)}
-            />
+            <ActionGuard permission="leads_edit" module="Lead Management" type="update">
+              <Edit2
+                size={14}
+                className="text-slate-400 cursor-pointer opacity-0 group-hover/value:opacity-100 transition-opacity flex-shrink-0 hover:text-orange-500"
+                onClick={() => startEditing(field, currentValue)}
+              />
+            </ActionGuard>
           </div>
         )}
       </div>
@@ -344,12 +347,14 @@ export default function LeadSidebar({
             <h2 className="text-2xl font-bold text-slate-800 uppercase truncate px-6" title={leadData?.name}>
               {leadData?.name?.length > 15 ? leadData?.name?.slice(0, 15) + '...' : leadData?.name || "Lead Name"}
             </h2>
-            <button
-              onClick={() => startEditing('name', leadData?.name)}
-              className="absolute right-[5%] top-0 w-7 h-7 flex items-center justify-center bg-orange-500 text-white rounded-sm opacity-0 group-hover/name:opacity-100 transition-all hover:bg-orange-600 shadow-lg"
-            >
-              <Edit2 size={12} />
-            </button>
+            <ActionGuard permission="leads_edit" module="Lead Management" type="update">
+              <button
+                onClick={() => startEditing('name', leadData?.name)}
+                className="absolute right-[5%] top-0 w-7 h-7 flex items-center justify-center bg-orange-500 text-white rounded-sm opacity-0 group-hover/name:opacity-100 transition-all hover:bg-orange-600 shadow-lg"
+              >
+                <Edit2 size={12} />
+              </button>
+            </ActionGuard>
             {/* Lead Type - Non Editable */}
             <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-1">
               {leadData?.type || "Individual"} Lead
@@ -367,22 +372,26 @@ export default function LeadSidebar({
 
       {/* Action Buttons Row */}
       <div className="p-4 grid grid-cols-2 gap-3 border-b border-gray-100">
-        <button
-          onClick={() => setShowConvertModal(true)}
-          disabled={leadData?.tag !== 'Follow Up' && leadData?.tag !== 'Missed'}
-          className={`py-2.5 rounded-sm text-sm font-semibold flex items-center justify-center gap-2 transition-all ${leadData?.tag === 'Follow Up' || leadData?.tag === 'Missed'
-            ? "bg-slate-800 hover:bg-slate-900 text-white shadow-sm"
-            : "bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200"
-            }`}
-        >
-          <UserCheck className={`w-4 h-4 ${leadData?.tag === 'Follow Up' || leadData?.tag === 'Missed' ? 'text-orange-500' : 'text-slate-300'}`} /> Convert Client
-        </button>
-        <button
-          onClick={() => handleQrCall && handleQrCall()}
-          className="bg-orange-500 hover:bg-orange-600 text-white py-2.5 rounded-sm text-sm font-semibold flex items-center justify-center gap-2 transition-colors "
-        >
-          <Phone className="w-4 h-4" /> Call Now
-        </button>
+        <ActionGuard permission="leads_edit" module="Lead Management" type="update">
+          <button
+            onClick={() => setShowConvertModal(true)}
+            disabled={leadData?.tag !== 'Follow Up' && leadData?.tag !== 'Missed'}
+            className={`py-2.5 rounded-sm text-sm font-semibold flex items-center justify-center gap-2 transition-all ${leadData?.tag === 'Follow Up' || leadData?.tag === 'Missed'
+              ? "bg-slate-800 hover:bg-slate-900 text-white shadow-sm"
+              : "bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200"
+              }`}
+          >
+            <UserCheck className={`w-4 h-4 ${leadData?.tag === 'Follow Up' || leadData?.tag === 'Missed' ? 'text-orange-500' : 'text-slate-300'}`} /> Convert Client
+          </button>
+        </ActionGuard>
+        <ActionGuard permission="leads_view_own" module="Lead Management" type="read">
+          <button
+            onClick={() => handleQrCall && handleQrCall()}
+            className="bg-orange-500 hover:bg-orange-600 text-white py-2.5 rounded-sm text-sm font-semibold flex items-center justify-center gap-2 transition-colors "
+          >
+            <Phone className="w-4 h-4" /> Call Now
+          </button>
+        </ActionGuard>
       </div>
 
       {/* Quick Quick Info Cards */}
@@ -439,12 +448,14 @@ export default function LeadSidebar({
               <span className="font-bold text-emerald-600 text-sm">
                 {formatCurrency ? formatCurrency(leadData?.value) : `₹${leadData?.value || 0}`}
               </span>
-              <button
-                onClick={() => startEditing('budget', leadData?.value)}
-                className="w-5 h-5 flex items-center justify-center bg-orange-500 text-white rounded-sm opacity-0 group-hover/budget:opacity-100 transition-all hover:bg-orange-600 shadow-sm"
-              >
-                <Edit2 size={10} />
-              </button>
+              <ActionGuard permission="leads_edit" module="Lead Management" type="update">
+                <button
+                  onClick={() => startEditing('budget', leadData?.value)}
+                  className="w-5 h-5 flex items-center justify-center bg-orange-500 text-white rounded-sm opacity-0 group-hover/budget:opacity-100 transition-all hover:bg-orange-600 shadow-sm"
+                >
+                  <Edit2 size={10} />
+                </button>
+              </ActionGuard>
             </div>
           )}
         </div>
@@ -478,17 +489,19 @@ export default function LeadSidebar({
               </div>
             ) : (
               !editingSection && !editingField && (
-                <button
-                  onClick={() => {
-                    const fields = leadType === 'Organization'
-                      ? ['industry_type', 'company_email', 'company_phone', 'website', 'gst_number', 'visibility']
-                      : ['gender', 'email', 'phone', 'altMobileNumber', 'whatsapp_number', 'dateOfBirth', 'visibility'];
-                    startSectionEditing('basic', fields);
-                  }}
-                  className="w-6 h-6 flex items-center justify-center bg-orange-500 text-white rounded-sm hover:bg-orange-600 transition-all shadow-md active:scale-95"
-                >
-                  <Edit2 size={13} />
-                </button>
+                <ActionGuard permission="leads_edit" module="Lead Management" type="update">
+                  <button
+                    onClick={() => {
+                      const fields = leadType === 'Organization'
+                        ? ['industry_type', 'company_email', 'company_phone', 'website', 'gst_number', 'visibility']
+                        : ['gender', 'email', 'phone', 'altMobileNumber', 'whatsapp_number', 'dateOfBirth', 'visibility'];
+                      startSectionEditing('basic', fields);
+                    }}
+                    className="w-6 h-6 flex items-center justify-center bg-orange-500 text-white rounded-sm hover:bg-orange-600 transition-all shadow-md active:scale-95"
+                  >
+                    <Edit2 size={13} />
+                  </button>
+                </ActionGuard>
               )
             )}
           </div>
@@ -556,17 +569,19 @@ export default function LeadSidebar({
               </div>
             ) : (
               !editingSection && !editingField && (
-                <button
-                  onClick={() => {
-                    const fields = leadType === 'Organization'
-                      ? ['company_address', 'org_city', 'org_state', 'org_pincode', 'org_country']
-                      : ['address', 'city', 'state', 'pincode', 'country'];
-                    startSectionEditing('location', fields);
-                  }}
-                  className="w-6 h-6 flex items-center justify-center bg-orange-500 text-white rounded-sm hover:bg-orange-600 transition-all shadow-md active:scale-95"
-                >
-                  <Edit2 size={13} />
-                </button>
+                <ActionGuard permission="leads_edit" module="Lead Management" type="update">
+                  <button
+                    onClick={() => {
+                      const fields = leadType === 'Organization'
+                        ? ['company_address', 'org_city', 'org_state', 'org_pincode', 'org_country']
+                        : ['address', 'city', 'state', 'pincode', 'country'];
+                      startSectionEditing('location', fields);
+                    }}
+                    className="w-6 h-6 flex items-center justify-center bg-orange-500 text-white rounded-sm hover:bg-orange-600 transition-all shadow-md active:scale-95"
+                  >
+                    <Edit2 size={13} />
+                  </button>
+                </ActionGuard>
               )
             )}
           </div>
@@ -617,12 +632,14 @@ export default function LeadSidebar({
               </div>
             ) : (
               !editingSection && !editingField && (
-                <button
-                  onClick={() => startSectionEditing('business', ['followUp', 'source', 'priority', 'referral_mobile'])}
-                  className="w-6 h-6 flex items-center justify-center bg-orange-500 text-white rounded-sm hover:bg-orange-600 transition-all shadow-md active:scale-95"
-                >
-                  <Edit2 size={13} />
-                </button>
+                <ActionGuard permission="leads_edit" module="Lead Management" type="update">
+                  <button
+                    onClick={() => startSectionEditing('business', ['followUp', 'source', 'priority', 'referral_mobile'])}
+                    className="w-6 h-6 flex items-center justify-center bg-orange-500 text-white rounded-sm hover:bg-orange-600 transition-all shadow-md active:scale-95"
+                  >
+                    <Edit2 size={13} />
+                  </button>
+                </ActionGuard>
               )
             )}
           </div>
@@ -725,12 +742,14 @@ export default function LeadSidebar({
               <div className="flex justify-between items-center mb-3">
                 <p className="text-[10px] text-orange-500 font-black uppercase tracking-widest">Assigned To</p>
                 {!editingSection && !editingField && (
-                  <button
-                    onClick={() => startEditing('assigned_to', leadData?.assigned_to)}
-                    className="w-6 h-6 flex items-center justify-center bg-orange-500 text-white rounded-sm opacity-0 group-hover/agent:opacity-100 transition-all hover:bg-orange-600 shadow-md active:scale-95"
-                  >
-                    <Edit2 size={13} />
-                  </button>
+                  <ActionGuard permission="leads_edit" module="Lead Management" type="update">
+                    <button
+                      onClick={() => startEditing('assigned_to', leadData?.assigned_to)}
+                      className="w-6 h-6 flex items-center justify-center bg-orange-500 text-white rounded-sm opacity-0 group-hover/agent:opacity-100 transition-all hover:bg-orange-600 shadow-md active:scale-95"
+                    >
+                      <Edit2 size={13} />
+                    </button>
+                  </ActionGuard>
                 )}
               </div>
 
@@ -782,13 +801,15 @@ export default function LeadSidebar({
 
         {/* Footer Actions */}
         <div className="pt-4 pb-10">
-          <button
-            onClick={() => setShowModal && setShowModal(true)}
-            className="w-full bg-slate-900 text-white py-4 rounded-sm font-semibold text-sm shadow-xl hover:bg-slate-800 transition-all flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-95 group"
-          >
-            <Plus size={18} className="text-orange-500 group-hover:rotate-90 transition-transform duration-300" />
-            Generate Quotation
-          </button>
+          <ActionGuard permission="quotation_create" module="Financial Documents" type="create">
+            <button
+              onClick={() => setShowModal && setShowModal(true)}
+              className="w-full bg-slate-900 text-white py-4 rounded-sm font-semibold text-sm shadow-xl hover:bg-slate-800 transition-all flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-95 group"
+            >
+              <Plus size={18} className="text-orange-500 group-hover:rotate-90 transition-transform duration-300" />
+              Generate Quotation
+            </button>
+          </ActionGuard>
         </div>
       </div>
 

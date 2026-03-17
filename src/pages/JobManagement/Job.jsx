@@ -40,6 +40,7 @@ import toast from 'react-hot-toast';
 import { useGetDepartmentsQuery } from "../../store/api/departmentApi";
 import usePermission from "../../hooks/usePermission";
 import Modal from "../../components/common/Modal";
+import ActionGuard from "../../components/common/ActionGuard";
 import GenericGridView from "../../components/common/GenericGridView";
 
 const DeleteJobModal = ({ isOpen, onClose, onConfirm, isLoading, title }) => {
@@ -532,20 +533,18 @@ export default function JobManagement() {
                   </button>
                 </div>
 
-                <button
-                  onClick={() => {
-                    resetForm();
-                    setShowAddModal(true);
-                  }}
-                  disabled={!create}
-                  className={`flex items-center gap-2 px-6 py-3 rounded-sm font-semibold transition shadow-lg hover:shadow-xl font-primary text-sm ${create
-                    ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
-                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                    }`}
-                >
-                  <Plus size={20} />
-                  Add New Job
-                </button>
+                <ActionGuard permission="job_management_create" module="Job Management" type="create">
+                  <button
+                    onClick={() => {
+                      resetForm();
+                      setShowAddModal(true);
+                    }}
+                    className="flex items-center gap-2 px-6 py-3 rounded-sm transition shadow-lg hover:shadow-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 font-bold"
+                  >
+                    <Plus size={20} />
+                    Add New Job
+                  </button>
+                </ActionGuard>
               </div>
             </div>
           </div>
@@ -653,7 +652,7 @@ export default function JobManagement() {
                                 Reset All Filters
                               </button>
                             ) : (
-                              create && (
+                              <ActionGuard permission="job_management_create" module="Job Management" type="create">
                                 <button
                                   onClick={() => {
                                     resetForm();
@@ -664,7 +663,7 @@ export default function JobManagement() {
                                   <Plus size={20} className="group-hover:rotate-90 transition-transform duration-300" />
                                   Create First Job
                                 </button>
-                              )
+                              </ActionGuard>
                             )}
                           </div>
                         </td>
@@ -750,7 +749,7 @@ export default function JobManagement() {
                               >
                                 <LinkIcon size={16} />
                               </button>
-                              {read && (
+                              <ActionGuard permission="job_management_read" module="Job Management" type="read">
                                 <button
                                   onClick={() => handleViewJob(job)}
                                   className="p-1.5 hover:bg-blue-50 text-blue-500 hover:text-blue-700 transition-all border border-transparent hover:border-blue-100"
@@ -758,8 +757,8 @@ export default function JobManagement() {
                                 >
                                   <Eye size={16} />
                                 </button>
-                              )}
-                              {update && (
+                              </ActionGuard>
+                              <ActionGuard permission="job_management_edit" module="Job Management" type="update">
                                 <button
                                   onClick={() => handleEditJob(job)}
                                   className="p-1.5 hover:bg-green-50 text-green-500 hover:text-green-700 transition-all border border-transparent hover:border-green-100"
@@ -767,8 +766,8 @@ export default function JobManagement() {
                                 >
                                   <Edit size={16} />
                                 </button>
-                              )}
-                              {remove && (
+                              </ActionGuard>
+                              <ActionGuard permission="job_management_delete" module="Job Management" type="delete">
                                 <button
                                   onClick={() => handleDelete(job)}
                                   className="p-1.5 hover:bg-red-50 text-red-500 hover:text-red-700 transition-all border border-transparent hover:border-red-100 shadow-sm"
@@ -776,7 +775,7 @@ export default function JobManagement() {
                                 >
                                   <Trash2 size={16} />
                                 </button>
-                              )}
+                              </ActionGuard>
                             </div>
                           </td>
                         </tr>
@@ -803,7 +802,7 @@ export default function JobManagement() {
                     >
                       <LinkIcon size={16} />
                     </button>
-                    {read && (
+                    <ActionGuard permission="job_management_read" module="Job Management" type="read">
                       <button
                         onClick={() => handleViewJob(job)}
                         className="p-1.5 text-blue-500 hover:bg-blue-50 rounded-sm bg-white shadow-sm border border-blue-100"
@@ -811,8 +810,8 @@ export default function JobManagement() {
                       >
                         <Eye size={16} />
                       </button>
-                    )}
-                    {update && (
+                    </ActionGuard>
+                    <ActionGuard permission="job_management_edit" module="Job Management" type="update">
                       <button
                         onClick={() => handleEditJob(job)}
                         className="p-1.5 text-green-500 hover:bg-green-50 rounded-sm bg-white shadow-sm border border-green-100"
@@ -820,8 +819,8 @@ export default function JobManagement() {
                       >
                         <Edit size={16} />
                       </button>
-                    )}
-                    {remove && (
+                    </ActionGuard>
+                    <ActionGuard permission="job_management_delete" module="Job Management" type="delete">
                       <button
                         onClick={() => handleDelete(job)}
                         className="p-1.5 text-red-500 hover:bg-red-50 rounded-sm bg-white shadow-sm border border-red-100"
@@ -829,7 +828,7 @@ export default function JobManagement() {
                       >
                         <Trash2 size={16} />
                       </button>
-                    )}
+                    </ActionGuard>
                   </div>
 
                   <div className="p-6 pb-4 flex-1 flex flex-col items-center mt-2 text-center">

@@ -49,7 +49,7 @@ export default function LogoutPopup({ onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-gradient-to-r from-orange-200 to-orange-300 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fadeIn">
+    <div className="fixed inset-0  bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fadeIn">
       <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-8 relative transform transition-all animate-scaleIn">
         {/* Close Button */}
         {!isLoggingOut && !isLoggedOut && (

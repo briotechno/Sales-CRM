@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { FiHome } from "react-icons/fi";
 import { Edit, Trash2, Eye, FileDown, Users, Warehouse, Handshake, Target, Plus, Search, Filter, X, LayoutGrid, List } from "lucide-react";
 import DashboardLayout from "../../components/DashboardLayout";
+import ActionGuard from "../../components/common/ActionGuard";
 import AddDesignationModal from "../../components/Designation/AddDesignationModal";
 import EditDesignationModal from "../../components/Designation/EditDesignationModal";
 import ViewDesignationModal from "../../components/Designation/ViewDesignationModal";
@@ -289,17 +290,15 @@ const AllDesignation = () => {
                   </button>
                 </div>
 
-                <button
-                  onClick={() => setIsAddModalOpen(true)}
-                  disabled={!create}
-                  className={`flex items-center gap-2 px-6 py-3 rounded-sm font-semibold transition shadow-lg hover:shadow-xl ${create
-                    ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
-                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                    }`}
-                >
-                  <Plus size={20} />
-                  Add Designation
-                </button>
+                <ActionGuard permission="designations_create" module="Designation" type="create">
+                  <button
+                    onClick={() => setIsAddModalOpen(true)}
+                    className="flex items-center gap-2 px-6 py-3 rounded-sm font-semibold transition shadow-lg hover:shadow-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
+                  >
+                    <Plus size={20} />
+                    Add Designation
+                  </button>
+                </ActionGuard>
               </div>
             </div>
           </div>
@@ -402,24 +401,24 @@ const AllDesignation = () => {
                             >
                               <Eye size={18} />
                             </button>
-                            <button
-                              onClick={() => handleEdit(dsg)}
-                              disabled={!update}
-                              className={`p-1 hover:bg-orange-100 rounded-sm transition-all ${update ? "text-green-500 hover:text-green-700" : "text-gray-300 cursor-not-allowed"
-                                }`}
-                              title="Edit"
-                            >
-                              <Edit size={18} />
-                            </button>
-                            <button
-                              onClick={() => handleDelete(dsg)}
-                              disabled={!remove}
-                              className={`p-1 hover:bg-orange-100 rounded-sm transition-all ${remove ? "text-red-500 hover:text-red-700" : "text-gray-300 cursor-not-allowed"
-                                }`}
-                              title="Delete"
-                            >
-                              <Trash2 size={18} />
-                            </button>
+                            <ActionGuard permission="designations_edit" module="Designation" type="update">
+                              <button
+                                onClick={() => handleEdit(dsg)}
+                                className="p-1 hover:bg-orange-100 rounded-sm text-green-500 hover:text-green-700 transition-all font-medium"
+                                title="Edit"
+                              >
+                                <Edit size={18} />
+                              </button>
+                            </ActionGuard>
+                            <ActionGuard permission="designations_delete" module="Designation" type="delete">
+                              <button
+                                onClick={() => handleDelete(dsg)}
+                                className="p-1 hover:bg-orange-100 rounded-sm text-red-500 hover:text-red-700 transition-all font-medium"
+                                title="Delete"
+                              >
+                                <Trash2 size={18} />
+                              </button>
+                            </ActionGuard>
                           </div>
                         </td>
                       </tr>
@@ -440,7 +439,7 @@ const AllDesignation = () => {
                       >
                         <Eye size={16} />
                       </button>
-                      {update && (
+                      <ActionGuard permission="designations_edit" module="Designation" type="update">
                         <button
                           onClick={() => handleEdit(dsg)}
                           className="p-1.5 text-green-500 hover:bg-green-50 rounded-sm bg-white shadow-sm border border-green-100"
@@ -448,8 +447,8 @@ const AllDesignation = () => {
                         >
                           <Edit size={16} />
                         </button>
-                      )}
-                      {remove && (
+                      </ActionGuard>
+                      <ActionGuard permission="designations_delete" module="Designation" type="delete">
                         <button
                           onClick={() => handleDelete(dsg)}
                           className="p-1.5 text-red-500 hover:bg-red-50 rounded-sm bg-white shadow-sm border border-red-100"
@@ -457,7 +456,7 @@ const AllDesignation = () => {
                         >
                           <Trash2 size={16} />
                         </button>
-                      )}
+                      </ActionGuard>
                     </div>
 
                     <div className="p-6 pb-4 flex-1 flex flex-col items-center mt-2">
@@ -532,13 +531,15 @@ const AllDesignation = () => {
                   Clear Filter
                 </button>
               ) : (
-                <button
-                  onClick={() => setIsAddModalOpen(true)}
-                  className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl inline-flex items-center gap-2 font-semibold"
-                >
-                  <Plus size={20} />
-                  Create First Designation
-                </button>
+                <ActionGuard permission="designations_create" module="Designation" type="create">
+                  <button
+                    onClick={() => setIsAddModalOpen(true)}
+                    className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl inline-flex items-center gap-2 font-semibold"
+                  >
+                    <Plus size={20} />
+                    Create First Designation
+                  </button>
+                </ActionGuard>
               )}
             </div>
           )}

@@ -17,6 +17,7 @@ import {
     RefreshCw,
     AlertCircle
 } from "lucide-react";
+import ActionGuard from "../common/ActionGuard";
 import ViewCampaignModal from "./ViewCampaignModal";
 import CreateCampaignModal from "./CreateCampaignModal";
 import Modal from "../common/Modal";
@@ -227,44 +228,54 @@ const CampaignList = ({ searchTerm, statusFilter, onClearFilters }) => {
                                     </td>
                                     <td className="py-4 px-4">
                                         <div className="flex justify-end gap-2 text-gray-400">
-                                            <button
-                                                onClick={() => handleView(campaign)}
-                                                className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-sm transition-all"
-                                                title="View Details"
-                                            >
-                                                <Eye size={18} />
-                                            </button>
-                                            <button
-                                                onClick={() => handleEdit(campaign)}
-                                                className="p-1.5 text-green-600 hover:bg-green-50 rounded-sm transition-all"
-                                                title="Edit Campaign"
-                                            >
-                                                <Edit size={18} />
-                                            </button>
+                                            <ActionGuard permission="campaign_view" module="Campaign Management" type="read">
+                                                <button
+                                                    onClick={() => handleView(campaign)}
+                                                    className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-sm transition-all"
+                                                    title="View Details"
+                                                >
+                                                    <Eye size={18} />
+                                                </button>
+                                            </ActionGuard>
+                                            <ActionGuard permission="campaign_edit" module="Campaign Management" type="update">
+                                                <button
+                                                    onClick={() => handleEdit(campaign)}
+                                                    className="p-1.5 text-green-600 hover:bg-green-50 rounded-sm transition-all"
+                                                    title="Edit Campaign"
+                                                >
+                                                    <Edit size={18} />
+                                                </button>
+                                            </ActionGuard>
                                             {campaign.status === "paused" || campaign.status === "scheduled" ? (
-                                                <button
-                                                    onClick={() => handleToggleStatus(campaign.id, campaign.status)}
-                                                    className="p-1.5 text-orange-600 hover:bg-orange-50 rounded-sm transition-all"
-                                                    title="Resume/Start"
-                                                >
-                                                    <Play size={18} />
-                                                </button>
+                                                <ActionGuard permission="campaign_edit" module="Campaign Management" type="update">
+                                                    <button
+                                                        onClick={() => handleToggleStatus(campaign.id, campaign.status)}
+                                                        className="p-1.5 text-orange-600 hover:bg-orange-50 rounded-sm transition-all"
+                                                        title="Resume/Start"
+                                                    >
+                                                        <Play size={18} />
+                                                    </button>
+                                                </ActionGuard>
                                             ) : (
-                                                <button
-                                                    onClick={() => handleToggleStatus(campaign.id, campaign.status)}
-                                                    className="p-1.5 text-amber-600 hover:bg-amber-50 rounded-sm transition-all"
-                                                    title="Pause"
-                                                >
-                                                    <Pause size={18} />
-                                                </button>
+                                                <ActionGuard permission="campaign_edit" module="Campaign Management" type="update">
+                                                    <button
+                                                        onClick={() => handleToggleStatus(campaign.id, campaign.status)}
+                                                        className="p-1.5 text-amber-600 hover:bg-amber-50 rounded-sm transition-all"
+                                                        title="Pause"
+                                                    >
+                                                        <Pause size={18} />
+                                                    </button>
+                                                </ActionGuard>
                                             )}
-                                            <button
-                                                onClick={() => handleDeleteClick(campaign)}
-                                                className="p-1.5 text-red-600 hover:bg-red-50 rounded-sm transition-all"
-                                                title="Delete"
-                                            >
-                                                <Trash2 size={18} />
-                                            </button>
+                                            <ActionGuard permission="campaign_delete" module="Campaign Management" type="delete">
+                                                <button
+                                                    onClick={() => handleDeleteClick(campaign)}
+                                                    className="p-1.5 text-red-600 hover:bg-red-50 rounded-sm transition-all"
+                                                    title="Delete"
+                                                >
+                                                    <Trash2 size={18} />
+                                                </button>
+                                            </ActionGuard>
                                         </div>
                                     </td>
                                 </tr>

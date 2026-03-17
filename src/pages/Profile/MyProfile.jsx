@@ -7,6 +7,7 @@ import {
     GraduationCap, Briefcase, ChevronDown, Edit, MessageSquare,
     CheckCircle, Loader2, Save, Shield, Heart, Globe, Upload, Building2, LayoutGrid
 } from "lucide-react";
+import ActionGuard from "../../components/common/ActionGuard";
 import toast from "react-hot-toast";
 import FormSection from "../../components/Employee/FormSection";
 import { useGetDepartmentsQuery } from "../../store/api/departmentApi";
@@ -257,6 +258,7 @@ export default function MyProfile() {
 
                             <div className="flex flex-wrap justify-center gap-3">
                                 {!editMode ? (
+                                <ActionGuard permission="employee_edit" module="Employee" type="update">
                                     <button
                                         onClick={() => setEditMode(true)}
                                         className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-sm flex items-center gap-2.5 font-bold transition-all shadow-lg hover:shadow-orange-200 active:scale-95 text-sm"
@@ -264,6 +266,7 @@ export default function MyProfile() {
                                         <Edit size={18} />
                                         EDIT PROFILE
                                     </button>
+                                </ActionGuard>
                                 ) : (
                                     <div className="flex gap-3">
                                         <button
@@ -624,13 +627,15 @@ export default function MyProfile() {
                                 <User className="text-orange-500" />
                                 My Professional Profile
                             </h1>
-                            <button
-                                onClick={() => setEditMode(true)}
-                                className="flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 px-5 py-2.5 rounded-sm font-bold border-2 border-gray-200 shadow-sm transition-all active:scale-95 group"
-                            >
-                                <Edit size={18} className="text-orange-500 group-hover:rotate-12 transition-transform" />
-                                Edit My Profile
-                            </button>
+                            <ActionGuard permission="employee_edit" module="Employee" type="update">
+                                <button
+                                    onClick={() => setEditMode(true)}
+                                    className="flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 px-5 py-2.5 rounded-sm font-bold border-2 border-gray-200 shadow-sm transition-all active:scale-95 group"
+                                >
+                                    <Edit size={18} className="text-orange-500 group-hover:rotate-12 transition-transform" />
+                                    Edit My Profile
+                                </button>
+                            </ActionGuard>
                         </div>
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                             {/* Left Column - Profile Card */}

@@ -40,6 +40,7 @@ import { useGetDepartmentsQuery } from "../../store/api/departmentApi";
 import { toast } from "react-hot-toast";
 import { useSelector } from "react-redux";
 import NumberCard from "../../components/NumberCard";
+import ActionGuard from "../../components/common/ActionGuard";
 
 export default function AttendanceApp() {
   const [currentPage, setCurrentPage] = useState("dashboard");
@@ -573,13 +574,15 @@ export default function AttendanceApp() {
                       )}
                     </div>
 
-                    <button
-                      onClick={handleExport}
-                      className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm hover:from-orange-600 hover:to-orange-700 transition shadow-lg flex items-center gap-2 font-semibold"
-                    >
-                      <Download size={18} />
-                      Export
-                    </button>
+                    <ActionGuard permission="attendance_reports" module="Attendance Management" type="read">
+                      <button
+                        onClick={handleExport}
+                        className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm hover:from-orange-600 hover:to-orange-700 transition shadow-lg flex items-center gap-2 font-semibold"
+                      >
+                        <Download size={18} />
+                        Export
+                      </button>
+                    </ActionGuard>
                   </div>
                 )}
               </div>
@@ -654,13 +657,15 @@ export default function AttendanceApp() {
                   Quick Actions
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <button
-                    onClick={() => setCurrentPage("checkin")}
-                    className="p-6 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-sm hover:shadow-sm transform flex items-center justify-center gap-3 font-semibold"
-                  >
-                    <Camera className="w-6 h-6" />
-                    Check-In with Selfie
-                  </button>
+                  <ActionGuard permission="attendance_mark" module="Attendance Management" type="create">
+                    <button
+                      onClick={() => setCurrentPage("checkin")}
+                      className="p-6 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-sm hover:shadow-sm transform flex items-center justify-center gap-3 font-semibold w-full"
+                    >
+                      <Camera className="w-6 h-6" />
+                      Check-In with Selfie
+                    </button>
+                  </ActionGuard>
                   <button
                     onClick={() => setCurrentPage("records")}
                     className="p-6 bg-gradient-to-r from-orange-400 to-orange-500 text-white rounded-sm hover:from-orange-500 hover:to-orange-600 transition-all shadow-sm hover:shadow-sm transform  flex items-center justify-center gap-3 font-semibold"
@@ -858,18 +863,20 @@ export default function AttendanceApp() {
                             </div>
                           </div>
 
-                          {!isCheckedIn && (
-                            <button
-                              onClick={() => handleCheckInClick(employee)}
-                              disabled={!isOnCompanyNetwork}
-                              className={`w-full py-4 rounded-xl font-black text-sm uppercase tracking-widest transition-all duration-300 shadow-lg active:scale-95 ${isOnCompanyNetwork
-                                ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:shadow-orange-200 hover:-translate-y-1"
-                                : "bg-gray-200 text-gray-400 cursor-not-allowed"
-                                }`}
-                            >
-                              Check In Now
-                            </button>
-                          )}
+                          <ActionGuard permission="attendance_mark" module="Attendance Management" type="create">
+                            {!isCheckedIn && (
+                              <button
+                                onClick={() => handleCheckInClick(employee)}
+                                disabled={!isOnCompanyNetwork}
+                                className={`w-full py-4 rounded-xl font-black text-sm uppercase tracking-widest transition-all duration-300 shadow-lg active:scale-95 ${isOnCompanyNetwork
+                                  ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:shadow-orange-200 hover:-translate-y-1"
+                                  : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                                  }`}
+                              >
+                                Check In Now
+                              </button>
+                            )}
+                          </ActionGuard>
                           {isCheckedIn && !isCheckedOut && (
                             <div className="w-full py-4 bg-green-100 text-green-700 rounded-xl text-center font-black text-sm uppercase tracking-widest border border-green-200">
                               Currently On Duty
@@ -978,13 +985,15 @@ export default function AttendanceApp() {
                                 {badge.label}
                               </span>
                             </td>
-                            <td className="py-3 px-4 text-right">
-                              <button
-                                onClick={() => setDetailsModal(record)}
-                                className="p-1 hover:bg-orange-100 rounded-sm text-blue-500 hover:text-blue-700 transition-all font-medium"
-                              >
-                                <Eye size={18} />
-                              </button>
+                             <td className="py-3 px-4 text-right">
+                              <ActionGuard permission="attendance_view" module="Attendance Management" type="read">
+                                <button
+                                  onClick={() => setDetailsModal(record)}
+                                  className="p-1 hover:bg-orange-100 rounded-sm text-blue-500 hover:text-blue-700 transition-all font-medium"
+                                >
+                                  <Eye size={18} />
+                                </button>
+                              </ActionGuard>
                             </td>
                           </tr>
                         );

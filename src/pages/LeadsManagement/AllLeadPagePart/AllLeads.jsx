@@ -18,6 +18,7 @@ import { useGetLeadsQuery, useDeleteLeadMutation, useUpdateLeadMutation, useHitC
 import { useGetPipelinesQuery } from "../../../store/api/pipelineApi";
 import { useGetEmployeesQuery } from "../../../store/api/employeeApi";
 import { toast } from "react-hot-toast";
+import ActionGuard from "../../../components/common/ActionGuard";
 
 export default function LeadsList() {
   const isLocked = useSelector((state) => state.ui.sidebarLocked);
@@ -645,42 +646,43 @@ export default function LeadsList() {
                 Export
               </button>
 
-              {/* Add Lead Button */}
-              <div className="relative" ref={addLeadMenuRef}>
-                <button
-                  onClick={() => setOpenLeadMenu(!openLeadMenu)}
-                  className="flex items-center gap-2 px-6 py-3 rounded-sm font-semibold transition shadow-lg hover:shadow-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
-                >
-                  <PlusIcon size={20} />
-                  Add Lead
-                </button>
+              <ActionGuard permission="leads_create" module="Lead Management" type="create">
+                <div className="relative" ref={addLeadMenuRef}>
+                  <button
+                    onClick={() => setOpenLeadMenu(!openLeadMenu)}
+                    className="flex items-center gap-2 px-6 py-3 rounded-sm font-semibold transition shadow-lg hover:shadow-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
+                  >
+                    <PlusIcon size={20} />
+                    Add Lead
+                  </button>
 
-                {openLeadMenu && (
-                  <div className="absolute top-full right-0 mt-2 w-56 bg-white border border-gray-200 shadow-xl rounded-sm z-50 overflow-hidden divide-y divide-gray-100 animate-fadeIn">
-                    <button
-                      onClick={() => {
-                        setOpenLeadMenu(false);
-                        handleAddLead();
-                      }}
-                      className="w-full flex items-center gap-3 text-left px-5 py-3.5 hover:bg-orange-50 text-sm font-bold text-gray-700 hover:text-orange-600 transition font-primary"
-                    >
-                      <UserPlus size={18} />
-                      Add Single Lead
-                    </button>
+                  {openLeadMenu && (
+                    <div className="absolute top-full right-0 mt-2 w-56 bg-white border border-gray-200 shadow-xl rounded-sm z-50 overflow-hidden divide-y divide-gray-100 animate-fadeIn">
+                      <button
+                        onClick={() => {
+                          setOpenLeadMenu(false);
+                          handleAddLead();
+                        }}
+                        className="w-full flex items-center gap-3 text-left px-5 py-3.5 hover:bg-orange-50 text-sm font-bold text-gray-700 hover:text-orange-600 transition font-primary"
+                      >
+                        <UserPlus size={18} />
+                        Add Single Lead
+                      </button>
 
-                    <button
-                      onClick={() => {
-                        setOpenLeadMenu(false);
-                        setShowBulkUploadPopup(true);
-                      }}
-                      className="w-full flex items-center gap-3 text-left px-5 py-3.5 hover:bg-orange-50 text-sm font-bold text-gray-700 hover:text-orange-600 transition font-primary"
-                    >
-                      <Upload size={18} />
-                      Bulk Upload
-                    </button>
-                  </div>
-                )}
-              </div>
+                      <button
+                        onClick={() => {
+                          setOpenLeadMenu(false);
+                          setShowBulkUploadPopup(true);
+                        }}
+                        className="w-full flex items-center gap-3 text-left px-5 py-3.5 hover:bg-orange-50 text-sm font-bold text-gray-700 hover:text-orange-600 transition font-primary"
+                      >
+                        <Upload size={18} />
+                        Bulk Upload
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </ActionGuard>
             </div>
           </div>
         </div>
@@ -713,20 +715,24 @@ export default function LeadsList() {
               </div>
 
               <div className="flex gap-4">
-                <button
-                  onClick={handleAssignLeads}
-                  className="bg-white border border-gray-300 text-gray-700 px-6 py-2.5 rounded-sm font-bold hover:bg-orange-50 hover:border-[#FF7B1D] hover:text-[#FF7B1D] transition-all capitalize flex items-center gap-2.5 text-sm shadow-sm active:scale-95 font-primary group"
-                >
-                  <UserPlus size={18} className="text-[#FF7B1D] group-hover:scale-110 transition-transform" />
-                  Assign Leads
-                </button>
-                <button
-                  onClick={handleDeleteSelected}
-                  className="bg-red-600 text-white px-6 py-2.5 rounded-sm font-bold hover:bg-red-700 transition-all capitalize flex items-center gap-2.5 text-sm shadow-md shadow-red-200 active:scale-95 font-primary border border-red-700"
-                >
-                  <Trash2 size={18} />
-                  Delete Selected
-                </button>
+                <ActionGuard permission="leads_edit" module="Lead Management" type="update">
+                  <button
+                    onClick={handleAssignLeads}
+                    className="bg-white border border-gray-300 text-gray-700 px-6 py-2.5 rounded-sm font-bold hover:bg-orange-50 hover:border-[#FF7B1D] hover:text-[#FF7B1D] transition-all capitalize flex items-center gap-2.5 text-sm shadow-sm active:scale-95 font-primary group"
+                  >
+                    <UserPlus size={18} className="text-[#FF7B1D] group-hover:scale-110 transition-transform" />
+                    Assign Leads
+                  </button>
+                </ActionGuard>
+                <ActionGuard permission="leads_delete" module="Lead Management" type="delete">
+                  <button
+                    onClick={handleDeleteSelected}
+                    className="bg-red-600 text-white px-6 py-2.5 rounded-sm font-bold hover:bg-red-700 transition-all capitalize flex items-center gap-2.5 text-sm shadow-md shadow-red-200 active:scale-95 font-primary border border-red-700"
+                  >
+                    <Trash2 size={18} />
+                    Delete Selected
+                  </button>
+                </ActionGuard>
               </div>
             </div>
           </div>

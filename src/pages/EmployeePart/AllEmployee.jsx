@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiHome, FiGrid } from "react-icons/fi";
 import DashboardLayout from "../../components/DashboardLayout";
+import ActionGuard from "../../components/common/ActionGuard";
 import {
   Eye,
   Edit,
@@ -252,17 +253,15 @@ const AllEmployee = () => {
                   </button>
                 </div>
 
-                <button
-                  onClick={() => setIsAddModalOpen(true)}
-                  disabled={!create}
-                  className={`flex items-center gap-2 px-6 py-3 rounded-sm font-semibold transition shadow-lg hover:shadow-xl ${create
-                    ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
-                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                    }`}
-                >
-                  <Plus size={20} />
-                  Add Employee
-                </button>
+                <ActionGuard permission="employees_create" module="Employee Management" type="create">
+                  <button
+                    onClick={() => setIsAddModalOpen(true)}
+                    className="flex items-center gap-2 px-6 py-3 rounded-sm font-semibold transition shadow-lg hover:shadow-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
+                  >
+                    <Plus size={20} />
+                    Add Employee
+                  </button>
+                </ActionGuard>
               </div>
             </div>
           </div>
@@ -381,21 +380,21 @@ const AllEmployee = () => {
                         </td>
                         <td className="py-3 px-4 text-right">
                           <div className="flex justify-end gap-2">
-                            {read && (
+                            <ActionGuard permission="employees_read" module="Employee Management" type="read">
                               <button onClick={() => handleView(emp)} className="p-1 hover:bg-orange-100 rounded-sm text-blue-500 hover:text-blue-700 transition-all" title="View Profile">
                                 <Eye size={18} />
                               </button>
-                            )}
-                            {update && (
+                            </ActionGuard>
+                            <ActionGuard permission="employees_edit" module="Employee Management" type="update">
                               <button onClick={() => handleEdit(emp)} className="p-1 hover:bg-orange-100 rounded-sm text-green-500 hover:text-green-700 transition-all" title="Edit">
                                 <Edit size={18} />
                               </button>
-                            )}
-                            {remove && (
+                            </ActionGuard>
+                            <ActionGuard permission="employees_delete" module="Employee Management" type="delete">
                               <button onClick={() => handleDelete(emp)} className="p-1 hover:bg-orange-100 rounded-sm text-red-500 hover:text-red-700 transition-all" title="Delete">
                                 <Trash2 size={18} />
                               </button>
-                            )}
+                            </ActionGuard>
                           </div>
                         </td>
                       </tr>

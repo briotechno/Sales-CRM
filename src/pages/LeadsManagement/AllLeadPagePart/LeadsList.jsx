@@ -1,6 +1,7 @@
 import { Phone, Mail, TrendingUp, Clock, User, Calendar, DollarSign, Info, QrCode, History } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
 import EmptyState from "../../../components/common/EmptyState";
+import ActionGuard from "../../../components/common/ActionGuard";
 
 export default function LeadsListView({
   currentLeads,
@@ -368,22 +369,30 @@ export default function LeadsListView({
                           <td key={col.id} className="py-3 px-4 text-right">
                             <div className="flex justify-end gap-2">
                               {pageType === "Dropped" ? (
-                                <button
-                                  onClick={() => handleReborn && handleReborn(lead)}
-                                  className="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 hover:bg-green-500 rounded-sm text-green-600 hover:text-white transition-all border border-green-100 shadow-sm text-[10px] font-bold uppercase tracking-wider"
-                                  title="Reactivate Lead"
-                                >
-                                  <TrendingUp size={14} />
-                                  Re-Born
-                                </button>
+                                <ActionGuard permission="leads_edit" module="Lead Management" type="update">
+                                  <button
+                                    onClick={() => handleReborn && handleReborn(lead)}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 hover:bg-green-500 rounded-sm text-green-600 hover:text-white transition-all border border-green-100 shadow-sm text-[10px] font-bold uppercase tracking-wider"
+                                    title="Reactivate Lead"
+                                  >
+                                    <TrendingUp size={14} />
+                                    Re-Born
+                                  </button>
+                                </ActionGuard>
                               ) : (
                                 <>
-                                  <button onClick={() => handleHitCall && handleHitCall(lead)} className="p-1.5 bg-orange-50 hover:bg-orange-500 rounded-sm text-orange-600 hover:text-white transition-all border border-orange-100 shadow-sm"><Phone size={14} /></button>
-                                  <button onClick={() => {
-                                    const phone = lead.mobile_number || lead.phone;
-                                    if (phone) window.open(`https://wa.me/${phone.replace(/\D/g, "")}`, "_blank");
-                                  }} className="p-1.5 bg-green-50 hover:bg-green-500 rounded-sm text-green-600 hover:text-white transition-all border border-green-100 shadow-sm"><FaWhatsapp size={14} /></button>
-                                  <button onClick={() => { if (lead.email) window.location.href = `mailto:${lead.email}`; }} className="p-1.5 bg-blue-50 hover:bg-blue-500 rounded-sm text-blue-600 hover:text-white transition-all border border-blue-100 shadow-sm"><Mail size={14} /></button>
+                                  <ActionGuard permission="leads_edit" module="Lead Management" type="update">
+                                    <button onClick={() => handleHitCall && handleHitCall(lead)} className="p-1.5 bg-orange-50 hover:bg-orange-500 rounded-sm text-orange-600 hover:text-white transition-all border border-orange-100 shadow-sm"><Phone size={14} /></button>
+                                  </ActionGuard>
+                                  <ActionGuard permission="leads_view_own" module="Lead Management" type="read">
+                                    <button onClick={() => {
+                                      const phone = lead.mobile_number || lead.phone;
+                                      if (phone) window.open(`https://wa.me/${phone.replace(/\D/g, "")}`, "_blank");
+                                    }} className="p-1.5 bg-green-50 hover:bg-green-500 rounded-sm text-green-600 hover:text-white transition-all border border-green-100 shadow-sm"><FaWhatsapp size={14} /></button>
+                                  </ActionGuard>
+                                  <ActionGuard permission="leads_view_own" module="Lead Management" type="read">
+                                    <button onClick={() => { if (lead.email) window.location.href = `mailto:${lead.email}`; }} className="p-1.5 bg-blue-50 hover:bg-blue-500 rounded-sm text-blue-600 hover:text-white transition-all border border-blue-100 shadow-sm"><Mail size={14} /></button>
+                                  </ActionGuard>
                                 </>
                               )}
                             </div>

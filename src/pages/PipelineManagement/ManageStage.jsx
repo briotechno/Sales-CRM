@@ -18,6 +18,7 @@ import {
     AlertCircle,
     SquarePen,
 } from "lucide-react";
+import ActionGuard from "../../components/common/ActionGuard";
 import NumberCard from "../../components/NumberCard";
 import Modal from "../../components/common/Modal";
 import { toast } from "react-hot-toast";
@@ -198,13 +199,15 @@ const ManageStage = () => {
                                     )}
                                 </div>
 
-                                <button
-                                    onClick={() => setIsAddOpen(true)}
-                                    className="flex items-center gap-2 px-6 py-3 rounded-sm font-semibold transition shadow-lg hover:shadow-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
-                                >
-                                    <Plus size={20} />
-                                    Add Stage
-                                </button>
+                                <ActionGuard permission="pipeline_stages_manage" module="Pipeline Management" type="update">
+                                    <button
+                                        onClick={() => setIsAddOpen(true)}
+                                        className="flex items-center gap-2 px-6 py-3 rounded-sm font-semibold transition shadow-lg hover:shadow-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
+                                    >
+                                        <Plus size={20} />
+                                        Add Stage
+                                    </button>
+                                </ActionGuard>
                             </div>
                         </div>
                     </div>
@@ -241,20 +244,24 @@ const ManageStage = () => {
                                             <td className="py-4 px-4 font-medium text-gray-500 truncate max-w-[300px]" title={stage.description}>{stage.description || "-"}</td>
                                             <td className="py-4 px-4">
                                                 <div className="flex justify-end gap-2">
-                                                    <button
-                                                        onClick={() => { setSelectedStage(stage); setIsEditOpen(true); }}
-                                                        className="p-1.5 text-green-600 hover:bg-green-50 rounded-sm transition-all"
-                                                        title="Edit"
-                                                    >
-                                                        <SquarePen size={18} />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => { setSelectedStage(stage); setIsDeleteOpen(true); }}
-                                                        className="p-1.5 text-red-600 hover:bg-red-50 rounded-sm transition-all"
-                                                        title="Delete"
-                                                    >
-                                                        <Trash2 size={18} />
-                                                    </button>
+                                                    <ActionGuard permission="pipeline_stages_manage" module="Pipeline Management" type="update">
+                                                        <button
+                                                            onClick={() => { setSelectedStage(stage); setIsEditOpen(true); }}
+                                                            className="p-1.5 text-green-600 hover:bg-green-50 rounded-sm transition-all"
+                                                            title="Edit"
+                                                        >
+                                                            <SquarePen size={18} />
+                                                        </button>
+                                                    </ActionGuard>
+                                                    <ActionGuard permission="pipeline_stages_manage" module="Pipeline Management" type="update">
+                                                        <button
+                                                            onClick={() => { setSelectedStage(stage); setIsDeleteOpen(true); }}
+                                                            className="p-1.5 text-red-600 hover:bg-red-50 rounded-sm transition-all"
+                                                            title="Delete"
+                                                        >
+                                                            <Trash2 size={18} />
+                                                        </button>
+                                                    </ActionGuard>
                                                 </div>
                                             </td>
                                         </tr>

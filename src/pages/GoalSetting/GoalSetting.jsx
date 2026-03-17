@@ -38,6 +38,7 @@ import {
     useUpdateGoalMutation,
     useDeleteGoalMutation,
 } from "../../store/api/goalApi";
+import ActionGuard from "../../components/common/ActionGuard";
 import { useGetEmployeesQuery } from "../../store/api/employeeApi";
 import { useGetTeamsQuery } from "../../store/api/teamApi";
 import {
@@ -609,9 +610,11 @@ const GoalDetailModal = ({ goal, assignee, onClose, onEdit, onTimeline }) => {
                         <button onClick={onTimeline} className="flex-1 py-3 flex items-center justify-center gap-1.5 border border-orange-200 bg-orange-50 text-orange-600 rounded-sm text-[13px] font-semibold hover:bg-orange-100 transition-all">
                             <Activity size={15} /> View Timeline
                         </button>
-                        <button onClick={onEdit} className="flex-1 py-3 flex items-center justify-center gap-1.5 border border-blue-200 bg-blue-50 text-blue-600 rounded-sm text-[13px] font-semibold hover:bg-blue-100 transition-all">
-                            <Edit2 size={15} /> Edit Goal
-                        </button>
+                        <ActionGuard permission="goal_edit" module="Goal Management" type="update">
+                            <button onClick={onEdit} className="flex-1 py-3 flex items-center justify-center gap-1.5 border border-blue-200 bg-blue-50 text-blue-600 rounded-sm text-[13px] font-semibold hover:bg-blue-100 transition-all">
+                                <Edit2 size={15} /> Edit Goal
+                            </button>
+                        </ActionGuard>
                     </div>
                 </div>
             </div>
@@ -726,15 +729,21 @@ const GoalSetting = () => {
                         </div>
                         {/* Action Buttons - AllDepartment style */}
                         <div className="flex items-center gap-3 flex-shrink-0 pr-1 opacity-0 group-hover:opacity-100 transition-all">
-                            <button onClick={() => setViewGoal(goal)} className="text-blue-500 hover:scale-110 transition-transform active:scale-90" title="View Details">
-                                <Eye size={18} strokeWidth={2} />
-                            </button>
-                            <button onClick={() => setEditGoal(goal)} className="text-[#22C55E] hover:scale-110 transition-transform active:scale-90" title="Edit Goal">
-                                <Edit size={18} strokeWidth={2} />
-                            </button>
-                            <button onClick={() => setDeleteTarget(goal)} className="text-red-500 hover:scale-110 transition-transform active:scale-90" title="Delete Goal">
-                                <Trash2 size={18} strokeWidth={2} />
-                            </button>
+                            <ActionGuard permission="goal_read" module="Goal Management" type="read">
+                                <button onClick={() => setViewGoal(goal)} className="text-blue-500 hover:scale-110 transition-transform active:scale-90" title="View Details">
+                                    <Eye size={18} strokeWidth={2} />
+                                </button>
+                            </ActionGuard>
+                            <ActionGuard permission="goal_edit" module="Goal Management" type="update">
+                                <button onClick={() => setEditGoal(goal)} className="text-[#22C55E] hover:scale-110 transition-transform active:scale-90" title="Edit Goal">
+                                    <Edit size={18} strokeWidth={2} />
+                                </button>
+                            </ActionGuard>
+                            <ActionGuard permission="goal_delete" module="Goal Management" type="delete">
+                                <button onClick={() => setDeleteTarget(goal)} className="text-red-500 hover:scale-110 transition-transform active:scale-90" title="Delete Goal">
+                                    <Trash2 size={18} strokeWidth={2} />
+                                </button>
+                            </ActionGuard>
                         </div>
                     </div>
 
@@ -832,7 +841,7 @@ const GoalSetting = () => {
                 <td className="py-3.5 px-4 text-left">
                     <div className="flex items-center gap-1.5 flex-nowrap">
                         <span className="text-[12px] font-semibold px-2.5 py-0.5 bg-gray-100 text-gray-500 rounded-sm capitalize whitespace-nowrap">{goal.period}</span>
-                        {goal.priority && <span className={`text-[12px] font-semibold px-2.5 py-0.5 rounded-sm capitalize whitespace-nowrap ${getPriorityStyle(goal.priority)}`}>{goal.priority}</span>}
+                        {goal.priority && <span className={`text-[12px] font-semibold px-2.5 py-0.5 rounded-sm capitalize ${getPriorityStyle(goal.priority)}`}>{goal.priority}</span>}
                     </div>
                 </td>
                 {/* Progress */}
@@ -865,15 +874,21 @@ const GoalSetting = () => {
                 {/* Actions - AllDepartment style */}
                 <td className="py-3.5 px-4 text-right">
                     <div className="flex justify-end gap-3 pr-2">
-                        <button onClick={() => setViewGoal(goal)} className="text-blue-500 hover:scale-110 transition-transform active:scale-90" title="View Details">
-                            <Eye size={18} strokeWidth={2} />
-                        </button>
-                        <button onClick={() => setEditGoal(goal)} className="text-[#22C55E] hover:scale-110 transition-transform active:scale-90" title="Edit Goal">
-                            <Edit size={18} strokeWidth={2} />
-                        </button>
-                        <button onClick={() => setDeleteTarget(goal)} className="text-red-500 hover:scale-110 transition-transform active:scale-90" title="Delete Goal">
-                            <Trash2 size={18} strokeWidth={2} />
-                        </button>
+                        <ActionGuard permission="goal_read" module="Goal Management" type="read">
+                            <button onClick={() => setViewGoal(goal)} className="text-blue-500 hover:scale-110 transition-transform active:scale-90" title="View Details">
+                                <Eye size={18} strokeWidth={2} />
+                            </button>
+                        </ActionGuard>
+                        <ActionGuard permission="goal_edit" module="Goal Management" type="update">
+                            <button onClick={() => setEditGoal(goal)} className="text-[#22C55E] hover:scale-110 transition-transform active:scale-90" title="Edit Goal">
+                                <Edit size={18} strokeWidth={2} />
+                            </button>
+                        </ActionGuard>
+                        <ActionGuard permission="goal_delete" module="Goal Management" type="delete">
+                            <button onClick={() => setDeleteTarget(goal)} className="text-red-500 hover:scale-110 transition-transform active:scale-90" title="Delete Goal">
+                                <Trash2 size={18} strokeWidth={2} />
+                            </button>
+                        </ActionGuard>
                     </div>
                 </td>
             </tr>
@@ -904,10 +919,12 @@ const GoalSetting = () => {
                                     <List size={16} />
                                 </button>
                             </div>
-                            <button onClick={() => setShowAddModal(true)}
-                                className="flex items-center gap-2 px-5 py-2.5 rounded-sm font-semibold transition shadow-lg hover:shadow-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 active:scale-95 text-sm">
-                                <PlusIcon size={18} /> Add New Goal
-                            </button>
+                            <ActionGuard permission="goal_create" module="Goal Management" type="create">
+                                <button onClick={() => setShowAddModal(true)}
+                                    className="flex items-center gap-2 px-5 py-2.5 rounded-sm font-semibold transition shadow-lg hover:shadow-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 active:scale-95 text-sm">
+                                    <PlusIcon size={18} /> Add New Goal
+                                </button>
+                            </ActionGuard>
                         </div>
                     </div>
                 </div>
@@ -969,9 +986,11 @@ const GoalSetting = () => {
                             </div>
                             <h3 className="text-xl font-bold text-gray-800 mb-2">No Goals Initialized</h3>
                             <p className="text-gray-500 text-sm mb-8 max-w-sm mx-auto font-semibold">High performance teams track their metrics. Start by defining your first performance goal.</p>
-                            <button onClick={() => setShowAddModal(true)} className="px-8 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm font-bold shadow-md hover:shadow-lg transition-all active:scale-95">
-                                Define Your First Goal
-                            </button>
+                            <ActionGuard permission="goal_create" module="Goal Management" type="create">
+                                <button onClick={() => setShowAddModal(true)} className="px-8 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm font-bold shadow-md hover:shadow-lg transition-all active:scale-95">
+                                    Define Your First Goal
+                                </button>
+                            </ActionGuard>
                         </div>
                     ) : view === "grid" ? (
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">

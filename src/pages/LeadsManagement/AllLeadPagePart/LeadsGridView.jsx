@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
 import EmptyState from "../../../components/common/EmptyState";
+import ActionGuard from "../../../components/common/ActionGuard";
 
 const getImageUrl = (path) => {
   if (!path) return null;
@@ -134,13 +135,15 @@ const LeadCard = ({
                     {lead.mobile_number || lead.phone || "--"}
                   </span>
                   {(lead.mobile_number || lead.phone) && (
-                    <button
-                      onClick={(e) => { e.stopPropagation(); handleHitCall && handleHitCall(lead); }}
-                      className="p-0.5 hover:bg-orange-50 rounded-full text-orange-500 transition-colors"
-                      title="View QR"
-                    >
-                      <QrCode size={12} />
-                    </button>
+                    <ActionGuard permission="leads_view_own" module="Lead Management" type="read">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleHitCall && handleHitCall(lead); }}
+                        className="p-0.5 hover:bg-orange-50 rounded-full text-orange-500 transition-colors"
+                        title="View QR"
+                      >
+                        <QrCode size={12} />
+                      </button>
+                    </ActionGuard>
                   )}
                 </div>
                 {(pageType === "Duplicate" && (lead.tag === 'Duplicate' || lead.duplicate_count > 1)) && (
@@ -330,34 +333,42 @@ const LeadCard = ({
 
         <div className="flex items-center gap-2 flex-shrink-0">
           {isDropped ? (
-            <button
-              onClick={(e) => { e.stopPropagation(); handleReborn && handleReborn(lead); }}
-              className="px-3 py-1.5 bg-green-50 hover:bg-green-600 rounded-sm text-green-600 hover:text-white transition-all border border-green-100 shadow-sm text-[10px] font-bold uppercase flex items-center gap-1.5 active:scale-95"
-            >
-              <TrendingUp size={12} />
-              Re-Born
-            </button>
+            <ActionGuard permission="leads_edit" module="Lead Management" type="update">
+              <button
+                onClick={(e) => { e.stopPropagation(); handleReborn && handleReborn(lead); }}
+                className="px-3 py-1.5 bg-green-50 hover:bg-green-600 rounded-sm text-green-600 hover:text-white transition-all border border-green-100 shadow-sm text-[10px] font-bold uppercase flex items-center gap-1.5 active:scale-95"
+              >
+                <TrendingUp size={12} />
+                Re-Born
+              </button>
+            </ActionGuard>
           ) : (
             <>
-              <button
-                onClick={(e) => { e.stopPropagation(); handleHitCall && handleHitCall(lead); }}
-                className="p-2 bg-white hover:bg-[#FF7B1D] rounded-sm text-[#FF7B1D] hover:text-white transition-all border border-orange-100 shadow-sm active:scale-95"
-                title={`Calls: ${lead.call_count || 0}`}
-              >
-                <Phone size={14} />
-              </button>
-              <button
-                onClick={(e) => { e.stopPropagation(); const phone = lead.mobile_number || lead.phone; if (phone) window.open(`https://wa.me/${phone.replace(/\D/g, "")}`, "_blank"); }}
-                className="p-2 bg-white hover:bg-green-600 rounded-sm text-green-600 hover:text-white transition-all border border-green-100 shadow-sm active:scale-95"
-              >
-                <FaWhatsapp size={14} />
-              </button>
-              <button
-                onClick={(e) => { e.stopPropagation(); if (lead.email) window.location.href = `mailto:${lead.email}`; }}
-                className="p-2 bg-white hover:bg-blue-600 rounded-sm text-blue-600 hover:text-white transition-all border border-blue-100 shadow-sm active:scale-95"
-              >
-                <Mail size={14} />
-              </button>
+              <ActionGuard permission="leads_edit" module="Lead Management" type="update">
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleHitCall && handleHitCall(lead); }}
+                  className="p-2 bg-white hover:bg-[#FF7B1D] rounded-sm text-[#FF7B1D] hover:text-white transition-all border border-orange-100 shadow-sm active:scale-95"
+                  title={`Calls: ${lead.call_count || 0}`}
+                >
+                  <Phone size={14} />
+                </button>
+              </ActionGuard>
+              <ActionGuard permission="leads_view_own" module="Lead Management" type="read">
+                <button
+                  onClick={(e) => { e.stopPropagation(); const phone = lead.mobile_number || lead.phone; if (phone) window.open(`https://wa.me/${phone.replace(/\D/g, "")}`, "_blank"); }}
+                  className="p-2 bg-white hover:bg-green-600 rounded-sm text-green-600 hover:text-white transition-all border border-green-100 shadow-sm active:scale-95"
+                >
+                  <FaWhatsapp size={14} />
+                </button>
+              </ActionGuard>
+              <ActionGuard permission="leads_view_own" module="Lead Management" type="read">
+                <button
+                  onClick={(e) => { e.stopPropagation(); if (lead.email) window.location.href = `mailto:${lead.email}`; }}
+                  className="p-2 bg-white hover:bg-blue-600 rounded-sm text-blue-600 hover:text-white transition-all border border-blue-100 shadow-sm active:scale-95"
+                >
+                  <Mail size={14} />
+                </button>
+              </ActionGuard>
             </>
           )}
         </div>

@@ -202,7 +202,7 @@ const TeamHierarchyConfig = ({ teamId, hierarchySettings, setHierarchySettings }
                             {/* Header for Level */}
                             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 font-primary">
                                 <div className="flex items-center gap-4">
-                                    <div className="bg-gradient-to-br from-gray-800 to-black text-white px-5 py-2 rounded-sm flex items-center justify-center text-[14px] font-bold shadow-lg capitalize font-primary border border-gray-700">
+                                    <div className="bg-orange-500 text-white px-5 py-2 rounded-sm flex items-center justify-center text-[14px] font-bold shadow-lg capitalize font-primary border border-orange-600">
                                         Level {level}
                                     </div>
                                     <div className="h-[2px] w-12 bg-gradient-to-r from-orange-200 to-transparent rounded-full"></div>

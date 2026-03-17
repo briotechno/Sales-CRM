@@ -29,6 +29,7 @@ import { useGetEmployeesQuery } from "../../store/api/employeeApi";
 import toast from 'react-hot-toast';
 import usePermission from "../../hooks/usePermission";
 import Modal from "../../components/common/Modal";
+import ActionGuard from "../../components/common/ActionGuard";
 
 const ViewLeaveModal = ({ isOpen, onClose, leave }) => {
   if (!leave || !isOpen) return null;
@@ -423,16 +424,14 @@ export default function LeaveManagement() {
                   <Download className="w-5 h-5" /> EXPORT
                 </button> */}
 
-                <button
-                  onClick={() => setShowApplyModal(true)}
-                  disabled={!create}
-                  className={`flex items-center gap-2 px-6 py-3 rounded-sm font-semibold transition shadow-lg hover:shadow-xl ${create
-                    ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
-                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                    }`}
-                >
-                  <Plus size={20} /> Apply Leave
-                </button>
+                <ActionGuard permission="leave_management_create" module="Leave Management" type="create">
+                  <button
+                    onClick={() => setShowApplyModal(true)}
+                    className="flex items-center gap-2 px-6 py-3 rounded-sm transition shadow-lg hover:shadow-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 font-bold"
+                  >
+                    <Plus size={20} /> Apply Leave
+                  </button>
+                </ActionGuard>
               </div>
             </div>
           </div>
@@ -540,27 +539,27 @@ export default function LeaveManagement() {
                       <td className="py-3 px-4 text-right">
                         <div className="flex justify-end gap-1">
                           {request.status?.toLowerCase() === "pending" ? (
-                            <div className="flex gap-1.5">
-                              {update && (
-                                <>
-                                  <button
-                                    onClick={() => handleStatusUpdate(request.id, 'approved')}
-                                    className="px-2 py-1 bg-green-50 text-green-700 border border-green-200 rounded-sm text-[10px] font-bold hover:bg-green-100 transition-colors shadow-sm"
-                                  >
-                                    APPROVE
-                                  </button>
-                                  <button
-                                    onClick={() => handleStatusUpdate(request.id, 'rejected')}
-                                    className="px-2 py-1 bg-red-50 text-red-700 border border-red-200 rounded-sm text-[10px] font-bold hover:bg-red-100 transition-colors shadow-sm"
-                                  >
-                                    REJECT
-                                  </button>
-                                </>
-                              )}
+                            <div className="flex gap-1.5 text-right">
+                              <ActionGuard permission="leave_management_edit" module="Leave Management" type="update">
+                                <button
+                                  onClick={() => handleStatusUpdate(request.id, 'approved')}
+                                  className="px-2 py-1 bg-green-50 text-green-700 border border-green-200 rounded-sm text-[10px] font-bold hover:bg-green-100 transition-colors shadow-sm"
+                                >
+                                  APPROVE
+                                </button>
+                              </ActionGuard>
+                              <ActionGuard permission="leave_management_edit" module="Leave Management" type="update">
+                                <button
+                                  onClick={() => handleStatusUpdate(request.id, 'rejected')}
+                                  className="px-2 py-1 bg-red-50 text-red-700 border border-red-200 rounded-sm text-[10px] font-bold hover:bg-red-100 transition-colors shadow-sm"
+                                >
+                                  REJECT
+                                </button>
+                              </ActionGuard>
                             </div>
                           ) : (
                             <div className="flex justify-end">
-                              {read && (
+                              <ActionGuard permission="leave_management_read" module="Leave Management" type="read">
                                 <button
                                   onClick={() => {
                                     setSelectedLeave(request);
@@ -571,7 +570,7 @@ export default function LeaveManagement() {
                                 >
                                   <Eye size={18} />
                                 </button>
-                              )}
+                              </ActionGuard>
                             </div>
                           )}
                         </div>

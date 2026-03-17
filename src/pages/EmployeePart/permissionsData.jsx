@@ -50,30 +50,7 @@ export const permissionCategories = {
       icon: BarChart,
       description: "Access and view CRM dashboard analytics",
     },
-    {
-      id: "crm_dashboard_widgets",
-      label: "Customize Widgets",
-      icon: Settings,
-      description: "Add, remove, and arrange dashboard widgets",
-    },
-    {
-      id: "crm_dashboard_reports",
-      label: "View Reports",
-      icon: PieChart,
-      description: "Access dashboard reports and insights",
-    },
-    {
-      id: "crm_dashboard_export",
-      label: "Export Dashboard Data",
-      icon: DownloadIcon,
-      description: "Download dashboard data and reports",
-    },
-    {
-      id: "crm_dashboard_analytics",
-      label: "Advanced Analytics",
-      icon: Activity,
-      description: "Access detailed analytics and trends",
-    },
+
   ],
 
   "Leads Management": [
@@ -113,70 +90,10 @@ export const permissionCategories = {
       icon: UserCheck,
       description: "Assign leads to team members",
     },
-    {
-      id: "leads_import",
-      label: "Import Leads",
-      icon: Upload,
-      description: "Bulk import leads from files",
-    },
-    {
-      id: "leads_export",
-      label: "Export Leads",
-      icon: DownloadIcon,
-      description: "Export lead data",
-    },
-    {
-      id: "leads_contact",
-      label: "Contact Leads",
-      icon: Mail,
-      description: "Send emails and messages to leads",
-    },
-    {
-      id: "leads_convert",
-      label: "Convert to Client",
-      icon: TrendingUp,
-      description: "Convert leads to clients",
-    },
-    {
-      id: "leads_status_change",
-      label: "Change Lead Status",
-      icon: CheckSquare,
-      description: "Update lead status and stages",
-    },
-    {
-      id: "leads_notes",
-      label: "Manage Lead Notes",
-      icon: StickyNote,
-      description: "Add and edit notes on leads",
-    },
+
   ],
 
-  Champions: [
-    {
-      id: "champions_view",
-      label: "View Champions",
-      icon: Award,
-      description: "View top performing leads/clients",
-    },
-    {
-      id: "champions_manage",
-      label: "Manage Champions",
-      icon: Edit,
-      description: "Add or remove champion status",
-    },
-    {
-      id: "champions_analytics",
-      label: "Champion Analytics",
-      icon: BarChart,
-      description: "View champion performance metrics",
-    },
-    {
-      id: "champions_rewards",
-      label: "Manage Rewards",
-      icon: Award,
-      description: "Set up and manage reward programs",
-    },
-  ],
+
 
   "Pipeline Management": [
     {
@@ -186,47 +103,30 @@ export const permissionCategories = {
       description: "Access sales pipeline overview",
     },
     {
+      id: "pipeline_create",
+      label: "Create Pipeline",
+      icon: Plus,
+      description: "Create new sales pipelines",
+    },
+    {
+      id: "pipeline_edit",
+      label: "Edit Pipeline",
+      icon: Edit,
+      description: "Modify existing pipeline settings",
+    },
+    {
+      id: "pipeline_delete",
+      label: "Delete Pipeline",
+      icon: Trash2,
+      description: "Remove pipelines from the system",
+    },
+    {
       id: "pipeline_stages_manage",
       label: "Manage Pipeline Stages",
       icon: Settings,
       description: "Create, edit, and delete pipeline stages",
     },
-    {
-      id: "pipeline_deals_create",
-      label: "Create Deals",
-      icon: Plus,
-      description: "Add new deals to pipeline",
-    },
-    {
-      id: "pipeline_deals_edit",
-      label: "Edit Deals",
-      icon: Edit,
-      description: "Modify existing deals",
-    },
-    {
-      id: "pipeline_deals_delete",
-      label: "Delete Deals",
-      icon: Trash2,
-      description: "Remove deals from pipeline",
-    },
-    {
-      id: "pipeline_deals_move",
-      label: "Move Deals Between Stages",
-      icon: GitBranch,
-      description: "Change deal stages",
-    },
-    {
-      id: "pipeline_forecast",
-      label: "View Sales Forecast",
-      icon: TrendingUp,
-      description: "Access revenue forecasting",
-    },
-    {
-      id: "pipeline_reports",
-      label: "Pipeline Reports",
-      icon: FileSpreadsheet,
-      description: "Generate pipeline performance reports",
-    },
+
   ],
 
   "Client Management": [
@@ -260,30 +160,7 @@ export const permissionCategories = {
       icon: Trash2,
       description: "Remove client records",
     },
-    {
-      id: "clients_documents",
-      label: "Manage Client Documents",
-      icon: FileText,
-      description: "Upload and manage client files",
-    },
-    {
-      id: "clients_communication",
-      label: "Client Communication",
-      icon: MessageSquare,
-      description: "Send emails and messages to clients",
-    },
-    {
-      id: "clients_contracts",
-      label: "Manage Contracts",
-      icon: FileCheck,
-      description: "Create and manage client contracts",
-    },
-    {
-      id: "clients_billing",
-      label: "View Billing Information",
-      icon: DollarSign,
-      description: "Access client billing and payment data",
-    },
+
   ],
 
   "Channel Integration": [
@@ -326,24 +203,7 @@ export const permissionCategories = {
       icon: BarChart,
       description: "Access HR analytics dashboard",
     },
-    {
-      id: "hrm_dashboard_employee_stats",
-      label: "Employee Statistics",
-      icon: Users,
-      description: "View employee statistics and metrics",
-    },
-    {
-      id: "hrm_dashboard_attendance_overview",
-      label: "Attendance Overview",
-      icon: Calendar,
-      description: "View attendance summaries",
-    },
-    {
-      id: "hrm_dashboard_reports",
-      label: "Generate HR Reports",
-      icon: FileText,
-      description: "Create and download HR reports",
-    },
+
   ],
 
   "Team Management": [
@@ -461,12 +321,7 @@ export const permissionCategories = {
       icon: Settings,
       description: "Create and edit leave categories",
     },
-    {
-      id: "leave_balance",
-      label: "View Leave Balance",
-      icon: Calendar,
-      description: "Check available leave balance",
-    },
+
   ],
 
   "Employee Management": [
@@ -476,12 +331,7 @@ export const permissionCategories = {
       icon: Users,
       description: "Access all employee profiles",
     },
-    {
-      id: "employee_view_basic",
-      label: "View Basic Info",
-      icon: Eye,
-      description: "View basic employee information",
-    },
+
     {
       id: "employee_create",
       label: "Add New Employees",
@@ -500,12 +350,7 @@ export const permissionCategories = {
       icon: Trash2,
       description: "Remove employee records",
     },
-    {
-      id: "employee_salary_view",
-      label: "View Salary Information",
-      icon: DollarSign,
-      description: "Access employee salary details",
-    },
+
     {
       id: "employee_documents",
       label: "Manage Employee Documents",
@@ -856,74 +701,163 @@ export const permissionCategories = {
     },
   ],
 
-  "System Administration": [
+  "Goal Management": [
     {
-      id: "admin_full_access",
-      label: "Full Administrator Access",
-      icon: Shield,
-      description: "Complete system control",
+      id: "goal_view",
+      label: "View Goals",
+      icon: Target,
+      description: "View sales goals and targets",
     },
     {
-      id: "settings_view",
-      label: "View System Settings",
-      icon: Settings,
-      description: "Access system configuration",
+      id: "goal_create",
+      label: "Create Goals",
+      icon: Plus,
+      description: "Set new sales goals and targets",
     },
     {
-      id: "settings_edit",
-      label: "Edit System Settings",
+      id: "goal_edit",
+      label: "Edit Goals",
       icon: Edit,
-      description: "Modify system configuration",
+      description: "Modify existing goals and targets",
     },
     {
-      id: "database_access",
-      label: "Database Access",
-      icon: Database,
-      description: "Direct database operations",
-    },
-    {
-      id: "user_management",
-      label: "Manage Users",
-      icon: Users,
-      description: "Create and manage user accounts",
-    },
-    {
-      id: "role_management",
-      label: "Manage Roles",
-      icon: Shield,
-      description: "Create and assign user roles",
-    },
-    {
-      id: "permission_management",
-      label: "Manage Permissions",
-      icon: Lock,
-      description: "Configure system permissions",
-    },
-    {
-      id: "audit_logs",
-      label: "View Audit Logs",
-      icon: FileText,
-      description: "Access system activity logs",
-    },
-    {
-      id: "backup_restore",
-      label: "Backup & Restore",
-      icon: Database,
-      description: "Manage system backups",
-    },
-    {
-      id: "reports_all",
-      label: "Access All Reports",
-      icon: FileSpreadsheet,
-      description: "View comprehensive system reports",
-    },
-    {
-      id: "export_all_data",
-      label: "Export All Data",
-      icon: Download,
-      description: "Download complete system data",
+      id: "goal_delete",
+      label: "Delete Goals",
+      icon: Trash2,
+      description: "Remove goals and targets",
     },
   ],
+
+  "Meeting Management": [
+    {
+      id: "meeting_view",
+      label: "View Meetings",
+      icon: Calendar,
+      description: "View scheduled meetings",
+    },
+    {
+      id: "meeting_create",
+      label: "Create Meetings",
+      icon: Plus,
+      description: "Schedule new meetings",
+    },
+    {
+      id: "meeting_edit",
+      label: "Edit Meetings",
+      icon: Edit,
+      description: "Modify meeting details",
+    },
+    {
+      id: "meeting_delete",
+      label: "Delete Meetings",
+      icon: Trash2,
+      description: "Cancel or remove meetings",
+    },
+  ],
+
+  "Visitor Management": [
+    {
+      id: "visitor_view",
+      label: "View Visitors",
+      icon: Users,
+      description: "View visitor logs and records",
+    },
+    {
+      id: "visitor_create",
+      label: "Log Visitor Entry",
+      icon: Plus,
+      description: "Record new visitor entries",
+    },
+    {
+      id: "visitor_edit",
+      label: "Edit Visitor Info",
+      icon: Edit,
+      description: "Modify visitor information or status",
+    },
+    {
+      id: "visitor_delete",
+      label: "Delete Visitor Logs",
+      icon: Trash2,
+      description: "Remove visitor records",
+    },
+  ],
+
+  "Campaign Management": [
+    {
+      id: "campaign_view",
+      label: "View Campaigns",
+      icon: Megaphone,
+      description: "View marketing campaigns",
+    },
+    {
+      id: "campaign_create",
+      label: "Create Campaigns",
+      icon: Plus,
+      description: "Launch new marketing campaigns",
+    },
+    {
+      id: "campaign_edit",
+      label: "Edit Campaigns",
+      icon: Edit,
+      description: "Modify campaign details or status",
+    },
+    {
+      id: "campaign_delete",
+      label: "Delete Campaigns",
+      icon: Trash2,
+      description: "Remove marketing campaigns",
+    },
+  ],
+
+  "Offer Letter Management": [
+    {
+      id: "offer_letter_view",
+      label: "View Offer Letters",
+      icon: FileText,
+      description: "View generated offer letters",
+    },
+    {
+      id: "offer_letter_create",
+      label: "Generate Offer Letters",
+      icon: Plus,
+      description: "Create new offer letters for candidates",
+    },
+    {
+      id: "offer_letter_edit",
+      label: "Edit Offer Letters",
+      icon: Edit,
+      description: "Modify existing offer letters",
+    },
+    {
+      id: "offer_letter_download",
+      label: "Download Letters",
+      icon: DownloadIcon,
+      description: "Download offer letters in PDF format",
+    },
+    {
+      id: "offer_letter_delete",
+      label: "Delete Letters",
+      icon: Trash2,
+      description: "Remove offer letter records",
+    },
+  ],
+
+  "FAQ Management": [
+    {
+      id: "faq_view",
+      label: "View FAQ",
+      icon: BookOpen,
+      description: "Access frequency asked questions",
+    },
+    {
+      id: "faq_manage",
+      label: "Manage FAQ",
+      icon: Edit,
+      description: "Create, edit and delete FAQ items",
+    },
+  ],
+
+
 };
 
 /**
@@ -1060,10 +994,9 @@ export const roleTemplates = {
     name: "System Administrator",
     description: "Full system access and control",
     permissions: [
-      "admin_full_access",
-      "settings_edit",
-      "database_access",
-      "user_management",
+      "crm_dashboard_view",
+      "leads_view_all",
+      "employee_view_all",
     ],
   },
   salesManager: {
@@ -1077,6 +1010,10 @@ export const roleTemplates = {
       "clients_view_all",
       "team_view",
       "team_assign_members",
+      "goal_view",
+      "goal_create",
+      "campaign_view",
+      "meeting_view",
     ],
   },
   hrManager: {
@@ -1090,6 +1027,8 @@ export const roleTemplates = {
       "leave_approve",
       "salary_view_all",
       "job_create",
+      "offer_letter_view",
+      "offer_letter_create",
     ],
   },
   teamLead: {
@@ -1111,9 +1050,10 @@ export const roleTemplates = {
       "crm_dashboard_view",
       "leads_view_own",
       "leads_edit",
-      "leads_contact",
       "clients_view_own",
       "pipeline_view",
+      "meeting_view",
+      "meeting_create",
     ],
   },
   employee: {
@@ -1126,6 +1066,8 @@ export const roleTemplates = {
       "todo_view_own",
       "notes_create",
       "messenger_use",
+      "faq_view",
+      "meeting_view",
     ],
   },
 };

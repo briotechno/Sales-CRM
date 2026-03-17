@@ -60,6 +60,7 @@ import {
 } from "../../../store/api/attendanceApi";
 import { toast } from "react-hot-toast";
 import NumberCard from "../../../components/NumberCard";
+import ActionGuard from "../../../components/common/ActionGuard";
 import { useEffect } from "react";
 
 export default function AttendanceManagement() {
@@ -501,14 +502,16 @@ export default function AttendanceManagement() {
                               <td className="px-6 py-4 text-right">
                                 <div className="flex justify-end gap-2">
                                   {!record.check_out ? (
-                                    <button
-                                      onClick={() => handleManualCheckOut(record)}
-                                      className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-500 rounded-sm text-red-600 hover:text-white transition-all border border-red-100 shadow-sm text-[10px] font-bold uppercase tracking-wider group"
-                                      title="Force Check Out"
-                                    >
-                                      <LogOut className="w-3.5 h-3.5" />
-                                      <span>Force Check Out</span>
-                                    </button>
+                                    <ActionGuard permission="attendance_edit" module="Attendance Management" type="update">
+                                      <button
+                                        onClick={() => handleManualCheckOut(record)}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-500 rounded-sm text-red-600 hover:text-white transition-all border border-red-100 shadow-sm text-[10px] font-bold uppercase tracking-wider group"
+                                        title="Force Check Out"
+                                      >
+                                        <LogOut className="w-3.5 h-3.5" />
+                                        <span>Force Check Out</span>
+                                      </button>
+                                    </ActionGuard>
                                   ) : (
                                     <span className="text-[10px] font-bold text-green-600 bg-green-50 px-3 py-1.5 rounded-sm border border-green-100 uppercase tracking-tighter">
                                       COMPLETED at {record.check_out}
@@ -533,7 +536,9 @@ export default function AttendanceManagement() {
                     <h2 className="text-xl font-bold text-gray-800">Historical Records Management</h2>
                     <div className="flex gap-2">
                       <button className="p-2 hover:bg-gray-100 rounded-sm text-gray-400"><Filter className="w-5 h-5" /></button>
-                      <button className="p-2 hover:bg-gray-100 rounded-sm text-gray-400"><Download className="w-5 h-5" /></button>
+                      <ActionGuard permission="attendance_reports" module="Attendance Management" type="read">
+                        <button className="p-2 hover:bg-gray-100 rounded-sm text-gray-400"><Download className="w-5 h-5" /></button>
+                      </ActionGuard>
                     </div>
                   </div>
 
@@ -574,8 +579,12 @@ export default function AttendanceManagement() {
                               </td>
                               <td className="px-6 py-4 text-right">
                                 <div className="flex justify-end gap-2">
-                                  <button className="p-2 bg-blue-50 hover:bg-blue-500 rounded-sm text-blue-600 hover:text-white transition-all border border-blue-100 shadow-sm" title="Edit Record"><Edit className="w-4 h-4" /></button>
-                                  <button onClick={() => handleDeleteRecord(record.id)} className="p-2 bg-red-50 hover:bg-red-500 rounded-sm text-red-600 hover:text-white transition-all border border-red-100 shadow-sm" title="Delete Record"><Trash2 className="w-4 h-4" /></button>
+                                  <ActionGuard permission="attendance_edit" module="Attendance Management" type="update">
+                                    <button className="p-2 bg-blue-50 hover:bg-blue-500 rounded-sm text-blue-600 hover:text-white transition-all border border-blue-100 shadow-sm" title="Edit Record"><Edit className="w-4 h-4" /></button>
+                                  </ActionGuard>
+                                  <ActionGuard permission="attendance_delete" module="Attendance Management" type="delete">
+                                    <button onClick={() => handleDeleteRecord(record.id)} className="p-2 bg-red-50 hover:bg-red-500 rounded-sm text-red-600 hover:text-white transition-all border border-red-100 shadow-sm" title="Delete Record"><Trash2 className="w-4 h-4" /></button>
+                                  </ActionGuard>
                                 </div>
                               </td>
                             </tr>
@@ -1685,18 +1694,20 @@ export default function AttendanceManagement() {
                         <RefreshCw className="w-4 h-4" />
                         Reset Defaults
                       </button>
-                      <button
-                        onClick={handleSave}
-                        disabled={isUpdating}
-                        className="px-10 py-2.5 bg-[#FF7B1D] text-white rounded-sm text-sm font-bold hover:bg-[#e66a15] shadow-lg shadow-orange-200 transition-all flex items-center gap-2 disabled:opacity-50"
-                      >
-                        {isUpdating ? (
-                          <div className="w-4 h-4 border-2 border-white/30 border-t-white animate-spin rounded-full" />
-                        ) : (
-                          <Save className="w-4 h-4" />
-                        )}
-                        Save Changes
-                      </button>
+                      <ActionGuard permission="attendance_settings" module="Attendance Management" type="update">
+                        <button
+                          onClick={handleSave}
+                          disabled={isUpdating}
+                          className="px-10 py-2.5 bg-[#FF7B1D] text-white rounded-sm text-sm font-bold hover:bg-[#e66a15] shadow-lg shadow-orange-200 transition-all flex items-center gap-2 disabled:opacity-50"
+                        >
+                          {isUpdating ? (
+                            <div className="w-4 h-4 border-2 border-white/30 border-t-white animate-spin rounded-full" />
+                          ) : (
+                            <Save className="w-4 h-4" />
+                          )}
+                          Save Changes
+                        </button>
+                      </ActionGuard>
                     </div>
                   </div>
                 </div>

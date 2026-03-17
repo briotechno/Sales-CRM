@@ -89,4 +89,40 @@ const superAdmin = (req, res, next) => {
     }
 };
 
-module.exports = { protect, superAdmin };
+const authorize = (permission) => {
+    return (req, res, next) => {
+        // Super Admin and Admin have full access
+        if (req.user && (req.user.role === 'Super Admin' || req.user.role === 'Admin')) {
+            return next();
+        }
+
+        // Employee Access Check
+        if (req.user && req.user.role === 'Employee') {
+            let userPermissions = req.user.permissions || [];
+
+            // If permissions is a string, parse it
+            if (typeof userPermissions === 'string') {
+                try {
+                    userPermissions = JSON.parse(userPermissions);
+                } catch (e) {
+                    userPermissions = [];
+                }
+            }
+
+            // Check if user has the specific permission ID
+            if (Array.isArray(userPermissions) && userPermissions.includes(permission)) {
+                return next();
+            }
+
+            // Also check for category-level permission if needed? 
+            // For now, let's keep it strict to individual IDs as requested.
+        }
+
+        return res.status(403).json({
+            status: false,
+            message: `Not authorized to access this resource. Required permission: ${permission}`
+        });
+    };
+};
+
+module.exports = { protect, superAdmin, authorize };

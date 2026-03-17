@@ -33,6 +33,8 @@ import {
   Smartphone,
   QrCode,
 } from "lucide-react";
+import ActionGuard from "../../components/common/ActionGuard";
+import usePermission from "../../hooks/usePermission";
 import {
   useGetClientsQuery,
   useCreateClientMutation,
@@ -56,6 +58,7 @@ export default function AllClientPage() {
   const navigate = useNavigate();
   const [showAddModal, setShowAddModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const permissions = usePermission("Client Management");
   const [editingId, setEditingId] = useState(null);
   const [clientType, setClientType] = useState("person");
   const [searchTerm, setSearchTerm] = useState("");
@@ -720,13 +723,15 @@ export default function AllClientPage() {
                 </button> */}
 
                 {/* Add Client Button */}
-                <button
-                  onClick={openAddModal}
-                  className="flex items-center gap-2 px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-sm text-sm font-semibold transition shadow-lg active:scale-95 capitalize tracking-wider"
-                >
-                  <Plus size={20} />
-                  Add Client
-                </button>
+                <ActionGuard permission="clients_create" module="Client Management" type="create">
+                  <button
+                    onClick={openAddModal}
+                    className="flex items-center gap-2 px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-sm text-sm font-semibold transition shadow-lg active:scale-95 capitalize tracking-wider"
+                  >
+                    <Plus size={20} />
+                    Add Client
+                  </button>
+                </ActionGuard>
               </div>
             </div>
           </div>
@@ -801,7 +806,7 @@ export default function AllClientPage() {
 
 
           {/* Client Cards Grid */}
-          {isLoading ? (
+          {(isLoading || !clients) ? (
             <div className="flex justify-center py-20">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
             </div>
@@ -814,9 +819,11 @@ export default function AllClientPage() {
                       <User className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                       <h3 className="text-lg font-semibold text-gray-700">No Clients Found</h3>
                       <p className="text-gray-500 mb-6">Get started by adding your first client.</p>
-                      <button onClick={openAddModal} className="px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 font-medium shadow-sm transition-colors">
-                        Add New Client
-                      </button>
+                      <ActionGuard permission="clients_create" module="Client Management" type="create">
+                        <button onClick={openAddModal} className="px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 font-medium shadow-sm transition-colors">
+                          Add New Client
+                        </button>
+                      </ActionGuard>
                     </div>
                   ) : (
                     clients.map((client) => {
@@ -941,42 +948,50 @@ export default function AllClientPage() {
 
                               <div className="flex flex-col sm:flex-row items-stretch gap-3">
                                 {/* Primary Actions Row */}
-                                <div className="flex items-center gap-2 flex-1">
-                                  <button
-                                    onClick={() => openViewModal(client)}
-                                    className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white text-blue-600 hover:bg-blue-50 rounded-sm transition-all font-bold text-xs uppercase tracking-widest border border-blue-100 shadow-sm flex-1 min-h-[44px]"
-                                  >
-                                    <Eye size={16} />
-                                    <span className="hidden sm:inline">View</span>
-                                    <span className="sm:hidden">View</span>
-                                  </button>
-                                  <button
-                                    onClick={() => handleOpenInvoiceList(client)}
-                                    className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white text-orange-600 hover:bg-orange-50 rounded-sm transition-all font-bold text-xs uppercase tracking-widest border border-orange-100 shadow-sm flex-1 min-h-[44px]"
-                                  >
-                                    <FileText size={16} />
-                                    <span className="hidden sm:inline">Invoice</span>
-                                    <span className="sm:hidden">Invoice</span>
-                                  </button>
-                                </div>
+                                  <div className="flex items-center gap-2 flex-1">
+                                    <ActionGuard permission="clients_read" module="Client Management" type="read">
+                                      <button
+                                        onClick={() => openViewModal(client)}
+                                        className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white text-blue-600 hover:bg-blue-50 rounded-sm transition-all font-bold text-xs uppercase tracking-widest border border-blue-100 shadow-sm flex-1 min-h-[44px]"
+                                      >
+                                        <Eye size={16} />
+                                        <span className="hidden sm:inline">View</span>
+                                        <span className="sm:hidden">View</span>
+                                      </button>
+                                    </ActionGuard>
+                                    <ActionGuard permission="clients_read" module="Client Management" type="read">
+                                      <button
+                                        onClick={() => handleOpenInvoiceList(client)}
+                                        className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white text-orange-600 hover:bg-orange-50 rounded-sm transition-all font-bold text-xs uppercase tracking-widest border border-orange-100 shadow-sm flex-1 min-h-[44px]"
+                                      >
+                                        <FileText size={16} />
+                                        <span className="hidden sm:inline">Invoice</span>
+                                        <span className="sm:hidden">Invoice</span>
+                                      </button>
+                                    </ActionGuard>
+                                  </div>
 
                                 {/* Secondary Actions */}
-                                <div className="flex items-center justify-center gap-1 sm:gap-2 border-l border-gray-300 pl-3 ml-0 sm:ml-2">
-                                  <button
-                                    onClick={() => openEditModal(client)}
-                                    className="p-2.5 text-green-600 hover:bg-green-50 rounded-sm transition-all hover:scale-110 min-w-[44px] min-h-[44px] flex items-center justify-center bg-white shadow-sm border border-green-100"
-                                    title="Edit Client"
-                                  >
-                                    <SquarePen size={18} />
-                                  </button>
-                                  <button
-                                    onClick={() => openDeleteModal(client.id)}
-                                    className="p-2.5 text-red-600 hover:bg-red-50 rounded-sm transition-all hover:scale-110 min-w-[44px] min-h-[44px] flex items-center justify-center bg-white shadow-sm border border-red-100"
-                                    title="Delete Client"
-                                  >
-                                    <Trash2 size={18} />
-                                  </button>
-                                </div>
+                                  <div className="flex items-center justify-center gap-1 sm:gap-2 border-l border-gray-300 pl-3 ml-0 sm:ml-2">
+                                    <ActionGuard permission="clients_edit" module="Client Management" type="update">
+                                      <button
+                                        onClick={() => openEditModal(client)}
+                                        className="p-2.5 text-green-600 hover:bg-green-50 rounded-sm transition-all hover:scale-110 min-w-[44px] min-h-[44px] flex items-center justify-center bg-white shadow-sm border border-green-100"
+                                        title="Edit Client"
+                                      >
+                                        <SquarePen size={18} />
+                                      </button>
+                                    </ActionGuard>
+                                    <ActionGuard permission="clients_delete" module="Client Management" type="delete">
+                                      <button
+                                        onClick={() => openDeleteModal(client.id)}
+                                        className="p-2.5 text-red-600 hover:bg-red-50 rounded-sm transition-all hover:scale-110 min-w-[44px] min-h-[44px] flex items-center justify-center bg-white shadow-sm border border-red-100"
+                                        title="Delete Client"
+                                      >
+                                        <Trash2 size={18} />
+                                      </button>
+                                    </ActionGuard>
+                                  </div>
                               </div>
                             </div>
                           </div>
@@ -1070,8 +1085,8 @@ export default function AllClientPage() {
                               </div>
                             </div>
 
-                            {/* Source Block - Shown only on 1280px+ */}
-                            <div className="hidden xl:flex items-center gap-2.5 text-gray-600 group/info border-l border-orange-100/30 pl-4 min-w-0 flex-1">
+                            {/* Source Block - Shown only on 1678px+ */}
+                            <div className="hidden min-[1678px]:flex items-center gap-2.5 text-gray-600 group/info border-l border-orange-100/30 pl-4 min-w-0 flex-1">
                               <div className="p-2 bg-white rounded-lg shadow-sm border border-orange-100 group-hover/info:bg-orange-50 transition-colors flex-shrink-0">
                                 <Globe size={14} className="text-orange-500" />
                               </div>
@@ -1092,7 +1107,7 @@ export default function AllClientPage() {
                                 {client.status}
                               </span>
                             </div>
-                            <div className="hidden xl:flex flex-col items-start min-w-[130px] border-l border-gray-100 pl-4 xl:pl-8">
+                            <div className="hidden min-[1678px]:flex flex-col items-start min-w-[130px] border-l border-gray-100 pl-4 xl:pl-8">
                               <span className="text-[14px] text-gray-500 font-semibold capitalize tracking-tight font-primary mb-1 whitespace-nowrap">Since</span>
                               <span className="text-[15px] text-gray-700 font-bold flex items-center whitespace-nowrap">
                                 <Calendar className="w-4 h-4 mr-1.5 text-orange-400" />
@@ -1103,34 +1118,42 @@ export default function AllClientPage() {
 
                           {/* Actions always visible now as requested */}
                           <div className="flex items-center gap-1">
-                            <button
-                              onClick={() => openViewModal(client)}
-                              className="p-2 text-blue-600 hover:bg-blue-100 rounded-md transition-all hover:scale-110"
-                              title="View Details"
-                            >
-                              <Eye size={18} />
-                            </button>
-                            <button
-                              onClick={() => handleOpenInvoiceList(client)}
-                              className="p-2 text-orange-600 hover:bg-orange-100 rounded-md transition-all hover:scale-110"
-                              title="Generate Invoice"
-                            >
-                              <FileText size={18} />
-                            </button>
-                            <button
-                              onClick={() => openEditModal(client)}
-                              className="p-2 text-green-600 hover:bg-green-100 rounded-md transition-all hover:scale-110"
-                              title="Edit Client"
-                            >
-                              <SquarePen size={18} />
-                            </button>
-                            <button
-                              onClick={() => openDeleteModal(client.id)}
-                              className="p-2 text-red-600 hover:bg-red-100 rounded-md transition-all hover:scale-110"
-                              title="Delete Client"
-                            >
-                              <Trash2 size={18} />
-                            </button>
+                            <ActionGuard permission="clients_read" module="Client Management" type="read">
+                              <button
+                                onClick={() => openViewModal(client)}
+                                className="p-2 text-blue-600 hover:bg-blue-100 rounded-md transition-all hover:scale-110"
+                                title="View Details"
+                              >
+                                <Eye size={18} />
+                              </button>
+                            </ActionGuard>
+                            <ActionGuard permission="clients_read" module="Client Management" type="read">
+                              <button
+                                onClick={() => handleOpenInvoiceList(client)}
+                                className="p-2 text-orange-600 hover:bg-orange-100 rounded-md transition-all hover:scale-110"
+                                title="Generate Invoice"
+                              >
+                                <FileText size={18} />
+                              </button>
+                            </ActionGuard>
+                            <ActionGuard permission="clients_edit" module="Client Management" type="update">
+                              <button
+                                onClick={() => openEditModal(client)}
+                                className="p-2 text-green-600 hover:bg-green-100 rounded-md transition-all hover:scale-110"
+                                title="Edit Client"
+                              >
+                                <SquarePen size={18} />
+                              </button>
+                            </ActionGuard>
+                            <ActionGuard permission="clients_delete" module="Client Management" type="delete">
+                              <button
+                                onClick={() => openDeleteModal(client.id)}
+                                className="p-2 text-red-600 hover:bg-red-100 rounded-md transition-all hover:scale-110"
+                                title="Delete Client"
+                              >
+                                <Trash2 size={18} />
+                              </button>
+                            </ActionGuard>
                           </div>
                         </div>
                       );
@@ -1843,21 +1866,27 @@ export default function AllClientPage() {
               </div>
 
               <div className="flex items-center gap-4">
-                <button className="flex items-center gap-2.5 px-6 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-sm hover:bg-orange-50 hover:border-orange-300 hover:text-orange-600 transition-all font-bold text-sm shadow-sm active:scale-95">
-                  <Mail size={18} className="text-orange-500" />
-                  Email Selected
-                </button>
-                <button className="flex items-center gap-2.5 px-6 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-sm hover:bg-orange-50 hover:border-orange-300 hover:text-orange-600 transition-all font-bold text-sm shadow-sm active:scale-95">
-                  <Download size={18} className="text-orange-500" />
-                  Export Selected
-                </button>
-                <button
-                  onClick={openBulkDeleteModal}
-                  className="flex items-center gap-2.5 px-6 py-2.5 bg-red-600 text-white rounded-sm hover:bg-red-700 transition-all font-bold text-sm shadow-md active:scale-95"
-                >
-                  <Trash2 size={18} />
-                  Delete Selected
-                </button>
+                <ActionGuard permission="clients_read" module="Client Management" type="read">
+                  <button className="flex items-center gap-2.5 px-6 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-sm hover:bg-orange-50 hover:border-orange-300 hover:text-orange-600 transition-all font-bold text-sm shadow-sm active:scale-95">
+                    <Mail size={18} className="text-orange-500" />
+                    Email Selected
+                  </button>
+                </ActionGuard>
+                <ActionGuard permission="clients_read" module="Client Management" type="read">
+                  <button className="flex items-center gap-2.5 px-6 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-sm hover:bg-orange-50 hover:border-orange-300 hover:text-orange-600 transition-all font-bold text-sm shadow-sm active:scale-95">
+                    <Download size={18} className="text-orange-500" />
+                    Export Selected
+                  </button>
+                </ActionGuard>
+                <ActionGuard permission="clients_delete" module="Client Management" type="delete">
+                  <button
+                    onClick={openBulkDeleteModal}
+                    className="flex items-center gap-2.5 px-6 py-2.5 bg-red-600 text-white rounded-sm hover:bg-red-700 transition-all font-bold text-sm shadow-md active:scale-95"
+                  >
+                    <Trash2 size={18} />
+                    Delete Selected
+                  </button>
+                </ActionGuard>
               </div>
             </div>
           </div>

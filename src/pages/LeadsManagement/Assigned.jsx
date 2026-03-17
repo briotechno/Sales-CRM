@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 
 import { Download, Upload, Filter, UserPlus, List, Trash2, Users, Server, Type, Phone, Loader2, ChevronLeft, ChevronRight, Mail, AlertCircle, PlusIcon } from "lucide-react";
 import Modal from "../../components/common/Modal";
+import ActionGuard from "../../components/common/ActionGuard";
 import AddLeadPopup from "../../components/AddNewLeads/AddNewLead";
 import BulkUploadLeads from "../../components/AddNewLeads/BulkUpload";
 import AssignLeadsModal from "../../pages/LeadsManagement/AllLeadPagePart/AssignLeadModal";
@@ -626,13 +627,15 @@ export default function AssignedLeads() {
 
                 {/* Add Lead - Primary Button */}
                 <div className="relative" ref={addLeadMenuRef}>
-                  <button
-                    onClick={() => setOpenLeadMenu(!openLeadMenu)}
-                    className="flex items-center gap-2 px-6 py-3 rounded-sm font-semibold transition shadow-lg hover:shadow-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
-                  >
-                    <PlusIcon size={20} />
-                    Add Lead
-                  </button>
+                  <ActionGuard permission="leads_create" module="Lead Management" type="create">
+                    <button
+                      onClick={() => setOpenLeadMenu(!openLeadMenu)}
+                      className="flex items-center gap-2 px-6 py-3 rounded-sm font-semibold transition shadow-lg hover:shadow-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
+                    >
+                      <PlusIcon size={20} />
+                      Add Lead
+                    </button>
+                  </ActionGuard>
 
                   {openLeadMenu && (
                     <div className="absolute top-full right-0 mt-2 w-56 bg-white border border-gray-200 shadow-xl rounded-sm z-50 overflow-hidden divide-y divide-gray-100 animate-fadeIn">
@@ -684,20 +687,24 @@ export default function AssignedLeads() {
                 </div>
 
                 <div className="flex gap-4">
-                  <button
-                    onClick={handleAssignLeads}
-                    className="bg-white border border-gray-300 text-gray-700 px-6 py-2.5 rounded-sm font-bold hover:bg-orange-50 hover:border-[#FF7B1D] hover:text-[#FF7B1D] transition-all capitalize flex items-center gap-2.5 text-sm shadow-sm active:scale-95 font-primary group"
-                  >
-                    <UserPlus size={18} className="text-[#FF7B1D] group-hover:scale-110 transition-transform" />
-                    Change Assignment
-                  </button>
-                  <button
-                    onClick={handleDeleteSelected}
-                    className="bg-red-600 text-white px-6 py-2.5 rounded-sm font-bold hover:bg-red-700 transition-all capitalize flex items-center gap-2.5 text-sm shadow-md shadow-red-200 active:scale-95 font-primary border border-red-700"
-                  >
-                    <Trash2 size={18} />
-                    Delete Selected
-                  </button>
+                  <ActionGuard permission="leads_assign" module="Lead Management" type="update">
+                    <button
+                      onClick={handleAssignLeads}
+                      className="bg-white border border-gray-300 text-gray-700 px-6 py-2.5 rounded-sm font-bold hover:bg-orange-50 hover:border-[#FF7B1D] hover:text-[#FF7B1D] transition-all capitalize flex items-center gap-2.5 text-sm shadow-sm active:scale-95 font-primary group"
+                    >
+                      <UserPlus size={18} className="text-[#FF7B1D] group-hover:scale-110 transition-transform" />
+                      Change Assignment
+                    </button>
+                  </ActionGuard>
+                  <ActionGuard permission="leads_delete" module="Lead Management" type="delete">
+                    <button
+                      onClick={handleDeleteSelected}
+                      className="bg-red-600 text-white px-6 py-2.5 rounded-sm font-bold hover:bg-red-700 transition-all capitalize flex items-center gap-2.5 text-sm shadow-md shadow-red-200 active:scale-95 font-primary border border-red-700"
+                    >
+                      <Trash2 size={18} />
+                      Delete Selected
+                    </button>
+                  </ActionGuard>
                 </div>
               </div>
             </div>

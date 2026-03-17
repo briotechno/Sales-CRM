@@ -39,6 +39,7 @@ import {
   Cell,
 } from "recharts";
 import NumberCard from "../../components/NumberCard";
+import ActionGuard from "../../components/common/ActionGuard";
 import { useGetHRMDashboardDataQuery } from "../../store/api/hrmDashboardApi";
 
 export default function HRMDashboard() {
@@ -146,13 +147,15 @@ export default function HRMDashboard() {
                   <RefreshCw size={18} className={`${isFetching ? "animate-spin text-orange-500" : "group-hover:text-orange-500"}`} />
                 </button>
 
-                <button
-                  onClick={() => navigate("/hrm/employee/all")}
-                  className="flex items-center gap-2 px-6 py-3 rounded-sm font-semibold transition shadow-lg hover:shadow-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 active:scale-95 whitespace-nowrap"
-                >
-                  <Users size={18} />
-                  Add New Employee
-                </button>
+                <ActionGuard permission="employees_create" module="Employee Management" type="create">
+                  <button
+                    onClick={() => navigate("/hrm/employee/all")}
+                    className="flex items-center gap-2 px-6 py-3 rounded-sm font-semibold transition shadow-lg hover:shadow-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 active:scale-95 whitespace-nowrap"
+                  >
+                    <Users size={18} />
+                    Add New Employee
+                  </button>
+                </ActionGuard>
               </div>
             </div>
           </div>
@@ -330,12 +333,14 @@ export default function HRMDashboard() {
                       <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest">Pending approvals</p>
                     </div>
                   </div>
-                  <button
-                    onClick={() => navigate("/hrm/leave/all")}
-                    className="text-indigo-600 text-[11px] font-bold hover:bg-indigo-50 px-4 py-2 border border-indigo-200 rounded-sm shadow-sm transition-all uppercase tracking-widest active:scale-95"
-                  >
-                    View All
-                  </button>
+                  <ActionGuard permission="leave_management_read" module="Leave Management" type="read">
+                    <button
+                      onClick={() => navigate("/hrm/leave/all")}
+                      className="text-indigo-600 text-[11px] font-bold hover:bg-indigo-50 px-4 py-2 border border-indigo-200 rounded-sm shadow-sm transition-all uppercase tracking-widest active:scale-95"
+                    >
+                      View All
+                    </button>
+                  </ActionGuard>
                 </div>
                 <div className="space-y-4">
                   {leaveRequests.length > 0 ? (
@@ -476,12 +481,14 @@ export default function HRMDashboard() {
                     </div>
                   )}
                 </div>
-                <button
-                  onClick={() => navigate("/hrm/employee/all")}
-                  className="mt-6 w-full py-2.5 bg-slate-900 text-white rounded-sm text-[10px] font-black uppercase tracking-widest hover:bg-orange-600 transition-all shadow-md active:scale-95"
-                >
-                  View Directory
-                </button>
+                <ActionGuard permission="employees_read" module="Employee Management" type="read">
+                  <button
+                    onClick={() => navigate("/hrm/employee/all")}
+                    className="mt-6 w-full py-2.5 bg-slate-900 text-white rounded-sm text-[10px] font-black uppercase tracking-widest hover:bg-orange-600 transition-all shadow-md active:scale-95"
+                  >
+                    View Directory
+                  </button>
+                </ActionGuard>
               </div>
 
               {/* Company Pulse */}
@@ -578,12 +585,14 @@ export default function HRMDashboard() {
                     </div>
                   )}
                 </div>
-                <button
-                  onClick={() => navigate("/hrm/job-management")}
-                  className="mt-8 w-full py-2.5 bg-white/5 border border-white/10 rounded-sm text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-all text-blue-400 active:scale-95"
-                >
-                  Portal
-                </button>
+                <ActionGuard permission="job_management_read" module="Job Management" type="read">
+                  <button
+                    onClick={() => navigate("/hrm/job-management")}
+                    className="mt-8 w-full py-2.5 bg-white/5 border border-white/10 rounded-sm text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-all text-blue-400 active:scale-95"
+                  >
+                    Portal
+                  </button>
+                </ActionGuard>
               </div>
             </div>
             <div className="w-full mb-12">
@@ -607,10 +616,12 @@ export default function HRMDashboard() {
                     </button>
                     <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Showing all departments</span>
                   </div>
-                  <button className="flex items-center gap-1.5 text-[10px] font-black uppercase text-blue-600 hover:text-blue-700 transition-colors">
-                    <Download size={14} />
-                    Export Report
-                  </button>
+                  <ActionGuard permission="hrm_dashboard_export" module="HRM Dashboard" type="read">
+                    <button className="flex items-center gap-1.5 text-[10px] font-black uppercase text-blue-600 hover:text-blue-700 transition-colors">
+                      <Download size={14} />
+                      Export Report
+                    </button>
+                  </ActionGuard>
                 </div>
                 <div className="overflow-x-auto custom-scrollbar">
                   <table className="w-full text-left">

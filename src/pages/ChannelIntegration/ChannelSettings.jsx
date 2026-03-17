@@ -1,4 +1,5 @@
-import { Settings, ShieldCheck, Zap, UserX, Plus, List, Filter, Home, Search, X } from "lucide-react";
+import { Settings, ShieldCheck, Zap, UserX, Plus, List, Filter, Home, Search, X, Phone, Mic, MessageSquare } from "lucide-react";
+import ActionGuard from "../../components/common/ActionGuard";
 import { useNavigate } from "react-router-dom";
 import { useRef, useEffect, useState } from "react";
 import AssignmentSettings from "../LeadsManagement/AssignmentSettings";
@@ -9,7 +10,7 @@ import CampaignList from "../../components/ChannelIntegration/CampaignList";
 import DialerSettings from "./DialerSettings";
 import IVRSettings from "./IVRSettings";
 import WhatsAppSettings from "./WhatsAppSettings";
-import { Phone, Mic, MessageSquare } from "lucide-react";
+
 
 export default function ChannelSettings() {
     const [activeTab, setActiveTab] = useState("campaign-list");
@@ -144,13 +145,15 @@ export default function ChannelSettings() {
                                 )}
                             </div>
                         )}
-                        <button
-                            onClick={() => setIsModalOpen(true)}
-                            className="flex items-center gap-2 px-6 py-3 rounded-sm font-semibold transition shadow-lg hover:shadow-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
-                        >
-                            <Plus size={20} />
-                            Create Campaign
-                        </button>
+                        <ActionGuard permission="campaign_create" module="Campaign Management" type="create">
+                            <button
+                                onClick={() => setIsModalOpen(true)}
+                                className="flex items-center gap-2 px-6 py-3 rounded-sm font-semibold transition shadow-lg hover:shadow-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
+                            >
+                                <Plus size={20} />
+                                Create Campaign
+                            </button>
+                        </ActionGuard>
                     </div>
                 </div>
 
