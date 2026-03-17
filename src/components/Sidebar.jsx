@@ -258,7 +258,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           name: "Goal Dashbaord",
           icon: <Target size={22} />,
           path: "/crm/goals",
-          permission: "Leads Management"
+          permission: "Goal Management"
         },
       ],
     },
@@ -404,7 +404,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           name: "Campaign",
           icon: <Settings size={22} />,
           path: "/crm/channel/settings",
-          permission: "Leads Management"
+          permission: "Campaign Management"
         },
 
       ],
@@ -504,7 +504,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           children: [
             { name: "Job List", path: "/hrm/job-management", permission: "Recruitment" },
             { name: "Applicant List", path: "/hrm/applicants", permission: "Recruitment" },
-            { name: "Offer Letter", path: "/hrm/offer-letters", permission: "Recruitment" },
+            { name: "Offer Letter", path: "/hrm/offer-letters", permission: "Offer Letter Management" },
           ],
         },
       ],
@@ -564,13 +564,13 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           name: "Meeting",
           icon: <Calendar size={22} />,
           path: "/additional/meeting",
-          permission: "Communication Tools",
+          permission: "Meeting Management",
         },
         {
           name: "Visitor",
           icon: <Users size={22} />,
           path: "/additional/visitor",
-          permission: "Communication Tools",
+          permission: "Visitor Management",
         },
         {
           name: "Notification",
@@ -600,7 +600,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           name: "FAQ",
           icon: <HelpCircle size={22} />,
           path: "/settings/faq",
-          permission: "System Administration"
+          permission: "FAQ Management"
         },
         { name: "Logout", icon: <LogOut size={22} />, path: "/logout" },
       ],

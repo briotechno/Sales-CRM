@@ -856,6 +856,162 @@ export const permissionCategories = {
     },
   ],
 
+  "Goal Management": [
+    {
+      id: "goal_view",
+      label: "View Goals",
+      icon: Target,
+      description: "View sales goals and targets",
+    },
+    {
+      id: "goal_create",
+      label: "Create Goals",
+      icon: Plus,
+      description: "Set new sales goals and targets",
+    },
+    {
+      id: "goal_edit",
+      label: "Edit Goals",
+      icon: Edit,
+      description: "Modify existing goals and targets",
+    },
+    {
+      id: "goal_delete",
+      label: "Delete Goals",
+      icon: Trash2,
+      description: "Remove goals and targets",
+    },
+  ],
+
+  "Meeting Management": [
+    {
+      id: "meeting_view",
+      label: "View Meetings",
+      icon: Calendar,
+      description: "View scheduled meetings",
+    },
+    {
+      id: "meeting_create",
+      label: "Create Meetings",
+      icon: Plus,
+      description: "Schedule new meetings",
+    },
+    {
+      id: "meeting_edit",
+      label: "Edit Meetings",
+      icon: Edit,
+      description: "Modify meeting details",
+    },
+    {
+      id: "meeting_delete",
+      label: "Delete Meetings",
+      icon: Trash2,
+      description: "Cancel or remove meetings",
+    },
+  ],
+
+  "Visitor Management": [
+    {
+      id: "visitor_view",
+      label: "View Visitors",
+      icon: Users,
+      description: "View visitor logs and records",
+    },
+    {
+      id: "visitor_create",
+      label: "Log Visitor Entry",
+      icon: Plus,
+      description: "Record new visitor entries",
+    },
+    {
+      id: "visitor_edit",
+      label: "Edit Visitor Info",
+      icon: Edit,
+      description: "Modify visitor information or status",
+    },
+    {
+      id: "visitor_delete",
+      label: "Delete Visitor Logs",
+      icon: Trash2,
+      description: "Remove visitor records",
+    },
+  ],
+
+  "Campaign Management": [
+    {
+      id: "campaign_view",
+      label: "View Campaigns",
+      icon: Megaphone,
+      description: "View marketing campaigns",
+    },
+    {
+      id: "campaign_create",
+      label: "Create Campaigns",
+      icon: Plus,
+      description: "Launch new marketing campaigns",
+    },
+    {
+      id: "campaign_edit",
+      label: "Edit Campaigns",
+      icon: Edit,
+      description: "Modify campaign details or status",
+    },
+    {
+      id: "campaign_delete",
+      label: "Delete Campaigns",
+      icon: Trash2,
+      description: "Remove marketing campaigns",
+    },
+  ],
+
+  "Offer Letter Management": [
+    {
+      id: "offer_letter_view",
+      label: "View Offer Letters",
+      icon: FileText,
+      description: "View generated offer letters",
+    },
+    {
+      id: "offer_letter_create",
+      label: "Generate Offer Letters",
+      icon: Plus,
+      description: "Create new offer letters for candidates",
+    },
+    {
+      id: "offer_letter_edit",
+      label: "Edit Offer Letters",
+      icon: Edit,
+      description: "Modify existing offer letters",
+    },
+    {
+      id: "offer_letter_download",
+      label: "Download Letters",
+      icon: DownloadIcon,
+      description: "Download offer letters in PDF format",
+    },
+    {
+      id: "offer_letter_delete",
+      label: "Delete Letters",
+      icon: Trash2,
+      description: "Remove offer letter records",
+    },
+  ],
+
+  "FAQ Management": [
+    {
+      id: "faq_view",
+      label: "View FAQ",
+      icon: BookOpen,
+      description: "Access frequency asked questions",
+    },
+    {
+      id: "faq_manage",
+      label: "Manage FAQ",
+      icon: Edit,
+      description: "Create, edit and delete FAQ items",
+    },
+  ],
+
   "System Administration": [
     {
       id: "admin_full_access",
@@ -1077,6 +1233,10 @@ export const roleTemplates = {
       "clients_view_all",
       "team_view",
       "team_assign_members",
+      "goal_view",
+      "goal_create",
+      "campaign_view",
+      "meeting_view",
     ],
   },
   hrManager: {
@@ -1090,6 +1250,8 @@ export const roleTemplates = {
       "leave_approve",
       "salary_view_all",
       "job_create",
+      "offer_letter_view",
+      "offer_letter_create",
     ],
   },
   teamLead: {
@@ -1114,6 +1276,8 @@ export const roleTemplates = {
       "leads_contact",
       "clients_view_own",
       "pipeline_view",
+      "meeting_view",
+      "meeting_create",
     ],
   },
   employee: {
@@ -1126,6 +1290,8 @@ export const roleTemplates = {
       "todo_view_own",
       "notes_create",
       "messenger_use",
+      "faq_view",
+      "meeting_view",
     ],
   },
 };

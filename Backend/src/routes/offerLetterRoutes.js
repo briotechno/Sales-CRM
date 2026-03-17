@@ -7,17 +7,17 @@ const {
     updateOfferLetter,
     deleteOfferLetter
 } = require('../controllers/offerLetterController');
-const { protect } = require('../middleware/authMiddleware');
+const { protect, authorize } = require('../middleware/authMiddleware');
 
 router.use(protect);
 
 router.route('/')
-    .get(getOfferLetters)
-    .post(createOfferLetter);
+    .get(authorize('offer_letter_view'), getOfferLetters)
+    .post(authorize('offer_letter_create'), createOfferLetter);
 
 router.route('/:id')
-    .get(getOfferLetterById)
-    .put(updateOfferLetter)
-    .delete(deleteOfferLetter);
+    .get(authorize('offer_letter_view'), getOfferLetterById)
+    .put(authorize('offer_letter_edit'), updateOfferLetter)
+    .delete(authorize('offer_letter_delete'), deleteOfferLetter);
 
 module.exports = router;
