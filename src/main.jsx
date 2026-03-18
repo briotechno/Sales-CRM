@@ -4,6 +4,7 @@ import { Provider } from "react-redux";
 import { Toaster } from "react-hot-toast";
 import { store } from "./store";
 import App from "./App";
+import { NotificationProvider } from "./context/NotificationContext";
 import "./index.css"; // Tailwind CSS
 
 ReactDOM.createRoot(document.getElementById("root")).render(
@@ -46,7 +47,9 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           },
         }}
       />
-      <App />
+      <NotificationProvider>
+        <App />
+      </NotificationProvider>
     </Provider>
   </React.StrictMode>
 );

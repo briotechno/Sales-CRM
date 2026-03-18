@@ -20,93 +20,19 @@ import {
   Settings,
 } from "lucide-react";
 import NumberCard from "../../components/NumberCard";
+import { useNotifications } from "../../context/NotificationContext";
+import { formatDistanceToNow } from 'date-fns';
 
 export default function NotificationPage() {
-  const [notifications, setNotifications] = useState([
-    {
-      id: 1,
-      type: "invoice",
-      title: "Invoice Payment Received",
-      message:
-        "Payment of ₹2,50,000 received from Tech Solutions Ltd for Invoice INV-2024-002",
-      timestamp: "2024-11-19T10:30:00",
-      read: false,
-      priority: "high",
-      icon: "DollarSign",
-    },
-    {
-      id: 2,
-      type: "quotation",
-      title: "New Quotation Approved",
-      message: "Quotation QT-2024-005 has been approved by Acme Corporation",
-      timestamp: "2024-11-19T09:15:00",
-      read: false,
-      priority: "medium",
-      icon: "FileText",
-    },
-    {
-      id: 3,
-      type: "overdue",
-      title: "Invoice Overdue",
-      message:
-        "Invoice INV-2024-003 for Global Industries is now overdue by 5 days",
-      timestamp: "2024-11-19T08:00:00",
-      read: false,
-      priority: "high",
-      icon: "AlertCircle",
-    },
-    {
-      id: 4,
-      type: "meeting",
-      title: "Meeting Reminder",
-      message:
-        "Client meeting with Innovation Inc scheduled for today at 2:00 PM",
-      timestamp: "2024-11-19T07:00:00",
-      read: true,
-      priority: "medium",
-      icon: "Calendar",
-    },
-    {
-      id: 5,
-      type: "expense",
-      title: "Expense Approved",
-      message: "Your expense claim of ₹15,000 has been approved",
-      timestamp: "2024-11-18T16:30:00",
-      read: true,
-      priority: "low",
-      icon: "CheckCircle",
-    },
-    {
-      id: 6,
-      type: "team",
-      title: "New Team Member",
-      message: "Sarah Johnson has been added to the Sales Team",
-      timestamp: "2024-11-18T14:20:00",
-      read: true,
-      priority: "low",
-      icon: "Users",
-    },
-    {
-      id: 7,
-      type: "target",
-      title: "Monthly Target Update",
-      message: "You have achieved 85% of your monthly sales target",
-      timestamp: "2024-11-18T12:00:00",
-      read: true,
-      priority: "medium",
-      icon: "TrendingUp",
-    },
-    {
-      id: 8,
-      type: "email",
-      title: "Important Email",
-      message: "New email from client regarding project requirements",
-      timestamp: "2024-11-18T11:30:00",
-      read: true,
-      priority: "medium",
-      icon: "Mail",
-    },
-  ]);
+  const { 
+    notifications, 
+    unreadCount, 
+    markAsRead, 
+    markAllAsRead, 
+    deleteNotification, 
+    clearRead,
+    loading 
+  } = useNotifications();
 
   const [filterType, setFilterType] = useState("all");
   const [filterRead, setFilterRead] = useState("all");
@@ -120,28 +46,15 @@ export default function NotificationPage() {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      // Type filter
-      if (
-        typeDropdownRef.current &&
-        !typeDropdownRef.current.contains(event.target)
-      ) {
+      if (typeDropdownRef.current && !typeDropdownRef.current.contains(event.target)) {
         setIsTypeFilterOpen(false);
       }
-
-      // Read filter
-      if (
-        readDropdownRef.current &&
-        !readDropdownRef.current.contains(event.target)
-      ) {
+      if (readDropdownRef.current && !readDropdownRef.current.contains(event.target)) {
         setIsReadFilterOpen(false);
       }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const getIcon = (iconName) => {
@@ -161,12 +74,13 @@ export default function NotificationPage() {
   const getTypeColor = (type) => {
     const colors = {
       invoice: "bg-blue-100 text-blue-600",
+      lead: "bg-orange-100 text-orange-600",
       quotation: "bg-purple-100 text-purple-600",
       overdue: "bg-red-100 text-red-600",
       meeting: "bg-green-100 text-green-600",
       expense: "bg-yellow-100 text-yellow-600",
       team: "bg-indigo-100 text-indigo-600",
-      target: "bg-orange-100 text-orange-600",
+      target: "bg-cyan-100 text-cyan-600",
       email: "bg-pink-100 text-pink-600",
     };
     return colors[type] || "bg-gray-100 text-gray-600";
@@ -181,114 +95,24 @@ export default function NotificationPage() {
     return colors[priority] || "bg-gray-500 text-white";
   };
 
-  const formatTime = (timestamp) => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diff = now - date;
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-
-    if (hours < 1) return "Just now";
-    if (hours < 24) return `${hours}h ago`;
-    if (days === 1) return "Yesterday";
-    if (days < 7) return `${days}d ago`;
-    return date.toLocaleDateString();
-  };
-
-  const markAsRead = (id) => {
-    setNotifications(
-      notifications.map((n) => (n.id === id ? { ...n, read: true } : n))
-    );
-  };
-
-  const markAllAsRead = () => {
-    setNotifications(notifications.map((n) => ({ ...n, read: true })));
-  };
-
-  const deleteNotification = (id) => {
-    setNotifications(notifications.filter((n) => n.id !== id));
-  };
-
-  const deleteAllRead = () => {
-    setNotifications(notifications.filter((n) => !n.read));
-    setIsDeleteModalOpen(false);
-  };
-
-  const ConfirmDeleteModal = ({ isOpen, onClose, onConfirm, isLoading }) => {
-    if (!isOpen) return null;
-
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-        <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6 animate-scaleIn">
-
-          {/* Icon */}
-          <div className="flex justify-center mb-5">
-            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center animate-bounce">
-              <AlertCircle size={36} className="text-red-600" />
-            </div>
-          </div>
-
-          {/* Content */}
-          <h2 className="text-2xl font-bold text-gray-800 text-center mb-2">
-            Confirm Delete
-          </h2>
-
-          <p className="text-gray-600 mb-2 leading-relaxed">
-            Are you sure you want to delete all{" "}
-            <span className="font-bold text-gray-800">"read notifications"</span>?
-          </p>
-
-          <p className="text-sm text-red-500 text-center mb-5 italic">
-            This action cannot be undone. All associated data will be permanently removed.
-          </p>
-
-          {/* Actions */}
-          <div className="flex gap-4">
-            <button
-              onClick={onClose}
-              className="flex-1 px-5 py-3 border-2 border-gray-200 rounded-xl font-semibold text-gray-700 hover:bg-gray-100 transition-all"
-            >
-              Cancel
-            </button>
-
-            <button
-              onClick={onConfirm}
-              disabled={isLoading}
-              className="flex-1 px-5 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-all shadow-lg hover:shadow-red-200 flex items-center justify-center gap-2 disabled:opacity-50"
-            >
-              {isLoading ? (
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              ) : (
-                <Trash2 size={18} />
-              )}
-              {isLoading ? "Deleting..." : "Delete"}
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   const filteredNotifications = notifications.filter((n) => {
     const matchesType = filterType === "all" || n.type === filterType;
     const matchesRead =
       filterRead === "all" ||
-      (filterRead === "unread" && !n.read) ||
-      (filterRead === "read" && n.read);
+      (filterRead === "unread" && !n.is_read) ||
+      (filterRead === "read" && n.is_read);
     const matchesSearch =
       n.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       n.message.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesType && matchesRead && matchesSearch;
   });
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
-
   const stats = {
     total: notifications.length,
     unread: unreadCount,
-    high: notifications.filter((n) => n.priority === "high" && !n.read).length,
+    high: notifications.filter((n) => n.priority === "high" && !n.is_read).length,
     today: notifications.filter((n) => {
-      const date = new Date(n.timestamp);
+      const date = new Date(n.created_at);
       const today = new Date();
       return date.toDateString() === today.toDateString();
     }).length,
@@ -296,131 +120,89 @@ export default function NotificationPage() {
 
   return (
     <DashboardLayout>
-      <div className="p-0 bg-gradient-to-br from-gray-0 to-gray-100 ml-4 mr-4 min-h-screen">
-        {/* Header */}
-        <div className="bg-white border-b">
+      <div className="p-0 bg-gradient-to-br from-gray-0 to-white ml-4 mr-4 min-h-screen">
+        {/* Header Section */}
+        <div className="bg-white border-b sticky top-0 z-30">
           <div className="max-w-8xl mx-auto py-4">
-            <div className="flex items-center justify-between">
-              {/* Left Side */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
-                <h1 className="text-2xl font-bold text-gray-800">
-                  Notification
-                </h1>
+                <h1 className="text-2xl font-bold text-gray-800">Notifications</h1>
                 <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
-                  <FiHome className="text-gray-700 text-sm" />
-                  <span className="text-gray-400"></span> Additional /{" "}
-                  <span className="text-[#FF7B1D] font-medium">
-                    All Notification
-                  </span>
+                  <FiHome className="text-gray-400" />
+                  <span>Dashboard</span> / <span className="text-[#FF7B1D] font-medium">All Notifications</span>
                 </p>
               </div>
-              <div className="flex gap-3">
-                <div className="flex flex-col md:flex-row gap-4">
-                  {/* ------------------------------------------ */}
-                  <div className="relative" ref={typeDropdownRef}>
-                    <button
-                      onClick={() => setIsTypeFilterOpen(!isTypeFilterOpen)}
-                      className={`flex items-center gap-2 px-4 py-3 rounded-sm border transition shadow-sm ${isTypeFilterOpen || filterType !== "all"
-                        ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
-                        : "bg-white text-black border-gray-300 hover:bg-gray-100"
-                        }`}
-                    >
-                      <FileText size={18} />
-                      <span className="text-sm font-medium">
-                        {filterType === "all" ? "All Types" : filterType}
-                      </span>
-                    </button>
 
-                    {isTypeFilterOpen && (
-                      <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-sm shadow-xl z-50 animate-fadeIn">
-                        <div className="p-2 border-b bg-gray-50">
-                          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Filter by Notification</p>
-                        </div>
-                        <div className="py-1">
-                          {[
-                            { label: "All Types", value: "all" },
-                            { label: "Invoice", value: "invoice" },
-                            { label: "Quotation", value: "quotation" },
-                            { label: "Overdue", value: "overdue" },
-                            { label: "Meeting", value: "meeting" },
-                            { label: "Expense", value: "expense" },
-                            { label: "Team", value: "team" },
-                            { label: "Target", value: "target" },
-                            { label: "Email", value: "email" },
-                          ].map((option) => (
-                            <button
-                              key={option.value}
-                              onClick={() => {
-                                setFilterType(option.value);
-                                setIsTypeFilterOpen(false);
-                                setCurrentPage(1);
-                              }}
-                              className={`block w-full text-left px-4 py-2.5 text-sm transition-colors ${filterType === option.value
-                                ? "bg-orange-50 text-orange-600 font-bold"
-                                : "text-gray-700 hover:bg-gray-50"
-                                }`}
-                            >
-                              {option.label}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* ------------------------------------------ */}
-                  <div className="relative" ref={readDropdownRef}>
-                    <button
-                      onClick={() => setIsReadFilterOpen(!isReadFilterOpen)}
-                      className={`flex items-center gap-2 px-4 py-3 rounded-sm border transition shadow-sm ${isReadFilterOpen || filterRead !== "all"
-                        ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-[#FF7B1D]"
-                        : "bg-white text-black border-gray-300 hover:bg-gray-100"
-                        }`}
-                    >
-                      <Filter size={20} />
-                    </button>
-
-                    {isReadFilterOpen && (
-                      <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-sm shadow-xl z-50 animate-fadeIn">
-                        <div className="py-1">
-                          {[
-                            { label: "All", value: "all" },
-                            { label: "Unread", value: "unread" },
-                            { label: "Read", value: "read" },
-                          ].map((option) => (
-                            <button
-                              key={option.value}
-                              onClick={() => {
-                                setFilterRead(option.value);
-                                setIsReadFilterOpen(false);
-                                setCurrentPage(1);
-                              }}
-                              className={`block w-full text-left px-4 py-2.5 text-sm transition-colors ${filterRead === option.value
-                                ? "bg-orange-50 text-orange-600 font-bold"
-                                : "text-gray-700 hover:bg-gray-50"
-                                }`}
-                            >
-                              {option.label}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
+              <div className="flex flex-wrap items-center gap-3">
+                {/* Type Filter */}
+                <div className="relative" ref={typeDropdownRef}>
+                  <button
+                    onClick={() => setIsTypeFilterOpen(!isTypeFilterOpen)}
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border transition-all text-sm font-bold shadow-sm ${
+                      filterType !== "all" ? "bg-orange-500 text-white border-orange-600" : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
+                    }`}
+                  >
+                    <Filter size={16} />
+                    {filterType === "all" ? "Filter Type" : filterType.toUpperCase()}
+                  </button>
+                  {isTypeFilterOpen && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-100 rounded-xl shadow-xl z-50 py-2 animate-fadeIn">
+                      {["all", "lead", "invoice", "quotation", "meeting", "expense", "team", "system"].map((type) => (
+                        <button
+                          key={type}
+                          onClick={() => { setFilterType(type); setIsTypeFilterOpen(false); }}
+                          className={`w-full text-left px-4 py-2 text-sm hover:bg-orange-50 hover:text-orange-600 transition-colors ${filterType === type ? 'bg-orange-50 text-orange-600 font-bold' : 'text-gray-600'}`}
+                        >
+                          {type.charAt(0).toUpperCase() + type.slice(1)}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
+
+                {/* Status Filter */}
+                <div className="relative" ref={readDropdownRef}>
+                  <button
+                    onClick={() => setIsReadFilterOpen(!isReadFilterOpen)}
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border transition-all text-sm font-bold shadow-sm ${
+                      filterRead !== "all" ? "bg-orange-500 text-white border-orange-600" : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
+                    }`}
+                  >
+                    <Bell size={16} />
+                    {filterRead === "all" ? "Status" : filterRead.toUpperCase()}
+                  </button>
+                  {isReadFilterOpen && (
+                    <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-100 rounded-xl shadow-xl z-50 py-2 animate-fadeIn">
+                      {["all", "unread", "read"].map((status) => (
+                        <button
+                          key={status}
+                          onClick={() => { setFilterRead(status); setIsReadFilterOpen(false); }}
+                          className={`w-full text-left px-4 py-2 text-sm hover:bg-orange-50 hover:text-orange-600 transition-colors ${filterRead === status ? 'bg-orange-50 text-orange-600 font-bold' : 'text-gray-600'}`}
+                        >
+                          {status.charAt(0).toUpperCase() + status.slice(1)}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="h-8 w-px bg-gray-200 mx-1 hidden md:block" />
+
                 <button
                   onClick={() => setIsDeleteModalOpen(true)}
-                  className="px-4 py-2 border border-gray-300 rounded-sm hover:bg-gray-50 font-semibold text-gray-700 flex items-center gap-2"
+                  disabled={notifications.length === 0}
+                  className="p-2.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all disabled:opacity-30"
+                  title="Clear All Read"
                 >
-                  <Trash2 size={18} />
-                  Clear Read
+                  <Trash2 size={20} />
                 </button>
 
                 <button
                   onClick={markAllAsRead}
-                  className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm hover:shadow-lg transition-all flex items-center gap-2 font-bold shadow-md"
+                  disabled={unreadCount === 0}
+                  className="px-6 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:shadow-lg hover:shadow-orange-200 transition-all font-bold text-sm flex items-center gap-2 disabled:opacity-50"
                 >
-                  <Check size={20} />
+                  <Check size={18} />
                   Mark All Read
                 </button>
               </div>
@@ -428,131 +210,143 @@ export default function NotificationPage() {
           </div>
         </div>
 
-        {/* Stats Cards */}
-        <div className="px-0 mt-2 py-0">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <NumberCard
-              title={"Total Notifications"}
-              number={stats.total}
-              icon={<Bell className="text-blue-600" size={24} />}
-              iconBgColor={"bg-blue-100"}
-              lineBorderClass={"border-blue-500"}
-            />
-            <NumberCard
-              title={"Unread"}
-              number={stats.unread}
-              icon={<Mail className="text-green-600" size={24} />}
-              iconBgColor={"bg-green-100"}
-              lineBorderClass={"border-green-500"}
-            />
-            <NumberCard
-              title={"High Priority"}
-              number={stats.high}
-              icon={<AlertCircle className="text-orange-600" size={24} />}
-              iconBgColor={"bg-orange-100"}
-              lineBorderClass={"border-orange-500"}
-            />
-            <NumberCard
-              title={"Today"}
-              number={stats.today}
-              icon={<Calendar className="text-purple-600" size={24} />}
-              iconBgColor={"bg-purple-100"}
-              lineBorderClass={"border-purple-500"}
+        {/* Content Area */}
+        <div className="max-w-8xl mx-auto py-6">
+          {/* Stats Section */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <NumberCard title="Total" number={stats.total} icon={<Bell className="text-blue-500" />} iconBgColor="bg-blue-50" lineBorderClass="border-blue-500" />
+            <NumberCard title="Unread" number={stats.unread} icon={<Mail className="text-orange-500" />} iconBgColor="bg-orange-50" lineBorderClass="border-orange-500" />
+            <NumberCard title="High Priority" number={stats.high} icon={<AlertCircle className="text-red-500" />} iconBgColor="bg-red-50" lineBorderClass="border-red-500" />
+            <NumberCard title="Today" number={stats.today} icon={<Calendar className="text-purple-500" />} iconBgColor="bg-purple-50" lineBorderClass="border-purple-500" />
+          </div>
+
+          {/* Search Bar */}
+          <div className="relative mb-6">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+            <input
+              type="text"
+              placeholder="Search notifications by title or message..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full h-12 pl-12 pr-4 bg-white border border-gray-200 rounded-xl text-gray-700 placeholder-gray-400 outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all shadow-sm"
             />
           </div>
 
           {/* Notifications List */}
           <div className="space-y-3">
-            {filteredNotifications.length === 0 ? (
-              <div className="bg-white rounded-sm shadow-md p-12 text-center">
-                <Bell className="mx-auto text-gray-300 mb-4" size={64} />
-                <h3 className="text-xl font-semibold text-gray-600 mb-2">
-                  No notifications found
-                </h3>
-                <p className="text-gray-500">You're all caught up!</p>
+            {loading ? (
+              <div className="py-20 text-center">
+                <div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                <p className="text-gray-500 font-medium">Loading your alerts...</p>
               </div>
-            ) : (
+            ) : filteredNotifications.length > 0 ? (
               filteredNotifications.map((notification) => (
                 <div
                   key={notification.id}
-                  className={`bg-white rounded-sm shadow-md hover:shadow-lg transition-all p-5 border-t-4 ${notification.read
-                    ? "border-gray-300 opacity-75"
-                    : "border-orange-500"
-                    }`}
+                  className={`group relative bg-white rounded-xl border transition-all duration-300 shadow-sm hover:shadow-md ${
+                    !notification.is_read ? 'border-orange-200 bg-orange-50/5' : 'border-gray-100'
+                  }`}
                 >
-                  <div className="flex items-start gap-4">
-                    {/* Icon */}
-                    <div
-                      className={`p-3 rounded-sm ${getTypeColor(
-                        notification.type
-                      )}`}
-                    >
+                  <div className="p-4 sm:p-5 flex gap-4">
+                    <div className={`flex-shrink-0 h-12 w-12 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110 ${getTypeColor(notification.type)}`}>
                       {getIcon(notification.icon)}
                     </div>
 
-                    {/* Content */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-4 mb-2">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h3
-                              className={`font-bold text-gray-800 ${!notification.read ? "text-orange-600" : ""
-                                }`}
-                            >
+                        <div>
+                          <div className="flex items-center gap-2 mb-1 flex-wrap">
+                            <h3 className={`text-[15px] leading-tight transition-colors ${!notification.is_read ? 'font-bold text-gray-900 border-b-2 border-orange-500/30' : 'font-semibold text-gray-700'}`}>
                               {notification.title}
                             </h3>
-                            <span
-                              className={`text-xs px-2 py-0.5 rounded-sm font-semibold ${getPriorityBadge(
-                                notification.priority
-                              )}`}
-                            >
-                              {notification.priority.toUpperCase()}
+                            <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${getPriorityBadge(notification.priority)}`}>
+                              {notification.priority}
                             </span>
-                            {!notification.read && (
-                              <span className="w-2 h-2 bg-orange-500 rounded-full"></span>
+                            {!notification.is_read && (
+                              <span className="w-2 h-2 bg-orange-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(255,123,29,0.5)]" />
                             )}
                           </div>
-                          <p className="text-gray-600 text-sm leading-relaxed">
+                          <p className={`text-sm leading-relaxed ${!notification.is_read ? 'text-gray-800 font-medium' : 'text-gray-500'}`}>
                             {notification.message}
                           </p>
                         </div>
-                        <button
-                          onClick={() => deleteNotification(notification.id)}
-                          className="text-red-600 hover:bg-red-50 p-1.5 rounded-lg transition-colors"
-                        >
-                          <Trash2 size={18} />
-                        </button>
+
+                        <div className="flex flex-col items-end gap-2">
+                           <button 
+                             onClick={() => deleteNotification(notification.id)}
+                             className="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                           >
+                             <Trash2 size={16} />
+                           </button>
+                           <span className="text-[10px] font-bold text-gray-400 whitespace-nowrap bg-gray-50 px-2 py-1 rounded-md">
+                             {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
+                           </span>
+                        </div>
                       </div>
 
-                      {/* Footer */}
-                      <div className="flex items-center justify-between mt-3">
-                        <span className="text-xs text-gray-500 font-medium">
-                          {formatTime(notification.timestamp)}
-                        </span>
-                        {!notification.read && (
-                          <button
-                            onClick={() => markAsRead(notification.id)}
-                            className="text-orange-600 hover:text-orange-700 text-sm font-semibold flex items-center gap-1"
-                          >
-                            <Check size={16} />
-                            Mark as read
-                          </button>
-                        )}
-                      </div>
+                      {!notification.is_read && (
+                        <button
+                          onClick={() => markAsRead(notification.id)}
+                          className="mt-2 text-xs font-bold text-orange-600 hover:text-orange-700 flex items-center gap-1.5 transition-colors bg-orange-50 px-3 py-1.5 rounded-lg w-fit"
+                        >
+                          <Check size={14} />
+                          Mark as Read
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
               ))
+            ) : (
+              <div className="py-20 text-center bg-white rounded-3xl border border-dashed border-gray-200">
+                <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-100">
+                  <Bell className="text-gray-200" size={40} />
+                </div>
+                <h3 className="text-lg font-bold text-gray-700">No Notifications</h3>
+                <p className="text-sm text-gray-400 max-w-xs mx-auto mt-1">
+                  We'll let you know when something important happens!
+                </p>
+                {searchTerm && (
+                  <button onClick={() => setSearchTerm("")} className="mt-4 text-sm font-bold text-orange-500 hover:underline">
+                    Clear Search
+                  </button>
+                )}
+              </div>
             )}
           </div>
         </div>
       </div>
-      <ConfirmDeleteModal
-        isOpen={isDeleteModalOpen}
-        onClose={() => setIsDeleteModalOpen(false)}
-        onConfirm={deleteAllRead}
-      />
 
+      {/* Delete Confirmation Modal */}
+      {isDeleteModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all animate-scaleIn">
+            <div className="p-6 text-center">
+              <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Trash2 size={32} />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Clear Notifications?</h3>
+              <p className="text-sm text-gray-500">
+                Are you sure you want to clear all read notifications? This action cannot be undone.
+              </p>
+            </div>
+            <div className="p-4 bg-gray-50 flex gap-3">
+              <button 
+                onClick={() => setIsDeleteModalOpen(false)}
+                className="flex-1 px-4 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl font-bold text-sm hover:bg-gray-100 transition-all"
+              >
+                No, Keep
+              </button>
+              <button 
+                onClick={() => { clearRead(); setIsDeleteModalOpen(false); }}
+                className="flex-1 px-4 py-2.5 bg-red-500 text-white rounded-xl font-bold text-sm hover:bg-red-600 shadow-lg shadow-red-200 transition-all"
+              >
+                Yes, Clear All
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 }

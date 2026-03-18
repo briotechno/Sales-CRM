@@ -2,6 +2,7 @@ const { pool } = require('../config/db');
 const LeadAssignmentSettings = require('../models/leadAssignmentSettingsModel');
 const LeadAssignmentLog = require('../models/leadAssignmentLogModel');
 const Lead = require('../models/leadModel');
+const notificationService = require('./notificationService');
 
 const leadAssignmentService = {
     autoAssign: async (leadId, userId, excludeEmployeeId = null) => {
@@ -11,7 +12,7 @@ const leadAssignmentService = {
             let mode = settings?.mode || 'manual';
 
             // 2. Fetch Lead details to get Source and Priority
-            const [leads] = await pool.query('SELECT lead_source, priority, tag FROM leads WHERE id = ?', [leadId]);
+            const [leads] = await pool.query('SELECT client_name, lead_source, priority, tag FROM leads WHERE id = ?', [leadId]);
             if (!leads.length) return;
             const lead = leads[0];
 
@@ -163,23 +164,30 @@ const leadAssignmentService = {
             });
 
             // 9. Real-time Notification
-            const { getIO } = require('../socket');
-            const io = getIO();
-            if (io) {
-                const userKey = `${selectedEmployee.id}_employee`;
-                io.to(userKey).emit('new_lead_assigned', {
-                    leadId,
-                    employeeName: selectedEmployee.employee_name,
-                    campaignName: campaign?.name || null
-                });
-
-                // Also notify admin room for stats update
-                if (campaign && isInitialAssignment) {
-                    io.to(`user_${userId}_admin`).emit('campaign_update', {
-                        campaignId: campaign?.id,
-                        newHits: campaign ? campaign.leads_generated + 1 : campaign.leads_generated
-                    });
+            try {
+                await notificationService.createNotification(
+                    selectedEmployee.id,
+                    'employee',
+                    'lead',
+                    'New Lead Assigned',
+                    `You have been assigned a new lead: ${lead.client_name || 'New Lead'}`,
+                    'high',
+                    'FiUserPlus'
+                );
+                
+                const { getIO } = require('../socket');
+                const io = getIO();
+                if (io) {
+                    // Also notify admin room for stats update
+                    if (campaign && isInitialAssignment) {
+                        io.to(`user_${userId}_admin`).emit('campaign_update', {
+                            campaignId: campaign?.id,
+                            newHits: campaign ? campaign.leads_generated + 1 : campaign.leads_generated
+                        });
+                    }
                 }
+            } catch (notifError) {
+                console.error('Error sending lead assignment notification:', notifError);
             }
 
             console.log(`Lead ${leadId} assigned to ${selectedEmployee.employee_name}`);

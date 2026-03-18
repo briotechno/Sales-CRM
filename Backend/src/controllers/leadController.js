@@ -6,6 +6,7 @@ const LeadResources = require('../models/leadResourcesModel'); // Added
 const leadAssignmentService = require('../services/leadAssignmentService');
 const LeadAssignmentLog = require('../models/leadAssignmentLogModel');
 const LeadAssignmentSettings = require('../models/leadAssignmentSettingsModel');
+const notificationService = require('../services/notificationService');
 
 const createLead = async (req, res) => {
     try {
@@ -26,6 +27,17 @@ const createLead = async (req, res) => {
                 assignment_type: 'manual',
                 reason: 'Initial Assignment'
             });
+
+            // Trigger Notification for manual assignment
+            await notificationService.createNotification(
+                assignedTo,
+                'employee',
+                'lead',
+                'New Lead Assigned',
+                `You have been assigned a new lead: ${req.body.name || 'New Lead'}`,
+                'high',
+                'FiUserPlus'
+            );
         }
         // Trigger Auto-Assignment
         await leadAssignmentService.autoAssign(id, req.user.id);
@@ -186,17 +198,28 @@ const updateLead = async (req, res) => {
 
         // Create assignment log if owner changed
         // Use loose comparison via String() to handle ID type mismatches (int vs string)
-        if (newOwnerId && String(newOwnerId) !== String(oldOwnerId)) {
-            await LeadAssignmentLog.create({
-                user_id: userId,
-                lead_id: leadId,
-                employee_id: newOwnerId,
-                assigned_by: req.user.employee_name || req.user.username || 'admin',
-                assignment_type: 'manual',
-                reassigned_from: oldOwnerId,
-                reason: 'Lead Profile Update'
-            });
-        }
+                if (newOwnerId && String(newOwnerId) !== String(oldOwnerId)) {
+                    await LeadAssignmentLog.create({
+                        user_id: userId,
+                        lead_id: leadId,
+                        employee_id: newOwnerId,
+                        assigned_by: req.user.employee_name || req.user.username || 'admin',
+                        assignment_type: 'manual',
+                        reassigned_from: oldOwnerId,
+                        reason: 'Lead Profile Update'
+                    });
+
+                    // Send Notification to the new owner
+                    await notificationService.createNotification(
+                        newOwnerId,
+                        'employee',
+                        'lead',
+                        'New Lead Assigned',
+                        `Lead "${currentLead.name || currentLead.full_name || 'New Lead'}" has been assigned to you by ${req.user.employee_name || 'Admin'}.`,
+                        'high',
+                        'Users'
+                    );
+                }
 
         res.status(200).json({ status: true, message: 'Lead updated successfully' });
     } catch (error) {
