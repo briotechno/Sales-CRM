@@ -30,9 +30,9 @@ export default function LogoutPopup({ onClose }) {
       setIsLoggedOut(true);
 
       // Navigate to login after showing success message
-      // setTimeout(() => {
-      //   navigate("/");
-      // }, 1500);
+      setTimeout(() => {
+        navigate("/");
+      }, 1500);
     } catch (error) {
       console.error("Logout failed:", error);
       setIsLoggingOut(false);

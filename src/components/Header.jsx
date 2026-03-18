@@ -329,7 +329,7 @@ const Header = () => {
                           <p className="text-[11px] text-gray-400 mt-1.5 font-medium truncate">
                             {notif.message}
                           </p>
-                          <p className="text-[10px] text-gray-400 mt-1 font-bold uppercase tracking-tight">
+                          <p className={`text-[10px] mt-1.5 font-bold uppercase tracking-tight ${!notif.is_read ? 'text-orange-500' : 'text-gray-400'}`}>
                             {formatDistanceToNow(new Date(notif.created_at), { addSuffix: true })}
                           </p>
                         </div>
