@@ -18,6 +18,7 @@ import { useGetLeadsQuery, useDeleteLeadMutation, useUpdateLeadMutation, useHitC
 import { useGetPipelinesQuery } from "../../store/api/pipelineApi";
 import { useGetEmployeesQuery } from "../../store/api/employeeApi";
 import { toast } from "react-hot-toast";
+import ActionGuard from "../../components/common/ActionGuard";
 
 export default function NotConnectedLeads() {
     const isLocked = useSelector((state) => state.ui.sidebarLocked);
@@ -605,13 +606,15 @@ export default function NotConnectedLeads() {
 
                                 {/* Add Lead - Primary Button */}
                                 <div className="relative" ref={addLeadMenuRef}>
-                                    <button
-                                        onClick={() => setOpenLeadMenu(!openLeadMenu)}
-                                        className="flex items-center gap-2 px-6 py-3 rounded-sm font-semibold transition shadow-lg hover:shadow-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
-                                    >
-                                        <PlusIcon size={20} />
-                                        Add Lead
-                                    </button>
+                                    <ActionGuard permission="leads_create" module="Leads Management" type="create">
+                                        <button
+                                            onClick={() => setOpenLeadMenu(!openLeadMenu)}
+                                            className="flex items-center gap-2 px-6 py-3 rounded-sm font-semibold transition shadow-lg hover:shadow-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
+                                        >
+                                            <PlusIcon size={20} />
+                                            Add Lead
+                                        </button>
+                                    </ActionGuard>
 
                                     {openLeadMenu && (
                                         <div className="absolute top-full right-0 mt-2 w-56 bg-white border border-gray-200 shadow-xl rounded-sm z-50 overflow-hidden divide-y divide-gray-100 animate-fadeIn">

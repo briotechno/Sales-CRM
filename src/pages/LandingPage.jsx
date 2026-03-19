@@ -52,8 +52,8 @@ const Navigation = ({ handleLogin, handleSignUp }) => {
   return (
     <nav
       className={`fixed top-0 w-full z-50 transition-all duration-300 ${scrolled
-          ? "bg-white/95 backdrop-blur-lg shadow-2xl"
-          : "bg-white shadow-lg"
+        ? "bg-white/95 backdrop-blur-lg shadow-2xl"
+        : "bg-white shadow-lg"
         }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -570,10 +570,10 @@ const DesktopMockupSection = () => {
                 <div
                   key={index}
                   className={`absolute inset-0 transition-all duration-700 ease-in-out ${index === currentImage
-                      ? "opacity-100 translate-x-0 scale-100"
-                      : index < currentImage
-                        ? "opacity-0 -translate-x-full scale-95"
-                        : "opacity-0 translate-x-full scale-95"
+                    ? "opacity-100 translate-x-0 scale-100"
+                    : index < currentImage
+                      ? "opacity-0 -translate-x-full scale-95"
+                      : "opacity-0 translate-x-full scale-95"
                     }`}
                 >
                   <div
@@ -620,8 +620,8 @@ const DesktopMockupSection = () => {
                   key={index}
                   onClick={() => goToImage(index)}
                   className={`transition-all duration-300 rounded-full ${index === currentImage
-                      ? "w-12 h-3 bg-gradient-to-r from-orange-500 to-orange-700 shadow-lg"
-                      : "w-3 h-3 bg-orange-200/50 hover:bg-orange-400"
+                    ? "w-12 h-3 bg-gradient-to-r from-orange-500 to-orange-700 shadow-lg"
+                    : "w-3 h-3 bg-orange-200/50 hover:bg-orange-400"
                     }`}
                 />
               ))}
@@ -814,8 +814,8 @@ const PricingSection = ({ handleSignUp }) => {
             <div
               key={index}
               className={`bg-white rounded-3xl shadow-2xl overflow-hidden transition-all duration-500 transform hover:scale-105 hover:shadow-orange-200 animate-fadeInUp ${pkg.popular
-                  ? "ring-4 ring-orange-500 scale-105 md:scale-110"
-                  : "hover:ring-2 hover:ring-orange-300"
+                ? "ring-4 ring-orange-500 scale-105 md:scale-110"
+                : "hover:ring-2 hover:ring-orange-300"
                 }`}
               style={{ animationDelay: `${index * 100}ms` }}
             >
@@ -832,8 +832,8 @@ const PricingSection = ({ handleSignUp }) => {
                   </h3>
                   <div
                     className={`p-3 rounded-xl ${pkg.popular
-                        ? "bg-gradient-to-br from-orange-500 to-red-500"
-                        : "bg-gradient-to-br from-gray-600 to-gray-700"
+                      ? "bg-gradient-to-br from-orange-500 to-red-500"
+                      : "bg-gradient-to-br from-gray-600 to-gray-700"
                       } text-white`}
                   >
                     {pkg.icon}
@@ -857,8 +857,8 @@ const PricingSection = ({ handleSignUp }) => {
                 <button
                   onClick={handleSignUp}
                   className={`w-full py-4 rounded-full font-bold text-lg transition-all transform hover:scale-105 flex items-center justify-center space-x-2 ${pkg.popular
-                      ? "bg-gradient-to-r from-orange-600 to-red-600 text-white hover:from-orange-700 hover:to-red-700 shadow-xl hover:shadow-2xl"
-                      : "bg-orange-100 text-orange-600 hover:bg-orange-200 shadow-lg hover:shadow-xl"
+                    ? "bg-gradient-to-r from-orange-600 to-red-600 text-white hover:from-orange-700 hover:to-red-700 shadow-xl hover:shadow-2xl"
+                    : "bg-orange-100 text-orange-600 hover:bg-orange-200 shadow-lg hover:shadow-xl"
                     }`}
                 >
                   <span>Get Started</span>
@@ -977,8 +977,8 @@ const FAQSection = () => {
               </button>
               <div
                 className={`transition-all duration-300 ease-in-out overflow-hidden ${openFaq === index
-                    ? "max-h-96 opacity-100"
-                    : "max-h-0 opacity-0"
+                  ? "max-h-96 opacity-100"
+                  : "max-h-0 opacity-0"
                   }`}
               >
                 <div className="px-8 py-6 bg-gradient-to-br from-orange-50 to-red-50 border-t-2 border-orange-100">

@@ -265,7 +265,7 @@ export default function LeadSidebar({
                 ? (currentValue.length > 0 ? currentValue.join(', ') : "N/A")
                 : (currentValue || "N/A")}
             </span>
-            <ActionGuard permission="leads_edit" module="Lead Management" type="update">
+            <ActionGuard permission="leads_edit" module="Leads Management" type="update">
               <Edit2
                 size={14}
                 className="text-slate-400 cursor-pointer opacity-0 group-hover/value:opacity-100 transition-opacity flex-shrink-0 hover:text-orange-500"
@@ -347,7 +347,7 @@ export default function LeadSidebar({
             <h2 className="text-2xl font-bold text-slate-800 uppercase truncate px-6" title={leadData?.name}>
               {leadData?.name?.length > 15 ? leadData?.name?.slice(0, 15) + '...' : leadData?.name || "Lead Name"}
             </h2>
-            <ActionGuard permission="leads_edit" module="Lead Management" type="update">
+            <ActionGuard permission="leads_edit" module="Leads Management" type="update">
               <button
                 onClick={() => startEditing('name', leadData?.name)}
                 className="absolute right-[5%] top-0 w-7 h-7 flex items-center justify-center bg-orange-500 text-white rounded-sm opacity-0 group-hover/name:opacity-100 transition-all hover:bg-orange-600 shadow-lg"
@@ -372,7 +372,7 @@ export default function LeadSidebar({
 
       {/* Action Buttons Row */}
       <div className="p-4 grid grid-cols-2 gap-3 border-b border-gray-100">
-        <ActionGuard permission="leads_edit" module="Lead Management" type="update">
+        <ActionGuard permission="leads_edit" module="Leads Management" type="update">
           <button
             onClick={() => setShowConvertModal(true)}
             disabled={leadData?.tag !== 'Follow Up' && leadData?.tag !== 'Missed'}
@@ -384,7 +384,7 @@ export default function LeadSidebar({
             <UserCheck className={`w-4 h-4 ${leadData?.tag === 'Follow Up' || leadData?.tag === 'Missed' ? 'text-orange-500' : 'text-slate-300'}`} /> Convert Client
           </button>
         </ActionGuard>
-        <ActionGuard permission="leads_view_own" module="Lead Management" type="read">
+        <ActionGuard permission="leads_view_own" module="Leads Management" type="read">
           <button
             onClick={() => handleQrCall && handleQrCall()}
             className="bg-orange-500 hover:bg-orange-600 text-white py-2.5 rounded-sm text-sm font-semibold flex items-center justify-center gap-2 transition-colors "
@@ -448,7 +448,7 @@ export default function LeadSidebar({
               <span className="font-bold text-emerald-600 text-sm">
                 {formatCurrency ? formatCurrency(leadData?.value) : `₹${leadData?.value || 0}`}
               </span>
-              <ActionGuard permission="leads_edit" module="Lead Management" type="update">
+              <ActionGuard permission="leads_edit" module="Leads Management" type="update">
                 <button
                   onClick={() => startEditing('budget', leadData?.value)}
                   className="w-5 h-5 flex items-center justify-center bg-orange-500 text-white rounded-sm opacity-0 group-hover/budget:opacity-100 transition-all hover:bg-orange-600 shadow-sm"
@@ -489,7 +489,7 @@ export default function LeadSidebar({
               </div>
             ) : (
               !editingSection && !editingField && (
-                <ActionGuard permission="leads_edit" module="Lead Management" type="update">
+                <ActionGuard permission="leads_edit" module="Leads Management" type="update">
                   <button
                     onClick={() => {
                       const fields = leadType === 'Organization'
@@ -569,7 +569,7 @@ export default function LeadSidebar({
               </div>
             ) : (
               !editingSection && !editingField && (
-                <ActionGuard permission="leads_edit" module="Lead Management" type="update">
+                <ActionGuard permission="leads_edit" module="Leads Management" type="update">
                   <button
                     onClick={() => {
                       const fields = leadType === 'Organization'
@@ -632,7 +632,7 @@ export default function LeadSidebar({
               </div>
             ) : (
               !editingSection && !editingField && (
-                <ActionGuard permission="leads_edit" module="Lead Management" type="update">
+                <ActionGuard permission="leads_edit" module="Leads Management" type="update">
                   <button
                     onClick={() => startSectionEditing('business', ['followUp', 'source', 'priority', 'referral_mobile'])}
                     className="w-6 h-6 flex items-center justify-center bg-orange-500 text-white rounded-sm hover:bg-orange-600 transition-all shadow-md active:scale-95"
@@ -742,7 +742,7 @@ export default function LeadSidebar({
               <div className="flex justify-between items-center mb-3">
                 <p className="text-[10px] text-orange-500 font-black uppercase tracking-widest">Assigned To</p>
                 {!editingSection && !editingField && (
-                  <ActionGuard permission="leads_edit" module="Lead Management" type="update">
+                  <ActionGuard permission="leads_edit" module="Leads Management" type="update">
                     <button
                       onClick={() => startEditing('assigned_to', leadData?.assigned_to)}
                       className="w-6 h-6 flex items-center justify-center bg-orange-500 text-white rounded-sm opacity-0 group-hover/agent:opacity-100 transition-all hover:bg-orange-600 shadow-md active:scale-95"

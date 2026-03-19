@@ -47,7 +47,7 @@ const usePermission = (moduleName) => {
             };
 
             return {
-                create: hasAction(['create', 'add', 'submit']),
+                create: hasAction(['create', 'add', 'submit', 'mark', 'apply']),
                 read: hasAction(['view', 'read', 'list', 'use']),
                 update: hasAction(['edit', 'update', 'manage', 'configure', 'assign', 'approve']),
                 delete: hasAction(['delete', 'remove', 'cancel']),

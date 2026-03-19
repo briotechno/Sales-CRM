@@ -949,7 +949,7 @@ export default function AllClientPage() {
                               <div className="flex flex-col sm:flex-row items-stretch gap-3">
                                 {/* Primary Actions Row */}
                                   <div className="flex items-center gap-2 flex-1">
-                                    <ActionGuard permission="clients_read" module="Client Management" type="read">
+                                    <ActionGuard module="Client Management" type="read">
                                       <button
                                         onClick={() => openViewModal(client)}
                                         className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white text-blue-600 hover:bg-blue-50 rounded-sm transition-all font-bold text-xs uppercase tracking-widest border border-blue-100 shadow-sm flex-1 min-h-[44px]"
@@ -959,7 +959,7 @@ export default function AllClientPage() {
                                         <span className="sm:hidden">View</span>
                                       </button>
                                     </ActionGuard>
-                                    <ActionGuard permission="clients_read" module="Client Management" type="read">
+                                    <ActionGuard module="Client Management" type="read">
                                       <button
                                         onClick={() => handleOpenInvoiceList(client)}
                                         className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white text-orange-600 hover:bg-orange-50 rounded-sm transition-all font-bold text-xs uppercase tracking-widest border border-orange-100 shadow-sm flex-1 min-h-[44px]"
@@ -1118,7 +1118,7 @@ export default function AllClientPage() {
 
                           {/* Actions always visible now as requested */}
                           <div className="flex items-center gap-1">
-                            <ActionGuard permission="clients_read" module="Client Management" type="read">
+                            <ActionGuard module="Client Management" type="read">
                               <button
                                 onClick={() => openViewModal(client)}
                                 className="p-2 text-blue-600 hover:bg-blue-100 rounded-md transition-all hover:scale-110"
@@ -1127,7 +1127,7 @@ export default function AllClientPage() {
                                 <Eye size={18} />
                               </button>
                             </ActionGuard>
-                            <ActionGuard permission="clients_read" module="Client Management" type="read">
+                            <ActionGuard module="Client Management" type="read">
                               <button
                                 onClick={() => handleOpenInvoiceList(client)}
                                 className="p-2 text-orange-600 hover:bg-orange-100 rounded-md transition-all hover:scale-110"

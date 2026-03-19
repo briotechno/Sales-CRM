@@ -290,7 +290,7 @@ const EditDesignationModal = ({ isOpen, onClose, designation, refetchDashboard }
             <div className={activeTab === "permissions" ? "block" : "hidden"}>
                 <div className="bg-orange-50/50 p-4 rounded-lg mb-6 border border-orange-100 italic text-center text-black">
                     <p className="text-xs text-orange-700 leading-relaxed font-bold">
-                        Note: Updating these permissions will NOT affect existing employees.
+                        Note: Updating these permissions will also automatically update all existing employees with this designation.
                     </p>
                 </div>
                 <PermissionSelector

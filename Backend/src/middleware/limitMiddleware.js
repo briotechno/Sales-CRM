@@ -19,7 +19,7 @@ const checkLimit = (type) => async (req, res, next) => {
         if (req.user && req.user.role === 'Super Admin') return next();
 
         // Get the owner Admin ID
-        const adminId = req.user.role === 'Admin' ? req.user.id : req.user.user_id;
+        const adminId = (req.user.role === 'Admin' || req.user.role === 'Employee') ? req.user.id : req.user.user_id;
 
         if (!adminId) {
             return res.status(401).json({ message: 'Not authorized, admin context missing' });

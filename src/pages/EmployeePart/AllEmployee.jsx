@@ -253,7 +253,7 @@ const AllEmployee = () => {
                   </button>
                 </div>
 
-                <ActionGuard permission="employees_create" module="Employee Management" type="create">
+                <ActionGuard permission="employee_create" module="Employee Management" type="create">
                   <button
                     onClick={() => setIsAddModalOpen(true)}
                     className="flex items-center gap-2 px-6 py-3 rounded-sm font-semibold transition shadow-lg hover:shadow-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
@@ -380,17 +380,17 @@ const AllEmployee = () => {
                         </td>
                         <td className="py-3 px-4 text-right">
                           <div className="flex justify-end gap-2">
-                            <ActionGuard permission="employees_read" module="Employee Management" type="read">
+                            <ActionGuard permission="employee_view_all" module="Employee Management" type="read">
                               <button onClick={() => handleView(emp)} className="p-1 hover:bg-orange-100 rounded-sm text-blue-500 hover:text-blue-700 transition-all" title="View Profile">
                                 <Eye size={18} />
                               </button>
                             </ActionGuard>
-                            <ActionGuard permission="employees_edit" module="Employee Management" type="update">
+                            <ActionGuard permission="employee_edit" module="Employee Management" type="update">
                               <button onClick={() => handleEdit(emp)} className="p-1 hover:bg-orange-100 rounded-sm text-green-500 hover:text-green-700 transition-all" title="Edit">
                                 <Edit size={18} />
                               </button>
                             </ActionGuard>
-                            <ActionGuard permission="employees_delete" module="Employee Management" type="delete">
+                            <ActionGuard permission="employee_delete" module="Employee Management" type="delete">
                               <button onClick={() => handleDelete(emp)} className="p-1 hover:bg-orange-100 rounded-sm text-red-500 hover:text-red-700 transition-all" title="Delete">
                                 <Trash2 size={18} />
                               </button>
