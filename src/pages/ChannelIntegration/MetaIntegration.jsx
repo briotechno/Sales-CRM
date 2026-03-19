@@ -37,6 +37,7 @@ import NumberCard from "../../components/NumberCard";
 
 const MetaIntegration = () => {
     const [activeTab, setActiveTab] = useState("accounts");
+    const [isTutorialModalOpen, setIsTutorialModalOpen] = useState(false);
     const [isConnectModalOpen, setIsConnectModalOpen] = useState(false);
     const [viewMode, setViewMode] = useState("grid");
     const [formData, setFormData] = useState({
@@ -150,6 +151,14 @@ const MetaIntegration = () => {
                                     </button>
                                 </div>
 
+                                 <button
+                                    onClick={() => setIsTutorialModalOpen(true)}
+                                    className="flex items-center gap-2 bg-white border border-orange-200 text-orange-600 px-4 py-3 rounded-sm font-semibold transition hover:bg-orange-50 shadow-sm"
+                                >
+                                    <ExternalLink size={18} />
+                                    Tutorial
+                                </button>
+
                                 <button
                                     onClick={handleConnect}
                                     className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-sm font-semibold transition shadow-lg hover:shadow-xl hover:from-orange-600 hover:to-orange-700"
@@ -162,7 +171,8 @@ const MetaIntegration = () => {
                     </div>
                 </div>
 
-                <div className="max-w-8xl mx-auto px-4 py-6   pt-0 mt-2">
+                <div className="max-w-8xl mx-auto px-4 py-6 pt-0 mt-2">
+
                     {/* Stats Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                         <NumberCard
@@ -483,6 +493,67 @@ const MetaIntegration = () => {
                     </Modal>
                 );
             })()}
+            {/* Tutorial Modal */}
+            <Modal
+                isOpen={isTutorialModalOpen}
+                onClose={() => setIsTutorialModalOpen(false)}
+                title="how to integrate meta lead ads?"
+                subtitle="follow these simple steps to connect your facebook business page"
+                icon={<ExternalLink size={24} />}
+                headerVariant="orange"
+                maxWidth="max-w-2xl"
+                footer={
+                    <div className="flex justify-end gap-3 w-full">
+                        <a 
+                            href="https://developers.facebook.com/" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="px-6 py-2.5 rounded-sm border-2 border-orange-100 text-[#FF7B1D] font-bold hover:bg-orange-50 transition-all font-primary text-sm flex items-center gap-2"
+                        >
+                            <Facebook size={16} /> Open Facebook Developer Portal
+                        </a>
+                        <button
+                            onClick={() => setIsTutorialModalOpen(false)}
+                            className="px-8 py-2.5 rounded-sm bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold hover:shadow-lg transition-all font-primary text-sm"
+                        >
+                            Got It
+                        </button>
+                    </div>
+                }
+            >
+                <div className="space-y-6 pt-4">
+                    <div className="grid grid-cols-1 gap-6">
+                        <div className="flex gap-5 p-4 bg-orange-50/30 rounded-lg border border-orange-100">
+                            <span className="flex-shrink-0 w-10 h-10 rounded-full bg-orange-500 text-white flex items-center justify-center font-black shadow-md shadow-orange-200">1</span>
+                            <div>
+                                <h4 className="font-bold text-gray-800 text-base mb-1">facebook developer portal</h4>
+                                <p className="text-sm text-gray-600 leading-relaxed">go to the facebook for developers portal and log in with your business account. if you don't have an app, create one first.</p>
+                            </div>
+                        </div>
+                        <div className="flex gap-5 p-4 bg-orange-50/30 rounded-lg border border-orange-100">
+                            <span className="flex-shrink-0 w-10 h-10 rounded-full bg-orange-500 text-white flex items-center justify-center font-black shadow-md shadow-orange-200">2</span>
+                            <div>
+                                <h4 className="font-bold text-gray-800 text-base mb-1">setup app & permissions</h4>
+                                <p className="text-sm text-gray-600 leading-relaxed">ensure your app has "facebook login" and "page public content access" permissions. specifically, leads_retrieval and pages_show_list are required.</p>
+                            </div>
+                        </div>
+                        <div className="flex gap-5 p-4 bg-orange-50/30 rounded-lg border border-orange-100">
+                            <span className="flex-shrink-0 w-10 h-10 rounded-full bg-orange-500 text-white flex items-center justify-center font-black shadow-md shadow-orange-200">3</span>
+                            <div>
+                                <h4 className="font-bold text-gray-800 text-base mb-1">generate access token</h4>
+                                <p className="text-sm text-gray-600 leading-relaxed">use the graph api explorer or app settings to generate a long-lived page access token. this token allows the crm to sync leads even when you are offline.</p>
+                            </div>
+                        </div>
+                        <div className="flex gap-5 p-4 bg-orange-50/30 rounded-lg border border-orange-100">
+                            <span className="flex-shrink-0 w-10 h-10 rounded-full bg-orange-500 text-white flex items-center justify-center font-black shadow-md shadow-orange-200">4</span>
+                            <div>
+                                <h4 className="font-bold text-gray-800 text-base mb-1">paste page id & token</h4>
+                                <p className="text-sm text-gray-600 leading-relaxed">copy your facebook page id and the generated access token. click on "connect page" above and paste those details here.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </Modal>
         </DashboardLayout>
     );
 };

@@ -39,6 +39,7 @@ import NumberCard from "../../components/NumberCard";
 
 const JustdialIntegration = () => {
     const [activeTab, setActiveTab] = useState("accounts");
+    const [isTutorialModalOpen, setIsTutorialModalOpen] = useState(false);
     const [isConnectModalOpen, setIsConnectModalOpen] = useState(false);
     const [viewMode, setViewMode] = useState("grid");
     const [formData, setFormData] = useState({ account_name: '', mobile: '', api_key: '' });
@@ -148,6 +149,14 @@ const JustdialIntegration = () => {
                                     </button>
                                 </div>
 
+                                 <button
+                                    onClick={() => setIsTutorialModalOpen(true)}
+                                    className="flex items-center gap-2 bg-white border border-orange-200 text-orange-600 px-4 py-3 rounded-sm font-semibold transition hover:bg-orange-50 shadow-sm"
+                                >
+                                    <ExternalLink size={18} />
+                                    Tutorial
+                                </button>
+
                                 <button
                                     onClick={handleConnect}
                                     className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-sm font-semibold transition shadow-lg hover:shadow-xl hover:from-orange-600 hover:to-orange-700"
@@ -161,6 +170,7 @@ const JustdialIntegration = () => {
                 </div>
 
                 <div className="max-w-8xl mx-auto px-4 py-6 pt-0 mt-2">
+
                     {/* Stats Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                         <NumberCard
@@ -469,6 +479,67 @@ const JustdialIntegration = () => {
                     </Modal>
                 );
             })()}
+            {/* Tutorial Modal */}
+            <Modal
+                isOpen={isTutorialModalOpen}
+                onClose={() => setIsTutorialModalOpen(false)}
+                title="how to integrate justdial?"
+                subtitle="follow these simple steps to connect your justdial business listing"
+                icon={<ExternalLink size={24} />}
+                headerVariant="orange"
+                maxWidth="max-w-2xl"
+                footer={
+                    <div className="flex justify-end gap-3 w-full">
+                        <a 
+                            href="https://www.justdial.com/Free-Listing" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="px-6 py-2.5 rounded-sm border-2 border-orange-100 text-[#FF7B1D] font-bold hover:bg-orange-50 transition-all font-primary text-sm flex items-center gap-2"
+                        >
+                            <PhoneCall size={16} /> Open Justdial Business Portal
+                        </a>
+                        <button
+                            onClick={() => setIsTutorialModalOpen(false)}
+                            className="px-8 py-2.5 rounded-sm bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold hover:shadow-lg transition-all font-primary text-sm"
+                        >
+                            Got It
+                        </button>
+                    </div>
+                }
+            >
+                <div className="space-y-6 pt-4">
+                    <div className="grid grid-cols-1 gap-6">
+                        <div className="flex gap-5 p-4 bg-orange-50/30 rounded-lg border border-orange-100">
+                            <span className="flex-shrink-0 w-10 h-10 rounded-full bg-orange-500 text-white flex items-center justify-center font-black shadow-md shadow-orange-200">1</span>
+                            <div>
+                                <h4 className="font-bold text-gray-800 text-base mb-1">justdial business login</h4>
+                                <p className="text-sm text-gray-600 leading-relaxed">log in to your justdial ambassador or business listing portal using your registered credentials.</p>
+                            </div>
+                        </div>
+                        <div className="flex gap-5 p-4 bg-orange-50/30 rounded-lg border border-orange-100">
+                            <span className="flex-shrink-0 w-10 h-10 rounded-full bg-orange-500 text-white flex items-center justify-center font-black shadow-md shadow-orange-200">2</span>
+                            <div>
+                                <h4 className="font-bold text-gray-800 text-base mb-1">find api credentials</h4>
+                                <p className="text-sm text-gray-600 leading-relaxed">navigate to the "settings" or "lead sync" section in your portal to find your unique api key or integration token.</p>
+                            </div>
+                        </div>
+                        <div className="flex gap-5 p-4 bg-orange-50/30 rounded-lg border border-orange-100">
+                            <span className="flex-shrink-0 w-10 h-10 rounded-full bg-orange-500 text-white flex items-center justify-center font-black shadow-md shadow-orange-200">3</span>
+                            <div>
+                                <h4 className="font-bold text-gray-800 text-base mb-1">mobile registration</h4>
+                                <p className="text-sm text-gray-600 leading-relaxed">ensure that the mobile number you use for integration is the same one registered with your justdial business listing.</p>
+                            </div>
+                        </div>
+                        <div className="flex gap-5 p-4 bg-orange-50/30 rounded-lg border border-orange-100">
+                            <span className="flex-shrink-0 w-10 h-10 rounded-full bg-orange-500 text-white flex items-center justify-center font-black shadow-md shadow-orange-200">4</span>
+                            <div>
+                                <h4 className="font-bold text-gray-800 text-base mb-1">link account here</h4>
+                                <p className="text-sm text-gray-600 leading-relaxed">come back to this crm, click on "add link" above, and enter your account name, mobile number, and api key to start syncing.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </Modal>
         </DashboardLayout>
     );
 };
