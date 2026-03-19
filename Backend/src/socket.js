@@ -20,23 +20,25 @@ const initializeSocket = (server) => {
         console.log('New client connected:', socket.id);
 
         socket.on('setup', async (userData) => {
-            // userData should have { id: employeeId, type: 'employee' } or { id: adminId, type: 'user' }
-            const userKey = `${userData.id}_${userData.type}`;
-            socket.join(userKey);
-            onlineUsers.set(userKey, socket.id);
+            console.log('Socket Setup with Data:', userData);
+            if (userData && userData.id) {
+                const userKey = `${userData.id}_${userData.type}`;
+                socket.join(userKey);
+                onlineUsers.set(userKey, socket.id);
+                console.log(`User joined notification room: ${userKey}`);
 
-            // If it's an admin (type 'user'), join the admin room for campaign updates
-            if (userData.type === 'user') {
-                const adminRoom = `user_${userData.id}_admin`;
-                socket.join(adminRoom);
-                console.log('Admin joined room:', adminRoom);
+                // If it's an admin (type 'user'), join the admin room for campaign updates
+                if (userData.type === 'user') {
+                    const adminRoom = `user_${userData.id}_admin`;
+                    socket.join(adminRoom);
+                    console.log('Admin joined campaign room:', adminRoom);
+                }
+
+                // Mark all messages for this user as delivered
+                await Messenger.markAllAsDeliveredForUser(userData.id, userData.type);
+                
+                socket.emit('connected');
             }
-
-            // Mark all messages for this user as delivered
-            await Messenger.markAllAsDeliveredForUser(userData.id, userData.type);
-
-            console.log('User joined room:', userKey);
-            socket.emit('connected');
         });
 
         socket.on('join_chat', (room) => {

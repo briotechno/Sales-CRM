@@ -235,7 +235,7 @@ const EditDepartmentModal = ({ isOpen, onClose, department, refetchDashboard }) 
             <div className={activeTab === "permissions" ? "block" : "hidden"}>
                 <div className="bg-orange-50/50 p-4 rounded-lg mb-6 border border-orange-100 italic text-center">
                     <p className="text-xs text-orange-700 leading-relaxed font-bold">
-                        Note: Updating these permissions will NOT affect existing employees.
+                        Note: Updating these permissions will automatically update all designations and employees in this department.
                     </p>
                 </div>
                 <PermissionSelector

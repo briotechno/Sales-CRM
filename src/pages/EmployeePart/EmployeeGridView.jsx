@@ -62,7 +62,7 @@ const EmployeeGridView = ({ employees, onEdit, onDelete, onView }) => {
               className="bg-white border border-gray-200 rounded-sm shadow-sm hover:shadow-md transition-all relative group flex flex-col h-full overflow-hidden"
             >
               <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                <ActionGuard permission="employee_read" module="Employee" type="read">
+                <ActionGuard permission="employee_read" module="Employee Management" type="read">
                   <button
                     onClick={(e) => { e.stopPropagation(); onView(emp, { monitor: true, type: 'video' }); }}
                     className="p-1.5 text-orange-600 hover:bg-orange-50 rounded-sm bg-white shadow-sm border border-orange-100"
@@ -71,7 +71,7 @@ const EmployeeGridView = ({ employees, onEdit, onDelete, onView }) => {
                     <Camera size={16} />
                   </button>
                 </ActionGuard>
-                <ActionGuard permission="employee_read" module="Employee" type="read">
+                <ActionGuard permission="employee_read" module="Employee Management" type="read">
                   <button
                     onClick={(e) => { e.stopPropagation(); onView(emp, { monitor: true, type: 'audio' }); }}
                     className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-sm bg-white shadow-sm border border-blue-100"
@@ -80,7 +80,7 @@ const EmployeeGridView = ({ employees, onEdit, onDelete, onView }) => {
                     <Mic size={16} />
                   </button>
                 </ActionGuard>
-                <ActionGuard permission="employee_read" module="Employee" type="read">
+                <ActionGuard permission="employee_read" module="Employee Management" type="read">
                   <button
                     onClick={(e) => { e.stopPropagation(); onView(emp); }}
                     className="p-1.5 text-gray-600 hover:bg-gray-50 rounded-sm bg-white shadow-sm border border-gray-100"
@@ -89,12 +89,12 @@ const EmployeeGridView = ({ employees, onEdit, onDelete, onView }) => {
                     <Eye size={16} />
                   </button>
                 </ActionGuard>
-                <ActionGuard permission="employee_edit" module="Employee" type="update">
+                <ActionGuard permission="employee_edit" module="Employee Management" type="update">
                   <button onClick={(e) => { e.stopPropagation(); onEdit(emp); }} className="p-1.5 text-orange-600 hover:bg-orange-50 rounded-sm bg-white shadow-sm border border-orange-100">
                     <Edit size={16} />
                   </button>
                 </ActionGuard>
-                <ActionGuard permission="employee_delete" module="Employee" type="delete">
+                <ActionGuard permission="employee_delete" module="Employee Management" type="delete">
                   <button onClick={(e) => { e.stopPropagation(); onDelete(emp); }} className="p-1.5 text-red-600 hover:bg-red-50 rounded-sm bg-white shadow-sm border border-red-100">
                     <Trash2 size={16} />
                   </button>

@@ -37,6 +37,8 @@ import {
   MessageSquare,
   Square,
   Plus,
+  Users,
+  User,
 } from "lucide-react";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
@@ -64,12 +66,12 @@ const handleDownload = async (url, fileName) => {
 export function ContactsList({ contacts, selectedChat, onChatSelect }) {
   if (contacts.length === 0) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center text-center p-8 bg-white/50 backdrop-blur-sm">
-        <div className="w-16 h-16 bg-orange-50 rounded-2xl flex items-center justify-center mb-4 transition-all duration-300">
-          <Search className="text-orange-400" size={28} />
+      <div className="flex-1 flex flex-col items-center justify-center text-center p-8 bg-white font-primary">
+        <div className="w-16 h-16 bg-orange-50 rounded-xl flex items-center justify-center mb-4 transition-all duration-300">
+          <Search className="text-[#FF7B1D]" size={28} />
         </div>
-        <p className="text-sm font-semibold text-gray-800">No contacts found</p>
-        <p className="text-xs text-gray-400 mt-1 max-w-[180px]">
+        <p className="text-sm font-bold text-gray-800">No contacts found</p>
+        <p className="text-xs text-gray-400 mt-1 max-w-[180px] font-medium">
           Start a new conversation to see them here.
         </p>
       </div>
@@ -83,16 +85,16 @@ export function ContactsList({ contacts, selectedChat, onChatSelect }) {
           <div
             key={contact.id}
             onClick={() => onChatSelect(contact)}
-            className={`p-3 rounded-2xl cursor-pointer transition-all duration-200 relative group ${selectedChat?.id === contact.id
-              ? "bg-white shadow-md border border-gray-100 ring-1 ring-orange-100"
-              : "hover:bg-white/60 bg-transparent border border-transparent"
+            className={`p-3 rounded-xl cursor-pointer transition-all duration-300 relative group border ${selectedChat?.id === contact.id
+              ? "bg-orange-50/20 border-[#FF7B1D] shadow-sm"
+              : "hover:bg-gray-50 bg-white border-transparent"
               }`}
           >
             <div className="flex items-center gap-3">
               <div className="relative flex-shrink-0">
                 <div
-                  className={`w-12 h-12 rounded-2xl flex items-center justify-center text-sm font-bold text-white shadow-sm transition-all duration-300 group-hover:shadow-md ${contact.status === "online"
-                    ? "bg-gradient-to-tr from-orange-400 to-orange-500"
+                  className={`w-12 h-12 rounded-xl flex items-center justify-center text-sm font-bold text-white shadow-sm transition-all duration-300 group-hover:shadow-md ${contact.status === "online"
+                    ? "bg-gradient-to-tr from-[#FF7B1D] to-[#E66A0D]"
                     : "bg-gray-300"
                     }`}
                 >
@@ -108,27 +110,27 @@ export function ContactsList({ contacts, selectedChat, onChatSelect }) {
 
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between mb-0.5">
-                  <h3 className={`text-sm font-semibold truncate ${selectedChat?.id === contact.id ? "text-gray-900" : "text-gray-700"
+                  <h3 className={`text-sm font-semibold truncate ${selectedChat?.id === contact.id ? "text-black" : "text-gray-800"
                     }`}>
                     {contact.name}
                   </h3>
-                  <span className="text-[10px] text-gray-400 font-medium">
+                  <span className={`text-[12px] font-semibold whitespace-nowrap ${selectedChat?.id === contact.id ? "text-[#FF7B1D]" : "text-[#FF7B1D]"}`}>
                     {contact.time}
                   </span>
                 </div>
 
                 <div className="flex items-center justify-between">
                   <div className="flex flex-col min-w-0 flex-1">
-                    <span className="text-[9px] text-orange-500 font-bold uppercase tracking-wider">
+                    <span className={`text-[9px] font-bold uppercase tracking-wider ${selectedChat?.id === contact.id ? "text-[#FF7B1D]" : "text-gray-400"}`}>
                       {contact.role}
                     </span>
-                    <p className="text-xs text-gray-400 truncate font-medium">
+                    <p className={`text-xs truncate font-medium ${selectedChat?.id === contact.id ? "text-black" : "text-gray-500"}`}>
                       {contact.lastMessage || "No messages yet"}
                     </p>
                   </div>
 
                   {contact.unread > 0 && (
-                    <div className="bg-orange-500 text-white text-[10px] font-bold rounded-full h-5 min-w-[20px] px-1 flex items-center justify-center shadow-sm">
+                    <div className="bg-[#FF7B1D] text-white text-[10px] font-bold rounded-full h-5 min-w-[20px] px-1 flex items-center justify-center shadow-sm">
                       {contact.unread}
                     </div>
                   )}
@@ -155,10 +157,10 @@ export function ChatHeader({
 }) {
   return (
     <>
-      <div className="bg-white px-6 py-4 flex items-center justify-between sticky top-0 z-30 border-b border-gray-100 shadow-sm">
+      <div className="bg-white px-6 py-4 flex items-center justify-between sticky top-0 z-30 border-b-2 border-orange-50/80 shadow-sm font-primary">
         <div className="flex items-center gap-4">
           <div className="relative cursor-pointer group" onClick={onToggleChatInfo}>
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-orange-400 to-orange-500 flex items-center justify-center text-base font-bold text-white shadow-sm transition-all duration-300 group-hover:shadow-md">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-[#FF7B1D] to-[#E66A0D] flex items-center justify-center text-base font-bold text-white shadow-sm transition-all duration-300 group-hover:shadow-md">
               {selectedChat.avatar}
             </div>
             <div
@@ -178,7 +180,7 @@ export function ChatHeader({
                 {selectedChat.status === "online" ? "Online" : selectedChat.status}
               </span>
               <span className="text-gray-200">|</span>
-              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{selectedChat.role}</span>
+              <span className="text-[10px] font-bold text-[#FF7B1D] uppercase tracking-wider">{selectedChat.role}</span>
             </div>
           </div>
         </div>
@@ -187,7 +189,7 @@ export function ChatHeader({
           {/* Internal Search */}
           <div className="relative hidden md:block group">
             <Search
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 group-focus-within:text-orange-500 transition-colors"
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#FF7B1D] opacity-60 group-focus-within:opacity-100 transition-opacity"
               size={13}
             />
             <input
@@ -195,7 +197,7 @@ export function ChatHeader({
               placeholder="Search chat..."
               value={chatSearchQuery}
               onChange={(e) => setChatSearchQuery(e.target.value)}
-              className="pl-9 pr-8 py-2 text-xs bg-gray-50 border border-transparent rounded-full focus:outline-none focus:bg-white focus:border-orange-200 w-44 transition-all"
+              className="pl-9 pr-8 py-2.5 text-xs bg-orange-50/30 border-2 border-orange-100/50 rounded-xl focus:outline-none focus:bg-white focus:border-[#FF7B1D] w-48 transition-all font-semibold text-black placeholder:text-[#FF7B1D]/40"
             />
             {chatSearchQuery && (
               <button
@@ -212,7 +214,9 @@ export function ChatHeader({
           <div className="flex items-center gap-1">
             <button
               onClick={() => setNotifications(!notifications)}
-              className={`p-2.5 rounded-xl transition-all ${notifications ? "text-gray-400 hover:bg-gray-50 hover:text-orange-500" : "text-orange-500 bg-orange-50"
+              className={`p-2.5 rounded-lg transition-all border ${notifications
+                ? "text-[#FF7B1D] border-orange-100 bg-orange-50 hover:bg-[#FF7B1D] hover:text-white"
+                : "text-white bg-[#FF7B1D] border-[#FF7B1D] shadow-sm"
                 }`}
               title={notifications ? "Mute" : "Unmute"}
             >
@@ -221,9 +225,9 @@ export function ChatHeader({
 
             <button
               onClick={onToggleChatInfo}
-              className={`p-2.5 rounded-xl transition-all ${showChatInfo
-                ? "bg-orange-500 text-white shadow-md shadow-orange-100"
-                : "text-gray-400 hover:bg-gray-50 hover:text-orange-500 font-bold"
+              className={`p-2.5 rounded-lg transition-all border ${showChatInfo
+                ? "bg-[#FF7B1D] text-white shadow-md shadow-[#FF7B1D]/20 border-[#FF7B1D]"
+                : "text-[#FF7B1D] border-orange-100 bg-orange-50 hover:bg-[#FF7B1D] hover:text-white font-bold"
                 }`}
             >
               <Info size={18} />
@@ -234,7 +238,7 @@ export function ChatHeader({
 
       {pinnedMessage && (
         <div className="bg-orange-50 border-b border-orange-100 px-6 py-2 flex items-center gap-3 animate-slideDown">
-          <div className="p-1.5 bg-orange-500 rounded-lg text-white">
+          <div className="p-1.5 bg-[#FF7B1D] rounded-md text-white">
             <Pin size={10} fill="white" />
           </div>
           <div className="flex-1 min-w-0">
@@ -275,6 +279,7 @@ export function ChatMessages({
   starredMessages,
   currentUserId,
   currentUserType,
+  selectedChatType,
 }) {
   const reactions = ["👍", "❤️", "😂", "😮", "😢", "🔥"];
 
@@ -289,7 +294,7 @@ export function ChatMessages({
             <div key={msg.id} className={`flex flex-col ${isMe ? "items-end" : "items-start animate-fadeIn"}`}>
               {showTime && (
                 <div className="w-full flex justify-center my-6">
-                  <span className="px-3 py-1 bg-gray-100 text-[10px] font-bold text-gray-500 uppercase tracking-wider rounded-full">
+                  <span className="px-4 py-1.5 bg-orange-50 border border-orange-100 text-[10px] font-bold text-[#FF7B1D] uppercase tracking-wider rounded-full shadow-sm">
                     {msg.time || 'Just now'}
                   </span>
                 </div>
@@ -297,33 +302,41 @@ export function ChatMessages({
 
               <div className={`flex max-w-[85%] md:max-w-[75%] gap-2 group/msg ${isMe ? "flex-row-reverse" : "flex-row"}`}>
                 {!isMe && (
-                  <div className="w-8 h-8 rounded-xl bg-orange-100 flex-shrink-0 flex items-center justify-center text-[10px] font-bold text-orange-600 shadow-sm uppercase">
-                    {msg.sender_name?.substring(0, 1) || "?"}
+                  <div className="flex flex-col items-center flex-shrink-0 pt-0.5">
+                    <div className="w-8 h-8 rounded-xl bg-orange-50 border border-orange-100 flex items-center justify-center text-[10px] font-bold text-[#FF7B1D] shadow-sm uppercase group-hover:shadow transition-all duration-300">
+                      {msg.sender_name?.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) || "?"}
+                    </div>
                   </div>
                 )}
 
                 <div className="relative group/bubble flex flex-col">
+                  {/* Sender Name for Team/Group Chats - Only show for the first message in a group */}
+                  {!isMe && selectedChatType === 'team' && (idx === 0 || messages[idx - 1]?.sender_id !== msg.sender_id) && (
+                    <span className="text-[10px] font-bold text-[#FF7B1D] mb-1 ml-1 uppercase tracking-wider break-words">
+                      {msg.sender_name || 'Unknown'}
+                    </span>
+                  )}
                   {/* Reply Preview */}
                   {msg.replyTo && (
                     <div className={`mb-1 px-3 py-2 rounded-xl text-xs flex border transition-all ${isMe
-                      ? "bg-orange-50/50 border-orange-100 text-orange-900 italic self-end"
-                      : "bg-gray-50 border-gray-100 text-gray-600"
+                      ? "bg-orange-50/20 border-orange-200 text-white italic self-end"
+                      : "bg-orange-50/50 border-orange-100 text-black font-medium"
                       }`}>
                       <div className="flex items-start gap-2">
-                        <Reply size={12} className="text-orange-500 mt-0.5 flex-shrink-0" />
-                        <p className="truncate line-clamp-1 italic">{msg.replyTo.text}</p>
+                        <Reply size={12} className="text-[#FF7B1D] mt-0.5 flex-shrink-0" />
+                        <p className="line-clamp-2 italic break-words">{msg.replyTo.text}</p>
                       </div>
                     </div>
                   )}
 
                   <div
-                    className={`px-4 py-2.5 rounded-2xl shadow-sm relative group-hover/msg:shadow-md transition-all ${isMe
-                      ? "bg-orange-500 text-white rounded-tr-none"
-                      : "bg-white border border-gray-100 text-gray-800 rounded-tl-none"
+                    className={`px-4 py-3 rounded-2xl relative transition-all duration-300 border ${isMe
+                      ? "bg-gradient-to-br from-[#FF7B1D] to-[#E66A0D] text-white border-[#FF7B1D] rounded-tr-none shadow-md shadow-[#FF7B1D]/20 ml-auto"
+                      : "bg-white border-orange-100 text-black rounded-tl-none shadow-sm shadow-orange-500/5 group-hover/msg:border-orange-200"
                       }`}
                   >
                     {/* Forwarded */}
-                    {msg.is_forwarded && (
+                    {!!msg.is_forwarded && (
                       <div className={`flex items-center gap-1 mb-1 opacity-70 ${isMe ? "text-orange-100" : "text-gray-400"}`}>
                         <Forward size={10} />
                         <span className="text-[9px] font-bold uppercase tracking-wider italic">Forwarded</span>
@@ -346,7 +359,7 @@ export function ChatMessages({
                           }
                           return (
                             <div key={fIdx} className={`flex items-center gap-3 p-2.5 rounded-xl border ${isMe ? 'bg-white/10 border-white/20' : 'bg-gray-50 border-gray-100'}`}>
-                              <FileText size={20} className={isMe ? 'text-white' : 'text-orange-500'} />
+                              <FileText size={20} className={isMe ? 'text-white' : 'text-[#FF7B1D]'} />
                               <div className="flex-1 min-w-0">
                                 <p className="text-xs font-semibold truncate uppercase">{file.file_name || 'File'}</p>
                                 <p className="text-[9px] opacity-70">{file.file_size || '0 KB'}</p>
@@ -360,12 +373,12 @@ export function ChatMessages({
                       </div>
                     )}
 
-                    <p className={`text-[14px] leading-relaxed font-medium ${/^(\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff])+$/.test(msg.text?.trim()) && msg.text.trim().length <= 4 ? "text-3xl py-1" : ""}`}>
+                    <p className={`text-[14px] leading-relaxed font-medium break-words whitespace-pre-wrap ${/^(\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff])+$/.test(msg.text?.trim()) && msg.text.trim().length <= 4 ? "text-3xl py-1" : ""}`}>
                       {msg.text}
                     </p>
 
                     <div className={`flex items-center justify-end gap-1.5 mt-1 opacity-60`}>
-                      {msg.is_edited && <span className="text-[8px] font-bold uppercase italic">Edited</span>}
+                      {!!msg.is_edited && <span className="text-[8px] font-bold uppercase italic">Edited</span>}
                       {isMe && (
                         <div className="flex items-center">
                           {msg.is_read ? (
@@ -393,11 +406,11 @@ export function ChatMessages({
 
                   {/* Actions Pill */}
                   <div className={`flex items-center gap-2 mt-1 px-2 opacity-0 group-hover/msg:opacity-100 transition-opacity ${isMe ? "justify-end" : "justify-start"}`}>
-                    <button onClick={() => onReaction(msg.id, "👍")} className="text-gray-400 hover:text-orange-500" title="React"><Smile size={14} /></button>
-                    <button onClick={() => onReply(msg)} className="text-gray-400 hover:text-orange-500" title="Reply"><Reply size={14} /></button>
+                    <button onClick={() => onReaction(msg.id, "👍")} className="text-gray-400 hover:text-[#FF7B1D]" title="React"><Smile size={14} /></button>
+                    <button onClick={() => onReply(msg)} className="text-gray-400 hover:text-[#FF7B1D]" title="Reply"><Reply size={14} /></button>
                     <button onClick={() => onStar(msg.id)} className={`${starredMessages.has(msg.id) ? "text-yellow-400" : "text-gray-400"} hover:text-yellow-500`} title="Star"><Star size={14} fill={starredMessages.has(msg.id) ? "currentColor" : "none"} /></button>
                     <div className="relative message-menu-container">
-                      <button onClick={() => setShowMessageMenu(showMessageMenu === msg.id ? null : msg.id)} className="text-gray-400 hover:text-orange-500" title="More"><MoreVertical size={14} /></button>
+                      <button onClick={() => setShowMessageMenu(showMessageMenu === msg.id ? null : msg.id)} className="text-gray-400 hover:text-[#FF7B1D]" title="More"><MoreVertical size={14} /></button>
 
                       {showMessageMenu === msg.id && (
                         <div className={`absolute bottom-full mb-2 ${isMe ? 'right-0' : 'left-0'} bg-white rounded-2xl shadow-xl border border-gray-100 py-2 min-w-[160px] z-50 animate-scaleUp`}>
@@ -430,9 +443,9 @@ export function ChatMessages({
           <div className="flex items-end gap-2 animate-fadeIn">
             <div className="w-8 h-8 rounded-xl bg-gray-100 flex items-center justify-center text-[10px] font-bold text-gray-400 uppercase">TY</div>
             <div className="bg-white border border-gray-100 px-4 py-2 rounded-2xl rounded-bl-none shadow-sm flex gap-1 items-center">
-              <span className="w-1 h-1 bg-orange-400 rounded-full animate-bounce"></span>
-              <span className="w-1 h-1 bg-orange-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></span>
-              <span className="w-1 h-1 bg-orange-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></span>
+              <span className="w-1 h-1 bg-[#FF7B1D] rounded-full animate-bounce"></span>
+              <span className="w-1 h-1 bg-[#FF7B1D] rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></span>
+              <span className="w-1 h-1 bg-[#FF7B1D] rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></span>
             </div>
           </div>
         )}
@@ -445,17 +458,18 @@ export function ChatMessages({
 
 // Chat Info Sidebar Component
 export function ChatInfoSidebar({ selectedChat, messages, starredMessages }) {
-  const sharedMedia = messages.filter((msg) => msg.attachments || msg.file_url).slice(0, 6);
+  const sharedMedia = messages.filter((msg) => (msg.attachments && msg.attachments.length > 0) || msg.file_url).slice(0, 6);
   const starred = messages.filter((msg) => starredMessages.has(msg.id));
+  const isTeam = selectedChat?.type === 'team';
 
   return (
-    <div className="w-80 border-l border-gray-100 bg-white h-full flex flex-col overflow-hidden animate-slideLeft">
+    <div className="w-80 border-l-2 border-orange-50/80 bg-white h-full flex flex-col overflow-hidden animate-slideLeft shadow-sm">
       <div className="flex-1 overflow-y-auto custom-scrollbar">
         <div className="p-6">
           {/* Profile Section */}
-          <div className="text-center mb-8">
+          <div className="text-center mb-8 font-primary">
             <div className="relative inline-block mb-4 group">
-              <div className="w-24 h-24 rounded-2xl bg-gradient-to-tr from-orange-400 to-orange-500 flex items-center justify-center text-3xl font-bold text-white mx-auto shadow-lg transition-all duration-300 group-hover:shadow-md">
+              <div className="w-24 h-24 rounded-3xl bg-gradient-to-tr from-[#FF7B1D] to-[#E66A0D] flex items-center justify-center text-3xl font-black text-white mx-auto shadow-lg transition-all duration-300 group-hover:shadow-md">
                 {selectedChat.avatar}
               </div>
               <div
@@ -467,58 +481,92 @@ export function ChatInfoSidebar({ selectedChat, messages, starredMessages }) {
                 <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse mx-auto mt-1.5"></div>
               </div>
             </div>
-            <h3 className="text-xl font-bold text-gray-900 leading-tight">
+            <h3 className="text-[18px] font-black text-black leading-tight">
               {selectedChat.name}
             </h3>
-            <p className="text-xs text-orange-500 font-bold uppercase tracking-wider mt-1">
+            <p className="text-xs text-[#FF7B1D] font-bold uppercase tracking-widest mt-1">
               {selectedChat.role}
             </p>
           </div>
 
           {/* Core Info Cards */}
           <div className="space-y-4">
-            <div className="bg-gray-50 rounded-2xl p-4 border border-transparent hover:border-orange-100 transition-all hover:bg-white hover:shadow-md group">
-              <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Quick Details</h4>
-              <div className="space-y-3">
-                {[
-                  { icon: Mail, label: "Email", value: selectedChat.email },
-                  { icon: Phone, label: "Phone", value: selectedChat.phone },
-                  { icon: Clock, label: "Timezone", value: "GMT+5:30" }
-                ].map((item, i) => (
-                  <div key={i} className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center flex-shrink-0 text-orange-500 shadow-sm transition-transform group-hover:scale-110">
-                      <item.icon size={14} />
+            {/* Quick Details Section */}
+            {!isTeam ? (
+              <div className="bg-orange-50/30 rounded-3xl p-5 border-2 border-orange-50/50 hover:border-orange-100 transition-all group">
+                <h4 className="text-[10px] font-bold text-[#FF7B1D] uppercase tracking-[0.15em] mb-4 flex items-center gap-2">
+                  <User size={12} /> Quick Details
+                </h4>
+                <div className="space-y-4">
+                  {[
+                    { icon: Mail, label: "Email", value: selectedChat.email },
+                    { icon: Phone, label: "Phone", value: selectedChat.phone },
+                    { icon: Clock, label: "Timezone", value: "GMT+5:30" }
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-start gap-4">
+                      <div className="w-9 h-9 rounded-xl bg-white border border-orange-50 flex items-center justify-center flex-shrink-0 text-[#FF7B1D] shadow-sm transition-all group-hover:scale-105">
+                        <item.icon size={14} />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[9px] font-bold text-gray-400 uppercase tracking-tighter mb-0.5">{item.label}</p>
+                        <p className="text-xs font-semibold text-black truncate break-all leading-tight">{item.value || 'Not provided'}</p>
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <p className="text-[9px] font-bold text-gray-400 uppercase tracking-tighter mb-0.5">{item.label}</p>
-                      <p className="text-xs font-semibold text-gray-700 truncate break-all leading-tight">{item.value}</p>
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="bg-orange-50/30 rounded-3xl p-5 border-2 border-orange-50/50 transition-all">
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="text-[10px] font-bold text-[#FF7B1D] uppercase tracking-[0.15em] flex items-center gap-2">
+                    <Users size={12} /> Group Members
+                  </h4>
+                  <span className="text-[10px] font-bold bg-[#FF7B1D] text-white px-2 py-0.5 rounded-full shadow-sm">
+                    {selectedChat.members?.length || 0}
+                  </span>
+                </div>
+                <div className="max-h-60 overflow-y-auto custom-scrollbar space-y-3">
+                  {selectedChat.members?.map((member, i) => (
+                    <div key={i} className="flex items-center gap-3 p-2 bg-white/60 rounded-xl hover:bg-white transition-all shadow-none hover:shadow-sm border border-transparent hover:border-orange-50">
+                      <div className="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center text-[10px] font-bold text-orange-600 uppercase shadow-sm">
+                        {member.name.substring(0, 2).toUpperCase()}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[11px] font-bold text-black truncate">{member.name}</p>
+                        <p className={`text-[8px] font-bold uppercase tracking-wider ${member.role === 'Admin' ? 'text-[#FF7B1D]' : 'text-gray-400'}`}>
+                          {member.role === 'Admin' ? 'Team Admin' : 'Member'}
+                        </p>
+                      </div>
+                      {member.status === 'online' && (
+                        <div className="w-1.5 h-1.5 bg-green-500 rounded-full" />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Media Gallery */}
-            <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-              <div className="flex items-center justify-between mb-3">
-                <h4 className="text-[10px] font-bold text-gray-900 uppercase tracking-wider flex items-center gap-2">
-                  <ImageIcon size={14} className="text-orange-500" />
-                  Media & Links
+            <div className="bg-white rounded-3xl p-5 border-2 border-orange-50 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="text-[10px] font-bold text-black uppercase tracking-wider flex items-center gap-2">
+                  <ImageIcon size={14} className="text-[#FF7B1D]" /> Media & Links
                 </h4>
-                <button className="text-[10px] font-bold text-orange-500 hover:underline">View All</button>
+                <button className="text-[10px] font-bold text-[#FF7B1D] hover:underline">View All</button>
               </div>
 
               {sharedMedia.length > 0 ? (
                 <div className="grid grid-cols-3 gap-2">
                   {sharedMedia.map((msg, i) => {
-                    const file = msg.attachments?.[0] || { file_url: msg.file_url, message_type: msg.message_type };
+                    const attachments = msg.attachments || [];
+                    const file = attachments[0] || { file_url: msg.file_url, message_type: msg.message_type };
                     const isImg = file.message_type === 'image' || file.file_url?.match(/\.(jpeg|jpg|gif|png|webp|svg)$/i);
                     return (
-                      <div key={i} className="aspect-square bg-gray-50 rounded-xl overflow-hidden cursor-pointer group/tile relative border border-gray-100 hover:opacity-80 transition-all">
+                      <div key={i} className="aspect-square bg-gray-50 rounded-2xl overflow-hidden cursor-pointer group/tile relative border border-gray-100 hover:opacity-80 transition-all">
                         {isImg ? (
                           <img src={file.file_url} alt="" className="w-full h-full object-cover transition-transform duration-500 group-hover/tile:scale-110" />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-orange-400">
+                          <div className="w-full h-full flex items-center justify-center text-[#FF7B1D]">
                             <FileText size={18} />
                           </div>
                         )}
@@ -527,40 +575,39 @@ export function ChatInfoSidebar({ selectedChat, messages, starredMessages }) {
                   })}
                 </div>
               ) : (
-                <div className="py-6 text-center bg-gray-50 rounded-xl italic text-gray-400 text-[10px] font-bold uppercase">No media shared</div>
+                <div className="py-8 text-center bg-gray-50 rounded-2xl italic text-gray-400 text-[9px] font-bold uppercase tracking-widest">No shared media</div>
               )}
             </div>
 
             {/* Starred Messages */}
-            <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-              <div className="flex items-center justify-between mb-3">
-                <h4 className="text-[10px] font-bold text-gray-900 uppercase tracking-wider flex items-center gap-2">
-                  <Star size={14} className="text-yellow-400 fill-yellow-400" />
-                  Starred Items
+            <div className="bg-white rounded-3xl p-5 border-2 border-orange-50 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="text-[10px] font-bold text-black uppercase tracking-wider flex items-center gap-2">
+                  <Star size={14} className="text-yellow-400 fill-yellow-400" /> Starred Items
                 </h4>
                 <span className="text-[10px] font-bold text-gray-400">{starred.length}</span>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {starred.length > 0 ? (
                   starred.slice(0, 3).map((msg, i) => (
-                    <div key={i} className="p-3 bg-gray-50 rounded-xl border border-gray-100 group/star hover:bg-white hover:shadow-sm transition-all">
-                      <p className="text-xs text-gray-600 font-medium line-clamp-2 italic leading-relaxed">"{msg.text}"</p>
-                      <p className="text-[9px] font-bold text-orange-400 mt-2 uppercase tracking-widest">{msg.time}</p>
+                    <div key={i} className="p-4 bg-orange-50/20 rounded-2xl border border-orange-50/50 group/star hover:bg-white hover:shadow-md transition-all">
+                      <p className="text-xs text-black font-medium line-clamp-2 italic leading-relaxed">"{msg.text}"</p>
+                      <p className="text-[9px] font-bold text-[#FF7B1D] mt-2 uppercase tracking-widest">{msg.time}</p>
                     </div>
                   ))
                 ) : (
-                  <div className="text-center py-4 italic text-gray-400 text-[10px] font-bold uppercase">No starred items</div>
+                  <div className="text-center py-6 italic text-gray-400 text-[9px] font-bold uppercase tracking-widest">No starred items</div>
                 )}
               </div>
             </div>
 
             {/* Actions */}
-            <div className="pt-4 space-y-2 pb-6">
-              <button className="w-full py-3 px-4 bg-orange-50 text-orange-600 text-[10px] font-bold uppercase tracking-widest rounded-xl hover:bg-orange-500 hover:text-white transition-all flex items-center justify-center gap-2 group shadow-sm">
-                <BellOff size={14} /> Mute Notifications
+            <div className="pt-4 space-y-3 pb-8">
+              <button className="w-full py-4 px-5 bg-orange-50 border border-orange-100 text-[#FF7B1D] text-[10px] font-bold uppercase tracking-widest rounded-2xl hover:bg-[#FF7B1D] hover:text-white transition-all flex items-center justify-center gap-3 group shadow-sm">
+                <BellOff size={16} className="group-hover:animate-shake" /> Mute Notifications
               </button>
-              <button className="w-full py-3 px-4 bg-red-50 text-red-600 text-[10px] font-bold uppercase tracking-widest rounded-xl hover:bg-red-500 hover:text-white transition-all flex items-center justify-center gap-2 group shadow-sm">
-                <Trash2 size={14} /> Clear History
+              <button className="w-full py-4 px-5 bg-red-50 border border-red-100 text-red-600 text-[10px] font-bold uppercase tracking-widest rounded-2xl hover:bg-red-500 hover:text-white transition-all flex items-center justify-center gap-3 group shadow-sm">
+                <Trash2 size={16} /> Clear History
               </button>
             </div>
           </div>
@@ -626,19 +673,19 @@ export function ChatInput({
   };
 
   return (
-    <div className="bg-white border-t border-gray-100 p-4 relative z-40">
+    <div className="bg-white border-t-2 border-orange-50/80 p-4 relative z-40">
       {/* Reply/Edit Banner */}
       {(replyingTo || editingMessage) && (
         <div className="absolute bottom-full left-0 right-0 p-3 bg-orange-50 border-t border-orange-100 flex items-center justify-between animate-slideUp">
           <div className="flex items-center gap-3 px-4">
-            <div className="text-orange-500">
+            <div className="text-[#FF7B1D]">
               {editingMessage ? <Edit3 size={16} /> : <Reply size={16} />}
             </div>
             <div className="min-w-0">
               <p className="text-[10px] font-bold text-orange-900 uppercase tracking-wider">
                 {editingMessage ? "Editing" : "Replying"}
               </p>
-              <p className="text-xs text-orange-800 truncate font-medium max-w-md">
+              <p className="text-xs text-orange-800 truncate font-semibold max-w-md italic">
                 {editingMessage ? editingMessage.text : replyingTo?.text}
               </p>
             </div>
@@ -657,7 +704,7 @@ export function ChatInput({
                   <img src={file.url} alt="" className="w-full h-full object-cover" />
                 ) : (
                   <div className="w-full h-full flex flex-col items-center justify-center gap-1">
-                    <FileText size={20} className="text-orange-500" />
+                    <FileText size={20} className="text-[#FF7B1D]" />
                     <span className="text-[8px] font-bold uppercase truncate px-1 w-full text-center">{file.name}</span>
                   </div>
                 )}
@@ -668,12 +715,12 @@ export function ChatInput({
         </div>
       )}
 
-      <div className="max-w-6xl mx-auto flex items-center gap-3">
-        <div className="relative flex-1 flex items-center bg-gray-50 border border-gray-100 rounded-full px-4 py-1.5 focus-within:bg-white focus-within:border-orange-200 focus-within:shadow-sm transition-all">
+      <div className="max-w-6xl mx-auto flex items-center gap-4">
+        <div className="relative flex-1 flex items-center bg-white border border-gray-200 rounded-xl px-4 py-2 focus-within:border-[#FF7B1D] focus-within:ring-4 focus-within:ring-[#FF7B1D]/10 transition-all shadow-sm">
           <button
             ref={emojiPickerRef}
             onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-            className={`p-1.5 text-gray-400 hover:text-orange-500 transition-colors ${showEmojiPicker ? "text-orange-500" : ""}`}
+            className={`p-1.5 text-gray-400 hover:text-[#FF7B1D] transition-colors ${showEmojiPicker ? "text-[#FF7B1D]" : ""}`}
           >
             <Smile size={20} />
           </button>
@@ -688,29 +735,37 @@ export function ChatInput({
                 onSend();
               }
             }}
-            className="flex-1 px-2 py-1.5 text-sm focus:outline-none min-h-[36px] max-h-32 overflow-y-auto empty:before:content-[attr(data-placeholder)] empty:before:text-gray-400"
+            className="flex-1 px-2 py-1.5 text-sm focus:outline-none min-h-[36px] max-h-32 overflow-y-auto empty:before:content-[attr(data-placeholder)] empty:before:text-gray-400 font-bold font-primary break-words whitespace-pre-wrap"
             data-placeholder={editingMessage ? "Edit your message..." : "Type a message..."}
           />
 
           <div className="relative" ref={attachmentMenuRef}>
             <button
               onClick={() => setShowAttachmentMenu(!showAttachmentMenu)}
-              className="p-1.5 text-gray-400 hover:text-orange-500 transition-colors"
+              className="p-1.5 text-gray-400 hover:text-[#FF7B1D] transition-colors"
             >
               <Paperclip size={20} />
             </button>
 
             {showAttachmentMenu && (
-              <div className="absolute bottom-full right-0 mb-4 bg-white rounded-2xl shadow-xl border border-gray-100 p-2 grid grid-cols-2 gap-1 min-w-[160px] animate-scaleUp">
+              <div className="absolute bottom-full right-0 mb-4 bg-white rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-gray-100 p-4 grid grid-cols-2 gap-2 min-w-[260px] animate-scaleUp z-50">
                 {[
-                  { icon: ImageIcon, label: "Image", type: "image", color: "text-blue-500 bg-blue-50" },
-                  { icon: FileText, label: "File", type: "document", color: "text-green-500 bg-green-50" },
-                  { icon: VideoIcon, label: "Video", type: "video", color: "text-red-500 bg-red-50" },
-                  { icon: Camera, label: "Camera", type: "camera", color: "text-purple-500 bg-purple-50" },
+                  { icon: ImageIcon, label: "Image", type: "image" },
+                  { icon: FileText, label: "File", type: "document" },
+                  { icon: VideoIcon, label: "Video", type: "video" },
+                  { icon: Camera, label: "Camera", type: "camera" },
                 ].map((item, i) => (
-                  <button key={i} onClick={() => handleAttachmentClick(item.type)} className="flex items-center gap-2 p-2 hover:bg-gray-50 rounded-xl transition-all">
-                    <div className={`p-1.5 rounded-lg ${item.color}`}><item.icon size={14} /></div>
-                    <span className="text-xs font-semibold text-gray-600">{item.label}</span>
+                  <button
+                    key={i}
+                    onClick={() => handleAttachmentClick(item.type)}
+                    className="flex items-center gap-3 p-2 hover:bg-orange-50 rounded-2xl transition-all group w-full"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-orange-50 text-[#FF7B1D] flex items-center justify-center group-hover:bg-[#FF7B1D] group-hover:text-white transition-all duration-300 flex-shrink-0">
+                      <item.icon size={18} />
+                    </div>
+                    <span className="text-[11px] font-bold text-gray-700 font-primary group-hover:text-[#FF7B1D] whitespace-nowrap">
+                      {item.label}
+                    </span>
                   </button>
                 ))}
               </div>
@@ -718,7 +773,7 @@ export function ChatInput({
           </div>
 
           {showEmojiPicker && (
-            <div className="absolute bottom-full left-0 mb-4 bg-white rounded-2xl shadow-xl border border-gray-100 p-3 w-72 animate-scaleUp z-50">
+            <div className="absolute bottom-full left-0 mb-4 bg-white rounded-xl shadow-xl border border-gray-100 p-3 w-72 animate-scaleUp z-50">
               <div className="grid grid-cols-8 gap-1 max-h-48 overflow-y-auto no-scrollbar">
                 {emojis.map((e, i) => (
                   <button key={i} onClick={() => handleEmojiClick(e)} className="text-xl p-1 hover:bg-gray-100 rounded-lg">{e}</button>
@@ -731,8 +786,8 @@ export function ChatInput({
         <button
           onClick={onSend}
           disabled={!message.trim() && attachedFiles.length === 0}
-          className={`w-11 h-11 rounded-full flex items-center justify-center transition-all shadow-md active:scale-95 ${message.trim() || attachedFiles.length > 0
-            ? "bg-orange-500 text-white hover:bg-orange-600"
+          className={`w-11 h-11 rounded-lg flex items-center justify-center transition-all shadow-md active:scale-95 ${message.trim() || attachedFiles.length > 0
+            ? "bg-[#FF7B1D] text-white hover:bg-[#E66A0D]"
             : "bg-gray-100 text-gray-400 cursor-not-allowed shadow-none"
             }`}
         >
@@ -748,12 +803,12 @@ export function ChatInput({
 // Empty State Component
 export function EmptyState() {
   return (
-    <div className="flex-1 flex flex-col items-center justify-center p-12 bg-white text-center">
-      <div className="w-32 h-32 bg-orange-50 rounded-[40px] flex items-center justify-center mb-8 shadow-inner transition-transform hover:scale-105 duration-500 group">
-        <MessageCircle size={64} className="text-orange-500 group-hover:rotate-12 transition-transform" strokeWidth={1.5} />
+    <div className="flex-1 flex flex-col items-center justify-center p-12 bg-white text-center font-primary">
+      <div className="w-32 h-32 bg-orange-50 rounded-3xl flex items-center justify-center mb-8 shadow-inner transition-transform hover:scale-105 duration-500 group">
+        <MessageCircle size={64} className="text-[#FF7B1D] group-hover:rotate-12 transition-transform" strokeWidth={1.5} />
       </div>
-      <h2 className="text-3xl font-bold text-gray-900 mb-3 tracking-tight">Your Conversations</h2>
-      <p className="text-gray-500 max-w-sm font-medium leading-relaxed mb-10">
+      <h2 className="text-3xl font-semibold text-black mb-3 tracking-tight">Your Conversations</h2>
+      <p className="text-gray-600 max-w-sm font-medium leading-relaxed mb-10">
         Select a chat to view your message history or start a new connection with your team.
       </p>
 
@@ -762,13 +817,13 @@ export function EmptyState() {
           { icon: Search, label: "Search Contacts", desc: "Find anyone in your team" },
           { icon: Star, label: "Starred Items", desc: "Access your saved gems" },
         ].map((item, i) => (
-          <div key={i} className="bg-white border border-gray-100 p-5 rounded-3xl shadow-sm flex items-center gap-4 hover:shadow-md hover:border-orange-100 transition-all cursor-pointer group w-64">
-            <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center text-orange-500 group-hover:bg-orange-500 group-hover:text-white transition-all">
-              <item.icon size={18} />
+          <div key={i} className="bg-white border-2 border-orange-50 p-5 rounded-3xl flex items-center gap-4 hover:border-[#FF7B1D] hover:shadow-xl hover:shadow-orange-500/10 transition-all cursor-pointer group w-64">
+            <div className="w-12 h-12 rounded-xl bg-orange-50 flex items-center justify-center text-[#FF7B1D] group-hover:bg-[#FF7B1D] group-hover:text-white transition-all duration-300">
+              <item.icon size={20} />
             </div>
             <div className="text-left">
-              <p className="text-xs font-bold text-gray-900">{item.label}</p>
-              <p className="text-[10px] text-gray-400 font-medium">{item.desc}</p>
+              <p className="text-sm font-semibold text-black">{item.label}</p>
+              <p className="text-[10px] text-gray-500 font-medium">{item.desc}</p>
             </div>
           </div>
         ))}
@@ -805,7 +860,7 @@ export function ForwardModal({ contacts, onClose, onForward, messageToForward })
         {messageToForward && (
           <div className="px-6 py-4 bg-orange-50/30">
             <div className="p-4 bg-white rounded-2xl border border-orange-100 flex items-start gap-3 shadow-sm">
-              <Reply size={16} className="text-orange-500 flex-shrink-0 mt-1" />
+              <Reply size={16} className="text-[#FF7B1D] flex-shrink-0 mt-1" />
               <div className="min-w-0">
                 <p className="text-[9px] font-bold text-orange-900 uppercase tracking-widest mb-1">Content</p>
                 <p className="text-xs text-gray-600 italic line-clamp-2 font-medium">"{messageToForward.text || 'Flash message/media'}"</p>
@@ -832,7 +887,7 @@ export function ForwardModal({ contacts, onClose, onForward, messageToForward })
                 <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{contact.role}</p>
               </div>
               {selectedContacts.find((c) => c.id === contact.id && c.type === contact.type) && (
-                <div className="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center text-white shadow-md">
+                <div className="w-6 h-6 bg-[#FF7B1D] rounded-full flex items-center justify-center text-white shadow-md">
                   <Check size={14} />
                 </div>
               )}
@@ -846,7 +901,7 @@ export function ForwardModal({ contacts, onClose, onForward, messageToForward })
             onClick={() => onForward(selectedContacts)}
             disabled={selectedContacts.length === 0}
             className={`flex-1 px-4 py-2.5 font-bold rounded-xl transition-all text-xs uppercase tracking-widest ${selectedContacts.length > 0
-              ? "bg-orange-500 text-white shadow-lg shadow-orange-100 hover:scale-[1.02] active:scale-95"
+              ? "bg-[#FF7B1D] text-white shadow-lg shadow-[#FF7B1D]/20 hover:scale-[1.02] active:scale-95"
               : "bg-gray-200 text-gray-400 cursor-not-allowed"
               }`}
           >

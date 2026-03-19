@@ -48,6 +48,7 @@ const protect = async (req, res, next) => {
                     req.user = {
                         _id: emp.id, // Actual Employee ID
                         id: emp.user_id, // Masquerade as Admin ID for existing controllers (Data Scope)
+                        user_id: emp.user_id, // Explicit Admin ID context
                         role: 'Employee',
                         permissions: emp.permissions ? (typeof emp.permissions === 'string' ? JSON.parse(emp.permissions) : emp.permissions) : [],
                         username: emp.username,

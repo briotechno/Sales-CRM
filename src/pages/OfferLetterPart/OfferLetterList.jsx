@@ -211,7 +211,7 @@ export default function OfferLetterList() {
     const renderActions = (offer) => {
         return (
             <div className="flex items-center justify-end gap-2.5">
-                <ActionGuard permission="offer_letter_read" module="Offer Letter" type="read">
+                <ActionGuard permission="offer_letter_read" module="Offer Letter Management" type="read">
                     <button
                         onClick={() => {
                             setViewOffer(offer);
@@ -223,7 +223,7 @@ export default function OfferLetterList() {
                         <Eye size={16} />
                     </button>
                 </ActionGuard>
-                <ActionGuard permission="offer_letter_edit" module="Offer Letter" type="update">
+                <ActionGuard permission="offer_letter_edit" module="Offer Letter Management" type="update">
                     <button
                         onClick={() => {
                             setSelectedOffer(offer);
@@ -235,7 +235,7 @@ export default function OfferLetterList() {
                         <Edit size={16} />
                     </button>
                 </ActionGuard>
-                <ActionGuard permission="offer_letter_delete" module="Offer Letter" type="delete">
+                <ActionGuard permission="offer_letter_delete" module="Offer Letter Management" type="delete">
                     <button
                         onClick={() => handleDelete(offer)}
                         className="p-1.5 hover:bg-red-50 rounded-sm text-red-500 hover:text-red-700 transition-all border border-transparent hover:border-red-100 shadow-sm"
@@ -443,7 +443,7 @@ export default function OfferLetterList() {
                                     Export
                                 </button>
 
-                                <ActionGuard permission="offer_letter_create" module="Offer Letter" type="create">
+                                <ActionGuard permission="offer_letter_create" module="Offer Letter Management" type="create">
                                     <button
                                         onClick={() => {
                                             setSelectedOffer(null);

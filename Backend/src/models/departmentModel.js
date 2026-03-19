@@ -88,12 +88,24 @@ const Department = {
 
     update: async (id, data, userId) => {
         const { department_name, icon, status, description, permissions } = data;
+        const permissionsJson = typeof permissions === 'object' ? JSON.stringify(permissions || []) : (permissions || '[]');
+        
         await pool.query(
             'UPDATE departments SET department_name = ?, icon = ?, status = ?, description = ?, permissions = ? WHERE id = ? AND user_id = ?',
-            [department_name, icon, status, description,
-                typeof permissions === 'object' ? JSON.stringify(permissions || []) : (permissions || '[]'),
-                id, userId]
+            [department_name, icon, status, description, permissionsJson, id, userId]
         );
+
+        // SYNC: Update all designations and employees in this department
+        if (permissions) {
+            await pool.query(
+                'UPDATE designations SET permissions = ? WHERE department_id = ? AND user_id = ?',
+                [permissionsJson, id, userId]
+            );
+            await pool.query(
+                'UPDATE employees SET permissions = ? WHERE department_id = ? AND user_id = ?',
+                [permissionsJson, id, userId]
+            );
+        }
     },
 
     delete: async (id, userId) => {

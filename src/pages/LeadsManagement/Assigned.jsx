@@ -627,7 +627,7 @@ export default function AssignedLeads() {
 
                 {/* Add Lead - Primary Button */}
                 <div className="relative" ref={addLeadMenuRef}>
-                  <ActionGuard permission="leads_create" module="Lead Management" type="create">
+                  <ActionGuard permission="leads_create" module="Leads Management" type="create">
                     <button
                       onClick={() => setOpenLeadMenu(!openLeadMenu)}
                       className="flex items-center gap-2 px-6 py-3 rounded-sm font-semibold transition shadow-lg hover:shadow-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
@@ -687,7 +687,7 @@ export default function AssignedLeads() {
                 </div>
 
                 <div className="flex gap-4">
-                  <ActionGuard permission="leads_assign" module="Lead Management" type="update">
+                  <ActionGuard permission="leads_assign" module="Leads Management" type="update">
                     <button
                       onClick={handleAssignLeads}
                       className="bg-white border border-gray-300 text-gray-700 px-6 py-2.5 rounded-sm font-bold hover:bg-orange-50 hover:border-[#FF7B1D] hover:text-[#FF7B1D] transition-all capitalize flex items-center gap-2.5 text-sm shadow-sm active:scale-95 font-primary group"
@@ -696,7 +696,7 @@ export default function AssignedLeads() {
                       Change Assignment
                     </button>
                   </ActionGuard>
-                  <ActionGuard permission="leads_delete" module="Lead Management" type="delete">
+                  <ActionGuard permission="leads_delete" module="Leads Management" type="delete">
                     <button
                       onClick={handleDeleteSelected}
                       className="bg-red-600 text-white px-6 py-2.5 rounded-sm font-bold hover:bg-red-700 transition-all capitalize flex items-center gap-2.5 text-sm shadow-md shadow-red-200 active:scale-95 font-primary border border-red-700"

@@ -185,7 +185,7 @@ export default function EmployeeAttendance() {
   }, [myStats]);
 
   useEffect(() => {
-    const simulatedIP = `192.168.1.${Math.floor(Math.random() * 255)} `;
+    const simulatedIP = `192.168.1.${Math.floor(Math.random() * 255)}`;
     setUserIP(simulatedIP);
     setIsOnCompanyNetwork(simulatedIP.startsWith(companyIPRange));
   }, []);
@@ -520,7 +520,7 @@ export default function EmployeeAttendance() {
                       </div>
 
                       {!hasCheckedOut && (
-                        <ActionGuard permission="attendance_edit" module="Attendance" type="update">
+                        <ActionGuard permission="attendance_edit" module="Attendance Management" type="update">
                           <button
                             onClick={async () => {
                               try {
@@ -563,7 +563,7 @@ export default function EmployeeAttendance() {
                           <p className="text-sm text-gray-600 mt-1">Start your day by marking your attendance.</p>
                         </div>
                       </div>
-                      <ActionGuard permission="attendance_create" module="Attendance" type="create">
+                      <ActionGuard permission="attendance_mark" module="Attendance Management" type="create">
                         <button
                           onClick={() => setCurrentPage("checkin")}
                           className="w-full md:w-auto px-8 py-3 bg-blue-600 text-white rounded-sm font-bold shadow-lg hover:bg-blue-700 active:scale-95 transition-all flex items-center justify-center gap-2"
@@ -766,7 +766,7 @@ export default function EmployeeAttendance() {
                             )}
                           </div>
 
-                          <ActionGuard permission="attendance_create" module="Attendance" type="create">
+                          <ActionGuard permission="attendance_mark" module="Attendance Management" type="create">
                             <button
                               onClick={() => setShowCheckInModal(true)}
                               disabled={settings?.wifiEnabled && !isOnCompanyNetwork}

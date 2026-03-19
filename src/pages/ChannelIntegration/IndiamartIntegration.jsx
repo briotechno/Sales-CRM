@@ -14,6 +14,7 @@ import {
     CheckCircle,
     AlertCircle,
     Link2,
+    ExternalLink,
     Table as TableIcon,
     Home,
     Trash2,
@@ -39,6 +40,7 @@ import NumberCard from "../../components/NumberCard";
 
 const IndiamartIntegration = () => {
     const [activeTab, setActiveTab] = useState("accounts");
+    const [isTutorialModalOpen, setIsTutorialModalOpen] = useState(false);
     const [isConnectModalOpen, setIsConnectModalOpen] = useState(false);
     const [viewMode, setViewMode] = useState("grid");
     const [formData, setFormData] = useState({ account_name: '', api_key: '' });
@@ -148,6 +150,14 @@ const IndiamartIntegration = () => {
                                     </button>
                                 </div>
 
+                                 <button
+                                    onClick={() => setIsTutorialModalOpen(true)}
+                                    className="flex items-center gap-2 bg-white border border-orange-200 text-orange-600 px-4 py-3 rounded-sm font-semibold transition hover:bg-orange-50 shadow-sm"
+                                >
+                                    <ExternalLink size={18} />
+                                    Tutorial
+                                </button>
+
                                 <button
                                     onClick={handleConnect}
                                     className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-sm font-semibold transition shadow-lg hover:shadow-xl hover:from-orange-600 hover:to-orange-700"
@@ -161,6 +171,7 @@ const IndiamartIntegration = () => {
                 </div>
 
                 <div className="max-w-8xl mx-auto px-4 py-6 pt-0 mt-2">
+
                     {/* Stats Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                         <NumberCard
@@ -451,6 +462,67 @@ const IndiamartIntegration = () => {
                     </Modal>
                 );
             })()}
+            {/* Tutorial Modal */}
+            <Modal
+                isOpen={isTutorialModalOpen}
+                onClose={() => setIsTutorialModalOpen(false)}
+                title="how to integrate indiamart?"
+                subtitle="follow these simple steps to connect your indiamart seller panel"
+                icon={<ExternalLink size={24} />}
+                headerVariant="orange"
+                maxWidth="max-w-2xl"
+                footer={
+                    <div className="flex justify-end gap-3 w-full">
+                        <a 
+                            href="https://seller.indiamart.com" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="px-6 py-2.5 rounded-sm border-2 border-orange-100 text-[#FF7B1D] font-bold hover:bg-orange-50 transition-all font-primary text-sm flex items-center gap-2"
+                        >
+                            <ShoppingBag size={16} /> Open IndiaMart Seller Panel
+                        </a>
+                        <button
+                            onClick={() => setIsTutorialModalOpen(false)}
+                            className="px-8 py-2.5 rounded-sm bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold hover:shadow-lg transition-all font-primary text-sm"
+                        >
+                            Got It
+                        </button>
+                    </div>
+                }
+            >
+                <div className="space-y-6 pt-4">
+                    <div className="grid grid-cols-1 gap-6">
+                        <div className="flex gap-5 p-4 bg-orange-50/30 rounded-lg border border-orange-100">
+                            <span className="flex-shrink-0 w-10 h-10 rounded-full bg-orange-500 text-white flex items-center justify-center font-black shadow-md shadow-orange-200">1</span>
+                            <div>
+                                <h4 className="font-bold text-gray-800 text-base mb-1">seller panel login</h4>
+                                <p className="text-sm text-gray-600 leading-relaxed">log in to your indiamart seller panel using your registered mobile number or email.</p>
+                            </div>
+                        </div>
+                        <div className="flex gap-5 p-4 bg-orange-50/30 rounded-lg border border-orange-100">
+                            <span className="flex-shrink-0 w-10 h-10 rounded-full bg-orange-500 text-white flex items-center justify-center font-black shadow-md shadow-orange-200">2</span>
+                            <div>
+                                <h4 className="font-bold text-gray-800 text-base mb-1">crm integration setting</h4>
+                                <p className="text-sm text-gray-600 leading-relaxed">navigate to the "settings" menu and look for the "crm integration" or "api key" section.</p>
+                            </div>
+                        </div>
+                        <div className="flex gap-5 p-4 bg-orange-50/30 rounded-lg border border-orange-100">
+                            <span className="flex-shrink-0 w-10 h-10 rounded-full bg-orange-500 text-white flex items-center justify-center font-black shadow-md shadow-orange-200">3</span>
+                            <div>
+                                <h4 className="font-bold text-gray-800 text-base mb-1">copy crm api key</h4>
+                                <p className="text-sm text-gray-600 leading-relaxed">copy the unique alphanumeric key provided. this key is essential for securely syncing your enquiries.</p>
+                            </div>
+                        </div>
+                        <div className="flex gap-5 p-4 bg-orange-50/30 rounded-lg border border-orange-100">
+                            <span className="flex-shrink-0 w-10 h-10 rounded-full bg-orange-500 text-white flex items-center justify-center font-black shadow-md shadow-orange-200">4</span>
+                            <div>
+                                <h4 className="font-bold text-gray-800 text-base mb-1">verify connection</h4>
+                                <p className="text-sm text-gray-600 leading-relaxed">click on "add crm key" in this crm and paste your registered mobile number and the api key you just copied.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </Modal>
         </DashboardLayout>
     );
 };

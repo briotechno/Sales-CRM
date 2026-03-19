@@ -153,13 +153,16 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           return categoryPerms.some(cp => perms.includes(cp.id));
         }
 
-        // Fallback: Module match (check if any 'view' or 'read' permission exists for this module)
-        const moduleKey = key.toLowerCase().replace(/\s+/g, '_');
-        const fallbackMatch = perms.some(p =>
-          (p.startsWith(moduleKey) || p.includes(moduleKey.split('_')[0])) &&
-          (p.includes('view') || p.includes('read') || p.includes('use'))
-        );
-        if (fallbackMatch) return true;
+        // Fallback: Module match (only for category/module names, e.g., "Leads Management")
+        // Specific IDs (e.g., "leads_view") contain underscores and should match directly
+        if (!key.includes('_')) {
+          const moduleKey = key.toLowerCase().replace(/\s+/g, '_');
+          const fallbackMatch = perms.some(p =>
+            (p.startsWith(moduleKey) || p.includes(moduleKey.split('_')[0])) &&
+            (p.includes('view') || p.includes('read') || p.includes('use'))
+          );
+          if (fallbackMatch) return true;
+        }
 
         return false;
       }
@@ -255,7 +258,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           permission: "Lead Dashboard"
         },
         {
-          name: "Goal Dashbaord",
+          name: "Goal Dashboard",
           icon: <Target size={22} />,
           path: "/crm/goals",
           permission: "Goal Management"
@@ -426,13 +429,14 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         },
         {
           name: "Attendance",
+          permission: "Attendance Management",
           icon: <CalendarCheck size={22} />,
           children: [
             {
               name: "My Attendance",
               path: "/hrm/attendance/employee",
+              permission: "attendance_view_own"
             },
-
             {
               name: "All Attendance",
               path: "/hrm/attendance",

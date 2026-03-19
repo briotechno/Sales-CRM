@@ -198,13 +198,19 @@ const Messenger = {
 
     // Get recent conversations for a user
     getConversations: async (userId, userType) => {
-        const [rows] = await pool.query(
-            `SELECT c.*, 
+        // Find conversations: 1-on-1 where the user is participant 1 or 2,
+        // OR Team conversations where the user is a team member (if employee)
+        // OR any Team conversation in the org (if Admin/owner)
+        
+        let query = `
+            SELECT c.*, 
              CASE 
+                WHEN c.team_id IS NOT NULL THEN c.team_id
                 WHEN participant_one_id = ? AND participant_one_type = ? THEN participant_two_id 
                 ELSE participant_one_id 
              END as other_id,
              CASE 
+                WHEN c.team_id IS NOT NULL THEN 'team'
                 WHEN participant_one_id = ? AND participant_one_type = ? THEN participant_two_type 
                 ELSE participant_one_type 
              END as other_type,
@@ -212,11 +218,19 @@ const Messenger = {
               WHERE conversation_id = c.id 
               AND (sender_id != ? OR sender_type != ?) 
               AND is_read = FALSE) as unread_count
-             FROM messenger_conversations c
-             WHERE (participant_one_id = ? AND participant_one_type = ?) 
-             OR (participant_two_id = ? AND participant_two_type = ?)
-             ORDER BY last_message_time DESC`,
-            [userId, userType, userId, userType, userId, userType, userId, userType, userId, userType]
+            FROM messenger_conversations c
+            LEFT JOIN team_members tm ON c.team_id = tm.team_id
+            WHERE 
+                (c.participant_one_id = ? AND c.participant_one_type = ?) 
+                OR (c.participant_two_id = ? AND c.participant_two_type = ?)
+                OR (c.team_id IS NOT NULL AND (tm.employee_id = ? AND ? = 'employee'))
+                OR (c.team_id IS NOT NULL AND ? = 'user')
+            GROUP BY c.id
+            ORDER BY last_message_time DESC`;
+
+        const [rows] = await pool.query(query, 
+            [userId, userType, userId, userType, userId, userType, 
+             userId, userType, userId, userType, userId, userType, userType]
         );
         return rows;
     },

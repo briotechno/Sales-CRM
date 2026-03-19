@@ -39,7 +39,7 @@ const AllDesignation = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedDesignation, setSelectedDesignation] = useState(null);
 
-  const { create, read, update, delete: remove } = usePermission("Designation");
+  const { create, read, update, delete: remove } = usePermission("Designation Management");
 
   // RTK Query
   const { data, isLoading } = useGetDesignationsQuery({
@@ -290,7 +290,7 @@ const AllDesignation = () => {
                   </button>
                 </div>
 
-                <ActionGuard permission="designations_create" module="Designation" type="create">
+                <ActionGuard permission="designation_create" module="Designation Management" type="create">
                   <button
                     onClick={() => setIsAddModalOpen(true)}
                     className="flex items-center gap-2 px-6 py-3 rounded-sm font-semibold transition shadow-lg hover:shadow-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
@@ -394,14 +394,16 @@ const AllDesignation = () => {
                         </td>
                         <td className="py-3 px-4 text-right">
                           <div className="flex justify-end gap-2">
-                            <button
-                              onClick={() => handleView(dsg)}
-                              className="p-1 hover:bg-orange-100 rounded-sm text-blue-500 hover:text-blue-700 transition-all font-medium"
-                              title="View"
-                            >
-                              <Eye size={18} />
-                            </button>
-                            <ActionGuard permission="designations_edit" module="Designation" type="update">
+                            <ActionGuard permission="designation_view" module="Designation Management" type="read">
+                              <button
+                                onClick={() => handleView(dsg)}
+                                className="p-1 hover:bg-orange-100 rounded-sm text-blue-500 hover:text-blue-700 transition-all font-medium"
+                                title="View"
+                              >
+                                <Eye size={18} />
+                              </button>
+                            </ActionGuard>
+                            <ActionGuard permission="designation_edit" module="Designation Management" type="update">
                               <button
                                 onClick={() => handleEdit(dsg)}
                                 className="p-1 hover:bg-orange-100 rounded-sm text-green-500 hover:text-green-700 transition-all font-medium"
@@ -410,7 +412,7 @@ const AllDesignation = () => {
                                 <Edit size={18} />
                               </button>
                             </ActionGuard>
-                            <ActionGuard permission="designations_delete" module="Designation" type="delete">
+                            <ActionGuard permission="designation_delete" module="Designation Management" type="delete">
                               <button
                                 onClick={() => handleDelete(dsg)}
                                 className="p-1 hover:bg-orange-100 rounded-sm text-red-500 hover:text-red-700 transition-all font-medium"
@@ -432,14 +434,16 @@ const AllDesignation = () => {
                 renderItem={(dsg) => (
                   <div key={dsg.id} className="bg-white border border-gray-200 rounded-sm shadow-sm hover:shadow-md transition-all relative group flex flex-col h-full overflow-hidden">
                     <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                      <button
-                        onClick={() => handleView(dsg)}
-                        className="p-1.5 text-blue-500 hover:bg-blue-50 rounded-sm bg-white shadow-sm border border-blue-100"
-                        title="View"
-                      >
-                        <Eye size={16} />
-                      </button>
-                      <ActionGuard permission="designations_edit" module="Designation" type="update">
+                      <ActionGuard permission="designation_view" module="Designation Management" type="read">
+                        <button
+                          onClick={() => handleView(dsg)}
+                          className="p-1.5 text-blue-500 hover:bg-blue-50 rounded-sm bg-white shadow-sm border border-blue-100"
+                          title="View"
+                        >
+                          <Eye size={16} />
+                        </button>
+                      </ActionGuard>
+                      <ActionGuard permission="designation_edit" module="Designation Management" type="update">
                         <button
                           onClick={() => handleEdit(dsg)}
                           className="p-1.5 text-green-500 hover:bg-green-50 rounded-sm bg-white shadow-sm border border-green-100"
@@ -448,7 +452,7 @@ const AllDesignation = () => {
                           <Edit size={16} />
                         </button>
                       </ActionGuard>
-                      <ActionGuard permission="designations_delete" module="Designation" type="delete">
+                      <ActionGuard permission="designation_delete" module="Designation Management" type="delete">
                         <button
                           onClick={() => handleDelete(dsg)}
                           className="p-1.5 text-red-500 hover:bg-red-50 rounded-sm bg-white shadow-sm border border-red-100"

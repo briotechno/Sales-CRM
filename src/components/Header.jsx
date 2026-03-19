@@ -18,10 +18,13 @@ import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { FileSignature, Wallet, Shield } from "lucide-react";
 import { useGetUserProfileQuery } from "../store/api/userApi";
+import { useNotifications } from "../context/NotificationContext";
+import { formatDistanceToNow } from 'date-fns';
 
 const Header = () => {
   const { user } = useSelector((state) => state.auth);
   const { data: userProfile } = useGetUserProfileQuery();
+  const { notifications, unreadCount, markAsRead } = useNotifications();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [appsOpen, setAppsOpen] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -290,30 +293,57 @@ const Header = () => {
               className={`relative p-2 rounded-lg transition-all ${notificationOpen ? "bg-white/20 text-white" : "text-white/80 hover:text-white hover:bg-white/10"}`}
             >
               <FiBell size={20} />
-              <span className="absolute top-2 right-2 h-2 w-2 bg-red-500 rounded-full border-2 border-[#2b303b]" />
+              {unreadCount > 0 && (
+                <span className="absolute top-1 right-1 flex h-4 w-4">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-4 w-4 bg-red-500 text-[9px] text-white items-center justify-center font-bold">{unreadCount}</span>
+                </span>
+              )}
             </button>
             {notificationOpen && (
               <div className="absolute right-0 mt-3 w-80 bg-white rounded-lg shadow-2xl border border-gray-100 overflow-hidden z-50 animate-fadeIn">
                 <div className="px-5 py-4 border-b border-gray-100 bg-white flex items-center justify-between">
                   <h3 className="text-[15px] font-bold text-gray-900">Notifications</h3>
-                  <span className="text-[10px] font-bold text-orange-600 bg-orange-50 px-2.5 py-1 rounded-full uppercase tracking-wider">3 New</span>
+                  {unreadCount > 0 && (
+                    <span className="text-[10px] font-bold text-orange-600 bg-orange-50 px-2.5 py-1 rounded-full uppercase tracking-wider">{unreadCount} New</span>
+                  )}
                 </div>
                 <div className="max-h-[380px] overflow-y-auto">
-                  {[
-                    { title: "New Lead Assigned", time: "2 min ago", type: "lead" },
-                    { title: "Meeting at 3:00 PM", time: "1 hour ago", type: "meeting" },
-                    { title: "Report Generated", time: "3 hours ago", type: "system" },
-                  ].map((notif, i) => (
-                    <button key={i} className="w-full px-5 py-4 flex gap-4 hover:bg-gray-50 transition-all border-b border-gray-50 last:border-0 text-left group">
-                      <div className="h-10 w-10 rounded-full bg-orange-50 flex items-center justify-center text-orange-500 flex-shrink-0 group-hover:bg-orange-100 transition-colors">
-                        <FiBell size={18} />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-[14px] font-bold text-gray-800 leading-tight group-hover:text-orange-600 transition-colors">{notif.title}</p>
-                        <p className="text-[11px] text-gray-400 mt-1.5 font-medium">{notif.time}</p>
-                      </div>
-                    </button>
-                  ))}
+                  {notifications.length > 0 ? (
+                    notifications.slice(0, 10).map((notif, i) => (
+                      <button 
+                        key={i} 
+                        onClick={() => {
+                          if (!notif.is_read) markAsRead(notif.id);
+                          go("/additional/notification");
+                        }}
+                        className={`w-full px-5 py-4 flex gap-4 hover:bg-gray-50 transition-all border-b border-gray-50 last:border-0 text-left group ${!notif.is_read ? 'bg-orange-50/30' : ''}`}
+                      >
+                        <div className={`h-10 w-10 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${!notif.is_read ? 'bg-orange-100 text-orange-600' : 'bg-gray-100 text-gray-400 group-hover:bg-orange-100 group-hover:text-orange-600'}`}>
+                          <FiBell size={18} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-[13px] leading-tight transition-colors ${!notif.is_read ? 'font-bold text-gray-900' : 'font-medium text-gray-600'} group-hover:text-orange-600`}>
+                            {notif.title}
+                          </p>
+                          <p className="text-[11px] text-gray-400 mt-1.5 font-medium truncate">
+                            {notif.message}
+                          </p>
+                          <p className={`text-[10px] mt-1.5 font-bold uppercase tracking-tight ${!notif.is_read ? 'text-orange-500' : 'text-gray-400'}`}>
+                            {formatDistanceToNow(new Date(notif.created_at), { addSuffix: true })}
+                          </p>
+                        </div>
+                        {!notif.is_read && (
+                          <div className="w-2 h-2 bg-orange-500 rounded-full self-center" />
+                        )}
+                      </button>
+                    ))
+                  ) : (
+                    <div className="py-12 text-center">
+                      <FiBell className="mx-auto text-gray-200 mb-2" size={32} />
+                      <p className="text-sm font-medium text-gray-400">No notifications yet</p>
+                    </div>
+                  )}
                 </div>
                 <button
                   onClick={() => go("/additional/notification")}

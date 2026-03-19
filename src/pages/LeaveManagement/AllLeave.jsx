@@ -424,7 +424,7 @@ export default function LeaveManagement() {
                   <Download className="w-5 h-5" /> EXPORT
                 </button> */}
 
-                <ActionGuard permission="leave_management_create" module="Leave Management" type="create">
+                <ActionGuard permission="leave_apply" module="Leave Management" type="create">
                   <button
                     onClick={() => setShowApplyModal(true)}
                     className="flex items-center gap-2 px-6 py-3 rounded-sm transition shadow-lg hover:shadow-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 font-bold"
@@ -540,7 +540,7 @@ export default function LeaveManagement() {
                         <div className="flex justify-end gap-1">
                           {request.status?.toLowerCase() === "pending" ? (
                             <div className="flex gap-1.5 text-right">
-                              <ActionGuard permission="leave_management_edit" module="Leave Management" type="update">
+                              <ActionGuard permission="leave_approve" module="Leave Management" type="update">
                                 <button
                                   onClick={() => handleStatusUpdate(request.id, 'approved')}
                                   className="px-2 py-1 bg-green-50 text-green-700 border border-green-200 rounded-sm text-[10px] font-bold hover:bg-green-100 transition-colors shadow-sm"
@@ -548,7 +548,7 @@ export default function LeaveManagement() {
                                   APPROVE
                                 </button>
                               </ActionGuard>
-                              <ActionGuard permission="leave_management_edit" module="Leave Management" type="update">
+                               <ActionGuard permission="leave_approve" module="Leave Management" type="update">
                                 <button
                                   onClick={() => handleStatusUpdate(request.id, 'rejected')}
                                   className="px-2 py-1 bg-red-50 text-red-700 border border-red-200 rounded-sm text-[10px] font-bold hover:bg-red-100 transition-colors shadow-sm"
@@ -559,7 +559,7 @@ export default function LeaveManagement() {
                             </div>
                           ) : (
                             <div className="flex justify-end">
-                              <ActionGuard permission="leave_management_read" module="Leave Management" type="read">
+                               <ActionGuard module="Leave Management" type="read">
                                 <button
                                   onClick={() => {
                                     setSelectedLeave(request);

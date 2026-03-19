@@ -34,7 +34,8 @@ export default function MessengerPage() {
 
   const [teamMembers, setTeamMembers] = useState([]);
   const [clients, setClients] = useState([]);
-  const [recentChats, setRecentChats] = useState([]);
+  const [groups, setGroups] = useState([]);
+  const [activeTab, setActiveTab] = useState('employee'); // 'employee' or 'team'
   const [chatMessages, setChatMessages] = useState({}); // { conversationId: [messages] }
   const [currentConversationId, setCurrentConversationId] = useState(null);
 
@@ -110,7 +111,8 @@ export default function MessengerPage() {
         if (data.success) {
           setTeamMembers(data.team);
           setClients(data.clients);
-          console.log('Loaded contacts:', { team: data.team.length, clients: data.clients.length });
+          setGroups(data.groups || []);
+          console.log('Loaded contacts:', { team: data.team.length, clients: data.clients.length, groups: data.groups?.length });
         } else {
           console.error('Failed to fetch contacts:', data);
           toast.error(data.message || "Failed to load contacts");
@@ -183,11 +185,23 @@ export default function MessengerPage() {
         // Update unread count and last message in contact lists
         const updateList = (list) => {
           const isFromCurrentChat = selectedChatRef.current &&
-            Number(selectedChatRef.current.id) === Number(senderId) &&
-            selectedChatRef.current.type === senderType;
+            (
+              (selectedChatRef.current.type !== 'team' && Number(selectedChatRef.current.id) === Number(senderId) && selectedChatRef.current.type === senderType) ||
+              (selectedChatRef.current.type === 'team' && (
+                (newMessage.team_id && Number(selectedChatRef.current.id) === Number(newMessage.team_id)) ||
+                (selectedChatRef.current.conversationId && Number(selectedChatRef.current.conversationId) === Number(convId))
+              ))
+            );
 
           return list.map(item => {
-            if (Number(item.id) === Number(senderId) && item.type === senderType) {
+            const isMatch = (item.type === 'team' && (
+              (newMessage.team_id && Number(item.id) === Number(newMessage.team_id)) ||
+              (item.conversationId && Number(item.conversationId) === Number(convId))
+            )) ||
+              (item.type !== 'team' && Number(item.id) === Number(senderId) && item.type === senderType) ||
+              (item.conversationId && convId && Number(item.conversationId) === Number(convId));
+
+            if (isMatch) {
               return {
                 ...item,
                 unread: isFromCurrentChat ? 0 : (item.unread || 0) + 1,
@@ -206,9 +220,23 @@ export default function MessengerPage() {
 
         setTeamMembers(prev => updateList(prev));
         setClients(prev => updateList(prev));
+        setGroups(prev => updateList(prev));
 
-        if (!(selectedChatRef.current && Number(selectedChatRef.current.id) === Number(senderId))) {
-          toast.success(`New message from ${newMessage.sender_name || 'Team'}`);
+        // Improved notification logic
+        const isFromSelected = selectedChatRef.current && (
+          (selectedChatRef.current.type === 'team' && (Number(selectedChatRef.current.id) === Number(newMessage.team_id) || Number(selectedChatRef.current.conversationId) === Number(convId))) ||
+          (selectedChatRef.current.type !== 'team' && Number(selectedChatRef.current.id) === Number(senderId) && selectedChatRef.current.type === senderType)
+        );
+
+        if (!isFromSelected && Number(senderId) !== Number(currentUserId)) {
+          const fromName = newMessage.sender_name || 'Someone';
+          const teamName = newMessage.team_id ? (groups.find(g => Number(g.id) === Number(newMessage.team_id))?.name || 'Team') : null;
+
+          if (teamName) {
+            toast.success(`New message in ${teamName} from ${fromName}`);
+          } else {
+            toast.success(`New message from ${fromName}`);
+          }
         }
       });
 
@@ -276,6 +304,18 @@ export default function MessengerPage() {
     }
   }, [socket, currentUser]);
 
+  // Join group rooms once connected and groups are loaded
+  useEffect(() => {
+    if (socket && socketConnected && groups.length > 0) {
+      groups.forEach(group => {
+        if (group.conversationId) {
+          socket.emit("join_chat", group.conversationId);
+          console.log('Auto-joined team room:', group.conversation_id);
+        }
+      });
+    }
+  }, [socket, socketConnected, groups]);
+
   // Fetch history when chat is selected
   useEffect(() => {
     const fetchHistory = async () => {
@@ -296,6 +336,12 @@ export default function MessengerPage() {
               ...prev,
               [data.conversationId]: data.messages,
             }));
+
+            // Enrich selectedChat with members if they exist (for teams)
+            if (data.members) {
+              console.log('Received team members:', data.members.length);
+              setSelectedChat(prev => ({ ...prev, members: data.members }));
+            }
 
             // Sync starred messages state
             const starredIds = new Set();
@@ -324,7 +370,7 @@ export default function MessengerPage() {
     };
 
     fetchHistory();
-  }, [selectedChat, socket]);
+  }, [selectedChat?.id, selectedChat?.type, socket]);
 
   // Mark as read when messages change or chat is selected
   useEffect(() => {
@@ -634,6 +680,7 @@ export default function MessengerPage() {
     const resetUnread = (list) => list.map(item => (Number(item.id) === Number(contact.id) && item.type === contact.type) ? { ...item, unread: 0 } : item);
     setTeamMembers(prev => resetUnread(prev));
     setClients(prev => resetUnread(prev));
+    setGroups(prev => resetUnread(prev));
 
     setShowChatInfo(false);
     setChatSearchQuery("");
@@ -864,74 +911,97 @@ export default function MessengerPage() {
     setMessage("");
   };
 
-  // Computed values
-  const filteredContacts = teamMembers.filter(
+  const currentTabContacts = activeTab === 'employee' ? teamMembers : groups;
+
+  const filteredContacts = currentTabContacts.filter(
     (contact) =>
-      contact.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      contact.role.toLowerCase().includes(searchQuery.toLowerCase())
+      contact.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      contact.role?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const messages = currentConversationId ? chatMessages[currentConversationId] || [] : [];
   const filteredMessages = chatSearchQuery
     ? messages.filter((msg) =>
-      msg.text.toLowerCase().includes(chatSearchQuery.toLowerCase())
+      msg.text?.toLowerCase().includes(chatSearchQuery.toLowerCase())
     )
     : messages;
 
+  const employeeUnread = teamMembers.reduce((acc, curr) => acc + (curr.unread || 0), 0);
+  const teamUnread = groups.reduce((acc, curr) => acc + (curr.unread || 0), 0);
+
   return (
     <>
-      <div className="flex-1 min-h-0 ml-5 bg-white rounded-3xl overflow-hidden shadow-2xl border border-gray-100 flex flex-col">
+      <div className="flex-1 min-h-0 m-5 bg-white overflow-hidden border-2 border-[#FF7B1D]/20 rounded-xl flex flex-col font-primary shadow-[0_32px_64px_-16px_rgba(255,123,29,0.08)]">
         <div className="flex flex-1 min-h-0">
           {/* Sidebar */}
-
-          <div className="w-[380px] bg-gray-50/30 flex flex-col h-full border-r border-gray-100">
+          <div className="w-[380px] bg-gray-50/10 flex flex-col h-full border-r-2 border-orange-50/80">
             {/* Header */}
-            <div className="px-6 pt-8 pb-6 bg-white shrink-0">
-              <div className="flex items-center justify-between mb-8">
+            <div className="px-6 pt-8 pb-4 bg-white shrink-0">
+              <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-orange-600 rounded-2xl flex items-center justify-center shadow-lg shadow-orange-100">
+                  <div className="w-12 h-12 bg-gradient-to-br from-[#FF7B1D] to-[#E66A0D] rounded-xl flex items-center justify-center shadow-lg shadow-[#FF7B1D]/20 transform -rotate-3 hover:rotate-0 transition-transform duration-300">
                     <MessageCircle className="text-white" size={24} />
                   </div>
                   <div>
-                    <h1 className="text-2xl font-black text-gray-900 tracking-tight">Chats</h1>
-                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">Messenger Pro</p>
+                    <h1 className="text-xl font-semibold text-black tracking-tight leading-none">Chats</h1>
+                    <p className="text-[10px] font-medium text-[#FF7B1D] uppercase tracking-widest mt-1 opacity-80">Messenger Pro</p>
                   </div>
                 </div>
-                <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400 hover:bg-orange-50 hover:text-orange-600 transition-all cursor-pointer group">
-                  <div className="relative">
-                    <Users size={20} className="group-hover:scale-110 transition-transform" />
-                    <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-orange-500 rounded-full border-2 border-white"></div>
-                  </div>
+                <div className="w-10 h-10 bg-orange-50 rounded-lg flex items-center justify-center text-[#FF7B1D] hover:bg-[#FF7B1D] hover:text-white transition-all cursor-pointer group shadow-sm border border-orange-100/50">
+                  <Users size={18} className="transition-transform group-hover:scale-110" />
                 </div>
               </div>
 
               {/* Search */}
               <div className="relative group">
                 <Search
-                  className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 group-focus-within:text-orange-500 transition-colors"
-                  size={18}
+                  className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 group-focus-within:text-[#FF7B1D] transition-colors"
+                  size={16}
                 />
                 <input
                   type="text"
-                  placeholder="Search chats, people..."
+                  placeholder="Search chats..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-12 pr-12 py-3.5 text-sm bg-gray-50 border-2 border-transparent rounded-2xl focus:outline-none focus:bg-white focus:border-orange-100 focus:ring-4 focus:ring-orange-50/50 transition-all placeholder:text-gray-400 font-medium"
+                  className="w-full pl-11 pr-4 py-3 text-xs bg-white border-2 border-orange-50 rounded-xl focus:outline-none focus:border-[#FF7B1D] focus:ring-4 focus:ring-[#FF7B1D]/10 transition-all placeholder:text-gray-400 font-semibold text-black"
                 />
-                {searchQuery && (
-                  <button
-                    onClick={() => setSearchQuery("")}
-                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-orange-600 bg-white rounded-lg p-1 transition-all"
-                  >
-                    <X size={14} />
-                  </button>
-                )}
               </div>
             </div>
 
-            {/* Navigation Tabs Removed */}
-            <div className="px-6 pb-2 bg-white shrink-0">
-              <div className="h-4"></div>
+            <div className="w-full h-px bg-orange-50/50" />
+
+            {/* Navigation Tabs */}
+            <div className="px-6 pb-4 bg-white shrink-0">
+              <div className="flex bg-gray-50 p-1 rounded-lg gap-1 shadow-inner relative overflow-hidden">
+                <div
+                  className={`absolute top-1 bottom-1 left-1 w-[calc(50%-4px)] bg-white rounded-md shadow-sm transition-all duration-300 ease-out z-0`}
+                  style={{ transform: activeTab === 'team' ? 'translateX(100%)' : 'translateX(0)' }}
+                ></div>
+
+                <button
+                  onClick={() => setActiveTab('employee')}
+                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-[11px] font-semibold uppercase tracking-wider rounded-md transition-all duration-300 relative z-10 ${activeTab === 'employee' ? 'text-black' : 'text-gray-400 hover:text-gray-600'
+                    }`}
+                >
+                  {employeeUnread > 0 && activeTab !== 'employee' && (
+                    <span className="absolute top-1.5 right-2 w-2 h-2 bg-[#FF7B1D] rounded-full border border-white shadow-sm" />
+                  )}
+                  <User size={14} className={activeTab === 'employee' ? 'text-[#FF7B1D]' : ''} />
+                  Employees
+                </button>
+
+                <button
+                  onClick={() => setActiveTab('team')}
+                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-[11px] font-semibold uppercase tracking-wider rounded-md transition-all duration-300 relative z-10 ${activeTab === 'team' ? 'text-black' : 'text-gray-400 hover:text-gray-600'
+                    }`}
+                >
+                  {teamUnread > 0 && activeTab !== 'team' && (
+                    <span className="absolute top-1.5 right-2 w-2 h-2 bg-[#FF7B1D] rounded-full border border-white shadow-sm" />
+                  )}
+                  <Users size={14} className={activeTab === 'team' ? 'text-[#FF7B1D]' : ''} />
+                  Teams
+                </button>
+              </div>
             </div>
 
             {/* Contacts List */}
@@ -975,6 +1045,7 @@ export default function MessengerPage() {
                       messages={filteredMessages}
                       typingIndicator={typingIndicator}
                       selectedChatId={selectedChat.id}
+                      selectedChatType={selectedChat.type}
                       currentUserId={currentUserId}
                       currentUserType={currentUserType}
                       messagesEndRef={messagesEndRef}
@@ -1051,7 +1122,7 @@ export default function MessengerPage() {
       <style jsx>{`
         .custom-scrollbar {
           scrollbar-width: thin;
-          scrollbar-color: #f97316 transparent;
+          scrollbar-color: #FF7B1D transparent;
         }
         .custom-scrollbar::-webkit-scrollbar {
           width: 4px;
@@ -1061,11 +1132,11 @@ export default function MessengerPage() {
           background: transparent;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb {
-          background-color: #f97316;
+          background-color: #FF7B1D;
           border-radius: 10px;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background-color: #ea580c;
+          background-color: #E66A0D;
         }
       `}</style>
     </>

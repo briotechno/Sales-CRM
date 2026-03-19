@@ -75,7 +75,7 @@ export default function TeamManagement() {
   const [showMembersModal, setShowMembersModal] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState(null);
 
-  const { create, read, update, delete: canDelete } = usePermission("Team Management");
+  const { create, read, update, delete: canDelete, hasPermission } = usePermission("Team Management");
 
   // Filter Logic (Frontend side since backend only supports search)
   const getDateRange = () => {
@@ -565,15 +565,16 @@ export default function TeamManagement() {
                           <div className="flex justify-end gap-2">
                             <button
                               onClick={() => { setSelectedTeam(team); setShowViewModal(true); }}
-                              className="p-1 hover:bg-orange-100 rounded-sm text-blue-500 hover:text-blue-700 transition-all"
+                              disabled={!read}
+                              className={`p-1 hover:bg-orange-100 rounded-sm transition-all ${read ? "text-blue-500 hover:text-blue-700" : "text-gray-300 cursor-not-allowed"}`}
                               title="View"
                             >
                               <Eye size={18} />
                             </button>
                             <button
                               onClick={() => { setSelectedTeam(team); setShowEditModal(true); }}
-                              disabled={!update}
-                              className={`p-1 hover:bg-orange-100 rounded-sm transition-all ${update ? "text-green-500 hover:text-green-700" : "text-gray-300 cursor-not-allowed"
+                              disabled={!hasPermission('team_edit')}
+                              className={`p-1 hover:bg-orange-100 rounded-sm transition-all ${hasPermission('team_edit') ? "text-green-500 hover:text-green-700" : "text-gray-300 cursor-not-allowed"
                                 }`}
                               title="Edit"
                             >
@@ -638,12 +639,13 @@ export default function TeamManagement() {
                   <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
                     <button
                       onClick={() => { setSelectedTeam(team); setShowViewModal(true); }}
-                      className="p-1.5 text-blue-500 hover:bg-blue-50 rounded-sm bg-white shadow-sm border border-blue-100"
+                      disabled={!read}
+                      className={`p-1.5 rounded-sm bg-white shadow-sm border ${read ? "text-blue-500 border-blue-100 hover:bg-blue-50" : "text-gray-300 border-gray-100 cursor-not-allowed"}`}
                       title="View"
                     >
                       <Eye size={16} />
                     </button>
-                    {update && (
+                    {hasPermission('team_edit') && (
                       <button
                         onClick={() => { setSelectedTeam(team); setShowEditModal(true); }}
                         className="p-1.5 text-green-500 hover:bg-green-50 rounded-sm bg-white shadow-sm border border-green-100"

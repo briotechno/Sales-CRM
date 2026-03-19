@@ -2,6 +2,7 @@ const Messenger = require('../models/messengerModel');
 const Employee = require('../models/employeeModel');
 const Client = require('../models/clientModel');
 const { pool } = require('../config/db');
+const notificationService = require('../services/notificationService');
 
 const messengerController = {
     // Get all potential contacts (Employees and Clients)
@@ -12,7 +13,7 @@ const messengerController = {
             const currentSubId = currentUserRole === 'Employee' ? req.user._id : req.user.id;
             const currentType = currentUserRole === 'Employee' ? 'employee' : 'user';
 
-            // Get all employees for this org (Admin who created them)
+            // Get all employees for this org
             const [employees] = await pool.query(`
                 SELECT e.id, e.employee_name, e.employee_id, e.email, e.mobile_number,
                        e.profile_picture, e.status, d.department_name, deg.designation_name
@@ -55,7 +56,37 @@ const messengerController = {
                 }
             }
 
-            // Get all clients (findAll returns { data, pagination })
+            // Get all teams for this user
+            let teams = [];
+            if (currentUserRole === 'Employee') {
+                // If employee, get teams where they are a member
+                [teams] = await pool.query(`
+                    SELECT t.id, t.team_name, t.description, t.team_id as team_code
+                    FROM teams t
+                    JOIN team_members tm ON t.id = tm.team_id
+                    WHERE tm.employee_id = ?
+                `, [currentSubId]);
+            } else {
+                // If Admin, get all teams in their org
+                [teams] = await pool.query(`
+                    SELECT id, team_name, description, team_id as team_code
+                    FROM teams
+                    WHERE user_id = ?
+                `, [orgId]);
+            }
+
+            const formattedTeams = teams.map(t => ({
+                id: t.id,
+                name: t.team_name,
+                role: 'Team / Group',
+                avatar: t.team_name.substring(0, 2).toUpperCase(),
+                status: 'online',
+                type: 'team',
+                unread: 0,
+                description: t.description
+            }));
+
+            // Get all clients
             const clientResponse = await Client.findAll(orgId, { limit: 1000 });
             const clients = clientResponse?.data || [];
 
@@ -64,12 +95,13 @@ const messengerController = {
 
             const enrichContact = (contact) => {
                 const conv = conversations.find(c =>
-                    parseInt(c.other_id) === parseInt(contact.id) &&
-                    c.other_type === contact.type
+                    (c.team_id && contact.type === 'team' && parseInt(c.team_id) === parseInt(contact.id)) ||
+                    (!c.team_id && parseInt(c.other_id) === parseInt(contact.id) && c.other_type === contact.type)
                 );
                 if (conv) {
                     return {
                         ...contact,
+                        conversationId: conv.id,
                         unread: conv.unread_count || 0,
                         lastMessage: conv.last_message_text,
                         time: conv.last_message_time ? new Date(conv.last_message_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
@@ -79,12 +111,21 @@ const messengerController = {
                 return contact;
             };
 
-            const enrichedTeam = team.map(enrichContact).sort((a, b) => {
-                if (a.updated_at && b.updated_at) return new Date(b.updated_at) - new Date(a.updated_at);
-                if (a.updated_at) return -1;
-                if (b.updated_at) return 1;
-                return 0;
-            });
+            const enrichedTeam = team.map(enrichContact);
+            const enrichedGroups = await Promise.all(formattedTeams.map(async (t) => {
+                // Find or create conversation for this team
+                let conversationId;
+                const [rows] = await pool.query('SELECT id FROM messenger_conversations WHERE team_id = ?', [t.id]);
+                if (rows.length > 0) {
+                    conversationId = rows[0].id;
+                } else {
+                    const [result] = await pool.query('INSERT INTO messenger_conversations (team_id, participant_one_type) VALUES (?, ?)', [t.id, 'team']);
+                    conversationId = result.insertId;
+                }
+
+                const contact = enrichContact({ ...t, conversationId });
+                return contact;
+            }));
 
             const enrichedClients = clients.map(c => enrichContact({
                 id: c.id,
@@ -96,17 +137,13 @@ const messengerController = {
                 phone: c.phone,
                 type: 'client',
                 unread: 0
-            })).sort((a, b) => {
-                if (a.updated_at && b.updated_at) return new Date(b.updated_at) - new Date(a.updated_at);
-                if (a.updated_at) return -1;
-                if (b.updated_at) return 1;
-                return 0;
-            });
+            }));
 
             res.status(200).json({
                 success: true,
                 team: enrichedTeam,
-                clients: enrichedClients
+                clients: enrichedClients,
+                groups: enrichedGroups
             });
         } catch (error) {
             console.error('Error fetching contacts:', error);
@@ -122,20 +159,79 @@ const messengerController = {
             const currentSubId = currentUserRole === 'Employee' ? req.user._id : req.user.id;
             const currentType = currentUserRole === 'Employee' ? 'employee' : 'user';
 
-            const conversation = await Messenger.getOrCreateConversation(
-                currentSubId, currentType,
-                parseInt(otherId), otherType
-            );
+            const teamId = parseInt(otherId);
 
-            const messages = await Messenger.getMessages(conversation.id, currentSubId, currentType);
+            if (otherType === 'team' || otherType === 'group') {
+                console.log(`Fetching history for team ID: ${teamId}`);
+                // For teams, check if a conversation already exists for this team_id
+                const [rows] = await pool.query(
+                    'SELECT * FROM messenger_conversations WHERE team_id = ?',
+                    [teamId]
+                );
+                
+                if (rows.length > 0) {
+                    conversationId = rows[0].id;
+                    console.log(`Found existing conversation: ${conversationId}`);
+                } else {
+                    // Create a new room for this team
+                    const [result] = await pool.query(
+                        'INSERT INTO messenger_conversations (team_id, participant_one_type) VALUES (?, ?)',
+                        [teamId, 'team']
+                    );
+                    conversationId = result.insertId;
+                    console.log(`Created new team conversation: ${conversationId}`);
+                }
+            } else {
+                const conversation = await Messenger.getOrCreateConversation(
+                    currentSubId, currentType,
+                    parseInt(otherId), otherType
+                );
+                conversationId = conversation.id;
+            }
+
+            const messages = await Messenger.getMessages(conversationId, currentSubId, currentType);
 
             // Mark as read
-            await Messenger.markAsRead(conversation.id, currentSubId, currentType);
+            await Messenger.markAsRead(conversationId, currentSubId, currentType);
+
+            let members = [];
+            if (otherType === 'team' || otherType === 'group') {
+                const teamId = parseInt(otherId);
+                // Fetch team members (employees)
+                const [empMembers] = await pool.query(`
+                    SELECT e.id, e.employee_name as name, e.email, e.mobile_number as phone, 
+                    'Member' as role, 'online' as status
+                    FROM employees e
+                    JOIN team_members tm ON e.id = tm.employee_id
+                    WHERE tm.team_id = ?
+                    ORDER BY e.employee_name ASC
+                `, [teamId]);
+                
+                members = empMembers;
+
+                // Also fetch the team owner (Admin)
+                const [teamInfo] = await pool.query('SELECT user_id FROM teams WHERE id = ?', [teamId]);
+                if (teamInfo[0]) {
+                    const [admin] = await pool.query('SELECT id, firstName, lastName, email, mobileNumber FROM users WHERE id = ?', [teamInfo[0].user_id]);
+                    if (admin[0]) {
+                        members.unshift({
+                            id: admin[0].id,
+                            name: `${admin[0].firstName} ${admin[0].lastName}`,
+                            email: admin[0].email,
+                            phone: admin[0].mobileNumber,
+                            role: 'Admin',
+                            status: 'online'
+                        });
+                    }
+                }
+                console.log(`Total members compiled for team ${teamId}: ${members.length}`);
+            }
 
             res.status(200).json({
                 success: true,
-                conversationId: conversation.id,
-                messages: messages
+                conversationId: conversationId,
+                messages: messages,
+                members: members || []
             });
         } catch (error) {
             console.error('Error fetching chat history:', error);
@@ -236,11 +332,21 @@ const messengerController = {
             let finalConversationId = conversationId;
 
             if (!finalConversationId && otherId) {
-                const conversation = await Messenger.getOrCreateConversation(
-                    currentSubId, currentType,
-                    parseInt(otherId), otherType
-                );
-                finalConversationId = conversation.id;
+                if (otherType === 'team') {
+                    const [rows] = await pool.query('SELECT id FROM messenger_conversations WHERE team_id = ?', [otherId]);
+                    if (rows.length > 0) {
+                        finalConversationId = rows[0].id;
+                    } else {
+                        const [result] = await pool.query('INSERT INTO messenger_conversations (team_id, participant_one_type) VALUES (?, ?)', [otherId, 'team']);
+                        finalConversationId = result.insertId;
+                    }
+                } else {
+                    const conversation = await Messenger.getOrCreateConversation(
+                        currentSubId, currentType,
+                        parseInt(otherId), otherType
+                    );
+                    finalConversationId = conversation.id;
+                }
             }
 
             const files = req.files || (req.file ? [req.file] : []);
@@ -295,10 +401,11 @@ const messengerController = {
 
             // Get the saved message with sender info and formatted time
             const [savedMsg] = await pool.query(`
-                SELECT m.*, 
+                SELECT m.*, c.team_id,
                 COALESCE(e.employee_name, CONCAT(u.firstName, ' ', u.lastName)) as sender_name,
                 DATE_FORMAT(m.created_at, '%h:%i %p') as time
                 FROM messenger_messages m
+                LEFT JOIN messenger_conversations c ON m.conversation_id = c.id
                 LEFT JOIN employees e ON m.sender_id = e.id AND m.sender_type = 'employee'
                 LEFT JOIN users u ON m.sender_id = u.id AND m.sender_type = 'user'
                 WHERE m.id = ?
@@ -335,6 +442,77 @@ const messengerController = {
                 message: msgData,
                 messages: [msgData]
             });
+
+            // Trigger Notification for recipient(s)
+            const senderName = req.user.employee_name || req.user.username || 'Someone';
+            const notificationTitle = 'New Message';
+            const notificationMessage = `${senderName} sent a message: ${text ? (text.length > 50 ? text.substring(0, 50) + '...' : text) : 'Sent an attachment'}`;
+
+            // Resolve recipients if not provided
+            let targetId = otherId;
+            let targetType = otherType;
+
+            if (!targetId && finalConversationId) {
+                const [convs] = await pool.query('SELECT * FROM messenger_conversations WHERE id = ?', [finalConversationId]);
+                if (convs.length > 0) {
+                    const c = convs[0];
+                    if (c.team_id) {
+                        targetId = c.team_id;
+                        targetType = 'team';
+                    } else {
+                        // 1-on-1: find the "other" participant
+                        if (Number(c.participant_one_id) === Number(currentSubId) && c.participant_one_type === currentType) {
+                            targetId = c.participant_two_id;
+                            targetType = c.participant_two_type;
+                        } else {
+                            targetId = c.participant_one_id;
+                            targetType = c.participant_one_type;
+                        }
+                    }
+                }
+            }
+
+            if (targetId) {
+                if (targetType === 'team' || targetType === 'group') {
+                    const teamId = targetId;
+                    // 1. Notify all employees in the team
+                    const [members] = await pool.query('SELECT employee_id FROM team_members WHERE team_id = ?', [teamId]);
+                    
+                    // 2. Notify the team owner (Admin)
+                    const [teamOwner] = await pool.query('SELECT user_id FROM teams WHERE id = ?', [teamId]);
+                    
+                    const recipients = members.map(m => ({ id: m.employee_id, type: 'employee' }));
+                    if (teamOwner.length > 0) {
+                        recipients.push({ id: teamOwner[0].user_id, type: 'user' });
+                    }
+
+                    // Send notifications to all recipients except the sender
+                    for (const recipient of recipients) {
+                        if (Number(recipient.id) === Number(currentSubId) && recipient.type === currentType) continue;
+                        
+                        await notificationService.createNotification(
+                            recipient.id,
+                            recipient.type,
+                            'messenger',
+                            `New Group Message (${msgData.sender_name || 'Team'})`,
+                            notificationMessage,
+                            'medium',
+                            'FiMessageCircle'
+                        );
+                    }
+                } else if (targetId && targetType !== 'team' && targetType !== 'group' && targetType !== 'client') {
+                    // Regular 1-on-1 notification (Skip clients for system-wide alerts unless requested)
+                    await notificationService.createNotification(
+                        targetId,
+                        targetType === 'user' ? 'user' : 'employee',
+                        'messenger',
+                        notificationTitle,
+                        notificationMessage,
+                        'medium',
+                        'FiMessageCircle'
+                    );
+                }
+            }
         } catch (error) {
             console.error('Error sending message:', error);
             res.status(500).json({ success: false, message: 'Server error' });

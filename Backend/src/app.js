@@ -75,6 +75,7 @@ app.use('/api/visitors', require('./routes/visitorRoutes'));
 app.use('/api/meetings', require('./routes/meetingRoutes'));
 app.use('/api/wallet', require('./routes/walletRoutes'));
 app.use('/api/super-admin', require('./routes/superAdminDashboardRoutes'));
+app.use('/api/notifications', require('./routes/notificationRoutes'));
 
 
 

@@ -139,7 +139,7 @@ const Employee = {
         const payload = data || {};
         const forbiddenFields = [
             'id', 'employee_id', 'user_id', 'department_name', 'department_uid', 'designation_name', 'designation_uid',
-            'employeeId', 'joiningDate', 'firstName', 'lastName', 'createdAt', 'updatedAt', 'permissions'
+            'employeeId', 'joiningDate', 'firstName', 'lastName', 'createdAt', 'updatedAt'
         ];
         const fields = Object.keys(payload).filter(key => !forbiddenFields.includes(key));
         const setClause = fields.map(field => `${field} = ?`).join(', ');

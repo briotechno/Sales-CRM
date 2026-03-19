@@ -38,7 +38,7 @@ const AllDepartment = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedDept, setSelectedDept] = useState(null);
 
-  const { create, read, update, delete: remove } = usePermission("Department");
+  const { create, read, update, delete: remove } = usePermission("Department Management");
 
   const { data, isLoading } = useGetDepartmentsQuery({
     page: currentPage,
@@ -281,7 +281,7 @@ const AllDepartment = () => {
                   </button>
                 </div>
 
-                <ActionGuard permission="departments_create" module="Department" type="create">
+                <ActionGuard permission="department_create" module="Department Management" type="create">
                   <button
                     onClick={() => setIsAddModalOpen(true)}
                     className={`flex items-center gap-2 px-6 py-3 rounded-sm font-semibold transition-all shadow-lg active:scale-95 bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 hover:shadow-orange-200`}
@@ -399,31 +399,33 @@ const AllDepartment = () => {
                           </td>
                           <td className="py-4 px-4 text-right">
                             <div className="flex justify-end gap-3 pr-2">
-                              <button
-                                onClick={() => { setSelectedDept(dept); setIsViewModalOpen(true); }}
-                                className="text-blue-500 hover:scale-110 transition-transform active:scale-90"
-                                title="View Details"
-                              >
-                                <Eye size={18} strokeWidth={2} />
-                              </button>
-                            <ActionGuard permission="departments_edit" module="Department" type="update">
-                              <button
-                                onClick={() => { setSelectedDept(dept); setIsEditModalOpen(true); }}
-                                className="text-[#22C55E] hover:scale-110 transition-transform active:scale-90"
-                                title="Edit Department"
-                              >
-                                <Edit size={18} strokeWidth={2} />
-                              </button>
-                            </ActionGuard>
-                            <ActionGuard permission="departments_delete" module="Department" type="delete">
-                              <button
-                                onClick={() => { setSelectedDept(dept); setIsDeleteModalOpen(true); }}
-                                className="text-red-500 hover:scale-110 transition-transform active:scale-90"
-                                title="Delete Department"
-                              >
-                                <Trash2 size={18} strokeWidth={2} />
-                              </button>
-                            </ActionGuard>
+                              <ActionGuard permission="department_view" module="Department Management" type="read">
+                                <button
+                                  onClick={() => { setSelectedDept(dept); setIsViewModalOpen(true); }}
+                                  className="text-blue-500 hover:scale-110 transition-transform active:scale-90"
+                                  title="View Details"
+                                >
+                                  <Eye size={18} strokeWidth={2} />
+                                </button>
+                              </ActionGuard>
+                              <ActionGuard permission="department_edit" module="Department Management" type="update">
+                                <button
+                                  onClick={() => { setSelectedDept(dept); setIsEditModalOpen(true); }}
+                                  className="text-[#22C55E] hover:scale-110 transition-transform active:scale-90"
+                                  title="Edit Department"
+                                >
+                                  <Edit size={18} strokeWidth={2} />
+                                </button>
+                              </ActionGuard>
+                              <ActionGuard permission="department_delete" module="Department Management" type="delete">
+                                <button
+                                  onClick={() => { setSelectedDept(dept); setIsDeleteModalOpen(true); }}
+                                  className="text-red-500 hover:scale-110 transition-transform active:scale-90"
+                                  title="Delete Department"
+                                >
+                                  <Trash2 size={18} strokeWidth={2} />
+                                </button>
+                              </ActionGuard>
                             </div>
                           </td>
                         </tr>
@@ -489,14 +491,16 @@ const AllDepartment = () => {
                     <div key={dept.id} className="bg-white border-2 border-gray-100 rounded-sm shadow-sm hover:shadow-md transition-all p-6 relative group flex flex-col h-full">
                       {/* Absolute Actions */}
                       <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 z-10">
-                        <button
-                          onClick={() => { setSelectedDept(dept); setIsViewModalOpen(true); }}
-                          className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-sm bg-white shadow-sm border border-blue-100"
-                          title="View"
-                        >
-                          <Eye size={16} />
-                        </button>
-                        <ActionGuard permission="departments_edit" module="Department" type="update">
+                        <ActionGuard permission="department_view" module="Department Management" type="read">
+                          <button
+                            onClick={() => { setSelectedDept(dept); setIsViewModalOpen(true); }}
+                            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-sm bg-white shadow-sm border border-blue-100"
+                            title="View"
+                          >
+                            <Eye size={16} />
+                          </button>
+                        </ActionGuard>
+                        <ActionGuard permission="department_edit" module="Department Management" type="update">
                           <button
                             onClick={() => { setSelectedDept(dept); setIsEditModalOpen(true); }}
                             className="p-1.5 text-green-600 hover:bg-green-50 rounded-sm bg-white shadow-sm border border-green-100"
@@ -505,7 +509,7 @@ const AllDepartment = () => {
                             <Edit size={16} />
                           </button>
                         </ActionGuard>
-                        <ActionGuard permission="departments_delete" module="Department" type="delete">
+                        <ActionGuard permission="department_delete" module="Department Management" type="delete">
                           <button
                             onClick={() => { setSelectedDept(dept); setIsDeleteModalOpen(true); }}
                             className="p-1.5 text-red-600 hover:bg-red-50 rounded-sm bg-white shadow-sm border border-red-100"

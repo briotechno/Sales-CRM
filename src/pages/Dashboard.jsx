@@ -266,7 +266,7 @@ const CRMDashboard = () => {
                   </button>
 
                   <div className="relative">
-                    <ActionGuard permission="leads_create" module="Lead Management" type="create">
+                    <ActionGuard permission="leads_create" module="Leads Management" type="create">
                       <button
                         onClick={() => setOpenLeadMenu(!openLeadMenu)}
                         className="flex items-center gap-2 px-6 py-3 rounded-sm font-semibold transition shadow-lg hover:shadow-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
@@ -492,7 +492,7 @@ const CRMDashboard = () => {
                   </div>
 
                   {!isPunchedIn ? (
-                    <ActionGuard permission="attendance_create" module="Attendance" type="create">
+                    <ActionGuard permission="attendance_mark" module="Attendance Management" type="create">
                       <button
                         onClick={handlePunchIn}
                         className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-3 rounded-sm font-bold text-xs uppercase tracking-widest hover:from-green-600 hover:to-green-700 transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2"
@@ -502,7 +502,7 @@ const CRMDashboard = () => {
                       </button>
                     </ActionGuard>
                   ) : (
-                    <ActionGuard permission="attendance_edit" module="Attendance" type="update">
+                    <ActionGuard permission="attendance_edit" module="Attendance Management" type="update">
                       <button
                         onClick={handlePunchOut}
                         className="w-full bg-gradient-to-r from-red-500 to-red-600 text-white py-3 rounded-sm font-bold text-xs uppercase tracking-widest hover:from-red-600 hover:to-red-700 transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2"

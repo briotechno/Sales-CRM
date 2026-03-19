@@ -80,6 +80,18 @@ const deleteHoliday = async (req, res) => {
 const applyLeave = async (req, res) => {
     try {
         const id = await LeaveRequest.create(req.body, req.user.id);
+        
+        // Notify Admin of new leave request
+        await notificationService.createNotification(
+            req.user.id, // The Admin who owns the employee's data
+            'user',      // Always notify the Admin (user type)
+            'hr',
+            'New Leave Request',
+            `${req.user.employee_name || 'An employee'} has applied for leave.`,
+            'medium',
+            'FiCalendar'
+        );
+
         res.status(201).json({ status: true, message: 'Leave application submitted successfully', id });
     } catch (error) {
         res.status(500).json({ status: false, message: error.message });
@@ -103,6 +115,21 @@ const updateLeaveStatus = async (req, res) => {
             return res.status(400).json({ status: false, message: 'Invalid status value' });
         }
         await LeaveRequest.updateStatus(req.params.id, status, req.user.id);
+
+        // Fetch the request to notify the employee
+        const request = await LeaveRequest.findById(req.params.id, req.user.id);
+        if (request) {
+            await notificationService.createNotification(
+                request.employee_id,
+                'employee',
+                'hr',
+                'Leave Request Update',
+                `Your leave request has been ${status}.`,
+                status === 'approved' ? 'medium' : 'high',
+                status === 'approved' ? 'FiCheckCircle' : 'FiXCircle'
+            );
+        }
+
         res.status(200).json({ status: true, message: `Leave ${status} successfully` });
     } catch (error) {
         res.status(500).json({ status: false, message: error.message });

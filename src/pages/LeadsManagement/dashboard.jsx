@@ -27,6 +27,7 @@ import { useGetLeadDashboardQuery } from "../../store/api/leadApi";
 import NumberCard from "../../components/NumberCard";
 import BulkUploadLeads from "../../components/AddNewLeads/BulkUpload";
 import AddLeadPopup from "../../components/AddNewLeads/AddNewLead";
+import ActionGuard from "../../components/common/ActionGuard";
 
 const leadCategories = [
   { name: "Work Station", path: "/crm/leads/work-station", icon: <Briefcase size={16} /> },
@@ -185,13 +186,15 @@ export default function LeadDashboard() {
               </div>
 
               <div className="relative" ref={addLeadMenuRef}>
-                <button
-                  onClick={() => setOpenLeadMenu(!openLeadMenu)}
-                  className="flex items-center gap-2 px-6 py-3 rounded-sm font-semibold transition shadow-lg hover:shadow-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
-                >
-                  <PlusIcon size={20} />
-                  Add Lead
-                </button>
+                <ActionGuard permission="leads_create" module="Leads Management" type="create">
+                  <button
+                    onClick={() => setOpenLeadMenu(!openLeadMenu)}
+                    className="flex items-center gap-2 px-6 py-3 rounded-sm font-semibold transition shadow-lg hover:shadow-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
+                  >
+                    <PlusIcon size={20} />
+                    Add Lead
+                  </button>
+                </ActionGuard>
 
                 {openLeadMenu && (
                   <div className="absolute top-full right-0 mt-2 w-56 bg-white border border-gray-200 shadow-xl rounded-sm z-50 overflow-hidden divide-y divide-gray-100 animate-fadeIn">
