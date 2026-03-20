@@ -42,6 +42,7 @@ import { FaWhatsapp } from "react-icons/fa";
 import NumberCard from "../../components/NumberCard";
 import CallActionPopup from "../../components/AddNewLeads/CallActionPopup";
 import EmptyState from "../../components/common/EmptyState";
+import SendWhatsAppModal from "../../components/LeadManagement/SendWhatsAppModal";
 
 import CallQrModal from "../../components/LeadManagement/CallQrModal";
 import AssignmentHistoryModal from "../../components/LeadManagement/AssignmentHistoryModal";
@@ -99,7 +100,8 @@ const WorkStationLeadsListView = ({
   handleLeadClick,
   handleEditLead,
   handleDeleteLead,
-  handleHitCall
+  handleHitCall,
+  handleWhatsAppClick
 }) => {
   return (
     <div className="overflow-x-auto border border-gray-200 rounded-sm shadow-sm bg-white">
@@ -287,15 +289,13 @@ const WorkStationLeadsListView = ({
                       </button>
                     </ActionGuard>
                     <ActionGuard permission="leads_view_own" module="Leads Management" type="read">
-                      <a
-                        href={((lead.mobile_number || lead.phone || '').replace(/\D/g, '')) ? `https://wa.me/${(lead.mobile_number || lead.phone || '').replace(/\D/g, '')}` : '#'}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleWhatsAppClick && handleWhatsAppClick(lead); }}
                         className="p-1.5 bg-green-50 hover:bg-green-500 rounded-sm text-green-600 hover:text-white transition-all border border-green-100 hover:border-green-500 shadow-sm"
                         title="WhatsApp"
                       >
                         <FaWhatsapp size={16} />
-                      </a>
+                      </button>
                     </ActionGuard>
                     <ActionGuard permission="leads_view_own" module="Leads Management" type="read">
                       <a
@@ -337,7 +337,8 @@ const WorkStationLeadsGridView = ({
   employees = [],
   currentTime, // Added currentTime prop for instant UI moves
   handleShowAssignmentHistory,
-  navigate
+  navigate,
+  handleWhatsAppClick
 }) => {
   const groupTags = ["New Leads", "Not Connected", "Follow Up", "Trending"];
 
@@ -674,16 +675,13 @@ const WorkStationLeadsGridView = ({
                             </button>
                           </ActionGuard>
                           <ActionGuard permission="leads_view_own" module="Leads Management" type="read">
-                            <a
-                              href={waLink}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              onClick={(e) => e.stopPropagation()}
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleWhatsAppClick && handleWhatsAppClick(lead); }}
                               className="p-2 bg-white hover:bg-green-600 rounded-sm text-green-600 hover:text-white transition-all duration-200 border border-green-100 hover:border-green-600 shadow-sm active:scale-95"
                               title="WhatsApp"
                             >
                               <FaWhatsapp size={14} />
-                            </a>
+                            </button>
                           </ActionGuard>
                           <ActionGuard permission="leads_view_own" module="Leads Management" type="read">
                             <a
@@ -754,12 +752,19 @@ export default function WorkStation() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isAssignmentHistoryOpen, setIsAssignmentHistoryOpen] = useState(false);
   const [currentAssignmentLead, setCurrentAssignmentLead] = useState(null);
+  const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
+  const [selectedLeadForWhatsApp, setSelectedLeadForWhatsApp] = useState(null);
   const dropdownRef = useRef(null);
   const addLeadMenuRef = useRef(null);
 
   const handleShowAssignmentHistory = (lead) => {
     setCurrentAssignmentLead(lead);
     setIsAssignmentHistoryOpen(true);
+  };
+
+  const handleWhatsAppClick = (lead) => {
+    setSelectedLeadForWhatsApp(lead);
+    setIsWhatsAppModalOpen(true);
   };
 
   // Temporary filter states for the menu
@@ -1431,6 +1436,7 @@ export default function WorkStation() {
                     handleDeleteLead={handleDeleteLead}
                     handleEditLead={handleEditLead}
                     handleHitCall={openCallAction}
+                    handleWhatsAppClick={handleWhatsAppClick}
                   />
                 ) : (
                   <WorkStationLeadsGridView
@@ -1444,6 +1450,7 @@ export default function WorkStation() {
                     currentTime={currentTime}
                     handleShowAssignmentHistory={handleShowAssignmentHistory}
                     navigate={navigate}
+                    handleWhatsAppClick={handleWhatsAppClick}
                   />
                 )
               )}
@@ -1659,6 +1666,12 @@ export default function WorkStation() {
           </div>
         </div>
       </Modal>
+
+      <SendWhatsAppModal
+        isOpen={isWhatsAppModalOpen}
+        onClose={() => setIsWhatsAppModalOpen(false)}
+        lead={selectedLeadForWhatsApp}
+      />
 
       <style>{`
         @keyframes slideUp {

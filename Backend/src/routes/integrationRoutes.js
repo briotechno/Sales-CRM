@@ -28,6 +28,13 @@ router.post('/channels', protect, integrationController.saveChannelConfig);
 router.delete('/channels/:id', protect, integrationController.deleteChannelConfig);
 router.post('/channels/:id/sync', protect, checkLimit('leads'), integrationController.syncChannelLeads);
 
+// WhatsApp Specific
+router.get('/whatsapp', protect, integrationController.getWhatsAppConfig);
+router.post('/whatsapp', protect, integrationController.saveWhatsAppConfig);
+router.post('/whatsapp/test', protect, integrationController.sendWhatsAppTestMessage);
+router.get('/whatsapp/templates', protect, integrationController.getWhatsAppTemplates);
+router.post('/whatsapp/send', protect, integrationController.sendWhatsAppMessage);
+
 
 // Logs
 router.get('/logs', protect, integrationController.getLogs);

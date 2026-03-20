@@ -1,3 +1,4 @@
+const { pool } = require('../config/db');
 const CRMForm = require('../models/crmFormModel');
 const GoogleSheetsConfig = require('../models/googleSheetsModel');
 const LeadSyncLog = require('../models/leadSyncLogModel');
@@ -323,6 +324,247 @@ const integrationController = {
             res.json({ message: 'Configuration deleted successfully' });
         } catch (error) {
             res.status(500).json({ message: error.message });
+        }
+    },
+
+    // --- WhatsApp Specific ---
+    getWhatsAppConfig: async (req, res) => {
+        try {
+            // Use same model as getWhatsAppTemplates (consistent — avoids parseInt mismatch)
+            const configs = await ChannelConfig.findAll(req.user.id, 'whatsapp');
+            res.json({
+                success: true,
+                data: configs[0] || null
+            });
+        } catch (error) {
+            res.status(500).json({ success: false, message: error.message });
+        }
+    },
+
+    saveWhatsAppConfig: async (req, res) => {
+        try {
+            const { phoneNumberId, businessAccountId, accessToken, apiUrl, apiVersion, webhookVerifyToken, provider, status, businessId } = req.body;
+            const userId = parseInt(req.user.id);
+
+            const dbStatus = (status === 'active') ? 'Active' : 'Inactive';
+
+            const configData = JSON.stringify({
+                phoneNumberId,
+                businessAccountId,
+                apiUrl,
+                apiVersion,
+                webhookVerifyToken,
+                provider,
+                status,
+                businessId
+            });
+
+            // SELECT first — then UPDATE existing row by ID, or INSERT new
+            const [existing] = await pool.query(
+                'SELECT id FROM channel_configs WHERE user_id = ? AND channel_type = ? LIMIT 1',
+                [userId, 'whatsapp']
+            );
+
+            if (existing.length > 0) {
+                // UPDATE existing row by primary key (100% reliable)
+                await pool.query(
+                    `UPDATE channel_configs 
+                     SET api_key = ?, config_data = ?, status = ?, account_name = ?
+                     WHERE id = ?`,
+                    [accessToken, configData, dbStatus, 'Primary WhatsApp', existing[0].id]
+                );
+            } else {
+                // INSERT new row
+                await pool.query(
+                    `INSERT INTO channel_configs (user_id, channel_type, account_name, api_key, config_data, status)
+                     VALUES (?, 'whatsapp', 'Primary WhatsApp', ?, ?, ?)`,
+                    [userId, accessToken, configData, dbStatus]
+                );
+            }
+
+            res.json({ success: true, message: 'WhatsApp configuration saved successfully' });
+        } catch (error) {
+            console.error('Save WhatsApp Config Error:', error);
+            res.status(500).json({ success: false, message: error.message });
+        }
+    },
+
+    sendWhatsAppTestMessage: async (req, res) => {
+        try {
+            const { phone, config } = req.body;
+            const accessToken = config.accessToken;
+            const phoneNumberId = config.phoneNumberId;
+            const apiVersion = config.apiVersion || 'v19.0';
+
+            let finalUrl = config.apiUrl;
+            if (!finalUrl || finalUrl === 'https://graph.facebook.com') {
+                finalUrl = `https://graph.facebook.com/${apiVersion}/${phoneNumberId}/messages`;
+            } else {
+                // For custom gateways, we still need to append the Meta path standard suffix 
+                // if it's not already there
+                if (!finalUrl.includes('/messages')) {
+                    finalUrl = `${finalUrl.replace(/\/$/, '')}/${apiVersion}/${phoneNumberId}/messages`;
+                }
+            }
+
+            // Prepare the payload for Meta Cloud API
+            const payload = {
+                messaging_product: "whatsapp",
+                to: phone,
+                type: "template",
+                template: {
+                    name: "hello_world",
+                    language: { code: "en_US" }
+                }
+            };
+
+            const response = await axios.post(finalUrl, payload, {
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            res.json({ success: true, data: response.data, message: "Test message sent successfully" });
+        } catch (error) {
+            console.error('WhatsApp Test Error:', error.response?.data || error.message);
+            res.status(400).json({
+                success: false,
+                message: error.response?.data?.error?.message || error.message,
+                error: error.response?.data || error.message
+            });
+        }
+    },
+
+    getWhatsAppTemplates: async (req, res) => {
+        try {
+            const configs = await ChannelConfig.findAll(req.user.id, 'whatsapp');
+            if (configs.length === 0) return res.status(404).json({ message: 'WhatsApp not configured' });
+
+            const config = configs[0];
+            const configData = typeof config.config_data === 'string' ? JSON.parse(config.config_data) : config.config_data;
+            const wabaId = configData.businessAccountId;
+            const accessToken = config.api_key;
+            const apiVersion = configData.apiVersion || 'v19.0';
+
+            // Build templates URL from saved apiUrl (respect custom gateway)
+            const baseApiUrl = configData.apiUrl || 'https://graph.facebook.com';
+            const isDefaultMeta = !baseApiUrl || baseApiUrl === 'https://graph.facebook.com';
+
+            let templatesUrl;
+            let requestConfig;
+
+            if (isDefaultMeta) {
+                // Official Meta Cloud API — uses access_token as query param
+                templatesUrl = `https://graph.facebook.com/${apiVersion}/${wabaId}/message_templates`;
+                requestConfig = {
+                    params: { access_token: accessToken, limit: 100 }
+                };
+            } else {
+                // Custom gateway (e.g. https://crmapp.seeviewapi.com/api/meta)
+                // Uses Authorization: Bearer header + API-KEY header
+                const cleanBase = baseApiUrl.replace(/\/$/, '');
+                templatesUrl = `${cleanBase}/${apiVersion}/${wabaId}/message_templates`;
+                requestConfig = {
+                    params: { limit: 100 },
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'API-KEY': accessToken,
+                        'Content-Type': 'application/json'
+                    }
+                };
+            }
+
+            console.log('[Templates] Hitting URL:', templatesUrl);
+
+            const response = await axios.get(templatesUrl, requestConfig);
+
+
+            // Handle multiple possible response formats from different gateways
+            // Meta format: { data: [...] }
+            // Custom gateway might use: { templates: [...] } or { data: { data: [...] } } or just [...]
+            let rawList =
+                response.data?.data ||          // Meta standard: { data: [...] }
+                response.data?.templates ||      // Custom: { templates: [...] }
+                response.data?.records ||        // Custom: { records: [...] }
+                (Array.isArray(response.data) ? response.data : []);  // Direct array
+
+            // Case-insensitive APPROVED filter
+            const templates = rawList.filter(t =>
+                (t.status || '').toUpperCase() === 'APPROVED'
+            );
+
+            res.json({
+                success: true,
+                data: templates
+            });
+        } catch (error) {
+            console.error('Fetch Templates Error:', error.response?.data || error.message);
+            const status = error.response?.status || 400;
+            res.status(status).json({
+                success: false,
+                message: error.response?.data?.error?.message || error.message
+            });
+        }
+    },
+
+    sendWhatsAppMessage: async (req, res) => {
+        try {
+            const { phone, templateName, languageCode, components, leadId } = req.body;
+
+            const configs = await ChannelConfig.findAll(req.user.id, 'whatsapp');
+            if (configs.length === 0) return res.status(404).json({ message: 'WhatsApp not configured' });
+
+            const config = configs[0];
+            const configData = typeof config.config_data === 'string' ? JSON.parse(config.config_data) : config.config_data;
+            const accessToken = config.api_key;
+            const phoneNumberId = configData.phoneNumberId;
+            const apiVersion = configData.apiVersion || 'v19.0';
+
+            let finalUrl = configData.apiUrl || 'https://graph.facebook.com';
+            if (finalUrl === 'https://graph.facebook.com') {
+                finalUrl = `https://graph.facebook.com/${apiVersion}/${phoneNumberId}/messages`;
+            } else {
+                if (!finalUrl.includes('/messages')) {
+                    finalUrl = `${finalUrl.replace(/\/$/, '')}/${apiVersion}/${phoneNumberId}/messages`;
+                }
+            }
+
+            const payload = {
+                messaging_product: "whatsapp",
+                to: phone,
+                type: "template",
+                template: {
+                    name: templateName,
+                    language: { code: languageCode || "en_US" },
+                    components: components || []
+                }
+            };
+
+            const response = await axios.post(finalUrl, payload, {
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            // Log the sync
+            await LeadSyncLog.create({
+                user_id: req.user.id,
+                channel_type: 'whatsapp_msg',
+                reference_id: leadId || null,
+                status: 'success',
+                message: `Template ${templateName} sent to ${phone}`,
+                raw_data: { templateName, phone, response: response.data }
+            });
+
+            res.json({ success: true, data: response.data, message: "Message sent successfully" });
+        } catch (error) {
+            console.error('Send Template Error:', error.response?.data || error.message);
+            res.status(400).json({
+                success: false,
+                message: error.response?.data?.error?.message || error.message
+            });
         }
     },
 

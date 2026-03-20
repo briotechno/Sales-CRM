@@ -139,6 +139,39 @@ export const integrationApi = createApi({
             }),
             providesTags: ['SyncLog'],
         }),
+
+        // WhatsApp Specific
+        getWhatsAppConfig: builder.query({
+            query: () => 'whatsapp',
+            providesTags: ['ChannelConfig'],
+        }),
+        saveWhatsAppConfig: builder.mutation({
+            query: (data) => ({
+                url: 'whatsapp',
+                method: 'POST',
+                body: data,
+            }),
+            invalidatesTags: ['ChannelConfig'],
+        }),
+        sendWhatsAppTestMessage: builder.mutation({
+            query: (data) => ({
+                url: 'whatsapp/test',
+                method: 'POST',
+                body: data,
+            }),
+        }),
+        getWhatsAppTemplates: builder.query({
+            query: () => 'whatsapp/templates',
+            providesTags: ['ChannelConfig'],
+        }),
+        sendWhatsAppMessage: builder.mutation({
+            query: (data) => ({
+                url: 'whatsapp/send',
+                method: 'POST',
+                body: data,
+            }),
+            invalidatesTags: ['SyncLog'],
+        }),
     }),
 });
 
@@ -157,4 +190,9 @@ export const {
     useDeleteChannelConfigMutation,
     useSyncChannelLeadsMutation,
     useGetLogsQuery,
+    useGetWhatsAppConfigQuery,
+    useSaveWhatsAppConfigMutation,
+    useSendWhatsAppTestMessageMutation,
+    useGetWhatsAppTemplatesQuery,
+    useSendWhatsAppMessageMutation,
 } = integrationApi;

@@ -149,6 +149,7 @@ export default function LeadTabs({
   onDownloadClick = () => { },
   leadId,
   isDisabled = false,
+  setShowWhatsAppModal,
 }) {
   const sortOptions = [
     "Last 7 Days",
@@ -1176,14 +1177,24 @@ export default function LeadTabs({
                 <div className="w-20 h-20 bg-[#25D366] rounded-full flex items-center justify-center mb-6 shadow-lg shadow-[#25D366]/20">
                   <FaWhatsapp size={40} className="text-white" />
                 </div>
-                <h3 className="text-[20px] font-bold text-gray-800 font-primary mb-3">WhatsApp Integration</h3>
-                <p className="text-[15px] text-gray-400 font-medium font-primary max-w-md mx-auto mb-8">Connect your WhatsApp Business account to send messages, templates, and track conversations directly within the lead profile.</p>
-                <button
-                  disabled={isDisabled}
-                  className={`px-10 py-3.5 rounded-sm transition-all font-bold text-[14px] font-primary shadow-lg active:scale-95 flex items-center gap-2 ${isDisabled ? 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none' : 'bg-[#25D366] text-white hover:bg-[#128C7E] shadow-[#25D366]/20'}`}
-                >
-                  Connect WhatsApp
-                </button>
+                <h3 className="text-[20px] font-bold text-gray-800 font-primary mb-3">WhatsApp Messenger</h3>
+                <p className="text-[15px] text-gray-400 font-medium font-primary max-w-md mx-auto mb-8">Send approved templates, dynamic messages, and track conversations directly within the lead profile.</p>
+                <div className="flex gap-4">
+                  <button
+                    disabled={isDisabled}
+                    onClick={() => setShowWhatsAppModal(true)}
+                    className={`px-10 py-3.5 rounded-sm transition-all font-bold text-[14px] font-primary shadow-lg active:scale-95 flex items-center gap-2 ${isDisabled ? 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none' : 'bg-[#25D366] text-white hover:bg-[#128C7E] shadow-[#25D366]/20'}`}
+                  >
+                    <FaWhatsapp size={18} />
+                    Send Template Message
+                  </button>
+                  <button
+                    disabled={isDisabled}
+                    className={`px-6 py-3.5 rounded-sm transition-all font-bold text-[14px] font-primary border border-gray-200 text-gray-600 hover:bg-gray-50 active:scale-95 ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    Connect WhatsApp
+                  </button>
+                </div>
               </div>
             </div>
           </div>

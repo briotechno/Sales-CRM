@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { FaWhatsapp } from "react-icons/fa";
 
 import AddNoteModal from "../../components/LeadManagement/LeadPipLineStatus/AddNotes";
 import EditLeadModal from "../../pages/LeadsManagement/EditLeadPopup"; // Adjust path as needed
@@ -23,6 +24,7 @@ import {
 } from "lucide-react";
 import { useGetLeadByIdQuery, useUpdateLeadMutation } from "../../store/api/leadApi";
 import { useGetPipelineByIdQuery } from "../../store/api/pipelineApi";
+import { useGetWhatsAppConfigQuery } from "../../store/api/integrationApi";
 import ActionGuard from "../../components/common/ActionGuard";
 
 export default function CRMLeadDetail() {
@@ -822,30 +824,10 @@ export default function CRMLeadDetail() {
 
       case "whatsapp":
         return (
-          <div className="flex-1 bg-gray-50 p-8 overflow-auto">
-            <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-              <FaWhatsapp size={28} className="text-green-500" />
-              WhatsApp
-            </h2>
-
-            <div className="bg-white rounded-lg border border-gray-200 p-8 flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-bold text-gray-900 mb-2">
-                  Manage WhatsApp Messages
-                </h3>
-                <p className="text-sm text-gray-600">
-                  You can send and receive WhatsApp messages directly via this
-                  section.
-                </p>
-              </div>
-              <ActionGuard permission="leads_edit" module="Leads Management" type="update">
-                <button className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-semibold flex items-center gap-2">
-                  <FaWhatsapp size={20} />
-                  Connect WhatsApp
-                </button>
-              </ActionGuard>
-            </div>
-          </div>
+          <WhatsAppTab
+            lead={passedLead}
+            navigate={navigate}
+          />
         );
 
       default:
@@ -982,7 +964,6 @@ export default function CRMLeadDetail() {
                   </span>
                 </div>
 
-                {/* Follow Up */}
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-gray-600 flex items-center gap-2">
                     <Phone size={16} className="text-gray-400" /> Follow Up
@@ -1303,5 +1284,45 @@ export default function CRMLeadDetail() {
       />
     </>
 
+  );
+}
+
+// --- WhatsApp Tab Component --------------------------------------------------
+import SendWhatsAppModal from "../../components/LeadManagement/SendWhatsAppModal";
+
+function WhatsAppTab({ lead, navigate }) {
+  const { data: waConfig, isLoading } = useGetWhatsAppConfigQuery();
+  const [showSendModal, setShowSendModal] = React.useState(false);
+  const isConfigured = !isLoading && waConfig?.success && waConfig?.data !== null;
+
+  return (
+    <div className="flex-1 bg-gray-50 p-8 overflow-auto">
+      <h2 className="text-xl font-bold text-gray-800 mb-4">WhatsApp Messenger</h2>
+      <div className="bg-white rounded-lg border border-gray-200 p-10 flex flex-col items-center justify-center text-center gap-4">
+        <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center shadow-lg">
+          <FaWhatsapp size={32} className="text-white" />
+        </div>
+        <h3 className="text-lg font-bold text-gray-900">WhatsApp Messenger</h3>
+        <p className="text-sm text-gray-500 max-w-sm">
+          Send approved templates, dynamic messages, and track conversations directly within the lead profile.
+        </p>
+        <div className="flex items-center gap-3 mt-2">
+          {isLoading ? (
+            <span className="text-sm text-gray-400 animate-pulse">Checking configuration...</span>
+          ) : isConfigured ? (
+            <button onClick={() => setShowSendModal(true)} className="flex items-center gap-2 px-6 py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg transition-colors shadow-sm">
+              <FaWhatsapp size={18} /> Send Template Message
+            </button>
+          ) : (
+            <button onClick={() => navigate("/channel-integration?tab=whatsapp")} className="flex items-center gap-2 px-6 py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg transition-colors shadow-sm">
+              <FaWhatsapp size={18} /> Connect WhatsApp
+            </button>
+          )}
+        </div>
+      </div>
+      {showSendModal && isConfigured && (
+        <SendWhatsAppModal isOpen={true} onClose={() => setShowSendModal(false)} lead={lead} />
+      )}
+    </div>
   );
 }

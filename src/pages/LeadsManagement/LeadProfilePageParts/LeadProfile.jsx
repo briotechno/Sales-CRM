@@ -34,6 +34,7 @@ import LeadDeleteConfirmationModal from "../../../components/LeadManagement/Lead
 import ConvertClientModal from "../../../components/LeadManagement/ConvertClientModal";
 import { toast } from "react-hot-toast";
 import { FaWhatsapp } from "react-icons/fa";
+import SendWhatsAppModal from "../../../components/LeadManagement/SendWhatsAppModal";
 import {
   Edit2,
   ChevronDown,
@@ -143,6 +144,7 @@ export default function CRMLeadDetail() {
   const [showQuotationModal, setShowQuotationModal] = useState(false);
   const [showJourney, setShowJourney] = useState(false);
   const [showStageDropdown, setShowStageDropdown] = useState(false);
+  const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
   const stageDropdownRef = useRef(null);
   const [quotationFormData, setQuotationFormData] = useState({
     customerType: "Individual",
@@ -882,6 +884,7 @@ export default function CRMLeadDetail() {
             handleQrCall={openQrCall}
             employees={employees}
             handleUpdateStatus={handleUpdateStatus}
+            setShowWhatsAppModal={setShowWhatsAppModal}
           />
 
           {/* Main Content */}
@@ -1269,6 +1272,7 @@ export default function CRMLeadDetail() {
               <LeadTabs
                 activeTab={activeTab}
                 setActiveTab={setActiveTab}
+                setShowWhatsAppModal={setShowWhatsAppModal}
                 isDisabled={activeTab === "activities" ? false : (isOnlyCallTabEnabled ? (activeTab !== "calls" && activeTab !== "activities") : !isTabsEnabled)}
                 selectedSort={selectedSort}
                 setSelectedSort={setSelectedSort}
@@ -1430,6 +1434,12 @@ export default function CRMLeadDetail() {
           leadData={leadData}
         />
 
+        <SendWhatsAppModal
+          isOpen={showWhatsAppModal}
+          onClose={() => setShowWhatsAppModal(false)}
+          lead={leadData}
+        />
+
         {/* Disqualify Lead Modal */}
         {
           showDropModal && (
@@ -1550,14 +1560,13 @@ export default function CRMLeadDetail() {
           >
             <Mail size={24} />
           </a>
-          <a
-            href={leadData?.phone ? `https://wa.me/${leadData.phone.replace(/\D/g, '')}` : '#'}
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            onClick={() => setShowWhatsAppModal(true)}
             className="w-14 h-14 bg-gradient-to-br from-green-500 to-green-600 border-2 border-white rounded-xl flex items-center justify-center text-white shadow-xl hover:shadow-green-500/40 transition-all transform hover:-translate-y-1 active:scale-95"
+            title="Send WhatsApp Message"
           >
             <FaWhatsapp size={26} />
-          </a>
+          </button>
           <button
             onClick={openQrCall}
             className="w-14 h-14 bg-gradient-to-br from-orange-500 to-orange-600 border-2 border-white rounded-xl flex items-center justify-center text-white shadow-xl hover:shadow-orange-500/40 transition-all transform hover:-translate-y-1 active:scale-95"
