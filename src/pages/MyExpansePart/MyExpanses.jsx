@@ -300,7 +300,7 @@ export default function ExpensePage() {
 
 
                 {/* Add Expense Button */}
-                <ActionGuard permission="expense_create" module="Expense">
+                <ActionGuard permission="expenses_create" module="Financial">
                   <button
                     onClick={() => setIsAddModalOpen(true)}
                     className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-2 font-semibold"
@@ -413,7 +413,7 @@ export default function ExpensePage() {
                         </td>
                         <td className="px-4 py-3 text-right">
                           <div className="flex items-center justify-end gap-3">
-                            <ActionGuard permission="expense_view" module="Expense">
+                            <ActionGuard permission="expenses_view" module="Financial">
                               <button
                                 onClick={() => handleView(expense)}
                                 className="p-1 hover:bg-orange-100 rounded-sm text-blue-500 hover:text-blue-700 transition-all"
@@ -422,7 +422,7 @@ export default function ExpensePage() {
                                 <Eye size={18} />
                               </button>
                             </ActionGuard>
-                            <ActionGuard permission="expense_edit" module="Expense">
+                            <ActionGuard permission="expenses_edit" module="Financial">
                               <button
                                 onClick={() => handleEdit(expense)}
                                 className="p-1 hover:bg-orange-100 rounded-sm text-green-500 hover:text-green-700 transition-all"
@@ -431,7 +431,7 @@ export default function ExpensePage() {
                                 <Edit size={18} />
                               </button>
                             </ActionGuard>
-                            <ActionGuard permission="expense_delete" module="Expense">
+                            <ActionGuard permission="expenses_delete" module="Financial">
                               <button
                                 onClick={() => handleDelete(expense)}
                                 className="p-1 hover:bg-orange-100 rounded-sm text-red-500 hover:text-red-700 transition-all shadow-sm"

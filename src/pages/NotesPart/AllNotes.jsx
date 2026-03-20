@@ -387,7 +387,7 @@ export default function NotesPage() {
                   </button>
                 </div>
 
-                <ActionGuard permission="note_create" module="Notes">
+                <ActionGuard permission="notes_create" module="Communication Tools">
                   <button
                     onClick={() => {
                       resetForm();
@@ -454,7 +454,7 @@ export default function NotesPage() {
                 >
                   {/* Absolute Actions */}
                   <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 z-10">
-                    <ActionGuard permission="note_read" module="Notes">
+                    <ActionGuard permission="notes_view" module="Communication Tools">
                       <button
                         onClick={(e) => { e.stopPropagation(); handleView(note); }}
                         className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-sm transition-all"
@@ -463,7 +463,7 @@ export default function NotesPage() {
                         <Eye size={16} />
                       </button>
                     </ActionGuard>
-                    <ActionGuard permission="note_edit" module="Notes">
+                    <ActionGuard permission="notes_edit" module="Communication Tools">
                       <button
                         onClick={(e) => { e.stopPropagation(); handleEdit(note); }}
                         className="p-1.5 text-green-600 hover:bg-green-50 rounded-sm transition-all"
@@ -472,7 +472,7 @@ export default function NotesPage() {
                         <SquarePen size={16} />
                       </button>
                     </ActionGuard>
-                    <ActionGuard permission="note_delete" module="Notes">
+                    <ActionGuard permission="notes_delete" module="Communication Tools">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -592,7 +592,7 @@ export default function NotesPage() {
                         </td>
                         <td className="py-3 px-4 text-right">
                           <div className="flex items-center justify-end gap-2">
-                            <ActionGuard permission="note_read" module="Notes">
+                            <ActionGuard permission="notes_view" module="Communication Tools">
                               <button
                                 onClick={() => handleView(note)}
                                 className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-sm transition-all"
@@ -601,7 +601,7 @@ export default function NotesPage() {
                                 <Eye size={16} />
                               </button>
                             </ActionGuard>
-                            <ActionGuard permission="note_edit" module="Notes">
+                            <ActionGuard permission="notes_edit" module="Communication Tools">
                               <button
                                 onClick={() => handleEdit(note)}
                                 className="p-1.5 text-green-600 hover:bg-green-50 rounded-sm transition-all"
@@ -610,7 +610,7 @@ export default function NotesPage() {
                                 <SquarePen size={16} />
                               </button>
                             </ActionGuard>
-                            <ActionGuard permission="note_delete" module="Notes">
+                            <ActionGuard permission="notes_delete" module="Communication Tools">
                               <button
                                 onClick={() => {
                                   setNoteToDelete(note);
@@ -695,7 +695,7 @@ export default function NotesPage() {
                   Clear Filter
                 </button>
               ) : (
-                <ActionGuard permission="note_create" module="Notes">
+                <ActionGuard permission="notes_create" module="Communication Tools">
                   <button
                     onClick={() => {
                       resetForm();

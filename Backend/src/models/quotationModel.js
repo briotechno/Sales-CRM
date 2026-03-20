@@ -62,14 +62,14 @@ const Quotation = {
 
         const [result] = await pool.query(
             `INSERT INTO quotations (
-                quotation_id, client_id, customer_type, company_name, contact_person, email, phone, 
+                quotation_id, client_id, client_name, customer_type, company_name, contact_person, email, phone, 
                 billing_address, shipping_address, state, pincode, gstin, pan_number, cin_number,
                 quotation_date, valid_until, sales_executive, currency, line_items, subtotal, 
                 tax, discount, total_amount, payment_terms, 
                 status, user_id
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
-                q_id, client_id, customer_type || 'Business', company_name, contact_person, email, phone,
+                q_id, client_id, company_name, customer_type || 'Business', company_name, contact_person, email, phone,
                 billing_address, shipping_address, state, pincode, gstin, pan_number, cin_number,
                 quotation_date, valid_until, sales_executive, currency || 'INR',
                 JSON.stringify(line_items || []), subtotal,
@@ -178,14 +178,14 @@ const Quotation = {
 
         const [result] = await pool.query(
             `UPDATE quotations SET 
-                client_id = ?, customer_type = ?, company_name = ?, contact_person = ?, email = ?, phone = ?, 
+                client_id = ?, client_name = ?, customer_type = ?, company_name = ?, contact_person = ?, email = ?, phone = ?, 
                 billing_address = ?, shipping_address = ?, state = ?, pincode = ?, gstin = ?, pan_number = ?, cin_number = ?,
                 quotation_date = ?, valid_until = ?, sales_executive = ?, currency = ?, line_items = ?, 
                 subtotal = ?, tax = ?, discount = ?, total_amount = ?, 
                 payment_terms = ?, status = ?
             WHERE id = ? AND user_id = ?`,
             [
-                client_id, customer_type, company_name, contact_person, email, phone,
+                client_id, company_name, customer_type, company_name, contact_person, email, phone,
                 billing_address, shipping_address, state, pincode, gstin, pan_number, cin_number,
                 quotation_date, valid_until, sales_executive, currency, JSON.stringify(line_items),
                 subtotal, tax, discount, total_amount,
