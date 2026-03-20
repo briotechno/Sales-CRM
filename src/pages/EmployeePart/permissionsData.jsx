@@ -36,6 +36,7 @@ import {
   PieChart,
   Activity,
   FileSpreadsheet,
+  Package,
 } from "lucide-react";
 
 /**
@@ -457,10 +458,34 @@ export const permissionCategories = {
       description: "Modify salary components",
     },
     {
+      id: "expenses_view",
+      label: "View My Expenses",
+      icon: Eye,
+      description: "View your personal expense claims",
+    },
+    {
+      id: "expenses_create",
+      label: "Create Expense",
+      icon: Plus,
+      description: "Record a new expense claim",
+    },
+    {
+      id: "expenses_edit",
+      label: "Edit Expense",
+      icon: Edit,
+      description: "Modify your pending expense claims",
+    },
+    {
+      id: "expenses_delete",
+      label: "Delete Expense",
+      icon: Trash2,
+      description: "Remove your expense claims",
+    },
+    {
       id: "expenses_view_all",
       label: "View All Expenses",
       icon: Eye,
-      description: "View all expense claims",
+      description: "View all team expense claims",
     },
     {
       id: "expenses_submit",
@@ -558,13 +583,31 @@ export const permissionCategories = {
     {
       id: "catalogs_view",
       label: "View Catalogs",
-      icon: BarChart,
+      icon: Package,
       description: "Access product/service catalogs",
+    },
+    {
+      id: "catalogs_create",
+      label: "Create Catalogs",
+      icon: Plus,
+      description: "Create new product/service catalogs",
+    },
+    {
+      id: "catalogs_edit",
+      label: "Edit Catalogs",
+      icon: Edit,
+      description: "Modify existing catalogs",
+    },
+    {
+      id: "catalogs_delete",
+      label: "Delete Catalogs",
+      icon: Trash2,
+      description: "Remove product catalogs",
     },
     {
       id: "catalogs_manage",
       label: "Manage Catalogs",
-      icon: Edit,
+      icon: Settings,
       description: "Create and edit catalogs",
     },
     {
@@ -580,10 +623,28 @@ export const permissionCategories = {
       description: "Send messages to multiple users",
     },
     {
+      id: "notes_view",
+      label: "View Notes",
+      icon: Eye,
+      description: "View and access notes",
+    },
+    {
       id: "notes_create",
       label: "Create Notes",
       icon: StickyNote,
       description: "Create personal notes",
+    },
+    {
+      id: "notes_edit",
+      label: "Edit Notes",
+      icon: Edit,
+      description: "Modify existing notes",
+    },
+    {
+      id: "notes_delete",
+      label: "Delete Notes",
+      icon: Trash2,
+      description: "Remove personal notes",
     },
     {
       id: "notes_share",
@@ -602,6 +663,18 @@ export const permissionCategories = {
       label: "Create Announcements",
       icon: Megaphone,
       description: "Post company-wide announcements",
+    },
+    {
+      id: "announcement_edit",
+      label: "Edit Announcements",
+      icon: Edit,
+      description: "Modify company announcements",
+    },
+    {
+      id: "announcement_delete",
+      label: "Delete Announcements",
+      icon: Trash2,
+      description: "Remove company announcements",
     },
   ],
 

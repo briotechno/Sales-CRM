@@ -15,7 +15,13 @@ const usePermission = (moduleName) => {
 
     // Super Admin and Admin have full access
     if (user.role === 'Super Admin' || user.role === 'Admin') {
-        return { create: true, read: true, update: true, delete: true };
+        return { 
+            create: true, 
+            read: true, 
+            update: true, 
+            delete: true,
+            hasPermission: () => true 
+        };
     }
 
     // Employee Access Check
@@ -27,12 +33,12 @@ const usePermission = (moduleName) => {
             try {
                 perms = JSON.parse(perms);
             } catch (e) {
-                return { create: false, read: false, update: false, delete: false };
+                return { create: false, read: false, update: false, delete: false, hasPermission: () => false };
             }
         }
 
         if (!perms) {
-            return { create: false, read: false, update: false, delete: false };
+            return { create: false, read: false, update: false, delete: false, hasPermission: () => false };
         }
 
         // NEW Flat Array Logic
@@ -59,7 +65,7 @@ const usePermission = (moduleName) => {
         // OLD Object Structure Logic (Fallback)
         const modulePerms = perms[moduleName];
         if (!modulePerms) {
-            return { create: false, read: false, update: false, delete: false };
+            return { create: false, read: false, update: false, delete: false, hasPermission: () => false };
         }
 
         return {
@@ -67,10 +73,11 @@ const usePermission = (moduleName) => {
             read: !!modulePerms.read,
             update: !!modulePerms.update,
             delete: !!modulePerms.delete,
+            hasPermission: (actionId) => !!modulePerms[actionId]
         };
     }
 
-    return { create: false, read: false, update: false, delete: false };
+    return { create: false, read: false, update: false, delete: false, hasPermission: () => false };
 };
 
 export default usePermission;

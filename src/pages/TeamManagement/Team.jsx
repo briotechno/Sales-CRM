@@ -42,6 +42,7 @@ import { useGetDepartmentsQuery } from "../../store/api/departmentApi";
 import { useGetDesignationsQuery } from "../../store/api/designationApi";
 import { useGetEmployeesQuery } from "../../store/api/employeeApi";
 import GenericGridView from "../../components/common/GenericGridView";
+import ActionGuard from "../../components/common/ActionGuard";
 
 export default function TeamManagement() {
   const [currentPage, setCurrentPage] = useState(1);
@@ -450,17 +451,15 @@ export default function TeamManagement() {
                   </button>
                 </div>
 
-                <button
-                  onClick={() => setShowAddModal(true)}
-                  disabled={!create}
-                  className={`flex items-center gap-2 px-6 py-3 rounded-sm font-bold transition shadow-lg hover:shadow-xl ${create
-                    ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
-                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                    }`}
-                >
-                  <PlusIcon size={20} />
-                  Add Team
-                </button>
+                <ActionGuard permission="team_create" module="Team Management" type="create">
+                  <button
+                    onClick={() => setShowAddModal(true)}
+                    className="flex items-center gap-2 px-6 py-3 rounded-sm font-bold transition shadow-lg hover:shadow-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
+                  >
+                    <PlusIcon size={20} />
+                    Add Team
+                  </button>
+                </ActionGuard>
               </div>
             </div>
           </div>
@@ -563,32 +562,33 @@ export default function TeamManagement() {
                         </td>
                         <td className="py-3 px-4 text-right">
                           <div className="flex justify-end gap-2">
-                            <button
-                              onClick={() => { setSelectedTeam(team); setShowViewModal(true); }}
-                              disabled={!read}
-                              className={`p-1 hover:bg-orange-100 rounded-sm transition-all ${read ? "text-blue-500 hover:text-blue-700" : "text-gray-300 cursor-not-allowed"}`}
-                              title="View"
-                            >
-                              <Eye size={18} />
-                            </button>
-                            <button
-                              onClick={() => { setSelectedTeam(team); setShowEditModal(true); }}
-                              disabled={!hasPermission('team_edit')}
-                              className={`p-1 hover:bg-orange-100 rounded-sm transition-all ${hasPermission('team_edit') ? "text-green-500 hover:text-green-700" : "text-gray-300 cursor-not-allowed"
-                                }`}
-                              title="Edit"
-                            >
-                              <Edit size={18} />
-                            </button>
-                            <button
-                              onClick={() => { setSelectedTeam(team); setShowDeleteModal(true); }}
-                              disabled={!canDelete}
-                              className={`p-1 hover:bg-orange-100 rounded-sm transition-all ${canDelete ? "text-red-500 hover:text-red-700" : "text-gray-300 cursor-not-allowed"
-                                }`}
-                              title="Delete"
-                            >
-                              <Trash2 size={18} />
-                            </button>
+                            <ActionGuard permission="team_view" module="Team Management" type="read">
+                              <button
+                                onClick={() => { setSelectedTeam(team); setShowViewModal(true); }}
+                                className="p-1 hover:bg-orange-100 rounded-sm transition-all text-blue-500 hover:text-blue-700"
+                                title="View"
+                              >
+                                <Eye size={18} />
+                              </button>
+                            </ActionGuard>
+                            <ActionGuard permission="team_edit" module="Team Management" type="update">
+                              <button
+                                onClick={() => { setSelectedTeam(team); setShowEditModal(true); }}
+                                className="p-1 hover:bg-orange-100 rounded-sm transition-all text-green-500 hover:text-green-700"
+                                title="Edit"
+                              >
+                                <Edit size={18} />
+                              </button>
+                            </ActionGuard>
+                            <ActionGuard permission="team_delete" module="Team Management" type="delete">
+                              <button
+                                onClick={() => { setSelectedTeam(team); setShowDeleteModal(true); }}
+                                className="p-1 hover:bg-orange-100 rounded-sm transition-all text-red-500 hover:text-red-700 font-bold shadow-sm"
+                                title="Delete"
+                              >
+                                <Trash2 size={18} />
+                              </button>
+                            </ActionGuard>
                           </div>
                         </td>
                       </tr>
@@ -637,32 +637,33 @@ export default function TeamManagement() {
               renderItem={(team) => (
                 <div key={team.id} className="bg-white border border-gray-200 rounded-sm shadow-sm hover:shadow-md transition-all relative group flex flex-col h-full overflow-hidden">
                   <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                    <button
-                      onClick={() => { setSelectedTeam(team); setShowViewModal(true); }}
-                      disabled={!read}
-                      className={`p-1.5 rounded-sm bg-white shadow-sm border ${read ? "text-blue-500 border-blue-100 hover:bg-blue-50" : "text-gray-300 border-gray-100 cursor-not-allowed"}`}
-                      title="View"
-                    >
-                      <Eye size={16} />
-                    </button>
-                    {hasPermission('team_edit') && (
+                    <ActionGuard permission="team_view" module="Team Management" type="read">
+                      <button
+                        onClick={() => { setSelectedTeam(team); setShowViewModal(true); }}
+                        className="p-1.5 rounded-sm bg-white shadow-sm border text-blue-500 border-blue-100 hover:bg-blue-50 transition-all font-bold"
+                        title="View"
+                      >
+                        <Eye size={16} />
+                      </button>
+                    </ActionGuard>
+                    <ActionGuard permission="team_edit" module="Team Management" type="update">
                       <button
                         onClick={() => { setSelectedTeam(team); setShowEditModal(true); }}
-                        className="p-1.5 text-green-500 hover:bg-green-50 rounded-sm bg-white shadow-sm border border-green-100"
+                        className="p-1.5 text-green-500 hover:bg-green-50 rounded-sm bg-white shadow-sm border border-green-100 transition-all font-bold"
                         title="Edit"
                       >
                         <Edit size={16} />
                       </button>
-                    )}
-                    {canDelete && (
+                    </ActionGuard>
+                    <ActionGuard permission="team_delete" module="Team Management" type="delete">
                       <button
                         onClick={() => { setSelectedTeam(team); setShowDeleteModal(true); }}
-                        className="p-1.5 text-red-500 hover:bg-red-50 rounded-sm bg-white shadow-sm border border-red-100"
+                        className="p-1.5 text-red-500 hover:bg-red-50 rounded-sm bg-white shadow-sm border border-red-100 transition-all font-bold"
                         title="Delete"
                       >
                         <Trash2 size={16} />
                       </button>
-                    )}
+                    </ActionGuard>
                   </div>
 
                   <div className="p-6 pb-4 flex-1 flex flex-col items-center mt-2">

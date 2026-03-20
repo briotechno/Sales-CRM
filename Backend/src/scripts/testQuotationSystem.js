@@ -78,11 +78,11 @@ const testQuotationCreation = async () => {
 
         // Check if we can construct the INSERT query
         const insertQuery = `INSERT INTO quotations (
-            quotation_id, customer_type, company_name, contact_person, email, phone,
+            quotation_id, client_name, customer_type, company_name, contact_person, email, phone,
             billing_address, shipping_address, state, pincode, gstin, pan_number, cin_number,
             quotation_date, valid_until, sales_executive, currency, line_items, subtotal,
             tax, discount, total_amount, payment_terms, status, user_id
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
         console.log('✅ Quotation INSERT query structure is valid');
 

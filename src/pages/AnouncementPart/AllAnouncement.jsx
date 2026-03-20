@@ -382,7 +382,7 @@ export default function AnnouncementPage() {
                 </div>
 
                 {/* New Announcement */}
-                <ActionGuard permission="announcement_create" module="Announcement">
+                <ActionGuard permission="announcement_create" module="Communication Tools">
                   <button
                     onClick={() => {
                       setSelectedAnnouncement(null);
@@ -460,7 +460,7 @@ export default function AnnouncementPage() {
                     Clear All Filters
                   </button>
                 ) : (
-                  <ActionGuard permission="announcement_create" module="Announcement">
+                  <ActionGuard permission="announcement_create" module="Communication Tools">
                     <button
                       onClick={() => {
                         setSelectedAnnouncement(null);
@@ -483,7 +483,7 @@ export default function AnnouncementPage() {
                   >
                     {/* Action Icons - Top Right (Hidden by default, shown on hover) */}
                     <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                      <ActionGuard permission="announcement_view" module="Announcement">
+                      <ActionGuard permission="announcement_view" module="Communication Tools">
                         <button
                           onClick={() => handleView(announcement)}
                           className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-sm bg-white shadow-sm border border-blue-100"
@@ -492,7 +492,7 @@ export default function AnnouncementPage() {
                           <Eye size={16} />
                         </button>
                       </ActionGuard>
-                      <ActionGuard permission="announcement_edit" module="Announcement">
+                      <ActionGuard permission="announcement_edit" module="Communication Tools">
                         <button
                           onClick={() => handleEdit(announcement)}
                           className="p-1.5 text-green-600 hover:bg-green-50 rounded-sm bg-white shadow-sm border border-green-100"
@@ -501,7 +501,7 @@ export default function AnnouncementPage() {
                           <Edit size={16} />
                         </button>
                       </ActionGuard>
-                      <ActionGuard permission="announcement_delete" module="Announcement">
+                      <ActionGuard permission="announcement_delete" module="Communication Tools">
                         <button
                           onClick={() => handleDelete(announcement)}
                           className="p-1.5 text-red-600 hover:bg-red-50 rounded-sm bg-white shadow-sm border border-red-100"
@@ -697,7 +697,7 @@ export default function AnnouncementPage() {
                           </td>
                           <td className="py-3 px-4 text-right">
                             <div className="flex items-center justify-end gap-3 text-gray-400">
-                              <ActionGuard permission="announcement_view" module="Announcement">
+                              <ActionGuard permission="announcement_view" module="Communication Tools">
                                 <button
                                   onClick={() => handleView(announcement)}
                                   className="p-1 hover:bg-orange-100 rounded-sm text-blue-500 hover:text-blue-700 transition-all"
@@ -706,7 +706,7 @@ export default function AnnouncementPage() {
                                   <Eye size={18} />
                                 </button>
                               </ActionGuard>
-                              <ActionGuard permission="announcement_edit" module="Announcement">
+                              <ActionGuard permission="announcement_edit" module="Communication Tools">
                                 <button
                                   onClick={() => handleEdit(announcement)}
                                   className="p-1 hover:bg-orange-100 rounded text-green-500 hover:text-green-700 transition-all"
@@ -715,7 +715,7 @@ export default function AnnouncementPage() {
                                   <Edit size={18} />
                                 </button>
                               </ActionGuard>
-                              <ActionGuard permission="announcement_delete" module="Announcement">
+                              <ActionGuard permission="announcement_delete" module="Communication Tools">
                                 <button
                                   onClick={() => handleDelete(announcement)}
                                   className="p-1 hover:bg-orange-100 rounded text-red-500 hover:text-red-700 transition-all shadow-sm"

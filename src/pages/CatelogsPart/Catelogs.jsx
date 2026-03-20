@@ -612,7 +612,7 @@ export default function CatalogsPage() {
                 </div>
 
 
-                <ActionGuard permission="catalog_create" module="Catalog">
+                <ActionGuard permission="catalogs_create" module="Communication Tools">
                   <button
                     onClick={() => {
                       resetForm();
@@ -791,7 +791,7 @@ export default function CatalogsPage() {
                       </td>
                       <td className="py-3 px-4">
                         <div className="flex justify-end gap-2">
-                          <ActionGuard permission="catalog_read" module="Catalog">
+                          <ActionGuard permission="catalogs_view" module="Communication Tools">
                             <button
                               onClick={() => handleView(catalog)}
                               className="p-1 hover:bg-orange-100 rounded-sm text-blue-500 hover:text-blue-700 transition-all"
@@ -800,7 +800,7 @@ export default function CatalogsPage() {
                               <Eye size={18} />
                             </button>
                           </ActionGuard>
-                          <ActionGuard permission="catalog_edit" module="Catalog">
+                          <ActionGuard permission="catalogs_edit" module="Communication Tools">
                             <button
                               onClick={() => handleEdit(catalog)}
                               className="p-1 hover:bg-orange-100 rounded-sm text-green-500 hover:text-green-700 transition-all"
@@ -809,7 +809,7 @@ export default function CatalogsPage() {
                               <Edit size={18} />
                             </button>
                           </ActionGuard>
-                          <ActionGuard permission="catalog_delete" module="Catalog">
+                          <ActionGuard permission="catalogs_delete" module="Communication Tools">
                             <button
                               onClick={() => handleDelete(catalog)}
                               className="p-1 hover:bg-orange-100 rounded-sm text-red-500 hover:text-red-700 transition-all"
@@ -850,7 +850,7 @@ export default function CatalogsPage() {
                             Clear Filter
                           </button>
                         ) : (
-                          <ActionGuard permission="catalog_create" module="Catalog">
+                          <ActionGuard permission="catalogs_create" module="Communication Tools">
                             <button
                               onClick={() => {
                                 resetForm();
