@@ -18,6 +18,7 @@ import AddExpenseModal from "../../components/Expense/AddExpenseModal";
 import EditExpenseModal from "../../components/Expense/EditExpenseModal";
 import ViewExpenseModal from "../../components/Expense/ViewExpenseModal";
 import DeleteExpenseModal from "../../components/Expense/DeleteExpenseModal";
+import ActionGuard from "../../components/common/ActionGuard";
 
 export default function ExpensePage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -299,13 +300,15 @@ export default function ExpensePage() {
 
 
                 {/* Add Expense Button */}
-                <button
-                  onClick={() => setIsAddModalOpen(true)}
-                  className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-2 font-semibold"
-                >
-                  <Plus size={20} />
-                  Add Expense
-                </button>
+                <ActionGuard permission="expense_create" module="Expense">
+                  <button
+                    onClick={() => setIsAddModalOpen(true)}
+                    className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-2 font-semibold"
+                  >
+                    <Plus size={20} />
+                    Add Expense
+                  </button>
+                </ActionGuard>
               </div>
             </div>
           </div>
@@ -410,27 +413,33 @@ export default function ExpensePage() {
                         </td>
                         <td className="px-4 py-3 text-right">
                           <div className="flex items-center justify-end gap-3">
-                            <button
-                              onClick={() => handleView(expense)}
-                              className="p-1 hover:bg-orange-100 rounded-sm text-blue-500 hover:text-blue-700 transition-all"
-                              title="View"
-                            >
-                              <Eye size={18} />
-                            </button>
-                            <button
-                              onClick={() => handleEdit(expense)}
-                              className="p-1 hover:bg-orange-100 rounded-sm text-green-500 hover:text-green-700 transition-all"
-                              title="Edit"
-                            >
-                              <Edit size={18} />
-                            </button>
-                            <button
-                              onClick={() => handleDelete(expense)}
-                              className="p-1 hover:bg-orange-100 rounded-sm text-red-500 hover:text-red-700 transition-all shadow-sm"
-                              title="Delete"
-                            >
-                              <Trash2 size={18} />
-                            </button>
+                            <ActionGuard permission="expense_view" module="Expense">
+                              <button
+                                onClick={() => handleView(expense)}
+                                className="p-1 hover:bg-orange-100 rounded-sm text-blue-500 hover:text-blue-700 transition-all"
+                                title="View"
+                              >
+                                <Eye size={18} />
+                              </button>
+                            </ActionGuard>
+                            <ActionGuard permission="expense_edit" module="Expense">
+                              <button
+                                onClick={() => handleEdit(expense)}
+                                className="p-1 hover:bg-orange-100 rounded-sm text-green-500 hover:text-green-700 transition-all"
+                                title="Edit"
+                              >
+                                <Edit size={18} />
+                              </button>
+                            </ActionGuard>
+                            <ActionGuard permission="expense_delete" module="Expense">
+                              <button
+                                onClick={() => handleDelete(expense)}
+                                className="p-1 hover:bg-orange-100 rounded-sm text-red-500 hover:text-red-700 transition-all shadow-sm"
+                                title="Delete"
+                              >
+                                <Trash2 size={18} />
+                              </button>
+                            </ActionGuard>
                           </div>
                         </td>
                       </tr>

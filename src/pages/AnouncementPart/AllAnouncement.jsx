@@ -21,6 +21,7 @@ import {
   Clock,
 } from "lucide-react";
 import NumberCard from "../../components/NumberCard";
+import ActionGuard from "../../components/common/ActionGuard";
 import { useGetAnnouncementsQuery } from "../../store/api/announcementApi";
 import { useGetAnnouncementCategoriesQuery } from "../../store/api/announcementCategoryApi";
 import AddAnnouncementModal from "../../components/Announcement/AddAnnouncementModal";
@@ -381,16 +382,18 @@ export default function AnnouncementPage() {
                 </div>
 
                 {/* New Announcement */}
-                <button
-                  onClick={() => {
-                    setSelectedAnnouncement(null);
-                    setShowAddModal(true);
-                  }}
-                  className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-2 font-semibold"
-                >
-                  <Plus size={20} />
-                  Add Announcement
-                </button>
+                <ActionGuard permission="announcement_create" module="Announcement">
+                  <button
+                    onClick={() => {
+                      setSelectedAnnouncement(null);
+                      setShowAddModal(true);
+                    }}
+                    className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-2 font-semibold"
+                  >
+                    <Plus size={20} />
+                    Add Announcement
+                  </button>
+                </ActionGuard>
               </div>
             </div>
           </div>
@@ -457,16 +460,18 @@ export default function AnnouncementPage() {
                     Clear All Filters
                   </button>
                 ) : (
-                  <button
-                    onClick={() => {
-                      setSelectedAnnouncement(null);
-                      setShowAddModal(true);
-                    }}
-                    className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl inline-flex items-center gap-2 font-semibold"
-                  >
-                    <Plus size={20} />
-                    Create First Announcement
-                  </button>
+                  <ActionGuard permission="announcement_create" module="Announcement">
+                    <button
+                      onClick={() => {
+                        setSelectedAnnouncement(null);
+                        setShowAddModal(true);
+                      }}
+                      className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl inline-flex items-center gap-2 font-semibold"
+                    >
+                      <Plus size={20} />
+                      Create First Announcement
+                    </button>
+                  </ActionGuard>
                 )}
               </div>
             ) : viewMode === "grid" ? (
@@ -478,27 +483,33 @@ export default function AnnouncementPage() {
                   >
                     {/* Action Icons - Top Right (Hidden by default, shown on hover) */}
                     <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                      <button
-                        onClick={() => handleView(announcement)}
-                        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-sm bg-white shadow-sm border border-blue-100"
-                        title="View Details"
-                      >
-                        <Eye size={16} />
-                      </button>
-                      <button
-                        onClick={() => handleEdit(announcement)}
-                        className="p-1.5 text-green-600 hover:bg-green-50 rounded-sm bg-white shadow-sm border border-green-100"
-                        title="Edit"
-                      >
-                        <Edit size={16} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(announcement)}
-                        className="p-1.5 text-red-600 hover:bg-red-50 rounded-sm bg-white shadow-sm border border-red-100"
-                        title="Delete"
-                      >
-                        <Trash2 size={16} />
-                      </button>
+                      <ActionGuard permission="announcement_view" module="Announcement">
+                        <button
+                          onClick={() => handleView(announcement)}
+                          className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-sm bg-white shadow-sm border border-blue-100"
+                          title="View Details"
+                        >
+                          <Eye size={16} />
+                        </button>
+                      </ActionGuard>
+                      <ActionGuard permission="announcement_edit" module="Announcement">
+                        <button
+                          onClick={() => handleEdit(announcement)}
+                          className="p-1.5 text-green-600 hover:bg-green-50 rounded-sm bg-white shadow-sm border border-green-100"
+                          title="Edit"
+                        >
+                          <Edit size={16} />
+                        </button>
+                      </ActionGuard>
+                      <ActionGuard permission="announcement_delete" module="Announcement">
+                        <button
+                          onClick={() => handleDelete(announcement)}
+                          className="p-1.5 text-red-600 hover:bg-red-50 rounded-sm bg-white shadow-sm border border-red-100"
+                          title="Delete"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </ActionGuard>
                     </div>
 
                     {/* Body Section */}
@@ -686,27 +697,33 @@ export default function AnnouncementPage() {
                           </td>
                           <td className="py-3 px-4 text-right">
                             <div className="flex items-center justify-end gap-3 text-gray-400">
-                              <button
-                                onClick={() => handleView(announcement)}
-                                className="p-1 hover:bg-orange-100 rounded-sm text-blue-500 hover:text-blue-700 transition-all"
-                                title="View Details"
-                              >
-                                <Eye size={18} />
-                              </button>
-                              <button
-                                onClick={() => handleEdit(announcement)}
-                                className="p-1 hover:bg-orange-100 rounded text-green-500 hover:text-green-700 transition-all"
-                                title="Edit"
-                              >
-                                <Edit size={18} />
-                              </button>
-                              <button
-                                onClick={() => handleDelete(announcement)}
-                                className="p-1 hover:bg-orange-100 rounded text-red-500 hover:text-red-700 transition-all shadow-sm"
-                                title="Delete"
-                              >
-                                <Trash2 size={18} />
-                              </button>
+                              <ActionGuard permission="announcement_view" module="Announcement">
+                                <button
+                                  onClick={() => handleView(announcement)}
+                                  className="p-1 hover:bg-orange-100 rounded-sm text-blue-500 hover:text-blue-700 transition-all"
+                                  title="View Details"
+                                >
+                                  <Eye size={18} />
+                                </button>
+                              </ActionGuard>
+                              <ActionGuard permission="announcement_edit" module="Announcement">
+                                <button
+                                  onClick={() => handleEdit(announcement)}
+                                  className="p-1 hover:bg-orange-100 rounded text-green-500 hover:text-green-700 transition-all"
+                                  title="Edit"
+                                >
+                                  <Edit size={18} />
+                                </button>
+                              </ActionGuard>
+                              <ActionGuard permission="announcement_delete" module="Announcement">
+                                <button
+                                  onClick={() => handleDelete(announcement)}
+                                  className="p-1 hover:bg-orange-100 rounded text-red-500 hover:text-red-700 transition-all shadow-sm"
+                                  title="Delete"
+                                >
+                                  <Trash2 size={18} />
+                                </button>
+                              </ActionGuard>
                             </div>
                           </td>
                         </tr>

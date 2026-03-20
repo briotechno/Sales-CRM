@@ -59,6 +59,7 @@ export default function LeadSidebar({
   handleQrCall,
   employees = [],
   handleUpdateStatus,
+  setShowWhatsAppModal,
 }) {
   const leadType = leadData?.type || "Individual";
   const [editingField, setEditingField] = useState(null);
@@ -265,6 +266,15 @@ export default function LeadSidebar({
                 ? (currentValue.length > 0 ? currentValue.join(', ') : "N/A")
                 : (currentValue || "N/A")}
             </span>
+            {field === 'whatsapp_number' && currentValue && (
+              <button 
+                onClick={() => setShowWhatsAppModal(true)}
+                className="p-1 hover:bg-green-50 text-[#25D366] rounded transition-all active:scale-90"
+                title="Send WhatsApp Message"
+              >
+                <FaWhatsapp size={14} />
+              </button>
+            )}
             <ActionGuard permission="leads_edit" module="Leads Management" type="update">
               <Edit2
                 size={14}

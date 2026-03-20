@@ -35,6 +35,7 @@ import CreateInvoiceModal from "./CreateInvoiceModal";
 import ViewInvoiceModal from "./ViewInvoiceModal";
 import NumberCard from "../../components/NumberCard";
 import Modal from "../../components/common/Modal";
+import ActionGuard from "../../components/common/ActionGuard";
 import {
   useGetInvoicesQuery,
   useCreateInvoiceMutation,
@@ -712,39 +713,41 @@ export default function AllInvoicePage() {
                 </button>
 
 
-                <button
-                  onClick={() => {
-                    setFormData({
-                      invoiceNo: `INV-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
-                      clientName: "",
-                      email: "",
-                      phone: "",
-                      address: "",
-                      invoiceDate: new Date().toISOString().split("T")[0],
-                      dueDate: "",
-                      lineItems: [],
-                      subtotal: 0,
-                      tax: 0,
-                      discount: 0,
-                      totalAmount: 0,
-                      paidAmount: 0,
-                      balanceAmount: 0,
-                      status: "Draft",
-                      notes: "",
-                      tax_type: "GST",
-                      client_gstin: "",
-                      place_of_supply: "",
-                      business_gstin: "",
-                      pan_number: "",
-                      terms_and_conditions: ""
-                    });
-                    setShowModal(true);
-                  }}
-                  className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-2 font-semibold"
-                >
-                  <Plus size={20} />
-                  Add Invoice
-                </button>
+                <ActionGuard permission="invoice_create" module="Invoice" type="create">
+                  <button
+                    onClick={() => {
+                      setFormData({
+                        invoiceNo: `INV-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
+                        clientName: "",
+                        email: "",
+                        phone: "",
+                        address: "",
+                        invoiceDate: new Date().toISOString().split("T")[0],
+                        dueDate: "",
+                        lineItems: [],
+                        subtotal: 0,
+                        tax: 0,
+                        discount: 0,
+                        totalAmount: 0,
+                        paidAmount: 0,
+                        balanceAmount: 0,
+                        status: "Draft",
+                        notes: "",
+                        tax_type: "GST",
+                        client_gstin: "",
+                        place_of_supply: "",
+                        business_gstin: "",
+                        pan_number: "",
+                        terms_and_conditions: ""
+                      });
+                      setShowModal(true);
+                    }}
+                    className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-2 font-semibold"
+                  >
+                    <Plus size={20} />
+                    Add Invoice
+                  </button>
+                </ActionGuard>
               </div>
             </div>
           </div>
@@ -836,32 +839,36 @@ export default function AllInvoicePage() {
                         </td>
                         <td className="py-4 px-4 text-center">
                           <div className="inline-flex items-center justify-center relative min-w-[120px]">
-                            <select
-                              value={invoice.status}
-                              onChange={(e) => handleStatusUpdate(invoice, e.target.value)}
-                              className={`w-full px-2.5 py-1.5 rounded-sm text-[10px] font-bold border uppercase tracking-widest outline-none cursor-pointer transition-all shadow-sm ${invoice.status === 'Paid' ? 'bg-green-50 text-green-700 border-green-200' :
-                                invoice.status === 'Partial' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                                  invoice.status === 'Unpaid' ? 'bg-red-50 text-red-700 border-red-200' :
-                                    invoice.status === 'Draft' ? 'bg-gray-50 text-gray-700 border-gray-200' :
-                                      invoice.status === 'Sent' ? 'bg-orange-50 text-orange-700 border-orange-200' :
-                                        'bg-slate-50 text-slate-700 border-slate-200'
-                                }`}
-                            >
-                              <option value="Draft">Draft</option>
-                              <option value="Sent">Sent</option>
-                              <option value="Unpaid">Unpaid</option>
-                              <option value="Paid">Paid</option>
-                              <option value="Partial">Partial</option>
-                              <option value="Cancelled">Cancelled</option>
-                            </select>
-                            {invoice.status === "Partial" && (
-                              <button
-                                onClick={() => handleStatusUpdate(invoice, "Partial")}
-                                className="absolute -right-8 p-1.5 bg-orange-50 text-[#FF7B1D] rounded-full hover:bg-orange-100 transition-colors shadow-sm border border-orange-100"
-                                title="Edit Partial Payment"
+                            <ActionGuard permission="invoice_edit" module="Invoice" type="update">
+                              <select
+                                value={invoice.status}
+                                onChange={(e) => handleStatusUpdate(invoice, e.target.value)}
+                                className={`w-full px-2.5 py-1.5 rounded-sm text-[10px] font-bold border uppercase tracking-widest outline-none cursor-pointer transition-all shadow-sm ${invoice.status === 'Paid' ? 'bg-green-50 text-green-700 border-green-200' :
+                                  invoice.status === 'Partial' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                                    invoice.status === 'Unpaid' ? 'bg-red-50 text-red-700 border-red-200' :
+                                      invoice.status === 'Draft' ? 'bg-gray-50 text-gray-700 border-gray-200' :
+                                        invoice.status === 'Sent' ? 'bg-orange-50 text-orange-700 border-orange-200' :
+                                          'bg-slate-50 text-slate-700 border-slate-200'
+                                  }`}
                               >
-                                <Edit2 size={11} strokeWidth={3} />
-                              </button>
+                                <option value="Draft">Draft</option>
+                                <option value="Sent">Sent</option>
+                                <option value="Unpaid">Unpaid</option>
+                                <option value="Paid">Paid</option>
+                                <option value="Partial">Partial</option>
+                                <option value="Cancelled">Cancelled</option>
+                              </select>
+                            </ActionGuard>
+                            {invoice.status === "Partial" && (
+                              <ActionGuard permission="invoice_edit" module="Invoice" type="update">
+                                <button
+                                  onClick={() => handleStatusUpdate(invoice, "Partial")}
+                                  className="absolute -right-8 p-1.5 bg-orange-50 text-[#FF7B1D] rounded-full hover:bg-orange-100 transition-colors shadow-sm border border-orange-100"
+                                  title="Edit Partial Payment"
+                                >
+                                  <Edit2 size={11} strokeWidth={3} />
+                                </button>
+                              </ActionGuard>
                             )}
                           </div>
                         </td>
@@ -891,23 +898,27 @@ export default function AllInvoicePage() {
                             >
                               <Eye size={16} />
                             </button>
-                            <button
-                              onClick={() => handleEdit(invoice)}
-                              className="p-1.5 hover:bg-green-50 rounded-sm text-green-500 hover:text-green-700 transition-all border border-transparent hover:border-green-100"
-                              title="Edit"
-                            >
-                              <Edit size={16} />
-                            </button>
-                            <button
-                              onClick={() => {
-                                setSelectedInvoice(invoice);
-                                setShowDeleteModal(true);
-                              }}
-                              className="p-1.5 hover:bg-red-50 rounded-sm text-red-500 hover:text-red-700 transition-all border border-transparent hover:border-red-100 shadow-sm"
-                              title="Delete"
-                            >
-                              <Trash2 size={16} />
-                            </button>
+                            <ActionGuard permission="invoice_edit" module="Invoice" type="update">
+                              <button
+                                onClick={() => handleEdit(invoice)}
+                                className="p-1.5 hover:bg-green-50 rounded-sm text-green-500 hover:text-green-700 transition-all border border-transparent hover:border-green-100"
+                                title="Edit"
+                              >
+                                <Edit size={16} />
+                              </button>
+                            </ActionGuard>
+                            <ActionGuard permission="invoice_delete" module="Invoice" type="delete">
+                              <button
+                                onClick={() => {
+                                  setSelectedInvoice(invoice);
+                                  setShowDeleteModal(true);
+                                }}
+                                className="p-1.5 hover:bg-red-50 rounded-sm text-red-500 hover:text-red-700 transition-all border border-transparent hover:border-red-100 shadow-sm"
+                                title="Delete"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </ActionGuard>
                           </div>
                         </td>
                       </tr>
@@ -940,39 +951,41 @@ export default function AllInvoicePage() {
                                 Clear All Filters
                               </button>
                             ) : (
-                              <button
-                                onClick={() => {
-                                  setFormData({
-                                    invoiceNo: `INV-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
-                                    clientName: "",
-                                    email: "",
-                                    phone: "",
-                                    address: "",
-                                    invoiceDate: new Date().toISOString().split("T")[0],
-                                    dueDate: "",
-                                    lineItems: [],
-                                    subtotal: 0,
-                                    tax: 0,
-                                    discount: 0,
-                                    totalAmount: 0,
-                                    paidAmount: 0,
-                                    balanceAmount: 0,
-                                    status: "Draft",
-                                    notes: "",
-                                    tax_type: "GST",
-                                    client_gstin: "",
-                                    place_of_supply: "",
-                                    business_gstin: "",
-                                    pan_number: "",
-                                    terms_and_conditions: ""
-                                  });
-                                  setShowModal(true);
-                                }}
-                                className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-8 py-3.5 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl inline-flex items-center gap-2 font-bold tracking-wide"
-                              >
-                                <Plus size={20} />
-                                Create First Invoice
-                              </button>
+                              <ActionGuard permission="invoice_create" module="Invoice" type="create">
+                                <button
+                                  onClick={() => {
+                                    setFormData({
+                                      invoiceNo: `INV-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
+                                      clientName: "",
+                                      email: "",
+                                      phone: "",
+                                      address: "",
+                                      invoiceDate: new Date().toISOString().split("T")[0],
+                                      dueDate: "",
+                                      lineItems: [],
+                                      subtotal: 0,
+                                      tax: 0,
+                                      discount: 0,
+                                      totalAmount: 0,
+                                      paidAmount: 0,
+                                      balanceAmount: 0,
+                                      status: "Draft",
+                                      notes: "",
+                                      tax_type: "GST",
+                                      client_gstin: "",
+                                      place_of_supply: "",
+                                      business_gstin: "",
+                                      pan_number: "",
+                                      terms_and_conditions: ""
+                                    });
+                                    setShowModal(true);
+                                  }}
+                                  className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-8 py-3.5 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl inline-flex items-center gap-2 font-bold tracking-wide"
+                                >
+                                  <Plus size={20} />
+                                  Create First Invoice
+                                </button>
+                              </ActionGuard>
                             )}
                           </div>
                         </div>

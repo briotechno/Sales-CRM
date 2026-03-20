@@ -26,6 +26,7 @@ import {
 import toast from "react-hot-toast";
 import NumberCard from "../../components/NumberCard";
 import Modal from "../../components/common/Modal";
+import ActionGuard from "../../components/common/ActionGuard";
 import {
   useGetTasksQuery,
   useCreateTaskMutation,
@@ -547,22 +548,24 @@ export default function TodoPage() {
                   </button>
                 </div>
 
-                <button
-                  onClick={() => {
-                    setNewTask("");
-                    setNewTaskPriority("medium");
-                    const today = new Date();
-                    const localDate = today.toLocaleDateString('en-CA'); // YYYY-MM-DD in local time
-                    setNewTaskDate(localDate);
-                    setNewTaskTime(today.toTimeString().slice(0, 5));
-                    setNewTaskCategory("General");
-                    setIsAddModalOpen(true);
-                  }}
-                  className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm text-[11px] font-bold transition shadow-lg hover:shadow-xl hover:from-orange-600 hover:to-orange-700 capitalize tracking-wider"
-                >
-                  <Plus size={20} />
-                  Add Task
-                </button>
+                <ActionGuard permission="todo_create" module="To-Do" type="create">
+                  <button
+                    onClick={() => {
+                      setNewTask("");
+                      setNewTaskPriority("medium");
+                      const today = new Date();
+                      const localDate = today.toLocaleDateString('en-CA'); // YYYY-MM-DD in local time
+                      setNewTaskDate(localDate);
+                      setNewTaskTime(today.toTimeString().slice(0, 5));
+                      setNewTaskCategory("General");
+                      setIsAddModalOpen(true);
+                    }}
+                    className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm text-[11px] font-bold transition shadow-lg hover:shadow-xl hover:from-orange-600 hover:to-orange-700 capitalize tracking-wider"
+                  >
+                    <Plus size={20} />
+                    Add Task
+                  </button>
+                </ActionGuard>
               </div>
             </div>
           </div>
@@ -621,8 +624,7 @@ export default function TodoPage() {
                           key={task.id}
                           className="bg-white border-2 border-gray-100 rounded-sm shadow-sm hover:shadow-md transition-all p-6 relative group flex flex-col"
                         >
-                          {/* Absolute Actions */}
-                          <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 z-10">
+                          {/* Absolute Actions */}                           <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 z-10">
                             <button
                               onClick={(e) => { e.stopPropagation(); handleView(task); }}
                               className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-sm bg-white shadow-sm border border-blue-100"
@@ -630,26 +632,31 @@ export default function TodoPage() {
                             >
                               <Eye size={16} />
                             </button>
-                            {!task.completed && (
+                            <ActionGuard permission="todo_edit" module="To-Do" type="update">
+                              {!task.completed && (
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); handleEdit(task); }}
+                                  className="p-1.5 text-green-600 hover:bg-green-50 rounded-sm bg-white shadow-sm border border-green-100"
+                                  title="Edit Task"
+                                >
+                                  <SquarePen size={16} />
+                                </button>
+                              )}
+                            </ActionGuard>
+                            <ActionGuard permission="todo_delete" module="To-Do" type="delete">
                               <button
-                                onClick={(e) => { e.stopPropagation(); handleEdit(task); }}
-                                className="p-1.5 text-green-600 hover:bg-green-50 rounded-sm bg-white shadow-sm border border-green-100"
-                                title="Edit Task"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  confirmDelete(task);
+                                }}
+                                className="p-1.5 text-red-600 hover:bg-red-50 rounded-sm bg-white shadow-sm border border-red-100"
+                                title="Delete Task"
                               >
-                                <SquarePen size={16} />
+                                <Trash2 size={16} />
                               </button>
-                            )}
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                confirmDelete(task);
-                              }}
-                              className="p-1.5 text-red-600 hover:bg-red-50 rounded-sm bg-white shadow-sm border border-red-100"
-                              title="Delete Task"
-                            >
-                              <Trash2 size={16} />
-                            </button>
+                            </ActionGuard>
                           </div>
+
 
                           {/* Icon & Status Section */}
                           <div className="flex flex-col items-center mb-4 transition-transform group-hover:scale-105 duration-300">
@@ -784,16 +791,18 @@ export default function TodoPage() {
                                         {task.status || (task.completed ? 'Completed' : 'Active')}
                                         <ChevronDown size={12} strokeWidth={3} />
                                       </span>
-                                      <select
-                                        value={task.status || (task.completed ? 'Completed' : 'Active')}
-                                        onChange={(e) => handleStatusChange(task, e.target.value)}
-                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer text-[11px]"
-                                        onClick={(e) => e.stopPropagation()}
-                                      >
-                                        <option value="Active">Active</option>
-                                        <option value="Pending">Pending</option>
-                                        <option value="Completed">Completed</option>
-                                      </select>
+                                      <ActionGuard permission="todo_edit" module="To-Do" type="update">
+                                        <select
+                                          value={task.status || (task.completed ? 'Completed' : 'Active')}
+                                          onChange={(e) => handleStatusChange(task, e.target.value)}
+                                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer text-[11px]"
+                                          onClick={(e) => e.stopPropagation()}
+                                        >
+                                          <option value="Active">Active</option>
+                                          <option value="Pending">Pending</option>
+                                          <option value="Completed">Completed</option>
+                                        </select>
+                                      </ActionGuard>
                                     </div>
                                   </td>
                                   <td className="py-3 px-4 text-right">
@@ -806,7 +815,7 @@ export default function TodoPage() {
                                         <Eye size={18} />
                                       </button>
                                       {!task.completed && (
-                                        <>
+                                        <div className="flex items-center gap-2">
                                           <button
                                             onClick={() => handleToggleStatus(task.id)}
                                             className="p-1.5 text-blue-500 hover:bg-blue-50 rounded-sm transition-all"
@@ -814,14 +823,16 @@ export default function TodoPage() {
                                           >
                                             <CheckCircle size={18} />
                                           </button>
-                                          <button
-                                            onClick={() => handleEdit(task)}
-                                            className="p-1.5 text-green-600 hover:bg-green-50 rounded-sm transition-all"
-                                            title="Edit Task"
-                                          >
-                                            <SquarePen size={18} />
-                                          </button>
-                                        </>
+                                          <ActionGuard permission="todo_edit" module="To-Do" type="update">
+                                            <button
+                                              onClick={() => handleEdit(task)}
+                                              className="p-1.5 text-green-600 hover:bg-green-50 rounded-sm transition-all"
+                                              title="Edit Task"
+                                            >
+                                              <SquarePen size={18} />
+                                            </button>
+                                          </ActionGuard>
+                                        </div>
                                       )}
                                       {!!task.completed && (
                                         <button
@@ -832,13 +843,15 @@ export default function TodoPage() {
                                           <RotateCcw size={18} />
                                         </button>
                                       )}
-                                      <button
-                                        onClick={() => confirmDelete(task)}
-                                        className="p-1.5 text-red-600 hover:bg-red-50 rounded-sm transition-all"
-                                        title="Delete Task"
-                                      >
-                                        <Trash2 size={18} />
-                                      </button>
+                                      <ActionGuard permission="todo_delete" module="To-Do" type="delete">
+                                        <button
+                                          onClick={() => confirmDelete(task)}
+                                          className="p-1.5 text-red-600 hover:bg-red-50 rounded-sm transition-all"
+                                          title="Delete Task"
+                                        >
+                                          <Trash2 size={18} />
+                                        </button>
+                                      </ActionGuard>
                                     </div>
                                   </td>
                                 </tr>

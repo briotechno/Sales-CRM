@@ -1,30 +1,75 @@
 import React, { useState } from "react";
 import { MessageSquare, Shield, Zap, Save, RefreshCw, Key, Link as LinkIcon, Smartphone } from "lucide-react";
 import { toast } from "react-hot-toast";
+import { useGetWhatsAppConfigQuery, useSaveWhatsAppConfigMutation, useSendWhatsAppTestMessageMutation } from "../../store/api/integrationApi";
 
 const WhatsAppSettings = () => {
+    // API Hooks
+    const { data: dbConfig, isLoading: isFetching } = useGetWhatsAppConfigQuery();
+    const [saveConfig] = useSaveWhatsAppConfigMutation();
+    const [sendTestMessage] = useSendWhatsAppTestMessageMutation();
+
     const [config, setConfig] = useState({
         provider: "meta",
-        phoneNumberId: "109283746554321",
-        businessAccountId: "882736455109283",
-        accessToken: "EAAG...",
-        webhookUrl: "https://api.crm.com/webhooks/whatsapp",
+        phoneNumberId: "",
+        businessAccountId: "",
+        accessToken: "",
+        webhookUrl: "https://api.crm.com/webhooks/whatsapp", 
         webhookVerifyToken: "CRM_WP_VERIFY_2024",
-        status: "active"
+        status: "active",
+        apiUrl: "https://graph.facebook.com",
+        apiVersion: "v19.0",
+        businessId: ""
     });
+
+    const [hasPopulated, setHasPopulated] = useState(false);
+
+    // Populate from DB
+    React.useEffect(() => {
+        if (dbConfig?.success && dbConfig?.data && !hasPopulated) {
+            const data = dbConfig.data;
+            const configData = typeof data.config_data === 'string' ? JSON.parse(data.config_data) : (data.config_data || {});
+            
+            setConfig({
+                provider: configData.provider || "meta",
+                phoneNumberId: configData.phoneNumberId || "",
+                businessAccountId: configData.businessAccountId || "",
+                accessToken: data.api_key || "",
+                webhookUrl: configData.webhookUrl || "https://api.crm.com/webhooks/whatsapp",
+                webhookVerifyToken: configData.webhookVerifyToken || "CRM_WP_VERIFY_2024",
+                status: data.status?.toLowerCase() === 'active' ? 'active' : 'disabled',
+                apiUrl: configData.apiUrl || "https://graph.facebook.com",
+                apiVersion: configData.apiVersion || "v19.0",
+                businessId: configData.businessId || ""
+            });
+            setHasPopulated(true);
+        }
+    }, [dbConfig, hasPopulated]);
 
     const [testPhone, setTestPhone] = useState("");
     const [isTesting, setIsTesting] = useState(false);
-
     const [isSaving, setIsSaving] = useState(false);
 
-    const handleSave = () => {
-        setIsSaving(true);
-        setTimeout(() => {
-            setIsSaving(false);
+    const handleSave = async () => {
+        try {
+            setIsSaving(true);
+            await saveConfig(config).unwrap();
             toast.success("WhatsApp configuration saved successfully!");
-        }, 1500);
+        } catch (error) {
+            toast.error(error.data?.message || "Failed to save configuration");
+        } finally {
+            setIsSaving(false);
+        }
     };
+
+    if (isFetching && !hasPopulated) {
+        return (
+            <div className="w-full h-96 flex flex-col items-center justify-center bg-white border border-gray-100 rounded-sm">
+                <RefreshCw size={32} className="text-orange-500 animate-spin mb-4" />
+                <p className="text-sm font-bold text-gray-500 uppercase tracking-widest">Loading WhatsApp Configuration...</p>
+            </div>
+        );
+    }
 
     return (
         <div className="w-full animate-fadeIn">
@@ -105,13 +150,55 @@ const WhatsAppSettings = () => {
                         {/* Business Account ID */}
                         <div className="space-y-2">
                             <label className="flex items-center gap-2 text-[15px] font-semibold text-gray-700 capitalize">
-                                <Key size={14} className="text-orange-500" /> Business Account ID
+                                <Key size={14} className="text-orange-500" /> WhatsApp Business Account ID (WABA ID)
                             </label>
                             <input
                                 type="text"
                                 value={config.businessAccountId}
                                 onChange={(e) => setConfig({ ...config, businessAccountId: e.target.value })}
-                                placeholder="Enter Business Account ID"
+                                placeholder="Enter WABA ID"
+                                className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500 focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 shadow-sm font-semibold"
+                            />
+                        </div>
+
+                        {/* API URL */}
+                        <div className="space-y-2">
+                            <label className="flex items-center gap-2 text-[15px] font-semibold text-gray-700 capitalize">
+                                <LinkIcon size={14} className="text-orange-500" /> API Base URL
+                            </label>
+                            <input
+                                type="text"
+                                value={config.apiUrl}
+                                onChange={(e) => setConfig({ ...config, apiUrl: e.target.value })}
+                                placeholder="https://graph.facebook.com"
+                                className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500 focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 shadow-sm font-semibold"
+                            />
+                        </div>
+
+                        {/* API Version */}
+                        <div className="space-y-2">
+                            <label className="flex items-center gap-2 text-[15px] font-semibold text-gray-700 capitalize">
+                                <Zap size={14} className="text-orange-500" /> API Version
+                            </label>
+                            <input
+                                type="text"
+                                value={config.apiVersion}
+                                onChange={(e) => setConfig({ ...config, apiVersion: e.target.value })}
+                                placeholder="v19.0"
+                                className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500 focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 shadow-sm font-semibold"
+                            />
+                        </div>
+
+                        {/* Business ID */}
+                        <div className="space-y-2">
+                            <label className="flex items-center gap-2 text-[15px] font-semibold text-gray-700 capitalize">
+                                <Key size={14} className="text-orange-500" /> Business ID
+                            </label>
+                            <input
+                                type="text"
+                                value={config.businessId}
+                                onChange={(e) => setConfig({ ...config, businessId: e.target.value })}
+                                placeholder="Enter Business ID"
                                 className="w-full px-4 py-3 border border-gray-200 rounded-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500 focus:ring-opacity-20 outline-none transition-all text-sm text-gray-900 bg-white hover:border-gray-300 shadow-sm font-semibold"
                             />
                         </div>
@@ -195,6 +282,13 @@ const WhatsAppSettings = () => {
                         </div>
                     </div>
 
+                    {isFetching && (
+                        <div className="flex items-center justify-center py-4 gap-2 text-orange-500 font-bold animate-pulse">
+                            <RefreshCw size={18} className="animate-spin" />
+                            Fetching latest configuration...
+                        </div>
+                    )}
+
                     {/* Submit Section */}
                     <div className="pt-4 flex justify-end gap-3 font-primary">
                         <button
@@ -215,8 +309,8 @@ const WhatsAppSettings = () => {
                 </div>
             </div>
 
-            {/* Test Connection Banner */}
-            <div className={`p-6 bg-white border border-gray-200 rounded-sm shadow-sm mb-6 ${config.status !== 'active' ? 'opacity-60 pointer-events-none' : ''}`}>
+            {/* Test Connection Banner - always enabled, independent of status */}
+            <div className={`p-6 bg-white border border-gray-200 rounded-sm shadow-sm mb-6`}>
                 <div className="flex items-center gap-3 mb-6">
                     <div className="p-2 bg-orange-100 text-orange-600 rounded-sm">
                         <Zap size={18} />
@@ -240,13 +334,17 @@ const WhatsAppSettings = () => {
                     </div>
                     <div className="flex items-end">
                         <button
-                            onClick={() => {
+                            onClick={async () => {
                                 if (!testPhone) return toast.error("Please enter a phone number");
-                                setIsTesting(true);
-                                setTimeout(() => {
-                                    setIsTesting(false);
+                                try {
+                                    setIsTesting(true);
+                                    await sendTestMessage({ phone: testPhone, config }).unwrap();
                                     toast.success("Test message sent! Check your WhatsApp.");
-                                }, 2000);
+                                } catch (error) {
+                                    toast.error(error.data?.message || "Failed to send test message");
+                                } finally {
+                                    setIsTesting(false);
+                                }
                             }}
                             disabled={isTesting}
                             className="w-full md:w-auto px-10 py-3.5 bg-white border-2 border-orange-500 text-orange-600 font-bold rounded-sm hover:bg-orange-500 hover:text-white transition-all text-base capitalize tracking-wide shadow-sm flex items-center justify-center gap-2 active:scale-95 disabled:opacity-70"
@@ -266,7 +364,7 @@ const WhatsAppSettings = () => {
                     </div>
                     <div>
                         <p className="text-sm font-bold text-gray-800 capitalize tracking-tight">Cloud API Service Check</p>
-                        <p className="text-[11px] text-gray-500 font-medium capitalize mt-1">Status: {config.status === "active" ? "Connected" : "Disconnected"} | API v18.0</p>
+                        <p className="text-[11px] text-gray-500 font-medium capitalize mt-1">Status: {config.status === "active" ? "Connected" : "Disconnected"} | API {config.apiVersion}</p>
                     </div>
                 </div>
                 <button
