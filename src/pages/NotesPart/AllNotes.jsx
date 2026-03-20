@@ -22,6 +22,7 @@ import {
 import toast from "react-hot-toast";
 import NumberCard from "../../components/NumberCard";
 import Modal from "../../components/common/Modal";
+import ActionGuard from "../../components/common/ActionGuard";
 import {
   useGetNotesQuery,
   useCreateNoteMutation,
@@ -386,16 +387,18 @@ export default function NotesPage() {
                   </button>
                 </div>
 
-                <button
-                  onClick={() => {
-                    resetForm();
-                    setIsAdding(true);
-                  }}
-                  className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-2 font-semibold"
-                >
-                  <Plus size={20} />
-                  Add Note
-                </button>
+                <ActionGuard permission="note_create" module="Notes">
+                  <button
+                    onClick={() => {
+                      resetForm();
+                      setIsAdding(true);
+                    }}
+                    className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-2 font-semibold"
+                  >
+                    <Plus size={20} />
+                    Add Note
+                  </button>
+                </ActionGuard>
               </div>
             </div>
           </div>
@@ -451,31 +454,37 @@ export default function NotesPage() {
                 >
                   {/* Absolute Actions */}
                   <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 z-10">
-                    <button
-                      onClick={(e) => { e.stopPropagation(); handleView(note); }}
-                      className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-sm transition-all"
-                      title="View Note"
-                    >
-                      <Eye size={16} />
-                    </button>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); handleEdit(note); }}
-                      className="p-1.5 text-green-600 hover:bg-green-50 rounded-sm transition-all"
-                      title="Edit Note"
-                    >
-                      <SquarePen size={16} />
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setNoteToDelete(note);
-                        setShowDeleteModal(true);
-                      }}
-                      className="p-1.5 text-red-600 hover:bg-red-50 rounded-sm transition-all"
-                      title="Delete Note"
-                    >
-                      <Trash2 size={16} />
-                    </button>
+                    <ActionGuard permission="note_read" module="Notes">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleView(note); }}
+                        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-sm transition-all"
+                        title="View Note"
+                      >
+                        <Eye size={16} />
+                      </button>
+                    </ActionGuard>
+                    <ActionGuard permission="note_edit" module="Notes">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleEdit(note); }}
+                        className="p-1.5 text-green-600 hover:bg-green-50 rounded-sm transition-all"
+                        title="Edit Note"
+                      >
+                        <SquarePen size={16} />
+                      </button>
+                    </ActionGuard>
+                    <ActionGuard permission="note_delete" module="Notes">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setNoteToDelete(note);
+                          setShowDeleteModal(true);
+                        }}
+                        className="p-1.5 text-red-600 hover:bg-red-50 rounded-sm transition-all"
+                        title="Delete Note"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </ActionGuard>
                   </div>
 
                   {/* Icon & Title Section */}
@@ -583,30 +592,36 @@ export default function NotesPage() {
                         </td>
                         <td className="py-3 px-4 text-right">
                           <div className="flex items-center justify-end gap-2">
-                            <button
-                              onClick={() => handleView(note)}
-                              className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-sm transition-all"
-                              title="View Note"
-                            >
-                              <Eye size={16} />
-                            </button>
-                            <button
-                              onClick={() => handleEdit(note)}
-                              className="p-1.5 text-green-600 hover:bg-green-50 rounded-sm transition-all"
-                              title="Edit Note"
-                            >
-                              <SquarePen size={16} />
-                            </button>
-                            <button
-                              onClick={() => {
-                                setNoteToDelete(note);
-                                setShowDeleteModal(true);
-                              }}
-                              className="p-1.5 text-red-600 hover:bg-red-50 rounded-sm transition-all"
-                              title="Delete Note"
-                            >
-                              <Trash2 size={16} />
-                            </button>
+                            <ActionGuard permission="note_read" module="Notes">
+                              <button
+                                onClick={() => handleView(note)}
+                                className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-sm transition-all"
+                                title="View Note"
+                              >
+                                <Eye size={16} />
+                              </button>
+                            </ActionGuard>
+                            <ActionGuard permission="note_edit" module="Notes">
+                              <button
+                                onClick={() => handleEdit(note)}
+                                className="p-1.5 text-green-600 hover:bg-green-50 rounded-sm transition-all"
+                                title="Edit Note"
+                              >
+                                <SquarePen size={16} />
+                              </button>
+                            </ActionGuard>
+                            <ActionGuard permission="note_delete" module="Notes">
+                              <button
+                                onClick={() => {
+                                  setNoteToDelete(note);
+                                  setShowDeleteModal(true);
+                                }}
+                                className="p-1.5 text-red-600 hover:bg-red-50 rounded-sm transition-all"
+                                title="Delete Note"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </ActionGuard>
                           </div>
                         </td>
                       </tr>
@@ -680,16 +695,18 @@ export default function NotesPage() {
                   Clear Filter
                 </button>
               ) : (
-                <button
-                  onClick={() => {
-                    resetForm();
-                    setIsAdding(true);
-                  }}
-                  className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl inline-flex items-center gap-2 font-semibold"
-                >
-                  <Plus size={20} />
-                  Create First Note
-                </button>
+                <ActionGuard permission="note_create" module="Notes">
+                  <button
+                    onClick={() => {
+                      resetForm();
+                      setIsAdding(true);
+                    }}
+                    className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl inline-flex items-center gap-2 font-semibold"
+                  >
+                    <Plus size={20} />
+                    Create First Note
+                  </button>
+                </ActionGuard>
               )}
             </div>
           )}

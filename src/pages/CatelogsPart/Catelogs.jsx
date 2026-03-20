@@ -54,6 +54,7 @@ import {
 import usePermission from "../../hooks/usePermission";
 import ViewCatalogModal from "./ViewCatalogModal";
 import { useGetBusinessInfoQuery } from "../../store/api/businessApi";
+import ActionGuard from "../../components/common/ActionGuard";
 
 const DESC_LIMIT = 1500;
 const CAT_LIMIT = 100;
@@ -611,20 +612,18 @@ export default function CatalogsPage() {
                 </div>
 
 
-                <button
-                  onClick={() => {
-                    resetForm();
-                    setShowAddModal(true);
-                  }}
-                  disabled={!create}
-                  className={`flex items-center gap-2 px-6 py-3 rounded-sm font-semibold transition shadow-lg hover:shadow-xl ${create
-                    ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
-                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                    }`}
-                >
-                  <Plus size={20} />
-                  Add Catalog
-                </button>
+                <ActionGuard permission="catalog_create" module="Catalog">
+                  <button
+                    onClick={() => {
+                      resetForm();
+                      setShowAddModal(true);
+                    }}
+                    className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl font-semibold"
+                  >
+                    <Plus size={20} />
+                    Add Catalog
+                  </button>
+                </ActionGuard>
               </div>
             </div>
           </div>
@@ -792,31 +791,33 @@ export default function CatalogsPage() {
                       </td>
                       <td className="py-3 px-4">
                         <div className="flex justify-end gap-2">
-                          <button
-                            onClick={() => handleView(catalog)}
-                            className="p-1 hover:bg-orange-100 rounded-sm text-blue-500 hover:text-blue-700 transition-all"
-                            title="View"
-                          >
-                            <Eye size={18} />
-                          </button>
-                          <button
-                            onClick={() => handleEdit(catalog)}
-                            disabled={!update}
-                            className={`p-1 hover:bg-orange-100 rounded-sm transition-all ${update ? "text-green-500 hover:text-green-700" : "text-gray-300 cursor-not-allowed"
-                              }`}
-                            title="Edit"
-                          >
-                            <Edit size={18} />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(catalog)}
-                            disabled={!canDelete}
-                            className={`p-1 hover:bg-orange-100 rounded-sm transition-all ${canDelete ? "text-red-500 hover:text-red-700" : "text-gray-300 cursor-not-allowed"
-                              }`}
-                            title="Delete"
-                          >
-                            <Trash2 size={18} />
-                          </button>
+                          <ActionGuard permission="catalog_read" module="Catalog">
+                            <button
+                              onClick={() => handleView(catalog)}
+                              className="p-1 hover:bg-orange-100 rounded-sm text-blue-500 hover:text-blue-700 transition-all"
+                              title="View"
+                            >
+                              <Eye size={18} />
+                            </button>
+                          </ActionGuard>
+                          <ActionGuard permission="catalog_edit" module="Catalog">
+                            <button
+                              onClick={() => handleEdit(catalog)}
+                              className="p-1 hover:bg-orange-100 rounded-sm text-green-500 hover:text-green-700 transition-all"
+                              title="Edit"
+                            >
+                              <Edit size={18} />
+                            </button>
+                          </ActionGuard>
+                          <ActionGuard permission="catalog_delete" module="Catalog">
+                            <button
+                              onClick={() => handleDelete(catalog)}
+                              className="p-1 hover:bg-orange-100 rounded-sm text-red-500 hover:text-red-700 transition-all"
+                              title="Delete"
+                            >
+                              <Trash2 size={18} />
+                            </button>
+                          </ActionGuard>
                           <button
                             onClick={() => handleShare(catalog)}
                             className="p-1 hover:bg-orange-100 rounded-sm text-purple-500 hover:text-purple-700 transition-all"
@@ -849,16 +850,18 @@ export default function CatalogsPage() {
                             Clear Filter
                           </button>
                         ) : (
-                          <button
-                            onClick={() => {
-                              resetForm();
-                              setShowAddModal(true);
-                            }}
-                            className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl inline-flex items-center gap-2 font-semibold"
-                          >
-                            <Plus size={20} />
-                            Create First Catalog
-                          </button>
+                          <ActionGuard permission="catalog_create" module="Catalog">
+                            <button
+                              onClick={() => {
+                                resetForm();
+                                setShowAddModal(true);
+                              }}
+                              className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl inline-flex items-center gap-2 font-semibold"
+                            >
+                              <Plus size={20} />
+                              Create First Catalog
+                            </button>
+                          </ActionGuard>
                         )}
                       </div>
                     </td>

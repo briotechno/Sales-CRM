@@ -23,6 +23,7 @@ import * as XLSX from "xlsx";
 import CreateQuotationModal from "../../pages/QuotationPart/CreateQuotationModal";
 import ViewQuotationModal from "../../pages/QuotationPart/ViewQuotationModal";
 import NumberCard from "../../components/NumberCard";
+import ActionGuard from "../../components/common/ActionGuard";
 
 import {
   useGetQuotationsQuery,
@@ -975,16 +976,18 @@ export default function QuotationPage() {
                   Export
                 </button>
 
-                <button
-                  onClick={() => {
-                    resetForm();
-                    setShowModal(true);
-                  }}
-                  className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-2 font-semibold"
-                >
-                  <Plus size={20} />
-                  Add Quotation
-                </button>
+                <ActionGuard permission="quotation_create" module="Quotation" type="create">
+                  <button
+                    onClick={() => {
+                      resetForm();
+                      setShowModal(true);
+                    }}
+                    className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-2 font-semibold"
+                  >
+                    <Plus size={20} />
+                    Add Quotation
+                  </button>
+                </ActionGuard>
               </div>
             </div>
           </div>
@@ -1082,16 +1085,18 @@ export default function QuotationPage() {
                               Clear All Filters
                             </button>
                           ) : (
-                            <button
-                              onClick={() => {
-                                resetForm();
-                                setShowModal(true);
-                              }}
-                              className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-8 py-3.5 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl inline-flex items-center gap-2 font-bold tracking-wide"
-                            >
-                              <Plus size={20} />
-                              Create First Quotation
-                            </button>
+                            <ActionGuard permission="quotation_create" module="Quotation" type="create">
+                              <button
+                                onClick={() => {
+                                  resetForm();
+                                  setShowModal(true);
+                                }}
+                                className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-8 py-3.5 rounded-sm hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl inline-flex items-center gap-2 font-bold tracking-wide"
+                              >
+                                <Plus size={20} />
+                                Create First Quotation
+                              </button>
+                            </ActionGuard>
                           )}
                         </div>
                       </div>
@@ -1117,20 +1122,22 @@ export default function QuotationPage() {
                         </div>
                       </td>
                       <td className="py-4 px-4 text-center">
-                        <select
-                          value={quote.status}
-                          onChange={(e) => handleStatusChange(quote.id, e.target.value)}
-                          className={`w-full max-w-[120px] px-2.5 py-1.5 rounded-sm text-[10px] font-bold border uppercase tracking-widest outline-none cursor-pointer transition-all shadow-sm mx-auto ${quote.status === "Approved" ? "bg-green-50 text-green-700 border-green-200" :
-                            quote.status === "Pending" ? "bg-orange-50 text-orange-700 border-orange-200" :
-                              quote.status === "Rejected" ? "bg-red-50 text-red-700 border-red-200" :
-                                "bg-gray-50 text-gray-700 border-gray-200"
-                            }`}
-                        >
-                          <option value="Draft">Draft</option>
-                          <option value="Pending">Pending</option>
-                          <option value="Approved">Approved</option>
-                          <option value="Rejected">Rejected</option>
-                        </select>
+                        <ActionGuard permission="quotation_edit" module="Quotation" type="update">
+                          <select
+                            value={quote.status}
+                            onChange={(e) => handleStatusChange(quote.id, e.target.value)}
+                            className={`w-full max-w-[120px] px-2.5 py-1.5 rounded-sm text-[10px] font-bold border uppercase tracking-widest outline-none cursor-pointer transition-all shadow-sm mx-auto ${quote.status === "Approved" ? "bg-green-50 text-green-700 border-green-200" :
+                              quote.status === "Pending" ? "bg-orange-50 text-orange-700 border-orange-200" :
+                                quote.status === "Rejected" ? "bg-red-50 text-red-700 border-red-200" :
+                                  "bg-gray-50 text-gray-700 border-gray-200"
+                              }`}
+                          >
+                            <option value="Draft">Draft</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Approved">Approved</option>
+                            <option value="Rejected">Rejected</option>
+                          </select>
+                        </ActionGuard>
                       </td>
                       <td className="py-4 px-4 text-right">
                         <div className="flex items-center justify-end gap-2.5">
@@ -1141,13 +1148,15 @@ export default function QuotationPage() {
                           >
                             <Eye size={16} />
                           </button>
-                          <button
-                            onClick={() => handleEdit(quote)}
-                            className="p-1.5 hover:bg-green-50 rounded-sm text-green-500 hover:text-green-700 transition-all border border-transparent hover:border-green-100"
-                            title="Edit"
-                          >
-                            <Edit size={16} />
-                          </button>
+                          <ActionGuard permission="quotation_edit" module="Quotation" type="update">
+                            <button
+                              onClick={() => handleEdit(quote)}
+                              className="p-1.5 hover:bg-green-50 rounded-sm text-green-500 hover:text-green-700 transition-all border border-transparent hover:border-green-100"
+                              title="Edit"
+                            >
+                              <Edit size={16} />
+                            </button>
+                          </ActionGuard>
                           <button
                             onClick={() => handleDownload(quote)}
                             className="p-1.5 hover:bg-orange-50 rounded-sm text-[#FF7B1D] hover:text-orange-700 transition-all border border-transparent hover:border-orange-100"
@@ -1155,16 +1164,18 @@ export default function QuotationPage() {
                           >
                             <Download size={16} />
                           </button>
-                          <button
-                            onClick={() => {
-                              setSelectedQuotationId(quote.id);
-                              setIsDeleteModalOpen(true);
-                            }}
-                            className="p-1.5 hover:bg-red-50 rounded-sm text-red-500 hover:text-red-700 transition-all border border-transparent hover:border-red-100 shadow-sm"
-                            title="Delete"
-                          >
-                            <Trash2 size={16} />
-                          </button>
+                          <ActionGuard permission="quotation_delete" module="Quotation" type="delete">
+                            <button
+                              onClick={() => {
+                                setSelectedQuotationId(quote.id);
+                                setIsDeleteModalOpen(true);
+                              }}
+                              className="p-1.5 hover:bg-red-50 rounded-sm text-red-500 hover:text-red-700 transition-all border border-transparent hover:border-red-100 shadow-sm"
+                              title="Delete"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </ActionGuard>
                         </div>
                       </td>
                     </tr>
