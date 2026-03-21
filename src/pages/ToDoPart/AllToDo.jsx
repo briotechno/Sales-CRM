@@ -334,12 +334,11 @@ export default function TodoPage() {
           <div className="max-w-8xl mx-auto px-4 py-4 border-b">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
-                <h1 className="text-2xl font-bold text-gray-800 capitalize tracking-tight">My Tasks</h1>
-                <p className="text-[11px] text-gray-400 mt-1 flex items-center gap-2 font-bold capitalize tracking-wider">
-                  <FiHome className="text-gray-400" size={12} />
-                  <span>Additional</span>
-                  <span className="text-gray-300">/</span>
-                  <span className="text-[#FF7B1D]">
+                <h1 className="text-2xl font-bold text-gray-800">My Tasks</h1>
+                <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
+                  <FiHome className="text-gray-700" size={14} />
+                  <span className="text-gray-400">Additional /</span>{" "}
+                  <span className="text-[#FF7B1D] font-medium">
                     To-Do
                   </span>
                 </p>
@@ -560,7 +559,7 @@ export default function TodoPage() {
                       setNewTaskCategory("General");
                       setIsAddModalOpen(true);
                     }}
-                    className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm text-[11px] font-bold transition shadow-lg hover:shadow-xl hover:from-orange-600 hover:to-orange-700 capitalize tracking-wider"
+                    className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-sm font-semibold transition-all shadow-lg hover:shadow-xl hover:from-orange-600 hover:to-orange-700"
                   >
                     <Plus size={20} />
                     Add Task
