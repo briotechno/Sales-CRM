@@ -22,6 +22,7 @@ import {
 } from "../../store/api/leadApi";
 import { toast } from "react-hot-toast";
 import CallQrModal from "../../components/LeadManagement/CallQrModal";
+import EmptyState from "../../components/common/EmptyState";
 
 export default function LeadsList() {
   const isLocked = useSelector((state) => state.ui.sidebarLocked);
